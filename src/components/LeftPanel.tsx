@@ -279,17 +279,20 @@ export default function LeftPanel() {
             >
               <div
                 className={`dropzone ${preview ? 'has-img' : ''}`}
-                onClick={() => !preview && !cameraActive && (window.innerWidth < 768 ? fileInputRef.current?.click() : openCamera())}
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
               >
                 {cameraActive && <video ref={videoRef} autoPlay playsInline muted className="w-full h-[150px] object-cover rounded-xl" />}
                 {preview && !cameraActive && <img src={preview} alt="" className="w-full h-[150px] object-cover rounded-xl" />}
                 {!preview && !cameraActive && (
-                  <div className="text-center p-3 pointer-events-none select-none">
+                  <div className="text-center p-3 select-none">
                     <div className="text-xl opacity-35 mb-1">📷</div>
-                    <div className="text-xs font-medium text-muted-foreground">Clique, arraste ou cole (Ctrl+V)</div>
+                    <div className="text-xs font-medium text-muted-foreground">Arraste uma imagem ou cole (Ctrl+V)</div>
                     <div className="text-[11px] text-muted-foreground/60 mt-1">JPG · PNG · WEBP</div>
+                    <div className="flex gap-2 justify-center mt-3">
+                      <button onClick={(e) => { e.stopPropagation(); openCamera(); }} className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-surface-2 transition-colors bg-surface">📷 Câmera</button>
+                      <button onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-surface-2 transition-colors bg-surface">🖼 Galeria</button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -301,7 +304,7 @@ export default function LeftPanel() {
                   {!cameraActive && (
                     <>
                       <button className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors" onClick={openCamera}>📷 Câmera</button>
-                      <button className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors" onClick={() => fileInputRef.current?.click()}>🗂 Arquivo</button>
+                      <button className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors" onClick={() => fileInputRef.current?.click()}>🖼 Galeria</button>
                       <button className="text-xs px-2.5 py-1 rounded-md hover:bg-surface-2 transition-colors text-muted-foreground ml-auto" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}>✕</button>
                     </>
                   )}
