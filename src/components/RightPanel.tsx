@@ -95,31 +95,31 @@ export default function RightPanel() {
       </AnimatePresence>
 
       {/* Toolbar */}
-      <div className="px-5 h-12 surface-bg border-b border-border flex items-center gap-2.5 flex-shrink-0">
-        <div className="flex items-center gap-2 surface-2-bg border border-border rounded-lg px-3 flex-1 max-w-[280px]">
+      <div className="px-3 sm:px-5 py-2 sm:py-0 sm:h-12 surface-bg border-b border-border flex flex-wrap items-center gap-2 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-2 surface-2-bg border border-border rounded-lg px-3 flex-1 min-w-0">
           <span className="text-sm opacity-35">🔍</span>
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="border-none bg-transparent outline-none text-sm py-1.5 w-full"
-            placeholder="Filtrar por item, endereço ou lote…"
+            placeholder="Filtrar…"
             autoComplete="off"
           />
         </div>
-        <div className="ml-auto flex gap-2 items-center">
+        <div className="flex gap-1.5 sm:gap-2 items-center">
           <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value)}
             className="border border-border rounded-lg px-2 py-1.5 text-xs text-muted-foreground bg-surface outline-none cursor-pointer"
           >
-            <option value="">Ordenar: Entrada</option>
+            <option value="">Ordenar</option>
             <option value="item">Item A→Z</option>
-            <option value="ml-d">M Linear ↓</option>
-            <option value="ml-a">M Linear ↑</option>
+            <option value="ml-d">M Lin ↓</option>
+            <option value="ml-a">M Lin ↑</option>
             <option value="m2-d">M² ↓</option>
             <option value="end">Endereço</option>
           </select>
-          <button onClick={exportExcel} className="text-xs px-2.5 py-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors">⬇ Excel</button>
+          <button onClick={exportExcel} className="text-xs px-2 py-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors">⬇</button>
           {registros.length > 0 && (
             <button onClick={handleClearAll} className="text-xs px-2 py-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors">🗑</button>
           )}
