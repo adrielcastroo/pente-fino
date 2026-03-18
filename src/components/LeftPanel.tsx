@@ -279,14 +279,13 @@ export default function LeftPanel() {
             >
               <div
                 className={`dropzone ${preview ? 'has-img' : ''}`}
-                onClick={() => !preview && !cameraActive && (window.innerWidth < 768 ? fileInputRef.current?.click() : openCamera())}
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
               >
                 {cameraActive && <video ref={videoRef} autoPlay playsInline muted className="w-full h-[150px] object-cover rounded-xl" />}
                 {preview && !cameraActive && <img src={preview} alt="" className="w-full h-[150px] object-cover rounded-xl" />}
                 {!preview && !cameraActive && (
-                  <div className="text-center p-3 pointer-events-none select-none">
+                  <div className="text-center p-3 select-none">
                     <div className="text-xl opacity-35 mb-1">📷</div>
                     <div className="text-xs font-medium text-muted-foreground">Clique, arraste ou cole (Ctrl+V)</div>
                     <div className="text-[11px] text-muted-foreground/60 mt-1">JPG · PNG · WEBP</div>
