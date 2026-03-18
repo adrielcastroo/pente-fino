@@ -128,7 +128,7 @@ export default function RightPanel() {
 
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <div className="min-w-[700px]">
+        <div className="min-w-[600px]">
           <table className="w-full border-collapse">
             <thead>
               <tr>
