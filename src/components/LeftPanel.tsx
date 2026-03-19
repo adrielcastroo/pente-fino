@@ -123,7 +123,9 @@ export default function LeftPanel() {
   const resetForm = () => {
     setItem(''); setMl(''); setLarg(''); setEndereco(''); setObs('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
+    setEnderecoError('');
     stopCamera();
+    stopScanner();
   };
 
   const loadFile = useCallback((file: File) => {
