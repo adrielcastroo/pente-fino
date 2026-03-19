@@ -45,6 +45,10 @@ export default function LeftPanel() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<HTMLDivElement>(null);
+  const [enderecoError, setEnderecoError] = useState('');
 
   const mlNum = parseFloat(ml) || 0;
   const lgNum = parseFloat(larg) || 0;
