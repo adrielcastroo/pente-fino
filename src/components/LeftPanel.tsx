@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppStore, gerarLoteUnico, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia os 3 campos abaixo.
 
@@ -44,6 +45,10 @@ export default function LeftPanel() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<HTMLDivElement>(null);
+  const [enderecoError, setEnderecoError] = useState('');
 
   const mlNum = parseFloat(ml) || 0;
   const lgNum = parseFloat(larg) || 0;
@@ -52,10 +57,75 @@ export default function LeftPanel() {
   const lotePreview = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
+  // Regex for address pattern: TEC0X.X.N0X
+  const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
+
+  const validateEndereco = (val: string) => {
+    if (!val) { setEnderecoError(''); return; }
+    if (!ENDERECO_REGEX.test(val)) {
+      setEnderecoError('Padrão: TEC01.A.N03');
+    } else {
+      setEnderecoError('');
+    }
+  };
+
+  const handleEnderecoChange = (val: string) => {
+    const upper = val.toUpperCase();
+    setEndereco(upper);
+    validateEndereco(upper);
+  };
+
+  // Barcode scanner for address
+  const startScanner = async () => {
+    if (scannerActive) { stopScanner(); return; }
+    setScannerActive(true);
+    try {
+      const scanner = new Html5Qrcode('endereco-scanner');
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 100 } },
+        (decodedText) => {
+          const upper = decodedText.toUpperCase().trim();
+          setEndereco(upper);
+          validateEndereco(upper);
+          addToast(`Código lido: ${upper}`, 'ok');
+          stopScanner();
+        },
+        () => {}
+      );
+    } catch (err: any) {
+      addToast('Erro ao abrir scanner: ' + (err?.message || err), 'err');
+      setScannerActive(false);
+    }
+  };
+
+  const stopScanner = () => {
+    scannerRef.current?.stop().catch(() => {});
+    scannerRef.current?.clear();
+    scannerRef.current = null;
+    setScannerActive(false);
+  };
+
+  // Save photo locally to device
+  const savePhotoLocally = () => {
+    if (!preview) { addToast('Nenhuma foto para salvar.', 'warn'); return; }
+    const link = document.createElement('a');
+    link.href = preview;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    link.download = `rolo_${item || 'foto'}_${timestamp}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast('Foto salva no dispositivo', 'ok');
+  };
+
   const resetForm = () => {
     setItem(''); setMl(''); setLarg(''); setEndereco(''); setObs('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
+    setEnderecoError('');
     stopCamera();
+    stopScanner();
   };
 
   const loadFile = useCallback((file: File) => {
@@ -206,6 +276,7 @@ export default function LeftPanel() {
   const handleAdd = () => {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (!endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
+    if (!ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
     const m2Val = parseFloat((mlNum * lgNum).toFixed(3));
     const loteBase = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
     const lote = gerarLoteUnico(registros, loteBase);
@@ -375,7 +446,8 @@ export default function LeftPanel() {
                     <>
                       <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openNativeCamera}>📷</button>
                       <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={() => fileInputRef.current?.click()}>🖼</button>
-                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openLiveCamera}>🎥 Ao vivo</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openLiveCamera}>🎥</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors text-green-600" onClick={savePhotoLocally} title="Salvar foto no dispositivo">💾</button>
                       <button className="text-[11px] px-2.5 py-1 rounded-lg hover:bg-surface-2 transition-colors text-muted-foreground ml-auto" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}>✕</button>
                     </>
                   )}
@@ -450,11 +522,46 @@ export default function LeftPanel() {
           </div>
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Endereço</label>
-            <input
-              value={endereco} onChange={e => setEndereco(e.target.value.toUpperCase())}
-              className="w-full border border-border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all uppercase"
-              placeholder="TEC01.A.N06" autoComplete="off"
-            />
+            <div className="flex gap-1.5">
+              <input
+                value={endereco} onChange={e => handleEnderecoChange(e.target.value)}
+                className={`flex-1 border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:ring-2 transition-all uppercase font-mono ${
+                  enderecoError ? 'border-destructive focus:border-destructive focus:ring-destructive/10' : 'border-border focus:border-primary focus:ring-primary/10'
+                }`}
+                placeholder="TEC01.A.N03" autoComplete="off"
+              />
+              <button
+                onClick={startScanner}
+                className={`px-2.5 py-2 rounded-lg border transition-colors text-sm ${
+                  scannerActive ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-surface-2 bg-surface'
+                }`}
+                title="Bipar código de barras"
+              >
+                {scannerActive ? '⏹' : '📱'}
+              </button>
+            </div>
+            {enderecoError && (
+              <div className="text-[10px] text-destructive mt-0.5 font-medium">{enderecoError}</div>
+            )}
+            {/* Barcode scanner viewport */}
+            <AnimatePresence>
+              {scannerActive && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-1.5 overflow-hidden"
+                >
+                  <div id="endereco-scanner" ref={scannerContainerRef} className="w-full rounded-lg overflow-hidden border border-border" />
+                  <button
+                    onClick={stopScanner}
+                    className="w-full mt-1 text-[11px] px-2 py-1 rounded-lg border border-border hover:bg-surface-2 text-muted-foreground"
+                  >
+                    ✕ Fechar scanner
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Cor (opcional)</label>
