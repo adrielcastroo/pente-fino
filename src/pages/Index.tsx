@@ -53,29 +53,22 @@ export default function Index() {
         document.querySelector<HTMLInputElement>('[placeholder*="Filtrar"]')?.focus();
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setShortcutsOpen(true); }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'l' && !typing) {
-        e.preventDefault();
-        const loteEl = document.querySelector<HTMLSpanElement>('.lote-display span');
-        if (loteEl?.textContent && loteEl.textContent !== '—') {
-          navigator.clipboard.writeText(loteEl.textContent);
-          addToast('Copiado: ' + loteEl.textContent, 'ok');
-        }
-      }
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); setConfigOpen(true); }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [undo, addToast, configOpen, shortcutsOpen]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <TopBar />
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
+      <TopBar onOpenConfig={() => setConfigOpen(true)} />
 
       {/* Mobile tab bar */}
       {isMobile && (
         <div className="flex border-b border-border bg-surface flex-shrink-0">
           <button
             onClick={() => setMobileTab('form')}
-            className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
               mobileTab === 'form'
                 ? 'text-primary border-b-2 border-primary'
                 : 'text-muted-foreground'
@@ -85,7 +78,7 @@ export default function Index() {
           </button>
           <button
             onClick={() => setMobileTab('table')}
-            className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors relative ${
+            className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors relative ${
               mobileTab === 'table'
                 ? 'text-primary border-b-2 border-primary'
                 : 'text-muted-foreground'
@@ -93,7 +86,7 @@ export default function Index() {
           >
             📋 Tabela
             {registros.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold">
                 {registros.length}
               </span>
             )}

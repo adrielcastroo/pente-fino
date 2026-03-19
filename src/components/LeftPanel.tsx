@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppStore, gerarLoteUnico, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +24,7 @@ Retorne SOMENTE este JSON válido, sem markdown, sem explicações:
 {"item":"<nome/código>","largura_raw":<número float ou null>,"unidade":"cm ou m","metragem_linear":<número float ou null>,"cor":"<cor ou null>"}`;
 
 export default function LeftPanel() {
-  const { currentMode, setMode, nfe, registros, addRegistro, deleteRegistro, undo: undoAction, undoStack } = useAppStore();
+  const { currentMode, setMode, nfe, registros, addRegistro, undo: undoAction, undoStack } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   const [item, setItem] = useState('');
@@ -39,6 +39,7 @@ export default function LeftPanel() {
   const [aiStatus, setAiStatus] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -68,14 +69,26 @@ export default function LeftPanel() {
     reader.readAsDataURL(file);
   }, []);
 
-  const openCamera = async () => {
+  // Open native camera app via input capture (mobile)
+  const openNativeCamera = () => {
+    cameraInputRef.current?.click();
+  };
+
+  // Open live camera preview in-app (desktop fallback)
+  const openLiveCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
       setCameraActive(true);
     } catch {
-      fileInputRef.current?.click();
+      // If getUserMedia fails, fall back to native camera input
+      openNativeCamera();
     }
   };
 
@@ -89,9 +102,9 @@ export default function LeftPanel() {
     const v = videoRef.current;
     const c = canvasRef.current;
     if (!v || !c) return;
-    c.width = v.videoWidth || 640;
-    c.height = v.videoHeight || 480;
-    c.getContext('2d')?.drawImage(v, 0, 0);
+    c.width = v.videoWidth || 1280;
+    c.height = v.videoHeight || 720;
+    c.getContext('2d')?.drawImage(v, 0, 0, c.width, c.height);
     const url = c.toDataURL('image/jpeg', 0.85);
     setFotoB64(url.split(',')[1]);
     setFotoMime('image/jpeg');
@@ -108,20 +121,19 @@ export default function LeftPanel() {
   const handlePaste = useCallback((e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        const f = item.getAsFile();
+    for (const it of items) {
+      if (it.type.startsWith('image/')) {
+        const f = it.getAsFile();
         if (f) { loadFile(f); addToast('Imagem colada', 'ok'); }
         break;
       }
     }
   }, [loadFile, addToast]);
 
-  // Paste listener
-  useState(() => {
+  useEffect(() => {
     document.addEventListener('paste', handlePaste as any);
     return () => document.removeEventListener('paste', handlePaste as any);
-  });
+  }, [handlePaste]);
 
   const applyResult = (parsed: any, provider: string) => {
     let largM = parseFloat(parsed.largura_raw) || 0;
@@ -137,7 +149,7 @@ export default function LeftPanel() {
   const processGemini = async () => {
     if (!fotoB64) { addToast('Adicione uma foto primeiro.', 'warn'); return; }
     const key = localStorage.getItem('cft4_key') || '';
-    if (!key) { addToast('Configure a chave Gemini.', 'warn'); return; }
+    if (!key) { addToast('Configure a chave Gemini em ⚙️ API.', 'warn'); return; }
     const model = localStorage.getItem('cft4_model') || 'gemini-2.0-flash-lite';
     setAiLoading(true); setProgress(30); setAiStatus(null);
     try {
@@ -165,7 +177,7 @@ export default function LeftPanel() {
   const processOpenRouter = async () => {
     if (!fotoB64) { addToast('Adicione uma foto primeiro.', 'warn'); return; }
     const key = localStorage.getItem('cft4_or_key') || '';
-    if (!key) { addToast('Configure a chave OpenRouter.', 'warn'); return; }
+    if (!key) { addToast('Configure a chave OpenRouter em ⚙️ API.', 'warn'); return; }
     const model = localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku';
     setAiLoading(true); setProgress(30); setAiStatus(null);
     try {
@@ -212,7 +224,7 @@ export default function LeftPanel() {
   const modes = [
     { key: 'manual' as const, label: '✏️ Manual' },
     { key: 'gemini' as const, label: '✦ Gemini' },
-    { key: 'openrouter' as const, label: '⚡ OpenRouter' },
+    { key: 'openrouter' as const, label: '⚡ OR' },
   ];
 
   const showDropzone = currentMode !== 'manual';
@@ -225,26 +237,26 @@ export default function LeftPanel() {
       className="surface-bg border-r border-border overflow-y-auto flex flex-col h-full"
     >
       {/* Header */}
-      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between flex-shrink-0">
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between flex-shrink-0">
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Conferir Rolo</span>
         <div className="flex gap-1.5">
           {undoStack.length > 0 && (
-            <button onClick={handleUndo} className="text-xs px-2 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors">↩ Desfazer</button>
+            <button onClick={handleUndo} className="text-[11px] px-2 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors">↩</button>
           )}
-          <button onClick={resetForm} className="text-xs px-2 py-1 rounded-md hover:bg-surface-2 transition-colors text-muted-foreground">✕ Limpar</button>
+          <button onClick={resetForm} className="text-[11px] px-2 py-1 rounded-md hover:bg-surface-2 transition-colors text-muted-foreground">✕</button>
         </div>
       </div>
 
-      <div className="p-4 flex-1 overflow-y-auto space-y-3">
+      <div className="p-3 flex-1 overflow-y-auto space-y-2.5">
         {/* Mode Toggle */}
         <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
           {modes.map(m => (
             <button
               key={m.key}
               onClick={() => setMode(m.key)}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+              className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 ${
                 currentMode === m.key
-                  ? 'surface-bg text-navy-3 shadow-sm'
+                  ? 'surface-bg text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -261,9 +273,9 @@ export default function LeftPanel() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="ai-status-box text-xs leading-relaxed"
+              className="ai-status-box text-[11px] leading-relaxed"
             >
-              Preencha os campos abaixo diretamente. Modo rápido — sem foto, sem API.
+              Preencha os campos abaixo. Modo rápido — sem foto.
             </motion.div>
           )}
         </AnimatePresence>
@@ -282,36 +294,89 @@ export default function LeftPanel() {
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
               >
-                {cameraActive && <video ref={videoRef} autoPlay playsInline muted className="w-full h-[150px] object-cover rounded-xl" />}
-                {preview && !cameraActive && <img src={preview} alt="" className="w-full h-[150px] object-cover rounded-xl" />}
+                {/* Live camera preview */}
+                {cameraActive && (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover rounded-xl absolute inset-0"
+                    style={{ transform: 'scaleX(1)' }}
+                  />
+                )}
+
+                {/* Image preview */}
+                {preview && !cameraActive && (
+                  <img src={preview} alt="Preview da etiqueta" className="w-full h-full object-cover rounded-xl" />
+                )}
+
+                {/* Empty state */}
                 {!preview && !cameraActive && (
                   <div className="text-center p-3 select-none">
                     <div className="text-xl opacity-35 mb-1">📷</div>
-                    <div className="text-xs font-medium text-muted-foreground">Arraste uma imagem ou cole (Ctrl+V)</div>
-                    <div className="text-[11px] text-muted-foreground/60 mt-1">JPG · PNG · WEBP</div>
-                    <div className="flex gap-2 justify-center mt-3">
-                      <button onClick={(e) => { e.stopPropagation(); openCamera(); }} className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-surface-2 transition-colors bg-surface">📷 Câmera</button>
-                      <button onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-surface-2 transition-colors bg-surface">🖼 Galeria</button>
+                    <div className="text-[11px] font-medium text-muted-foreground">Tire uma foto ou selecione da galeria</div>
+                    <div className="text-[10px] text-muted-foreground/60 mt-0.5">JPG · PNG · WEBP · Ctrl+V para colar</div>
+                    <div className="flex gap-2 justify-center mt-2.5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openNativeCamera(); }}
+                        className="text-[11px] px-3 py-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors bg-surface font-medium"
+                      >
+                        📷 Câmera
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                        className="text-[11px] px-3 py-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors bg-surface font-medium"
+                      >
+                        🖼 Galeria
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }} />
+
+              {/* Hidden file inputs */}
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }}
+              />
               <canvas ref={canvasRef} className="hidden" />
 
+              {/* Controls when camera or preview active */}
               {(preview || cameraActive) && (
-                <div className="flex gap-1.5 mt-2 flex-wrap">
-                  {!cameraActive && (
+                <div className="flex gap-1.5 mt-2">
+                  {cameraActive ? (
                     <>
-                      <button className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors" onClick={openCamera}>📷 Câmera</button>
-                      <button className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-surface-2 transition-colors" onClick={() => fileInputRef.current?.click()}>🖼 Galeria</button>
-                      <button className="text-xs px-2.5 py-1 rounded-md hover:bg-surface-2 transition-colors text-muted-foreground ml-auto" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}>✕</button>
+                      <button
+                        className="flex-1 text-[11px] px-3 py-2 rounded-lg navy-3-bg text-primary-foreground font-medium"
+                        onClick={snapPhoto}
+                      >
+                        📸 Capturar
+                      </button>
+                      <button
+                        className="text-[11px] px-3 py-2 rounded-lg border border-border hover:bg-surface-2"
+                        onClick={stopCamera}
+                      >
+                        ✕
+                      </button>
                     </>
-                  )}
-                  {cameraActive && (
+                  ) : (
                     <>
-                      <button className="text-xs px-3 py-1.5 rounded-md navy-3-bg text-primary-foreground w-full" onClick={snapPhoto}>📸 Capturar</button>
-                      <button className="text-xs px-3 py-1.5 rounded-md border border-border w-full mt-1" onClick={stopCamera}>✕ Cancelar</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openNativeCamera}>📷</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={() => fileInputRef.current?.click()}>🖼</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openLiveCamera}>🎥 Ao vivo</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg hover:bg-surface-2 transition-colors text-muted-foreground ml-auto" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}>✕</button>
                     </>
                   )}
                 </div>
@@ -327,7 +392,7 @@ export default function LeftPanel() {
                 <button
                   onClick={currentMode === 'gemini' ? processGemini : processOpenRouter}
                   disabled={aiLoading}
-                  className="w-full mt-2 h-10 navy-3-bg text-primary-foreground rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="w-full mt-2 h-10 navy-3-bg text-primary-foreground rounded-lg text-[11px] sm:text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {aiLoading ? (
                     <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin-fast" />
@@ -335,7 +400,6 @@ export default function LeftPanel() {
                     <span>{currentMode === 'gemini' ? '✦' : '⚡'}</span>
                   )}
                   <span>{aiLoading ? 'Enviando…' : `Processar com ${currentMode === 'gemini' ? 'Gemini' : 'OpenRouter'}`}</span>
-                  {!aiLoading && <span className="kbd ml-auto opacity-45">Enter</span>}
                 </button>
               )}
 
@@ -357,46 +421,46 @@ export default function LeftPanel() {
 
         {/* Form Fields */}
         <div className="space-y-2">
-          <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Dados do Rolo</div>
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Dados do Rolo</div>
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Item / Referência</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Item / Referência</label>
             <input
               value={item} onChange={e => setItem(e.target.value)}
-              className="w-full border border-border rounded-lg px-2.5 py-1.5 text-sm font-mono font-medium bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              className="w-full border border-border rounded-lg px-2.5 py-2 text-sm font-mono font-medium bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="Código do tecido" autoComplete="off"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">M Linear</label>
               <input
                 type="number" step="0.1" value={ml} onChange={e => setMl(e.target.value)}
-                className="w-full border border-border rounded-lg px-2.5 py-1.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                placeholder="76.9" autoComplete="off"
+                className="w-full border border-border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                placeholder="76.9" autoComplete="off" inputMode="decimal"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m)</label>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Largura (m)</label>
               <input
                 type="number" step="0.01" value={larg} onChange={e => setLarg(e.target.value)}
-                className="w-full border border-border rounded-lg px-2.5 py-1.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                placeholder="1.40" autoComplete="off"
+                className="w-full border border-border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                placeholder="1.40" autoComplete="off" inputMode="decimal"
               />
             </div>
           </div>
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Endereço</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Endereço</label>
             <input
               value={endereco} onChange={e => setEndereco(e.target.value.toUpperCase())}
-              className="w-full border border-border rounded-lg px-2.5 py-1.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all uppercase"
+              className="w-full border border-border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all uppercase"
               placeholder="TEC01.A.N06" autoComplete="off"
             />
           </div>
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Cor (opcional)</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Cor (opcional)</label>
             <input
               value={obs} onChange={e => setObs(e.target.value)}
-              className="w-full border border-border rounded-lg px-2.5 py-1.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              className="w-full border border-border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="Azul marinho, LT.GREY…" autoComplete="off"
             />
           </div>
@@ -416,7 +480,7 @@ export default function LeftPanel() {
 
         {/* Lote */}
         <div>
-          <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Lote</div>
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Lote</div>
           <div
             className="lote-display"
             onClick={() => {
@@ -426,8 +490,8 @@ export default function LeftPanel() {
               }
             }}
           >
-            <span>{lotePreview || '—'}</span>
-            <span className="text-[10px] opacity-35 flex-shrink-0">Ctrl+L copiar</span>
+            <span className="truncate">{lotePreview || '—'}</span>
+            <span className="text-[10px] opacity-35 flex-shrink-0">copiar</span>
           </div>
         </div>
 
@@ -438,7 +502,6 @@ export default function LeftPanel() {
           className="w-full h-11 bg-primary text-primary-foreground rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
         >
           ➕ Adicionar à Tabela
-          <span className="kbd opacity-45 ml-auto text-[10px]">Ctrl+Enter</span>
         </motion.button>
 
         {/* Duplicate warning */}
@@ -448,10 +511,10 @@ export default function LeftPanel() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-md px-3 py-2 text-xs border"
+              className="rounded-md px-3 py-2 text-[11px] border"
               style={{ background: '#FFF8ED', borderColor: '#F5C97A', color: '#7A5B10' }}
             >
-              ⚠️ <b>Possível duplicata</b> — este item já existe na tabela.
+              ⚠️ <b>Possível duplicata</b> — item já existe na tabela.
             </motion.div>
           )}
         </AnimatePresence>
