@@ -518,11 +518,46 @@ export default function LeftPanel() {
           </div>
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Endereço</label>
-            <input
-              value={endereco} onChange={e => setEndereco(e.target.value.toUpperCase())}
-              className="w-full border border-border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all uppercase"
-              placeholder="TEC01.A.N06" autoComplete="off"
-            />
+            <div className="flex gap-1.5">
+              <input
+                value={endereco} onChange={e => handleEnderecoChange(e.target.value)}
+                className={`flex-1 border rounded-lg px-2.5 py-2 text-sm bg-surface outline-none focus:ring-2 transition-all uppercase font-mono ${
+                  enderecoError ? 'border-destructive focus:border-destructive focus:ring-destructive/10' : 'border-border focus:border-primary focus:ring-primary/10'
+                }`}
+                placeholder="TEC01.A.N03" autoComplete="off"
+              />
+              <button
+                onClick={startScanner}
+                className={`px-2.5 py-2 rounded-lg border transition-colors text-sm ${
+                  scannerActive ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-surface-2 bg-surface'
+                }`}
+                title="Bipar código de barras"
+              >
+                {scannerActive ? '⏹' : '📱'}
+              </button>
+            </div>
+            {enderecoError && (
+              <div className="text-[10px] text-destructive mt-0.5 font-medium">{enderecoError}</div>
+            )}
+            {/* Barcode scanner viewport */}
+            <AnimatePresence>
+              {scannerActive && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-1.5 overflow-hidden"
+                >
+                  <div id="endereco-scanner" ref={scannerContainerRef} className="w-full rounded-lg overflow-hidden border border-border" />
+                  <button
+                    onClick={stopScanner}
+                    className="w-full mt-1 text-[11px] px-2 py-1 rounded-lg border border-border hover:bg-surface-2 text-muted-foreground"
+                  >
+                    ✕ Fechar scanner
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Cor (opcional)</label>
