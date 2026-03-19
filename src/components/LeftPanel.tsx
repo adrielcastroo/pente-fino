@@ -274,6 +274,7 @@ export default function LeftPanel() {
   const handleAdd = () => {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (!endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
+    if (!ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
     const m2Val = parseFloat((mlNum * lgNum).toFixed(3));
     const loteBase = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
     const lote = gerarLoteUnico(registros, loteBase);
