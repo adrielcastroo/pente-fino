@@ -443,7 +443,8 @@ export default function LeftPanel() {
                     <>
                       <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openNativeCamera}>📷</button>
                       <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={() => fileInputRef.current?.click()}>🖼</button>
-                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openLiveCamera}>🎥 Ao vivo</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors" onClick={openLiveCamera}>🎥</button>
+                      <button className="text-[11px] px-2.5 py-1 rounded-lg border border-border hover:bg-surface-2 transition-colors text-green-600" onClick={savePhotoLocally} title="Salvar foto no dispositivo">💾</button>
                       <button className="text-[11px] px-2.5 py-1 rounded-lg hover:bg-surface-2 transition-colors text-muted-foreground ml-auto" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}>✕</button>
                     </>
                   )}
