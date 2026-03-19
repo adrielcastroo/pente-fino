@@ -57,6 +57,69 @@ export default function LeftPanel() {
   const lotePreview = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
+  // Regex for address pattern: TEC0X.X.N0X
+  const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
+
+  const validateEndereco = (val: string) => {
+    if (!val) { setEnderecoError(''); return; }
+    if (!ENDERECO_REGEX.test(val)) {
+      setEnderecoError('Padrão: TEC01.A.N03');
+    } else {
+      setEnderecoError('');
+    }
+  };
+
+  const handleEnderecoChange = (val: string) => {
+    const upper = val.toUpperCase();
+    setEndereco(upper);
+    validateEndereco(upper);
+  };
+
+  // Barcode scanner for address
+  const startScanner = async () => {
+    if (scannerActive) { stopScanner(); return; }
+    setScannerActive(true);
+    try {
+      const scanner = new Html5Qrcode('endereco-scanner');
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 100 } },
+        (decodedText) => {
+          const upper = decodedText.toUpperCase().trim();
+          setEndereco(upper);
+          validateEndereco(upper);
+          addToast(`Código lido: ${upper}`, 'ok');
+          stopScanner();
+        },
+        () => {}
+      );
+    } catch (err: any) {
+      addToast('Erro ao abrir scanner: ' + (err?.message || err), 'err');
+      setScannerActive(false);
+    }
+  };
+
+  const stopScanner = () => {
+    scannerRef.current?.stop().catch(() => {});
+    scannerRef.current?.clear();
+    scannerRef.current = null;
+    setScannerActive(false);
+  };
+
+  // Save photo locally to device
+  const savePhotoLocally = () => {
+    if (!preview) { addToast('Nenhuma foto para salvar.', 'warn'); return; }
+    const link = document.createElement('a');
+    link.href = preview;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    link.download = `rolo_${item || 'foto'}_${timestamp}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast('Foto salva no dispositivo', 'ok');
+  };
+
   const resetForm = () => {
     setItem(''); setMl(''); setLarg(''); setEndereco(''); setObs('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
