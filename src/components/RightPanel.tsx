@@ -18,7 +18,7 @@ function highlight(text: string, q: string) {
 }
 
 export default function RightPanel() {
-  const { registros, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack } = useAppStore();
+  const { registros, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack, clearAll } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   let rows = [...registros];
@@ -56,7 +56,8 @@ export default function RightPanel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
     XLSX.writeFile(wb, `conferencia_NFe_${nfe}.xlsx`);
-    addToast(`Excel: ${registros.length} rolos exportados`, 'ok');
+    clearAll();
+    addToast(`Excel exportado e tabela limpa (${registros.length} rolos)`, 'ok');
   };
 
   const handleClearAll = () => {

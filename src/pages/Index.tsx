@@ -12,7 +12,7 @@ import { PenLine, Table } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function Index() {
-  const { loadFromStorage, undo, registros } = useAppStore();
+  const { loadFromStorage, undo, registros, clearAll } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -48,7 +48,8 @@ export default function Index() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
         XLSX.writeFile(wb, `conferencia_NFe_${nfe}.xlsx`);
-        addToast(`Excel: ${regs.length} rolos exportados`, 'ok');
+        clearAll();
+        addToast(`Excel exportado e tabela limpa (${regs.length} rolos)`, 'ok');
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !typing) {
         e.preventDefault();
@@ -59,7 +60,7 @@ export default function Index() {
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [undo, addToast, configOpen, shortcutsOpen]);
+  }, [undo, addToast, clearAll, configOpen, shortcutsOpen]);
 
   const showTabs = isMobile || isTablet;
 
