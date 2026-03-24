@@ -5,7 +5,7 @@ import { useToastStore } from '@/hooks/useToast';
 import { Settings, Download, Package, Ruler, Square } from 'lucide-react';
 
 export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) {
-  const { nfe, setNfe, registros } = useAppStore();
+  const { nfe, setNfe, registros, clearAll } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   const totalML = registros.reduce((a, r) => a + r.mLinear, 0);
@@ -21,7 +21,8 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
     XLSX.writeFile(wb, `conferencia_NFe_${nfeVal}.xlsx`);
-    addToast(`Excel: ${registros.length} rolos exportados`, 'ok');
+    clearAll();
+    addToast(`Excel exportado e tabela limpa (${registros.length} rolos)`, 'ok');
   };
 
   return (
