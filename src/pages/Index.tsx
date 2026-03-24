@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import TopBar from '@/components/TopBar';
 import LeftPanel from '@/components/LeftPanel';
 import RightPanel from '@/components/RightPanel';
 import ToastContainer from '@/components/ToastContainer';
 import ConfigModal from '@/components/ConfigModal';
 import ShortcutsModal from '@/components/ShortcutsModal';
+import { PenLine, Table } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function Index() {
@@ -17,6 +18,7 @@ export default function Index() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'table'>('form');
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
 
   useEffect(() => {
     loadFromStorage();
@@ -59,34 +61,38 @@ export default function Index() {
     return () => document.removeEventListener('keydown', handler);
   }, [undo, addToast, configOpen, shortcutsOpen]);
 
+  const showTabs = isMobile || isTablet;
+
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden">
       <TopBar onOpenConfig={() => setConfigOpen(true)} />
 
-      {/* Mobile tab bar */}
-      {isMobile && (
+      {/* Mobile/Tablet tab bar */}
+      {showTabs && (
         <div className="flex border-b border-border bg-surface flex-shrink-0">
           <button
             onClick={() => setMobileTab('form')}
-            className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+            className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
               mobileTab === 'form'
                 ? 'text-primary border-b-2 border-primary'
                 : 'text-muted-foreground'
             }`}
           >
-            ✏️ Conferir
+            <PenLine className="w-3.5 h-3.5" />
+            Conferir
           </button>
           <button
             onClick={() => setMobileTab('table')}
-            className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors relative ${
+            className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors relative flex items-center justify-center gap-1.5 ${
               mobileTab === 'table'
                 ? 'text-primary border-b-2 border-primary'
                 : 'text-muted-foreground'
             }`}
           >
-            📋 Tabela
+            <Table className="w-3.5 h-3.5" />
+            Tabela
             {registros.length > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
                 {registros.length}
               </span>
             )}
@@ -94,8 +100,8 @@ export default function Index() {
         </div>
       )}
 
-      {/* Desktop: side by side / Mobile: tabbed */}
-      {isMobile ? (
+      {/* Layout */}
+      {showTabs ? (
         <div className="flex-1 overflow-hidden">
           {mobileTab === 'form' ? <LeftPanel /> : <RightPanel />}
         </div>
