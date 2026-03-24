@@ -102,7 +102,7 @@ export default function LeftPanel() {
     try {
       const scanner = new Html5Qrcode('endereco-scanner-file');
       const decodedText = await scanner.scanFile(file, true);
-      scanner.clear().catch(() => {});
+      scanner.clear();
       const upper = decodedText.toUpperCase().trim();
       setEndereco(upper);
       validateEndereco(upper);
