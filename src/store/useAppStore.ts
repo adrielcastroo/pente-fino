@@ -21,12 +21,12 @@ interface UndoEntry {
 interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
-  currentMode: 'manual' | 'gemini' | 'openrouter';
+  currentMode: 'manual' | 'openrouter';
   nfe: string;
   searchQuery: string;
   sortBy: string;
 
-  setMode: (mode: 'manual' | 'gemini' | 'openrouter') => void;
+  setMode: (mode: 'manual' | 'openrouter') => void;
   setNfe: (nfe: string) => void;
   setSearchQuery: (q: string) => void;
   setSortBy: (s: string) => void;

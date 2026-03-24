@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Html5Qrcode } from 'html5-qrcode';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Trash2, Sparkles, Zap, SquarePen, Copy
+  Plus, Trash2, Zap, SquarePen, Copy
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia os 3 campos abaixo.
@@ -45,13 +45,11 @@ export default function LeftPanel() {
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const scannerInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
-  const [scannerActive, setScannerActive] = useState(false);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const [pendingScannerStart, setPendingScannerStart] = useState(false);
   const [enderecoError, setEnderecoError] = useState('');
 
   const mlNum = parseFloat(ml) || 0;
@@ -60,6 +58,28 @@ export default function LeftPanel() {
   const mlFmt = formatML(mlNum);
   const lotePreview = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
+
+  const getPhotoFileName = useCallback(() => {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+    const safeItem = (item || 'rolo').trim().replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 24);
+    return `conferencia_${date}_${safeItem}_${time}.jpg`;
+  }, [item]);
+
+  const downloadDataUrl = useCallback((dataUrl: string, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, []);
+
+  const autoSaveCapturedPhoto = useCallback((dataUrl: string) => {
+    downloadDataUrl(dataUrl, getPhotoFileName());
+    addToast('Foto salva automaticamente no dispositivo', 'ok');
+  }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
 
@@ -78,63 +98,27 @@ export default function LeftPanel() {
     validateEndereco(upper);
   };
 
-  // Start scanner AFTER DOM element is rendered
-  useEffect(() => {
-    if (!pendingScannerStart || !scannerActive) return;
-    const el = document.getElementById('endereco-scanner');
-    if (!el) return;
-
-    const startAsync = async () => {
-      try {
-        const scanner = new Html5Qrcode('endereco-scanner');
-        scannerRef.current = scanner;
-        await scanner.start(
-          { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 250, height: 100 } },
-          (decodedText) => {
-            const upper = decodedText.toUpperCase().trim();
-            setEndereco(upper);
-            validateEndereco(upper);
-            addToast(`Código lido: ${upper}`, 'ok');
-            stopScanner();
-          },
-          () => {}
-        );
-      } catch (err: any) {
-        addToast('Erro ao abrir scanner: ' + (err?.message || err), 'err');
-        setScannerActive(false);
-      }
-      setPendingScannerStart(false);
-    };
-
-    // Small delay to ensure DOM is painted
-    const timer = setTimeout(startAsync, 150);
-    return () => clearTimeout(timer);
-  }, [pendingScannerStart, scannerActive]);
-
-  const startScanner = () => {
-    if (scannerActive) { stopScanner(); return; }
-    setScannerActive(true);
-    setPendingScannerStart(true);
+  const scanEnderecoFromFile = async (file: File) => {
+    try {
+      const scanner = new Html5Qrcode('endereco-scanner-file');
+      const decodedText = await scanner.scanFile(file, true);
+      scanner.clear();
+      const upper = decodedText.toUpperCase().trim();
+      setEndereco(upper);
+      validateEndereco(upper);
+      addToast(`Código lido: ${upper}`, 'ok');
+    } catch {
+      addToast('Não foi possível ler o QR Code da imagem capturada.', 'err');
+    }
   };
 
-  const stopScanner = () => {
-    scannerRef.current?.stop().catch(() => {});
-    scannerRef.current?.clear();
-    scannerRef.current = null;
-    setScannerActive(false);
-    setPendingScannerStart(false);
+  const startScanner = () => {
+    scannerInputRef.current?.click();
   };
 
   const savePhotoLocally = () => {
     if (!preview) { addToast('Nenhuma foto para salvar.', 'warn'); return; }
-    const link = document.createElement('a');
-    link.href = preview;
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    link.download = `rolo_${item || 'foto'}_${timestamp}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadDataUrl(preview, getPhotoFileName());
     addToast('Foto salva no dispositivo', 'ok');
   };
 
@@ -143,19 +127,19 @@ export default function LeftPanel() {
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
-    stopScanner();
   };
 
-  const loadFile = useCallback((file: File) => {
+  const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
     setFotoMime(file.type || 'image/jpeg');
     const reader = new FileReader();
     reader.onload = (ev) => {
       const result = ev.target?.result as string;
       setFotoB64(result.split(',')[1]);
       setPreview(result);
+      if (options?.autoSave) autoSaveCapturedPhoto(result);
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [autoSaveCapturedPhoto]);
 
   const openNativeCamera = () => { cameraInputRef.current?.click(); };
 
@@ -192,6 +176,7 @@ export default function LeftPanel() {
     setFotoB64(url.split(',')[1]);
     setFotoMime('image/jpeg');
     setPreview(url);
+    autoSaveCapturedPhoto(url);
     stopCamera();
   };
 
@@ -227,34 +212,6 @@ export default function LeftPanel() {
     if (parsed.cor && parsed.cor !== 'null' && !obs) setObs(parsed.cor);
     const cor = parsed.cor && parsed.cor !== 'null' ? ' · Cor: ' + parsed.cor : '';
     return `✓ ${provider}: ${parsed.item || '—'} · Larg ${largM > 0 ? largM.toFixed(2) + 'm' : '—'} · M.Lin ${parsed.metragem_linear || '—'}m${cor}`;
-  };
-
-  const processGemini = async () => {
-    if (!fotoB64) { addToast('Adicione uma foto primeiro.', 'warn'); return; }
-    const key = localStorage.getItem('cft4_key') || '';
-    if (!key) { addToast('Configure a chave Gemini em ⚙️ API.', 'warn'); return; }
-    const model = localStorage.getItem('cft4_model') || 'gemini-2.0-flash-lite';
-    setAiLoading(true); setProgress(30); setAiStatus(null);
-    try {
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: fotoMime, data: fotoB64 } }, { text: VISION_PROMPT }] }], generationConfig: { temperature: 0.1, maxOutputTokens: 300 } })
-      });
-      setProgress(80);
-      if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${resp.status}`); }
-      const data = await resp.json();
-      const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(raw);
-      const summary = applyResult(parsed, 'Gemini');
-      setProgress(100); setTimeout(() => setProgress(0), 700);
-      setAiStatus({ msg: summary, type: 'ok' });
-      addToast('Gemini processou com sucesso', 'ok');
-    } catch (e: any) {
-      setProgress(0);
-      setAiStatus({ msg: '❌ ' + e.message, type: 'err' });
-      addToast('Erro Gemini: ' + e.message, 'err');
-    }
-    setAiLoading(false);
   };
 
   const processOpenRouter = async () => {
@@ -307,8 +264,7 @@ export default function LeftPanel() {
 
   const modes = [
     { key: 'manual' as const, label: 'Manual', icon: SquarePen },
-    { key: 'gemini' as const, label: 'Gemini', icon: Sparkles },
-    { key: 'openrouter' as const, label: 'OR', icon: Zap },
+    { key: 'openrouter' as const, label: 'IA', icon: Zap },
   ];
 
   const showDropzone = currentMode !== 'manual';
@@ -438,7 +394,7 @@ export default function LeftPanel() {
                 accept="image/*"
                 capture="environment"
                 className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }}
+                onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f, { autoSave: true }); e.target.value = ''; }}
               />
               <input
                 ref={fileInputRef}
@@ -447,6 +403,15 @@ export default function LeftPanel() {
                 className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }}
               />
+              <input
+                ref={scannerInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) void scanEnderecoFromFile(f); e.target.value = ''; }}
+              />
+              <div id="endereco-scanner-file" className="hidden" />
               <canvas ref={canvasRef} className="hidden" />
 
               {/* Controls when camera or preview active */}
@@ -500,16 +465,16 @@ export default function LeftPanel() {
               {/* AI Button */}
               {preview && !cameraActive && (
                 <button
-                  onClick={currentMode === 'gemini' ? processGemini : processOpenRouter}
+                  onClick={processOpenRouter}
                   disabled={aiLoading}
                   className="w-full mt-2.5 h-11 navy-3-bg text-primary-foreground rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {aiLoading ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-fast" />
                   ) : (
-                    currentMode === 'gemini' ? <Sparkles className="w-4 h-4" /> : <Zap className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                   )}
-                  <span>{aiLoading ? 'Enviando…' : `Processar com ${currentMode === 'gemini' ? 'Gemini' : 'OpenRouter'}`}</span>
+                  <span>{aiLoading ? 'Enviando…' : 'Processar com OpenRouter'}</span>
                 </button>
               )}
 
@@ -570,29 +535,14 @@ export default function LeftPanel() {
               />
               <button
                 onClick={startScanner}
-                className={`px-3 py-2.5 rounded-lg border transition-colors flex items-center justify-center ${
-                  scannerActive ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-surface-2 bg-surface'
-                }`}
-                title="Bipar código de barras"
+                className="px-3 py-2.5 rounded-lg border border-border hover:bg-surface-2 bg-surface transition-colors flex items-center justify-center"
+                title="Bipar endereço via câmera"
               >
                 <ScanBarcode className="w-5 h-5" />
               </button>
             </div>
             {enderecoError && (
               <div className="text-[10px] text-destructive mt-1 font-medium">{enderecoError}</div>
-            )}
-            {/* Barcode scanner viewport */}
-            {scannerActive && (
-              <div className="mt-2 overflow-hidden">
-                <div id="endereco-scanner" className="w-full rounded-lg overflow-hidden border border-border" style={{ minHeight: 200 }} />
-                <button
-                  onClick={stopScanner}
-                  className="w-full mt-1.5 flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-border hover:bg-surface-2 text-muted-foreground"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Fechar scanner
-                </button>
-              </div>
             )}
           </div>
           <div>
