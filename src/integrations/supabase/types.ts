@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      conferences: {
+        Row: {
+          conferente: string
+          created_at: string
+          id: string
+          processo: string
+        }
+        Insert: {
+          conferente?: string
+          created_at?: string
+          id?: string
+          processo: string
+        }
+        Update: {
+          conferente?: string
+          created_at?: string
+          id?: string
+          processo?: string
+        }
+        Relationships: []
+      }
+      registros: {
+        Row: {
+          conference_id: string | null
+          created_at: string
+          endereco: string
+          id: string
+          item: string
+          largura: number
+          lote: string
+          lote_sistema: string
+          m_linear: number
+          m2: number
+        }
+        Insert: {
+          conference_id?: string | null
+          created_at?: string
+          endereco?: string
+          id?: string
+          item: string
+          largura?: number
+          lote?: string
+          lote_sistema?: string
+          m_linear?: number
+          m2?: number
+        }
+        Update: {
+          conference_id?: string | null
+          created_at?: string
+          endereco?: string
+          id?: string
+          item?: string
+          largura?: number
+          lote?: string
+          lote_sistema?: string
+          m_linear?: number
+          m2?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registros_conference_id_fkey"
+            columns: ["conference_id"]
+            isOneToOne: false
+            referencedRelation: "conferences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
