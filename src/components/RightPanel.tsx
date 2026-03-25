@@ -125,11 +125,11 @@ export default function RightPanel() {
               <tr>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[38px]">#</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Item</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M²</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M Lin</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Larg.</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lote Sist.</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M Lin</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M²</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lote Final</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></th>
               </tr>
             </thead>
