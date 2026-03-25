@@ -48,8 +48,8 @@ export default function RightPanel() {
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
     const proc = useAppStore.getState().processo || 'sem_proc';
-    const headers = ['Item/Referência', 'M²', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch', 'Lote Sistema'];
-    const data = registros.map(r => [r.item, r.m2, r.mLinear, r.largura, r.endereco, r.lote, r.loteSistema]);
+    const headers = ['Item/Referência', 'Largura', 'Endereço', 'M Linear', 'M²', 'Lote/Batch', 'Lote Final (Sistema)'];
+    const data = registros.map(r => [r.item, r.largura, r.endereco, r.mLinear, r.m2, r.lote, r.loteSistema]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }, { wch: 36 }];
     const wb = XLSX.utils.book_new();
