@@ -2,25 +2,25 @@ import { useAppStore, formatML } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { useToastStore } from '@/hooks/useToast';
-import { Settings, Download, Package, Ruler } from 'lucide-react';
+import { Settings, Download, Package, Ruler, User } from 'lucide-react';
 
 export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) {
-  const { nfe, setNfe, registros, archiveAndClear } = useAppStore();
+  const { processo, setProcesso, conferente, setConferente, registros, archiveAndClear } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const totalML = registros.reduce((a, r) => a + r.mLinear, 0);
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
-    const nfeVal = nfe || 'sem_nfe';
-    const headers = ['Item/Referência', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch'];
-    const rows = registros.map(r => [r.item, r.mLinear, r.largura, r.endereco, r.lote]);
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }];
+    if (!processo) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
+    const headers = ['Item/Referência', 'M²', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch', 'Lote Sistema'];
+    const data = registros.map(r => [r.item, r.m2, r.mLinear, r.largura, r.endereco, r.lote, r.loteSistema]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }, { wch: 36 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
-    XLSX.writeFile(wb, `conferencia_NFe_${nfeVal}.xlsx`);
+    XLSX.writeFile(wb, `conferencia_PROC_${processo.replace(/[/\\]/g, '_')}.xlsx`);
     const count = registros.length;
-    archiveAndClear(`NFe ${nfeVal}`);
+    await archiveAndClear(`PROC ${processo}`);
     addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
   };
 
@@ -29,7 +29,7 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="topbar-bg text-primary-foreground flex items-center gap-2 sm:gap-4 px-3 sm:px-5 h-12 sm:h-14 sticky top-0 z-50"
+      className="topbar-bg text-primary-foreground flex items-center gap-2 sm:gap-3 px-3 sm:px-5 h-12 sm:h-14 sticky top-0 z-50"
       style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
       <div className="flex items-center gap-2 flex-shrink-0">
@@ -43,8 +43,26 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
       </div>
 
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider hidden sm:inline">NFe</span>
-        <input className="glass-input font-mono font-medium w-[80px] sm:w-[140px] text-xs" value={nfe} onChange={e => setNfe(e.target.value)} placeholder="NFe" autoComplete="off" />
+        <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider hidden sm:inline">PROC</span>
+        <input
+          className="glass-input font-mono font-medium w-[100px] sm:w-[140px] text-xs"
+          value={processo}
+          onChange={e => setProcesso(e.target.value)}
+          placeholder="Processo *"
+          autoComplete="off"
+          required
+        />
+      </div>
+
+      <div className="hidden sm:flex items-center gap-1.5">
+        <User className="w-3 h-3 text-white/30" />
+        <input
+          className="glass-input font-medium w-[100px] text-xs"
+          value={conferente}
+          onChange={e => setConferente(e.target.value)}
+          placeholder="Conferente"
+          autoComplete="off"
+        />
       </div>
 
       <div className="flex gap-1 ml-auto items-center">

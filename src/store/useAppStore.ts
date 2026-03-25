@@ -1,19 +1,25 @@
 import { create } from 'zustand';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Registro {
-  id: number;
+  id: string;
   item: string;
-  nfe: string;
+  processo: string;
   endereco: string;
+  m2: number;
   mLinear: number;
   largura: number;
   lote: string;
+  loteSistema: string;
   isNew?: boolean;
+  conference_id?: string | null;
 }
 
 export interface Conference {
   id: string;
   name: string;
+  processo: string;
+  conferente: string;
   date: string;
   registros: Registro[];
 }
@@ -27,25 +33,33 @@ interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
   currentMode: 'manual' | 'openrouter';
-  nfe: string;
+  processo: string;
+  conferente: string;
   searchQuery: string;
   sortBy: string;
   history: Conference[];
+  lockEndereco: boolean;
+  lockedEndereco: string;
 
   setMode: (mode: 'manual' | 'openrouter') => void;
-  setNfe: (nfe: string) => void;
+  setProcesso: (p: string) => void;
+  setConferente: (c: string) => void;
   setSearchQuery: (q: string) => void;
   setSortBy: (s: string) => void;
+  setLockEndereco: (lock: boolean) => void;
+  setLockedEndereco: (e: string) => void;
   addRegistro: (reg: Registro) => void;
-  deleteRegistro: (id: number) => void;
+  deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
   clearAll: () => void;
   loadFromStorage: () => void;
-  archiveAndClear: (name: string) => void;
+  archiveAndClear: (name: string) => Promise<void>;
+  loadHistory: () => Promise<void>;
+  deleteConference: (id: string) => Promise<void>;
+  clearHistory: () => Promise<void>;
 }
 
 const STORAGE_KEY = 'cft4';
-const HISTORY_KEY = 'cft4_history';
 
 function fmtML(v: number): string {
   if (!v || v === 0) return '';
@@ -54,10 +68,6 @@ function fmtML(v: number): string {
 
 function save(registros: Registro[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch {}
-}
-
-function saveHistory(history: Conference[]) {
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
 }
 
 export function formatML(v: number): string {
@@ -75,19 +85,43 @@ export function extractLarguraFromItem(item: string): number {
   return num / 10;
 }
 
+/** Generate Lote Sistema with serial for duplicates */
+export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[]): string {
+  const mlFormatted = fmtML(mLinear) || '0M';
+  const base = `${processo} ${endereco} ${mlFormatted}`;
+  
+  // Count existing registros with same base
+  const count = existingRegistros.filter(r => {
+    const rBase = `${r.processo} ${r.endereco} ${fmtML(r.mLinear) || '0M'}`;
+    return rBase === base;
+  }).length;
+  
+  if (count === 0) return base;
+  return `${base}-${count}`;
+}
+
 export const useAppStore = create<AppState>((set, get) => ({
   registros: [],
   undoStack: [],
   currentMode: 'manual',
-  nfe: '',
+  processo: '',
+  conferente: localStorage.getItem('cft4_conferente') || '',
   searchQuery: '',
   sortBy: '',
   history: [],
+  lockEndereco: false,
+  lockedEndereco: '',
 
   setMode: (mode) => set({ currentMode: mode }),
-  setNfe: (nfe) => set({ nfe }),
+  setProcesso: (p) => set({ processo: p }),
+  setConferente: (c) => {
+    localStorage.setItem('cft4_conferente', c);
+    set({ conferente: c });
+  },
   setSearchQuery: (q) => set({ searchQuery: q }),
   setSortBy: (s) => set({ sortBy: s }),
+  setLockEndereco: (lock) => set({ lockEndereco: lock }),
+  setLockedEndereco: (e) => set({ lockedEndereco: e }),
 
   addRegistro: (reg) => set(state => {
     const newRegs = [...state.registros, reg];
@@ -121,19 +155,110 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ registros: [], undoStack: [] });
   },
 
-  archiveAndClear: (name: string) => {
+  archiveAndClear: async (name: string) => {
     const state = get();
     if (!state.registros.length) return;
-    const conf: Conference = {
-      id: Date.now().toString(),
-      name: name || 'Conferência',
-      date: new Date().toISOString(),
-      registros: [...state.registros],
-    };
-    const newHistory = [conf, ...state.history];
-    saveHistory(newHistory);
-    save([]);
-    set({ registros: [], undoStack: [], history: newHistory });
+
+    try {
+      // Save conference to Supabase
+      const { data: conf, error: confError } = await supabase
+        .from('conferences')
+        .insert({ processo: state.processo || name, conferente: state.conferente })
+        .select()
+        .single();
+
+      if (confError) throw confError;
+
+      // Save registros to Supabase
+      const rows = state.registros.map(r => ({
+        conference_id: conf.id,
+        item: r.item,
+        m2: r.m2,
+        m_linear: r.mLinear,
+        largura: r.largura,
+        endereco: r.endereco,
+        lote: r.lote,
+        lote_sistema: r.loteSistema,
+      }));
+
+      const { error: regError } = await supabase.from('registros').insert(rows);
+      if (regError) throw regError;
+
+      save([]);
+      set({ registros: [], undoStack: [] });
+
+      // Reload history
+      await get().loadHistory();
+    } catch (e) {
+      console.error('Error archiving:', e);
+      // Fallback: still clear local
+      save([]);
+      set({ registros: [], undoStack: [] });
+    }
+  },
+
+  loadHistory: async () => {
+    try {
+      const { data: confs, error } = await supabase
+        .from('conferences')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const history: Conference[] = [];
+      for (const c of confs || []) {
+        const { data: regs } = await supabase
+          .from('registros')
+          .select('*')
+          .eq('conference_id', c.id)
+          .order('created_at', { ascending: true });
+
+        history.push({
+          id: c.id,
+          name: c.processo,
+          processo: c.processo,
+          conferente: c.conferente,
+          date: c.created_at,
+          registros: (regs || []).map(r => ({
+            id: r.id,
+            item: r.item,
+            processo: c.processo,
+            endereco: r.endereco,
+            m2: Number(r.m2),
+            mLinear: Number(r.m_linear),
+            largura: Number(r.largura),
+            lote: r.lote,
+            loteSistema: r.lote_sistema,
+            conference_id: r.conference_id,
+          })),
+        });
+      }
+
+      set({ history });
+    } catch (e) {
+      console.error('Error loading history:', e);
+    }
+  },
+
+  deleteConference: async (id: string) => {
+    try {
+      await supabase.from('registros').delete().eq('conference_id', id);
+      await supabase.from('conferences').delete().eq('id', id);
+      await get().loadHistory();
+    } catch (e) {
+      console.error('Error deleting conference:', e);
+    }
+  },
+
+  clearHistory: async () => {
+    try {
+      await supabase.from('registros').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('conferences').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      set({ history: [] });
+    } catch (e) {
+      console.error('Error clearing history:', e);
+    }
   },
 
   loadFromStorage: () => {
@@ -143,10 +268,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         const registros: Registro[] = JSON.parse(d);
         set({ registros });
       }
-    } catch {}
-    try {
-      const h = localStorage.getItem(HISTORY_KEY);
-      if (h) set({ history: JSON.parse(h) });
     } catch {}
   },
 }));

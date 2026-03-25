@@ -1,27 +1,27 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, extractLarguraFromItem, formatML } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Trash2, Zap, SquarePen, Copy
+  Plus, Trash2, Zap, SquarePen, Copy, Lock, Unlock
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
 ITEM (código do tecido): Item, Ref, Item No, Description, Artigo, Part No
-METRAGEM LINEAR (comprimento): LENGTH, Length, QUANTITY, Q'TY, MTR, Metros
+METRAGEM (M²): LENGTH, Length, QUANTITY, Q'TY, MTR, Metros, M²
 
-Retorne SOMENTE JSON: {"item":"<código>","metragem_linear":<número float ou null>}`;
+Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>}`;
 
 export default function LeftPanel() {
-  const { currentMode, setMode, nfe, registros, addRegistro, undo: undoAction, undoStack } = useAppStore();
+  const { currentMode, setMode, processo, registros, addRegistro, undo: undoAction, undoStack, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   const [item, setItem] = useState('');
-  const [ml, setMl] = useState('');
+  const [m2, setM2] = useState('');
   const [lote, setLote] = useState('');
-  const [endereco, setEndereco] = useState('');
+  const [endereco, setEndereco] = useState(lockedEndereco);
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
   const [preview, setPreview] = useState<string | null>(null);
@@ -37,15 +37,14 @@ export default function LeftPanel() {
   const [cameraActive, setCameraActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Refs for auto-advance
   const itemRef = useRef<HTMLInputElement>(null);
-  const mlRef = useRef<HTMLInputElement>(null);
+  const m2Ref = useRef<HTMLInputElement>(null);
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
-  const mlNum = parseFloat(ml) || 0;
+  const m2Num = parseFloat(m2) || 0;
   const largura = extractLarguraFromItem(item);
-  const mlFmt = formatML(mlNum);
+  const mLinear = largura > 0 ? m2Num / largura : 0;
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
@@ -54,6 +53,13 @@ export default function LeftPanel() {
     if (!val) { setEnderecoError(''); return; }
     setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
   };
+
+  // Sync locked endereco
+  useEffect(() => {
+    if (lockEndereco && lockedEndereco) {
+      setEndereco(lockedEndereco);
+    }
+  }, [lockEndereco, lockedEndereco]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -78,7 +84,8 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setMl(''); setLote(''); setEndereco('');
+    setItem(''); setM2(''); setLote('');
+    if (!lockEndereco) setEndereco('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
@@ -172,21 +179,28 @@ export default function LeftPanel() {
     }
   };
 
-  // When item changes, auto-calc largura
-  const handleItemChange = (val: string) => {
-    setItem(val);
-  };
-
   const handleEnderecoChange = (val: string) => {
     const upper = val.toUpperCase();
     setEndereco(upper);
     validateEndereco(upper);
+    if (lockEndereco) setLockedEndereco(upper);
+  };
+
+  const toggleLockEndereco = () => {
+    if (!lockEndereco) {
+      setLockedEndereco(endereco);
+      setLockEndereco(true);
+      addToast('Endereço travado', 'ok');
+    } else {
+      setLockEndereco(false);
+      addToast('Endereço destravado', 'ok');
+    }
   };
 
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
-    if (parsed.metragem_linear) setMl(parseFloat(parsed.metragem_linear).toFixed(1));
-    return `✓ ${provider}: ${parsed.item || '—'} · M.Lin ${parsed.metragem_linear || '—'}m`;
+    if (parsed.m2) setM2(parseFloat(parsed.m2).toFixed(1));
+    return `✓ ${provider}: ${parsed.item || '—'} · M² ${parsed.m2 || '—'}`;
   };
 
   const processOpenRouter = async () => {
@@ -219,17 +233,24 @@ export default function LeftPanel() {
   };
 
   const handleAdd = () => {
+    const proc = useAppStore.getState().processo;
+    if (!proc) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (!endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (!ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
+
+    const loteSistema = generateLoteSistema(proc, endereco, mLinear, registros);
+
     const reg = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       item,
-      nfe,
+      processo: proc,
       endereco,
-      mLinear: mlNum,
+      m2: m2Num,
+      mLinear,
       largura,
       lote: lote || '',
+      loteSistema,
       isNew: true,
     };
     addRegistro(reg);
@@ -305,7 +326,7 @@ export default function LeftPanel() {
               className="ai-status-box text-xs leading-relaxed"
             >
               <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
-              Use um leitor de código de barras — os campos avançam automaticamente com <kbd className="kbd">Enter</kbd>
+              Bipe cada campo — avança automaticamente com <kbd className="kbd">Enter</kbd>
             </motion.div>
           )}
         </AnimatePresence>
@@ -394,7 +415,7 @@ export default function LeftPanel() {
           )}
         </AnimatePresence>
 
-        {/* Form Fields - Order: Item → M Linear → Lote/Batch → Endereço */}
+        {/* Form Fields - Order: Item → M² → Lote/Batch → Endereço */}
         <div className="space-y-2.5">
           <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <ScanBarcode className="w-3 h-3" /> Dados do Rolo
@@ -406,27 +427,30 @@ export default function LeftPanel() {
             <input
               ref={itemRef}
               value={item}
-              onChange={e => handleItemChange(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, mlRef)}
-              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              onChange={e => setItem(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+              className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="SRC-3003-05-30-EB2" autoComplete="off" autoFocus
             />
             {largura > 0 && (
-              <div className="text-[10px] text-primary mt-1 font-medium">Largura detectada: {largura.toFixed(2)}m</div>
+              <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
             )}
           </div>
 
-          {/* 2. M Linear */}
+          {/* 2. M² (Metro Quadrado) */}
           <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
             <input
-              ref={mlRef}
-              type="number" step="0.1" value={ml}
-              onChange={e => setMl(e.target.value)}
+              ref={m2Ref}
+              type="number" step="0.1" value={m2}
+              onChange={e => setM2(e.target.value)}
               onKeyDown={e => handleFieldKeyDown(e, loteRef)}
-              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="76.9" autoComplete="off" inputMode="decimal"
             />
+            {mLinear > 0 && (
+              <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
+            )}
           </div>
 
           {/* 3. Lote / Batch */}
@@ -436,24 +460,41 @@ export default function LeftPanel() {
               ref={loteRef}
               value={lote}
               onChange={e => setLote(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, enderecoRef)}
-              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
+              className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="Código do lote" autoComplete="off"
             />
           </div>
 
           {/* 4. Endereço */}
           <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Endereço</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</label>
+              <button
+                onClick={toggleLockEndereco}
+                className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
+                  lockEndereco
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title={lockEndereco ? 'Destravar endereço' : 'Travar endereço'}
+              >
+                {lockEndereco ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                {lockEndereco ? 'Travado' : 'Travar'}
+              </button>
+            </div>
             <input
               ref={enderecoRef}
               value={endereco}
               onChange={e => handleEnderecoChange(e.target.value)}
               onKeyDown={e => handleFieldKeyDown(e, null)}
-              className={`w-full border rounded-lg px-3 py-2.5 text-sm bg-card outline-none focus:ring-2 transition-all uppercase font-mono ${
+              className={`w-full border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:ring-2 transition-all uppercase font-mono ${
+                lockEndereco ? 'bg-primary/5 border-primary/30' : ''
+              } ${
                 enderecoError ? 'border-destructive focus:border-destructive focus:ring-destructive/10' : 'border-border focus:border-primary focus:ring-primary/10'
               }`}
               placeholder="TEC01.A.N03" autoComplete="off"
+              readOnly={lockEndereco && !!lockedEndereco}
             />
             {enderecoError && <div className="text-[10px] text-destructive mt-1 font-medium">{enderecoError}</div>}
           </div>
@@ -466,8 +507,16 @@ export default function LeftPanel() {
             <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
           </div>
           <div>
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">NFe</div>
-            <div className="text-sm font-semibold font-mono opacity-50">{nfe || '—'}</div>
+            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M Linear</div>
+            <div className="text-base font-semibold font-mono">{mLinear > 0 ? formatML(mLinear) : '—'}</div>
+          </div>
+          <div className="col-span-2">
+            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
+            <div className="text-xs font-mono opacity-70 truncate">
+              {processo && endereco && mLinear > 0
+                ? generateLoteSistema(processo, endereco, mLinear, registros)
+                : '—'}
+            </div>
           </div>
         </div>
 
@@ -475,9 +524,9 @@ export default function LeftPanel() {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleAdd}
-          className="w-full h-12 bg-primary text-primary-foreground rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          className="w-full h-14 bg-primary text-primary-foreground rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.97]"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           Adicionar à Tabela
         </motion.button>
 
