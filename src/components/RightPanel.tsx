@@ -48,10 +48,10 @@ export default function RightPanel() {
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
     const proc = useAppStore.getState().processo || 'sem_proc';
-    const headers = ['Item/Referência', 'M²', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch', 'Lote Sistema'];
-    const data = registros.map(r => [r.item, r.m2, r.mLinear, r.largura, r.endereco, r.lote, r.loteSistema]);
+    const headers = ['Item/Referência', 'Largura', 'Endereço', 'M Linear', 'M²', 'Lote/Batch', 'Lote Final (Sistema)'];
+    const data = registros.map(r => [r.item, r.largura, r.endereco, r.mLinear, r.m2, r.lote, r.loteSistema]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }, { wch: 36 }];
+    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 24 }, { wch: 36 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
     XLSX.writeFile(wb, `conferencia_PROC_${proc.replace(/[/\\]/g, '_')}.xlsx`);
@@ -125,11 +125,11 @@ export default function RightPanel() {
               <tr>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[38px]">#</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Item</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M²</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M Lin</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Larg.</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lote Sist.</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M Lin</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M²</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lote Final</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></th>
               </tr>
             </thead>
@@ -144,10 +144,10 @@ export default function RightPanel() {
                     className="border-b border-border hover:bg-primary/[0.04] transition-colors">
                     <td className="px-3 py-2.5 text-sm text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2.5 text-sm font-semibold">{highlight(r.item, q)}</td>
-                    <td className="px-3 py-2.5 text-sm font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
-                    <td className="px-3 py-2.5 text-sm font-mono">{formatML(r.mLinear)}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{r.largura > 0 ? r.largura.toFixed(2) + 'm' : '—'}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{highlight(r.endereco, q)}</td>
+                    <td className="px-3 py-2.5 text-sm font-mono">{formatML(r.mLinear)}</td>
+                    <td className="px-3 py-2.5 text-sm font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
                     <td className="px-3 py-2.5 text-sm font-mono max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap">
                       <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>
                     </td>
@@ -169,10 +169,11 @@ export default function RightPanel() {
               <tfoot>
                 <tr className="navy-bg text-primary-foreground font-semibold font-mono text-xs sticky bottom-0">
                   <td colSpan={2} className="px-3 py-2.5">TOTAL — {rows.length} rolo{rows.length !== 1 ? 's' : ''}</td>
-                  <td className="px-3 py-2.5">{totalM2 > 0 ? totalM2.toFixed(1) : '—'}</td>
-                  <td className="px-3 py-2.5">{formatML(totalML)}</td>
                   <td className="px-3 py-2.5">—</td>
-                  <td colSpan={3} className="px-3 py-2.5"></td>
+                  <td className="px-3 py-2.5">—</td>
+                  <td className="px-3 py-2.5">{formatML(totalML)}</td>
+                  <td className="px-3 py-2.5">{totalM2 > 0 ? totalM2.toFixed(1) : '—'}</td>
+                  <td colSpan={2} className="px-3 py-2.5"></td>
                 </tr>
               </tfoot>
             )}

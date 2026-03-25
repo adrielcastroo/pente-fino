@@ -233,8 +233,11 @@ export default function LeftPanel() {
   };
 
   const handleAdd = () => {
-    const proc = useAppStore.getState().processo;
+    const state = useAppStore.getState();
+    const proc = state.processo;
+    const conf = state.conferente;
     if (!proc) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
+    if (!conf) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (!endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (!ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
