@@ -12,10 +12,10 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
     if (!processo) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
-    const headers = ['Item/Referência', 'M²', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch', 'Lote Sistema'];
-    const data = registros.map(r => [r.item, r.m2, r.mLinear, r.largura, r.endereco, r.lote, r.loteSistema]);
+    const headers = ['Item/Referência', 'Largura', 'Endereço', 'M Linear', 'M²', 'Lote/Batch', 'Lote Final (Sistema)'];
+    const data = registros.map(r => [r.item, r.largura, r.endereco, r.mLinear, r.m2, r.lote, r.loteSistema]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }, { wch: 36 }];
+    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 24 }, { wch: 36 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
     XLSX.writeFile(wb, `conferencia_PROC_${processo.replace(/[/\\]/g, '_')}.xlsx`);
