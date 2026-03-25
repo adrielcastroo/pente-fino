@@ -12,7 +12,7 @@ import ShortcutsModal from '@/components/ShortcutsModal';
 import { PenLine, Table, FolderClock } from 'lucide-react';
 
 export default function Index() {
-  const { loadFromStorage, undo } = useAppStore();
+  const { loadFromStorage, undo, loadHistory } = useAppStore();
   const registros = useAppStore(s => s.registros);
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
@@ -21,7 +21,10 @@ export default function Index() {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
-  useEffect(() => { loadFromStorage(); }, [loadFromStorage]);
+  useEffect(() => {
+    loadFromStorage();
+    loadHistory();
+  }, [loadFromStorage, loadHistory]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -63,16 +66,16 @@ export default function Index() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
                   activeTab === tab.key
                     ? 'text-primary border-b-2 border-primary'
                     : 'text-muted-foreground'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
                 {tab.label}
                 {tab.badge && tab.badge > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
                     {tab.badge}
                   </span>
                 )}

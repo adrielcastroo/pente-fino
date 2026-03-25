@@ -26,7 +26,8 @@ export default function RightPanel() {
   if (q) rows = rows.filter(r =>
     r.item.toLowerCase().includes(q) ||
     r.endereco.toLowerCase().includes(q) ||
-    r.lote.toLowerCase().includes(q)
+    r.lote.toLowerCase().includes(q) ||
+    r.loteSistema.toLowerCase().includes(q)
   );
 
   const sortMap: Record<string, (a: any, b: any) => number> = {
@@ -38,23 +39,24 @@ export default function RightPanel() {
   if (sortBy && sortMap[sortBy]) rows.sort(sortMap[sortBy]);
 
   const totalML = rows.reduce((a, r) => a + r.mLinear, 0);
+  const totalM2 = rows.reduce((a, r) => a + r.m2, 0);
 
   const copyText = (t: string) => {
     navigator.clipboard.writeText(t).then(() => addToast('Copiado: ' + t, 'ok'));
   };
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
-    const nfe = useAppStore.getState().nfe || 'sem_nfe';
-    const headers = ['Item/Referência', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch'];
-    const data = registros.map(r => [r.item, r.mLinear, r.largura, r.endereco, r.lote]);
+    const proc = useAppStore.getState().processo || 'sem_proc';
+    const headers = ['Item/Referência', 'M²', 'M Linear', 'Largura', 'Endereço', 'Lote/Batch', 'Lote Sistema'];
+    const data = registros.map(r => [r.item, r.m2, r.mLinear, r.largura, r.endereco, r.lote, r.loteSistema]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    ws['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }];
+    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }, { wch: 36 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
-    XLSX.writeFile(wb, `conferencia_NFe_${nfe}.xlsx`);
+    XLSX.writeFile(wb, `conferencia_PROC_${proc.replace(/[/\\]/g, '_')}.xlsx`);
     const count = registros.length;
-    archiveAndClear(`NFe ${nfe}`);
+    await archiveAndClear(`PROC ${proc}`);
     addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
   };
 
@@ -117,16 +119,17 @@ export default function RightPanel() {
 
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <div className="min-w-[500px]">
+        <div className="min-w-[600px]">
           <table className="w-full border-collapse">
             <thead>
               <tr>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[38px]">#</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Item</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M Linear</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Largura</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M²</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">M Lin</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Larg.</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</th>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lote/Batch</th>
+                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lote Sist.</th>
                 <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></th>
               </tr>
             </thead>
@@ -141,15 +144,16 @@ export default function RightPanel() {
                     className="border-b border-border hover:bg-primary/[0.04] transition-colors">
                     <td className="px-3 py-2.5 text-sm text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2.5 text-sm font-semibold">{highlight(r.item, q)}</td>
+                    <td className="px-3 py-2.5 text-sm font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{formatML(r.mLinear)}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{r.largura > 0 ? r.largura.toFixed(2) + 'm' : '—'}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{highlight(r.endereco, q)}</td>
                     <td className="px-3 py-2.5 text-sm font-mono max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap">
-                      <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.lote)}>{r.lote || '—'}</span>
+                      <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="row-acts">
-                        <button onClick={() => copyText(r.lote)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Copiar lote">
+                        <button onClick={() => copyText(r.loteSistema)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Copiar lote sistema">
                           <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                         </button>
                         <button onClick={() => deleteRegistro(r.id)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Remover">
@@ -165,6 +169,7 @@ export default function RightPanel() {
               <tfoot>
                 <tr className="navy-bg text-primary-foreground font-semibold font-mono text-xs sticky bottom-0">
                   <td colSpan={2} className="px-3 py-2.5">TOTAL — {rows.length} rolo{rows.length !== 1 ? 's' : ''}</td>
+                  <td className="px-3 py-2.5">{totalM2 > 0 ? totalM2.toFixed(1) : '—'}</td>
                   <td className="px-3 py-2.5">{formatML(totalML)}</td>
                   <td className="px-3 py-2.5">—</td>
                   <td colSpan={3} className="px-3 py-2.5"></td>
