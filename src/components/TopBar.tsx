@@ -12,6 +12,7 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
     if (!processo) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
+    if (!conferente) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
     const headers = ['Item/Referência', 'Largura', 'Endereço', 'M Linear', 'M²', 'Lote/Batch', 'Lote Final (Sistema)'];
     const data = registros.map(r => [r.item, r.largura, r.endereco, r.mLinear, r.m2, r.lote, r.loteSistema]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
