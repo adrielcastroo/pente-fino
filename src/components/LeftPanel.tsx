@@ -1,32 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, gerarLoteUnico, formatML } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Html5Qrcode } from 'html5-qrcode';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Trash2, Zap, SquarePen, Copy
 } from 'lucide-react';
 
-const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia os 3 campos abaixo.
+const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
-CAMPO 1 — ITEM (nome ou código do tecido):
-Pode aparecer como: ITEM, Item Name, Item No, Ref, REF, Referência, Description, Product, Artigo, Código, Part No, Style
-→ Capture o nome/código principal.
+ITEM (código do tecido): Item, Ref, Item No, Description, Artigo, Part No
+METRAGEM LINEAR (comprimento): LENGTH, Length, QUANTITY, Q'TY, MTR, Metros
 
-CAMPO 2 — LARGURA (do tecido):
-Pode aparecer como: WIDTH, WIDTH(CM), Width, Largura, LARG, W, ANCHO
-→ Retorne apenas o número em "largura_raw" e a unidade original em "unidade" ("cm" ou "m").
-
-CAMPO 3 — METRAGEM LINEAR (comprimento do rolo):
-Pode aparecer como: LENGTH, Length, QUANTITY, Quantity, Q'TY, Q'TY(Net), QTY, MTR, Metros
-→ Extraia apenas o número principal em metros.
-
-CAMPO EXTRA — COR (opcional):
-Pode aparecer como: COLOR, Colour, Cor
-
-Retorne SOMENTE este JSON válido, sem markdown, sem explicações:
-{"item":"<nome/código>","largura_raw":<número float ou null>,"unidade":"cm ou m","metragem_linear":<número float ou null>,"cor":"<cor ou null>"}`;
+Retorne SOMENTE JSON: {"item":"<código>","metragem_linear":<número float ou null>}`;
 
 export default function LeftPanel() {
   const { currentMode, setMode, nfe, registros, addRegistro, undo: undoAction, undoStack } = useAppStore();
@@ -34,30 +20,40 @@ export default function LeftPanel() {
 
   const [item, setItem] = useState('');
   const [ml, setMl] = useState('');
-  const [larg, setLarg] = useState('');
+  const [lote, setLote] = useState('');
   const [endereco, setEndereco] = useState('');
-  const [obs, setObs] = useState('');
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
   const [preview, setPreview] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStatus, setAiStatus] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [progress, setProgress] = useState(0);
+  const [enderecoError, setEnderecoError] = useState('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const scannerInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
-  const [enderecoError, setEnderecoError] = useState('');
+
+  // Refs for auto-advance
+  const itemRef = useRef<HTMLInputElement>(null);
+  const mlRef = useRef<HTMLInputElement>(null);
+  const loteRef = useRef<HTMLInputElement>(null);
+  const enderecoRef = useRef<HTMLInputElement>(null);
 
   const mlNum = parseFloat(ml) || 0;
-  const lgNum = parseFloat(larg) || 0;
-  const m2 = mlNum * lgNum;
+  const largura = extractLarguraFromItem(item);
   const mlFmt = formatML(mlNum);
-  const lotePreview = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
+
+  const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
+
+  const validateEndereco = (val: string) => {
+    if (!val) { setEnderecoError(''); return; }
+    setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
+  };
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -78,55 +74,15 @@ export default function LeftPanel() {
 
   const autoSaveCapturedPhoto = useCallback((dataUrl: string) => {
     downloadDataUrl(dataUrl, getPhotoFileName());
-    addToast('Foto salva automaticamente no dispositivo', 'ok');
+    addToast('Foto salva automaticamente', 'ok');
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
-  const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
-
-  const validateEndereco = (val: string) => {
-    if (!val) { setEnderecoError(''); return; }
-    if (!ENDERECO_REGEX.test(val)) {
-      setEnderecoError('Padrão: TEC01.A.N03');
-    } else {
-      setEnderecoError('');
-    }
-  };
-
-  const handleEnderecoChange = (val: string) => {
-    const upper = val.toUpperCase();
-    setEndereco(upper);
-    validateEndereco(upper);
-  };
-
-  const scanEnderecoFromFile = async (file: File) => {
-    try {
-      const scanner = new Html5Qrcode('endereco-scanner-file');
-      const decodedText = await scanner.scanFile(file, true);
-      scanner.clear();
-      const upper = decodedText.toUpperCase().trim();
-      setEndereco(upper);
-      validateEndereco(upper);
-      addToast(`Código lido: ${upper}`, 'ok');
-    } catch {
-      addToast('Não foi possível ler o QR Code da imagem capturada.', 'err');
-    }
-  };
-
-  const startScanner = () => {
-    scannerInputRef.current?.click();
-  };
-
-  const savePhotoLocally = () => {
-    if (!preview) { addToast('Nenhuma foto para salvar.', 'warn'); return; }
-    downloadDataUrl(preview, getPhotoFileName());
-    addToast('Foto salva no dispositivo', 'ok');
-  };
-
   const resetForm = () => {
-    setItem(''); setMl(''); setLarg(''); setEndereco(''); setObs('');
+    setItem(''); setMl(''); setLote(''); setEndereco('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
+    setTimeout(() => itemRef.current?.focus(), 50);
   };
 
   const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
@@ -203,15 +159,34 @@ export default function LeftPanel() {
     return () => document.removeEventListener('paste', handlePaste as any);
   }, [handlePaste]);
 
+  // Auto-advance: Enter key moves to next field
+  const handleFieldKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef?.current) {
+        nextRef.current.focus();
+        nextRef.current.select();
+      } else {
+        handleAdd();
+      }
+    }
+  };
+
+  // When item changes, auto-calc largura
+  const handleItemChange = (val: string) => {
+    setItem(val);
+  };
+
+  const handleEnderecoChange = (val: string) => {
+    const upper = val.toUpperCase();
+    setEndereco(upper);
+    validateEndereco(upper);
+  };
+
   const applyResult = (parsed: any, provider: string) => {
-    let largM = parseFloat(parsed.largura_raw) || 0;
-    if (parsed.unidade === 'cm' || largM > 5) largM = largM / 100;
     if (parsed.item) setItem(parsed.item);
-    if (largM > 0) setLarg(largM.toFixed(2));
     if (parsed.metragem_linear) setMl(parseFloat(parsed.metragem_linear).toFixed(1));
-    if (parsed.cor && parsed.cor !== 'null' && !obs) setObs(parsed.cor);
-    const cor = parsed.cor && parsed.cor !== 'null' ? ' · Cor: ' + parsed.cor : '';
-    return `✓ ${provider}: ${parsed.item || '—'} · Larg ${largM > 0 ? largM.toFixed(2) + 'm' : '—'} · M.Lin ${parsed.metragem_linear || '—'}m${cor}`;
+    return `✓ ${provider}: ${parsed.item || '—'} · M.Lin ${parsed.metragem_linear || '—'}m`;
   };
 
   const processOpenRouter = async () => {
@@ -247,12 +222,18 @@ export default function LeftPanel() {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (!endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (!ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
-    const m2Val = parseFloat((mlNum * lgNum).toFixed(3));
-    const loteBase = [endereco, nfe, mlFmt].filter(Boolean).join(' ');
-    const lote = gerarLoteUnico(registros, loteBase);
-    const reg = { id: Date.now(), item, nfe, endereco, mLinear: mlNum, largura: lgNum, m2: m2Val, lote, obs, isNew: true };
+    const reg = {
+      id: Date.now(),
+      item,
+      nfe,
+      endereco,
+      mLinear: mlNum,
+      largura,
+      lote: lote || '',
+      isNew: true,
+    };
     addRegistro(reg);
-    addToast(`✓ ${item} adicionado (${registros.length + 1} rolo${registros.length > 0 ? 's' : ''})`, 'ok');
+    addToast(`✓ ${item} adicionado (${registros.length + 1} rolos)`, 'ok');
     resetForm();
     setTimeout(() => { reg.isNew = false; }, 400);
   };
@@ -277,15 +258,15 @@ export default function LeftPanel() {
       className="surface-bg border-r border-border overflow-y-auto flex flex-col h-full"
     >
       {/* Header */}
-      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between flex-shrink-0">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Conferir Rolo</span>
         <div className="flex gap-1.5">
           {undoStack.length > 0 && (
-            <button onClick={handleUndo} className="p-1.5 rounded-md border border-border hover:bg-surface-2 transition-colors" title="Desfazer">
+            <button onClick={handleUndo} className="p-1.5 rounded-md border border-border hover:bg-muted transition-colors" title="Desfazer">
               <Undo2 className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           )}
-          <button onClick={resetForm} className="p-1.5 rounded-md hover:bg-surface-2 transition-colors" title="Limpar formulário">
+          <button onClick={resetForm} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Limpar formulário">
             <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>
@@ -323,7 +304,8 @@ export default function LeftPanel() {
               exit={{ opacity: 0, height: 0 }}
               className="ai-status-box text-xs leading-relaxed"
             >
-              Preencha os campos abaixo. Modo rápido — sem foto.
+              <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
+              Use um leitor de código de barras — os campos avançam automaticamente com <kbd className="kbd">Enter</kbd>
             </motion.div>
           )}
         </AnimatePresence>
@@ -341,246 +323,151 @@ export default function LeftPanel() {
                 className={`dropzone ${preview ? 'has-img' : ''}`}
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
-                style={{ height: preview || cameraActive ? 200 : 180 }}
+                style={{ height: preview || cameraActive ? 200 : 160 }}
               >
-                {/* Live camera preview */}
                 {cameraActive && (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover rounded-xl absolute inset-0"
-                  />
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover rounded-xl absolute inset-0" />
                 )}
-
-                {/* Image preview */}
                 {preview && !cameraActive && (
-                  <img src={preview} alt="Preview da etiqueta" className="w-full h-full object-cover rounded-xl" />
+                  <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
                 )}
-
-                {/* Empty state */}
                 {!preview && !cameraActive && (
                   <div className="text-center p-4 select-none flex flex-col items-center gap-3">
                     <Camera className="w-8 h-8 text-muted-foreground/30" />
-                    <div>
-                      <div className="text-xs font-medium text-muted-foreground">Tire uma foto ou selecione da galeria</div>
-                      <div className="text-[10px] text-muted-foreground/50 mt-0.5">JPG · PNG · WEBP · Ctrl+V</div>
-                    </div>
+                    <div className="text-xs text-muted-foreground">Tire uma foto ou selecione da galeria</div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openNativeCamera(); }}
-                        className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors bg-surface font-medium"
-                      >
-                        <Camera className="w-4 h-4" />
-                        Câmera
+                      <button onClick={(e) => { e.stopPropagation(); openNativeCamera(); }} className="flex items-center gap-1.5 text-xs px-4 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors bg-card font-medium">
+                        <Camera className="w-4 h-4" /> Câmera
                       </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                        className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors bg-surface font-medium"
-                      >
-                        <Image className="w-4 h-4" />
-                        Galeria
+                      <button onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex items-center gap-1.5 text-xs px-4 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors bg-card font-medium">
+                        <Image className="w-4 h-4" /> Galeria
                       </button>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Hidden file inputs */}
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f, { autoSave: true }); e.target.value = ''; }}
-              />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }}
-              />
-              <input
-                ref={scannerInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) void scanEnderecoFromFile(f); e.target.value = ''; }}
-              />
-              <div id="endereco-scanner-file" className="hidden" />
+              <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f, { autoSave: true }); e.target.value = ''; }} />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }} />
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* Controls when camera or preview active */}
               {(preview || cameraActive) && (
                 <div className="flex gap-2 mt-2.5">
                   {cameraActive ? (
                     <>
-                      <button
-                        className="flex-1 flex items-center justify-center gap-2 text-xs px-4 py-2.5 rounded-lg navy-3-bg text-primary-foreground font-medium"
-                        onClick={snapPhoto}
-                      >
-                        <Camera className="w-4 h-4" />
-                        Capturar
+                      <button className="flex-1 flex items-center justify-center gap-2 text-xs px-4 py-2.5 rounded-lg navy-3-bg text-primary-foreground font-medium" onClick={snapPhoto}>
+                        <Camera className="w-4 h-4" /> Capturar
                       </button>
-                      <button
-                        className="p-2.5 rounded-lg border border-border hover:bg-surface-2"
-                        onClick={stopCamera}
-                      >
+                      <button className="p-2.5 rounded-lg border border-border hover:bg-muted" onClick={stopCamera}>
                         <X className="w-4 h-4 text-muted-foreground" />
                       </button>
                     </>
                   ) : (
                     <>
-                      <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-surface-2 transition-colors font-medium" onClick={openNativeCamera} title="Câmera">
-                        <Camera className="w-4 h-4" />
-                        <span className="hidden sm:inline">Câmera</span>
-                      </button>
-                      <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-surface-2 transition-colors font-medium" onClick={() => fileInputRef.current?.click()} title="Galeria">
-                        <Image className="w-4 h-4" />
-                        <span className="hidden sm:inline">Galeria</span>
-                      </button>
-                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-surface-2 transition-colors font-medium" onClick={openLiveCamera} title="Ao vivo">
-                        <Video className="w-4 h-4" />
-                      </button>
-                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-primary/30 hover:bg-primary/5 transition-colors font-medium text-primary" onClick={savePhotoLocally} title="Salvar foto">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button className="flex items-center justify-center text-xs p-2.5 rounded-lg hover:bg-surface-2 transition-colors text-muted-foreground" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }} title="Remover foto">
-                        <X className="w-4 h-4" />
-                      </button>
+                      <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={openNativeCamera}><Camera className="w-4 h-4" /></button>
+                      <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={() => fileInputRef.current?.click()}><Image className="w-4 h-4" /></button>
+                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={openLiveCamera}><Video className="w-4 h-4" /></button>
+                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-primary/30 hover:bg-primary/5 transition-colors font-medium text-primary" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); addToast('Foto salva', 'ok'); } }}><Download className="w-4 h-4" /></button>
+                      <button className="flex items-center justify-center text-xs p-2.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}><X className="w-4 h-4" /></button>
                     </>
                   )}
                 </div>
               )}
 
-              {/* Progress */}
-              <div className="progress-bar mt-2">
-                <div className="progress-fill" style={{ width: `${progress}%` }} />
-              </div>
+              <div className="progress-bar mt-2"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
 
-              {/* AI Button */}
               {preview && !cameraActive && (
-                <button
-                  onClick={processOpenRouter}
-                  disabled={aiLoading}
-                  className="w-full mt-2.5 h-11 navy-3-bg text-primary-foreground rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {aiLoading ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-fast" />
-                  ) : (
-                    <Zap className="w-4 h-4" />
-                  )}
-                  <span>{aiLoading ? 'Enviando…' : 'Processar com OpenRouter'}</span>
+                <button onClick={processOpenRouter} disabled={aiLoading} className="w-full mt-2.5 h-11 navy-3-bg text-primary-foreground rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
+                  {aiLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-fast" /> : <Zap className="w-4 h-4" />}
+                  <span>{aiLoading ? 'Enviando…' : 'Processar com IA'}</span>
                 </button>
               )}
 
-              {/* AI Status */}
               <AnimatePresence>
                 {aiStatus && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className={`mt-2 ai-status-box ${aiStatus.type === 'ok' ? 'ai-status-ok' : 'ai-status-err'}`}
-                    dangerouslySetInnerHTML={{ __html: aiStatus.msg }}
-                  />
+                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`mt-2 ai-status-box ${aiStatus.type === 'ok' ? 'ai-status-ok' : 'ai-status-err'}`}>
+                    {aiStatus.msg}
+                  </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Form Fields */}
+        {/* Form Fields - Order: Item → M Linear → Lote/Batch → Endereço */}
         <div className="space-y-2.5">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Dados do Rolo</div>
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <ScanBarcode className="w-3 h-3" /> Dados do Rolo
+          </div>
+
+          {/* 1. Item / Referência */}
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Item / Referência</label>
             <input
-              value={item} onChange={e => setItem(e.target.value)}
-              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm font-mono font-medium bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="Código do tecido" autoComplete="off"
+              ref={itemRef}
+              value={item}
+              onChange={e => handleItemChange(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, mlRef)}
+              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              placeholder="SRC-3003-05-30-EB2" autoComplete="off" autoFocus
             />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
-              <input
-                type="number" step="0.1" value={ml} onChange={e => setMl(e.target.value)}
-                className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                placeholder="76.9" autoComplete="off" inputMode="decimal"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m)</label>
-              <input
-                type="number" step="0.01" value={larg} onChange={e => setLarg(e.target.value)}
-                className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                placeholder="1.40" autoComplete="off" inputMode="decimal"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Endereço</label>
-            <div className="flex gap-2">
-              <input
-                value={endereco} onChange={e => handleEnderecoChange(e.target.value)}
-                className={`flex-1 border rounded-lg px-3 py-2.5 text-sm bg-surface outline-none focus:ring-2 transition-all uppercase font-mono ${
-                  enderecoError ? 'border-destructive focus:border-destructive focus:ring-destructive/10' : 'border-border focus:border-primary focus:ring-primary/10'
-                }`}
-                placeholder="TEC01.A.N03" autoComplete="off"
-              />
-              <button
-                onClick={startScanner}
-                className="px-3 py-2.5 rounded-lg border border-border hover:bg-surface-2 bg-surface transition-colors flex items-center justify-center"
-                title="Bipar endereço via câmera"
-              >
-                <ScanBarcode className="w-5 h-5" />
-              </button>
-            </div>
-            {enderecoError && (
-              <div className="text-[10px] text-destructive mt-1 font-medium">{enderecoError}</div>
+            {largura > 0 && (
+              <div className="text-[10px] text-primary mt-1 font-medium">Largura detectada: {largura.toFixed(2)}m</div>
             )}
           </div>
+
+          {/* 2. M Linear */}
           <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Cor (opcional)</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
             <input
-              value={obs} onChange={e => setObs(e.target.value)}
-              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="Azul marinho, LT.GREY…" autoComplete="off"
+              ref={mlRef}
+              type="number" step="0.1" value={ml}
+              onChange={e => setMl(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              placeholder="76.9" autoComplete="off" inputMode="decimal"
             />
+          </div>
+
+          {/* 3. Lote / Batch */}
+          <div>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch</label>
+            <input
+              ref={loteRef}
+              value={lote}
+              onChange={e => setLote(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, enderecoRef)}
+              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+              placeholder="Código do lote" autoComplete="off"
+            />
+          </div>
+
+          {/* 4. Endereço */}
+          <div>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Endereço</label>
+            <input
+              ref={enderecoRef}
+              value={endereco}
+              onChange={e => handleEnderecoChange(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, null)}
+              className={`w-full border rounded-lg px-3 py-2.5 text-sm bg-card outline-none focus:ring-2 transition-all uppercase font-mono ${
+                enderecoError ? 'border-destructive focus:border-destructive focus:ring-destructive/10' : 'border-border focus:border-primary focus:ring-primary/10'
+              }`}
+              placeholder="TEC01.A.N03" autoComplete="off"
+            />
+            {enderecoError && <div className="text-[10px] text-destructive mt-1 font-medium">{enderecoError}</div>}
           </div>
         </div>
 
         {/* Computed Card */}
         <div className="comp-card">
           <div>
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M²</div>
-            <div className="text-base font-semibold font-mono">{m2 > 0 ? m2.toFixed(3) + ' m²' : '—'}</div>
+            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Largura</div>
+            <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
           </div>
           <div>
             <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">NFe</div>
             <div className="text-sm font-semibold font-mono opacity-50">{nfe || '—'}</div>
-          </div>
-        </div>
-
-        {/* Lote */}
-        <div>
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Lote</div>
-          <div
-            className="lote-display"
-            onClick={() => {
-              if (lotePreview && lotePreview !== '—') {
-                navigator.clipboard.writeText(lotePreview);
-                addToast('Copiado: ' + lotePreview, 'ok');
-              }
-            }}
-          >
-            <span className="truncate">{lotePreview || '—'}</span>
-            <Copy className="w-3.5 h-3.5 opacity-35 flex-shrink-0" />
           </div>
         </div>
 
@@ -601,8 +488,7 @@ export default function LeftPanel() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-lg px-3 py-2.5 text-xs border"
-              style={{ background: '#FFF8ED', borderColor: '#F5C97A', color: '#7A5B10' }}
+              className="rounded-lg px-3 py-2.5 text-xs border bg-accent/10 border-accent text-accent-foreground"
             >
               ⚠️ <b>Possível duplicata</b> — item já existe na tabela.
             </motion.div>

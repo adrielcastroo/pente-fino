@@ -7,10 +7,15 @@ export interface Registro {
   endereco: string;
   mLinear: number;
   largura: number;
-  m2: number;
   lote: string;
-  obs: string;
   isNew?: boolean;
+}
+
+export interface Conference {
+  id: string;
+  name: string;
+  date: string;
+  registros: Registro[];
 }
 
 interface UndoEntry {
@@ -25,6 +30,7 @@ interface AppState {
   nfe: string;
   searchQuery: string;
   sortBy: string;
+  history: Conference[];
 
   setMode: (mode: 'manual' | 'openrouter') => void;
   setNfe: (nfe: string) => void;
@@ -35,56 +41,38 @@ interface AppState {
   undo: () => Registro | null;
   clearAll: () => void;
   loadFromStorage: () => void;
+  archiveAndClear: (name: string) => void;
 }
 
 const STORAGE_KEY = 'cft4';
+const HISTORY_KEY = 'cft4_history';
 
 function fmtML(v: number): string {
   if (!v || v === 0) return '';
   return (v % 1 === 0 ? Math.round(v) : v.toFixed(1).replace('.', ',')) + 'M';
 }
 
-function renumerarLotes(registros: Registro[]): void {
-  const groups: Record<string, Registro[]> = {};
-  registros.forEach(r => {
-    const base = r.lote.replace(/-\d+$/, '');
-    if (!groups[base]) groups[base] = [];
-    groups[base].push(r);
-  });
-  Object.values(groups).forEach(group => {
-    if (group.length === 1) {
-      group[0].lote = group[0].lote.replace(/-\d+$/, '');
-    } else {
-      group.forEach((r, i) => {
-        const base = r.lote.replace(/-\d+$/, '');
-        r.lote = base + '-' + (i + 1);
-      });
-    }
-  });
-}
-
 function save(registros: Registro[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch {}
 }
 
-export function gerarLoteUnico(registros: Registro[], loteBase: string): string {
-  const re = new RegExp('^' + loteBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:-(\\d+))?$');
-  const nums = registros.map(r => {
-    const m = r.lote.match(re);
-    if (!m) return null;
-    return m[1] ? parseInt(m[1]) : 0;
-  }).filter((n): n is number => n !== null);
-  if (nums.length === 0) return loteBase;
-  if (nums.length === 1 && nums[0] === 0) {
-    const existing = registros.find(r => r.lote === loteBase);
-    if (existing) existing.lote = loteBase + '-1';
-    return loteBase + '-2';
-  }
-  return loteBase + '-' + (Math.max(...nums) + 1);
+function saveHistory(history: Conference[]) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
 }
 
 export function formatML(v: number): string {
   return fmtML(v);
+}
+
+/** Extract largura from item code: e.g. SRC-3003-05-30-EB2 → 30 → 3.00m */
+export function extractLarguraFromItem(item: string): number {
+  const parts = item.split('-');
+  if (parts.length < 4) return 0;
+  const raw = parts[3];
+  const num = parseInt(raw, 10);
+  if (isNaN(num) || num <= 0) return 0;
+  if (num >= 100) return num / 100;
+  return num / 10;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -94,6 +82,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   nfe: '',
   searchQuery: '',
   sortBy: '',
+  history: [],
 
   setMode: (mode) => set({ currentMode: mode }),
   setNfe: (nfe) => set({ nfe }),
@@ -132,19 +121,32 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ registros: [], undoStack: [] });
   },
 
+  archiveAndClear: (name: string) => {
+    const state = get();
+    if (!state.registros.length) return;
+    const conf: Conference = {
+      id: Date.now().toString(),
+      name: name || 'Conferência',
+      date: new Date().toISOString(),
+      registros: [...state.registros],
+    };
+    const newHistory = [conf, ...state.history];
+    saveHistory(newHistory);
+    save([]);
+    set({ registros: [], undoStack: [], history: newHistory });
+  },
+
   loadFromStorage: () => {
     try {
       const d = localStorage.getItem(STORAGE_KEY);
       if (d) {
         const registros: Registro[] = JSON.parse(d);
-        registros.forEach(r => {
-          const mlFmt = fmtML(r.mLinear);
-          r.lote = [r.endereco, r.nfe, mlFmt].filter(Boolean).join(' ');
-        });
-        renumerarLotes(registros);
-        save(registros);
         set({ registros });
       }
+    } catch {}
+    try {
+      const h = localStorage.getItem(HISTORY_KEY);
+      if (h) set({ history: JSON.parse(h) });
     } catch {}
   },
 }));
