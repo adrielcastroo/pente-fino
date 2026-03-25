@@ -144,10 +144,10 @@ export default function RightPanel() {
                     className="border-b border-border hover:bg-primary/[0.04] transition-colors">
                     <td className="px-3 py-2.5 text-sm text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2.5 text-sm font-semibold">{highlight(r.item, q)}</td>
-                    <td className="px-3 py-2.5 text-sm font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
-                    <td className="px-3 py-2.5 text-sm font-mono">{formatML(r.mLinear)}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{r.largura > 0 ? r.largura.toFixed(2) + 'm' : '—'}</td>
                     <td className="px-3 py-2.5 text-sm font-mono">{highlight(r.endereco, q)}</td>
+                    <td className="px-3 py-2.5 text-sm font-mono">{formatML(r.mLinear)}</td>
+                    <td className="px-3 py-2.5 text-sm font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
                     <td className="px-3 py-2.5 text-sm font-mono max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap">
                       <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>
                     </td>
