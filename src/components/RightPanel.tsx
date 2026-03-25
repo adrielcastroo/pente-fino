@@ -169,10 +169,11 @@ export default function RightPanel() {
               <tfoot>
                 <tr className="navy-bg text-primary-foreground font-semibold font-mono text-xs sticky bottom-0">
                   <td colSpan={2} className="px-3 py-2.5">TOTAL — {rows.length} rolo{rows.length !== 1 ? 's' : ''}</td>
-                  <td className="px-3 py-2.5">{totalM2 > 0 ? totalM2.toFixed(1) : '—'}</td>
-                  <td className="px-3 py-2.5">{formatML(totalML)}</td>
                   <td className="px-3 py-2.5">—</td>
-                  <td colSpan={3} className="px-3 py-2.5"></td>
+                  <td className="px-3 py-2.5">—</td>
+                  <td className="px-3 py-2.5">{formatML(totalML)}</td>
+                  <td className="px-3 py-2.5">{totalM2 > 0 ? totalM2.toFixed(1) : '—'}</td>
+                  <td colSpan={2} className="px-3 py-2.5"></td>
                 </tr>
               </tfoot>
             )}
