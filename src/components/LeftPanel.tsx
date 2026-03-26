@@ -10,9 +10,10 @@ import {
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
 ITEM (código do tecido): Item, Ref, Item No, Description, Artigo, Part No
-METRAGEM (M²): LENGTH, Length, QUANTITY, Q'TY, MTR, Metros, M²
+M² (metragem quadrada): QUANTITY, Q'TY, Quantity, Qty
+LARGURA (largura do tecido): WIDTH, Width, Largura
 
-Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>}`;
+Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export default function LeftPanel() {
   const { currentMode, setMode, processo, registros, addRegistro, undo: undoAction, undoStack, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco } = useAppStore();
@@ -200,7 +201,17 @@ export default function LeftPanel() {
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
     if (parsed.m2) setM2(parseFloat(parsed.m2).toFixed(1));
-    return `✓ ${provider}: ${parsed.item || '—'} · M² ${parsed.m2 || '—'}`;
+    if (parsed.width) {
+      // width vem como inteiro (ex: 280), converter para metros (2.80)
+      const widthNum = parseInt(parsed.width, 10);
+      if (widthNum > 0) {
+        // Não altera o campo item, apenas mostra a largura extraída
+        // A largura será calculada automaticamente pelo extractLarguraFromItem
+        // Mas se a IA extraiu width, podemos informar no status
+      }
+    }
+    const widthInfo = parsed.width ? ` · Larg ${(parseInt(parsed.width, 10) / 100).toFixed(2)}m` : '';
+    return `✓ ${provider}: ${parsed.item || '—'} · M² ${parsed.m2 || '—'}${widthInfo}`;
   };
 
   const processOpenRouter = async () => {
