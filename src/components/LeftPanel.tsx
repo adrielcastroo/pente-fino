@@ -201,7 +201,17 @@ export default function LeftPanel() {
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
     if (parsed.m2) setM2(parseFloat(parsed.m2).toFixed(1));
-    return `✓ ${provider}: ${parsed.item || '—'} · M² ${parsed.m2 || '—'}`;
+    if (parsed.width) {
+      // width vem como inteiro (ex: 280), converter para metros (2.80)
+      const widthNum = parseInt(parsed.width, 10);
+      if (widthNum > 0) {
+        // Não altera o campo item, apenas mostra a largura extraída
+        // A largura será calculada automaticamente pelo extractLarguraFromItem
+        // Mas se a IA extraiu width, podemos informar no status
+      }
+    }
+    const widthInfo = parsed.width ? ` · Larg ${(parseInt(parsed.width, 10) / 100).toFixed(2)}m` : '';
+    return `✓ ${provider}: ${parsed.item || '—'} · M² ${parsed.m2 || '—'}${widthInfo}`;
   };
 
   const processOpenRouter = async () => {
