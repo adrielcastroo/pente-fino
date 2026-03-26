@@ -10,9 +10,10 @@ import {
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
 ITEM (código do tecido): Item, Ref, Item No, Description, Artigo, Part No
-METRAGEM (M²): LENGTH, Length, QUANTITY, Q'TY, MTR, Metros, M²
+M² (metragem quadrada): QUANTITY, Q'TY, Quantity, Qty
+LARGURA (largura do tecido): WIDTH, Width, Largura
 
-Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>}`;
+Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export default function LeftPanel() {
   const { currentMode, setMode, processo, registros, addRegistro, undo: undoAction, undoStack, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco } = useAppStore();
