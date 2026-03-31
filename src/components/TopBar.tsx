@@ -2,7 +2,8 @@ import { useAppStore, formatML } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { useToastStore } from '@/hooks/useToast';
-import { Settings, Download, Package, Ruler, User } from 'lucide-react';
+import { Settings, Download, Ruler, User } from 'lucide-react';
+import logoImg from '@/assets/logo.ico';
 
 export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) {
   const { processo, setProcesso, conferente, setConferente, registros, archiveAndClear } = useAppStore();
@@ -34,9 +35,7 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
       style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
       <div className="flex items-center gap-2 flex-shrink-0">
-        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
-          <Package className="w-4 h-4 text-primary-foreground" />
-        </div>
+        <img src={logoImg} alt="Pente Fino" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
         <div className="hidden sm:block">
           <div className="font-semibold text-sm leading-tight">Conferência de Tecidos</div>
           <div className="text-[10px] opacity-40 font-mono">SAP B1</div>
