@@ -2,7 +2,8 @@ import { useAppStore, formatML } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { useToastStore } from '@/hooks/useToast';
-import { Settings, Download, Package, Ruler, User } from 'lucide-react';
+import { Settings, Download, Ruler, User } from 'lucide-react';
+import logoImg from '@/assets/logo.ico';
 
 export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) {
   const { processo, setProcesso, conferente, setConferente, registros, archiveAndClear } = useAppStore();
