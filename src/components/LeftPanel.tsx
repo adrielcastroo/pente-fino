@@ -441,7 +441,7 @@ export default function LeftPanel() {
           )}
         </AnimatePresence>
 
-        {/* Form Fields - Order: Item → M² → Lote/Batch → Endereço */}
+        {/* Form Fields */}
         <div className="space-y-2.5">
           <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <ScanBarcode className="w-3 h-3" /> Dados do Rolo
@@ -458,41 +458,69 @@ export default function LeftPanel() {
               className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="SRC-3003-05-30-EB2" autoComplete="off" autoFocus
             />
-            {largura > 0 && (
+            {!isAI && largura > 0 && (
               <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
             )}
           </div>
 
-          {/* 2. M² (Metro Quadrado) */}
-          <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
-            <input
-              ref={m2Ref}
-              type="number" step="0.1" value={m2}
-              onChange={e => setM2(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, loteRef)}
-              className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="76.9" autoComplete="off" inputMode="decimal"
-            />
-            {mLinear > 0 && (
-              <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
-            )}
-          </div>
+          {/* AI mode: M Linear + Largura fields */}
+          {isAI ? (
+            <>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
+                <input
+                  ref={m2Ref}
+                  type="number" step="0.1" value={aiMLinear}
+                  onChange={e => setAiMLinear(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="27.5" autoComplete="off" inputMode="decimal"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m)</label>
+                <input
+                  ref={loteRef}
+                  type="number" step="0.01" value={aiLargura}
+                  onChange={e => setAiLargura(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="2.80" autoComplete="off" inputMode="decimal"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Manual: M² + Lote/Batch */}
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
+                <input
+                  ref={m2Ref}
+                  type="number" step="0.1" value={m2}
+                  onChange={e => setM2(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="76.9" autoComplete="off" inputMode="decimal"
+                />
+                {mLinear > 0 && (
+                  <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
+                )}
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch</label>
+                <input
+                  ref={loteRef}
+                  value={lote}
+                  onChange={e => setLote(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="Código do lote" autoComplete="off"
+                />
+              </div>
+            </>
+          )}
 
-          {/* 3. Lote / Batch */}
-          <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch</label>
-            <input
-              ref={loteRef}
-              value={lote}
-              onChange={e => setLote(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-              className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="Código do lote" autoComplete="off"
-            />
-          </div>
-
-          {/* 4. Endereço */}
+          {/* Endereço */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</label>
