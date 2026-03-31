@@ -206,14 +206,20 @@ export default function LeftPanel() {
 
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
-    if (parsed.m2) setM2(parseFloat(parsed.m2).toFixed(1));
     if (parsed.width) {
-      // width vem como inteiro (ex: 280), converter para metros (2.80)
       const widthNum = parseInt(parsed.width, 10);
       if (widthNum > 0) {
-        // Não altera o campo item, apenas mostra a largura extraída
-        // A largura será calculada automaticamente pelo extractLarguraFromItem
-        // Mas se a IA extraiu width, podemos informar no status
+        const larguraM = widthNum / 100;
+        setAiLargura(larguraM.toFixed(2));
+      }
+    }
+    if (parsed.m2) {
+      const m2Val = parseFloat(parsed.m2);
+      setM2(m2Val.toFixed(1));
+      // Calculate M Linear if we have width
+      const widthNum = parsed.width ? parseInt(parsed.width, 10) / 100 : 0;
+      if (widthNum > 0 && m2Val > 0) {
+        setAiMLinear((m2Val / widthNum).toFixed(1));
       }
     }
     const widthInfo = parsed.width ? ` · Larg ${(parseInt(parsed.width, 10) / 100).toFixed(2)}m` : '';
