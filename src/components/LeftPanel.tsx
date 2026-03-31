@@ -43,9 +43,15 @@ export default function LeftPanel() {
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
+  const [aiLargura, setAiLargura] = useState('');
+  const [aiMLinear, setAiMLinear] = useState('');
+
   const m2Num = parseFloat(m2) || 0;
-  const largura = extractLarguraFromItem(item);
-  const mLinear = largura > 0 ? m2Num / largura : 0;
+  const isAI = currentMode !== 'manual';
+  const aiLarguraNum = parseFloat(aiLargura) || 0;
+  const aiMLinearNum = parseFloat(aiMLinear) || 0;
+  const largura = isAI ? aiLarguraNum : extractLarguraFromItem(item);
+  const mLinear = isAI ? aiMLinearNum : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
