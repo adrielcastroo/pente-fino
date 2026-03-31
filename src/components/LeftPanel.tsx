@@ -91,7 +91,7 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setM2(''); setLote('');
+    setItem(''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear('');
     if (!lockEndereco) setEndereco('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
