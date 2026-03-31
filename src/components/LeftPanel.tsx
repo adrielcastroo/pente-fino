@@ -272,7 +272,7 @@ export default function LeftPanel() {
       item,
       processo: proc,
       endereco,
-      m2: m2Num,
+      m2: isAI ? (aiMLinearNum * aiLarguraNum) : m2Num,
       mLinear,
       largura,
       lote: lote || '',
