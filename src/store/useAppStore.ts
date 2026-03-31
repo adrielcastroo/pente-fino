@@ -88,7 +88,7 @@ export function extractLarguraFromItem(item: string): number {
 /** Generate Lote Sistema with serial for duplicates */
 export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[]): string {
   const mlFormatted = fmtML(mLinear) || '0M';
-  const base = `${processo} ${endereco} ${mlFormatted}`;
+  const base = `${endereco} ${processo} ${mlFormatted}`;
   
   // Count existing registros with same base
   const count = existingRegistros.filter(r => {

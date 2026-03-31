@@ -43,9 +43,15 @@ export default function LeftPanel() {
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
+  const [aiLargura, setAiLargura] = useState('');
+  const [aiMLinear, setAiMLinear] = useState('');
+
   const m2Num = parseFloat(m2) || 0;
-  const largura = extractLarguraFromItem(item);
-  const mLinear = largura > 0 ? m2Num / largura : 0;
+  const isAI = currentMode !== 'manual';
+  const aiLarguraNum = parseFloat(aiLargura) || 0;
+  const aiMLinearNum = parseFloat(aiMLinear) || 0;
+  const largura = isAI ? aiLarguraNum : extractLarguraFromItem(item);
+  const mLinear = isAI ? aiMLinearNum : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
@@ -85,7 +91,7 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setM2(''); setLote('');
+    setItem(''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear('');
     if (!lockEndereco) setEndereco('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
@@ -200,14 +206,20 @@ export default function LeftPanel() {
 
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
-    if (parsed.m2) setM2(parseFloat(parsed.m2).toFixed(1));
     if (parsed.width) {
-      // width vem como inteiro (ex: 280), converter para metros (2.80)
       const widthNum = parseInt(parsed.width, 10);
       if (widthNum > 0) {
-        // Não altera o campo item, apenas mostra a largura extraída
-        // A largura será calculada automaticamente pelo extractLarguraFromItem
-        // Mas se a IA extraiu width, podemos informar no status
+        const larguraM = widthNum / 100;
+        setAiLargura(larguraM.toFixed(2));
+      }
+    }
+    if (parsed.m2) {
+      const m2Val = parseFloat(parsed.m2);
+      setM2(m2Val.toFixed(1));
+      // Calculate M Linear if we have width
+      const widthNum = parsed.width ? parseInt(parsed.width, 10) / 100 : 0;
+      if (widthNum > 0 && m2Val > 0) {
+        setAiMLinear((m2Val / widthNum).toFixed(1));
       }
     }
     const widthInfo = parsed.width ? ` · Larg ${(parseInt(parsed.width, 10) / 100).toFixed(2)}m` : '';
@@ -260,7 +272,7 @@ export default function LeftPanel() {
       item,
       processo: proc,
       endereco,
-      m2: m2Num,
+      m2: isAI ? (aiMLinearNum * aiLarguraNum) : m2Num,
       mLinear,
       largura,
       lote: lote || '',
@@ -429,7 +441,7 @@ export default function LeftPanel() {
           )}
         </AnimatePresence>
 
-        {/* Form Fields - Order: Item → M² → Lote/Batch → Endereço */}
+        {/* Form Fields */}
         <div className="space-y-2.5">
           <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <ScanBarcode className="w-3 h-3" /> Dados do Rolo
@@ -446,41 +458,69 @@ export default function LeftPanel() {
               className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="SRC-3003-05-30-EB2" autoComplete="off" autoFocus
             />
-            {largura > 0 && (
+            {!isAI && largura > 0 && (
               <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
             )}
           </div>
 
-          {/* 2. M² (Metro Quadrado) */}
-          <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
-            <input
-              ref={m2Ref}
-              type="number" step="0.1" value={m2}
-              onChange={e => setM2(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, loteRef)}
-              className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="76.9" autoComplete="off" inputMode="decimal"
-            />
-            {mLinear > 0 && (
-              <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
-            )}
-          </div>
+          {/* AI mode: M Linear + Largura fields */}
+          {isAI ? (
+            <>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
+                <input
+                  ref={m2Ref}
+                  type="number" step="0.1" value={aiMLinear}
+                  onChange={e => setAiMLinear(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="27.5" autoComplete="off" inputMode="decimal"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m)</label>
+                <input
+                  ref={loteRef}
+                  type="number" step="0.01" value={aiLargura}
+                  onChange={e => setAiLargura(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="2.80" autoComplete="off" inputMode="decimal"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Manual: M² + Lote/Batch */}
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
+                <input
+                  ref={m2Ref}
+                  type="number" step="0.1" value={m2}
+                  onChange={e => setM2(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="76.9" autoComplete="off" inputMode="decimal"
+                />
+                {mLinear > 0 && (
+                  <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
+                )}
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch</label>
+                <input
+                  ref={loteRef}
+                  value={lote}
+                  onChange={e => setLote(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="Código do lote" autoComplete="off"
+                />
+              </div>
+            </>
+          )}
 
-          {/* 3. Lote / Batch */}
-          <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch</label>
-            <input
-              ref={loteRef}
-              value={lote}
-              onChange={e => setLote(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-              className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="Código do lote" autoComplete="off"
-            />
-          </div>
-
-          {/* 4. Endereço */}
+          {/* Endereço */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</label>
