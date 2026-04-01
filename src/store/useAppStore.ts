@@ -5,6 +5,7 @@ export interface Registro {
   id: string;
   item: string;
   processo: string;
+  nf?: string;
   endereco: string;
   m2: number;
   mLinear: number;
@@ -169,7 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Save conference to Supabase
       const { data: conf, error: confError } = await supabase
         .from('conferences')
-        .insert({ processo: state.processo || name, conferente: state.conferente })
+        .insert({ processo: state.processo.trim() || name, conferente: state.conferente })
         .select()
         .single();
 
@@ -183,6 +184,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         m_linear: r.mLinear,
         largura: r.largura,
         endereco: r.endereco,
+        nf: r.nf || '',
         lote: r.lote,
         lote_sistema: r.loteSistema,
         tipo_tecido: r.tipoTecido || '',
@@ -192,7 +194,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         edited_at: r.editedAt || null,
       }));
 
-      const { error: regError } = await supabase.from('registros').insert(rows);
+      const { error: regError } = await supabase.from('registros').insert(rows as any);
       if (regError) throw regError;
 
       save([]);
@@ -234,7 +236,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           registros: (regs || []).map(r => ({
             id: r.id,
             item: r.item,
-            processo: c.processo,
+            processo: r.modo_origem === 'diversos' ? '' : c.processo,
+            nf: (r as any).nf || '',
             endereco: r.endereco,
             m2: Number(r.m2),
             mLinear: Number(r.m_linear),
@@ -290,15 +293,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       const normalizedML = Number(merged.mLinear) || 0;
       const normalizedM2 = Number(merged.m2) || 0;
       const normalizedLargura = Number(merged.largura) || 0;
+      const normalizedProcesso = merged.modoOrigem === 'diversos' || current.modoOrigem === 'diversos'
+        ? ''
+        : (merged.processo ?? current.processo ?? conference.processo);
       const normalizedEndereco = merged.endereco || '';
       const normalizedItem = (merged.item || '').trim();
+      const normalizedNf = (merged.nf || '').trim();
       const editedBy = state.conferente || merged.editedBy || '';
       const editedAt = new Date().toISOString();
       const siblingRegistros = conference.registros.filter(r => r.id !== registroId);
-      const loteSistema = generateLoteSistema(conference.processo, normalizedEndereco, normalizedML, siblingRegistros as Registro[]);
+      const loteSistema = generateLoteSistema(normalizedProcesso, normalizedEndereco, normalizedML, siblingRegistros as Registro[]);
 
       const payload = {
         item: normalizedItem,
+        nf: normalizedNf,
         m2: normalizedM2,
         m_linear: normalizedML,
         largura: normalizedLargura,
@@ -314,7 +322,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       const { error } = await supabase
         .from('registros')
-        .update(payload)
+        .update(payload as any)
         .eq('id', registroId)
         .eq('conference_id', conferenceId);
 
@@ -325,6 +333,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         registros: conf.registros.map(r => r.id !== registroId ? r : {
           ...r,
           item: normalizedItem,
+          processo: normalizedProcesso,
+          nf: normalizedNf,
           m2: normalizedM2,
           mLinear: normalizedML,
           largura: normalizedLargura,
