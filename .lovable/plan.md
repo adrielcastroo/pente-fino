@@ -1,96 +1,74 @@
 
-Objetivo: adicionar uma terceira aba principal chamada "Diversos", renomear "Manual" para "Coulisse", manter o modo "IA" como está, mostrar campos dinâmicos por tipo de tecido em "Diversos" e permitir edição individual no histórico com marcação de edição e usuário editor.
+Objetivo: adicionar travamento para PROC e NF com o mesmo comportamento já existente no Endereço, mantendo a lógica atual por modo e sem alterar regras de obrigatoriedade.
 
-1. Estrutura de navegação
-- Renomear o modo atual "Manual" para "Coulisse" apenas na interface, preservando o comportamento já existente.
-- Manter "IA" com o layout exclusivo já definido.
-- Adicionar uma terceira aba principal: "Diversos".
-- Atualizar os toggles de modo no painel esquerdo para: Coulisse | IA | Diversos.
+1. Estado global para travamento
+- Expandir `src/store/useAppStore.ts` com novos estados:
+  - `lockProcesso` / `lockedProcesso`
+  - `lockNf` / `lockedNf`
+- Criar setters equivalentes aos de endereço.
+- Persistir esses valores em memória do app como já acontece com o endereço, para que o formulário reutilize o valor travado entre registros.
 
-2. Aba "Diversos"
-- Adicionar uma chave/seletor de tipo de tecido visível apenas em "Diversos":
-  - Rolo
-  - PVT
-  - Cortina
-  - Celular
-- A seleção do tipo controlará quais campos aparecem para o usuário.
+2. Aplicar travamento no campo PROC
+- Em `src/components/LeftPanel.tsx`, no bloco de PROC (hoje exibido quando `requiresProcesso`), adicionar botão `Travar/Travado` com o mesmo padrão visual do endereço.
+- Comportamento:
+  - ao travar, salva o valor atual de `processo`
+  - ao destravar, libera edição
+  - quando travado, o input fica somente leitura e continua preenchido após `resetForm`
+- Impacto por modo:
+  - aparece apenas em `Coulisse` e `IA`
+  - continua obrigatório nesses modos
 
-3. Campos por tipo em "Diversos"
-- Rolo: mesmos campos do fluxo atual de Coulisse
-  - Item/Referência
-  - M²
-  - Lote/Batch
-  - Endereço
-  - Largura calculada
-  - M Linear calculado
-  - Travar Endereço
-  - Lote Sistema com as regras atuais
-- Cortina: igual a Rolo
-- Celular: igual a Rolo
-- PVT: somente
-  - Item/Referência
-  - M Linear
-  - Lote/Batch
-- Em PVT, os campos não usados ficarão ocultos e serão salvos como vazios/zero para não quebrar tabela, histórico e exportação.
+3. Aplicar travamento no campo NF
+- Em `src/components/LeftPanel.tsx`, no bloco de NF do modo `Diversos`, adicionar botão `Travar/Travado` com a mesma UX.
+- Comportamento:
+  - ao travar, salva o valor atual de `nf`
+  - ao destravar, libera edição
+  - quando travado, o NF permanece preenchido entre vários lançamentos
+- Impacto por modo:
+  - aparece apenas em `Diversos`
+  - continua obrigatório em todos os tipos de tecido de `Diversos`
 
-4. Regras que serão mantidas
-- PROC e Conferente continuam obrigatórios para registrar e exportar.
-- Coulisse continua com a lógica atual:
-  - largura extraída do item
-  - M Linear = M² / largura
-  - Lote Sistema = Endereço + PROC + M Linear
-  - serial para itens/lotes idênticos
-  - travamento de endereço
-- IA continua separada, com o layout exclusivo já existente.
+4. Sincronização com reset e fluxo de teclado
+- Ajustar `resetForm()` para:
+  - manter PROC se `lockProcesso` estiver ativo
+  - manter NF se `lockNf` estiver ativo
+  - continuar mantendo Endereço se `lockEndereco` estiver ativo
+- Ajustar navegação por Enter:
+  - PROC travado deve pular direto para o próximo campo
+  - NF travado deve pular para o próximo campo
+- Garantir que os refs atuais (`itemRef`, `nfRef`, etc.) sigam com foco previsível.
 
-5. Histórico com edição individual
-- Adicionar ação de editar por tecido dentro de cada conferência no histórico.
-- Cada linha poderá ser alterada individualmente.
-- Ao salvar:
-  - marcar o registro como editado
-  - salvar qual conferente atual fez a edição
-  - salvar data/hora da última edição
-- Mostrar visualmente no histórico:
-  - badge/indicador de “Editado”
-  - nome do usuário que editou
-  - data/hora da edição
-- Se já tiver sido editado antes, o indicador permanece ativo.
+5. Preview e validação
+- A validação obrigatória não muda:
+  - `CONFERENTE` sempre obrigatório
+  - `PROC` obrigatório em Coulisse/IA
+  - `NF` obrigatório em Diversos
+- Se o campo estiver travado mas vazio, a validação continua bloqueando o cadastro.
+- O card de cálculo e o `Lote Sistema` continuam usando o valor atual do store, então o PROC travado refletirá automaticamente no resultado.
 
-6. Banco de dados / backend
-Será necessário ajustar a estrutura da tabela de registros para suportar os novos comportamentos:
-- tipo_tecido
-- modo_origem
-- was_edited
-- edited_by
-- edited_at
+6. Responsividade e consistência visual
+- Reaproveitar exatamente o padrão já usado no Endereço:
+  - botão pequeno no cabeçalho do campo
+  - ícones `Lock/Unlock`
+  - destaque visual no input quando travado
+- Isso mantém consistência em smartphone, tablet e desktop sem criar um novo padrão de UI.
 
-Também vou atualizar o mapeamento do store para:
-- salvar esses campos novos ao arquivar
-- carregar esses campos no histórico
-- permitir update individual de registros no histórico
-
-7. Interface e responsividade
-- Manter a experiência atual de smartphone e tablet.
-- Ajustar o painel esquerdo para acomodar:
-  - 3 modos principais
-  - seletor de tipo em Diversos
-  - campos dinâmicos sem poluir a tela
-- No tablet e mobile, a edição do histórico deve abrir em formato confortável para toque, preferencialmente modal/folha de edição.
-
-8. Arquivos que serão afetados
-- src/store/useAppStore.ts
-- src/components/LeftPanel.tsx
-- src/components/HistoryPanel.tsx
-- src/pages/Index.tsx
-- supabase/migrations/...nova migration para ampliar a tabela registros
+Arquivos afetados
+- `src/store/useAppStore.ts`
+  - adicionar estados e setters para travamento de PROC e NF
+- `src/components/LeftPanel.tsx`
+  - adicionar botões de travamento
+  - sincronizar valores travados
+  - ajustar reset e navegação por Enter
 
 Detalhes técnicos
-- `currentMode` deixará de ser só `manual | openrouter` e passará a contemplar `coulisse | openrouter | diversos` (ou manter a chave interna antiga e trocar apenas o label, se isso for mais seguro para reduzir regressão).
-- Em "Diversos", o formulário será guiado por configuração do tipo selecionado, para evitar duplicação de UI.
-- A edição do histórico usará update direto no backend, sem criar nova conferência.
-- Como já existe banco unificado e políticas públicas ativas, a mudança principal será estrutural e de interface, não de autenticação.
+- O jeito mais seguro é seguir o mesmo modelo já existente para endereço, em vez de criar uma abstração nova agora.
+- Como `processo` já vive no store e `nf` vive localmente no componente, o plano é:
+  - travar PROC usando store + valor travado global
+  - travar NF com estado global de trava + valor travado global para reaplicar no formulário
+- Não precisa migration nem mudança no backend, porque é comportamento de preenchimento do formulário, não dado persistido extra.
 
 Resultado esperado
-- O usuário escolhe Coulisse, IA ou Diversos.
-- Em Diversos, escolhe o tipo de tecido e vê apenas os campos daquele tipo.
-- O histórico passa a permitir correção fina de cada tecido, com rastreio de quem editou e se o item já foi alterado antes.
+- O usuário poderá travar `PROC` em Coulisse/IA para lançar vários registros no mesmo processo.
+- O usuário poderá travar `NF` em Diversos para lançar vários registros com a mesma nota fiscal.
+- O comportamento será igual ao do Endereço: valor mantido, input protegido e fluxo mais rápido para conferência em sequência.
