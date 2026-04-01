@@ -13,6 +13,11 @@ export interface Registro {
   loteSistema: string;
   isNew?: boolean;
   conference_id?: string | null;
+  tipoTecido?: string;
+  modoOrigem?: string;
+  wasEdited?: boolean;
+  editedBy?: string;
+  editedAt?: string | null;
 }
 
 export interface Conference {
@@ -32,7 +37,7 @@ interface UndoEntry {
 interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
-  currentMode: 'manual' | 'openrouter';
+  currentMode: 'manual' | 'openrouter' | 'diversos';
   processo: string;
   conferente: string;
   searchQuery: string;
@@ -41,7 +46,7 @@ interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
 
-  setMode: (mode: 'manual' | 'openrouter') => void;
+  setMode: (mode: 'manual' | 'openrouter' | 'diversos') => void;
   setProcesso: (p: string) => void;
   setConferente: (c: string) => void;
   setSearchQuery: (q: string) => void;
@@ -57,6 +62,7 @@ interface AppState {
   loadHistory: () => Promise<void>;
   deleteConference: (id: string) => Promise<void>;
   clearHistory: () => Promise<void>;
+  updateHistoryRegistro: (conferenceId: string, registroId: string, updates: Partial<Registro>) => Promise<void>;
 }
 
 const STORAGE_KEY = 'cft4';
@@ -88,11 +94,11 @@ export function extractLarguraFromItem(item: string): number {
 /** Generate Lote Sistema with serial for duplicates */
 export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[]): string {
   const mlFormatted = fmtML(mLinear) || '0M';
-  const base = `${endereco} ${processo} ${mlFormatted}`;
+  const base = [endereco.trim(), processo.trim(), mlFormatted].filter(Boolean).join(' ');
   
   // Count existing registros with same base
   const count = existingRegistros.filter(r => {
-    const rBase = `${r.processo} ${r.endereco} ${fmtML(r.mLinear) || '0M'}`;
+    const rBase = [r.endereco?.trim() || '', r.processo?.trim() || '', fmtML(r.mLinear) || '0M'].filter(Boolean).join(' ');
     return rBase === base;
   }).length;
   
@@ -179,6 +185,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         endereco: r.endereco,
         lote: r.lote,
         lote_sistema: r.loteSistema,
+        tipo_tecido: r.tipoTecido || '',
+        modo_origem: r.modoOrigem || state.currentMode,
+        was_edited: r.wasEdited || false,
+        edited_by: r.editedBy || '',
+        edited_at: r.editedAt || null,
       }));
 
       const { error: regError } = await supabase.from('registros').insert(rows);
@@ -231,6 +242,11 @@ export const useAppStore = create<AppState>((set, get) => ({
             lote: r.lote,
             loteSistema: r.lote_sistema,
             conference_id: r.conference_id,
+            tipoTecido: r.tipo_tecido,
+            modoOrigem: r.modo_origem,
+            wasEdited: r.was_edited,
+            editedBy: r.edited_by,
+            editedAt: r.edited_at,
           })),
         });
       }
@@ -258,6 +274,75 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ history: [] });
     } catch (e) {
       console.error('Error clearing history:', e);
+    }
+  },
+
+  updateHistoryRegistro: async (conferenceId, registroId, updates) => {
+    try {
+      const state = get();
+      const conference = state.history.find(c => c.id === conferenceId);
+      if (!conference) return;
+
+      const current = conference.registros.find(r => r.id === registroId);
+      if (!current) return;
+
+      const merged = { ...current, ...updates };
+      const normalizedML = Number(merged.mLinear) || 0;
+      const normalizedM2 = Number(merged.m2) || 0;
+      const normalizedLargura = Number(merged.largura) || 0;
+      const normalizedEndereco = merged.endereco || '';
+      const normalizedItem = (merged.item || '').trim();
+      const editedBy = state.conferente || merged.editedBy || '';
+      const editedAt = new Date().toISOString();
+      const siblingRegistros = conference.registros.filter(r => r.id !== registroId);
+      const loteSistema = generateLoteSistema(conference.processo, normalizedEndereco, normalizedML, siblingRegistros as Registro[]);
+
+      const payload = {
+        item: normalizedItem,
+        m2: normalizedM2,
+        m_linear: normalizedML,
+        largura: normalizedLargura,
+        endereco: normalizedEndereco,
+        lote: merged.lote || '',
+        lote_sistema: loteSistema,
+        tipo_tecido: merged.tipoTecido || '',
+        modo_origem: merged.modoOrigem || current.modoOrigem || '',
+        was_edited: true,
+        edited_by: editedBy,
+        edited_at: editedAt,
+      };
+
+      const { error } = await supabase
+        .from('registros')
+        .update(payload)
+        .eq('id', registroId)
+        .eq('conference_id', conferenceId);
+
+      if (error) throw error;
+
+      const history = state.history.map(conf => conf.id !== conferenceId ? conf : {
+        ...conf,
+        registros: conf.registros.map(r => r.id !== registroId ? r : {
+          ...r,
+          item: normalizedItem,
+          m2: normalizedM2,
+          mLinear: normalizedML,
+          largura: normalizedLargura,
+          endereco: normalizedEndereco,
+          lote: merged.lote || '',
+          loteSistema,
+          tipoTecido: merged.tipoTecido || '',
+          modoOrigem: merged.modoOrigem || current.modoOrigem || '',
+          wasEdited: true,
+          editedBy,
+          editedAt,
+        }),
+      });
+
+      set({ history });
+    } catch (e) {
+      console.error('Error updating registro:', e);
+      throw e;
     }
   },
 
