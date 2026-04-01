@@ -1,0 +1,2 @@
+ALTER TABLE public.registros
+ADD COLUMN IF NOT EXISTS nf text NOT NULL DEFAULT '';

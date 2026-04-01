@@ -50,6 +50,7 @@ export type Database = {
           m_linear: number
           m2: number
           modo_origem: string
+          nf: string
           tipo_tecido: string
           was_edited: boolean
         }
@@ -67,6 +68,7 @@ export type Database = {
           m_linear?: number
           m2?: number
           modo_origem?: string
+          nf?: string
           tipo_tecido?: string
           was_edited?: boolean
         }
@@ -84,6 +86,7 @@ export type Database = {
           m_linear?: number
           m2?: number
           modo_origem?: string
+          nf?: string
           tipo_tecido?: string
           was_edited?: boolean
         }
