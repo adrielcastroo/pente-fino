@@ -6,6 +6,7 @@ import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pe
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { getRegistroColumns } from '@/lib/registroColumns';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -137,6 +138,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const totalML = conf.registros.reduce((a, r) => a + r.mLinear, 0);
+  const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
 
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-card">
@@ -172,50 +174,48 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
               <table className="w-full text-xs min-w-[500px]">
                 <thead>
                   <tr className="surface-2-bg">
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">Item</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">NF</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">M²</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">M Lin</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">Largura</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">Endereço</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">Lote Sist.</th>
+                    {columns.map(column => (
+                      <th key={column.key} className="px-3 py-2 text-left text-muted-foreground font-medium">{column.shortLabel || column.label}</th>
+                    ))}
                     <th className="px-3 py-2 text-left text-muted-foreground font-medium w-[74px]"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {conf.registros.map((r, i) => (
                     <tr key={i} className="border-t border-border/50">
-                      <td className="px-3 py-1.5 font-semibold">
-                        <div className="flex flex-col gap-1">
-                          <span>{r.item}</span>
-                          <div className="flex flex-wrap gap-1">
-                            {r.tipoTecido && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{r.tipoTecido}</span>}
-                            {r.wasEdited && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Editado</span>}
-                          </div>
-                        </div>
-                      </td>
-                       <td className="px-3 py-1.5 font-mono">{r.nf || '—'}</td>
-                      <td className="px-3 py-1.5 font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
-                      <td className="px-3 py-1.5 font-mono">{formatML(r.mLinear)}</td>
-                      <td className="px-3 py-1.5 font-mono">{r.largura > 0 ? r.largura.toFixed(2) : '—'}</td>
-                      <td className="px-3 py-1.5 font-mono">{r.endereco}</td>
-                      <td className="px-3 py-1.5 font-mono">
-                        <div>{r.loteSistema || '—'}</div>
-                        {r.wasEdited && (
-                          <div className="mt-1 flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
-                            <CheckCircle2 className="w-3 h-3 text-primary" />
-                            {r.editedBy || 'Conferente atual'} · {r.editedAt ? formatDate(r.editedAt) : 'agora'}
-                          </div>
-                        )}
-                      </td>
+                      {columns.map(column => (
+                        <td key={column.key} className={`px-3 py-1.5 ${column.key === 'item' ? 'font-semibold' : 'font-mono'}`}>
+                          {column.key === 'item' && (
+                            <div className="flex flex-col gap-1">
+                              <span>{r.item || '—'}</span>
+                              {r.tipoTecido && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground w-fit">{r.tipoTecido}</span>}
+                            </div>
+                          )}
+                          {column.key === 'nf' && (r.nf || '—')}
+                          {column.key === 'm2' && (r.m2 > 0 ? r.m2.toFixed(1) : '—')}
+                          {column.key === 'mLinear' && formatML(r.mLinear)}
+                          {column.key === 'largura' && (r.largura > 0 ? r.largura.toFixed(2) : '—')}
+                          {column.key === 'lote' && (r.lote || '—')}
+                          {column.key === 'endereco' && (r.endereco || '—')}
+                          {column.key === 'loteSistema' && (r.loteSistema || '—')}
+                        </td>
+                      ))}
                       <td className="px-3 py-1.5">
-                        <button
-                          onClick={() => setEditingRegistro(r)}
-                          className="inline-flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                          title="Editar tecido"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => setEditingRegistro(r)}
+                            className="inline-flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            title="Editar tecido"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          {r.wasEdited && (
+                            <div className="flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+                              <CheckCircle2 className="w-3 h-3 text-primary" />
+                              {r.editedBy || 'Conferente atual'}
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
