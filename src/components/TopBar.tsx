@@ -54,10 +54,10 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
         />
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <User className="w-3 h-3 text-white/30 hidden sm:block" />
+      <div className="flex items-center gap-1.5 min-w-0">
+        <User className="w-3 h-3 text-white/30" />
         <input
-          className="glass-input font-medium w-[80px] sm:w-[100px] text-xs"
+          className="glass-input font-medium w-[92px] sm:w-[120px] text-xs min-w-0"
           value={conferente}
           onChange={e => setConferente(e.target.value)}
           placeholder="Conferente *"
