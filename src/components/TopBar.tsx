@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { useToastStore } from '@/hooks/useToast';
 import { Settings, Download, Ruler, User } from 'lucide-react';
 import logoImg from '@/assets/logo.ico';
+import { getRegistroColumns } from '@/lib/registroColumns';
 
 export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) {
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
@@ -15,20 +16,7 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
     const requiresProcesso = registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos';
     if (requiresProcesso && !processo.trim()) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
     if (!conferente) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
-    const hasNF = registros.some(r => !!r.nf);
-    const hasLargura = registros.some(r => r.largura > 0);
-    const hasEndereco = registros.some(r => !!r.endereco);
-    const hasM2 = registros.some(r => r.m2 > 0);
-    const columns = [
-      { key: 'item', label: 'Item/Referência', width: 28 },
-      ...(hasNF ? [{ key: 'nf', label: 'NF', width: 16 }] : []),
-      ...(hasLargura ? [{ key: 'largura', label: 'Largura', width: 10 }] : []),
-      ...(hasEndereco ? [{ key: 'endereco', label: 'Endereço', width: 18 }] : []),
-      { key: 'mLinear', label: 'M Linear', width: 12 },
-      ...(hasM2 ? [{ key: 'm2', label: 'M²', width: 10 }] : []),
-      { key: 'lote', label: 'Lote/Batch', width: 24 },
-      { key: 'loteSistema', label: 'Lote Final (Sistema)', width: 36 },
-    ];
+    const columns = getRegistroColumns(registros, currentMode);
     const headers = columns.map(column => column.label);
     const data = registros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
