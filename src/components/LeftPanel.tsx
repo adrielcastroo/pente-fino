@@ -16,10 +16,11 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export default function LeftPanel() {
-  const { currentMode, setMode, processo, registros, addRegistro, undo: undoAction, undoStack, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco } = useAppStore();
+  const { currentMode, setMode, processo, setProcesso, registros, addRegistro, undo: undoAction, undoStack, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   const [item, setItem] = useState('');
+  const [nf, setNf] = useState('');
   const [m2, setM2] = useState('');
   const [lote, setLote] = useState('');
   const [endereco, setEndereco] = useState(lockedEndereco);
@@ -39,6 +40,7 @@ export default function LeftPanel() {
   const streamRef = useRef<MediaStream | null>(null);
 
   const itemRef = useRef<HTMLInputElement>(null);
+  const nfRef = useRef<HTMLInputElement>(null);
   const m2Ref = useRef<HTMLInputElement>(null);
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
@@ -55,6 +57,8 @@ export default function LeftPanel() {
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isPVT = isDiversos && diversosTipo === 'PVT';
+  const requiresProcesso = !isDiversos;
+  const requiresNF = isDiversos;
   const usesStandardFields = !isAI && !isPVT;
   const requiresEndereco = !isPVT;
   const largura = isAI ? aiLarguraNum : usesStandardFields ? extractLarguraFromItem(item) : 0;
@@ -98,7 +102,7 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear('');
+    setItem(''); setNf(''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear('');
     if (!lockEndereco) setEndereco('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
@@ -264,11 +268,15 @@ export default function LeftPanel() {
 
   const handleAdd = () => {
     const state = useAppStore.getState();
-    const proc = state.processo;
+    const proc = state.processo.trim();
     const conf = state.conferente;
-    if (!proc) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
+    if (requiresProcesso && !proc) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
     if (!conf) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
+    if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
+    if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
+    if (mLinear <= 0) { addToast(`Preencha o campo ${isPVT || isAI ? 'M Linear' : 'M²'}.`, 'warn'); return; }
+    if (!lote.trim()) { addToast('Preencha o campo Lote / Batch.', 'warn'); return; }
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
@@ -276,12 +284,14 @@ export default function LeftPanel() {
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : isPVT ? 0 : m2Num;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : largura;
 
-    const loteSistema = generateLoteSistema(proc, resolvedEndereco, mLinear, registros);
+    const resolvedProcesso = isDiversos ? '' : proc;
+    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros);
 
     const reg = {
       id: crypto.randomUUID(),
       item,
-      processo: proc,
+      processo: resolvedProcesso,
+      nf: isDiversos ? nf.trim() : '',
       endereco: resolvedEndereco,
       m2: resolvedM2,
       mLinear,
@@ -401,6 +411,9 @@ export default function LeftPanel() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
             >
+              <div className="mb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.24em] text-center">
+                Marina e Yuma
+              </div>
               <div
                 className={`dropzone ${preview ? 'has-img' : ''}`}
                 onDragOver={e => e.preventDefault()}
@@ -482,6 +495,20 @@ export default function LeftPanel() {
             <ScanBarcode className="w-3 h-3" /> Dados do Rolo
           </div>
 
+          {requiresProcesso && (
+            <div>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">PROC</label>
+              <input
+                value={processo}
+                onChange={e => setProcesso(e.target.value)}
+                onKeyDown={e => handleFieldKeyDown(e, itemRef)}
+                className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                placeholder="Processo *"
+                autoComplete="off"
+              />
+            </div>
+          )}
+
           {/* 1. Item / Referência */}
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Item / Referência</label>
@@ -489,14 +516,29 @@ export default function LeftPanel() {
               ref={itemRef}
               value={item}
               onChange={e => setItem(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+              onKeyDown={e => handleFieldKeyDown(e, isDiversos ? nfRef : m2Ref)}
               className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="SRC-3003-05-30-EB2" autoComplete="off" autoFocus
+              placeholder="SRC-3003-05-30-EB2" autoComplete="off"
             />
             {usesStandardFields && largura > 0 && (
               <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
             )}
           </div>
+
+          {isDiversos && (
+            <div>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">NF</label>
+              <input
+                ref={nfRef}
+                value={nf}
+                onChange={e => setNf(e.target.value)}
+                onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                placeholder="Nota fiscal *"
+                autoComplete="off"
+              />
+            </div>
+          )}
 
           {/* AI mode: M Linear + Largura fields */}
           {isAI ? (
