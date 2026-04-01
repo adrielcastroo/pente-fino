@@ -39,6 +39,8 @@ export type Database = {
         Row: {
           conference_id: string | null
           created_at: string
+          edited_at: string | null
+          edited_by: string
           endereco: string
           id: string
           item: string
@@ -47,10 +49,15 @@ export type Database = {
           lote_sistema: string
           m_linear: number
           m2: number
+          modo_origem: string
+          tipo_tecido: string
+          was_edited: boolean
         }
         Insert: {
           conference_id?: string | null
           created_at?: string
+          edited_at?: string | null
+          edited_by?: string
           endereco?: string
           id?: string
           item: string
@@ -59,10 +66,15 @@ export type Database = {
           lote_sistema?: string
           m_linear?: number
           m2?: number
+          modo_origem?: string
+          tipo_tecido?: string
+          was_edited?: boolean
         }
         Update: {
           conference_id?: string | null
           created_at?: string
+          edited_at?: string | null
+          edited_by?: string
           endereco?: string
           id?: string
           item?: string
@@ -71,6 +83,9 @@ export type Database = {
           lote_sistema?: string
           m_linear?: number
           m2?: number
+          modo_origem?: string
+          tipo_tecido?: string
+          was_edited?: boolean
         }
         Relationships: [
           {
