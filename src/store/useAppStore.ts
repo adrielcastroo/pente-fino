@@ -46,7 +46,7 @@ interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
 
-  setMode: (mode: 'manual' | 'openrouter') => void;
+  setMode: (mode: 'manual' | 'openrouter' | 'diversos') => void;
   setProcesso: (p: string) => void;
   setConferente: (c: string) => void;
   setSearchQuery: (q: string) => void;
