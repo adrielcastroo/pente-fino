@@ -599,7 +599,7 @@ export default function LeftPanel() {
               ref={itemRef}
               value={item}
               onChange={e => setItem(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, isDiversos ? nfRef : m2Ref)}
+              onKeyDown={e => handleFieldKeyDown(e, isDiversos ? (lockNf ? m2Ref : nfRef) : m2Ref)}
               className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="SRC-3003-05-30-EB2" autoComplete="off"
             />
