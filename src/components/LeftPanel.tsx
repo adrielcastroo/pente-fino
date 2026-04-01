@@ -16,11 +16,32 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export default function LeftPanel() {
-  const { currentMode, setMode, processo, setProcesso, registros, addRegistro, undo: undoAction, undoStack, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco } = useAppStore();
+  const {
+    currentMode,
+    setMode,
+    processo,
+    setProcesso,
+    registros,
+    addRegistro,
+    undo: undoAction,
+    undoStack,
+    lockProcesso,
+    setLockProcesso,
+    lockedProcesso,
+    setLockedProcesso,
+    lockNf,
+    setLockNf,
+    lockedNf,
+    setLockedNf,
+    lockEndereco,
+    setLockEndereco,
+    lockedEndereco,
+    setLockedEndereco,
+  } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   const [item, setItem] = useState('');
-  const [nf, setNf] = useState('');
+  const [nf, setNf] = useState(lockedNf);
   const [m2, setM2] = useState('');
   const [lote, setLote] = useState('');
   const [endereco, setEndereco] = useState(lockedEndereco);
@@ -79,6 +100,18 @@ export default function LeftPanel() {
     }
   }, [lockEndereco, lockedEndereco]);
 
+  useEffect(() => {
+    if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
+      setProcesso(lockedProcesso);
+    }
+  }, [lockProcesso, lockedProcesso, processo, setProcesso]);
+
+  useEffect(() => {
+    if (lockNf && lockedNf) {
+      setNf(lockedNf);
+    }
+  }, [lockNf, lockedNf]);
+
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
@@ -102,7 +135,8 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setNf(''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear('');
+    setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear('');
+    if (!lockProcesso) setProcesso('');
     if (!lockEndereco) setEndereco('');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
@@ -212,6 +246,38 @@ export default function LeftPanel() {
     } else {
       setLockEndereco(false);
       addToast('Endereço destravado', 'ok');
+    }
+  };
+
+  const handleProcessoChange = (val: string) => {
+    setProcesso(val);
+    if (lockProcesso) setLockedProcesso(val);
+  };
+
+  const handleNfChange = (val: string) => {
+    setNf(val);
+    if (lockNf) setLockedNf(val);
+  };
+
+  const toggleLockProcesso = () => {
+    if (!lockProcesso) {
+      setLockedProcesso(processo);
+      setLockProcesso(true);
+      addToast('PROC travado', 'ok');
+    } else {
+      setLockProcesso(false);
+      addToast('PROC destravado', 'ok');
+    }
+  };
+
+  const toggleLockNf = () => {
+    if (!lockNf) {
+      setLockedNf(nf);
+      setLockNf(true);
+      addToast('NF travada', 'ok');
+    } else {
+      setLockNf(false);
+      addToast('NF destravada', 'ok');
     }
   };
 
@@ -497,14 +563,31 @@ export default function LeftPanel() {
 
           {requiresProcesso && (
             <div>
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">PROC</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">PROC</label>
+                <button
+                  onClick={toggleLockProcesso}
+                  className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
+                    lockProcesso
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={lockProcesso ? 'Destravar PROC' : 'Travar PROC'}
+                >
+                  {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  {lockProcesso ? 'Travado' : 'Travar'}
+                </button>
+              </div>
               <input
                 value={processo}
-                onChange={e => setProcesso(e.target.value)}
+                onChange={e => handleProcessoChange(e.target.value)}
                 onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                className={`w-full border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:ring-2 transition-all ${
+                  lockProcesso ? 'bg-primary/5 border-primary/30' : 'border-border'
+                } focus:border-primary focus:ring-primary/10`}
                 placeholder="Processo *"
                 autoComplete="off"
+                readOnly={lockProcesso && !!lockedProcesso}
               />
             </div>
           )}
@@ -516,7 +599,7 @@ export default function LeftPanel() {
               ref={itemRef}
               value={item}
               onChange={e => setItem(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, isDiversos ? nfRef : m2Ref)}
+              onKeyDown={e => handleFieldKeyDown(e, isDiversos ? (lockNf ? m2Ref : nfRef) : m2Ref)}
               className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="SRC-3003-05-30-EB2" autoComplete="off"
             />
@@ -527,15 +610,32 @@ export default function LeftPanel() {
 
           {isDiversos && (
             <div>
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">NF</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">NF</label>
+                <button
+                  onClick={toggleLockNf}
+                  className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
+                    lockNf
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={lockNf ? 'Destravar NF' : 'Travar NF'}
+                >
+                  {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  {lockNf ? 'Travado' : 'Travar'}
+                </button>
+              </div>
               <input
                 ref={nfRef}
                 value={nf}
-                onChange={e => setNf(e.target.value)}
+                onChange={e => handleNfChange(e.target.value)}
                 onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                className={`w-full border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:ring-2 transition-all ${
+                  lockNf ? 'bg-primary/5 border-primary/30' : 'border-border'
+                } focus:border-primary focus:ring-primary/10`}
                 placeholder="Nota fiscal *"
                 autoComplete="off"
+                readOnly={lockNf && !!lockedNf}
               />
             </div>
           )}

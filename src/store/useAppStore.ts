@@ -44,6 +44,10 @@ interface AppState {
   searchQuery: string;
   sortBy: string;
   history: Conference[];
+  lockProcesso: boolean;
+  lockedProcesso: string;
+  lockNf: boolean;
+  lockedNf: string;
   lockEndereco: boolean;
   lockedEndereco: string;
 
@@ -52,6 +56,10 @@ interface AppState {
   setConferente: (c: string) => void;
   setSearchQuery: (q: string) => void;
   setSortBy: (s: string) => void;
+  setLockProcesso: (lock: boolean) => void;
+  setLockedProcesso: (p: string) => void;
+  setLockNf: (lock: boolean) => void;
+  setLockedNf: (n: string) => void;
   setLockEndereco: (lock: boolean) => void;
   setLockedEndereco: (e: string) => void;
   addRegistro: (reg: Registro) => void;
@@ -116,6 +124,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   searchQuery: '',
   sortBy: '',
   history: [],
+  lockProcesso: false,
+  lockedProcesso: '',
+  lockNf: false,
+  lockedNf: '',
   lockEndereco: false,
   lockedEndereco: '',
 
@@ -127,6 +139,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   setSearchQuery: (q) => set({ searchQuery: q }),
   setSortBy: (s) => set({ sortBy: s }),
+  setLockProcesso: (lock) => set({ lockProcesso: lock }),
+  setLockedProcesso: (p) => set({ lockedProcesso: p }),
+  setLockNf: (lock) => set({ lockNf: lock }),
+  setLockedNf: (n) => set({ lockedNf: n }),
   setLockEndereco: (lock) => set({ lockEndereco: lock }),
   setLockedEndereco: (e) => set({ lockedEndereco: e }),
 
