@@ -33,6 +33,7 @@ function EditRegistroDialog({
   }, [registro]);
 
   const isPVT = form?.tipoTecido === 'PVT';
+  const isDiversos = form?.modoOrigem === 'diversos';
 
   const updateField = <K extends keyof Registro>(key: K, value: Registro[K]) => {
     setForm(current => current ? { ...current, [key]: value } : current);
@@ -82,6 +83,13 @@ function EditRegistroDialog({
               <label className="text-xs font-medium text-muted-foreground">Item / Referência</label>
               <Input value={form.item} onChange={e => updateField('item', e.target.value)} />
             </div>
+
+            {isDiversos && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">NF</label>
+                <Input value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
+              </div>
+            )}
 
             {!isPVT && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -165,6 +173,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
                 <thead>
                   <tr className="surface-2-bg">
                     <th className="px-3 py-2 text-left text-muted-foreground font-medium">Item</th>
+                    <th className="px-3 py-2 text-left text-muted-foreground font-medium">NF</th>
                     <th className="px-3 py-2 text-left text-muted-foreground font-medium">M²</th>
                     <th className="px-3 py-2 text-left text-muted-foreground font-medium">M Lin</th>
                     <th className="px-3 py-2 text-left text-muted-foreground font-medium">Largura</th>
@@ -185,6 +194,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
                           </div>
                         </div>
                       </td>
+                       <td className="px-3 py-1.5 font-mono">{r.nf || '—'}</td>
                       <td className="px-3 py-1.5 font-mono">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</td>
                       <td className="px-3 py-1.5 font-mono">{formatML(r.mLinear)}</td>
                       <td className="px-3 py-1.5 font-mono">{r.largura > 0 ? r.largura.toFixed(2) : '—'}</td>

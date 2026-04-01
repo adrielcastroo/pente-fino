@@ -6,23 +6,39 @@ import { Settings, Download, Ruler, User } from 'lucide-react';
 import logoImg from '@/assets/logo.ico';
 
 export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) {
-  const { processo, setProcesso, conferente, setConferente, registros, archiveAndClear } = useAppStore();
+  const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const totalML = registros.reduce((a, r) => a + r.mLinear, 0);
 
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
-    if (!processo) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
+    const requiresProcesso = registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos';
+    if (requiresProcesso && !processo.trim()) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
     if (!conferente) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
-    const headers = ['Item/Referência', 'Largura', 'Endereço', 'M Linear', 'M²', 'Lote/Batch', 'Lote Final (Sistema)'];
-    const data = registros.map(r => [r.item, r.largura, r.endereco, r.mLinear, r.m2, r.lote, r.loteSistema]);
+    const hasNF = registros.some(r => !!r.nf);
+    const hasLargura = registros.some(r => r.largura > 0);
+    const hasEndereco = registros.some(r => !!r.endereco);
+    const hasM2 = registros.some(r => r.m2 > 0);
+    const columns = [
+      { key: 'item', label: 'Item/Referência', width: 28 },
+      ...(hasNF ? [{ key: 'nf', label: 'NF', width: 16 }] : []),
+      ...(hasLargura ? [{ key: 'largura', label: 'Largura', width: 10 }] : []),
+      ...(hasEndereco ? [{ key: 'endereco', label: 'Endereço', width: 18 }] : []),
+      { key: 'mLinear', label: 'M Linear', width: 12 },
+      ...(hasM2 ? [{ key: 'm2', label: 'M²', width: 10 }] : []),
+      { key: 'lote', label: 'Lote/Batch', width: 24 },
+      { key: 'loteSistema', label: 'Lote Final (Sistema)', width: 36 },
+    ];
+    const headers = columns.map(column => column.label);
+    const data = registros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    ws['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 24 }, { wch: 36 }];
+    ws['!cols'] = columns.map(column => ({ wch: column.width }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
-    XLSX.writeFile(wb, `conferencia_PROC_${processo.replace(/[/\\]/g, '_')}.xlsx`);
+    const fileLabel = processo.trim() || 'diversos';
+    XLSX.writeFile(wb, `conferencia_PROC_${fileLabel.replace(/[/\\]/g, '_')}.xlsx`);
     const count = registros.length;
-    await archiveAndClear(`PROC ${processo}`);
+    await archiveAndClear(processo.trim() ? `PROC ${processo.trim()}` : 'Diversos');
     addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
   };
 
@@ -36,22 +52,7 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
     >
       <div className="flex items-center gap-2 flex-shrink-0">
         <img src={logoImg} alt="Pente Fino" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
-        <div className="hidden sm:block">
-          <div className="font-semibold text-sm leading-tight">Conferência de Tecidos</div>
-          <div className="text-[10px] opacity-40 font-mono">SAP B1</div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider hidden sm:inline">PROC</span>
-        <input
-          className="glass-input font-mono font-medium w-[100px] sm:w-[140px] text-xs"
-          value={processo}
-          onChange={e => setProcesso(e.target.value)}
-          placeholder="Processo *"
-          autoComplete="off"
-          required
-        />
+        <div className="font-semibold text-sm leading-tight">Pente Fino</div>
       </div>
 
       <div className="flex items-center gap-1.5 min-w-0">
