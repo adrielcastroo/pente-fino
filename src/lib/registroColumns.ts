@@ -23,7 +23,7 @@ const COLUMN_MAP: Record<RegistroColumnKey, RegistroColumn> = {
 };
 
 const LAYOUTS = {
-  coulisse: ['item', 'm2', 'largura', 'mLinear', 'lote', 'endereco', 'loteSistema'],
+  coulisse: ['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
   ia: ['item', 'largura', 'mLinear', 'endereco', 'loteSistema'],
   rolo: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
   cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
