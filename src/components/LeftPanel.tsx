@@ -246,7 +246,8 @@ export default function LeftPanel() {
   };
 
   const handleEnderecoChange = (val: string) => {
-    const formatted = formatEndereco(val);
+    const normalized = val.replace(/[''`]/g, '-');
+    const formatted = formatEndereco(normalized);
     setEndereco(formatted);
     validateEndereco(formatted);
     if (lockEndereco) setLockedEndereco(formatted);
@@ -264,19 +265,21 @@ export default function LeftPanel() {
   };
 
   const handleProcessoChange = (val: string) => {
-    setProcesso(val);
-    if (lockProcesso) setLockedProcesso(val);
+    const normalized = val.replace(/[''`]/g, '-');
+    setProcesso(normalized);
+    if (lockProcesso) setLockedProcesso(normalized);
   };
 
   const handleNfChange = (val: string) => {
-    setNf(val);
-    if (lockNf) setLockedNf(val);
+    const normalized = val.replace(/[''`]/g, '-');
+    setNf(normalized);
+    if (lockNf) setLockedNf(normalized);
   };
 
-  const normalizeScannerItem = (val: string) => val.replace(/[''`]/g, '-');
+  const normalizeScannerInput = (val: string) => val.replace(/[''`]/g, '-');
 
   const handleItemChange = (val: string) => {
-    setItem(normalizeScannerItem(val));
+    setItem(normalizeScannerInput(val));
   };
 
   const toggleLockProcesso = () => {
@@ -506,7 +509,7 @@ export default function LeftPanel() {
                       : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
-                  {tipo}
+                  {tipo === 'Celular' ? 'Celular/Plissada' : tipo}
                 </button>
               ))}
             </div>
