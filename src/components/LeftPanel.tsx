@@ -88,7 +88,7 @@ export default function LeftPanel() {
   const requiresNF = isDiversos && !isCelular;
   const usesM2Input = !isAI && !isPVT && !isCelular;
   const usesLarguraFromItem = !isAI && (currentMode === 'manual' || isRolo || isCortina);
-  const requiresEndereco = !isPVT;
+  const requiresEndereco = !isPVT && !isCelular;
 
   const largura = isAI ? aiLarguraNum : usesLarguraFromItem ? extractLarguraFromItem(item) : 0;
   const mLinear = isAI ? aiMLinearNum : (isPVT || isCelular) ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
@@ -246,7 +246,8 @@ export default function LeftPanel() {
   };
 
   const handleEnderecoChange = (val: string) => {
-    const formatted = formatEndereco(val);
+    const normalized = val.replace(/[''`]/g, '-');
+    const formatted = formatEndereco(normalized);
     setEndereco(formatted);
     validateEndereco(formatted);
     if (lockEndereco) setLockedEndereco(formatted);
@@ -264,19 +265,21 @@ export default function LeftPanel() {
   };
 
   const handleProcessoChange = (val: string) => {
-    setProcesso(val);
-    if (lockProcesso) setLockedProcesso(val);
+    const normalized = val.replace(/[''`]/g, '-');
+    setProcesso(normalized);
+    if (lockProcesso) setLockedProcesso(normalized);
   };
 
   const handleNfChange = (val: string) => {
-    setNf(val);
-    if (lockNf) setLockedNf(val);
+    const normalized = val.replace(/[''`]/g, '-');
+    setNf(normalized);
+    if (lockNf) setLockedNf(normalized);
   };
 
-  const normalizeScannerItem = (val: string) => val.replace(/[''`]/g, '-');
+  const normalizeScannerInput = (val: string) => val.replace(/[''`]/g, '-');
 
   const handleItemChange = (val: string) => {
-    setItem(normalizeScannerItem(val));
+    setItem(normalizeScannerInput(val));
   };
 
   const toggleLockProcesso = () => {
@@ -506,7 +509,7 @@ export default function LeftPanel() {
                       : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
-                  {tipo}
+                  {tipo === 'Celular' ? 'Celular/Plissada' : tipo}
                 </button>
               ))}
             </div>
@@ -750,7 +753,7 @@ export default function LeftPanel() {
                 <input
                   ref={loteRef}
                   value={lote}
-                  onChange={e => setLote(e.target.value)}
+                  onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                   onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
                   className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   placeholder="Código do lote" autoComplete="off"

@@ -27,7 +27,7 @@ const LAYOUTS = {
   ia: ['item', 'largura', 'mLinear', 'endereco', 'loteSistema'],
   rolo: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
   cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
-  celular: ['item', 'processo', 'mLinear', 'lote', 'endereco', 'loteSistema'],
+  celular: ['item', 'processo', 'mLinear', 'lote', 'loteSistema'],
   pvt: ['item', 'nf', 'mLinear', 'lote'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
