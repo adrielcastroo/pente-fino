@@ -71,11 +71,17 @@ export default function LeftPanel() {
   const [aiMLinear, setAiMLinear] = useState('');
   const [diversosTipo, setDiversosTipo] = useState<'Rolo' | 'PVT' | 'Cortina' | 'Celular'>('Rolo');
   const [diversosMLinear, setDiversosMLinear] = useState('');
+  const [manualLargura, setManualLargura] = useState('');
+  const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
+  const [lockMetragem, setLockMetragem] = useState(false);
+
+  const manualLarguraRef = useRef<HTMLInputElement>(null);
 
   const m2Num = parseFloat(m2) || 0;
   const aiLarguraNum = parseFloat(aiLargura) || 0;
   const aiMLinearNum = parseFloat(aiMLinear) || 0;
   const diversosMLinearNum = parseFloat(diversosMLinear) || 0;
+  const manualLarguraNum = parseFloat(manualLargura) || 0;
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isPVT = isDiversos && diversosTipo === 'PVT';
@@ -86,12 +92,21 @@ export default function LeftPanel() {
   // Celular uses PROC instead of NF
   const requiresProcesso = !isDiversos || isCelular;
   const requiresNF = isDiversos && !isCelular;
-  const usesM2Input = !isAI && !isPVT && !isCelular;
-  const usesLarguraFromItem = !isAI && (currentMode === 'manual' || isRolo || isCortina);
+  const isCoulisse = currentMode === 'manual';
+  const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
+  const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
+  const usesM2Input = !isAI && !isPVT && !isCelular && !coulisseUsesMLinear;
+  const usesLarguraFromItem = !isAI && (isRolo || isCortina);
   const requiresEndereco = !isPVT && !isCelular;
 
-  const largura = isAI ? aiLarguraNum : usesLarguraFromItem ? extractLarguraFromItem(item) : 0;
-  const mLinear = isAI ? aiMLinearNum : (isPVT || isCelular) ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
+  const largura = isAI ? aiLarguraNum
+    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : usesLarguraFromItem ? extractLarguraFromItem(item)
+    : 0;
+  const mLinear = isAI ? aiMLinearNum
+    : (isPVT || isCelular) ? diversosMLinearNum
+    : coulisseUsesMLinear ? diversosMLinearNum
+    : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
@@ -150,9 +165,10 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear('');
+    setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear(''); setManualLargura('');
     if (!lockProcesso) setProcesso('');
     if (!lockEndereco) setEndereco('');
+    if (!lockMetragem) setCoulisseMetragem('m2');
     setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
@@ -363,14 +379,14 @@ export default function LeftPanel() {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
-    if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código.', 'warn'); return; }
-    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
+    if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código ou preencha manualmente.', 'warn'); return; }
+    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
     // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular) ? 0 : m2Num;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular || coulisseUsesMLinear) ? 0 : m2Num;
     const resolvedLargura = isAI ? aiLarguraNum : (isPVT || isCelular) ? 0 : largura;
 
     // Celular uses processo, other Diversos use NF
@@ -414,6 +430,7 @@ export default function LeftPanel() {
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
+    if (isCoulisse) return manualLarguraRef; // always go to optional largura field
     if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
     return m2Ref;
   };
@@ -658,6 +675,24 @@ export default function LeftPanel() {
             )}
           </div>
 
+          {/* Coulisse: optional manual largura */}
+          {isCoulisse && (
+            <div>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m) — opcional</label>
+              <input
+                ref={manualLarguraRef}
+                type="number" step="0.01" value={manualLargura}
+                onChange={e => setManualLargura(e.target.value)}
+                onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                placeholder="2.80" autoComplete="off" inputMode="decimal"
+              />
+              {largura > 0 && (
+                <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
+              )}
+            </div>
+          )}
+
           {/* NF field — Diversos except Celular */}
           {requiresNF && (
             <div>
@@ -719,8 +754,8 @@ export default function LeftPanel() {
             </>
           ) : (
             <>
-              {(isPVT || isCelular) ? (
-                /* PVT and Celular: direct M Linear input */
+              {(isPVT || isCelular || coulisseUsesMLinear) ? (
+                /* PVT, Celular, or Coulisse M Linear mode: direct M Linear input */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
                   <input
@@ -733,7 +768,7 @@ export default function LeftPanel() {
                   />
                 </div>
               ) : (
-                /* Coulisse, Rolo, Cortina: M² input with calculated M Linear */
+                /* Coulisse M², Rolo, Cortina: M² input with calculated M Linear */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
                   <input
@@ -747,6 +782,39 @@ export default function LeftPanel() {
                   {mLinear > 0 && (
                     <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
                   )}
+                </div>
+              )}
+
+              {/* Coulisse: measurement type toggle */}
+              {isCoulisse && (
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCoulisseMetragem(coulisseMetragem === 'm2' ? 'mlinear' : 'm2')}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                        coulisseMetragem === 'm2'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {coulisseMetragem === 'm2' ? 'M²→M Linear' : 'M Linear direto'}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setLockMetragem(!lockMetragem);
+                      addToast(lockMetragem ? 'Metragem destravada' : 'Metragem travada', 'ok');
+                    }}
+                    className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
+                      lockMetragem
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    title={lockMetragem ? 'Destravar metragem' : 'Travar metragem'}
+                  >
+                    {lockMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    {lockMetragem ? 'Travado' : 'Travar'}
+                  </button>
                 </div>
               )}
               <div>
