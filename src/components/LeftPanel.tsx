@@ -88,7 +88,7 @@ export default function LeftPanel() {
   const requiresNF = isDiversos && !isCelular;
   const usesM2Input = !isAI && !isPVT && !isCelular;
   const usesLarguraFromItem = !isAI && (currentMode === 'manual' || isRolo || isCortina);
-  const requiresEndereco = !isPVT;
+  const requiresEndereco = !isPVT && !isCelular;
 
   const largura = isAI ? aiLarguraNum : usesLarguraFromItem ? extractLarguraFromItem(item) : 0;
   const mLinear = isAI ? aiMLinearNum : (isPVT || isCelular) ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
