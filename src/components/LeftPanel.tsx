@@ -675,6 +675,24 @@ export default function LeftPanel() {
             )}
           </div>
 
+          {/* Coulisse: optional manual largura */}
+          {isCoulisse && (
+            <div>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m) — opcional</label>
+              <input
+                ref={manualLarguraRef}
+                type="number" step="0.01" value={manualLargura}
+                onChange={e => setManualLargura(e.target.value)}
+                onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                placeholder="2.80" autoComplete="off" inputMode="decimal"
+              />
+              {largura > 0 && (
+                <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
+              )}
+            </div>
+          )}
+
           {/* NF field — Diversos except Celular */}
           {requiresNF && (
             <div>
