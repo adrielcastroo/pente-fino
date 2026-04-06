@@ -753,7 +753,7 @@ export default function LeftPanel() {
                 <input
                   ref={loteRef}
                   value={lote}
-                  onChange={e => setLote(e.target.value)}
+                  onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                   onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
                   className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   placeholder="Código do lote" autoComplete="off"
