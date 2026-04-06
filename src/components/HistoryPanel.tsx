@@ -13,6 +13,12 @@ function formatDate(iso: string) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+function formatTime(iso: string | null | undefined) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
 function EditRegistroDialog({
   open,
   onOpenChange,
@@ -134,11 +140,25 @@ function EditRegistroDialog({
   );
 }
 
+function getConferenceFolderName(conf: Conference): string {
+  // For Diversos mode, use NF as folder name
+  const isDiversos = conf.registros.some(r => r.modoOrigem === 'diversos');
+  if (isDiversos) {
+    const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+    if (nfs.length > 0) return `NF ${nfs.join(', ')}`;
+  }
+  return conf.name;
+}
+
 function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const totalML = conf.registros.reduce((a, r) => a + r.mLinear, 0);
   const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
+  const folderName = getConferenceFolderName(conf);
+
+  const startTime = formatTime(conf.startedAt);
+  const endTime = formatTime(conf.finishedAt);
 
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-card">
@@ -146,13 +166,18 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
         <button onClick={() => setOpen(!open)} className="flex-1 px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left">
           <FolderOpen className="w-4 h-4 text-primary flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate">{conf.name}</div>
+            <div className="text-sm font-semibold truncate">{folderName}</div>
             <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
               <Clock className="w-3 h-3" />
               {formatDate(conf.date)} · {conf.registros.length} rolos · {formatML(totalML)}
               {conf.conferente && (
                 <span className="flex items-center gap-0.5">
                   <User className="w-3 h-3" /> {conf.conferente}
+                </span>
+              )}
+              {startTime && endTime && (
+                <span className="text-muted-foreground/70">
+                  {startTime} → {endTime}
                 </span>
               )}
             </div>
@@ -192,6 +217,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
                             </div>
                           )}
                           {column.key === 'nf' && (r.nf || '—')}
+                          {column.key === 'processo' && (r.processo || '—')}
                           {column.key === 'm2' && (r.m2 > 0 ? r.m2.toFixed(1) : '—')}
                           {column.key === 'mLinear' && formatML(r.mLinear)}
                           {column.key === 'largura' && (r.largura > 0 ? r.largura.toFixed(2) : '—')}

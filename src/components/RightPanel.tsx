@@ -149,6 +149,7 @@ export default function RightPanel() {
                       <td key={column.key} className={`px-3 py-2.5 text-sm ${column.key === 'item' ? 'font-semibold' : 'font-mono'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}>
                         {column.key === 'item' && highlight(r.item || '—', q)}
                         {column.key === 'nf' && (r.nf || '—')}
+                        {column.key === 'processo' && (r.processo || '—')}
                         {column.key === 'm2' && (r.m2 > 0 ? r.m2.toFixed(1) : '—')}
                         {column.key === 'largura' && (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')}
                         {column.key === 'mLinear' && formatML(r.mLinear)}
