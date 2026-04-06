@@ -27,6 +27,8 @@ export interface Conference {
   processo: string;
   conferente: string;
   date: string;
+  startedAt?: string | null;
+  finishedAt?: string | null;
   registros: Registro[];
 }
 
@@ -44,6 +46,7 @@ interface AppState {
   searchQuery: string;
   sortBy: string;
   history: Conference[];
+  sessionStartedAt: string | null;
   lockProcesso: boolean;
   lockedProcesso: string;
   lockNf: boolean;
@@ -75,6 +78,7 @@ interface AppState {
 }
 
 const STORAGE_KEY = 'cft4';
+const SESSION_START_KEY = 'cft4_session_started_at';
 
 function fmtML(v: number): string {
   if (!v || v === 0) return '';
@@ -100,14 +104,29 @@ export function extractLarguraFromItem(item: string): number {
   return num / 10;
 }
 
-/** Generate Lote Sistema with serial for duplicates */
-export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[]): string {
+/** Generate Lote Sistema with NF/PROC label prefix and serial for duplicates */
+export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[], nf?: string): string {
   const mlFormatted = fmtML(mLinear) || '0M';
-  const base = [endereco.trim(), processo.trim(), mlFormatted].filter(Boolean).join(' ');
+  
+  // Build label prefix: "PROC xxx" or "NF xxx" depending on what's available
+  const procTrimmed = processo.trim();
+  const nfTrimmed = (nf || '').trim();
+  let labelPrefix = '';
+  if (procTrimmed) labelPrefix = `PROC ${procTrimmed}`;
+  else if (nfTrimmed) labelPrefix = `NF ${nfTrimmed}`;
+
+  const parts = [endereco.trim(), labelPrefix, mlFormatted].filter(Boolean);
+  const base = parts.join(' ');
   
   // Count existing registros with same base
   const count = existingRegistros.filter(r => {
-    const rBase = [r.endereco?.trim() || '', r.processo?.trim() || '', fmtML(r.mLinear) || '0M'].filter(Boolean).join(' ');
+    const rProc = (r.processo || '').trim();
+    const rNf = (r.nf || '').trim();
+    let rLabel = '';
+    if (rProc) rLabel = `PROC ${rProc}`;
+    else if (rNf) rLabel = `NF ${rNf}`;
+    const rParts = [(r.endereco?.trim() || ''), rLabel, fmtML(r.mLinear) || '0M'].filter(Boolean);
+    const rBase = rParts.join(' ');
     return rBase === base;
   }).length;
   
@@ -124,6 +143,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   searchQuery: '',
   sortBy: '',
   history: [],
+  sessionStartedAt: localStorage.getItem(SESSION_START_KEY) || null,
   lockProcesso: false,
   lockedProcesso: '',
   lockNf: false,
@@ -149,7 +169,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   addRegistro: (reg) => set(state => {
     const newRegs = [...state.registros, reg];
     save(newRegs);
-    return { registros: newRegs };
+    // Track session start time on first registro
+    let sessionStartedAt = state.sessionStartedAt;
+    if (!sessionStartedAt && state.registros.length === 0) {
+      sessionStartedAt = new Date().toISOString();
+      try { localStorage.setItem(SESSION_START_KEY, sessionStartedAt); } catch {}
+    }
+    return { registros: newRegs, sessionStartedAt };
   }),
 
   deleteRegistro: (id) => set(state => {
@@ -175,24 +201,31 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   clearAll: () => {
     save([]);
-    set({ registros: [], undoStack: [] });
+    try { localStorage.removeItem(SESSION_START_KEY); } catch {}
+    set({ registros: [], undoStack: [], sessionStartedAt: null });
   },
 
   archiveAndClear: async (name: string) => {
     const state = get();
     if (!state.registros.length) return;
 
+    const finishedAt = new Date().toISOString();
+    const startedAt = state.sessionStartedAt || finishedAt;
+
     try {
-      // Save conference to Supabase
       const { data: conf, error: confError } = await supabase
         .from('conferences')
-        .insert({ processo: state.processo.trim() || name, conferente: state.conferente })
+        .insert({
+          processo: state.processo.trim() || name,
+          conferente: state.conferente,
+          started_at: startedAt,
+          finished_at: finishedAt,
+        } as any)
         .select()
         .single();
 
       if (confError) throw confError;
 
-      // Save registros to Supabase
       const rows = state.registros.map(r => ({
         conference_id: conf.id,
         item: r.item,
@@ -214,15 +247,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (regError) throw regError;
 
       save([]);
-      set({ registros: [], undoStack: [] });
+      try { localStorage.removeItem(SESSION_START_KEY); } catch {}
+      set({ registros: [], undoStack: [], sessionStartedAt: null });
 
-      // Reload history
       await get().loadHistory();
     } catch (e) {
       console.error('Error archiving:', e);
-      // Fallback: still clear local
       save([]);
-      set({ registros: [], undoStack: [] });
+      try { localStorage.removeItem(SESSION_START_KEY); } catch {}
+      set({ registros: [], undoStack: [], sessionStartedAt: null });
     }
   },
 
@@ -249,6 +282,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           processo: c.processo,
           conferente: c.conferente,
           date: c.created_at,
+          startedAt: (c as any).started_at || null,
+          finishedAt: (c as any).finished_at || null,
           registros: (regs || []).map(r => ({
             id: r.id,
             item: r.item,
@@ -318,7 +353,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const editedBy = state.conferente || merged.editedBy || '';
       const editedAt = new Date().toISOString();
       const siblingRegistros = conference.registros.filter(r => r.id !== registroId);
-      const loteSistema = generateLoteSistema(normalizedProcesso, normalizedEndereco, normalizedML, siblingRegistros as Registro[]);
+      const loteSistema = generateLoteSistema(normalizedProcesso, normalizedEndereco, normalizedML, siblingRegistros as Registro[], normalizedNf);
 
       const payload = {
         item: normalizedItem,
