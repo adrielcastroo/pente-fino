@@ -430,6 +430,7 @@ export default function LeftPanel() {
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
+    if (isCoulisse) return manualLarguraRef; // always go to optional largura field
     if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
     return m2Ref;
   };
