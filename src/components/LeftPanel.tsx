@@ -754,8 +754,8 @@ export default function LeftPanel() {
             </>
           ) : (
             <>
-              {(isPVT || isCelular) ? (
-                /* PVT and Celular: direct M Linear input */
+              {(isPVT || isCelular || coulisseUsesMLinear) ? (
+                /* PVT, Celular, or Coulisse M Linear mode: direct M Linear input */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
                   <input
@@ -768,7 +768,7 @@ export default function LeftPanel() {
                   />
                 </div>
               ) : (
-                /* Coulisse, Rolo, Cortina: M² input with calculated M Linear */
+                /* Coulisse M², Rolo, Cortina: M² input with calculated M Linear */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
                   <input
@@ -782,6 +782,39 @@ export default function LeftPanel() {
                   {mLinear > 0 && (
                     <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
                   )}
+                </div>
+              )}
+
+              {/* Coulisse: measurement type toggle */}
+              {isCoulisse && (
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCoulisseMetragem(coulisseMetragem === 'm2' ? 'mlinear' : 'm2')}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                        coulisseMetragem === 'm2'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {coulisseMetragem === 'm2' ? 'M²→M Linear' : 'M Linear direto'}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setLockMetragem(!lockMetragem);
+                      addToast(lockMetragem ? 'Metragem destravada' : 'Metragem travada', 'ok');
+                    }}
+                    className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
+                      lockMetragem
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    title={lockMetragem ? 'Destravar metragem' : 'Travar metragem'}
+                  >
+                    {lockMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    {lockMetragem ? 'Travado' : 'Travar'}
+                  </button>
                 </div>
               )}
               <div>
