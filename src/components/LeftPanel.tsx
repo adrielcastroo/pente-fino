@@ -92,12 +92,21 @@ export default function LeftPanel() {
   // Celular uses PROC instead of NF
   const requiresProcesso = !isDiversos || isCelular;
   const requiresNF = isDiversos && !isCelular;
-  const usesM2Input = !isAI && !isPVT && !isCelular;
-  const usesLarguraFromItem = !isAI && (currentMode === 'manual' || isRolo || isCortina);
+  const isCoulisse = currentMode === 'manual';
+  const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
+  const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
+  const usesM2Input = !isAI && !isPVT && !isCelular && !coulisseUsesMLinear;
+  const usesLarguraFromItem = !isAI && (isRolo || isCortina);
   const requiresEndereco = !isPVT && !isCelular;
 
-  const largura = isAI ? aiLarguraNum : usesLarguraFromItem ? extractLarguraFromItem(item) : 0;
-  const mLinear = isAI ? aiMLinearNum : (isPVT || isCelular) ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
+  const largura = isAI ? aiLarguraNum
+    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : usesLarguraFromItem ? extractLarguraFromItem(item)
+    : 0;
+  const mLinear = isAI ? aiMLinearNum
+    : (isPVT || isCelular) ? diversosMLinearNum
+    : coulisseUsesMLinear ? diversosMLinearNum
+    : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
