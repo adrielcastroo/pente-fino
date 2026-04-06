@@ -94,13 +94,13 @@ export default function LeftPanel() {
   const mLinear = isAI ? aiMLinearNum : (isPVT || isCelular) ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
-  const ENDERECO_REGEX = /^[A-Z0-9]{4}\.[A-Z0-9]\.[A-Z0-9]+$/;
+  const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
 
   const formatEndereco = (val: string): string => {
     const clean = val.toUpperCase().replace(/\./g, '');
-    if (clean.length <= 4) return clean;
-    if (clean.length <= 5) return `${clean.slice(0, 4)}.${clean.slice(4)}`;
-    return `${clean.slice(0, 4)}.${clean.slice(4, 5)}.${clean.slice(5)}`;
+    if (clean.length <= 5) return clean;
+    if (clean.length <= 6) return `${clean.slice(0, 5)}.${clean.slice(5)}`;
+    return `${clean.slice(0, 5)}.${clean.slice(5, 6)}.${clean.slice(6)}`;
   };
 
   const validateEndereco = (val: string) => {
@@ -363,6 +363,7 @@ export default function LeftPanel() {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
+    if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código.', 'warn'); return; }
     if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
     // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
