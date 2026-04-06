@@ -379,14 +379,14 @@ export default function LeftPanel() {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
-    if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código.', 'warn'); return; }
-    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
+    if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código ou preencha manualmente.', 'warn'); return; }
+    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
     // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular) ? 0 : m2Num;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular || coulisseUsesMLinear) ? 0 : m2Num;
     const resolvedLargura = isAI ? aiLarguraNum : (isPVT || isCelular) ? 0 : largura;
 
     // Celular uses processo, other Diversos use NF
