@@ -458,7 +458,7 @@ export default function LeftPanel() {
       initial={{ x: -40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="surface-bg border-r border-border overflow-y-auto flex flex-col h-full"
+      className="surface-bg border-r border-border overflow-hidden flex flex-col h-full"
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
