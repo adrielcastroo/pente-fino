@@ -63,6 +63,7 @@ export default function LeftPanel() {
   const itemRef = useRef<HTMLInputElement>(null);
   const nfRef = useRef<HTMLInputElement>(null);
   const m2Ref = useRef<HTMLInputElement>(null);
+  const larguraRef = useRef<HTMLInputElement>(null);
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
@@ -78,15 +79,29 @@ export default function LeftPanel() {
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isPVT = isDiversos && diversosTipo === 'PVT';
-  const requiresProcesso = !isDiversos;
-  const requiresNF = isDiversos;
-  const usesStandardFields = !isAI && !isPVT;
+  const isCelular = isDiversos && diversosTipo === 'Celular';
+  const isRolo = isDiversos && diversosTipo === 'Rolo';
+  const isCortina = isDiversos && diversosTipo === 'Cortina';
+
+  // Celular uses PROC instead of NF
+  const requiresProcesso = !isDiversos || isCelular;
+  const requiresNF = isDiversos && !isCelular;
+  const usesM2Input = !isAI && !isPVT && !isCelular;
+  const usesLarguraFromItem = !isAI && (currentMode === 'manual' || isRolo || isCortina);
   const requiresEndereco = !isPVT;
-  const largura = isAI ? aiLarguraNum : usesStandardFields ? extractLarguraFromItem(item) : 0;
-  const mLinear = isAI ? aiMLinearNum : isPVT ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
+
+  const largura = isAI ? aiLarguraNum : usesLarguraFromItem ? extractLarguraFromItem(item) : 0;
+  const mLinear = isAI ? aiMLinearNum : (isPVT || isCelular) ? diversosMLinearNum : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
-  const ENDERECO_REGEX = /^TEC\d{2}\.[A-Z]\.N\d{2}$/;
+  const ENDERECO_REGEX = /^[A-Z0-9]{4}\.[A-Z0-9]\.[A-Z0-9]+$/;
+
+  const formatEndereco = (val: string): string => {
+    const clean = val.toUpperCase().replace(/\./g, '');
+    if (clean.length <= 4) return clean;
+    if (clean.length <= 5) return `${clean.slice(0, 4)}.${clean.slice(4)}`;
+    return `${clean.slice(0, 4)}.${clean.slice(4, 5)}.${clean.slice(5)}`;
+  };
 
   const validateEndereco = (val: string) => {
     if (!val) { setEnderecoError(''); return; }
@@ -218,7 +233,6 @@ export default function LeftPanel() {
     return () => document.removeEventListener('paste', handlePaste as any);
   }, [handlePaste]);
 
-  // Auto-advance: Enter key moves to next field
   const handleFieldKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -232,10 +246,10 @@ export default function LeftPanel() {
   };
 
   const handleEnderecoChange = (val: string) => {
-    const upper = val.toUpperCase();
-    setEndereco(upper);
-    validateEndereco(upper);
-    if (lockEndereco) setLockedEndereco(upper);
+    const formatted = formatEndereco(val);
+    setEndereco(formatted);
+    validateEndereco(formatted);
+    if (lockEndereco) setLockedEndereco(formatted);
   };
 
   const toggleLockEndereco = () => {
@@ -259,7 +273,7 @@ export default function LeftPanel() {
     if (lockNf) setLockedNf(val);
   };
 
-  const normalizeScannerItem = (val: string) => val.replace(/['’`]/g, '-');
+  const normalizeScannerItem = (val: string) => val.replace(/[''`]/g, '-');
 
   const handleItemChange = (val: string) => {
     setItem(normalizeScannerItem(val));
@@ -299,7 +313,6 @@ export default function LeftPanel() {
     if (parsed.m2) {
       const m2Val = parseFloat(parsed.m2);
       setM2(m2Val.toFixed(1));
-      // Calculate M Linear if we have width
       const widthNum = parsed.width ? parseInt(parsed.width, 10) / 100 : 0;
       if (widthNum > 0 && m2Val > 0) {
         setAiMLinear((m2Val / widthNum).toFixed(1));
@@ -347,23 +360,25 @@ export default function LeftPanel() {
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
-    if (mLinear <= 0) { addToast(`Preencha o campo ${isPVT || isAI ? 'M Linear' : 'M²'}.`, 'warn'); return; }
+    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
     if (!lote.trim()) { addToast('Preencha o campo Lote / Batch.', 'warn'); return; }
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : isPVT ? 0 : m2Num;
-    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : largura;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular) ? 0 : m2Num;
+    const resolvedLargura = isAI ? aiLarguraNum : (isPVT || isCelular) ? 0 : largura;
 
-    const resolvedProcesso = isDiversos ? '' : proc;
-    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros);
+    // Celular uses processo, other Diversos use NF
+    const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
+    const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
+    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf);
 
     const reg = {
       id: crypto.randomUUID(),
       item,
       processo: resolvedProcesso,
-      nf: isDiversos ? nf.trim() : '',
+      nf: resolvedNf,
       endereco: resolvedEndereco,
       m2: resolvedM2,
       mLinear,
@@ -371,7 +386,7 @@ export default function LeftPanel() {
       lote: lote || '',
       loteSistema,
       tipoTecido: isDiversos ? diversosTipo : '',
-      modoOrigem: isAI ? 'ia' : isDiversos ? 'diversos' : 'coulisse',
+      modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : 'manual',
       isNew: true,
     };
     addRegistro(reg);
@@ -392,6 +407,30 @@ export default function LeftPanel() {
   ];
 
   const showDropzone = currentMode === 'openrouter';
+
+  // Determine next ref after item based on mode
+  const getNextRefAfterItem = () => {
+    if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
+    return m2Ref;
+  };
+
+  // Determine next ref after NF
+  const getNextRefAfterNf = () => {
+    if (isRolo || isCortina) return m2Ref; // largura is auto-calculated
+    return m2Ref;
+  };
+
+  // For computed card preview
+  const previewLoteSistema = (() => {
+    const proc = processo.trim();
+    const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
+    const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
+    const resolvedEnd = requiresEndereco ? endereco : '';
+    if (mLinear > 0 && (resolvedProc || resolvedNfVal || resolvedEnd)) {
+      return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal);
+    }
+    return '—';
+  })();
 
   return (
     <motion.div
@@ -441,7 +480,7 @@ export default function LeftPanel() {
         <AnimatePresence mode="wait">
           {!isAI && (
             <motion.div
-              key={currentMode}
+              key={currentMode + diversosTipo}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -567,6 +606,7 @@ export default function LeftPanel() {
             <ScanBarcode className="w-3 h-3" /> Dados do Rolo
           </div>
 
+          {/* PROC field — Coulisse, IA, and Celular */}
           {requiresProcesso && (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -598,23 +638,24 @@ export default function LeftPanel() {
             </div>
           )}
 
-          {/* 1. Item / Referência */}
+          {/* Item / Referência */}
           <div>
             <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Item / Referência</label>
             <input
               ref={itemRef}
               value={item}
               onChange={e => handleItemChange(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, isDiversos ? (lockNf ? m2Ref : nfRef) : m2Ref)}
+              onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
               className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               placeholder="SRC-3003-05-30-EB2" autoComplete="off"
             />
-            {usesStandardFields && largura > 0 && (
+            {usesLarguraFromItem && largura > 0 && (
               <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
             )}
           </div>
 
-          {isDiversos && (
+          {/* NF field — Diversos except Celular */}
+          {requiresNF && (
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">NF</label>
@@ -635,7 +676,7 @@ export default function LeftPanel() {
                 ref={nfRef}
                 value={nf}
                 onChange={e => handleNfChange(e.target.value)}
-                onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                 className={`w-full border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:ring-2 transition-all ${
                   lockNf ? 'bg-primary/5 border-primary/30' : 'border-border'
                 } focus:border-primary focus:ring-primary/10`}
@@ -655,7 +696,7 @@ export default function LeftPanel() {
                   ref={m2Ref}
                   type="number" step="0.1" value={aiMLinear}
                   onChange={e => setAiMLinear(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+                  onKeyDown={e => handleFieldKeyDown(e, larguraRef)}
                   className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   placeholder="27.5" autoComplete="off" inputMode="decimal"
                 />
@@ -663,7 +704,7 @@ export default function LeftPanel() {
               <div>
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m)</label>
                 <input
-                  ref={loteRef}
+                  ref={larguraRef}
                   type="number" step="0.01" value={aiLargura}
                   onChange={e => setAiLargura(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
@@ -674,7 +715,8 @@ export default function LeftPanel() {
             </>
           ) : (
             <>
-              {isPVT ? (
+              {(isPVT || isCelular) ? (
+                /* PVT and Celular: direct M Linear input */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
                   <input
@@ -687,6 +729,7 @@ export default function LeftPanel() {
                   />
                 </div>
               ) : (
+                /* Coulisse, Rolo, Cortina: M² input with calculated M Linear */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
                   <input
@@ -762,11 +805,7 @@ export default function LeftPanel() {
           </div>
           <div className="col-span-2">
             <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
-            <div className="text-xs font-mono opacity-70 truncate">
-              {processo && mLinear > 0 && (!requiresEndereco || endereco)
-                ? generateLoteSistema(processo, requiresEndereco ? endereco : '', mLinear, registros)
-                : '—'}
-            </div>
+            <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
           </div>
         </div>
 
@@ -787,9 +826,9 @@ export default function LeftPanel() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-lg px-3 py-2.5 text-xs border bg-accent/10 border-accent text-accent-foreground"
+              className="ai-status-box ai-status-err text-xs"
             >
-              ⚠️ <b>Possível duplicata</b> — item já existe na tabela.
+              ⚠ Item duplicado: "{item}" já existe na tabela
             </motion.div>
           )}
         </AnimatePresence>
