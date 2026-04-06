@@ -1,74 +1,78 @@
+## Plano de Alterações
 
-Objetivo: adicionar travamento para PROC e NF com o mesmo comportamento já existente no Endereço, mantendo a lógica atual por modo e sem alterar regras de obrigatoriedade.
+### 1. Banco de dados — Migration
 
-1. Estado global para travamento
-- Expandir `src/store/useAppStore.ts` com novos estados:
-  - `lockProcesso` / `lockedProcesso`
-  - `lockNf` / `lockedNf`
-- Criar setters equivalentes aos de endereço.
-- Persistir esses valores em memória do app como já acontece com o endereço, para que o formulário reutilize o valor travado entre registros.
+Adicionar colunas `started_at` e `finished_at` (timestamp with time zone, nullable) na tabela `conferences` para registrar hora de início e fim da conferência automaticamente.
 
-2. Aplicar travamento no campo PROC
-- Em `src/components/LeftPanel.tsx`, no bloco de PROC (hoje exibido quando `requiresProcesso`), adicionar botão `Travar/Travado` com o mesmo padrão visual do endereço.
-- Comportamento:
-  - ao travar, salva o valor atual de `processo`
-  - ao destravar, libera edição
-  - quando travado, o input fica somente leitura e continua preenchido após `resetForm`
-- Impacto por modo:
-  - aparece apenas em `Coulisse` e `IA`
-  - continua obrigatório nesses modos
+### 2. Diversos — Ajustes de campos por tipo
 
-3. Aplicar travamento no campo NF
-- Em `src/components/LeftPanel.tsx`, no bloco de NF do modo `Diversos`, adicionar botão `Travar/Travado` com a mesma UX.
-- Comportamento:
-  - ao travar, salva o valor atual de `nf`
-  - ao destravar, libera edição
-  - quando travado, o NF permanece preenchido entre vários lançamentos
-- Impacto por modo:
-  - aparece apenas em `Diversos`
-  - continua obrigatório em todos os tipos de tecido de `Diversos`
+**Celular:**
 
-4. Sincronização com reset e fluxo de teclado
-- Ajustar `resetForm()` para:
-  - manter PROC se `lockProcesso` estiver ativo
-  - manter NF se `lockNf` estiver ativo
-  - continuar mantendo Endereço se `lockEndereco` estiver ativo
-- Ajustar navegação por Enter:
-  - PROC travado deve pular direto para o próximo campo
-  - NF travado deve pular para o próximo campo
-- Garantir que os refs atuais (`itemRef`, `nfRef`, etc.) sigam com foco previsível.
+- Trocar o campo NF por PROC (com travamento, igual ao Coulisse/IA)
+- Usar M Linear direto (entrada direta, sem M²)
+- Campos: Item, PROC, M Linear, Lote/Batch, Endereço, Lote Final
 
-5. Preview e validação
-- A validação obrigatória não muda:
-  - `CONFERENTE` sempre obrigatório
-  - `PROC` obrigatório em Coulisse/IA
-  - `NF` obrigatório em Diversos
-- Se o campo estiver travado mas vazio, a validação continua bloqueando o cadastro.
-- O card de cálculo e o `Lote Sistema` continuam usando o valor atual do store, então o PROC travado refletirá automaticamente no resultado.
+**Cortina:**
 
-6. Responsividade e consistência visual
-- Reaproveitar exatamente o padrão já usado no Endereço:
-  - botão pequeno no cabeçalho do campo
-  - ícones `Lock/Unlock`
-  - destaque visual no input quando travado
-- Isso mantém consistência em smartphone, tablet e desktop sem criar um novo padrão de UI.
+- Manter NF + adicionar campo Largura (calculada do item, como no Coulisse)
+- M² como entrada, M Linear calculado = M² / largura
+- Campos: Item, NF, Largura, M², M Linear, Lote/Batch, Endereço, Lote Final
 
-Arquivos afetados
-- `src/store/useAppStore.ts`
-  - adicionar estados e setters para travamento de PROC e NF
-- `src/components/LeftPanel.tsx`
-  - adicionar botões de travamento
-  - sincronizar valores travados
-  - ajustar reset e navegação por Enter
+**Rolo:**
 
-Detalhes técnicos
-- O jeito mais seguro é seguir o mesmo modelo já existente para endereço, em vez de criar uma abstração nova agora.
-- Como `processo` já vive no store e `nf` vive localmente no componente, o plano é:
-  - travar PROC usando store + valor travado global
-  - travar NF com estado global de trava + valor travado global para reaplicar no formulário
-- Não precisa migration nem mudança no backend, porque é comportamento de preenchimento do formulário, não dado persistido extra.
+- Manter NF + adicionar campo Largura (calculada do item, como no Coulisse)
+- M² como entrada, M Linear calculado = M² / largura
+- Campos: Item, NF, Largura, M², M Linear, Lote/Batch, Endereço, Lote Final
 
-Resultado esperado
-- O usuário poderá travar `PROC` em Coulisse/IA para lançar vários registros no mesmo processo.
-- O usuário poderá travar `NF` em Diversos para lançar vários registros com a mesma nota fiscal.
-- O comportamento será igual ao do Endereço: valor mantido, input protegido e fluxo mais rápido para conferência em sequência.
+**PVT:** permanece como está (Item, NF, M Linear, Lote/Batch).
+
+### 3. Endereço — Auto-formatação
+
+Ao digitar no campo endereço, o sistema automaticamente:
+
+- Converte tudo para maiúsculo (já faz)
+- Insere um ponto `.` após os primeiros 4 caracteres
+- Insere outro ponto `.` após o próximo caractere seguinte ao primeiro ponto
+- Exemplo: digitando `TEC01AN03` → exibe `TEC0.1.AN03` → na verdade, o padrão é `TEC01.A.N03`, então: após 5 chars insere ponto, após o char seguinte insere outro ponto
+- Lógica: se o usuário digitar `TEC01AN03`, o sistema formata como `TEC01.A.N03`
+
+### 4. Histórico — Nome da pasta por NF
+
+Para conferências do modo "Diversos", o nome exibido na pasta do histórico será o nº da NF (em vez do processo). Manter o comportamento atual para Coulisse/IA.
+
+Mostrar "Item/Referência" dentro da pasta na mesma formatação que a planilha (conforme layout de colunas já definido).
+
+### 5. Histórico — Hora de início e fim
+
+- `started_at`: registrado quando o primeiro registro é adicionado à sessão atual (salvo em localStorage/memória)
+- `finished_at`: registrado no momento do arquivamento/exportação
+- Exibido no card da conferência no histórico
+
+### 6. Planilha (Excel) — Ajuste de colunas por tipo
+
+Atualizar `registroColumns.ts` para os novos layouts:
+
+- **Rolo**: Item, NF, Largura, M², M Linear, Lote/Batch, Endereço, Lote Final
+- **Cortina**: Item, NF, Largura, M², M Linear, Lote/Batch, Endereço, Lote Final
+- **Celular**: Item, PROC, M Linear, Lote/Batch, Endereço, Lote Final
+- **PVT**: NF, M Linear, Lote/Batch (sem mudança)
+
+### Arquivos afetados
+
+- `supabase/migrations/` — nova migration para `started_at`, `finished_at`
+- `src/store/useAppStore.ts` — `sessionStartedAt`, archiveAndClear com timestamps, Conference type
+- `src/components/LeftPanel.tsx` — campos dinâmicos para Celular (PROC), Rolo/Cortina (largura+M²), auto-formatação endereço
+- `src/components/HistoryPanel.tsx` — nome pasta por NF, exibir horários início/fim
+- `src/lib/registroColumns.ts` — novos layouts para Rolo, Cortina, Celular
+- `src/components/RightPanel.tsx` / `TopBar.tsx` — se necessário para colunas dinâmicas na sessão
+
+### Detalhes técnicos
+
+- Auto-formatação do endereço: interceptar `onChange`, remover pontos existentes, re-inserir nos pontos corretos (posição 4 e 6 do texto limpo), manter regex de validação existente.
+- Celular usa `processo` em vez de `nf`, então `requiresProcesso` e `requiresNF` passam a depender também do `diversosTipo`.
+- `started_at` será salvo em memória do store quando `addRegistro` é chamado pela primeira vez numa sessão vazia.
+
+No lote final tanto o campo (NF e PROC), precisam aparecer no lote final com o exato exemplo que vou mostrar: PROC 2555/25 | NF 2985.  
+  
+PROC e NF precisam aparecer escritos no lote final com espaçamento.  
+Seguindo a regra de campos definida anteriormente  
