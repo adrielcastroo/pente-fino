@@ -1,32 +1,26 @@
-## Plano: Celular/Plissada — remover endereço e normalizar aspas em todos os campos
 
-### 1. Remover campo Endereço do tipo Celular
 
-`**src/components/LeftPanel.tsx`:**
+## Plano: Corrigir validação M² e formatação do Endereço
 
-- Alterar `requiresEndereco` de `!isPVT` para `!isPVT && !isCelular`
-- Isso automaticamente oculta o campo endereço, pula validação e grava vazio
+### Problema 1: Mensagem "Preencha M²" mesmo com campo preenchido
+A validação (linha 366) verifica `mLinear <= 0`, mas `mLinear` é calculado como `m2 / largura`. Se a largura não é extraída do item (ex: código sem padrão reconhecido), `largura = 0` → `mLinear = 0` → erro aparece mesmo com M² preenchido.
 
-`**src/lib/registroColumns.ts`:**
+**Correção em `src/components/LeftPanel.tsx`:**
+- Quando `usesM2Input` é true e `m2Num > 0` mas `largura === 0`, mostrar mensagem específica: "Largura não detectada no item. Verifique o código."
+- Quando `usesM2Input` e `m2Num <= 0`, manter mensagem sobre M²
+- Quando modo usa entrada direta de M Linear e valor ≤ 0, manter mensagem sobre M Linear
 
-- Remover `'endereco'` do layout `celular`: `['item', 'processo', 'mLinear', 'lote', 'loteSistema']`
+### Problema 2: Ponto do Endereço após 4 caracteres em vez de 5
+Atualmente `formatEndereco` insere ponto após 4 chars (`TEC0.1.AN03`). O correto é após 5 chars (`TEC01.A.N03`).
 
-### 2. Normalizar aspas simples → hífen em todos os campos de texto
-
-`**src/components/LeftPanel.tsx`:**
-
-- A função `normalizeScannerItem` já existe mas só é aplicada ao campo Item
-- Aplicar a mesma normalização (`replace(/[''`]/g, '-')`) nos handlers de onChange dos campos: NF, Lote, Endereço, PROC
-- Renomear para algo genérico como `normalizeScannerInput`
-- `Da mesma forma que já funciona o campo "item/referência"`
-
-### 3. Renomear "Celular" para "Celular/Plissada"
-
-`**src/components/LeftPanel.tsx`:**
-
-- Atualizar o array de tipos de `'Celular'` para exibir `'Celular/Plissada'` no botão, mantendo o valor interno como `'Celular'`
+**Correção em `src/components/LeftPanel.tsx`:**
+- Alterar `formatEndereco`:
+  - `clean.length <= 5` → retorna limpo
+  - `clean.length <= 6` → `slice(0,5) + '.' + slice(5)`
+  - `> 6` → `slice(0,5) + '.' + slice(5,6) + '.' + slice(6)`
+- Atualizar `ENDERECO_REGEX` de `{4}` para `{5}`: `/^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/`
+- Atualizar mensagem de erro para refletir novo padrão: `'Padrão: TEC01.A.N03'`
 
 ### Arquivos afetados
+- `src/components/LeftPanel.tsx` — formatEndereco, ENDERECO_REGEX, validação handleAdd
 
-- `src/components/LeftPanel.tsx` — lógica de campos, normalização, label
-- `src/lib/registroColumns.ts` — layout de colunas do Celular
