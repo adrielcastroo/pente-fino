@@ -364,7 +364,7 @@ export default function LeftPanel() {
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
     if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
-    if (!lote.trim()) { addToast('Preencha o campo Lote / Batch.', 'warn'); return; }
+    // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
