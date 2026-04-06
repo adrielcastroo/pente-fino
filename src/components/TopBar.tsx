@@ -23,10 +23,23 @@ export default function TopBar({ onOpenConfig }: { onOpenConfig?: () => void }) 
     ws['!cols'] = columns.map(column => ({ wch: column.width }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
-    const fileLabel = processo.trim() || 'diversos';
-    XLSX.writeFile(wb, `conferencia_PROC_${fileLabel.replace(/[/\\]/g, '_')}.xlsx`);
+
+    // Determine file name and archive name
+    const isDiversosOnly = registros.every(r => r.modoOrigem === 'diversos');
+    let fileLabel: string;
+    let archiveName: string;
+    if (isDiversosOnly) {
+      const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+      fileLabel = nfs.length > 0 ? `NF_${nfs.join('_')}` : (processo.trim() || 'diversos');
+      archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : (processo.trim() || 'Diversos');
+    } else {
+      fileLabel = processo.trim() || 'conferencia';
+      archiveName = processo.trim() ? `PROC ${processo.trim()}` : 'Conferência';
+    }
+
+    XLSX.writeFile(wb, `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}.xlsx`);
     const count = registros.length;
-    await archiveAndClear(processo.trim() ? `PROC ${processo.trim()}` : 'Diversos');
+    await archiveAndClear(archiveName);
     addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
   };
 
