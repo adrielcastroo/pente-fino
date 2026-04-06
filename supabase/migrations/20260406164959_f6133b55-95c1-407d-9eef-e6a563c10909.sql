@@ -1,0 +1,1 @@
+ALTER TABLE public.conferences ADD COLUMN started_at timestamp with time zone, ADD COLUMN finished_at timestamp with time zone;

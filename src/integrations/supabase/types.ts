@@ -18,20 +18,26 @@ export type Database = {
         Row: {
           conferente: string
           created_at: string
+          finished_at: string | null
           id: string
           processo: string
+          started_at: string | null
         }
         Insert: {
           conferente?: string
           created_at?: string
+          finished_at?: string | null
           id?: string
           processo: string
+          started_at?: string | null
         }
         Update: {
           conferente?: string
           created_at?: string
+          finished_at?: string | null
           id?: string
           processo?: string
+          started_at?: string | null
         }
         Relationships: []
       }
