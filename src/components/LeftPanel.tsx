@@ -71,11 +71,17 @@ export default function LeftPanel() {
   const [aiMLinear, setAiMLinear] = useState('');
   const [diversosTipo, setDiversosTipo] = useState<'Rolo' | 'PVT' | 'Cortina' | 'Celular'>('Rolo');
   const [diversosMLinear, setDiversosMLinear] = useState('');
+  const [manualLargura, setManualLargura] = useState('');
+  const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
+  const [lockMetragem, setLockMetragem] = useState(false);
+
+  const manualLarguraRef = useRef<HTMLInputElement>(null);
 
   const m2Num = parseFloat(m2) || 0;
   const aiLarguraNum = parseFloat(aiLargura) || 0;
   const aiMLinearNum = parseFloat(aiMLinear) || 0;
   const diversosMLinearNum = parseFloat(diversosMLinear) || 0;
+  const manualLarguraNum = parseFloat(manualLargura) || 0;
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isPVT = isDiversos && diversosTipo === 'PVT';
