@@ -82,7 +82,8 @@ const SESSION_START_KEY = 'cft4_session_started_at';
 
 function fmtML(v: number): string {
   if (!v || v === 0) return '';
-  return (v % 1 === 0 ? Math.round(v) : v.toFixed(1).replace('.', ',')) + 'M';
+  const rounded = parseFloat(v.toFixed(1));
+  return (rounded % 1 === 0 ? Math.round(rounded) : rounded.toFixed(1).replace('.', ',')) + 'M';
 }
 
 function save(registros: Registro[]) {
@@ -105,7 +106,7 @@ export function extractLarguraFromItem(item: string): number {
 }
 
 /** Generate Lote Sistema with NF/PROC label prefix and serial for duplicates */
-export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[], nf?: string): string {
+export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[], nf?: string, itemCode?: string): string {
   const mlFormatted = fmtML(mLinear) || '0M';
   
   // Build label prefix: "PROC xxx" or "NF xxx" depending on what's available
@@ -118,8 +119,12 @@ export function generateLoteSistema(processo: string, endereco: string, mLinear:
   const parts = [endereco.trim(), labelPrefix, mlFormatted].filter(Boolean);
   const base = parts.join(' ');
   
-  // Count existing registros with same base
+  const itemNorm = (itemCode || '').trim().toLowerCase();
+  
+  // Count existing registros with same item + endereco + proc/nf + mLinear
   const count = existingRegistros.filter(r => {
+    const rItem = (r.item || '').trim().toLowerCase();
+    if (rItem !== itemNorm) return false;
     const rProc = (r.processo || '').trim();
     const rNf = (r.nf || '').trim();
     let rLabel = '';
