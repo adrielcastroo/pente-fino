@@ -342,17 +342,16 @@ export default function HistoryPanel() {
   const { history, loadHistory, deleteConference, clearHistory } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const [search, setSearch] = useState('');
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
 
   const handleClearAll = async () => {
-    if (!history.length) return;
-    if (confirm(`Limpar todo o histórico (${history.length} conferências)?`)) {
-      await clearHistory();
-      addToast('Histórico limpo', 'warn');
-    }
+    await clearHistory();
+    setConfirmClearAll(false);
+    addToast('Histórico limpo', 'warn');
   };
 
   const q = search.toLowerCase().trim();
@@ -380,7 +379,7 @@ export default function HistoryPanel() {
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico de Conferências</span>
           {history.length > 0 && (
             <button
-              onClick={handleClearAll}
+              onClick={() => setConfirmClearAll(true)}
               className="flex items-center gap-1 text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors"
             >
               <Trash2 className="w-3 h-3" /> Limpar tudo
@@ -420,6 +419,25 @@ export default function HistoryPanel() {
           ))
         )}
       </div>
+
+      {/* Clear all confirmation dialog */}
+      <Dialog open={confirmClearAll} onOpenChange={setConfirmClearAll}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Limpar todo o histórico
+            </DialogTitle>
+            <DialogDescription>
+              Deseja remover todas as {history.length} conferências do histórico? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmClearAll(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleClearAll}>Limpar tudo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
