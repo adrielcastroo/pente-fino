@@ -1,34 +1,61 @@
 
 
-## Plano: Histórico — download Excel + pesquisa + layout horizontal
+## Plano: Lote Sistema duplicatas por item, formatação M Linear, Celular M²÷3.05, melhorias de design
 
-### 1. Botão de download Excel por conferência no Histórico
+### 1. Sufixo serial no Lote Sistema baseado em item+endereço+proc+metragem idênticos
+
+**`src/store/useAppStore.ts` — `generateLoteSistema`:**
+- Atualmente: compara apenas `endereco + PROC/NF + mLinear` para gerar sufixo `-1`, `-2`, etc.
+- Novo: adicionar parâmetro `item` à função. A comparação de duplicatas deve considerar `item + endereco + PROC/NF + mLinear`. Somente quando TODOS esses campos forem idênticos, adicionar o sufixo serial.
+- Atualizar todas as chamadas de `generateLoteSistema` (em `LeftPanel.tsx`, `useAppStore.ts` — `archiveAndClear` e `updateHistoryRegistro`) para passar o `item`.
+
+### 2. Formatação M Linear: remover ",0" (29,0M → 29M)
+
+**`src/store/useAppStore.ts` — `fmtML`:**
+- Atualmente: `v.toFixed(1).replace('.', ',') + 'M'` → gera "29,0M"
+- Corrigir: se `v % 1 === 0`, já retorna inteiro. Verificar que a condição cobre corretamente valores como 29.0 (que `% 1 === 0` já cobre). A lógica atual já deveria funcionar — vou verificar se há um bug com floats tipo `29.000000001`. Usar `Math.round` para valores muito próximos de inteiros, ou simplesmente checar `parseFloat(v.toFixed(1)) % 1 === 0`.
+
+### 3. Coulisse: melhorar chave M²/M Linear
+
+**`src/components/LeftPanel.tsx`:**
+- Substituir o botão toggle atual por dois botões lado a lado mais claros:
+  - `[M² → M Linear]` e `[M Linear direto]` como segmented control (similar ao mode toggle)
+- Manter a trava ao lado
+
+### 4. Diversos — Celular/Plissada: trocar M Linear por M² ÷ 3.05
+
+**`src/components/LeftPanel.tsx`:**
+- `isCelular` atualmente usa campo M Linear direto
+- Mudar para: campo M² (input), calcular `mLinear = m2 / 3.05` automaticamente
+- Exibir o M Linear calculado abaixo do campo
+- Atualizar `usesM2Input` para incluir `isCelular` (remover da condição de exclusão)
+- Largura fixa = 3.05 para Celular (não precisa de campo)
+- Atualizar validação: verificar `m2 > 0` em vez de `mLinear > 0` para Celular
+
+**`src/lib/registroColumns.ts`:**
+- Atualizar layout `celular`: trocar `'mLinear'` por `'m2', 'mLinear'` → `['item', 'processo', 'm2', 'mLinear', 'lote', 'loteSistema']`
+
+### 5. Design: lixeira → "Limpar campos"
+
+**`src/components/LeftPanel.tsx` (linha ~472):**
+- Substituir ícone `Trash2` + tooltip por texto `Limpar campos` com ícone menor ou sem ícone
+
+### 6. Design: botões do histórico + confirmação de exclusão
 
 **`src/components/HistoryPanel.tsx`:**
-- Adicionar botão `Download` (ícone) em cada `ConferenceCard`, ao lado do botão de deletar
-- Ao clicar, gerar Excel usando a mesma lógica do `RightPanel`: `getRegistroColumns` para headers, `XLSX.writeFile` para download
-- Nome do arquivo: `conferencia_${folderName}.xlsx`
+- Melhorar botões Download e Delete no `ConferenceCard`: adicionar labels textuais ou tooltips mais visíveis, melhorar espaçamento
+- Substituir `confirm()` nativo por `Dialog` do shadcn para confirmação de exclusão de pasta
+- Mesmo para "Limpar tudo"
 
-### 2. Campo de pesquisa na aba Histórico
+### 7. Modelo de tecido na pasta de histórico
 
-**`src/components/HistoryPanel.tsx`:**
-- Adicionar estado `search` (string)
-- Renderizar input de pesquisa no header (ao lado de "Histórico de Conferências")
-- Filtrar `history` por: nome da pasta, conferente, itens dos registros (item, nf, lote)
-- Pesquisa case-insensitive
-
-### 3. Layout horizontal para tablet/smartphone deitado
-
-**`src/pages/Index.tsx`:**
-- Adicionar hook para detectar orientação landscape (`window.innerHeight < window.innerWidth` em mobile/tablet)
-- Quando landscape em mobile/tablet: usar layout side-by-side similar ao desktop (`grid-cols-[360px_1fr]`) em vez de abas full-screen
-- Reduzir largura do LeftPanel para 360px no landscape para caber melhor
-
-**`src/hooks/use-mobile.tsx`:**
-- Adicionar hook `useIsLandscape()` que retorna true quando `window.innerWidth > window.innerHeight`
+**`src/components/HistoryPanel.tsx` — `ConferenceCard`:**
+- Extrair os tipos de tecido únicos dos registros da conferência (`tipoTecido` e `modoOrigem`)
+- Exibir como badges ao lado do nome da pasta (ex: "Coulisse", "Rolo", "PVT", "Celular", "IA")
 
 ### Arquivos afetados
-- `src/components/HistoryPanel.tsx` — download Excel, campo pesquisa
-- `src/pages/Index.tsx` — layout landscape
-- `src/hooks/use-mobile.tsx` — hook useIsLandscape
+- `src/store/useAppStore.ts` — `generateLoteSistema` (adicionar item), `fmtML` (formatação)
+- `src/components/LeftPanel.tsx` — Celular M², toggle Coulisse, limpar campos
+- `src/components/HistoryPanel.tsx` — confirmação dialog, botões, badges de modelo
+- `src/lib/registroColumns.ts` — layout celular
 
