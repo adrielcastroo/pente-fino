@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useAppStore, formatML, type Conference, type Registro } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search } from 'lucide-react';
+import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getRegistroColumns } from '@/lib/registroColumns';
+import { Badge } from '@/components/ui/badge';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -176,12 +177,27 @@ function downloadConferenceExcel(conf: Conference) {
   XLSX.writeFile(wb, `conferencia_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
 }
 
+function getModeBadges(conf: Conference): string[] {
+  const badges = new Set<string>();
+  for (const r of conf.registros) {
+    if (r.modoOrigem === 'openrouter') badges.add('IA');
+    else if (r.modoOrigem === 'diversos') {
+      const tipo = (r.tipoTecido || '').trim();
+      if (tipo) badges.add(tipo === 'Celular' ? 'Celular/Plissada' : tipo);
+      else badges.add('Diversos');
+    } else badges.add('Coulisse');
+  }
+  return Array.from(badges);
+}
+
 function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const totalML = conf.registros.reduce((a, r) => a + r.mLinear, 0);
   const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
   const folderName = getConferenceFolderName(conf);
+  const modeBadges = getModeBadges(conf);
 
   const startTime = formatTime(conf.startedAt);
   const endTime = formatTime(conf.finishedAt);
@@ -192,7 +208,12 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
         <button onClick={() => setOpen(!open)} className="flex-1 px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left">
           <FolderOpen className="w-4 h-4 text-primary flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate">{folderName}</div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold truncate">{folderName}</span>
+              {modeBadges.map(b => (
+                <Badge key={b} variant="secondary" className="text-[9px] px-1.5 py-0">{b}</Badge>
+              ))}
+            </div>
             <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
               <Clock className="w-3 h-3" />
               {formatDate(conf.date)} · {conf.registros.length} rolos · {formatML(totalML)}
@@ -210,20 +231,23 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
           </div>
           {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
         </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-          className="p-2.5 rounded-md hover:bg-muted transition-colors"
-          title="Baixar Excel"
-        >
-          <Download className="w-3.5 h-3.5 text-primary" />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); if (confirm('Remover esta conferência do histórico?')) onDelete(); }}
-          className="p-2.5 mr-2 rounded-md hover:bg-muted transition-colors"
-          title="Remover conferência"
-        >
-          <Trash2 className="w-3.5 h-3.5 text-destructive" />
-        </button>
+        <div className="flex items-center gap-1 mr-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-[10px] font-medium text-primary"
+            title="Baixar Excel"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Excel</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-destructive/10 transition-colors text-[10px] font-medium text-destructive"
+            title="Remover conferência"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
       <AnimatePresence>
         {open && (
@@ -291,6 +315,25 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
         registro={editingRegistro}
         conferenceId={conf.id}
       />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Confirmar exclusão
+            </DialogTitle>
+            <DialogDescription>
+              Deseja remover a conferência <strong>"{folderName}"</strong> com {conf.registros.length} rolos? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => { setConfirmDelete(false); onDelete(); }}>Remover</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -299,17 +342,16 @@ export default function HistoryPanel() {
   const { history, loadHistory, deleteConference, clearHistory } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const [search, setSearch] = useState('');
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
 
   const handleClearAll = async () => {
-    if (!history.length) return;
-    if (confirm(`Limpar todo o histórico (${history.length} conferências)?`)) {
-      await clearHistory();
-      addToast('Histórico limpo', 'warn');
-    }
+    await clearHistory();
+    setConfirmClearAll(false);
+    addToast('Histórico limpo', 'warn');
   };
 
   const q = search.toLowerCase().trim();
@@ -337,7 +379,7 @@ export default function HistoryPanel() {
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico de Conferências</span>
           {history.length > 0 && (
             <button
-              onClick={handleClearAll}
+              onClick={() => setConfirmClearAll(true)}
               className="flex items-center gap-1 text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors"
             >
               <Trash2 className="w-3 h-3" /> Limpar tudo
@@ -377,6 +419,25 @@ export default function HistoryPanel() {
           ))
         )}
       </div>
+
+      {/* Clear all confirmation dialog */}
+      <Dialog open={confirmClearAll} onOpenChange={setConfirmClearAll}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Limpar todo o histórico
+            </DialogTitle>
+            <DialogDescription>
+              Deseja remover todas as {history.length} conferências do histórico? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmClearAll(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleClearAll}>Limpar tudo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

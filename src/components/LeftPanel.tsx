@@ -4,7 +4,7 @@ import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Trash2, Zap, SquarePen, Layers3, Lock, Unlock
+  Plus, Zap, SquarePen, Layers3, Lock, Unlock
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
@@ -95,17 +95,18 @@ export default function LeftPanel() {
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
-  const usesM2Input = !isAI && !isPVT && !isCelular && !coulisseUsesMLinear;
+  const usesM2Input = !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   const usesLarguraFromItem = !isAI && (isRolo || isCortina);
   const requiresEndereco = !isPVT && !isCelular;
 
   const largura = isAI ? aiLarguraNum
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : isCelular ? 3.05
     : usesLarguraFromItem ? extractLarguraFromItem(item)
     : 0;
   const mLinear = isAI ? aiMLinearNum
-    : (isPVT || isCelular) ? diversosMLinearNum
-    : coulisseUsesMLinear ? diversosMLinearNum
+    : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
+    : isCelular ? (m2Num > 0 ? m2Num / 3.05 : 0)
     : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
@@ -380,19 +381,19 @@ export default function LeftPanel() {
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código ou preencha manualmente.', 'warn'); return; }
-    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
+    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
     // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular || coulisseUsesMLinear) ? 0 : m2Num;
-    const resolvedLargura = isAI ? aiLarguraNum : (isPVT || isCelular) ? 0 : largura;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear) ? 0 : m2Num;
+    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? 3.05 : largura;
 
     // Celular uses processo, other Diversos use NF
     const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
-    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf);
+    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     const reg = {
       id: crypto.randomUUID(),
@@ -448,7 +449,7 @@ export default function LeftPanel() {
     const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
     const resolvedEnd = requiresEndereco ? endereco : '';
     if (mLinear > 0 && (resolvedProc || resolvedNfVal || resolvedEnd)) {
-      return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal);
+      return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
   })();
@@ -469,8 +470,9 @@ export default function LeftPanel() {
               <Undo2 className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           )}
-          <button onClick={resetForm} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Limpar formulário">
-            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+          <button onClick={resetForm} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-[10px] font-medium text-muted-foreground">
+            <X className="w-3 h-3" />
+            Limpar campos
           </button>
         </div>
       </div>
@@ -754,8 +756,8 @@ export default function LeftPanel() {
             </>
           ) : (
             <>
-              {(isPVT || isCelular || coulisseUsesMLinear) ? (
-                /* PVT, Celular, or Coulisse M Linear mode: direct M Linear input */
+              {(isPVT || coulisseUsesMLinear) ? (
+                /* PVT or Coulisse M Linear mode: direct M Linear input */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
                   <input
@@ -768,9 +770,11 @@ export default function LeftPanel() {
                   />
                 </div>
               ) : (
-                /* Coulisse M², Rolo, Cortina: M² input with calculated M Linear */
+                /* Coulisse M², Rolo, Cortina, Celular: M² input with calculated M Linear */
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                    {isCelular ? 'M² (÷ 3,05 = M Linear)' : 'M² (Metro Quadrado)'}
+                  </label>
                   <input
                     ref={m2Ref}
                     type="number" step="0.1" value={m2}
@@ -781,6 +785,8 @@ export default function LeftPanel() {
                   />
                   {mLinear > 0 && (
                     <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
+                  )}{isCelular && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: 3,05m</div>
                   )}
                 </div>
               )}
@@ -788,16 +794,26 @@ export default function LeftPanel() {
               {/* Coulisse: measurement type toggle */}
               {isCoulisse && (
                 <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
                     <button
-                      onClick={() => setCoulisseMetragem(coulisseMetragem === 'm2' ? 'mlinear' : 'm2')}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                      onClick={() => setCoulisseMetragem('m2')}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
                         coulisseMetragem === 'm2'
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-muted text-muted-foreground'
+                          ? 'surface-bg text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {coulisseMetragem === 'm2' ? 'M²→M Linear' : 'M Linear direto'}
+                      M² → M Linear
+                    </button>
+                    <button
+                      onClick={() => setCoulisseMetragem('mlinear')}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                        coulisseMetragem === 'mlinear'
+                          ? 'surface-bg text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      M Linear direto
                     </button>
                   </div>
                   <button
