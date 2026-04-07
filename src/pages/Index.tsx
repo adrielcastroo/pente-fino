@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
-import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
+import { useIsMobile, useIsTablet, useIsLandscape } from '@/hooks/use-mobile';
 import TopBar from '@/components/TopBar';
 import LeftPanel from '@/components/LeftPanel';
 import RightPanel from '@/components/RightPanel';
