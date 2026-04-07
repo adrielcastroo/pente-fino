@@ -95,17 +95,18 @@ export default function LeftPanel() {
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
-  const usesM2Input = !isAI && !isPVT && !isCelular && !coulisseUsesMLinear;
+  const usesM2Input = !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   const usesLarguraFromItem = !isAI && (isRolo || isCortina);
   const requiresEndereco = !isPVT && !isCelular;
 
   const largura = isAI ? aiLarguraNum
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : isCelular ? 3.05
     : usesLarguraFromItem ? extractLarguraFromItem(item)
     : 0;
   const mLinear = isAI ? aiMLinearNum
-    : (isPVT || isCelular) ? diversosMLinearNum
-    : coulisseUsesMLinear ? diversosMLinearNum
+    : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
+    : isCelular ? (m2Num > 0 ? m2Num / 3.05 : 0)
     : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
