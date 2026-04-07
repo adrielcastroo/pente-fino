@@ -1,38 +1,34 @@
 
 
-## Plano: Coulisse — campo largura opcional, divisão M², chave m²/m linear
+## Plano: Histórico — download Excel + pesquisa + layout horizontal
 
-### 1. Adicionar campo "Largura" opcional ao Coulisse
+### 1. Botão de download Excel por conferência no Histórico
 
-**`src/components/LeftPanel.tsx`:**
-- Adicionar estado `manualLargura` (string) para entrada manual de largura no Coulisse
-- Exibir campo "Largura (m)" abaixo do Item no modo Coulisse (não obrigatório)
-- Se `manualLargura` estiver preenchido, usar esse valor; senão, usar `extractLarguraFromItem(item)` como fallback
-- Atualizar `resetForm` para limpar `manualLargura`
+**`src/components/HistoryPanel.tsx`:**
+- Adicionar botão `Download` (ícone) em cada `ConferenceCard`, ao lado do botão de deletar
+- Ao clicar, gerar Excel usando a mesma lógica do `RightPanel`: `getRegistroColumns` para headers, `XLSX.writeFile` para download
+- Nome do arquivo: `conferencia_${folderName}.xlsx`
 
-### 2. Chave de escolha: M² ou M Linear
+### 2. Campo de pesquisa na aba Histórico
 
-**`src/components/LeftPanel.tsx`:**
-- Adicionar estado `coulisseMetragem`: `'m2' | 'mlinear'` (default `'m2'`)
-- Adicionar estados de trava: `lockMetragem` (boolean) para travar a escolha entre sessões de bipagem
-- Renderizar toggle (similar ao lock de PROC/NF) acima do campo de metragem no Coulisse
-- Quando `'m2'`: mostra campo M², calcula `mLinear = m2 / largura`
-- Quando `'mlinear'`: mostra campo M Linear direto (igual PVT/Celular), sem necessidade de largura
+**`src/components/HistoryPanel.tsx`:**
+- Adicionar estado `search` (string)
+- Renderizar input de pesquisa no header (ao lado de "Histórico de Conferências")
+- Filtrar `history` por: nome da pasta, conferente, itens dos registros (item, nf, lote)
+- Pesquisa case-insensitive
 
-### 3. Ajustar lógica de validação e cálculo
+### 3. Layout horizontal para tablet/smartphone deitado
 
-**`src/components/LeftPanel.tsx`:**
-- `largura` no Coulisse: `manualLargura || extractLarguraFromItem(item)` (só usado quando metragem = m²)
-- `mLinear` no Coulisse com m²: `m2 / largura`
-- `mLinear` no Coulisse com mlinear: valor digitado direto
-- Validação: se metragem = m² e largura = 0, mostrar aviso; se metragem = mlinear, validar apenas valor > 0
+**`src/pages/Index.tsx`:**
+- Adicionar hook para detectar orientação landscape (`window.innerHeight < window.innerWidth` em mobile/tablet)
+- Quando landscape em mobile/tablet: usar layout side-by-side similar ao desktop (`grid-cols-[360px_1fr]`) em vez de abas full-screen
+- Reduzir largura do LeftPanel para 360px no landscape para caber melhor
 
-### 4. Layout de colunas
-
-**`src/lib/registroColumns.ts`:**
-- Adicionar `'largura'` ao layout `coulisse`: `['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema']`
+**`src/hooks/use-mobile.tsx`:**
+- Adicionar hook `useIsLandscape()` que retorna true quando `window.innerWidth > window.innerHeight`
 
 ### Arquivos afetados
-- `src/components/LeftPanel.tsx` — campo largura, toggle m²/mlinear, trava, validação
-- `src/lib/registroColumns.ts` — layout coulisse
+- `src/components/HistoryPanel.tsx` — download Excel, campo pesquisa
+- `src/pages/Index.tsx` — layout landscape
+- `src/hooks/use-mobile.tsx` — hook useIsLandscape
 
