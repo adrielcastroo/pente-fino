@@ -381,19 +381,19 @@ export default function LeftPanel() {
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código ou preencha manualmente.', 'warn'); return; }
-    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isCelular || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
+    if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
     // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isCelular || coulisseUsesMLinear) ? 0 : m2Num;
-    const resolvedLargura = isAI ? aiLarguraNum : (isPVT || isCelular) ? 0 : largura;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear) ? 0 : m2Num;
+    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? 3.05 : largura;
 
     // Celular uses processo, other Diversos use NF
     const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
-    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf);
+    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     const reg = {
       id: crypto.randomUUID(),
