@@ -358,7 +358,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const editedBy = state.conferente || merged.editedBy || '';
       const editedAt = new Date().toISOString();
       const siblingRegistros = conference.registros.filter(r => r.id !== registroId);
-      const loteSistema = generateLoteSistema(normalizedProcesso, normalizedEndereco, normalizedML, siblingRegistros as Registro[], normalizedNf);
+      const loteSistema = generateLoteSistema(normalizedProcesso, normalizedEndereco, normalizedML, siblingRegistros as Registro[], normalizedNf, normalizedItem);
 
       const payload = {
         item: normalizedItem,
