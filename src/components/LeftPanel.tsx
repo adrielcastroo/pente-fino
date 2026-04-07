@@ -756,8 +756,8 @@ export default function LeftPanel() {
             </>
           ) : (
             <>
-              {(isPVT || isCelular || coulisseUsesMLinear) ? (
-                /* PVT, Celular, or Coulisse M Linear mode: direct M Linear input */
+              {(isPVT || coulisseUsesMLinear) ? (
+                /* PVT or Coulisse M Linear mode: direct M Linear input */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
                   <input
@@ -770,9 +770,11 @@ export default function LeftPanel() {
                   />
                 </div>
               ) : (
-                /* Coulisse M², Rolo, Cortina: M² input with calculated M Linear */
+                /* Coulisse M², Rolo, Cortina, Celular: M² input with calculated M Linear */
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M² (Metro Quadrado)</label>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                    {isCelular ? 'M² (÷ 3,05 = M Linear)' : 'M² (Metro Quadrado)'}
+                  </label>
                   <input
                     ref={m2Ref}
                     type="number" step="0.1" value={m2}
@@ -783,6 +785,8 @@ export default function LeftPanel() {
                   />
                   {mLinear > 0 && (
                     <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
+                  )}{isCelular && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: 3,05m</div>
                   )}
                 </div>
               )}
