@@ -20,6 +20,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<'form' | 'table' | 'history'>('form');
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
+  const isLandscape = useIsLandscape();
 
   useEffect(() => {
     loadFromStorage();
@@ -46,7 +47,7 @@ export default function Index() {
     return () => document.removeEventListener('keydown', handler);
   }, [undo, addToast, configOpen, shortcutsOpen]);
 
-  const showTabs = isMobile || isTablet;
+  const showTabs = (isMobile || isTablet) && !isLandscape;
 
   const tabs = [
     { key: 'form' as const, label: 'Conferir', icon: PenLine },
@@ -92,7 +93,7 @@ export default function Index() {
           {activeTab === 'history' && <HistoryPanel />}
         </div>
       ) : (
-        <div className="flex-1 grid grid-cols-[420px_1fr] overflow-hidden">
+        <div className={`flex-1 grid overflow-hidden ${(isMobile || isTablet) && isLandscape ? 'grid-cols-[360px_1fr]' : 'grid-cols-[420px_1fr]'}`}>
           <LeftPanel />
           <div className="flex flex-col overflow-hidden">
             <div className="flex border-b border-border bg-card flex-shrink-0">
