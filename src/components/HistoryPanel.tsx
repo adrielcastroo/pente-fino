@@ -151,6 +151,31 @@ function getConferenceFolderName(conf: Conference): string {
   return conf.name;
 }
 
+function downloadConferenceExcel(conf: Conference) {
+  const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
+  const folderName = getConferenceFolderName(conf);
+  const headers = columns.map(c => c.label);
+  const data = conf.registros.map(r => columns.map(c => {
+    switch (c.key) {
+      case 'item': return r.item || '';
+      case 'nf': return r.nf || '';
+      case 'processo': return r.processo || '';
+      case 'm2': return r.m2 > 0 ? r.m2 : '';
+      case 'mLinear': return r.mLinear > 0 ? r.mLinear : '';
+      case 'largura': return r.largura > 0 ? r.largura : '';
+      case 'lote': return r.lote || '';
+      case 'endereco': return r.endereco || '';
+      case 'loteSistema': return r.loteSistema || '';
+      default: return '';
+    }
+  }));
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+  columns.forEach((c, i) => { ws['!cols'] = ws['!cols'] || []; (ws['!cols'] as any)[i] = { wch: c.width }; });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
+  XLSX.writeFile(wb, `conferencia_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+}
+
 function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
@@ -184,6 +209,13 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
             </div>
           </div>
           {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+          className="p-2.5 rounded-md hover:bg-muted transition-colors"
+          title="Baixar Excel"
+        >
+          <Download className="w-3.5 h-3.5 text-primary" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); if (confirm('Remover esta conferência do histórico?')) onDelete(); }}
