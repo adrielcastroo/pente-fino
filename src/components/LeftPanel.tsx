@@ -794,16 +794,26 @@ export default function LeftPanel() {
               {/* Coulisse: measurement type toggle */}
               {isCoulisse && (
                 <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
                     <button
-                      onClick={() => setCoulisseMetragem(coulisseMetragem === 'm2' ? 'mlinear' : 'm2')}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                      onClick={() => setCoulisseMetragem('m2')}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
                         coulisseMetragem === 'm2'
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-muted text-muted-foreground'
+                          ? 'surface-bg text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {coulisseMetragem === 'm2' ? 'M²→M Linear' : 'M Linear direto'}
+                      M² → M Linear
+                    </button>
+                    <button
+                      onClick={() => setCoulisseMetragem('mlinear')}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                        coulisseMetragem === 'mlinear'
+                          ? 'surface-bg text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      M Linear direto
                     </button>
                   </div>
                   <button
