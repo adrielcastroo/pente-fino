@@ -449,7 +449,7 @@ export default function LeftPanel() {
     const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
     const resolvedEnd = requiresEndereco ? endereco : '';
     if (mLinear > 0 && (resolvedProc || resolvedNfVal || resolvedEnd)) {
-      return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal);
+      return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
   })();
@@ -470,8 +470,9 @@ export default function LeftPanel() {
               <Undo2 className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           )}
-          <button onClick={resetForm} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Limpar formulário">
-            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+          <button onClick={resetForm} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-[10px] font-medium text-muted-foreground">
+            <X className="w-3 h-3" />
+            Limpar campos
           </button>
         </div>
       </div>
