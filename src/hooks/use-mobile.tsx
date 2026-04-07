@@ -34,3 +34,22 @@ export function useIsTablet() {
 
   return isTablet;
 }
+
+export function useIsLandscape() {
+  const [isLandscape, setIsLandscape] = React.useState(false);
+
+  React.useEffect(() => {
+    const check = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    check();
+    window.addEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
+    };
+  }, []);
+
+  return isLandscape;
+}

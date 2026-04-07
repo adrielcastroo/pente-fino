@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAppStore, formatML, type Conference, type Registro } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2 } from 'lucide-react';
+import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -150,6 +151,31 @@ function getConferenceFolderName(conf: Conference): string {
   return conf.name;
 }
 
+function downloadConferenceExcel(conf: Conference) {
+  const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
+  const folderName = getConferenceFolderName(conf);
+  const headers = columns.map(c => c.label);
+  const data = conf.registros.map(r => columns.map(c => {
+    switch (c.key) {
+      case 'item': return r.item || '';
+      case 'nf': return r.nf || '';
+      case 'processo': return r.processo || '';
+      case 'm2': return r.m2 > 0 ? r.m2 : '';
+      case 'mLinear': return r.mLinear > 0 ? r.mLinear : '';
+      case 'largura': return r.largura > 0 ? r.largura : '';
+      case 'lote': return r.lote || '';
+      case 'endereco': return r.endereco || '';
+      case 'loteSistema': return r.loteSistema || '';
+      default: return '';
+    }
+  }));
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+  columns.forEach((c, i) => { ws['!cols'] = ws['!cols'] || []; (ws['!cols'] as any)[i] = { wch: c.width }; });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
+  XLSX.writeFile(wb, `conferencia_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+}
+
 function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
@@ -183,6 +209,13 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
             </div>
           </div>
           {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+          className="p-2.5 rounded-md hover:bg-muted transition-colors"
+          title="Baixar Excel"
+        >
+          <Download className="w-3.5 h-3.5 text-primary" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); if (confirm('Remover esta conferência do histórico?')) onDelete(); }}
@@ -265,6 +298,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
 export default function HistoryPanel() {
   const { history, loadHistory, deleteConference, clearHistory } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadHistory();
@@ -278,32 +312,60 @@ export default function HistoryPanel() {
     }
   };
 
+  const q = search.toLowerCase().trim();
+  const filtered = q
+    ? history.filter(conf => {
+        const folderName = getConferenceFolderName(conf).toLowerCase();
+        if (folderName.includes(q)) return true;
+        if (conf.conferente?.toLowerCase().includes(q)) return true;
+        return conf.registros.some(r =>
+          r.item.toLowerCase().includes(q) ||
+          (r.nf || '').toLowerCase().includes(q) ||
+          (r.lote || '').toLowerCase().includes(q)
+        );
+      })
+    : history;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="flex flex-col h-full overflow-hidden bg-background"
     >
-      <div className="px-4 py-3 border-b border-border flex-shrink-0 flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico de Conferências</span>
+      <div className="px-4 py-3 border-b border-border flex-shrink-0 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico de Conferências</span>
+          {history.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="flex items-center gap-1 text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors"
+            >
+              <Trash2 className="w-3 h-3" /> Limpar tudo
+            </button>
+          )}
+        </div>
         {history.length > 0 && (
-          <button
-            onClick={handleClearAll}
-            className="flex items-center gap-1 text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors"
-          >
-            <Trash2 className="w-3 h-3" /> Limpar tudo
-          </button>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Filtrar por NF, processo, item, conferente..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
         )}
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {history.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Package className="w-10 h-10 text-muted-foreground/20 mb-3" />
-            <div className="text-sm font-medium text-foreground/60 mb-1">Nenhuma conferência arquivada</div>
-            <div className="text-xs text-muted-foreground">Ao exportar o Excel, a conferência será salva aqui</div>
+            <div className="text-sm font-medium text-foreground/60 mb-1">{q ? 'Nenhum resultado encontrado' : 'Nenhuma conferência arquivada'}</div>
+            <div className="text-xs text-muted-foreground">{q ? 'Tente outro termo de busca' : 'Ao exportar o Excel, a conferência será salva aqui'}</div>
           </div>
         ) : (
-          history.map(conf => (
+          filtered.map(conf => (
             <ConferenceCard
               key={conf.id}
               conf={conf}
