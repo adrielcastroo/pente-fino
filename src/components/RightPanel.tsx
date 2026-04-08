@@ -158,6 +158,7 @@ export default function RightPanel() {
                         {column.key === 'loteSistema' && (
                           <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>
                         )}
+                        {column.key === 'quantidade' && (r.quantidade || '—')}
                       </td>
                     ))}
                     <td className="px-3 py-2.5">

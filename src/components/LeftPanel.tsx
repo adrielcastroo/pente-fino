@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Zap, SquarePen, Layers3, Lock, Unlock
+  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
@@ -74,6 +74,10 @@ export default function LeftPanel() {
   const [manualLargura, setManualLargura] = useState('');
   const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
   const [lockMetragem, setLockMetragem] = useState(false);
+  const [madeiraTipo, setMadeiraTipo] = useState<'Lâmina' | 'Base' | 'Bandô'>('Lâmina');
+  const [quantidade, setQuantidade] = useState('');
+
+  const quantidadeRef = useRef<HTMLInputElement>(null);
 
   const manualLarguraRef = useRef<HTMLInputElement>(null);
 
@@ -84,31 +88,38 @@ export default function LeftPanel() {
   const manualLarguraNum = parseFloat(manualLargura) || 0;
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
+  const isMadeira = currentMode === 'madeira';
   const isPVT = isDiversos && diversosTipo === 'PVT';
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
   const isCortina = isDiversos && diversosTipo === 'Cortina';
+  const isHC45 = isCelular && item.toUpperCase().startsWith('HC-45');
+  const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = !isDiversos || isCelular;
+  const requiresProcesso = isMadeira || (!isDiversos || isCelular);
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
-  const usesM2Input = !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
+  const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   const usesLarguraFromItem = !isAI && (isRolo || isCortina);
-  const requiresEndereco = !isPVT && !isCelular;
+  const requiresEndereco = !isMadeira && !isPVT && !isCelular;
+
+  const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
   const largura = isAI ? aiLarguraNum
+    : isMadeira ? 0
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
-    : isCelular ? 3.05
+    : isCelular ? celularDivisor
     : usesLarguraFromItem ? extractLarguraFromItem(item)
     : 0;
   const mLinear = isAI ? aiMLinearNum
+    : isMadeira ? 0
     : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
-    : isCelular ? (m2Num > 0 ? m2Num / 3.05 : 0)
+    : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
     : (largura > 0 ? m2Num / largura : 0);
-  const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
+  const isDuplicate = !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
 
@@ -167,6 +178,7 @@ export default function LeftPanel() {
 
   const resetForm = () => {
     setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear(''); setManualLargura('');
+    setQuantidade('');
     if (!lockProcesso) setProcesso('');
     if (!lockEndereco) setEndereco('');
     if (!lockMetragem) setCoulisseMetragem('m2');
@@ -379,21 +391,52 @@ export default function LeftPanel() {
     if (!conf) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
+
+    if (isMadeira) {
+      const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
+      const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
+      const reg = {
+        id: crypto.randomUUID(),
+        item,
+        processo: proc,
+        nf: '',
+        endereco: '',
+        m2: 0,
+        mLinear: 0,
+        largura: 0,
+        lote: lote || '',
+        loteSistema,
+        quantidade: qtd,
+        tipoTecido: madeiraTipo,
+        modoOrigem: 'madeira' as const,
+        isNew: true,
+      };
+      addRegistro(reg);
+      addToast(`✓ ${item} — ${madeiraTipo} CX${(registros.filter(r => r.item.trim().toLowerCase() === item.trim().toLowerCase()).length + 1).toString().padStart(2, '0')}`, 'ok');
+      resetForm();
+      setQuantidade(madeiraDefaults[madeiraTipo].toString());
+      setTimeout(() => { reg.isNew = false; }, 400);
+      return;
+    }
+
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código ou preencha manualmente.', 'warn'); return; }
     if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
-    // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear) ? 0 : m2Num;
-    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? 3.05 : largura;
+    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
     // Celular uses processo, other Diversos use NF
     const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
-    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
+
+    // Celular uses box numbering
+    const loteSistema = isCelular
+      ? generateLoteSistemaCaixa(resolvedProcesso, item, mLinear, registros)
+      : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     const reg = {
       id: crypto.randomUUID(),
@@ -425,12 +468,14 @@ export default function LeftPanel() {
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'openrouter' as const, label: 'IA', icon: Zap },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
+    { key: 'madeira' as const, label: 'Madeira', icon: Package },
   ];
 
   const showDropzone = currentMode === 'openrouter';
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
+    if (isMadeira) return loteRef;
     if (isCoulisse) return manualLarguraRef; // always go to optional largura field
     if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
     return m2Ref;
@@ -445,14 +490,28 @@ export default function LeftPanel() {
   // For computed card preview
   const previewLoteSistema = (() => {
     const proc = processo.trim();
+    if (isMadeira) {
+      if (proc && item) return generateLoteSistemaCaixa(proc, item, 0, registros);
+      return '—';
+    }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
     const resolvedEnd = requiresEndereco ? endereco : '';
+    if (isCelular && proc && item) {
+      return generateLoteSistemaCaixa(resolvedProc, item, mLinear, registros);
+    }
     if (mLinear > 0 && (resolvedProc || resolvedNfVal || resolvedEnd)) {
       return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
   })();
+
+  // Set default quantidade when madeiraTipo changes
+  useEffect(() => {
+    if (isMadeira) {
+      setQuantidade(madeiraDefaults[madeiraTipo].toString());
+    }
+  }, [madeiraTipo, isMadeira]);
 
   return (
     <motion.div
@@ -510,7 +569,7 @@ export default function LeftPanel() {
               className="ai-status-box text-xs leading-relaxed"
             >
               <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
-              {isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
+              {isMadeira ? `${madeiraTipo}: Item + Lote + Quantidade` : isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
             </motion.div>
           )}
         </AnimatePresence>
@@ -530,6 +589,27 @@ export default function LeftPanel() {
                   }`}
                 >
                   {tipo === 'Celular' ? 'Celular/Plissada' : tipo}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isMadeira && (
+          <div className="space-y-2">
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtipo</div>
+            <div className="grid grid-cols-3 gap-2">
+              {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
+                <button
+                  key={tipo}
+                  onClick={() => setMadeiraTipo(tipo)}
+                  className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition-colors ${
+                    madeiraTipo === tipo
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {tipo}
                 </button>
               ))}
             </div>
@@ -626,7 +706,7 @@ export default function LeftPanel() {
         {/* Form Fields */}
         <div className="space-y-2.5">
           <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <ScanBarcode className="w-3 h-3" /> Dados do Rolo
+            <ScanBarcode className="w-3 h-3" /> {isMadeira ? 'Dados da Madeira' : 'Dados do Rolo'}
           </div>
 
           {/* PROC field — Coulisse, IA, and Celular */}
@@ -728,8 +808,38 @@ export default function LeftPanel() {
             </div>
           )}
 
+          {/* Madeira: Quantidade field */}
+          {isMadeira && (
+            <>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch (opcional)</label>
+                <input
+                  ref={loteRef}
+                  value={lote}
+                  onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
+                  onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="Código do lote" autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                  Quantidade por caixa (padrão: {madeiraDefaults[madeiraTipo]})
+                </label>
+                <input
+                  ref={quantidadeRef}
+                  type="number" step="1" value={quantidade}
+                  onChange={e => setQuantidade(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, null)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
+                />
+              </div>
+            </>
+          )}
+
           {/* AI mode: M Linear + Largura fields */}
-          {isAI ? (
+          {!isMadeira && isAI ? (
             <>
               <div>
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
@@ -754,7 +864,7 @@ export default function LeftPanel() {
                 />
               </div>
             </>
-          ) : (
+          ) : !isMadeira ? (
             <>
               {(isPVT || coulisseUsesMLinear) ? (
                 /* PVT or Coulisse M Linear mode: direct M Linear input */
@@ -773,7 +883,7 @@ export default function LeftPanel() {
                 /* Coulisse M², Rolo, Cortina, Celular: M² input with calculated M Linear */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    {isCelular ? 'M² (÷ 3,05 = M Linear)' : 'M² (Metro Quadrado)'}
+                    {isCelular ? `M² (÷ ${isHC45 ? '3,66' : '3,05'} = M Linear)` : 'M² (Metro Quadrado)'}
                   </label>
                   <input
                     ref={m2Ref}
@@ -786,7 +896,7 @@ export default function LeftPanel() {
                   {mLinear > 0 && (
                     <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
                   )}{isCelular && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: 3,05m</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: {isHC45 ? '3,66' : '3,05'}m {isHC45 ? '(HC-45)' : ''}</div>
                   )}
                 </div>
               )}
@@ -845,7 +955,7 @@ export default function LeftPanel() {
                 />
               </div>
             </>
-          )}
+          ) : null}
 
           {/* Endereço */}
           {requiresEndereco && <div>
@@ -883,18 +993,37 @@ export default function LeftPanel() {
 
         {/* Computed Card */}
         <div className="comp-card">
-          <div>
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Largura</div>
-            <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
-          </div>
-          <div>
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M Linear</div>
-            <div className="text-base font-semibold font-mono">{mLinear > 0 ? formatML(mLinear) : '—'}</div>
-          </div>
-          <div className="col-span-2">
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
-            <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
-          </div>
+          {isMadeira ? (
+            <>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Subtipo</div>
+                <div className="text-base font-semibold font-mono">{madeiraTipo}</div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Qtd</div>
+                <div className="text-base font-semibold font-mono">{quantidade || madeiraDefaults[madeiraTipo]}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
+                <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Largura</div>
+                <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M Linear</div>
+                <div className="text-base font-semibold font-mono">{mLinear > 0 ? formatML(mLinear) : '—'}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
+                <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Add Button */}

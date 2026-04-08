@@ -281,6 +281,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
                           {column.key === 'lote' && (r.lote || '—')}
                           {column.key === 'endereco' && (r.endereco || '—')}
                           {column.key === 'loteSistema' && (r.loteSistema || '—')}
+                          {column.key === 'quantidade' && (r.quantidade || '—')}
                         </td>
                       ))}
                       <td className="px-3 py-1.5">

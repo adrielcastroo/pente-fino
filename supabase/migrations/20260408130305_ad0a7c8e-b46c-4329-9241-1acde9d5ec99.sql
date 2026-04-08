@@ -1,0 +1,1 @@
+ALTER TABLE public.registros ADD COLUMN quantidade integer;
