@@ -808,8 +808,38 @@ export default function LeftPanel() {
             </div>
           )}
 
+          {/* Madeira: Quantidade field */}
+          {isMadeira && (
+            <>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch (opcional)</label>
+                <input
+                  ref={loteRef}
+                  value={lote}
+                  onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
+                  onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder="Código do lote" autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                  Quantidade por caixa (padrão: {madeiraDefaults[madeiraTipo]})
+                </label>
+                <input
+                  ref={quantidadeRef}
+                  type="number" step="1" value={quantidade}
+                  onChange={e => setQuantidade(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, null)}
+                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
+                />
+              </div>
+            </>
+          )}
+
           {/* AI mode: M Linear + Largura fields */}
-          {isAI ? (
+          {!isMadeira && isAI ? (
             <>
               <div>
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
@@ -834,7 +864,7 @@ export default function LeftPanel() {
                 />
               </div>
             </>
-          ) : (
+          ) : !isMadeira ? (
             <>
               {(isPVT || coulisseUsesMLinear) ? (
                 /* PVT or Coulisse M Linear mode: direct M Linear input */
@@ -925,7 +955,7 @@ export default function LeftPanel() {
                 />
               </div>
             </>
-          )}
+          ) : null}
 
           {/* Endereço */}
           {requiresEndereco && <div>
