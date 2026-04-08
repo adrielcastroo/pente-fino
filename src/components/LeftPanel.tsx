@@ -993,18 +993,37 @@ export default function LeftPanel() {
 
         {/* Computed Card */}
         <div className="comp-card">
-          <div>
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Largura</div>
-            <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
-          </div>
-          <div>
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M Linear</div>
-            <div className="text-base font-semibold font-mono">{mLinear > 0 ? formatML(mLinear) : '—'}</div>
-          </div>
-          <div className="col-span-2">
-            <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
-            <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
-          </div>
+          {isMadeira ? (
+            <>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Subtipo</div>
+                <div className="text-base font-semibold font-mono">{madeiraTipo}</div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Qtd</div>
+                <div className="text-base font-semibold font-mono">{quantidade || madeiraDefaults[madeiraTipo]}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
+                <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Largura</div>
+                <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
+              </div>
+              <div>
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M Linear</div>
+                <div className="text-base font-semibold font-mono">{mLinear > 0 ? formatML(mLinear) : '—'}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
+                <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Add Button */}
