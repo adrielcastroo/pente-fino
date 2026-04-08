@@ -12,6 +12,7 @@ export interface Registro {
   largura: number;
   lote: string;
   loteSistema: string;
+  quantidade?: number;
   isNew?: boolean;
   conference_id?: string | null;
   tipoTecido?: string;
@@ -40,7 +41,7 @@ interface UndoEntry {
 interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
-  currentMode: 'manual' | 'openrouter' | 'diversos';
+  currentMode: 'manual' | 'openrouter' | 'diversos' | 'madeira';
   processo: string;
   conferente: string;
   searchQuery: string;
@@ -54,7 +55,7 @@ interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
 
-  setMode: (mode: 'manual' | 'openrouter' | 'diversos') => void;
+  setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira') => void;
   setProcesso: (p: string) => void;
   setConferente: (c: string) => void;
   setSearchQuery: (q: string) => void;
@@ -137,6 +138,18 @@ export function generateLoteSistema(processo: string, endereco: string, mLinear:
   
   if (count === 0) return base;
   return `${base}-${count}`;
+}
+
+/** Generate Lote Sistema with box numbering (CXnn) for Madeira and Celular modes */
+export function generateLoteSistemaCaixa(processo: string, item: string, mLinear: number, existingRegistros: Registro[]): string {
+  const itemNorm = (item || '').trim().toLowerCase();
+  const count = existingRegistros.filter(r => (r.item || '').trim().toLowerCase() === itemNorm).length;
+  const caixaNum = count + 1;
+  const cxLabel = `CX${caixaNum.toString().padStart(2, '0')}`;
+  const procTrimmed = processo.trim();
+  const mlFormatted = fmtML(mLinear);
+  const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', mlFormatted].filter(Boolean);
+  return parts.join(' ');
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -246,6 +259,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         was_edited: r.wasEdited || false,
         edited_by: r.editedBy || '',
         edited_at: r.editedAt || null,
+        quantidade: r.quantidade || null,
       }));
 
       const { error: regError } = await supabase.from('registros').insert(rows as any);
@@ -306,6 +320,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             wasEdited: r.was_edited,
             editedBy: r.edited_by,
             editedAt: r.edited_at,
+            quantidade: (r as any).quantidade || undefined,
           })),
         });
       }

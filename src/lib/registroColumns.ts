@@ -1,7 +1,7 @@
 import type { Registro } from '@/store/useAppStore';
 
-export type RegistroMode = 'manual' | 'openrouter' | 'diversos';
-export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema';
+export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira';
+export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade';
 
 export interface RegistroColumn {
   key: RegistroColumnKey;
@@ -20,6 +20,7 @@ const COLUMN_MAP: Record<RegistroColumnKey, RegistroColumn> = {
   lote: { key: 'lote', label: 'Lote/Batch', width: 24 },
   endereco: { key: 'endereco', label: 'Endereço', width: 18 },
   loteSistema: { key: 'loteSistema', label: 'Lote Final (Sistema)', shortLabel: 'Lote Final', width: 36 },
+  quantidade: { key: 'quantidade', label: 'Quantidade', shortLabel: 'Qtd', width: 14 },
 };
 
 const LAYOUTS = {
@@ -29,10 +30,11 @@ const LAYOUTS = {
   cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
   celular: ['item', 'processo', 'm2', 'mLinear', 'lote', 'loteSistema'],
   pvt: ['item', 'nf', 'mLinear', 'lote'],
+  madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
 function normalizeMode(mode?: string | null, fallback: RegistroMode = 'manual'): RegistroMode {
-  if (mode === 'manual' || mode === 'openrouter' || mode === 'diversos') return mode;
+  if (mode === 'manual' || mode === 'openrouter' || mode === 'diversos' || mode === 'madeira') return mode;
   return fallback;
 }
 
@@ -53,6 +55,7 @@ function layoutForDiversosTipo(tipo: string): RegistroColumnKey[] {
 function layoutFromMode(mode: RegistroMode) {
   if (mode === 'manual') return LAYOUTS.coulisse;
   if (mode === 'openrouter') return LAYOUTS.ia;
+  if (mode === 'madeira') return LAYOUTS.madeira;
   return LAYOUTS.rolo; // default diversos
 }
 
@@ -74,7 +77,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
   }
 
   // Mixed modes: show all columns that have data
-  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'lote', 'endereco', 'loteSistema'];
+  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'loteSistema'];
   const visibility: Record<RegistroColumnKey, boolean> = {
     item: rows.some(row => !!row.item?.trim()),
     nf: rows.some(row => !!row.nf?.trim()),
@@ -82,6 +85,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     m2: rows.some(row => Number(row.m2) > 0),
     largura: rows.some(row => Number(row.largura) > 0),
     mLinear: rows.some(row => Number(row.mLinear) > 0),
+    quantidade: rows.some(row => Number(row.quantidade) > 0),
     lote: rows.some(row => !!row.lote?.trim()),
     endereco: rows.some(row => !!row.endereco?.trim()),
     loteSistema: rows.some(row => !!row.loteSistema?.trim()),
