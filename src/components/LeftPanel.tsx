@@ -391,21 +391,52 @@ export default function LeftPanel() {
     if (!conf) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
     if (!item) { addToast('Preencha o campo Item.', 'warn'); return; }
     if (requiresNF && !nf.trim()) { addToast('Preencha o campo NF.', 'warn'); return; }
+
+    if (isMadeira) {
+      const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
+      const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
+      const reg = {
+        id: crypto.randomUUID(),
+        item,
+        processo: proc,
+        nf: '',
+        endereco: '',
+        m2: 0,
+        mLinear: 0,
+        largura: 0,
+        lote: lote || '',
+        loteSistema,
+        quantidade: qtd,
+        tipoTecido: madeiraTipo,
+        modoOrigem: 'madeira' as const,
+        isNew: true,
+      };
+      addRegistro(reg);
+      addToast(`✓ ${item} — ${madeiraTipo} CX${(registros.filter(r => r.item.trim().toLowerCase() === item.trim().toLowerCase()).length + 1).toString().padStart(2, '0')}`, 'ok');
+      resetForm();
+      setQuantidade(madeiraDefaults[madeiraTipo].toString());
+      setTimeout(() => { reg.isNew = false; }, 400);
+      return;
+    }
+
     if (isAI && aiLarguraNum <= 0) { addToast('Preencha a Largura.', 'warn'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { addToast('Largura não detectada no item. Verifique o código ou preencha manualmente.', 'warn'); return; }
     if (mLinear <= 0) { addToast(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`, 'warn'); return; }
-    // Lote is optional — no validation needed
     if (requiresEndereco && !endereco) { addToast('Preencha o Endereço.', 'warn'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear) ? 0 : m2Num;
-    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? 3.05 : largura;
+    const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
     // Celular uses processo, other Diversos use NF
     const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
-    const loteSistema = generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
+
+    // Celular uses box numbering
+    const loteSistema = isCelular
+      ? generateLoteSistemaCaixa(resolvedProcesso, item, mLinear, registros)
+      : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     const reg = {
       id: crypto.randomUUID(),
@@ -437,12 +468,14 @@ export default function LeftPanel() {
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'openrouter' as const, label: 'IA', icon: Zap },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
+    { key: 'madeira' as const, label: 'Madeira', icon: Package },
   ];
 
   const showDropzone = currentMode === 'openrouter';
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
+    if (isMadeira) return loteRef;
     if (isCoulisse) return manualLarguraRef; // always go to optional largura field
     if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
     return m2Ref;
@@ -457,14 +490,28 @@ export default function LeftPanel() {
   // For computed card preview
   const previewLoteSistema = (() => {
     const proc = processo.trim();
+    if (isMadeira) {
+      if (proc && item) return generateLoteSistemaCaixa(proc, item, 0, registros);
+      return '—';
+    }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
     const resolvedEnd = requiresEndereco ? endereco : '';
+    if (isCelular && proc && item) {
+      return generateLoteSistemaCaixa(resolvedProc, item, mLinear, registros);
+    }
     if (mLinear > 0 && (resolvedProc || resolvedNfVal || resolvedEnd)) {
       return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
   })();
+
+  // Set default quantidade when madeiraTipo changes
+  useEffect(() => {
+    if (isMadeira) {
+      setQuantidade(madeiraDefaults[madeiraTipo].toString());
+    }
+  }, [madeiraTipo, isMadeira]);
 
   return (
     <motion.div
