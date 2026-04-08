@@ -57,6 +57,7 @@ export type Database = {
           m2: number
           modo_origem: string
           nf: string
+          quantidade: number | null
           tipo_tecido: string
           was_edited: boolean
         }
@@ -75,6 +76,7 @@ export type Database = {
           m2?: number
           modo_origem?: string
           nf?: string
+          quantidade?: number | null
           tipo_tecido?: string
           was_edited?: boolean
         }
@@ -93,6 +95,7 @@ export type Database = {
           m2?: number
           modo_origem?: string
           nf?: string
+          quantidade?: number | null
           tipo_tecido?: string
           was_edited?: boolean
         }
