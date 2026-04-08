@@ -178,6 +178,7 @@ export default function LeftPanel() {
 
   const resetForm = () => {
     setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear(''); setManualLargura('');
+    setQuantidade('');
     if (!lockProcesso) setProcesso('');
     if (!lockEndereco) setEndereco('');
     if (!lockMetragem) setCoulisseMetragem('m2');
