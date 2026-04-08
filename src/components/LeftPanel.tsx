@@ -569,7 +569,7 @@ export default function LeftPanel() {
               className="ai-status-box text-xs leading-relaxed"
             >
               <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
-              {isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
+              {isMadeira ? `${madeiraTipo}: Item + Lote + Quantidade` : isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
             </motion.div>
           )}
         </AnimatePresence>
@@ -589,6 +589,27 @@ export default function LeftPanel() {
                   }`}
                 >
                   {tipo === 'Celular' ? 'Celular/Plissada' : tipo}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isMadeira && (
+          <div className="space-y-2">
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtipo</div>
+            <div className="grid grid-cols-3 gap-2">
+              {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
+                <button
+                  key={tipo}
+                  onClick={() => setMadeiraTipo(tipo)}
+                  className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition-colors ${
+                    madeiraTipo === tipo
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {tipo}
                 </button>
               ))}
             </div>
