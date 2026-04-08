@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Zap, SquarePen, Layers3, Lock, Unlock
+  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
@@ -74,6 +74,10 @@ export default function LeftPanel() {
   const [manualLargura, setManualLargura] = useState('');
   const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
   const [lockMetragem, setLockMetragem] = useState(false);
+  const [madeiraTipo, setMadeiraTipo] = useState<'Lâmina' | 'Base' | 'Bandô'>('Lâmina');
+  const [quantidade, setQuantidade] = useState('');
+
+  const quantidadeRef = useRef<HTMLInputElement>(null);
 
   const manualLarguraRef = useRef<HTMLInputElement>(null);
 
@@ -84,31 +88,38 @@ export default function LeftPanel() {
   const manualLarguraNum = parseFloat(manualLargura) || 0;
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
+  const isMadeira = currentMode === 'madeira';
   const isPVT = isDiversos && diversosTipo === 'PVT';
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
   const isCortina = isDiversos && diversosTipo === 'Cortina';
+  const isHC45 = isCelular && item.toUpperCase().startsWith('HC-45');
+  const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = !isDiversos || isCelular;
+  const requiresProcesso = isMadeira || (!isDiversos || isCelular);
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
-  const usesM2Input = !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
+  const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   const usesLarguraFromItem = !isAI && (isRolo || isCortina);
-  const requiresEndereco = !isPVT && !isCelular;
+  const requiresEndereco = !isMadeira && !isPVT && !isCelular;
+
+  const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
   const largura = isAI ? aiLarguraNum
+    : isMadeira ? 0
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
-    : isCelular ? 3.05
+    : isCelular ? celularDivisor
     : usesLarguraFromItem ? extractLarguraFromItem(item)
     : 0;
   const mLinear = isAI ? aiMLinearNum
+    : isMadeira ? 0
     : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
-    : isCelular ? (m2Num > 0 ? m2Num / 3.05 : 0)
+    : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
     : (largura > 0 ? m2Num / largura : 0);
-  const isDuplicate = item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
+  const isDuplicate = !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
   const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
 
