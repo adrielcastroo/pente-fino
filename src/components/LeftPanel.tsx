@@ -706,7 +706,7 @@ export default function LeftPanel() {
         {/* Form Fields */}
         <div className="space-y-2.5">
           <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <ScanBarcode className="w-3 h-3" /> Dados do Rolo
+            <ScanBarcode className="w-3 h-3" /> {isMadeira ? 'Dados da Madeira' : 'Dados do Rolo'}
           </div>
 
           {/* PROC field — Coulisse, IA, and Celular */}
@@ -853,7 +853,7 @@ export default function LeftPanel() {
                 /* Coulisse M², Rolo, Cortina, Celular: M² input with calculated M Linear */
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    {isCelular ? 'M² (÷ 3,05 = M Linear)' : 'M² (Metro Quadrado)'}
+                    {isCelular ? `M² (÷ ${isHC45 ? '3,66' : '3,05'} = M Linear)` : 'M² (Metro Quadrado)'}
                   </label>
                   <input
                     ref={m2Ref}
@@ -866,7 +866,7 @@ export default function LeftPanel() {
                   {mLinear > 0 && (
                     <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
                   )}{isCelular && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: 3,05m</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: {isHC45 ? '3,66' : '3,05'}m {isHC45 ? '(HC-45)' : ''}</div>
                   )}
                 </div>
               )}
