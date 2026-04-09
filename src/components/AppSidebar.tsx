@@ -1,4 +1,4 @@
-import { Home, Layers3, Package, Construction, Table, FolderOpen } from 'lucide-react';
+import { Home, Layers3, Package, Settings2, Table, FolderOpen } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoImg from '@/assets/logo.ico';
 import {
@@ -24,7 +24,7 @@ const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
   { key: 'inicio', label: 'Início', icon: Home },
   { key: 'tecido', label: 'Tecido', icon: Layers3 },
   { key: 'madeira', label: 'Madeira', icon: Package },
-  { key: 'motor', label: 'Motor/Controle', icon: Construction },
+  { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
   { key: 'table', label: 'Tabela', icon: Table },
   { key: 'history', label: 'Histórico', icon: FolderOpen },
 ];
