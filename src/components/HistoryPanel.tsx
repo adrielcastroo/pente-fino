@@ -233,7 +233,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
             </div>
             <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
               <Clock className="w-3 h-3" />
-              {formatDate(conf.date)} · {conf.registros.length} rolos · {formatML(totalML)}
+              {formatDate(conf.date)} · {getSmartCount(conf)} · {formatML(totalML)}
               {conf.conferente && (
                 <span className="flex items-center gap-0.5">
                   <User className="w-3 h-3" /> {conf.conferente}
