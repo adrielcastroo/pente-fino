@@ -10,8 +10,8 @@ import ConfigModal from '@/components/ConfigModal';
 import ShortcutsModal from '@/components/ShortcutsModal';
 import AppSidebar from '@/components/AppSidebar';
 import DashboardPage from '@/components/DashboardPage';
+import MotorControlePage from '@/components/MotorControlePage';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { Construction } from 'lucide-react';
 
 type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
 
@@ -57,16 +57,6 @@ export default function Index() {
     }
   };
 
-  const renderMotorPlaceholder = () => (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground p-8">
-      <Construction className="w-12 h-12 opacity-30" />
-      <div className="text-center">
-        <div className="text-lg font-semibold mb-1">Motor / Controle</div>
-        <div className="text-sm opacity-70">Em breve</div>
-      </div>
-    </div>
-  );
-
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
@@ -75,11 +65,11 @@ export default function Index() {
         <div className="flex-1 flex flex-col overflow-hidden h-[100dvh]">
           <TopBar onOpenConfig={() => setConfigOpen(true)} />
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
             {activeTab === 'inicio' && <DashboardPage />}
             {activeTab === 'tecido' && <LeftPanel />}
             {activeTab === 'madeira' && <LeftPanel />}
-            {activeTab === 'motor' && renderMotorPlaceholder()}
+            {activeTab === 'motor' && <MotorControlePage />}
             {activeTab === 'table' && <RightPanel />}
             {activeTab === 'history' && <HistoryPanel />}
           </div>

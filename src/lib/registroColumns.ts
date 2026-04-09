@@ -1,6 +1,6 @@
 import type { Registro } from '@/store/useAppStore';
 
-export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira';
+export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
 export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade';
 
 export interface RegistroColumn {
@@ -31,10 +31,12 @@ const LAYOUTS = {
   celular: ['item', 'processo', 'm2', 'mLinear', 'lote', 'loteSistema'],
   pvt: ['item', 'nf', 'mLinear', 'lote'],
   madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
+  motor: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
+  controle: ['item', 'nf', 'lote', 'loteSistema'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
 function normalizeMode(mode?: string | null, fallback: RegistroMode = 'manual'): RegistroMode {
-  if (mode === 'manual' || mode === 'openrouter' || mode === 'diversos' || mode === 'madeira') return mode;
+  if (mode === 'manual' || mode === 'openrouter' || mode === 'diversos' || mode === 'madeira' || mode === 'motor' || mode === 'controle') return mode;
   return fallback;
 }
 
@@ -56,6 +58,8 @@ function layoutFromMode(mode: RegistroMode) {
   if (mode === 'manual') return LAYOUTS.coulisse;
   if (mode === 'openrouter') return LAYOUTS.ia;
   if (mode === 'madeira') return LAYOUTS.madeira;
+  if (mode === 'motor') return LAYOUTS.motor;
+  if (mode === 'controle') return LAYOUTS.controle;
   return LAYOUTS.rolo; // default diversos
 }
 

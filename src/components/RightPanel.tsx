@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppStore, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,8 +20,10 @@ function highlight(text: string, q: string) {
 }
 
 export default function RightPanel() {
-  const { registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack, archiveAndClear } = useAppStore();
+  const { registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack, archiveAndClear, updateRegistro } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
+  const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   let rows = [...registros];
   const q = searchQuery.toLowerCase().trim();
@@ -45,6 +48,53 @@ export default function RightPanel() {
 
   const copyText = (t: string) => {
     navigator.clipboard.writeText(t).then(() => addToast('Copiado: ' + t, 'ok'));
+  };
+
+  const startEdit = (rowId: string, key: string, currentValue: string) => {
+    setEditingCell({ rowId, key });
+    setEditValue(currentValue);
+  };
+
+  const commitEdit = () => {
+    if (!editingCell) return;
+    const { rowId, key } = editingCell;
+    updateRegistro(rowId, { [key]: key === 'm2' || key === 'mLinear' || key === 'largura' || key === 'quantidade'
+      ? parseFloat(editValue) || 0
+      : editValue });
+    setEditingCell(null);
+    addToast('Célula atualizada', 'ok');
+  };
+
+  const renderCell = (r: any, column: any) => {
+    const isEditing = editingCell?.rowId === r.id && editingCell?.key === column.key;
+    if (isEditing) {
+      return (
+        <input
+          autoFocus
+          value={editValue}
+          onChange={e => setEditValue(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingCell(null); }}
+          className="w-full bg-background border border-primary rounded px-1 py-0.5 text-sm outline-none"
+        />
+      );
+    }
+
+    const val = (r as any)[column.key];
+    const displayVal = column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
+      : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
+      : column.key === 'mLinear' ? formatML(r.mLinear)
+      : column.key === 'loteSistema' ? null
+      : column.key === 'item' ? null
+      : column.key === 'endereco' ? null
+      : (val || '—');
+
+    if (column.key === 'loteSistema') {
+      return <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>;
+    }
+    if (column.key === 'item') return highlight(r.item || '—', q);
+    if (column.key === 'endereco') return highlight(r.endereco || '—', q);
+    return displayVal;
   };
 
   const exportExcel = async () => {
@@ -146,19 +196,10 @@ export default function RightPanel() {
                     className="border-b border-border hover:bg-primary/[0.04] transition-colors">
                     <td className="px-3 py-2.5 text-sm text-muted-foreground">{i + 1}</td>
                     {columns.map(column => (
-                      <td key={column.key} className={`px-3 py-2.5 text-sm ${column.key === 'item' ? 'font-semibold' : 'font-mono'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}>
-                        {column.key === 'item' && highlight(r.item || '—', q)}
-                        {column.key === 'nf' && (r.nf || '—')}
-                        {column.key === 'processo' && (r.processo || '—')}
-                        {column.key === 'm2' && (r.m2 > 0 ? r.m2.toFixed(1) : '—')}
-                        {column.key === 'largura' && (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')}
-                        {column.key === 'mLinear' && formatML(r.mLinear)}
-                        {column.key === 'lote' && (r.lote || '—')}
-                        {column.key === 'endereco' && highlight(r.endereco || '—', q)}
-                        {column.key === 'loteSistema' && (
-                          <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>
-                        )}
-                        {column.key === 'quantidade' && (r.quantidade || '—')}
+                      <td key={column.key}
+                        onDoubleClick={() => column.key !== 'loteSistema' ? startEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
+                        className={`px-3 py-2.5 text-sm cursor-default ${column.key === 'item' ? 'font-semibold' : 'font-mono'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}>
+                        {renderCell(r, column)}
                       </td>
                     ))}
                     <td className="px-3 py-2.5">
