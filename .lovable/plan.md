@@ -1,59 +1,108 @@
+## Plano: Conferente fix + Scroll + Dashboard gráficos + Tabela editável + Motor/Controle completo
 
+### 1. TopBar — Campo Conferente não ficar "comido"
 
-## Plano: Sidebar + Dashboard Inicial
+`**src/components/TopBar.tsx`:**
 
-### Conceito
-Transformar a navbar horizontal em uma **sidebar colapsável** usando Shadcn Sidebar. Criar uma nova página **Início** com dashboard de estatísticas. Remover a barra "Conferir Rolo" do LeftPanel e reposicionar o botão "Limpar campos".
+- Aumentar `min-w` do input conferente de `min-w-0` para `min-w-[100px]` e `w-[80px] sm:w-[110px]` para `w-[100px] sm:w-[140px]`
+- Garantir que o container pai não force `flex-shrink` excessivo
 
-### Mudanças por arquivo
+### 2. Rolagem vertical para todos os devices
 
-#### 1. `src/pages/Index.tsx` → Layout com SidebarProvider
-- Envolver tudo com `SidebarProvider`
-- Substituir TopBar por `AppSidebar` + `SidebarTrigger` no header
-- Adicionar aba `'inicio'` ao tipo `AppTab`
-- Header fino com: `SidebarTrigger | [Conferente] [Excel] [Config]`
-- Renderizar `DashboardPage` quando `activeTab === 'inicio'`
-- Default `activeTab` = `'inicio'`
+`**src/pages/Index.tsx`:**
 
-#### 2. `src/components/AppSidebar.tsx` (novo)
-- Usar Shadcn `Sidebar` com `collapsible="icon"`
-- Logo "Pente Fino" no topo
-- Menu items: Início, Tecido, Madeira, Motor/Controle, Tabela, Histórico
-- Ícones: `Home, Layers3, Package, Construction, Table, FolderOpen`
-- Badge de contagem na aba Tabela
-- Item ativo destacado com cor primária
-- Estilo dark navy (topbar-bg) para manter identidade visual
+- Trocar `overflow-hidden` do container de conteúdo para `overflow-y-auto` garantindo scroll em todas as telas
+- Garantir `h-[100dvh]` no container principal e `flex-1 overflow-y-auto` no conteúdo
 
-#### 3. `src/components/TopBar.tsx` → Simplificar para header fino
-- Remover navegação por abas (agora na sidebar)
-- Manter apenas: Conferente + Excel + Config
-- `SidebarTrigger` no canto esquerdo
+`**src/components/LeftPanel.tsx`:**
 
-#### 4. `src/components/LeftPanel.tsx` — Remover barra "Conferir Rolo"
-- **Excluir** o header com "Conferir Rolo" (linhas 523-537)
-- Mover "Limpar campos" para dentro do tip box (linha 566-576), posicionado no **canto extremo direito** do card, na mesma linha que "Lâmina: Item + Lote + Quantidade Enter"
-- Manter botão Undo ao lado do "Limpar campos"
+- Verificar que `overflow-y-auto` está aplicado ao container scrollável
 
-#### 5. `src/components/DashboardPage.tsx` (novo) — Página Início
-- Título: "Início"
-- Consultar `history` (conferências do store) para calcular estatísticas:
-  - **Conferente que mais bipou**: agrupar por `conferente`, contar registros, exibir top 3
-  - **Categoria mais bipada**: agrupar por `modoOrigem` → mapear para Tecido (manual/openrouter/diversos), Madeira, Motor/Controle
-  - **Subcategoria mais usada**: contar por modo específico (Coulisse=manual, IA=openrouter, Diversos=diversos)
-  - **Tipos de tecido mais bipados**: agrupar por `tipoTecido` (Rolo, Cortina, PVT, Celular/Plissada)
-- Cards com ícones, números grandes e barras de progresso relativas
-- Estilo harmonioso com cores primárias/accent do tema
+### 3. Dashboard — Gráficos dinâmicos com Recharts
 
-#### 6. `src/index.css` — Ajustes de harmonia
-- Sidebar usa variáveis `--navy` existentes
-- Cards do dashboard com bordas sutis e sombras leves
-- Transições suaves entre páginas
+`**src/components/DashboardPage.tsx` — reescrever:**
+
+- Substituir `StatCard` com barras de progresso por gráficos Recharts reais (usando `ChartContainer` do chart.tsx existente)
+- **Conferentes** → `BarChart` horizontal com cores da paleta primária
+- **Categoria** → `PieChart` / donut com cores: Tecido=#2A9D8F, Madeira=#E9C46A, Motor=#E76F51
+- **Ferramenta** (antigo Subcategoria) → `BarChart` vertical
+- **Tipos de tecido** → `PieChart` com cores distintas
+- Renomear títulos dos cards:
+  - "Conferentes que mais biparam" → **"Conferentes"**
+  - "Categoria mais bipada" → **"Categorias"**
+  - "Subcategoria mais usada" → **"Ferramentas"**
+  - "Tipos de tecido mais bipados" → **"Tipos de tecidos"**
+
+### 4. Tabela — Edição inline direta
+
+`**src/components/RightPanel.tsx`:**
+
+- Adicionar estado `editingCell: { rowId: string, key: string } | null`
+- Ao clicar duplo em uma célula, transformá-la em `<input>` editável
+- Ao pressionar Enter ou blur, salvar o valor atualizado diretamente no array `registros` do store
+- Adicionar `updateRegistro(id, updates)` ao store para atualizar registros antes de arquivar
+
+`**src/store/useAppStore.ts`:**
+
+- Adicionar método `updateRegistro: (id: string, updates: Partial<Registro>) => void` que atualiza o registro no array atual (não no histórico)
+
+### 5. Motor/Controle — Página completa
+
+`**src/components/MotorControlePage.tsx` (novo):**
+
+**Subtoggle:** Motor | Controle (estilo igual ao Coulisse/IA/Diversos)
+
+**Motor:**
+
+- Toggle "Motor em Caixa" (switch) — quando ativo, mostra campo "Nº da Caixa" (input numérico com prefixo "CX" e badge "CX01")
+- Campos: Modelo, Nota Fiscal (NFe), Série (campo de bipagem com placeholder "Bipe o código de barras...")
+- Texto: "O leitor envia Enter automaticamente após a bipagem"
+- Ao bipar série: extrair apenas a série limpa (remover modelo + letra que acompanha), prevenir duplicatas
+- NF não redireciona foco para Série automaticamente
+- Botão "Adicionar Motor" (estilo gradiente com base na cor do website)
+
+**Controle:**
+
+- Campos: Modelo (ex: SI 5 PU), Nota Fiscal, Série
+- Série bruta: usar apenas dígitos antes da letra "F"
+- Badge sequencial automático (#1, #2...)
+- Formato final: `{Modelo} NFe {NF} {série limpa}`
+- Texto: "Os dígitos antes de 'F' serão extraídos automaticamente"
+- Botão "Adicionar Controle" (estilo gradiente de acordo com o website)
+
+**Registro no store:**
+
+- `modoOrigem: 'motor' | 'controle'`
+- Campos mapeados: item=Modelo, processo=NFe, lote=Série limpa, loteSistema=formato final, quantidade=caixa num (motor)
+- Sem duplicação de séries (validar antes de adicionar)
+
+`**src/lib/registroColumns.ts`:**
+
+- Adicionar layouts `motor` e `controle`: `['item', 'processo', 'lote', 'loteSistema', 'quantidade']`
+- Atualizar `normalizeMode` para aceitar `'motor'` e `'controle'`
+
+`**src/store/useAppStore.ts`:**
+
+- Expandir tipo `currentMode` para incluir `'motor' | 'controle'`
+- Atualizar `setMode` para aceitar novos modos
+
+`**src/pages/Index.tsx`:**
+
+- Substituir placeholder Motor/Controle por `<MotorControlePage />`
+- Ao selecionar aba motor, definir `setMode('motor')`
+
+### 6. Estilo visual Motor/Controle (referência imagens)
+
+- Motor: card com fundo `bg-orange-50`, toggle com cores do website, botão gradiente website
+- Controle: card com fundo `bg-blue-50`, botão gradiente do website
+- Badge de caixa no canto do card (ex: "CX01")
 
 ### Arquivos afetados
-- `src/pages/Index.tsx` — SidebarProvider, nova aba inicio
-- `src/components/AppSidebar.tsx` — novo, sidebar com navegação
-- `src/components/TopBar.tsx` — simplificar para header fino
-- `src/components/LeftPanel.tsx` — remover header "Conferir Rolo", mover "Limpar campos"
-- `src/components/DashboardPage.tsx` — novo, página dashboard
-- `src/index.css` — harmonia de cores sidebar
 
+- `src/components/TopBar.tsx` — fix conferente width
+- `src/pages/Index.tsx` — scroll fix, Motor page integration
+- `src/components/DashboardPage.tsx` — gráficos Recharts, renomear cards
+- `src/components/RightPanel.tsx` — edição inline de células
+- `src/store/useAppStore.ts` — updateRegistro, modos motor/controle
+- `src/lib/registroColumns.ts` — layouts motor/controle
+- `src/components/MotorControlePage.tsx` — novo, página completa Motor/Controle
