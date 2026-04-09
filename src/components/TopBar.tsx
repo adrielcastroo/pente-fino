@@ -58,7 +58,7 @@ export default function TopBar({ onOpenConfig }: TopBarProps) {
           <div className="flex items-center gap-1 min-w-0">
             <User className="w-3 h-3 text-muted-foreground" />
             <input
-              className="rounded-md px-2.5 py-1.5 text-xs outline-none transition-all duration-150 bg-muted border border-border text-foreground w-[80px] sm:w-[110px] min-w-0 font-medium placeholder:text-muted-foreground"
+              className="rounded-md px-2.5 py-1.5 text-xs outline-none transition-all duration-150 bg-muted border border-border text-foreground w-[100px] sm:w-[140px] min-w-[100px] font-medium placeholder:text-muted-foreground"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
               placeholder="Conferente *"

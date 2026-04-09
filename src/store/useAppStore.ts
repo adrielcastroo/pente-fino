@@ -41,7 +41,7 @@ interface UndoEntry {
 interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
-  currentMode: 'manual' | 'openrouter' | 'diversos' | 'madeira';
+  currentMode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
   processo: string;
   conferente: string;
   searchQuery: string;
@@ -55,7 +55,8 @@ interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
 
-  setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira') => void;
+  setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle') => void;
+  updateRegistro: (id: string, updates: Partial<Registro>) => void;
   setProcesso: (p: string) => void;
   setConferente: (c: string) => void;
   setSearchQuery: (q: string) => void;
@@ -170,6 +171,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   lockedEndereco: '',
 
   setMode: (mode) => set({ currentMode: mode }),
+  updateRegistro: (id, updates) => set(state => {
+    const newRegs = state.registros.map(r => r.id === id ? { ...r, ...updates, wasEdited: true, editedAt: new Date().toISOString() } : r);
+    save(newRegs);
+    return { registros: newRegs };
+  }),
   setProcesso: (p) => set({ processo: p }),
   setConferente: (c) => {
     localStorage.setItem('cft4_conferente', c);

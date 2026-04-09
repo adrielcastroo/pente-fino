@@ -1,65 +1,34 @@
 import { useAppStore, type Conference } from '@/store/useAppStore';
-import { Users, Layers3, Package, BarChart3, TrendingUp } from 'lucide-react';
+import { Users, Layers3, BarChart3, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
 
-interface StatItem {
-  label: string;
-  count: number;
-}
+const CATEGORY_COLORS: Record<string, string> = {
+  Tecido: '#2A9D8F',
+  Madeira: '#E9C46A',
+  'Motor/Controle': '#E76F51',
+};
 
-function StatCard({ title, icon: Icon, items, emptyText }: {
-  title: string;
-  icon: typeof Users;
-  items: StatItem[];
-  emptyText: string;
-}) {
-  const max = Math.max(...items.map(i => i.count), 1);
+const TOOL_COLORS = ['hsl(170, 57%, 39%)', 'hsl(38, 72%, 67%)', 'hsl(14, 72%, 51%)', 'hsl(213, 50%, 24%)'];
 
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <Icon className="w-4 h-4 text-primary" />
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground">{emptyText}</p>
-        ) : (
-          <div className="space-y-3">
-            {items.map((item, i) => (
-              <div key={item.label} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="font-medium">{i + 1}. {item.label}</span>
-                  <span className="text-muted-foreground font-mono">{item.count}</span>
-                </div>
-                <Progress value={(item.count / max) * 100} className="h-1.5" />
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+const TIPO_COLORS = ['#2A9D8F', '#264653', '#E9C46A', '#E76F51', '#F4A261', '#606C38'];
 
 function computeStats(history: Conference[]) {
   const allRegs = history.flatMap(c => c.registros.map(r => ({ ...r, conferente: c.conferente })));
 
-  // Top conferentes
   const confMap = new Map<string, number>();
   history.forEach(c => {
     const name = c.conferente || 'Desconhecido';
     confMap.set(name, (confMap.get(name) || 0) + c.registros.length);
   });
   const topConferentes = [...confMap.entries()]
-    .map(([label, count]) => ({ label, count }))
+    .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  // Categorias
   const catMap = new Map<string, number>();
   allRegs.forEach(r => {
     const modo = r.modoOrigem || 'manual';
@@ -68,11 +37,10 @@ function computeStats(history: Conference[]) {
     else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
     catMap.set(cat, (catMap.get(cat) || 0) + 1);
   });
-  const topCategorias = [...catMap.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count);
+  const categorias = [...catMap.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
-  // Subcategorias
   const subMap = new Map<string, number>();
   allRegs.forEach(r => {
     const modo = r.modoOrigem || 'manual';
@@ -83,30 +51,36 @@ function computeStats(history: Conference[]) {
     else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
     subMap.set(sub, (subMap.get(sub) || 0) + 1);
   });
-  const topSubcategorias = [...subMap.entries()]
-    .map(([label, count]) => ({ label, count }))
+  const ferramentas = [...subMap.entries()]
+    .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // Tipos de tecido
   const tipoMap = new Map<string, number>();
   allRegs.forEach(r => {
     const tipo = r.tipoTecido || 'Rolo';
     tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
   });
-  const topTipos = [...tipoMap.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count)
+  const tipos = [...tipoMap.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
     .slice(0, 6);
 
-  const totalRegistros = allRegs.length;
-  const totalConferencias = history.length;
-
-  return { topConferentes, topCategorias, topSubcategorias, topTipos, totalRegistros, totalConferencias };
+  return {
+    topConferentes,
+    categorias,
+    ferramentas,
+    tipos,
+    totalRegistros: allRegs.length,
+    totalConferencias: history.length,
+    totalConferentes: confMap.size,
+  };
 }
 
 export default function DashboardPage() {
   const history = useAppStore(s => s.history);
   const stats = computeStats(history);
+
+  const empty = stats.totalConferencias === 0;
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
@@ -115,7 +89,7 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground mt-1">Visão geral das conferências</p>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Card>
           <CardContent className="p-4 text-center">
@@ -131,38 +105,115 @@ export default function DashboardPage() {
         </Card>
         <Card className="col-span-2 sm:col-span-1">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{stats.topConferentes.length}</div>
+            <div className="text-2xl font-bold text-primary">{stats.totalConferentes}</div>
             <div className="text-xs text-muted-foreground mt-1">Conferentes</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detail cards */}
+      {/* Charts */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatCard
-          title="Conferentes que mais biparam"
-          icon={Users}
-          items={stats.topConferentes}
-          emptyText="Nenhuma conferência registrada"
-        />
-        <StatCard
-          title="Categoria mais bipada"
-          icon={Layers3}
-          items={stats.topCategorias}
-          emptyText="Sem dados"
-        />
-        <StatCard
-          title="Subcategoria mais usada"
-          icon={BarChart3}
-          items={stats.topSubcategorias}
-          emptyText="Sem dados"
-        />
-        <StatCard
-          title="Tipos de tecido mais bipados"
-          icon={TrendingUp}
-          items={stats.topTipos}
-          emptyText="Sem dados"
-        />
+        {/* Conferentes - Bar */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary" /> Conferentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.topConferentes.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhum dado</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={stats.topConferentes} layout="vertical" margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11 }} />
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="count" fill="hsl(170, 57%, 39%)" radius={[0, 4, 4, 0]} name="Itens" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Categorias - Pie */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Layers3 className="w-4 h-4 text-primary" /> Categorias
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.categorias.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sem dados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={stats.categorias} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3}>
+                    {stats.categorias.map((entry) => (
+                      <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#999'} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Ferramentas - Bar */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" /> Ferramentas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.ferramentas.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sem dados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={stats.ferramentas} margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="count" name="Itens" radius={[4, 4, 0, 0]}>
+                    {stats.ferramentas.map((_, i) => (
+                      <Cell key={i} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tipos de tecido - Pie */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" /> Tipos de tecidos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.tipos.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sem dados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={stats.tipos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3}>
+                    {stats.tipos.map((_, i) => (
+                      <Cell key={i} fill={TIPO_COLORS[i % TIPO_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
