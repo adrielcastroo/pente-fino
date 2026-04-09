@@ -536,26 +536,28 @@ export default function LeftPanel() {
       </div>
 
       <div className="p-4 flex-1 overflow-y-auto space-y-3">
-        {/* Mode Toggle */}
-        <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
-          {modes.map(m => {
-            const Icon = m.icon;
-            return (
-              <button
-                key={m.key}
-                onClick={() => setMode(m.key)}
-                className={`flex-1 py-2 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                  currentMode === m.key
-                    ? 'surface-bg text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {m.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Mode Toggle — only for Tecido (not Madeira) */}
+        {!isMadeira && (
+          <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
+            {tecidoModes.map(m => {
+              const Icon = m.icon;
+              return (
+                <button
+                  key={m.key}
+                  onClick={() => setMode(m.key)}
+                  className={`flex-1 py-2 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    currentMode === m.key
+                      ? 'surface-bg text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Manual tip */}
         <AnimatePresence mode="wait">
