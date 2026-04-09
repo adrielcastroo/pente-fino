@@ -520,21 +520,6 @@ export default function LeftPanel() {
       transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
       className="surface-bg border-r border-border overflow-hidden flex flex-col h-full"
     >
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Conferir Rolo</span>
-        <div className="flex gap-1.5">
-          {undoStack.length > 0 && (
-            <button onClick={handleUndo} className="p-1.5 rounded-md border border-border hover:bg-muted transition-colors" title="Desfazer">
-              <Undo2 className="w-3.5 h-3.5 text-muted-foreground" />
-            </button>
-          )}
-          <button onClick={resetForm} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-[10px] font-medium text-muted-foreground">
-            <X className="w-3 h-3" />
-            Limpar campos
-          </button>
-        </div>
-      </div>
 
       <div className="p-4 flex-1 overflow-y-auto space-y-3">
         {/* Mode Toggle — only for Tecido (not Madeira) */}
@@ -568,10 +553,23 @@ export default function LeftPanel() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="ai-status-box text-xs leading-relaxed"
+              className="ai-status-box text-xs leading-relaxed flex items-center justify-between"
             >
-              <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
-              {isMadeira ? `${madeiraTipo}: Item + Lote + Quantidade` : isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
+              <div>
+                <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
+                {isMadeira ? `${madeiraTipo}: Item + Lote + Quantidade` : isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
+              </div>
+              <div className="flex gap-1 flex-shrink-0 ml-2">
+                {undoStack.length > 0 && (
+                  <button onClick={handleUndo} className="p-1 rounded border border-border hover:bg-muted transition-colors" title="Desfazer">
+                    <Undo2 className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                )}
+                <button onClick={resetForm} className="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted transition-colors text-[10px] font-medium text-muted-foreground border border-border">
+                  <X className="w-3 h-3" />
+                  Limpar
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
