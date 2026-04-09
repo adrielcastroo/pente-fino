@@ -464,11 +464,10 @@ export default function LeftPanel() {
     if (restored) addToast('Rolo restaurado', 'ok');
   };
 
-  const modes = [
+  const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'openrouter' as const, label: 'IA', icon: Zap },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
-    { key: 'madeira' as const, label: 'Madeira', icon: Package },
   ];
 
   const showDropzone = currentMode === 'openrouter';

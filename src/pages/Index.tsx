@@ -9,15 +9,17 @@ import HistoryPanel from '@/components/HistoryPanel';
 import ToastContainer from '@/components/ToastContainer';
 import ConfigModal from '@/components/ConfigModal';
 import ShortcutsModal from '@/components/ShortcutsModal';
-import { PenLine, Table, FolderClock } from 'lucide-react';
+import { Construction } from 'lucide-react';
+
+type AppTab = 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
 
 export default function Index() {
-  const { loadFromStorage, undo, loadHistory } = useAppStore();
+  const { loadFromStorage, undo, loadHistory, setMode } = useAppStore();
   const registros = useAppStore(s => s.registros);
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'form' | 'table' | 'history'>('form');
+  const [activeTab, setActiveTab] = useState<AppTab>('tecido');
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const isLandscape = useIsLandscape();
@@ -47,77 +49,106 @@ export default function Index() {
     return () => document.removeEventListener('keydown', handler);
   }, [undo, addToast, configOpen, shortcutsOpen]);
 
-  const showTabs = (isMobile || isTablet) && !isLandscape;
+  // Sync mode when switching tabs
+  const handleTabChange = (tab: AppTab) => {
+    setActiveTab(tab);
+    if (tab === 'tecido') {
+      const currentMode = useAppStore.getState().currentMode;
+      if (currentMode === 'madeira') setMode('manual');
+    } else if (tab === 'madeira') {
+      setMode('madeira');
+    }
+  };
 
-  const tabs = [
-    { key: 'form' as const, label: 'Conferir', icon: PenLine },
-    { key: 'table' as const, label: 'Tabela', icon: Table, badge: registros.length || undefined },
-    { key: 'history' as const, label: 'Histórico', icon: FolderClock },
+  const showTabs = (isMobile || isTablet) && !isLandscape;
+  const isFormTab = activeTab === 'tecido' || activeTab === 'madeira' || activeTab === 'motor';
+
+  const tabs: { key: AppTab; label: string; badge?: number }[] = [
+    { key: 'tecido', label: 'Tecido' },
+    { key: 'madeira', label: 'Madeira' },
+    { key: 'motor', label: 'Motor/Controle' },
+    { key: 'table', label: 'Tabela', badge: registros.length || undefined },
+    { key: 'history', label: 'Histórico' },
   ];
+
+  // Desktop right panel tab (table vs history) — only relevant in desktop mode
+  const [desktopRightTab, setDesktopRightTab] = useState<'table' | 'history'>('table');
+
+  // When clicking table/history in desktop, update the right panel
+  const handleDesktopTab = (tab: AppTab) => {
+    if (tab === 'table' || tab === 'history') {
+      setDesktopRightTab(tab);
+      setActiveTab(tab);
+    } else {
+      handleTabChange(tab);
+    }
+  };
+
+  const renderNavBar = () => (
+    <div className={`flex border-b border-border bg-card flex-shrink-0 ${showTabs ? 'overflow-x-auto scrollbar-none' : ''}`}>
+      {tabs.map(tab => (
+        <button
+          key={tab.key}
+          onClick={() => showTabs ? handleTabChange(tab.key) : handleDesktopTab(tab.key)}
+          className={`whitespace-nowrap px-4 py-3 text-sm font-medium uppercase tracking-wider transition-colors relative ${
+            (showTabs ? activeTab === tab.key : (
+              // Desktop: highlight form tabs OR right panel tabs
+              (tab.key === 'table' || tab.key === 'history')
+                ? desktopRightTab === tab.key
+                : activeTab === tab.key
+            ))
+              ? 'text-foreground font-semibold'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {tab.label}
+          {tab.badge && tab.badge > 0 && (
+            <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
+              {tab.badge}
+            </span>
+          )}
+          {(showTabs ? activeTab === tab.key : (
+            (tab.key === 'table' || tab.key === 'history')
+              ? desktopRightTab === tab.key
+              : activeTab === tab.key
+          )) && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderMotorPlaceholder = () => (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground p-8">
+      <Construction className="w-12 h-12 opacity-30" />
+      <div className="text-center">
+        <div className="text-lg font-semibold mb-1">Motor / Controle</div>
+        <div className="text-sm opacity-70">Em breve</div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden">
       <TopBar onOpenConfig={() => setConfigOpen(true)} />
-
-      {showTabs && (
-        <div className="flex border-b border-border bg-card flex-shrink-0">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-                  activeTab === tab.key
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-                {tab.badge && tab.badge > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {renderNavBar()}
 
       {showTabs ? (
         <div className="flex-1 overflow-hidden">
-          {activeTab === 'form' && <LeftPanel />}
+          {activeTab === 'tecido' && <LeftPanel />}
+          {activeTab === 'madeira' && <LeftPanel />}
+          {activeTab === 'motor' && renderMotorPlaceholder()}
           {activeTab === 'table' && <RightPanel />}
           {activeTab === 'history' && <HistoryPanel />}
         </div>
       ) : (
         <div className={`flex-1 grid overflow-hidden ${(isMobile || isTablet) && isLandscape ? 'grid-cols-[360px_1fr]' : 'grid-cols-[420px_1fr]'}`}>
-          <LeftPanel />
+          {/* Left: always show form panel based on activeTab */}
+          {activeTab === 'motor' ? renderMotorPlaceholder() : <LeftPanel />}
+          {/* Right: table or history */}
           <div className="flex flex-col overflow-hidden">
-            <div className="flex border-b border-border bg-card flex-shrink-0">
-              <button
-                onClick={() => setActiveTab('table')}
-                className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-                  activeTab !== 'history' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
-                }`}
-              >
-                <Table className="w-3.5 h-3.5" /> Tabela
-                {registros.length > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">{registros.length}</span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
-                  activeTab === 'history' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
-                }`}
-              >
-                <FolderClock className="w-3.5 h-3.5" /> Histórico
-              </button>
-            </div>
-            {activeTab === 'history' ? <HistoryPanel /> : <RightPanel />}
+            {desktopRightTab === 'history' ? <HistoryPanel /> : <RightPanel />}
           </div>
         </div>
       )}
