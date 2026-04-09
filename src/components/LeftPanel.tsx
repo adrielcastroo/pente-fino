@@ -4,7 +4,7 @@ import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package
+  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
@@ -70,6 +70,7 @@ export default function LeftPanel() {
   const [aiLargura, setAiLargura] = useState('');
   const [aiMLinear, setAiMLinear] = useState('');
   const [diversosTipo, setDiversosTipo] = useState<'Rolo' | 'PVT' | 'Cortina' | 'Celular'>('Rolo');
+  const [showPreview, setShowPreview] = useState(false);
   const [diversosMLinear, setDiversosMLinear] = useState('');
   const [manualLargura, setManualLargura] = useState('');
   const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
@@ -1036,6 +1037,50 @@ export default function LeftPanel() {
           <Plus className="w-5 h-5" />
           Adicionar à Tabela
         </motion.button>
+
+        {/* Preview toggle */}
+        {registros.length > 0 && (
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {showPreview ? 'Ocultar Preview' : `Preview Tabela (${registros.length})`}
+          </button>
+        )}
+
+        {/* Mini table preview */}
+        <AnimatePresence>
+          {showPreview && registros.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="border border-border rounded-lg overflow-x-auto bg-card">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="surface-2-bg">
+                      <th className="px-2 py-1.5 text-left text-muted-foreground font-medium">#</th>
+                      <th className="px-2 py-1.5 text-left text-muted-foreground font-medium">Item</th>
+                      <th className="px-2 py-1.5 text-left text-muted-foreground font-medium">Lote Sistema</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registros.slice(-8).map((r, i) => (
+                      <tr key={r.id} className="border-t border-border/50">
+                        <td className="px-2 py-1 text-muted-foreground">{registros.length - 8 + i + 1 > 0 ? registros.indexOf(r) + 1 : i + 1}</td>
+                        <td className="px-2 py-1 font-semibold truncate max-w-[120px]">{r.item || '—'}</td>
+                        <td className="px-2 py-1 font-mono text-muted-foreground truncate max-w-[140px]">{r.loteSistema || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Duplicate warning */}
         <AnimatePresence>
