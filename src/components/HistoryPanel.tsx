@@ -180,7 +180,8 @@ function downloadConferenceExcel(conf: Conference) {
 function getModeBadges(conf: Conference): string[] {
   const badges = new Set<string>();
   for (const r of conf.registros) {
-    if (r.modoOrigem === 'openrouter') badges.add('IA');
+    if (r.modoOrigem === 'madeira') badges.add('Madeira');
+    else if (r.modoOrigem === 'openrouter') badges.add('IA');
     else if (r.modoOrigem === 'diversos') {
       const tipo = (r.tipoTecido || '').trim();
       if (tipo) badges.add(tipo === 'Celular' ? 'Celular/Plissada' : tipo);
@@ -188,6 +189,22 @@ function getModeBadges(conf: Conference): string[] {
     } else badges.add('Coulisse');
   }
   return Array.from(badges);
+}
+
+function getSmartCount(conf: Conference): string {
+  const regs = conf.registros;
+  const allMadeira = regs.every(r => r.modoOrigem === 'madeira');
+  const allCelular = regs.every(r => r.modoOrigem === 'diversos' && r.tipoTecido === 'Celular');
+  
+  if (allMadeira) {
+    const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
+    return `${regs.length} caixas${totalQtd > 0 ? ` (${totalQtd} und)` : ''}`;
+  }
+  if (allCelular) return `${regs.length} rolos (Celular)`;
+  
+  const hasMixed = new Set(regs.map(r => r.modoOrigem)).size > 1;
+  if (hasMixed) return `${regs.length} itens`;
+  return `${regs.length} rolos`;
 }
 
 function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => void }) {
