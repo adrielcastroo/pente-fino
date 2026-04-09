@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppStore, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,8 +20,10 @@ function highlight(text: string, q: string) {
 }
 
 export default function RightPanel() {
-  const { registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack, archiveAndClear } = useAppStore();
+  const { registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack, archiveAndClear, updateRegistro } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
+  const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   let rows = [...registros];
   const q = searchQuery.toLowerCase().trim();
