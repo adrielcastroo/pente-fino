@@ -4,7 +4,7 @@ import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package
+  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff
 } from 'lucide-react';
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
