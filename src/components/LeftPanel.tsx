@@ -70,6 +70,7 @@ export default function LeftPanel() {
   const [aiLargura, setAiLargura] = useState('');
   const [aiMLinear, setAiMLinear] = useState('');
   const [diversosTipo, setDiversosTipo] = useState<'Rolo' | 'PVT' | 'Cortina' | 'Celular'>('Rolo');
+  const [showPreview, setShowPreview] = useState(false);
   const [diversosMLinear, setDiversosMLinear] = useState('');
   const [manualLargura, setManualLargura] = useState('');
   const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
