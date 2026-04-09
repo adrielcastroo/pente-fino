@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
-import { useIsMobile, useIsTablet, useIsLandscape } from '@/hooks/use-mobile';
 import TopBar from '@/components/TopBar';
 import LeftPanel from '@/components/LeftPanel';
 import RightPanel from '@/components/RightPanel';
@@ -15,14 +14,10 @@ type AppTab = 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
 
 export default function Index() {
   const { loadFromStorage, undo, loadHistory, setMode } = useAppStore();
-  const registros = useAppStore(s => s.registros);
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<AppTab>('tecido');
-  const isMobile = useIsMobile();
-  const isTablet = useIsTablet();
-  const isLandscape = useIsLandscape();
 
   useEffect(() => {
     loadFromStorage();
@@ -49,7 +44,6 @@ export default function Index() {
     return () => document.removeEventListener('keydown', handler);
   }, [undo, addToast, configOpen, shortcutsOpen]);
 
-  // Sync mode when switching tabs
   const handleTabChange = (tab: AppTab) => {
     setActiveTab(tab);
     if (tab === 'tecido') {
@@ -59,65 +53,6 @@ export default function Index() {
       setMode('madeira');
     }
   };
-
-  const showTabs = (isMobile || isTablet) && !isLandscape;
-  const isFormTab = activeTab === 'tecido' || activeTab === 'madeira' || activeTab === 'motor';
-
-  const tabs: { key: AppTab; label: string; badge?: number }[] = [
-    { key: 'tecido', label: 'Tecido' },
-    { key: 'madeira', label: 'Madeira' },
-    { key: 'motor', label: 'Motor/Controle' },
-    { key: 'table', label: 'Tabela', badge: registros.length || undefined },
-    { key: 'history', label: 'Histórico' },
-  ];
-
-  // Desktop right panel tab (table vs history) — only relevant in desktop mode
-  const [desktopRightTab, setDesktopRightTab] = useState<'table' | 'history'>('table');
-
-  // When clicking table/history in desktop, update the right panel
-  const handleDesktopTab = (tab: AppTab) => {
-    if (tab === 'table' || tab === 'history') {
-      setDesktopRightTab(tab);
-      setActiveTab(tab);
-    } else {
-      handleTabChange(tab);
-    }
-  };
-
-  const renderNavBar = () => (
-    <div className={`flex border-b border-border bg-card flex-shrink-0 ${showTabs ? 'overflow-x-auto scrollbar-none' : ''}`}>
-      {tabs.map(tab => (
-        <button
-          key={tab.key}
-          onClick={() => showTabs ? handleTabChange(tab.key) : handleDesktopTab(tab.key)}
-          className={`whitespace-nowrap px-4 py-3 text-sm font-medium uppercase tracking-wider transition-colors relative ${
-            (showTabs ? activeTab === tab.key : (
-              // Desktop: highlight form tabs OR right panel tabs
-              (tab.key === 'table' || tab.key === 'history')
-                ? desktopRightTab === tab.key
-                : activeTab === tab.key
-            ))
-              ? 'text-foreground font-semibold'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {tab.label}
-          {tab.badge && tab.badge > 0 && (
-            <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1">
-              {tab.badge}
-            </span>
-          )}
-          {(showTabs ? activeTab === tab.key : (
-            (tab.key === 'table' || tab.key === 'history')
-              ? desktopRightTab === tab.key
-              : activeTab === tab.key
-          )) && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-          )}
-        </button>
-      ))}
-    </div>
-  );
 
   const renderMotorPlaceholder = () => (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground p-8">
@@ -131,27 +66,19 @@ export default function Index() {
 
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden">
-      <TopBar onOpenConfig={() => setConfigOpen(true)} />
-      {renderNavBar()}
+      <TopBar
+        onOpenConfig={() => setConfigOpen(true)}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
-      {showTabs ? (
-        <div className="flex-1 overflow-hidden">
-          {activeTab === 'tecido' && <LeftPanel />}
-          {activeTab === 'madeira' && <LeftPanel />}
-          {activeTab === 'motor' && renderMotorPlaceholder()}
-          {activeTab === 'table' && <RightPanel />}
-          {activeTab === 'history' && <HistoryPanel />}
-        </div>
-      ) : (
-        <div className={`flex-1 grid overflow-hidden ${(isMobile || isTablet) && isLandscape ? 'grid-cols-[360px_1fr]' : 'grid-cols-[420px_1fr]'}`}>
-          {/* Left: always show form panel based on activeTab */}
-          {activeTab === 'motor' ? renderMotorPlaceholder() : <LeftPanel />}
-          {/* Right: table or history */}
-          <div className="flex flex-col overflow-hidden">
-            {desktopRightTab === 'history' ? <HistoryPanel /> : <RightPanel />}
-          </div>
-        </div>
-      )}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'tecido' && <LeftPanel />}
+        {activeTab === 'madeira' && <LeftPanel />}
+        {activeTab === 'motor' && renderMotorPlaceholder()}
+        {activeTab === 'table' && <RightPanel />}
+        {activeTab === 'history' && <HistoryPanel />}
+      </div>
 
       <ToastContainer />
       <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
