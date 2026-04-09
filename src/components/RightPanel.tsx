@@ -50,6 +50,53 @@ export default function RightPanel() {
     navigator.clipboard.writeText(t).then(() => addToast('Copiado: ' + t, 'ok'));
   };
 
+  const startEdit = (rowId: string, key: string, currentValue: string) => {
+    setEditingCell({ rowId, key });
+    setEditValue(currentValue);
+  };
+
+  const commitEdit = () => {
+    if (!editingCell) return;
+    const { rowId, key } = editingCell;
+    updateRegistro(rowId, { [key]: key === 'm2' || key === 'mLinear' || key === 'largura' || key === 'quantidade'
+      ? parseFloat(editValue) || 0
+      : editValue });
+    setEditingCell(null);
+    addToast('Célula atualizada', 'ok');
+  };
+
+  const renderCell = (r: any, column: any) => {
+    const isEditing = editingCell?.rowId === r.id && editingCell?.key === column.key;
+    if (isEditing) {
+      return (
+        <input
+          autoFocus
+          value={editValue}
+          onChange={e => setEditValue(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingCell(null); }}
+          className="w-full bg-background border border-primary rounded px-1 py-0.5 text-sm outline-none"
+        />
+      );
+    }
+
+    const val = (r as any)[column.key];
+    const displayVal = column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
+      : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
+      : column.key === 'mLinear' ? formatML(r.mLinear)
+      : column.key === 'loteSistema' ? null
+      : column.key === 'item' ? null
+      : column.key === 'endereco' ? null
+      : (val || '—');
+
+    if (column.key === 'loteSistema') {
+      return <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>;
+    }
+    if (column.key === 'item') return highlight(r.item || '—', q);
+    if (column.key === 'endereco') return highlight(r.endereco || '—', q);
+    return displayVal;
+  };
+
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
     const proc = useAppStore.getState().processo || 'sem_proc';
