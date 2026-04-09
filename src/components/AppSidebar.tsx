@@ -1,4 +1,4 @@
-import { Home, Layers3, Package, Construction, Table, FolderOpen } from 'lucide-react';
+import { Home, Layers3, Package, Settings2, Table, FolderOpen } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoImg from '@/assets/logo.ico';
 import {
