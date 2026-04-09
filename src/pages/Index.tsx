@@ -8,16 +8,19 @@ import HistoryPanel from '@/components/HistoryPanel';
 import ToastContainer from '@/components/ToastContainer';
 import ConfigModal from '@/components/ConfigModal';
 import ShortcutsModal from '@/components/ShortcutsModal';
+import AppSidebar from '@/components/AppSidebar';
+import DashboardPage from '@/components/DashboardPage';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Construction } from 'lucide-react';
 
-type AppTab = 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
+type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
 
 export default function Index() {
   const { loadFromStorage, undo, loadHistory, setMode } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<AppTab>('tecido');
+  const [activeTab, setActiveTab] = useState<AppTab>('inicio');
 
   useEffect(() => {
     loadFromStorage();
@@ -65,24 +68,27 @@ export default function Index() {
   );
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden">
-      <TopBar
-        onOpenConfig={() => setConfigOpen(true)}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar activeTab={activeTab} onTabChange={handleTabChange} />
 
-      <div className="flex-1 overflow-hidden">
-        {activeTab === 'tecido' && <LeftPanel />}
-        {activeTab === 'madeira' && <LeftPanel />}
-        {activeTab === 'motor' && renderMotorPlaceholder()}
-        {activeTab === 'table' && <RightPanel />}
-        {activeTab === 'history' && <HistoryPanel />}
+        <div className="flex-1 flex flex-col overflow-hidden h-[100dvh]">
+          <TopBar onOpenConfig={() => setConfigOpen(true)} />
+
+          <div className="flex-1 overflow-hidden">
+            {activeTab === 'inicio' && <DashboardPage />}
+            {activeTab === 'tecido' && <LeftPanel />}
+            {activeTab === 'madeira' && <LeftPanel />}
+            {activeTab === 'motor' && renderMotorPlaceholder()}
+            {activeTab === 'table' && <RightPanel />}
+            {activeTab === 'history' && <HistoryPanel />}
+          </div>
+        </div>
       </div>
 
       <ToastContainer />
       <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
       <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-    </div>
+    </SidebarProvider>
   );
 }

@@ -1,28 +1,15 @@
 import { useAppStore, formatML } from '@/store/useAppStore';
-import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { useToastStore } from '@/hooks/useToast';
-import { Settings, Download, User } from 'lucide-react';
-import logoImg from '@/assets/logo.ico';
+import { Settings, Download, User, Menu } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
-
-type AppTab = 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface TopBarProps {
   onOpenConfig?: () => void;
-  activeTab: AppTab;
-  onTabChange: (tab: AppTab) => void;
 }
 
-const tabs: { key: AppTab; label: string }[] = [
-  { key: 'tecido', label: 'Tecido' },
-  { key: 'madeira', label: 'Madeira' },
-  { key: 'motor', label: 'Motor/Controle' },
-  { key: 'table', label: 'Tabela' },
-  { key: 'history', label: 'Histórico' },
-];
-
-export default function TopBar({ onOpenConfig, activeTab, onTabChange }: TopBarProps) {
+export default function TopBar({ onOpenConfig }: TopBarProps) {
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
@@ -58,48 +45,20 @@ export default function TopBar({ onOpenConfig, activeTab, onTabChange }: TopBarP
   };
 
   return (
-    <motion.header
-      initial={{ y: -60, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="topbar-bg text-primary-foreground sticky top-0 z-50"
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+    <header
+      className="sticky top-0 z-50 bg-card border-b border-border"
     >
-      {/* Top row: logo + actions */}
-      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 h-12 sm:h-14">
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <img src={logoImg} alt="Pente Fino" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
-          <div className="font-semibold text-sm leading-tight">Pente Fino</div>
-        </div>
+      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-12">
+        <SidebarTrigger className="text-foreground" />
 
-        {/* Nav tabs */}
-        <nav className="flex items-center gap-0.5 sm:gap-1 ml-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => onTabChange(tab.key)}
-              className={`whitespace-nowrap px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium uppercase tracking-wider transition-colors rounded-md relative ${
-                activeTab === tab.key
-                  ? 'text-white bg-white/10'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-              }`}
-            >
-              {tab.label}
-              {tab.key === 'table' && registros.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-[16px] rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1">
-                  {registros.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
+        <div className="flex-1" />
 
         {/* Right actions */}
         <div className="flex gap-1.5 items-center flex-shrink-0">
           <div className="flex items-center gap-1 min-w-0">
-            <User className="w-3 h-3 text-white/30" />
+            <User className="w-3 h-3 text-muted-foreground" />
             <input
-              className="glass-input font-medium w-[80px] sm:w-[110px] text-xs min-w-0"
+              className="rounded-md px-2.5 py-1.5 text-xs outline-none transition-all duration-150 bg-muted border border-border text-foreground w-[80px] sm:w-[110px] min-w-0 font-medium placeholder:text-muted-foreground"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
               placeholder="Conferente *"
@@ -107,15 +66,23 @@ export default function TopBar({ onOpenConfig, activeTab, onTabChange }: TopBarP
               required
             />
           </div>
-          <button className="glass-btn-accent glass-btn" onClick={exportExcel} title="Exportar Excel">
+          <button
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs cursor-pointer transition-all duration-150 whitespace-nowrap bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 font-medium"
+            onClick={exportExcel}
+            title="Exportar Excel"
+          >
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-xs">Excel</span>
+            <span className="hidden sm:inline">Excel</span>
           </button>
-          <button className="glass-btn" onClick={onOpenConfig} title="Configurações API">
+          <button
+            className="flex items-center gap-1.5 rounded-md p-1.5 text-xs cursor-pointer transition-all duration-150 hover:bg-muted border border-border text-muted-foreground"
+            onClick={onOpenConfig}
+            title="Configurações API"
+          >
             <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 }
