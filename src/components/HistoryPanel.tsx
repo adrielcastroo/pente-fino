@@ -143,6 +143,13 @@ function EditRegistroDialog({
 }
 
 function getConferenceFolderName(conf: Conference): string {
+  // For Motor/Controle, use NF as folder name
+  const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+  if (isMotorControle) {
+    const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+    if (nfs.length > 0) return `NF ${nfs.join(', ')}`;
+    return 'Motor/Controle';
+  }
   // For Diversos mode, use NF as folder name
   const isDiversos = conf.registros.some(r => r.modoOrigem === 'diversos');
   if (isDiversos) {
@@ -181,6 +188,8 @@ function getModeBadges(conf: Conference): string[] {
   const badges = new Set<string>();
   for (const r of conf.registros) {
     if (r.modoOrigem === 'madeira') badges.add('Madeira');
+    else if (r.modoOrigem === 'motor') badges.add('Motor');
+    else if (r.modoOrigem === 'controle') badges.add('Controle');
     else if (r.modoOrigem === 'openrouter') badges.add('IA');
     else if (r.modoOrigem === 'diversos') {
       const tipo = (r.tipoTecido || '').trim();
