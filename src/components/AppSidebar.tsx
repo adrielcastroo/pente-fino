@@ -1,6 +1,7 @@
-import { Home, Layers3, Package, Settings2, Table, FolderOpen } from 'lucide-react';
+import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoImg from '@/assets/logo.ico';
+import { useTheme } from '@/hooks/useTheme';
 import {
   Sidebar,
   SidebarContent,
@@ -10,14 +11,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
 
-type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
+type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
 
 interface AppSidebarProps {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
+  onOpenConfig?: () => void;
 }
 
 const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
@@ -25,14 +28,23 @@ const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
   { key: 'tecido', label: 'Tecido', icon: Layers3 },
   { key: 'madeira', label: 'Madeira', icon: Package },
   { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
+  { key: 'estoque', label: 'Estoque', icon: Warehouse },
   { key: 'table', label: 'Tabela', icon: Table },
   { key: 'history', label: 'Histórico', icon: FolderOpen },
 ];
 
-export default function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
-  const { state } = useSidebar();
+export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
+  const { state, toggleSidebar, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const registros = useAppStore(s => s.registros);
+  const { theme, toggleTheme } = useTheme();
+
+  const handleTabClick = (tab: AppTab) => {
+    onTabChange(tab);
+    if (isMobile) {
+      toggleSidebar();
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -55,7 +67,7 @@ export default function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) 
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
-                      onClick={() => onTabChange(item.key)}
+                      onClick={() => handleTabClick(item.key)}
                       tooltip={item.label}
                       isActive={isActive}
                       className={isActive ? 'bg-primary/10 text-primary font-medium' : ''}
@@ -75,6 +87,25 @@ export default function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) 
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-2 space-y-1">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={toggleTheme} tooltip={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}>
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <span>{theme === 'dark' ? 'Claro' : 'Escuro'}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {onOpenConfig && (
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={onOpenConfig} tooltip="Configurações">
+                <Settings className="w-4 h-4" />
+                <span>Configurações</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -11,9 +11,10 @@ import ShortcutsModal from '@/components/ShortcutsModal';
 import AppSidebar from '@/components/AppSidebar';
 import DashboardPage from '@/components/DashboardPage';
 import MotorControlePage from '@/components/MotorControlePage';
+import EstoquePage from '@/components/EstoquePage';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
-type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'table' | 'history';
+type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
 
 export default function Index() {
   const { loadFromStorage, undo, loadHistory, setMode } = useAppStore();
@@ -60,16 +61,17 @@ export default function Index() {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
-        <AppSidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <AppSidebar activeTab={activeTab} onTabChange={handleTabChange} onOpenConfig={() => setConfigOpen(true)} />
 
         <div className="flex-1 flex flex-col overflow-hidden h-[100dvh]">
-          <TopBar onOpenConfig={() => setConfigOpen(true)} />
+          <TopBar />
 
           <div className="flex-1 overflow-y-auto">
             {activeTab === 'inicio' && <DashboardPage />}
             {activeTab === 'tecido' && <LeftPanel />}
             {activeTab === 'madeira' && <LeftPanel />}
             {activeTab === 'motor' && <MotorControlePage />}
+            {activeTab === 'estoque' && <EstoquePage />}
             {activeTab === 'table' && <RightPanel />}
             {activeTab === 'history' && <HistoryPanel />}
           </div>

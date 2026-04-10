@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
-import { Zap, Plus, Settings2, ScanBarcode, X, Undo2, Eye } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,9 +20,7 @@ const CONTROLE_MODEL_MAP: Record<string, string> = {
 
 function mapModelo(raw: string): string {
   const trimmed = raw.trim();
-  // exact match by code
   if (CONTROLE_MODEL_MAP[trimmed]) return CONTROLE_MODEL_MAP[trimmed];
-  // case-insensitive match
   const lower = trimmed.toLowerCase();
   if (CONTROLE_MODEL_MAP[lower]) return CONTROLE_MODEL_MAP[lower];
   return trimmed;
@@ -65,8 +63,8 @@ export default function MotorControlePage() {
     if (mod && cleaned.toLowerCase().startsWith(mod.toLowerCase())) {
       cleaned = cleaned.slice(mod.length).trim();
     }
-    cleaned = cleaned.replace(/[A-Za-z]$/, '').trim();
-    return cleaned;
+    // Keep trailing letter if it exists (differentiator for identical series)
+    return cleaned.trim();
   };
 
   const cleanControleSerie = (raw: string): string => {
@@ -94,7 +92,7 @@ export default function MotorControlePage() {
 
   const handleAddMotor = () => {
     if (!modelo.trim()) { addToast('Preencha o Modelo', 'warn'); return; }
-    if (!nf.trim()) { addToast('Preencha a Nota Fiscal', 'warn'); return; }
+    // NF is now optional
     if (!serie.trim()) { addToast('Bipe a Série', 'warn'); return; }
 
     const cleaned = cleanMotorSerie(serie, modelo);
@@ -102,12 +100,14 @@ export default function MotorControlePage() {
     if (isDuplicate(cleaned)) { addToast('Série já cadastrada!', 'warn'); setSerie(''); return; }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
-    const loteSistema = `${cxLabel} NF ${nf.trim()} série ${cleaned}`;
+    const loteSistema = nf.trim()
+      ? `${cxLabel} NF ${nf.trim()} série ${cleaned}`
+      : `${cxLabel} série ${cleaned}`;
 
     addRegistro({
       id: crypto.randomUUID(),
       item: modelo.trim(),
-      processo: nf.trim(),
+      processo: '',
       nf: nf.trim(),
       endereco: '',
       m2: 0,
@@ -131,7 +131,7 @@ export default function MotorControlePage() {
     setModelo(resolvedModelo);
 
     if (!resolvedModelo.trim()) { addToast('Preencha o Modelo', 'warn'); return; }
-    if (!nf.trim()) { addToast('Preencha a Nota Fiscal', 'warn'); return; }
+    // NF is now optional
     if (!serie.trim()) { addToast('Bipe a Série', 'warn'); return; }
 
     const cleaned = cleanControleSerie(serie);
@@ -139,12 +139,14 @@ export default function MotorControlePage() {
     if (isDuplicate(cleaned)) { addToast('Série já cadastrada!', 'warn'); setSerie(''); return; }
 
     const seq = getSequencial();
-    const loteSistema = `${resolvedModelo.trim()} NF ${nf.trim()} série ${cleaned} Sequência ${seq}`;
+    const loteSistema = nf.trim()
+      ? `${resolvedModelo.trim()} NFe ${nf.trim()} ${cleaned}*${seq}`
+      : `${resolvedModelo.trim()} ${cleaned}*${seq}`;
 
     addRegistro({
       id: crypto.randomUUID(),
       item: resolvedModelo.trim(),
-      processo: nf.trim(),
+      processo: '',
       nf: nf.trim(),
       endereco: '',
       m2: 0,
@@ -214,7 +216,7 @@ export default function MotorControlePage() {
             <div>
               <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
               {subMode === 'motor'
-                ? <>O leitor envia <kbd className="kbd">Enter</kbd> automaticamente. Série limpa (modelo e letra removidos).</>
+                ? <>O leitor envia <kbd className="kbd">Enter</kbd> automaticamente. Letras finais mantidas como diferenciador.</>
                 : <>Dígitos antes de "<strong>F</strong>" serão extraídos. Sequência: #{getSequencial()}</>
               }
             </div>
@@ -265,7 +267,7 @@ export default function MotorControlePage() {
 
         {/* Nota Fiscal */}
         <div className="space-y-1">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Nota Fiscal (NFe)</label>
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Nota Fiscal (NFe) <span className="text-muted-foreground/50">— opcional</span></label>
           <input
             value={nf}
             onChange={e => setNf(sanitize(e.target.value))}
@@ -296,7 +298,7 @@ export default function MotorControlePage() {
           Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
         </button>
 
-        {/* Preview table of recent items */}
+        {/* Preview table */}
         {currentCount > 0 && (
           <div className="rounded-lg border border-border bg-card p-3">
             <div className="flex items-center gap-2 mb-2">
@@ -329,7 +331,7 @@ export default function MotorControlePage() {
                           </td>
                         )}
                         <td className="py-1.5 px-1.5 text-foreground">{r.item}</td>
-                        <td className="py-1.5 px-1.5 text-foreground">{r.nf}</td>
+                        <td className="py-1.5 px-1.5 text-foreground">{r.nf || '—'}</td>
                         <td className="py-1.5 px-1.5 font-mono text-foreground">{r.lote}</td>
                         <td className="py-1.5 px-1.5 font-mono text-muted-foreground truncate max-w-[140px]">{r.loteSistema}</td>
                         {subMode === 'controle' && (

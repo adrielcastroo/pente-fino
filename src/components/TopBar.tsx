@@ -1,23 +1,22 @@
 import { useAppStore, formatML } from '@/store/useAppStore';
 import * as XLSX from 'xlsx';
 import { useToastStore } from '@/hooks/useToast';
-import { Settings, Download, User, Menu } from 'lucide-react';
+import { Download, User } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
-interface TopBarProps {
-  onOpenConfig?: () => void;
-}
-
-export default function TopBar({ onOpenConfig }: TopBarProps) {
+export default function TopBar() {
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
   const exportExcel = async () => {
     if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
-    const requiresProcesso = registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos';
+
+    const isMotorControle = registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+    const requiresProcesso = !isMotorControle && (registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
     if (requiresProcesso && !processo.trim()) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
     if (!conferente) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
+
     const columns = getRegistroColumns(registros, currentMode);
     const headers = columns.map(column => column.label);
     const data = registros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
@@ -26,34 +25,40 @@ export default function TopBar({ onOpenConfig }: TopBarProps) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
 
-    const isDiversosOnly = registros.every(r => r.modoOrigem === 'diversos');
     let fileLabel: string;
     let archiveName: string;
-    if (isDiversosOnly) {
+
+    if (isMotorControle) {
       const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
-      fileLabel = nfs.length > 0 ? `NF_${nfs.join('_')}` : (processo.trim() || 'diversos');
-      archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : (processo.trim() || 'Diversos');
+      fileLabel = nfs.length > 0 ? `Motores NF ${nfs.join(' ')}` : 'Motores';
+      archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : 'Motor/Controle';
     } else {
-      fileLabel = processo.trim() || 'conferencia';
-      archiveName = processo.trim() ? `PROC ${processo.trim()}` : 'Conferência';
+      const isDiversosOnly = registros.every(r => r.modoOrigem === 'diversos');
+      if (isDiversosOnly) {
+        const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+        fileLabel = nfs.length > 0 ? `NF_${nfs.join('_')}` : (processo.trim() || 'diversos');
+        archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : (processo.trim() || 'Diversos');
+      } else {
+        fileLabel = processo.trim() || 'conferencia';
+        archiveName = processo.trim() ? `PROC ${processo.trim()}` : 'Conferência';
+      }
     }
 
-    XLSX.writeFile(wb, `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}.xlsx`);
+    const fileName = isMotorControle
+      ? `${fileLabel}.xlsx`
+      : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
     const count = registros.length;
     await archiveAndClear(archiveName);
     addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
   };
 
   return (
-    <header
-      className="sticky top-0 z-50 bg-card border-b border-border"
-    >
+    <header className="sticky top-0 z-50 bg-card border-b border-border">
       <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-12">
         <SidebarTrigger className="text-foreground" />
-
         <div className="flex-1" />
-
-        {/* Right actions */}
         <div className="flex gap-1.5 items-center flex-shrink-0">
           <div className="flex items-center gap-1 min-w-0">
             <User className="w-3 h-3 text-muted-foreground" />
@@ -73,13 +78,6 @@ export default function TopBar({ onOpenConfig }: TopBarProps) {
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Excel</span>
-          </button>
-          <button
-            className="flex items-center gap-1.5 rounded-md p-1.5 text-xs cursor-pointer transition-all duration-150 hover:bg-muted border border-border text-muted-foreground"
-            onClick={onOpenConfig}
-            title="Configurações API"
-          >
-            <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
