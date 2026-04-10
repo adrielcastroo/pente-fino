@@ -41,6 +41,80 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque_posicoes: {
+        Row: {
+          coluna: string
+          conferente_saida: string | null
+          created_at: string
+          data_registro: string | null
+          data_saida: string | null
+          endereco: string | null
+          estrutura: string
+          id: string
+          item: string | null
+          largura: number | null
+          lote: string | null
+          lote_sistema: string | null
+          m_linear: number | null
+          m2: number | null
+          nivel: number
+          posicao: number
+          proc: string | null
+          registro_id: string | null
+          status: string
+        }
+        Insert: {
+          coluna: string
+          conferente_saida?: string | null
+          created_at?: string
+          data_registro?: string | null
+          data_saida?: string | null
+          endereco?: string | null
+          estrutura: string
+          id?: string
+          item?: string | null
+          largura?: number | null
+          lote?: string | null
+          lote_sistema?: string | null
+          m_linear?: number | null
+          m2?: number | null
+          nivel: number
+          posicao: number
+          proc?: string | null
+          registro_id?: string | null
+          status?: string
+        }
+        Update: {
+          coluna?: string
+          conferente_saida?: string | null
+          created_at?: string
+          data_registro?: string | null
+          data_saida?: string | null
+          endereco?: string | null
+          estrutura?: string
+          id?: string
+          item?: string | null
+          largura?: number | null
+          lote?: string | null
+          lote_sistema?: string | null
+          m_linear?: number | null
+          m2?: number | null
+          nivel?: number
+          posicao?: number
+          proc?: string | null
+          registro_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_posicoes_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registros: {
         Row: {
           conference_id: string | null
