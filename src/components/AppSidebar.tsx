@@ -50,8 +50,8 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
     <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0 shadow-sm border border-primary/20 backdrop-blur-sm">
-            <Logo className="w-5 h-5" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 flex-shrink-0 shadow-sm border border-primary/20 backdrop-blur-sm group-hover:bg-primary/20 transition-all duration-300">
+            <Logo className="w-6 h-6" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
