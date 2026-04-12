@@ -9,14 +9,14 @@ import {
 } from 'recharts';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Tecido: 'hsl(var(--primary))',
-  Madeira: '#f59e0b',
-  'Motor/Controle': '#ef4444',
+  Tecido: '#6366f1', // Indigo modern
+  Madeira: '#f59e0b', // Amber
+  'Motor/Controle': '#ef4444', // Red
 };
 
-const TOOL_COLORS = ['hsl(var(--primary))', '#0f172a', '#f59e0b', '#ef4444', '#8b5cf6'];
-const TIPO_COLORS = ['hsl(var(--primary))', '#0f172a', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
-const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#334155' };
+const TOOL_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const TIPO_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
+const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#94a3b8' };
 
 function computeStats(history: Conference[]) {
   const allRegs = history.flatMap(c => c.registros.map(r => ({ ...r, conferente: c.conferente })));
@@ -135,7 +135,7 @@ export default function DashboardPage() {
     { name: 'Livre', value: stockTotals.livre },
   ].filter(d => d.value > 0);
 
-  const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#1e2a3f'];
+  const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
