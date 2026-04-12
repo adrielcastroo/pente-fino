@@ -38,7 +38,7 @@ interface UndoEntry {
   idx: number;
 }
 
-interface AppState {
+export interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
   currentMode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
