@@ -38,14 +38,17 @@ export default function LeftPanel() {
     setLockEndereco,
     lockedEndereco,
     setLockedEndereco,
+    formData,
+    setFormData,
+    resetFormData,
   } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
-  const [item, setItem] = useState('');
-  const [nf, setNf] = useState(lockedNf);
-  const [m2, setM2] = useState('');
-  const [lote, setLote] = useState('');
-  const [endereco, setEndereco] = useState(lockedEndereco);
+  const {
+    item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
+    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
+  } = formData;
+
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
   const [preview, setPreview] = useState<string | null>(null);
