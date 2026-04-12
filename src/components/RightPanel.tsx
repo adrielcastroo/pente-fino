@@ -123,48 +123,75 @@ export default function RightPanel() {
 
   return (
     <motion.div
-      initial={{ x: 40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col overflow-hidden bg-background"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col h-full overflow-hidden bg-background"
     >
       {/* Undo bar */}
       <AnimatePresence>
         {undoStack.length > 0 && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            className="navy-2-bg text-primary-foreground px-4 py-2 text-sm flex items-center gap-2.5 flex-shrink-0"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <span>Rolo removido</span>
-            <button onClick={() => { const r = undo(); if (r) addToast('Rolo restaurado', 'ok'); }}
-              className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium flex items-center gap-1.5">
-              <Undo2 className="w-3 h-3" /> Desfazer
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-primary px-4 py-2 text-sm flex items-center justify-between gap-2.5 flex-shrink-0 shadow-lg z-20"
+          >
+            <div className="flex items-center gap-2 text-primary-foreground font-medium">
+              <Undo2 className="w-4 h-4" />
+              <span>Registro removido recentemente</span>
+            </div>
+            <button 
+              onClick={() => { const r = undo(); if (r) addToast('Registro restaurado', 'ok'); }}
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full px-4 py-1.5 text-xs font-bold transition-colors backdrop-blur-sm"
+            >
+              DESFAZER
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Toolbar */}
-      <div className="px-3 sm:px-4 py-2 surface-bg border-b border-border flex flex-wrap items-center gap-2 flex-shrink-0">
-        <div className="flex items-center gap-2 surface-2-bg border border-border rounded-lg px-3 flex-1 min-w-0">
-          <Search className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-            className="border-none bg-transparent outline-none text-sm py-2 w-full" placeholder="Filtrar…" autoComplete="off" />
+      <div className="px-4 py-3 bg-card border-b border-border/50 flex flex-wrap items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-2.5 bg-muted/50 border border-border/50 rounded-full px-4 flex-1 min-w-[200px] focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200">
+          <Search className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
+          <input 
+            value={searchQuery} 
+            onChange={e => setSearchQuery(e.target.value)}
+            className="border-none bg-transparent outline-none text-sm py-2.5 w-full placeholder:text-muted-foreground/60" 
+            placeholder="Filtrar por item, endereço ou lote..." 
+            autoComplete="off" 
+          />
         </div>
-        <div className="flex gap-1.5 items-center">
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-            className="border border-border rounded-lg px-2.5 py-2 text-xs text-muted-foreground bg-card outline-none cursor-pointer">
-            <option value="">Ordenar</option>
+        
+        <div className="flex gap-2 items-center">
+          <select 
+            value={sortBy} 
+            onChange={e => setSortBy(e.target.value)}
+            className="h-10 border border-border/50 rounded-full px-4 text-xs font-semibold text-muted-foreground bg-background outline-none cursor-pointer hover:bg-muted/50 transition-colors appearance-none pr-8 relative bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJtNiA5IDYgNiA2LTYiLz48L3N2Zz4=')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
+          >
+            <option value="">Ordenar por</option>
             <option value="item">Item A→Z</option>
-            <option value="ml-d">M Lin ↓</option>
-            <option value="ml-a">M Lin ↑</option>
+            <option value="ml-d">M Linear ↓</option>
+            <option value="ml-a">M Linear ↑</option>
             <option value="end">Endereço</option>
           </select>
-          <button onClick={exportExcel} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors" title="Exportar Excel">
-            <Download className="w-4 h-4 text-muted-foreground" />
+          
+          <button 
+            onClick={exportExcel} 
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-border/50 bg-background hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all duration-200 group" 
+            title="Exportar Excel"
+          >
+            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
           </button>
+          
           {registros.length > 0 && (
-            <button onClick={handleClearAll} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors" title="Limpar tudo">
-              <Trash2 className="w-4 h-4 text-destructive" />
+            <button 
+              onClick={handleClearAll} 
+              className="h-10 w-10 flex items-center justify-center rounded-full border border-border/50 bg-background hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-200 group" 
+              title="Limpar tudo"
+            >
+              <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </button>
           )}
         </div>
