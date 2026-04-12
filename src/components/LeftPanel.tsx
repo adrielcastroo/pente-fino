@@ -472,7 +472,6 @@ export default function LeftPanel() {
 
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
-    { key: 'openrouter' as const, label: 'IA', icon: Zap },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
   ];
 
@@ -1041,14 +1040,18 @@ export default function LeftPanel() {
           Adicionar à Tabela
         </motion.button>
 
-        {/* Preview toggle */}
+        {/* Preview toggle - highlighted */}
         {registros.length > 0 && (
           <button
             onClick={() => setShowPreview(!showPreview)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border transition-all duration-300 font-bold text-sm ${
+              showPreview 
+                ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' 
+                : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'
+            }`}
           >
-            {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            {showPreview ? 'Ocultar Preview' : `Preview Tabela (${registros.length})`}
+            {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showPreview ? 'Ocultar Preview' : `Visualizar Tabela (${registros.length})`}
           </button>
         )}
 
