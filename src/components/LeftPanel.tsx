@@ -71,19 +71,26 @@ export default function LeftPanel() {
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
-  const [aiLargura, setAiLargura] = useState('');
-  const [aiMLinear, setAiMLinear] = useState('');
-  const [diversosTipo, setDiversosTipo] = useState<'Rolo' | 'PVT' | 'Cortina' | 'Celular'>('Rolo');
+  const [aiStatus, setAiStatus] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [enderecoError, setEnderecoError] = useState('');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const itemRef = useRef<HTMLInputElement>(null);
+  const nfRef = useRef<HTMLInputElement>(null);
+  const m2Ref = useRef<HTMLInputElement>(null);
+  const larguraRef = useRef<HTMLInputElement>(null);
+  const loteRef = useRef<HTMLInputElement>(null);
+  const enderecoRef = useRef<HTMLInputElement>(null);
+
   const [showPreview, setShowPreview] = useState(false);
-  const [diversosMLinear, setDiversosMLinear] = useState('');
-  const [manualLargura, setManualLargura] = useState('');
-  const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
-  const [lockMetragem, setLockMetragem] = useState(false);
-  const [madeiraTipo, setMadeiraTipo] = useState<'Lâmina' | 'Base' | 'Bandô'>('Lâmina');
-  const [quantidade, setQuantidade] = useState('');
-
   const quantidadeRef = useRef<HTMLInputElement>(null);
-
   const manualLarguraRef = useRef<HTMLInputElement>(null);
 
   const m2Num = parseFloat(m2) || 0;
