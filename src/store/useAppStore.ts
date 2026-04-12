@@ -220,6 +220,7 @@ const INITIAL_FORM_DATA: AppState['formData'] = {
   estoqueActiveTec: 'TEC01',
   estoqueSearch: '',
   estoqueHighlightStatus: null,
+  activeTab: 'inicio',
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
