@@ -9,14 +9,14 @@ import {
 } from 'recharts';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Tecido: '#2A9D8F',
-  Madeira: '#E9C46A',
-  'Motor/Controle': '#E76F51',
+  Tecido: 'hsl(var(--primary))',
+  Madeira: '#f59e0b',
+  'Motor/Controle': '#ef4444',
 };
 
-const TOOL_COLORS = ['#2A9D8F', '#264653', '#E9C46A', '#E76F51', '#F4A261'];
-const TIPO_COLORS = ['#2A9D8F', '#264653', '#E9C46A', '#E76F51', '#F4A261', '#606C38'];
-const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#1e2a3f' };
+const TOOL_COLORS = ['hsl(var(--primary))', '#0f172a', '#f59e0b', '#ef4444', '#8b5cf6'];
+const TIPO_COLORS = ['hsl(var(--primary))', '#0f172a', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
+const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#334155' };
 
 function computeStats(history: Conference[]) {
   const allRegs = history.flatMap(c => c.registros.map(r => ({ ...r, conferente: c.conferente })));
