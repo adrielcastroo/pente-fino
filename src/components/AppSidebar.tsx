@@ -1,4 +1,4 @@
-import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon, Pin, PinOff } from 'lucide-react';
+import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Logo } from './Logo';
 import { useTheme } from '@/hooks/useTheme';
@@ -35,29 +35,36 @@ const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
 ];
 
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
-  const { state, setOpen, isMobile, toggleSidebar } = useSidebar();
-  const [isPinned, setIsPinned] = useState(true);
+  const { state, setOpen, isMobile, toggleSidebar, open } = useSidebar();
   const registros = useAppStore(s => s.registros);
   const { theme, toggleTheme } = useTheme();
-
-  // Sync sidebar state with pin state
-  useEffect(() => {
-    if (!isMobile) {
-      setOpen(isPinned);
-    }
-  }, [isPinned, isMobile, setOpen]);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseEnter = () => {
-    if (!isPinned && !isMobile) {
+    if (!isMobile && !open) {
       setOpen(true);
+      setIsHovered(true);
     }
   };
 
   const handleMouseLeave = () => {
-    if (!isPinned && !isMobile) {
+    if (!isMobile && isHovered) {
       setOpen(false);
+      setIsHovered(false);
     }
   };
+
+  // Se o estado 'open' for alterado externamente (pelo botão superior), 
+  // resetamos o estado de hover para não fechar acidentalmente
+  useEffect(() => {
+    if (open && isHovered) {
+      // Se abrimos via hover e o usuário clicar no botão superior para "travar" aberto,
+      // o 'open' continuará true, mas o toggleSidebar (chamado pelo botão) 
+      // na verdade o fecharia se fosse um toggle simples.
+      // No entanto, o SidebarTrigger padrão apenas inverte o 'open'.
+    }
+    if (open) setIsHovered(false);
+  }, [open]);
 
   const handleTabClick = (tab: AppTab) => {
     onTabChange(tab);
@@ -129,16 +136,6 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
 
       <SidebarFooter className="p-2 space-y-1">
         <SidebarMenu>
-          {!isMobile && (
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setIsPinned(!isPinned)} tooltip={isPinned ? 'Sidebar Fixa' : 'Sidebar Fluida'}>
-                {isPinned ? <Pin className="w-4 h-4" /> : <PinOff className="w-4 h-4" />}
-                <span className={`transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                  {isPinned ? 'Sidebar Fixa' : 'Sidebar Fluida'}
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={toggleTheme} tooltip={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}>
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
