@@ -216,6 +216,9 @@ const INITIAL_FORM_DATA: AppState['formData'] = {
   motorSerie: '',
   motorTemCaixa: false,
   motorCaixaNum: '1',
+  estoqueActiveTec: 'TEC01',
+  estoqueSearch: '',
+  estoqueHighlightStatus: null,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
