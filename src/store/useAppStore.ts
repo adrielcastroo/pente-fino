@@ -206,6 +206,12 @@ const INITIAL_FORM_DATA: AppState['formData'] = {
   lockMetragem: false,
   madeiraTipo: 'Lâmina',
   quantidade: '',
+  motorSubMode: 'motor',
+  motorModelo: '',
+  motorNf: '',
+  motorSerie: '',
+  motorTemCaixa: false,
+  motorCaixaNum: '1',
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -224,7 +230,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   lockedNf: localStorage.getItem('cft4_lockedNf') || '',
   lockEndereco: localStorage.getItem('cft4_lockEndereco') === 'true',
   lockedEndereco: localStorage.getItem('cft4_lockedEndereco') || '',
-  formData: JSON.parse(localStorage.getItem('cft4_formData') || JSON.stringify(INITIAL_FORM_DATA)),
+  formData: {
+    ...INITIAL_FORM_DATA,
+    ...JSON.parse(localStorage.getItem('cft4_formData') || '{}'),
+  },
 
   setMode: (mode) => {
     localStorage.setItem('cft4_mode', mode);
