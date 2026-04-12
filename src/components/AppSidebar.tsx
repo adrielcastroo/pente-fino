@@ -76,8 +76,8 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                       tooltip={item.label}
                       isActive={isActive}
                       className={isActive 
-                        ? 'bg-primary/10 text-primary font-semibold shadow-sm transition-all duration-200' 
-                        : 'hover:bg-sidebar-accent/50 text-muted-foreground transition-all duration-200'}
+                        ? 'bg-primary/10 text-primary font-semibold shadow-sm transition-all duration-300 scale-[1.02] ring-1 ring-primary/20' 
+                        : 'hover:bg-sidebar-accent/50 text-muted-foreground transition-all duration-300 hover:translate-x-1'}
                     >
                       <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                       <span className="font-medium tracking-tight">{item.label}</span>
