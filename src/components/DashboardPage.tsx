@@ -320,31 +320,34 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Warehouse className="w-4 h-4 text-primary" /> Estoque por Estrutura
+        <Card className="md:col-span-2 lg:col-span-4 border border-border/40 shadow-sm hover:shadow-md transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Warehouse className="w-4 h-4 text-primary" />
+              </div>
+              Status do Estoque por Estrutura
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stockData.length === 0 ? (
-              <div className="h-[250px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-                <p className="text-xs text-muted-foreground italic">Sincronizando estoque...</p>
+              <div className="h-[250px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
+                <p className="text-sm text-muted-foreground italic">Sincronizando estoque...</p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={stockData} margin={{ left: -20, right: 12, top: 10, bottom: 10 }}>
-                  <XAxis dataKey="estrutura" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="estrutura" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                   />
                   <Bar dataKey="ocupado" stackId="a" fill="#10b981" name="Ocupado" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="reservado" stackId="a" fill="#f59e0b" name="Reservado" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="bloqueado" stackId="a" fill="#ef4444" name="Bloqueado" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="livre" stackId="a" fill="#1e2a3f" name="Livre" radius={[4, 4, 0, 0]} />
-                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: '15px' }} />
+                  <Bar dataKey="livre" stackId="a" fill="#334155" name="Livre" radius={[6, 6, 0, 0]} />
+                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: '20px' }} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -352,24 +355,41 @@ export default function DashboardPage() {
         </Card>
 
         {stockPieData.length > 0 && (
-          <Card className="md:col-span-2 border-none shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Warehouse className="w-4 h-4 text-primary" /> Resumo Geral do Estoque
+          <Card className="md:col-span-2 lg:col-span-4 border border-border/40 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Warehouse className="w-4 h-4 text-primary" />
+                </div>
+                Resumo Geral da Capacidade
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={stockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={4} stroke="none">
-                    {stockPieData.map((_, i) => <Cell key={i} fill={stockPieColors[i]} />)}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                  />
-                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: '15px' }} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={stockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={4} stroke="none">
+                        {stockPieData.map((_, i) => <Cell key={i} fill={stockPieColors[i]} />)}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-4">
+                  {stockPieData.map((item, i) => (
+                    <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stockPieColors[i] }} />
+                        <span className="text-sm font-medium text-foreground">{item.name}</span>
+                      </div>
+                      <span className="text-sm font-bold text-foreground">{item.value} unidades</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
