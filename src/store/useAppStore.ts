@@ -261,6 +261,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (confError) throw confError;
 
       const rows = state.registros.map(r => ({
+        id: r.id,
         conference_id: conf.id,
         item: r.item,
         m2: r.m2,
@@ -283,8 +284,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       // Populate estoque_posicoes for those with a valid address
       const estoqueRows: any[] = [];
-      
-      // We need to keep track of positions we're assigning in THIS conference to avoid local collisions
       const localOccupied: Record<string, Set<number>> = {};
 
       for (const r of insertedRegs || []) {
@@ -294,20 +293,18 @@ export const useAppStore = create<AppState>((set, get) => ({
           const cellKey = `${estrutura}.${coluna}.${nivel}`;
           
           if (!localOccupied[cellKey]) {
-            // Fetch currently occupied positions in DB for this cell
             const { data: dbOccupied } = await supabase
               .from('estoque_posicoes')
               .select('posicao')
               .eq('estrutura', estrutura)
               .eq('coluna', coluna)
               .eq('nivel', nivel)
-              .neq('status', 'saida') // Ignore those that have already left
+              .neq('status', 'saida')
               .neq('status', 'livre');
             
             localOccupied[cellKey] = new Set((dbOccupied || []).map(p => p.posicao));
           }
 
-          // Find first free position (1-30)
           let pos = 1;
           while (pos <= 30 && localOccupied[cellKey].has(pos)) {
             pos++;
@@ -315,6 +312,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
           if (pos <= 30) {
             localOccupied[cellKey].add(pos);
+            // Get original to retrieve 'processo' (which isn't in DB registros but is in local state)
+            const original = state.registros.find(orig => orig.id === r.id);
+            const proc = original?.processo || state.processo || '';
+
             estoqueRows.push({
               estrutura,
               coluna,
@@ -323,7 +324,7 @@ export const useAppStore = create<AppState>((set, get) => ({
               status: 'ocupado',
               registro_id: r.id,
               item: r.item,
-              proc: r.processo,
+              proc: proc,
               m2: r.m2,
               largura: r.largura,
               m_linear: r.m_linear,
@@ -338,7 +339,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
 
       if (estoqueRows.length > 0) {
-        // Upsert to handle any existing positions that might have been manually cleared or changed
         const { error: estoqueError } = await supabase
           .from('estoque_posicoes')
           .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
