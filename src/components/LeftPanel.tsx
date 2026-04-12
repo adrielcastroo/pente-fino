@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX, type AppState } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
