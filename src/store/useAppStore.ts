@@ -252,8 +252,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem('cft4_conferente', c);
     set({ conferente: c });
   },
-  setSearchQuery: (q) => set({ searchQuery: q }),
-  setSortBy: (s) => set({ sortBy: s }),
+  setSearchQuery: (q) => {
+    localStorage.setItem('cft4_searchQuery', q);
+    set({ searchQuery: q });
+  },
+  setSortBy: (s) => {
+    localStorage.setItem('cft4_sortBy', s);
+    set({ sortBy: s });
+  },
   setLockProcesso: (lock) => {
     localStorage.setItem('cft4_lockProcesso', String(lock));
     set({ lockProcesso: lock });
