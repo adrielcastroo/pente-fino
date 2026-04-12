@@ -2,6 +2,7 @@ import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settin
 import { useAppStore } from '@/store/useAppStore';
 import { Logo } from './Logo';
 import { useTheme } from '@/hooks/useTheme';
+import { useState, useEffect } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -34,26 +35,41 @@ const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
 ];
 
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
-  const { state, setOpen, isMobile, toggleSidebar } = useSidebar();
+  const { state, setOpen, isMobile, toggleSidebar, open } = useSidebar();
   const registros = useAppStore(s => s.registros);
   const { theme, toggleTheme } = useTheme();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = () => {
+    if (!isMobile && !open) {
+      setOpen(true);
+      setIsHovered(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobile && isHovered) {
+      setOpen(false);
+      setIsHovered(false);
+    }
+  };
+
+  // Se o estado 'open' for alterado externamente (pelo botão superior), 
+  // resetamos o estado de hover para não fechar acidentalmente
+  useEffect(() => {
+    if (open && isHovered) {
+      // Se abrimos via hover e o usuário clicar no botão superior para "travar" aberto,
+      // o 'open' continuará true, mas o toggleSidebar (chamado pelo botão) 
+      // na verdade o fecharia se fosse um toggle simples.
+      // No entanto, o SidebarTrigger padrão apenas inverte o 'open'.
+    }
+    if (open) setIsHovered(false);
+  }, [open]);
 
   const handleTabClick = (tab: AppTab) => {
     onTabChange(tab);
     if (isMobile) {
       toggleSidebar();
-    }
-  };
-
-  const handleMouseEnter = () => {
-    if (!isMobile && state === 'collapsed') {
-      setOpen(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (!isMobile && state === 'expanded') {
-      setOpen(false);
     }
   };
 
