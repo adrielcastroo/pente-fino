@@ -55,6 +55,24 @@ interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
 
+  // Form Fields Persistence
+  formData: {
+    item: string;
+    nf: string;
+    m2: string;
+    lote: string;
+    endereco: string;
+    aiLargura: string;
+    aiMLinear: string;
+    diversosTipo: 'Rolo' | 'PVT' | 'Cortina' | 'Celular';
+    diversosMLinear: string;
+    manualLargura: string;
+    coulisseMetragem: 'm2' | 'mlinear';
+    lockMetragem: boolean;
+    madeiraTipo: 'Lâmina' | 'Base' | 'Bandô';
+    quantidade: string;
+  };
+
   setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle') => void;
   updateRegistro: (id: string, updates: Partial<Registro>) => void;
   setProcesso: (p: string) => void;
@@ -67,6 +85,8 @@ interface AppState {
   setLockedNf: (n: string) => void;
   setLockEndereco: (lock: boolean) => void;
   setLockedEndereco: (e: string) => void;
+  setFormData: (updates: Partial<AppState['formData']>) => void;
+  resetFormData: () => void;
   addRegistro: (reg: Registro) => void;
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
