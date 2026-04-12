@@ -8,17 +8,25 @@ export const Logo = ({ className = "w-8 h-8", ...props }: React.SVGProps<SVGSVGE
     className={className}
     {...props}
   >
+    {/* Frame for a more "precise" look */}
+    <path 
+      d="M3 8V5a2 2 0 012-2h3m8 0h3a2 2 0 012 2v3m0 8v3a2 2 0 01-2 2h-3m-8 0H5a2 2 0 01-2-2v-3" 
+      stroke="currentColor" 
+      strokeWidth="1.5" 
+      strokeLinecap="round" 
+      className="text-primary/30"
+    />
     {/* Magnifying Glass Frame */}
     <circle 
-      cx="10" 
-      cy="10" 
-      r="7" 
+      cx="11" 
+      cy="11" 
+      r="5" 
       stroke="currentColor" 
       strokeWidth="2.5" 
       className="text-primary"
     />
     <path 
-      d="M15 15L20 20" 
+      d="M15 15L19 19" 
       stroke="currentColor" 
       strokeWidth="2.5" 
       strokeLinecap="round"
@@ -26,7 +34,7 @@ export const Logo = ({ className = "w-8 h-8", ...props }: React.SVGProps<SVGSVGE
     />
     {/* Checkmark inside */}
     <path 
-      d="M7 10L9 12L13 8" 
+      d="M9 11L10.5 12.5L13.5 9.5" 
       stroke="currentColor" 
       strokeWidth="2" 
       strokeLinecap="round" 

@@ -116,6 +116,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background-image: radial-gradient(at 0% 0%, hsl(var(--primary) / 0.05) 0, transparent 50%),
+                      radial-gradient(at 100% 0%, hsl(var(--accent) / 0.05) 0, transparent 50%);
+    background-attachment: fixed;
+    background-size: cover;
   }
 
   .font-mono {
