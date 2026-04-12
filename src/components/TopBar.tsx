@@ -55,35 +55,42 @@ export default function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center gap-4 px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-foreground transition-colors" />
-          <div className="h-4 w-px bg-border/50 mx-1 hidden sm:block" />
+    <header className="sticky top-0 z-40 w-full border-b border-border/10 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-16 items-center gap-4 px-6 max-w-[1600px] mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="p-1 rounded-lg hover:bg-muted/50 transition-colors">
+            <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-foreground" />
+          </div>
+          <div className="h-6 w-px bg-border/20 hidden sm:block" />
         </div>
 
-        <div className="flex flex-1 items-center justify-end space-x-3">
-          <div className="flex items-center gap-2 relative group max-w-[200px]">
-            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-              <User className="h-3.5 w-3.5" />
+        <div className="flex flex-1 items-center justify-end gap-4">
+          <div className="flex items-center gap-2 relative group w-full max-w-[240px]">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+              <User className="h-4 w-4" />
             </div>
             <input
-              className="h-9 w-full rounded-full border border-input bg-background pl-8 pr-3 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary transition-all duration-200"
+              className="h-10 w-full rounded-xl border border-border/50 bg-muted/30 pl-10 pr-4 text-sm font-medium ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/10 focus-visible:border-primary/50 transition-all duration-300"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
-              placeholder="Conferente *"
+              placeholder="Nome do Conferente..."
               autoComplete="off"
               required
             />
           </div>
 
           <button
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm shadow-primary/20 transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 active:scale-95 disabled:opacity-50 group"
             onClick={exportExcel}
-            title="Exportar Excel"
+            title="Exportar Excel e Arquivar"
           >
-            <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Exportar</span>
+            <Download className="h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
+            <span className="hidden sm:inline">Exportar Dados</span>
+            {registros.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 bg-primary-foreground/20 rounded-md text-[10px] animate-pulse">
+                {registros.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
