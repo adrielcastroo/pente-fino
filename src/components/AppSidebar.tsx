@@ -47,12 +47,17 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="p-3">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <img src={logoImg} alt="Pente Fino" className="w-8 h-8 rounded-lg object-contain flex-shrink-0" />
+    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0 shadow-sm">
+            <img src={logoImg} alt="Pente Fino" className="w-5 h-5 object-contain" />
+          </div>
           {!collapsed && (
-            <span className="font-semibold text-sm text-foreground whitespace-nowrap">Pente Fino</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm text-foreground leading-tight tracking-tight">Pente Fino</span>
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão Industrial</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
