@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX, type AppState } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -38,14 +38,17 @@ export default function LeftPanel() {
     setLockEndereco,
     lockedEndereco,
     setLockedEndereco,
+    formData,
+    setFormData,
+    resetFormData,
   } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
-  const [item, setItem] = useState('');
-  const [nf, setNf] = useState(lockedNf);
-  const [m2, setM2] = useState('');
-  const [lote, setLote] = useState('');
-  const [endereco, setEndereco] = useState(lockedEndereco);
+  const {
+    item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
+    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
+  } = formData;
+
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
   const [preview, setPreview] = useState<string | null>(null);
@@ -68,20 +71,25 @@ export default function LeftPanel() {
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
-  const [aiLargura, setAiLargura] = useState('');
-  const [aiMLinear, setAiMLinear] = useState('');
-  const [diversosTipo, setDiversosTipo] = useState<'Rolo' | 'PVT' | 'Cortina' | 'Celular'>('Rolo');
   const [showPreview, setShowPreview] = useState(false);
-  const [diversosMLinear, setDiversosMLinear] = useState('');
-  const [manualLargura, setManualLargura] = useState('');
-  const [coulisseMetragem, setCoulisseMetragem] = useState<'m2' | 'mlinear'>('m2');
-  const [lockMetragem, setLockMetragem] = useState(false);
-  const [madeiraTipo, setMadeiraTipo] = useState<'Lâmina' | 'Base' | 'Bandô'>('Lâmina');
-  const [quantidade, setQuantidade] = useState('');
-
   const quantidadeRef = useRef<HTMLInputElement>(null);
-
   const manualLarguraRef = useRef<HTMLInputElement>(null);
+
+  // Helper setters for compatibility with existing code
+  const setItem = (val: string) => setFormData({ item: val });
+  const setNf = (val: string) => setFormData({ nf: val });
+  const setM2 = (val: string) => setFormData({ m2: val });
+  const setLote = (val: string) => setFormData({ lote: val });
+  const setEndereco = (val: string) => setFormData({ endereco: val });
+  const setAiLargura = (val: string) => setFormData({ aiLargura: val });
+  const setAiMLinear = (val: string) => setFormData({ aiMLinear: val });
+  const setDiversosTipo = (val: AppState['formData']['diversosTipo']) => setFormData({ diversosTipo: val });
+  const setDiversosMLinear = (val: string) => setFormData({ diversosMLinear: val });
+  const setManualLargura = (val: string) => setFormData({ manualLargura: val });
+  const setCoulisseMetragem = (val: 'm2' | 'mlinear') => setFormData({ coulisseMetragem: val });
+  const setLockMetragem = (val: boolean) => setFormData({ lockMetragem: val });
+  const setMadeiraTipo = (val: AppState['formData']['madeiraTipo']) => setFormData({ madeiraTipo: val });
+  const setQuantidade = (val: string) => setFormData({ quantidade: val });
 
   const m2Num = parseFloat(m2) || 0;
   const aiLarguraNum = parseFloat(aiLargura) || 0;
@@ -179,12 +187,8 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear(''); setManualLargura('');
-    setQuantidade('');
-    if (!lockProcesso) setProcesso('');
-    if (!lockEndereco) setEndereco('');
-    if (!lockMetragem) setCoulisseMetragem('m2');
-    setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
+    resetFormData();
+    setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
     setTimeout(() => itemRef.current?.focus(), 50);

@@ -21,7 +21,9 @@ export default function Index() {
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<AppTab>('inicio');
+  const { formData, setFormData } = useAppStore();
+  const activeTab = formData.activeTab;
+  const setActiveTab = (tab: AppTab) => setFormData({ activeTab: tab });
 
   useEffect(() => {
     loadFromStorage();

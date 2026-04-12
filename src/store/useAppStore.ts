@@ -38,7 +38,7 @@ interface UndoEntry {
   idx: number;
 }
 
-interface AppState {
+export interface AppState {
   registros: Registro[];
   undoStack: UndoEntry[];
   currentMode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
@@ -55,6 +55,36 @@ interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
 
+  // Form Fields Persistence
+  formData: {
+    item: string;
+    nf: string;
+    m2: string;
+    lote: string;
+    endereco: string;
+    aiLargura: string;
+    aiMLinear: string;
+    diversosTipo: 'Rolo' | 'PVT' | 'Cortina' | 'Celular';
+    diversosMLinear: string;
+    manualLargura: string;
+    coulisseMetragem: 'm2' | 'mlinear';
+    lockMetragem: boolean;
+    madeiraTipo: 'Lâmina' | 'Base' | 'Bandô';
+    quantidade: string;
+    // Motor/Controle Fields
+    motorSubMode: 'motor' | 'controle';
+    motorModelo: string;
+    motorNf: string;
+    motorSerie: string;
+    motorTemCaixa: boolean;
+    motorCaixaNum: string;
+    // Estoque Page Fields
+    estoqueActiveTec: string;
+    estoqueSearch: string;
+    estoqueHighlightStatus: string | null;
+    activeTab: 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
+  };
+
   setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle') => void;
   updateRegistro: (id: string, updates: Partial<Registro>) => void;
   setProcesso: (p: string) => void;
@@ -67,6 +97,9 @@ interface AppState {
   setLockedNf: (n: string) => void;
   setLockEndereco: (lock: boolean) => void;
   setLockedEndereco: (e: string) => void;
+  setFormData: (updates: Partial<AppState['formData']>) => void;
+  resetFormData: () => void;
+  resetMotorFormData: () => void;
   addRegistro: (reg: Registro) => void;
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
@@ -163,42 +196,131 @@ export function generateLoteSistemaCaixa(processo: string, item: string, mLinear
   return parts.join(' ');
 }
 
+const INITIAL_FORM_DATA: AppState['formData'] = {
+  item: '',
+  nf: '',
+  m2: '',
+  lote: '',
+  endereco: '',
+  aiLargura: '',
+  aiMLinear: '',
+  diversosTipo: 'Rolo',
+  diversosMLinear: '',
+  manualLargura: '',
+  coulisseMetragem: 'm2',
+  lockMetragem: false,
+  madeiraTipo: 'Lâmina',
+  quantidade: '',
+  motorSubMode: 'motor',
+  motorModelo: '',
+  motorNf: '',
+  motorSerie: '',
+  motorTemCaixa: false,
+  motorCaixaNum: '1',
+  estoqueActiveTec: 'TEC01',
+  estoqueSearch: '',
+  estoqueHighlightStatus: null,
+  activeTab: 'inicio',
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   registros: [],
   undoStack: [],
-  currentMode: 'manual',
-  processo: '',
+  currentMode: (localStorage.getItem('cft4_mode') as any) || 'manual',
+  processo: localStorage.getItem('cft4_processo') || '',
   conferente: localStorage.getItem('cft4_conferente') || '',
-  searchQuery: '',
-  sortBy: '',
+  searchQuery: localStorage.getItem('cft4_searchQuery') || '',
+  sortBy: localStorage.getItem('cft4_sortBy') || '',
   history: [],
   sessionStartedAt: localStorage.getItem(SESSION_START_KEY) || null,
-  lockProcesso: false,
-  lockedProcesso: '',
-  lockNf: false,
-  lockedNf: '',
-  lockEndereco: false,
-  lockedEndereco: '',
+  lockProcesso: localStorage.getItem('cft4_lockProcesso') === 'true',
+  lockedProcesso: localStorage.getItem('cft4_lockedProcesso') || '',
+  lockNf: localStorage.getItem('cft4_lockNf') === 'true',
+  lockedNf: localStorage.getItem('cft4_lockedNf') || '',
+  lockEndereco: localStorage.getItem('cft4_lockEndereco') === 'true',
+  lockedEndereco: localStorage.getItem('cft4_lockedEndereco') || '',
+  formData: {
+    ...INITIAL_FORM_DATA,
+    ...JSON.parse(localStorage.getItem('cft4_formData') || '{}'),
+  },
 
-  setMode: (mode) => set({ currentMode: mode }),
+  setMode: (mode) => {
+    localStorage.setItem('cft4_mode', mode);
+    set({ currentMode: mode });
+  },
   updateRegistro: (id, updates) => set(state => {
     const newRegs = state.registros.map(r => r.id === id ? { ...r, ...updates, wasEdited: true, editedAt: new Date().toISOString() } : r);
     save(newRegs);
     return { registros: newRegs };
   }),
-  setProcesso: (p) => set({ processo: p }),
+  setProcesso: (p) => {
+    localStorage.setItem('cft4_processo', p);
+    set({ processo: p });
+  },
   setConferente: (c) => {
     localStorage.setItem('cft4_conferente', c);
     set({ conferente: c });
   },
-  setSearchQuery: (q) => set({ searchQuery: q }),
-  setSortBy: (s) => set({ sortBy: s }),
-  setLockProcesso: (lock) => set({ lockProcesso: lock }),
-  setLockedProcesso: (p) => set({ lockedProcesso: p }),
-  setLockNf: (lock) => set({ lockNf: lock }),
-  setLockedNf: (n) => set({ lockedNf: n }),
-  setLockEndereco: (lock) => set({ lockEndereco: lock }),
-  setLockedEndereco: (e) => set({ lockedEndereco: e }),
+  setSearchQuery: (q) => {
+    localStorage.setItem('cft4_searchQuery', q);
+    set({ searchQuery: q });
+  },
+  setSortBy: (s) => {
+    localStorage.setItem('cft4_sortBy', s);
+    set({ sortBy: s });
+  },
+  setLockProcesso: (lock) => {
+    localStorage.setItem('cft4_lockProcesso', String(lock));
+    set({ lockProcesso: lock });
+  },
+  setLockedProcesso: (p) => {
+    localStorage.setItem('cft4_lockedProcesso', p);
+    set({ lockedProcesso: p });
+  },
+  setLockNf: (lock) => {
+    localStorage.setItem('cft4_lockNf', String(lock));
+    set({ lockNf: lock });
+  },
+  setLockedNf: (n) => {
+    localStorage.setItem('cft4_lockedNf', n);
+    set({ lockedNf: n });
+  },
+  setLockEndereco: (lock) => {
+    localStorage.setItem('cft4_lockEndereco', String(lock));
+    set({ lockEndereco: lock });
+  },
+  setLockedEndereco: (e) => {
+    localStorage.setItem('cft4_lockedEndereco', e);
+    set({ lockedEndereco: e });
+  },
+  setFormData: (updates) => set(state => {
+    const newData = { ...state.formData, ...updates };
+    localStorage.setItem('cft4_formData', JSON.stringify(newData));
+    return { formData: newData };
+  }),
+  resetFormData: () => {
+    const newData = { ...INITIAL_FORM_DATA };
+    // Preservar valores travados se necessário
+    const state = get();
+    if (state.lockNf) newData.nf = state.lockedNf;
+    if (state.lockEndereco) newData.endereco = state.lockedEndereco;
+    
+    localStorage.setItem('cft4_formData', JSON.stringify(newData));
+    set({ formData: newData });
+  },
+  resetMotorFormData: () => {
+    const state = get();
+    const newData = { 
+      ...state.formData,
+      motorModelo: '',
+      motorNf: '',
+      motorSerie: '',
+      motorTemCaixa: false,
+      motorCaixaNum: '1',
+    };
+    localStorage.setItem('cft4_formData', JSON.stringify(newData));
+    set({ formData: newData });
+  },
 
   addRegistro: (reg) => set(state => {
     const newRegs = [...state.registros, reg];

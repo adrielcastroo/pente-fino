@@ -31,31 +31,35 @@ function sanitize(v: string) {
 }
 
 export default function MotorControlePage() {
-  const { registros, addRegistro, setMode } = useAppStore();
+  const { registros, addRegistro, setMode, formData, setFormData, resetMotorFormData } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
 
-  const [subMode, setSubMode] = useState<SubMode>('motor');
-  const [modelo, setModelo] = useState('');
-  const [nf, setNf] = useState('');
-  const [serie, setSerie] = useState('');
-  const [temCaixa, setTemCaixa] = useState(false);
-  const [caixaNum, setCaixaNum] = useState('1');
+  const {
+    motorSubMode: subMode,
+    motorModelo: modelo,
+    motorNf: nf,
+    motorSerie: serie,
+    motorTemCaixa: temCaixa,
+    motorCaixaNum: caixaNum,
+  } = formData;
+
+  const setSubMode = (val: 'motor' | 'controle') => setFormData({ motorSubMode: val });
+  const setModelo = (val: string) => setFormData({ motorModelo: val });
+  const setNf = (val: string) => setFormData({ motorNf: val });
+  const setSerie = (val: string) => setFormData({ motorSerie: val });
+  const setTemCaixa = (val: boolean) => setFormData({ motorTemCaixa: val });
+  const setCaixaNum = (val: string) => setFormData({ motorCaixaNum: val });
 
   const serieRef = useRef<HTMLInputElement>(null);
   const modeloRef = useRef<HTMLInputElement>(null);
 
-  const handleSubModeChange = (mode: SubMode) => {
+  const handleSubModeChange = (mode: 'motor' | 'controle') => {
     setSubMode(mode);
     setMode(mode);
-    resetFields();
   };
 
   const resetFields = () => {
-    setModelo('');
-    setNf('');
-    setSerie('');
-    setTemCaixa(false);
-    setCaixaNum('1');
+    resetMotorFormData();
   };
 
   const cleanMotorSerie = (raw: string, mod: string): string => {
