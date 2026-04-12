@@ -13,6 +13,7 @@ import DashboardPage from '@/components/DashboardPage';
 import MotorControlePage from '@/components/MotorControlePage';
 import EstoquePage from '@/components/EstoquePage';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
 
@@ -68,14 +69,25 @@ export default function Index() {
         <div className="flex-1 flex flex-col overflow-hidden h-[100dvh]">
           <TopBar />
 
-          <div className="flex-1 overflow-y-auto">
-            {activeTab === 'inicio' && <DashboardPage />}
-            {activeTab === 'tecido' && <LeftPanel />}
-            {activeTab === 'madeira' && <LeftPanel />}
-            {activeTab === 'motor' && <MotorControlePage />}
-            {activeTab === 'estoque' && <EstoquePage />}
-            {activeTab === 'table' && <RightPanel />}
-            {activeTab === 'history' && <HistoryPanel />}
+          <div className="flex-1 overflow-y-auto bg-background/50">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="h-full"
+              >
+                {activeTab === 'inicio' && <DashboardPage />}
+                {activeTab === 'tecido' && <LeftPanel />}
+                {activeTab === 'madeira' && <LeftPanel />}
+                {activeTab === 'motor' && <MotorControlePage />}
+                {activeTab === 'estoque' && <EstoquePage />}
+                {activeTab === 'table' && <RightPanel />}
+                {activeTab === 'history' && <HistoryPanel />}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
