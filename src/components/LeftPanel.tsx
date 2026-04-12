@@ -187,12 +187,8 @@ export default function LeftPanel() {
   }, [addToast, downloadDataUrl, getPhotoFileName]);
 
   const resetForm = () => {
-    setItem(''); setNf(lockNf ? lockedNf : ''); setM2(''); setLote(''); setAiLargura(''); setAiMLinear(''); setDiversosMLinear(''); setManualLargura('');
-    setQuantidade('');
-    if (!lockProcesso) setProcesso('');
-    if (!lockEndereco) setEndereco('');
-    if (!lockMetragem) setCoulisseMetragem('m2');
-    setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0);
+    resetFormData();
+    setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
     setTimeout(() => itemRef.current?.focus(), 50);
