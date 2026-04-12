@@ -138,26 +138,55 @@ export default function DashboardPage() {
   const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#1e2a3f'];
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Início</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visão geral das conferências e estoque</p>
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Início</h1>
+        <p className="text-sm text-muted-foreground">Visão geral das conferências e estoque em tempo real</p>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Card><CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.totalConferencias}</div>
-          <div className="text-xs text-muted-foreground mt-1">Conferências</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.totalRegistros}</div>
-          <div className="text-xs text-muted-foreground mt-1">Itens bipados</div>
-        </CardContent></Card>
-        <Card className="col-span-2 sm:col-span-1"><CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.totalConferentes}</div>
-          <div className="text-xs text-muted-foreground mt-1">Conferentes</div>
-        </CardContent></Card>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="overflow-hidden border-none shadow-md bg-gradient-to-br from-primary/5 via-card to-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Conferências</p>
+                <div className="text-3xl font-bold tracking-tight text-primary mt-1">{stats.totalConferencias}</div>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <BarChart3 className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-none shadow-md bg-gradient-to-br from-success/5 via-card to-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Itens bipados</p>
+                <div className="text-3xl font-bold tracking-tight text-success mt-1">{stats.totalRegistros}</div>
+              </div>
+              <div className="p-3 bg-success/10 rounded-xl">
+                <Layers3 className="w-6 h-6 text-success" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-none shadow-md bg-gradient-to-br from-amber-500/5 via-card to-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Conferentes</p>
+                <div className="text-3xl font-bold tracking-tight text-amber-500 mt-1">{stats.totalConferentes}</div>
+              </div>
+              <div className="p-3 bg-amber-500/10 rounded-xl">
+                <Users className="w-6 h-6 text-amber-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts */}
