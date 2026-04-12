@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa } from '@/store/useAppStore';
+import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff
 } from 'lucide-react';
+
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
@@ -122,7 +123,7 @@ export default function LeftPanel() {
     : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
-  const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
+  
 
   const formatEndereco = (val: string): string => {
     const clean = val.toUpperCase().replace(/\./g, '');

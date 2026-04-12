@@ -82,6 +82,16 @@ interface AppState {
 const STORAGE_KEY = 'cft4';
 const SESSION_START_KEY = 'cft4_session_started_at';
 
+export const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
+
+function parseEndereco(addr: string) {
+  if (!addr || !ENDERECO_REGEX.test(addr)) return null;
+  const [est, col, nivStr] = addr.split('.');
+  const nivel = parseInt(nivStr.replace('N', ''), 10);
+  return { estrutura: est, coluna: col, nivel };
+}
+
+
 function fmtML(v: number): string {
   if (!v || v === 0) return '';
   const rounded = parseFloat(v.toFixed(1));
@@ -251,6 +261,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (confError) throw confError;
 
       const rows = state.registros.map(r => ({
+        id: r.id,
         conference_id: conf.id,
         item: r.item,
         m2: r.m2,
@@ -268,8 +279,74 @@ export const useAppStore = create<AppState>((set, get) => ({
         quantidade: r.quantidade || null,
       }));
 
-      const { error: regError } = await supabase.from('registros').insert(rows as any);
+      const { data: insertedRegs, error: regError } = await supabase.from('registros').insert(rows as any).select();
       if (regError) throw regError;
+
+      // Populate estoque_posicoes for those with a valid address
+      const estoqueRows: any[] = [];
+      const localOccupied: Record<string, Set<number>> = {};
+
+      for (const r of insertedRegs || []) {
+        const parsed = parseEndereco(r.endereco);
+        if (parsed) {
+          const { estrutura, coluna, nivel } = parsed;
+          const cellKey = `${estrutura}.${coluna}.${nivel}`;
+          
+          if (!localOccupied[cellKey]) {
+            const { data: dbOccupied } = await supabase
+              .from('estoque_posicoes')
+              .select('posicao')
+              .eq('estrutura', estrutura)
+              .eq('coluna', coluna)
+              .eq('nivel', nivel)
+              .neq('status', 'saida')
+              .neq('status', 'livre');
+            
+            localOccupied[cellKey] = new Set((dbOccupied || []).map(p => p.posicao));
+          }
+
+          let pos = 1;
+          while (pos <= 30 && localOccupied[cellKey].has(pos)) {
+            pos++;
+          }
+
+          if (pos <= 30) {
+            localOccupied[cellKey].add(pos);
+            // Get original to retrieve 'processo' (which isn't in DB registros but is in local state)
+            const original = state.registros.find(orig => orig.id === r.id);
+            const proc = original?.processo || state.processo || '';
+
+            estoqueRows.push({
+              estrutura,
+              coluna,
+              nivel,
+              posicao: pos,
+              status: 'ocupado',
+              registro_id: r.id,
+              item: r.item,
+              proc: proc,
+              m2: r.m2,
+              largura: r.largura,
+              m_linear: r.m_linear,
+              lote: r.lote,
+              endereco: r.endereco,
+              lote_sistema: r.lote_sistema,
+              conferente_saida: '',
+              data_registro: new Date().toISOString(),
+            });
+          }
+        }
+      }
+
+      if (estoqueRows.length > 0) {
+        const { error: estoqueError } = await supabase
+          .from('estoque_posicoes')
+          .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
+        
+        if (estoqueError) {
+          console.error('Error populating estoque_posicoes:', estoqueError);
+        }
+      }
 
       save([]);
       try { localStorage.removeItem(SESSION_START_KEY); } catch {}
@@ -278,6 +355,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().loadHistory();
     } catch (e) {
       console.error('Error archiving:', e);
+      // Even on error, we might want to clear local if it was partially successful, 
+      // but usually we keep it for retry. However, current UI clears it anyway.
       save([]);
       try { localStorage.removeItem(SESSION_START_KEY); } catch {}
       set({ registros: [], undoStack: [], sessionStartedAt: null });
