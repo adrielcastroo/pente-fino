@@ -71,27 +71,25 @@ export default function LeftPanel() {
   const loteRef = useRef<HTMLInputElement>(null);
   const enderecoRef = useRef<HTMLInputElement>(null);
 
-  const [aiStatus, setAiStatus] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [enderecoError, setEnderecoError] = useState('');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  const itemRef = useRef<HTMLInputElement>(null);
-  const nfRef = useRef<HTMLInputElement>(null);
-  const m2Ref = useRef<HTMLInputElement>(null);
-  const larguraRef = useRef<HTMLInputElement>(null);
-  const loteRef = useRef<HTMLInputElement>(null);
-  const enderecoRef = useRef<HTMLInputElement>(null);
-
   const [showPreview, setShowPreview] = useState(false);
   const quantidadeRef = useRef<HTMLInputElement>(null);
   const manualLarguraRef = useRef<HTMLInputElement>(null);
+
+  // Helper setters for compatibility with existing code
+  const setItem = (val: string) => setFormData({ item: val });
+  const setNf = (val: string) => setFormData({ nf: val });
+  const setM2 = (val: string) => setFormData({ m2: val });
+  const setLote = (val: string) => setFormData({ lote: val });
+  const setEndereco = (val: string) => setFormData({ endereco: val });
+  const setAiLargura = (val: string) => setFormData({ aiLargura: val });
+  const setAiMLinear = (val: string) => setFormData({ aiMLinear: val });
+  const setDiversosTipo = (val: AppState['formData']['diversosTipo']) => setFormData({ diversosTipo: val });
+  const setDiversosMLinear = (val: string) => setFormData({ diversosMLinear: val });
+  const setManualLargura = (val: string) => setFormData({ manualLargura: val });
+  const setCoulisseMetragem = (val: 'm2' | 'mlinear') => setFormData({ coulisseMetragem: val });
+  const setLockMetragem = (val: boolean) => setFormData({ lockMetragem: val });
+  const setMadeiraTipo = (val: AppState['formData']['madeiraTipo']) => setFormData({ madeiraTipo: val });
+  const setQuantidade = (val: string) => setFormData({ quantidade: val });
 
   const m2Num = parseFloat(m2) || 0;
   const aiLarguraNum = parseFloat(aiLargura) || 0;
