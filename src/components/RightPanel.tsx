@@ -198,44 +198,59 @@ export default function RightPanel() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
-        <div className="min-w-[600px]">
-          <table className="w-full border-collapse">
+      <div className="flex-1 overflow-auto bg-background custom-scrollbar">
+        <div className="min-w-full inline-block align-middle">
+          <table className="w-full border-separate border-spacing-0">
             <thead>
-              <tr>
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[38px]">#</th>
+              <tr className="bg-muted/30">
+                <th className="sticky top-0 z-10 px-4 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 bg-background/95 backdrop-blur backdrop-filter:bg-background/60 w-[45px]">#</th>
                 {columns.map(column => (
-                  <th key={column.key} className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th 
+                    key={column.key} 
+                    className="sticky top-0 z-10 px-4 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 bg-background/95 backdrop-blur backdrop-filter:bg-background/60"
+                  >
                     {column.shortLabel || column.label}
                   </th>
                 ))}
-                <th className="sticky top-0 z-10 surface-bg border-b-2 border-border px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></th>
+                <th className="sticky top-0 z-10 px-4 py-3 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 bg-background/95 backdrop-blur backdrop-filter:bg-background/60 w-[80px]"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-border/30">
               <AnimatePresence initial={false}>
                 {rows.map((r, i) => (
-                  <motion.tr key={r.id}
-                    initial={r.isNew ? { opacity: 0, y: -4 } : false}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="border-b border-border hover:bg-primary/[0.04] transition-colors">
-                    <td className="px-3 py-2.5 text-sm text-muted-foreground">{i + 1}</td>
+                  <motion.tr 
+                    key={r.id}
+                    initial={r.isNew ? { opacity: 0, scale: 0.98, backgroundColor: 'hsl(var(--primary) / 0.05)' } : false}
+                    animate={{ opacity: 1, scale: 1, backgroundColor: 'transparent' }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.35 }}
+                    className="group hover:bg-muted/30 transition-all duration-200"
+                  >
+                    <td className="px-4 py-3 text-sm text-muted-foreground/60 font-medium tabular-nums">{i + 1}</td>
                     {columns.map(column => (
-                      <td key={column.key}
+                      <td 
+                        key={column.key}
                         onDoubleClick={() => column.key !== 'loteSistema' ? startEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
-                        className={`px-3 py-2.5 text-sm cursor-default ${column.key === 'item' ? 'font-semibold' : 'font-mono'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}>
+                        className={`px-4 py-3 text-sm transition-colors ${column.key === 'item' ? 'font-bold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+                      >
                         {renderCell(r, column)}
                       </td>
                     ))}
-                    <td className="px-3 py-2.5">
-                      <div className="row-acts">
-                        <button onClick={() => copyText(r.loteSistema)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Copiar lote sistema">
-                          <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button 
+                          onClick={() => copyText(r.loteSistema)} 
+                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+                          title="Copiar lote sistema"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => deleteRegistro(r.id)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Remover">
-                          <X className="w-3.5 h-3.5 text-destructive" />
+                        <button 
+                          onClick={() => deleteRegistro(r.id)} 
+                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
+                          title="Remover"
+                        >
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -244,28 +259,35 @@ export default function RightPanel() {
               </AnimatePresence>
             </tbody>
             {rows.length > 0 && (
-              <tfoot>
-                <tr className="navy-bg text-primary-foreground font-semibold font-mono text-xs sticky bottom-0">
-                  <td className="px-3 py-2.5">TOTAL</td>
+              <tfoot className="sticky bottom-0 z-10">
+                <tr className="bg-primary shadow-[0_-4px_10px_rgba(0,0,0,0.05)] text-primary-foreground font-bold font-mono text-xs backdrop-blur-sm">
+                  <td className="px-4 py-3.5 border-t border-primary/20">TOTAL</td>
                   {columns.map(column => (
-                    <td key={column.key} className="px-3 py-2.5">
-                      {column.key === 'item' ? `${rows.length} rolo${rows.length !== 1 ? 's' : ''}` : ''}
+                    <td key={column.key} className="px-4 py-3.5 border-t border-primary/20">
+                      {column.key === 'item' ? `${rows.length} ${rows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
                       {column.key === 'mLinear' ? formatML(totalML) : ''}
                       {column.key === 'm2' ? (totalM2 > 0 ? totalM2.toFixed(1) : '—') : ''}
                     </td>
                   ))}
-                  <td className="px-3 py-2.5"></td>
+                  <td className="px-4 py-3.5 border-t border-primary/20"></td>
                 </tr>
               </tfoot>
             )}
           </table>
 
           {rows.length === 0 && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center py-16 text-muted-foreground text-center">
-              <Package className="w-10 h-10 text-muted-foreground/20 mb-3" />
-              <div className="text-sm font-medium text-foreground/60 mb-1">Nenhum rolo conferido</div>
-              <div className="text-xs text-muted-foreground">Adicione rolos pelo painel à esquerda</div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-24 text-muted-foreground/50 text-center"
+            >
+              <div className="h-20 w-20 bg-muted/30 rounded-full flex items-center justify-center mb-6">
+                <Package className="w-10 h-10 text-muted-foreground/20" />
+              </div>
+              <div className="text-base font-bold text-foreground/40 mb-1">Tabela vazia</div>
+              <p className="text-sm max-w-[240px] leading-relaxed">
+                Os itens bipados aparecerão aqui. <br /> Comece a conferência no painel lateral.
+              </p>
             </motion.div>
           )}
         </div>
