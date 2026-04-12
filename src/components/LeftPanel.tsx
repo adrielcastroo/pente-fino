@@ -520,30 +520,30 @@ export default function LeftPanel() {
 
   return (
     <motion.div
-      initial={{ x: -40, opacity: 0 }}
+      initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="surface-bg border-r border-border overflow-hidden flex flex-col h-full"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="bg-background border-r border-border/50 overflow-hidden flex flex-col h-full"
     >
-
-      <div className="p-4 flex-1 overflow-y-auto space-y-3">
+      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-5 custom-scrollbar">
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
+          <div className="flex bg-muted/30 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
             {tecidoModes.map(m => {
               const Icon = m.icon;
+              const isActive = currentMode === m.key;
               return (
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-2 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                    currentMode === m.key
-                      ? 'surface-bg text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                  className={`flex-1 py-2 rounded-full text-[11px] font-bold transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-md scale-100'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 scale-95'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  {m.label}
+                  <span className="uppercase tracking-tight">{m.label}</span>
                 </button>
               );
             })}
