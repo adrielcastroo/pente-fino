@@ -82,6 +82,7 @@ export interface AppState {
     estoqueActiveTec: string;
     estoqueSearch: string;
     estoqueHighlightStatus: string | null;
+    activeTab: 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
   };
 
   setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle') => void;
