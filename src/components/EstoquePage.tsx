@@ -59,12 +59,20 @@ function formatDateBR(iso: string | null) {
 }
 
 export default function EstoquePage() {
+  const { formData, setFormData } = useAppStore();
+  const {
+    estoqueActiveTec: activeTec,
+    estoqueSearch: search,
+    estoqueHighlightStatus: highlightStatus,
+  } = formData;
+
+  const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
+  const setSearch = (val: string) => setFormData({ estoqueSearch: val });
+  const setHighlightStatus = (val: string | null) => setFormData({ estoqueHighlightStatus: val });
+
   const addToast = useToastStore(s => s.addToast);
-  const [activeTec, setActiveTec] = useState('TEC01');
   const [posicoes, setPosicoes] = useState<Posicao[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [highlightStatus, setHighlightStatus] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
 
