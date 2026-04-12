@@ -293,6 +293,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem('cft4_formData', JSON.stringify(newData));
     set({ formData: newData });
   },
+  resetMotorFormData: () => {
+    const state = get();
+    const newData = { 
+      ...state.formData,
+      motorModelo: '',
+      motorNf: '',
+      motorSerie: '',
+      motorTemCaixa: false,
+      motorCaixaNum: '1',
+    };
+    localStorage.setItem('cft4_formData', JSON.stringify(newData));
+    set({ formData: newData });
+  },
 
   addRegistro: (reg) => set(state => {
     const newRegs = [...state.registros, reg];
