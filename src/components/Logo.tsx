@@ -8,26 +8,16 @@ export const Logo = ({ className = "w-8 h-8", ...props }: React.SVGProps<SVGSVGE
     className={className}
     {...props}
   >
-    {/* Pente (Comb) - Minimalist & Professional */}
-    <path 
-      d="M4 6h16a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" 
-      fill="currentColor" 
-      className="text-primary"
-    />
-    <path d="M5 12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-primary" />
-    <path d="M8 12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-primary" />
-    <path d="M11 12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-primary" />
-    <path d="M14 12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-primary" />
-    <path d="M17 12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-primary" />
-    <path d="M20 12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-primary" />
+    {/* Pente (Comb) - Refined and modern */}
+    <rect x="3" y="6" width="18" height="3" rx="1.5" fill="currentColor" />
+    <path d="M5 9V17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M9 9V17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M13 9V17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M17 9V17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M21 9V17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     
-    {/* Accent detail for "Fino" / precision */}
-    <path 
-      d="M2 9h20" 
-      stroke="white" 
-      strokeWidth="0.5" 
-      strokeOpacity="0.3"
-    />
+    {/* Sparkle/Precision element */}
+    <circle cx="19" cy="5" r="1.5" fill="white" className="animate-pulse" />
   </svg>
 );
 
