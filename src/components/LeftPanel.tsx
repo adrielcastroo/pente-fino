@@ -123,7 +123,7 @@ export default function LeftPanel() {
     : (largura > 0 ? m2Num / largura : 0);
   const isDuplicate = !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
 
-  const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
+  
 
   const formatEndereco = (val: string): string => {
     const clean = val.toUpperCase().replace(/\./g, '');
