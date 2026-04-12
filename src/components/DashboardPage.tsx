@@ -197,44 +197,50 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" /> Conferentes
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Users className="w-4 h-4 text-primary" />
+              </div> 
+              Principais Conferentes
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.topConferentes.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-                <p className="text-xs text-muted-foreground italic">Nenhum dado disponível</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
+                <p className="text-sm text-muted-foreground italic">Nenhum dado disponível</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={stats.topConferentes} layout="vertical" margin={{ left: -10, right: 12, top: 4, bottom: 4 }}>
                   <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} />
                   <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                   />
-                  <Bar dataKey="count" fill="#2A9D8F" radius={[0, 4, 4, 0]} name="NF/PROC" />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} name="NF/PROC" />
                 </BarChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Layers3 className="w-4 h-4 text-primary" /> Categorias
+        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Layers3 className="w-4 h-4 text-primary" />
+              </div>
+              Distribuição por Categoria
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.categorias.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-                <p className="text-xs text-muted-foreground italic">Sem dados registrados</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
+                <p className="text-sm text-muted-foreground italic">Sem dados registrados</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
