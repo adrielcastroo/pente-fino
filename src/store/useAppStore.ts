@@ -183,42 +183,99 @@ export function generateLoteSistemaCaixa(processo: string, item: string, mLinear
   return parts.join(' ');
 }
 
+const INITIAL_FORM_DATA: AppState['formData'] = {
+  item: '',
+  nf: '',
+  m2: '',
+  lote: '',
+  endereco: '',
+  aiLargura: '',
+  aiMLinear: '',
+  diversosTipo: 'Rolo',
+  diversosMLinear: '',
+  manualLargura: '',
+  coulisseMetragem: 'm2',
+  lockMetragem: false,
+  madeiraTipo: 'Lâmina',
+  quantidade: '',
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   registros: [],
   undoStack: [],
-  currentMode: 'manual',
-  processo: '',
+  currentMode: (localStorage.getItem('cft4_mode') as any) || 'manual',
+  processo: localStorage.getItem('cft4_processo') || '',
   conferente: localStorage.getItem('cft4_conferente') || '',
   searchQuery: '',
   sortBy: '',
   history: [],
   sessionStartedAt: localStorage.getItem(SESSION_START_KEY) || null,
-  lockProcesso: false,
-  lockedProcesso: '',
-  lockNf: false,
-  lockedNf: '',
-  lockEndereco: false,
-  lockedEndereco: '',
+  lockProcesso: localStorage.getItem('cft4_lockProcesso') === 'true',
+  lockedProcesso: localStorage.getItem('cft4_lockedProcesso') || '',
+  lockNf: localStorage.getItem('cft4_lockNf') === 'true',
+  lockedNf: localStorage.getItem('cft4_lockedNf') || '',
+  lockEndereco: localStorage.getItem('cft4_lockEndereco') === 'true',
+  lockedEndereco: localStorage.getItem('cft4_lockedEndereco') || '',
+  formData: JSON.parse(localStorage.getItem('cft4_formData') || JSON.stringify(INITIAL_FORM_DATA)),
 
-  setMode: (mode) => set({ currentMode: mode }),
+  setMode: (mode) => {
+    localStorage.setItem('cft4_mode', mode);
+    set({ currentMode: mode });
+  },
   updateRegistro: (id, updates) => set(state => {
     const newRegs = state.registros.map(r => r.id === id ? { ...r, ...updates, wasEdited: true, editedAt: new Date().toISOString() } : r);
     save(newRegs);
     return { registros: newRegs };
   }),
-  setProcesso: (p) => set({ processo: p }),
+  setProcesso: (p) => {
+    localStorage.setItem('cft4_processo', p);
+    set({ processo: p });
+  },
   setConferente: (c) => {
     localStorage.setItem('cft4_conferente', c);
     set({ conferente: c });
   },
   setSearchQuery: (q) => set({ searchQuery: q }),
   setSortBy: (s) => set({ sortBy: s }),
-  setLockProcesso: (lock) => set({ lockProcesso: lock }),
-  setLockedProcesso: (p) => set({ lockedProcesso: p }),
-  setLockNf: (lock) => set({ lockNf: lock }),
-  setLockedNf: (n) => set({ lockedNf: n }),
-  setLockEndereco: (lock) => set({ lockEndereco: lock }),
-  setLockedEndereco: (e) => set({ lockedEndereco: e }),
+  setLockProcesso: (lock) => {
+    localStorage.setItem('cft4_lockProcesso', String(lock));
+    set({ lockProcesso: lock });
+  },
+  setLockedProcesso: (p) => {
+    localStorage.setItem('cft4_lockedProcesso', p);
+    set({ lockedProcesso: p });
+  },
+  setLockNf: (lock) => {
+    localStorage.setItem('cft4_lockNf', String(lock));
+    set({ lockNf: lock });
+  },
+  setLockedNf: (n) => {
+    localStorage.setItem('cft4_lockedNf', n);
+    set({ lockedNf: n });
+  },
+  setLockEndereco: (lock) => {
+    localStorage.setItem('cft4_lockEndereco', String(lock));
+    set({ lockEndereco: lock });
+  },
+  setLockedEndereco: (e) => {
+    localStorage.setItem('cft4_lockedEndereco', e);
+    set({ lockedEndereco: e });
+  },
+  setFormData: (updates) => set(state => {
+    const newData = { ...state.formData, ...updates };
+    localStorage.setItem('cft4_formData', JSON.stringify(newData));
+    return { formData: newData };
+  }),
+  resetFormData: () => {
+    const newData = { ...INITIAL_FORM_DATA };
+    // Preservar valores travados se necessário
+    const state = get();
+    if (state.lockNf) newData.nf = state.lockedNf;
+    if (state.lockEndereco) newData.endereco = state.lockedEndereco;
+    
+    localStorage.setItem('cft4_formData', JSON.stringify(newData));
+    set({ formData: newData });
+  },
 
   addRegistro: (reg) => set(state => {
     const newRegs = [...state.registros, reg];
