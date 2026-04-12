@@ -114,14 +114,17 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
     background-image: 
-      radial-gradient(at 0% 0%, hsl(var(--primary) / 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsl(var(--accent) / 0.1) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsl(var(--primary) / 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsl(var(--primary) / 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsl(var(--primary) / 0.05) 0px, transparent 50%);
     background-attachment: fixed;
     background-size: cover;
+  }
+
+  * {
+    @apply transition-colors duration-200;
   }
 
   .font-mono {
