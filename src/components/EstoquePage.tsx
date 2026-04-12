@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAppStore } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion } from 'framer-motion';
 import { Search, Upload, Download, Eye, Filter, X } from 'lucide-react';
