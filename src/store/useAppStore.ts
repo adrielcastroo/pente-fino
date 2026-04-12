@@ -71,6 +71,13 @@ export interface AppState {
     lockMetragem: boolean;
     madeiraTipo: 'Lâmina' | 'Base' | 'Bandô';
     quantidade: string;
+    // Motor/Controle Fields
+    motorSubMode: 'motor' | 'controle';
+    motorModelo: string;
+    motorNf: string;
+    motorSerie: string;
+    motorTemCaixa: boolean;
+    motorCaixaNum: string;
   };
 
   setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle') => void;
@@ -87,6 +94,7 @@ export interface AppState {
   setLockedEndereco: (e: string) => void;
   setFormData: (updates: Partial<AppState['formData']>) => void;
   resetFormData: () => void;
+  resetMotorFormData: () => void;
   addRegistro: (reg: Registro) => void;
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
