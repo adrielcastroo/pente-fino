@@ -39,8 +39,10 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
   const registros = useAppStore(s => s.registros);
   const { theme, toggleTheme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = () => {
+    if (hoverTimeout) clearTimeout(hoverTimeout);
     if (!isMobile && !open) {
       setOpen(true);
       setIsHovered(true);
@@ -49,22 +51,19 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
 
   const handleMouseLeave = () => {
     if (!isMobile && isHovered) {
-      setOpen(false);
-      setIsHovered(false);
+      const timeout = setTimeout(() => {
+        setOpen(false);
+        setIsHovered(false);
+      }, 300);
+      setHoverTimeout(timeout);
     }
   };
 
-  // Se o estado 'open' for alterado externamente (pelo botão superior), 
-  // resetamos o estado de hover para não fechar acidentalmente
   useEffect(() => {
-    if (open && isHovered) {
-      // Se abrimos via hover e o usuário clicar no botão superior para "travar" aberto,
-      // o 'open' continuará true, mas o toggleSidebar (chamado pelo botão) 
-      // na verdade o fecharia se fosse um toggle simples.
-      // No entanto, o SidebarTrigger padrão apenas inverte o 'open'.
+    if (open && !isHovered) {
+      // If opened manually (e.g. via trigger), don't auto-close
     }
-    if (open) setIsHovered(false);
-  }, [open]);
+  }, [open, isHovered]);
 
   const handleTabClick = (tab: AppTab) => {
     onTabChange(tab);
@@ -82,14 +81,14 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 flex-shrink-0 shadow-sm border border-primary/20 backdrop-blur-sm transition-all duration-300">
+      <SidebarHeader className="p-3">
+        <div className="flex items-center gap-2 overflow-hidden bg-primary/5 rounded-xl p-1 border border-primary/10">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/20 transition-all duration-300">
             <Logo className="w-6 h-6" />
           </div>
-          <div className={`flex flex-col transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+          <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1'}`}>
             <span className="font-bold text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
-            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider whitespace-nowrap">Gestão Industrial</span>
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest whitespace-nowrap">Industrial</span>
           </div>
         </div>
       </SidebarHeader>

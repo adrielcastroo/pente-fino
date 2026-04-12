@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAppStore, type Conference } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Layers3, BarChart3, TrendingUp, Warehouse } from 'lucide-react';
+import { Users, Layers3, BarChart3, TrendingUp, Warehouse, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { useToastStore } from '@/hooks/useToast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -84,6 +86,7 @@ interface StockStats {
 
 export default function DashboardPage() {
   const history = useAppStore(s => s.history);
+  const addToast = useToastStore(s => s.addToast);
   const stats = computeStats(history);
   const [stockData, setStockData] = useState<StockStats[]>([]);
 
@@ -116,6 +119,35 @@ export default function DashboardPage() {
     setStockData(result);
   };
 
+  const exportDashboardData = () => {
+    if (!history.length) {
+      addToast('Nenhum dado histórico para exportar.', 'warn');
+      return;
+    }
+
+    const data = history.flatMap(c => 
+      c.registros.map(r => ({
+        Conferente: c.conferente || 'Desconhecido',
+        Data: new Date(c.timestamp).toLocaleDateString(),
+        Hora: new Date(c.timestamp).toLocaleTimeString(),
+        NF: r.nf || '',
+        Processo: r.processo || '',
+        Categoria: r.modoOrigem || '',
+        Tipo: r.tipoTecido || '',
+        ML: r.ml || 0,
+        Peso: r.peso || 0,
+        Qualidade: r.qualidade || '',
+        Defeito: r.defeito || ''
+      }))
+    );
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Histórico_Geral');
+    XLSX.writeFile(wb, `dashboard_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    addToast('Dados do dashboard exportados com sucesso!', 'ok');
+  };
+
   const stockTotals = useMemo(() => {
     return stockData.reduce(
       (acc, s) => ({
@@ -139,11 +171,20 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">Início</h1>
-        <p className="text-base text-muted-foreground max-w-2xl">
-          Monitore o desempenho das conferências e o status do estoque em tempo real com métricas detalhadas.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">Início</h1>
+          <p className="text-base text-muted-foreground max-w-2xl">
+            Monitore o desempenho das conferências e o status do estoque em tempo real.
+          </p>
+        </div>
+        <button
+          onClick={exportDashboardData}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 active:scale-95 sm:w-auto"
+        >
+          <Download className="h-4 w-4" />
+          Exportar Todos os Dados
+        </button>
       </div>
 
       {/* Summary */}
