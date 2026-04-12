@@ -258,27 +258,30 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-primary" /> Ferramentas
+        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="w-4 h-4 text-primary" />
+              </div>
+              Uso de Ferramentas
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.ferramentas.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-                <p className="text-xs text-muted-foreground italic">Sem dados de ferramentas</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
+                <p className="text-sm text-muted-foreground italic">Sem dados de ferramentas</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={stats.ferramentas} margin={{ left: -30, right: 12, top: 10, bottom: 4 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                   />
-                  <Bar dataKey="count" name="Itens" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="count" name="Itens" radius={[6, 6, 0, 0]}>
                     {stats.ferramentas.map((_, i) => <Cell key={i} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />)}
                   </Bar>
                 </BarChart>
@@ -287,16 +290,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" /> Tipos de tecido
+        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
+              Tipos de Tecido Mais Comuns
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.tipos.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-                <p className="text-xs text-muted-foreground italic">Sem tipos detectados</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
+                <p className="text-sm text-muted-foreground italic">Sem tipos detectados</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
