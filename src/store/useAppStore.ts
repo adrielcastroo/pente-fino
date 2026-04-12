@@ -278,8 +278,75 @@ export const useAppStore = create<AppState>((set, get) => ({
         quantidade: r.quantidade || null,
       }));
 
-      const { error: regError } = await supabase.from('registros').insert(rows as any);
+      const { data: insertedRegs, error: regError } = await supabase.from('registros').insert(rows as any).select();
       if (regError) throw regError;
+
+      // Populate estoque_posicoes for those with a valid address
+      const estoqueRows: any[] = [];
+      
+      // We need to keep track of positions we're assigning in THIS conference to avoid local collisions
+      const localOccupied: Record<string, Set<number>> = {};
+
+      for (const r of insertedRegs || []) {
+        const parsed = parseEndereco(r.endereco);
+        if (parsed) {
+          const { estrutura, coluna, nivel } = parsed;
+          const cellKey = `${estrutura}.${coluna}.${nivel}`;
+          
+          if (!localOccupied[cellKey]) {
+            // Fetch currently occupied positions in DB for this cell
+            const { data: dbOccupied } = await supabase
+              .from('estoque_posicoes')
+              .select('posicao')
+              .eq('estrutura', estrutura)
+              .eq('coluna', coluna)
+              .eq('nivel', nivel)
+              .neq('status', 'saida') // Ignore those that have already left
+              .neq('status', 'livre');
+            
+            localOccupied[cellKey] = new Set((dbOccupied || []).map(p => p.posicao));
+          }
+
+          // Find first free position (1-30)
+          let pos = 1;
+          while (pos <= 30 && localOccupied[cellKey].has(pos)) {
+            pos++;
+          }
+
+          if (pos <= 30) {
+            localOccupied[cellKey].add(pos);
+            estoqueRows.push({
+              estrutura,
+              coluna,
+              nivel,
+              posicao: pos,
+              status: 'ocupado',
+              registro_id: r.id,
+              item: r.item,
+              proc: r.processo,
+              m2: r.m2,
+              largura: r.largura,
+              m_linear: r.m_linear,
+              lote: r.lote,
+              endereco: r.endereco,
+              lote_sistema: r.lote_sistema,
+              conferente_saida: '',
+              data_registro: new Date().toISOString(),
+            });
+          }
+        }
+      }
+
+      if (estoqueRows.length > 0) {
+        // Upsert to handle any existing positions that might have been manually cleared or changed
+        const { error: estoqueError } = await supabase
+          .from('estoque_posicoes')
+          .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
+        
+        if (estoqueError) {
+          console.error('Error populating estoque_posicoes:', estoqueError);
+        }
+      }
 
       save([]);
       try { localStorage.removeItem(SESSION_START_KEY); } catch {}
@@ -288,6 +355,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().loadHistory();
     } catch (e) {
       console.error('Error archiving:', e);
+      // Even on error, we might want to clear local if it was partially successful, 
+      // but usually we keep it for retry. However, current UI clears it anyway.
       save([]);
       try { localStorage.removeItem(SESSION_START_KEY); } catch {}
       set({ registros: [], undoStack: [], sessionStartedAt: null });
