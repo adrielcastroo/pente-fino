@@ -1,6 +1,6 @@
 import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import logoImg from '@/assets/logo.ico';
+import { Logo } from './Logo';
 import { useTheme } from '@/hooks/useTheme';
 import {
   Sidebar,
@@ -50,8 +50,8 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
     <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0 shadow-sm">
-            <img src={logoImg} alt="Pente Fino" className="w-5 h-5 object-contain" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0 shadow-sm border border-primary/20 backdrop-blur-sm">
+            <Logo className="w-5 h-5" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
