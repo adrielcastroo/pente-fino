@@ -13,6 +13,7 @@ import DashboardPage from '@/components/DashboardPage';
 import MotorControlePage from '@/components/MotorControlePage';
 import EstoquePage from '@/components/EstoquePage';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
 
