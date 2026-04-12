@@ -47,12 +47,17 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="p-3">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <img src={logoImg} alt="Pente Fino" className="w-8 h-8 rounded-lg object-contain flex-shrink-0" />
+    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0 shadow-sm">
+            <img src={logoImg} alt="Pente Fino" className="w-5 h-5 object-contain" />
+          </div>
           {!collapsed && (
-            <span className="font-semibold text-sm text-foreground whitespace-nowrap">Pente Fino</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm text-foreground leading-tight tracking-tight">Pente Fino</span>
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão Industrial</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
@@ -70,12 +75,14 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                       onClick={() => handleTabClick(item.key)}
                       tooltip={item.label}
                       isActive={isActive}
-                      className={isActive ? 'bg-primary/10 text-primary font-medium' : ''}
+                      className={isActive 
+                        ? 'bg-primary/10 text-primary font-semibold shadow-sm transition-all duration-200' 
+                        : 'hover:bg-sidebar-accent/50 text-muted-foreground transition-all duration-200'}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <span className="font-medium tracking-tight">{item.label}</span>
                       {item.key === 'table' && registros.length > 0 && (
-                        <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
+                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm animate-in zoom-in">
                           {registros.length}
                         </span>
                       )}

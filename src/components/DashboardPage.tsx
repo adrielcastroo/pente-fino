@@ -138,45 +138,78 @@ export default function DashboardPage() {
   const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#1e2a3f'];
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Início</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visão geral das conferências e estoque</p>
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Início</h1>
+        <p className="text-sm text-muted-foreground">Visão geral das conferências e estoque em tempo real</p>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Card><CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.totalConferencias}</div>
-          <div className="text-xs text-muted-foreground mt-1">Conferências</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.totalRegistros}</div>
-          <div className="text-xs text-muted-foreground mt-1">Itens bipados</div>
-        </CardContent></Card>
-        <Card className="col-span-2 sm:col-span-1"><CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.totalConferentes}</div>
-          <div className="text-xs text-muted-foreground mt-1">Conferentes</div>
-        </CardContent></Card>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="overflow-hidden border-none shadow-md bg-gradient-to-br from-primary/5 via-card to-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Conferências</p>
+                <div className="text-3xl font-bold tracking-tight text-primary mt-1">{stats.totalConferencias}</div>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <BarChart3 className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-none shadow-md bg-gradient-to-br from-success/5 via-card to-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Itens bipados</p>
+                <div className="text-3xl font-bold tracking-tight text-success mt-1">{stats.totalRegistros}</div>
+              </div>
+              <div className="p-3 bg-success/10 rounded-xl">
+                <Layers3 className="w-6 h-6 text-success" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-none shadow-md bg-gradient-to-br from-amber-500/5 via-card to-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Conferentes</p>
+                <div className="text-3xl font-bold tracking-tight text-amber-500 mt-1">{stats.totalConferentes}</div>
+              </div>
+              <div className="p-3 bg-amber-500/10 rounded-xl">
+                <Users className="w-6 h-6 text-amber-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" /> Conferentes
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.topConferentes.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Nenhum dado</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
+                <p className="text-xs text-muted-foreground italic">Nenhum dado disponível</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={stats.topConferentes} layout="vertical" margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
+                <BarChart data={stats.topConferentes} layout="vertical" margin={{ left: -10, right: 12, top: 4, bottom: 4 }}>
                   <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} />
-                  <Tooltip contentStyle={{ fontSize: 12, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                  />
                   <Bar dataKey="count" fill="#2A9D8F" radius={[0, 4, 4, 0]} name="NF/PROC" />
                 </BarChart>
               </ResponsiveContainer>
@@ -184,44 +217,53 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Layers3 className="w-4 h-4 text-primary" /> Categorias
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.categorias.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Sem dados</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
+                <p className="text-xs text-muted-foreground italic">Sem dados registrados</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={stats.categorias} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3}>
+                  <Pie data={stats.categorias} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} stroke="none">
                     {stats.categorias.map(e => <Cell key={e.name} fill={CATEGORY_COLORS[e.name] || '#999'} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ fontSize: 12, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: '10px' }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary" /> Ferramentas
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.ferramentas.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Sem dados</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
+                <p className="text-xs text-muted-foreground italic">Sem dados de ferramentas</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={stats.ferramentas} margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
+                <BarChart data={stats.ferramentas} margin={{ left: -30, right: 12, top: 10, bottom: 4 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                   <YAxis hide />
-                  <Tooltip contentStyle={{ fontSize: 12, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                  />
                   <Bar dataKey="count" name="Itens" radius={[4, 4, 0, 0]}>
                     {stats.ferramentas.map((_, i) => <Cell key={i} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />)}
                   </Bar>
@@ -231,72 +273,81 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" /> Tipos de tecido
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stats.tipos.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Sem dados</p>
+              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
+                <p className="text-xs text-muted-foreground italic">Sem tipos detectados</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={stats.tipos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3}>
+                  <Pie data={stats.tipos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} stroke="none">
                     {stats.tipos.map((_, i) => <Cell key={i} fill={TIPO_COLORS[i % TIPO_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ fontSize: 12, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: '10px' }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
 
-        {/* Stock by structure */}
-        <Card className="sm:col-span-2">
-          <CardHeader className="pb-2">
+        <Card className="md:col-span-2 border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Warehouse className="w-4 h-4 text-primary" /> Estoque por Estrutura
             </CardTitle>
           </CardHeader>
           <CardContent>
             {stockData.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Sem dados</p>
+              <div className="h-[250px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
+                <p className="text-xs text-muted-foreground italic">Sincronizando estoque...</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={stockData} margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
-                  <XAxis dataKey="estrutura" tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
+                <BarChart data={stockData} margin={{ left: -20, right: 12, top: 10, bottom: 10 }}>
+                  <XAxis dataKey="estrutura" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                   <YAxis hide />
-                  <Tooltip contentStyle={{ fontSize: 12, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                  <Bar dataKey="ocupado" stackId="a" fill="#10b981" name="Ocupado" />
-                  <Bar dataKey="reservado" stackId="a" fill="#f59e0b" name="Reservado" />
-                  <Bar dataKey="bloqueado" stackId="a" fill="#ef4444" name="Bloqueado" />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                  />
+                  <Bar dataKey="ocupado" stackId="a" fill="#10b981" name="Ocupado" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="reservado" stackId="a" fill="#f59e0b" name="Reservado" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="bloqueado" stackId="a" fill="#ef4444" name="Bloqueado" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="livre" stackId="a" fill="#1e2a3f" name="Livre" radius={[4, 4, 0, 0]} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: '15px' }} />
                 </BarChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
 
-        {/* Stock pie */}
         {stockPieData.length > 0 && (
-          <Card className="sm:col-span-2">
-            <CardHeader className="pb-2">
+          <Card className="md:col-span-2 border-none shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Warehouse className="w-4 h-4 text-primary" /> Resumo Geral do Estoque
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
-                  <Pie data={stockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3}>
+                  <Pie data={stockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={4} stroke="none">
                     {stockPieData.map((_, i) => <Cell key={i} fill={stockPieColors[i]} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ fontSize: 12, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                  />
+                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: '15px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
