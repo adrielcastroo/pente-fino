@@ -78,6 +78,10 @@ export interface AppState {
     motorSerie: string;
     motorTemCaixa: boolean;
     motorCaixaNum: string;
+    // Estoque Page Fields
+    estoqueActiveTec: string;
+    estoqueSearch: string;
+    estoqueHighlightStatus: string | null;
   };
 
   setMode: (mode: 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle') => void;
