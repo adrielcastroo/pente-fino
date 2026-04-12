@@ -128,16 +128,17 @@ export default function DashboardPage() {
     const data = history.flatMap(c => 
       c.registros.map(r => ({
         Conferente: c.conferente || 'Desconhecido',
-        Data: new Date(c.timestamp).toLocaleDateString(),
-        Hora: new Date(c.timestamp).toLocaleTimeString(),
+        Data: c.finishedAt ? new Date(c.finishedAt).toLocaleDateString() : '—',
+        Hora: c.finishedAt ? new Date(c.finishedAt).toLocaleTimeString() : '—',
+        Item: r.item || '',
         NF: r.nf || '',
         Processo: r.processo || '',
         Categoria: r.modoOrigem || '',
         Tipo: r.tipoTecido || '',
-        ML: r.ml || 0,
-        Peso: r.peso || 0,
-        Qualidade: r.qualidade || '',
-        Defeito: r.defeito || ''
+        ML: r.mLinear || 0,
+        M2: r.m2 || 0,
+        Largura: r.largura || 0,
+        Quantidade: r.quantidade || 0
       }))
     );
 

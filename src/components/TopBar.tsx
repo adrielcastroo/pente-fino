@@ -56,9 +56,9 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/5 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
-      <div className="flex h-16 items-center gap-4 px-4 max-w-[1600px] mx-auto">
+      <div className="flex h-16 items-center gap-4 px-3 max-w-[1600px] mx-auto">
         <div className="flex items-center">
-          <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-colors -ml-2" />
+          <SidebarTrigger className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-colors -ml-3" />
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-4">
