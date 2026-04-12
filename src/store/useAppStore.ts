@@ -82,6 +82,16 @@ interface AppState {
 const STORAGE_KEY = 'cft4';
 const SESSION_START_KEY = 'cft4_session_started_at';
 
+export const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
+
+function parseEndereco(addr: string) {
+  if (!addr || !ENDERECO_REGEX.test(addr)) return null;
+  const [est, col, nivStr] = addr.split('.');
+  const nivel = parseInt(nivStr.replace('N', ''), 10);
+  return { estrutura: est, coluna: col, nivel };
+}
+
+
 function fmtML(v: number): string {
   if (!v || v === 0) return '';
   const rounded = parseFloat(v.toFixed(1));
