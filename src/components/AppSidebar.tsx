@@ -1,8 +1,7 @@
-import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon, Pin, PinOff } from 'lucide-react';
+import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Logo } from './Logo';
 import { useTheme } from '@/hooks/useTheme';
-import { useState, useEffect } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -36,33 +35,25 @@ const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
 
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
   const { state, setOpen, isMobile, toggleSidebar } = useSidebar();
-  const [isPinned, setIsPinned] = useState(true);
   const registros = useAppStore(s => s.registros);
   const { theme, toggleTheme } = useTheme();
-
-  // Sync sidebar state with pin state
-  useEffect(() => {
-    if (!isMobile) {
-      setOpen(isPinned);
-    }
-  }, [isPinned, isMobile, setOpen]);
-
-  const handleMouseEnter = () => {
-    if (!isPinned && !isMobile) {
-      setOpen(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (!isPinned && !isMobile) {
-      setOpen(false);
-    }
-  };
 
   const handleTabClick = (tab: AppTab) => {
     onTabChange(tab);
     if (isMobile) {
       toggleSidebar();
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (!isMobile && state === 'collapsed') {
+      setOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobile && state === 'expanded') {
+      setOpen(false);
     }
   };
 
@@ -129,16 +120,6 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
 
       <SidebarFooter className="p-2 space-y-1">
         <SidebarMenu>
-          {!isMobile && (
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setIsPinned(!isPinned)} tooltip={isPinned ? 'Sidebar Fixa' : 'Sidebar Fluida'}>
-                {isPinned ? <Pin className="w-4 h-4" /> : <PinOff className="w-4 h-4" />}
-                <span className={`transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                  {isPinned ? 'Sidebar Fixa' : 'Sidebar Fluida'}
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={toggleTheme} tooltip={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}>
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
