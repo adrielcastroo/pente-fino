@@ -51,60 +51,65 @@ export default function MotorControlePage() {
   const temCaixa = formData.motorTemCaixa;
   const caixaNum = formData.motorCaixaNum;
 
-  const setSubMode = (val: 'motor' | 'controle') => setFormData({ motorSubMode: val });
-  const setModelo = (val: string) => setFormData({ motorModelo: val });
-  const setNf = (val: string) => setFormData({ motorNf: val });
-  const setSerie = (val: string) => setFormData({ motorSerie: val });
-  const setTemCaixa = (val: boolean) => setFormData({ motorTemCaixa: val });
-  const setCaixaNum = (val: string) => setFormData({ motorCaixaNum: val });
+  const setSubMode = useCallback((val: 'motor' | 'controle') => setFormData({ motorSubMode: val }), [setFormData]);
+  const setModelo = useCallback((val: string) => setFormData({ motorModelo: val }), [setFormData]);
+  const setNf = useCallback((val: string) => setFormData({ motorNf: val }), [setFormData]);
+  const setSerie = useCallback((val: string) => setFormData({ motorSerie: val }), [setFormData]);
+  const setTemCaixa = useCallback((val: boolean) => setFormData({ motorTemCaixa: val }), [setFormData]);
+  const setCaixaNum = useCallback((val: string) => setFormData({ motorCaixaNum: val }), [setFormData]);
 
   const serieRef = useRef<HTMLInputElement>(null);
   const modeloRef = useRef<HTMLInputElement>(null);
 
-  const handleSubModeChange = (mode: 'motor' | 'controle') => {
+  const handleSubModeChange = useCallback((mode: 'motor' | 'controle') => {
     setSubMode(mode);
     setMode(mode);
-  };
+  }, [setSubMode, setMode]);
 
-  const resetFields = () => {
+  const resetFields = useCallback(() => {
     resetMotorFormData();
-  };
+  }, [resetMotorFormData]);
 
-  const cleanMotorSerie = (raw: string, mod: string): string => {
+  const cleanMotorSerie = useCallback((raw: string, mod: string): string => {
     let cleaned = raw.trim();
     if (mod && cleaned.toLowerCase().startsWith(mod.toLowerCase())) {
       cleaned = cleaned.slice(mod.length).trim();
     }
-    // Keep trailing letter if it exists (differentiator for identical series)
     return cleaned.trim();
-  };
+  }, []);
 
-  const cleanControleSerie = (raw: string): string => {
+  const cleanControleSerie = useCallback((raw: string): string => {
     const idx = raw.search(/[Ff]/);
     if (idx > 0) return raw.slice(0, idx).trim();
     return raw.trim();
-  };
+  }, []);
 
-  const isDuplicate = (cleanedSerie: string): boolean => {
-    return registros.some(r =>
-      (r.modoOrigem === 'motor' || r.modoOrigem === 'controle') &&
-      r.lote === cleanedSerie
-    );
-  };
+  const isDuplicate = useCallback((cleanedSerie: string): boolean => {
+    for (let i = 0, len = registros.length; i < len; i++) {
+      const r = registros[i];
+      if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote === cleanedSerie) {
+        return true;
+      }
+    }
+    return false;
+  }, [registros]);
 
-  const getSequencial = (): number => {
-    return registros.filter(r => r.modoOrigem === 'controle').length + 1;
-  };
+  const getSequencial = useCallback((): number => {
+    let count = 0;
+    for (let i = 0, len = registros.length; i < len; i++) {
+      if (registros[i].modoOrigem === 'controle') count++;
+    }
+    return count + 1;
+  }, [registros]);
 
-  const handleModeloBlur = () => {
+  const handleModeloBlur = useCallback(() => {
     if (subMode === 'controle') {
       setModelo(mapModelo(modelo));
     }
-  };
+  }, [subMode, modelo, setModelo]);
 
-  const handleAddMotor = () => {
+  const handleAddMotor = useCallback(() => {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
-    // NF is now optional
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
     const cleaned = cleanMotorSerie(serie, modelo);
@@ -136,14 +141,13 @@ export default function MotorControlePage() {
     toast.success(`Motor adicionado: ${cleaned}`);
     setSerie('');
     serieRef.current?.focus();
-  };
+  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, setSerie]);
 
-  const handleAddControle = () => {
+  const handleAddControle = useCallback(() => {
     const resolvedModelo = mapModelo(modelo);
     setModelo(resolvedModelo);
 
     if (!resolvedModelo.trim()) { toast.warning('Preencha o Modelo'); return; }
-    // NF is now optional
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
     const cleaned = cleanControleSerie(serie);
@@ -175,20 +179,34 @@ export default function MotorControlePage() {
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     setSerie('');
     serieRef.current?.focus();
-  };
+  }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, setSerie]);
 
-  const handleSerieKeyDown = (e: React.KeyboardEvent) => {
+  const handleSerieKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (subMode === 'motor') handleAddMotor();
       else handleAddControle();
     }
-  };
+  }, [subMode, handleAddMotor, handleAddControle]);
 
-  const motorCount = registros.filter(r => r.modoOrigem === 'motor').length;
-  const controleCount = registros.filter(r => r.modoOrigem === 'controle').length;
+  const { motorCount, controleCount, currentItems } = useMemo(() => {
+    let mCount = 0;
+    let cCount = 0;
+    const items = [];
+    for (let i = 0, len = registros.length; i < len; i++) {
+      const r = registros[i];
+      if (r.modoOrigem === 'motor') mCount++;
+      if (r.modoOrigem === 'controle') cCount++;
+      if (r.modoOrigem === subMode) items.push(r);
+    }
+    return { 
+      motorCount: mCount, 
+      controleCount: cCount, 
+      currentItems: items 
+    };
+  }, [registros, subMode]);
+
   const currentCount = subMode === 'motor' ? motorCount : controleCount;
-  const currentItems = registros.filter(r => r.modoOrigem === subMode);
 
   return (
     <motion.div
