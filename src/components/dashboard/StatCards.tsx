@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
