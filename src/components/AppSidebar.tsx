@@ -17,8 +17,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-// type moved to @/types/index.ts
-
 interface AppSidebarProps {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
@@ -57,7 +55,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
       const timeout = setTimeout(() => {
         setOpen(false);
         setIsHovered(false);
-      }, 200);
+      }, 300);
       setHoverTimeout(timeout);
     }
   };
@@ -74,25 +72,27 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
   return (
     <Sidebar 
       collapsible="icon" 
-      className="border-r border-border/10 bg-sidebar"
+      className="border-r border-border/40 bg-sidebar shadow-xl"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      aria-label="Menu Principal"
     >
       <SidebarHeader className="p-4 group-data-[state=collapsed]:p-2 transition-all duration-300">
         <div className="flex items-center gap-3 overflow-hidden rounded-2xl p-1.5 group-data-[state=collapsed]:p-0 transition-all duration-300">
-          <div className="flex items-center justify-center w-10 h-10 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 rounded-xl bg-transparent text-primary flex-shrink-0 transition-transform duration-300 hover:rotate-6">
-            <Logo className="w-8 h-8 group-data-[state=collapsed]:w-6 group-data-[state=collapsed]:h-6" />
+          <div className="flex items-center justify-center w-10 h-10 group-data-[state=collapsed]:w-9 group-data-[state=collapsed]:h-9 rounded-xl bg-primary/10 text-primary flex-shrink-0 transition-all duration-500 hover:rotate-12 hover:scale-110">
+            <Logo className="w-6 h-6 group-data-[state=collapsed]:w-5 group-data-[state=collapsed]:h-5" />
           </div>
           <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
-            <span className="font-black text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
+            <span className="font-extrabold text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
+            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Controle de Estoque</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 group-data-[state=collapsed]:px-1">
+      <SidebarContent className="px-3 group-data-[state=collapsed]:px-1 mt-2">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
+            <SidebarMenu className="gap-2">
               {menuItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
@@ -104,29 +104,34 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                       onClick={() => handleTabClick(item.key)}
                       tooltip={item.label}
                       isActive={isActive}
+                      aria-current={isActive ? 'page' : undefined}
                       className={`
-                        h-11 rounded-xl transition-all duration-200
+                        h-12 rounded-xl transition-all duration-300 relative overflow-hidden group/btn
                         ${isActive 
-                          ? 'bg-primary/15 text-primary font-black shadow-[0_4px_20px_rgb(0,0,0,0.05)] scale-[1.02] ring-1 ring-primary/20' 
-                          : 'hover:bg-sidebar-accent/70 text-foreground dark:text-foreground font-bold hover:translate-x-1'}
-                        ${isTableTab && registros.length > 0 ? 'ring-2 ring-primary/40 animate-pulse-subtle' : ''}
+                          ? 'bg-primary text-primary-foreground font-extrabold shadow-lg shadow-primary/25 scale-[1.02]' 
+                          : 'hover:bg-sidebar-accent/80 text-sidebar-foreground font-semibold hover:translate-x-1'}
+                        ${isTableTab && registros.length > 0 && !isActive ? 'ring-2 ring-primary/40' : ''}
                       `}
                     >
-                      <div className="relative">
-                        <Icon className={`w-4.5 h-4.5 transition-all duration-200 ${isActive ? 'scale-110 ' + item.color : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
+                      <div className="relative flex items-center justify-center">
+                        <Icon className={`w-5 h-5 transition-all duration-300 ${isActive ? 'scale-110 text-primary-foreground' : 'text-muted-foreground group-hover/btn:text-foreground'}`} />
                         {isTableTab && registros.length > 0 && collapsed && (
-                          <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground ring-2 ring-sidebar animate-in zoom-in-50">
+                          <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-black text-white ring-2 ring-sidebar animate-pulse">
                             {registros.length}
                           </span>
                         )}
                       </div>
-                      <span className={`tracking-tight transition-all duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'} ${isActive ? 'font-black' : 'font-bold'} ${isActive ? item.color : ''}`}>
+                      <span className={`tracking-tight transition-all duration-300 whitespace-nowrap ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-3'} ${isActive ? 'font-black' : 'font-bold'}`}>
                         {item.label}
                       </span>
                       {isTableTab && registros.length > 0 && !collapsed && (
-                        <span className="ml-auto flex h-5.5 w-5.5 items-center justify-center rounded-lg bg-primary text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/20 animate-in slide-in-from-right-2 duration-300">
+                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-300 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-primary/20 animate-bounce'}`}>
                           {registros.length}
                         </span>
+                      )}
+                      
+                      {isActive && (
+                        <div className="absolute left-0 w-1.5 h-6 bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -137,35 +142,41 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 group-data-[state=collapsed]:p-1.5 border-t border-border/5 space-y-2">
-        <SidebarMenu className="gap-1">
+      <SidebarFooter className="p-4 group-data-[state=collapsed]:p-2 border-t border-border/40 space-y-2 bg-sidebar-accent/20">
+        <SidebarMenu className="gap-2">
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={toggleTheme} 
-              className="h-11 rounded-xl hover:bg-sidebar-accent/50 text-foreground dark:text-foreground transition-all duration-200"
-              tooltip={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+              className="h-11 rounded-xl hover:bg-sidebar-accent/80 text-sidebar-foreground transition-all duration-300 group/footer"
+              tooltip={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+              aria-label="Alternar Tema"
             >
-              <div className="w-4.5 h-4.5 flex items-center justify-center">
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-400" />}
+              <div className="w-5 h-5 flex items-center justify-center transition-transform group-hover/footer:rotate-45">
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-slate-500" />}
               </div>
-              <span className={`transition-all duration-200 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
-                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              </span>
+              {!collapsed && (
+                <span className="ml-3 font-bold tracking-tight">
+                  {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                </span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
           {onOpenConfig && (
             <SidebarMenuItem>
               <SidebarMenuButton 
                 onClick={onOpenConfig} 
-                className="h-11 rounded-xl hover:bg-sidebar-accent/50 text-foreground dark:text-foreground transition-all duration-200"
-                tooltip="Acessar Configurações"
+                className="h-11 rounded-xl hover:bg-sidebar-accent/80 text-sidebar-foreground transition-all duration-300 group/footer"
+                tooltip="Configurações"
+                aria-label="Abrir Configurações"
               >
-                <div className="w-4.5 h-4.5 flex items-center justify-center">
-                  <Settings className="w-4 h-4 text-muted-foreground" />
+                <div className="w-5 h-5 flex items-center justify-center transition-transform group-hover/footer:rotate-90">
+                  <Settings className="w-5 h-5 text-muted-foreground group-hover/footer:text-foreground" />
                 </div>
-                <span className={`transition-all duration-200 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
-                  Configurações
-                </span>
+                {!collapsed && (
+                  <span className="ml-3 font-bold tracking-tight text-muted-foreground group-hover/footer:text-foreground">
+                    Configurações
+                  </span>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
