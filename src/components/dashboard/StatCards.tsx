@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, LucideIcon } from 'lucide-react';
+import { ChevronRight, LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
 
 interface StatCardProps {
   label: string;
@@ -32,19 +32,14 @@ export const StatCard = ({ label, value, icon: Icon, tab, onClick, variants }: S
   </motion.div>
 );
 
+const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users };
+
 export const StatCards = ({ stats, onStatClick, containerVariants, itemVariants }: { stats: any, onStatClick: (tab: any) => void, containerVariants: any, itemVariants: any }) => {
   const cards = [
     { label: 'Conferências', value: stats.totalConferencias, icon: 'BarChart3', tab: 'history' },
     { label: 'Registros', value: stats.totalRegistros, icon: 'Layers3', tab: 'table' },
     { label: 'Conferentes', value: stats.totalConferentes, icon: 'Users', tab: 'inicio' },
   ];
-
-  // Map icon names to components to avoid dynamic import issues
-  const iconMap: Record<string, any> = {
-    BarChart3: require('lucide-react').BarChart3,
-    Layers3: require('lucide-react').Layers3,
-    Users: require('lucide-react').Users,
-  };
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
