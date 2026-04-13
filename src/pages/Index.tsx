@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import TopBar from '@/components/TopBar';
 import LeftPanel from '@/components/LeftPanel';
 import RightPanel from '@/components/RightPanel';
 import HistoryPanel from '@/components/HistoryPanel';
-import ToastContainer from '@/components/ToastContainer';
+
 import ConfigModal from '@/components/ConfigModal';
 import ShortcutsModal from '@/components/ShortcutsModal';
 import AppSidebar from '@/components/AppSidebar';
@@ -19,7 +19,7 @@ type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 
 
 export default function Index() {
   const { loadFromStorage, undo, loadHistory, setMode, currentMode } = useAppStore();
-  const addToast = useToastStore(s => s.addToast);
+  
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const activeTab = useAppStore(s => s.formData.activeTab);
@@ -50,7 +50,7 @@ export default function Index() {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { 
         e.preventDefault(); 
         const r = undo(); 
-        if (r) addToast('Rolo restaurado', 'ok'); 
+        if (r) toast.success('Rolo restaurado'); 
       }
       
       if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !isTyping) {
@@ -70,7 +70,7 @@ export default function Index() {
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [undo, addToast, configOpen, shortcutsOpen]);
+  }, [undo, configOpen, shortcutsOpen]);
 
   const handleTabChange = (tab: AppTab) => {
     setActiveTab(tab);
@@ -112,7 +112,7 @@ export default function Index() {
         </div>
       </div>
 
-      <ToastContainer />
+      
       <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
       <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </SidebarProvider>
