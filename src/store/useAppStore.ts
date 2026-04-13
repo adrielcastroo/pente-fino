@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Registro {
@@ -136,7 +137,7 @@ function save(registros: Registro[]) {
   if (saveTimeout) clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch {}
-  }, 500);
+  }, 1000); // Aumentado para 1s para melhor performance
 }
 
 export function formatML(v: number): string {
@@ -224,104 +225,65 @@ const INITIAL_FORM_DATA: AppState['formData'] = {
   activeTab: 'inicio',
 };
 
-export const useAppStore = create<AppState>((set, get) => ({
-  registros: [],
-  undoStack: [],
-  currentMode: (localStorage.getItem('cft4_mode') as any) || 'manual',
-  processo: localStorage.getItem('cft4_processo') || '',
-  conferente: localStorage.getItem('cft4_conferente') || '',
-  searchQuery: localStorage.getItem('cft4_searchQuery') || '',
-  sortBy: localStorage.getItem('cft4_sortBy') || '',
-  history: [],
-  sessionStartedAt: localStorage.getItem(SESSION_START_KEY) || null,
-  lockProcesso: localStorage.getItem('cft4_lockProcesso') === 'true',
-  lockedProcesso: localStorage.getItem('cft4_lockedProcesso') || '',
-  lockNf: localStorage.getItem('cft4_lockNf') === 'true',
-  lockedNf: localStorage.getItem('cft4_lockedNf') || '',
-  lockEndereco: localStorage.getItem('cft4_lockEndereco') === 'true',
-  lockedEndereco: localStorage.getItem('cft4_lockedEndereco') || '',
-  formData: {
-    ...INITIAL_FORM_DATA,
-    ...JSON.parse(localStorage.getItem('cft4_formData') || '{}'),
-  },
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      registros: [],
+      undoStack: [],
+      currentMode: 'manual',
+      processo: '',
+      conferente: '',
+      searchQuery: '',
+      sortBy: '',
+      history: [],
+      sessionStartedAt: null,
+      lockProcesso: false,
+      lockedProcesso: '',
+      lockNf: false,
+      lockedNf: '',
+      lockEndereco: false,
+      lockedEndereco: '',
+      formData: INITIAL_FORM_DATA,
 
-  setMode: (mode) => {
-    localStorage.setItem('cft4_mode', mode);
-    set({ currentMode: mode });
-  },
-  updateRegistro: (id, updates) => set(state => {
-    const newRegs = state.registros.map(r => r.id === id ? { ...r, ...updates, wasEdited: true, editedAt: new Date().toISOString() } : r);
-    save(newRegs);
-    return { registros: newRegs };
-  }),
-  setProcesso: (p) => {
-    localStorage.setItem('cft4_processo', p);
-    set({ processo: p });
-  },
-  setConferente: (c) => {
-    localStorage.setItem('cft4_conferente', c);
-    set({ conferente: c });
-  },
-  setSearchQuery: (q) => {
-    localStorage.setItem('cft4_searchQuery', q);
-    set({ searchQuery: q });
-  },
-  setSortBy: (s) => {
-    localStorage.setItem('cft4_sortBy', s);
-    set({ sortBy: s });
-  },
-  setLockProcesso: (lock) => {
-    localStorage.setItem('cft4_lockProcesso', String(lock));
-    set({ lockProcesso: lock });
-  },
-  setLockedProcesso: (p) => {
-    localStorage.setItem('cft4_lockedProcesso', p);
-    set({ lockedProcesso: p });
-  },
-  setLockNf: (lock) => {
-    localStorage.setItem('cft4_lockNf', String(lock));
-    set({ lockNf: lock });
-  },
-  setLockedNf: (n) => {
-    localStorage.setItem('cft4_lockedNf', n);
-    set({ lockedNf: n });
-  },
-  setLockEndereco: (lock) => {
-    localStorage.setItem('cft4_lockEndereco', String(lock));
-    set({ lockEndereco: lock });
-  },
-  setLockedEndereco: (e) => {
-    localStorage.setItem('cft4_lockedEndereco', e);
-    set({ lockedEndereco: e });
-  },
-  setFormData: (updates) => set(state => {
-    const newData = { ...state.formData, ...updates };
-    localStorage.setItem('cft4_formData', JSON.stringify(newData));
-    return { formData: newData };
-  }),
-  resetFormData: () => {
-    const newData = { ...INITIAL_FORM_DATA };
-    // Preservar valores travados se necessário
-    const state = get();
-    if (state.lockNf) newData.nf = state.lockedNf;
-    if (state.lockEndereco) newData.endereco = state.lockedEndereco;
-    
-    localStorage.setItem('cft4_formData', JSON.stringify(newData));
-    set({ formData: newData });
-  },
-  resetMotorFormData: () => {
-    const state = get();
-    const newData = { 
-      ...state.formData,
-      motorModelo: '',
-      motorNf: '',
-      motorSerie: '',
-      motorTemCaixa: false,
-      motorCaixaNum: '1',
-    };
-    localStorage.setItem('cft4_formData', JSON.stringify(newData));
-    set({ formData: newData });
-  },
+      setMode: (mode) => set({ currentMode: mode }),
+      updateRegistro: (id, updates) => set(state => {
+        const newRegs = state.registros.map(r => r.id === id ? { ...r, ...updates, wasEdited: true, editedAt: new Date().toISOString() } : r);
+        save(newRegs);
+        return { registros: newRegs };
+      }),
+      setProcesso: (p) => set({ processo: p }),
+      setConferente: (c) => set({ conferente: c }),
+      setSearchQuery: (q) => set({ searchQuery: q }),
+      setSortBy: (s) => set({ sortBy: s }),
+      setLockProcesso: (lock) => set({ lockProcesso: lock }),
+      setLockedProcesso: (p) => set({ lockedProcesso: p }),
+      setLockNf: (lock) => set({ lockNf: lock }),
+      setLockedNf: (n) => set({ lockedNf: n }),
+      setLockEndereco: (lock) => set({ lockEndereco: lock }),
+      setLockedEndereco: (e) => set({ lockedEndereco: e }),
+      setFormData: (updates) => set(state => ({ formData: { ...state.formData, ...updates } })),
+      resetFormData: () => {
+        const state = get();
+        const newData = { ...INITIAL_FORM_DATA };
+        if (state.lockNf) newData.nf = state.lockedNf;
+        if (state.lockEndereco) newData.endereco = state.lockedEndereco;
+        set({ formData: newData });
+      },
+      resetMotorFormData: () => {
+        const state = get();
+        set({ 
+          formData: { 
+            ...state.formData,
+            motorModelo: '',
+            motorNf: '',
+            motorSerie: '',
+            motorTemCaixa: false,
+            motorCaixaNum: '1',
+          }
+        });
+      },
+...
+
 
   addRegistro: (reg) => set(state => {
     const newRegs = [...state.registros, reg];
@@ -641,13 +603,24 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  loadFromStorage: () => {
-    try {
-      const d = localStorage.getItem(STORAGE_KEY);
-      if (d) {
-        const registros: Registro[] = JSON.parse(d);
-        set({ registros });
-      }
-    } catch {}
-  },
-}));
+    },
+    {
+      name: 'cft4-storage',
+      partialize: (state) => ({
+        currentMode: state.currentMode,
+        processo: state.processo,
+        conferente: state.conferente,
+        searchQuery: state.searchQuery,
+        sortBy: state.sortBy,
+        sessionStartedAt: state.sessionStartedAt,
+        lockProcesso: state.lockProcesso,
+        lockedProcesso: state.lockedProcesso,
+        lockNf: state.lockNf,
+        lockedNf: state.lockedNf,
+        lockEndereco: state.lockEndereco,
+        lockedEndereco: state.lockedEndereco,
+        formData: state.formData,
+      }),
+    }
+  )
+);
