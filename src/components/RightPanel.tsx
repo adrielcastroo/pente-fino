@@ -62,7 +62,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
               <Copy className="w-3.5 h-3.5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Copiar Lote Sistema</TooltipContent>
+           <TooltipContent>Copiar Lote Sistema</TooltipContent>
         </Tooltip>
         
         <Tooltip>
