@@ -616,7 +616,7 @@ export default function LeftPanel() {
         {isDiversos && (
           <div className="space-y-3">
             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 opacity-60">Selecione o Tipo</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
                 <button
                   key={tipo}
@@ -637,7 +637,7 @@ export default function LeftPanel() {
         {isMadeira && (
           <div className="space-y-3">
             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 opacity-60">Subtipo de Material</div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
@@ -1003,11 +1003,11 @@ export default function LeftPanel() {
         </div>
 
         {/* Computed Preview Card */}
-        <div className="p-6 rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000">
+        <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000 hidden xs:block">
              <Package className="w-32 h-32" />
           </div>
-          <div className="grid grid-cols-2 gap-8 relative z-10">
+          <div className="grid grid-cols-2 gap-4 sm:gap-8 relative z-10">
             {isMadeira ? (
               <>
                 <div className="space-y-1">
