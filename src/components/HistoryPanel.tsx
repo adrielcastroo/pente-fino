@@ -235,75 +235,54 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="border border-border/60 rounded-[1.5rem] overflow-hidden bg-card/40 backdrop-blur-md shadow-xl shadow-black/5 hover:border-primary/20 transition-all duration-300"
+      className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-md shadow-lg shadow-black/5 hover:border-primary/20 transition-all duration-300"
     >
-      <div className="flex items-center group/header">
-        <button onClick={() => setOpen(!open)} className="flex-1 px-6 py-4 flex items-center gap-4 hover:bg-muted/30 transition-all text-left">
-          <div className={`p-3 rounded-2xl transition-all duration-500 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
-            <FolderOpen className="w-5 h-5" />
+      <div className="group/header">
+        <button onClick={() => setOpen(!open)} className="w-full px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
+          <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
+            <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-base font-black tracking-tight truncate">{folderName}</span>
-              <div className="flex gap-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="text-sm sm:text-base font-black tracking-tight truncate">{folderName}</span>
+              <div className="flex gap-1 flex-wrap">
                 {modeBadges.map(b => (
-                  <Badge key={b} variant="secondary" className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/80 border-primary/10">{b}</Badge>
+                  <Badge key={b} variant="secondary" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-0.5 bg-primary/5 text-primary/80 border-primary/10">{b}</Badge>
                 ))}
               </div>
             </div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground font-bold flex items-center gap-2.5 mt-1 uppercase tracking-widest opacity-70">
-              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDate(conf.date)}</span>
-              <span className="h-3 w-[1px] bg-border" />
-              <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {getSmartCount(conf)}</span>
-              <span className="h-3 w-[1px] bg-border" />
-              <span className="text-primary/90">{formatML(totalML)}</span>
+            <div className="text-[9px] sm:text-xs text-muted-foreground font-bold flex items-center gap-1.5 sm:gap-2.5 mt-1 flex-wrap">
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDate(conf.date)}</span>
+              <span className="hidden xs:block h-3 w-[1px] bg-border" />
+              <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
+              {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
               {conf.conferente && (
-                <>
-                  <span className="h-3 w-[1px] bg-border" />
-                  <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> {conf.conferente}</span>
-                </>
-              )}
-              {startTime && endTime && (
-                <>
-                  <span className="h-3 w-[1px] bg-border" />
-                  <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {startTime} → {endTime}</span>
-                </>
+                <span className="hidden sm:flex items-center gap-1"><User className="w-3 h-3 shrink-0" /> {conf.conferente}</span>
               )}
             </div>
           </div>
-          <div className={`p-2 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
-             <ChevronDown className="w-5 h-5 text-muted-foreground/50" />
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-primary/10 text-primary transition-all"
+            >
+              <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-destructive/10 text-destructive transition-all"
+            >
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
+            <div className={`p-1.5 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
+               <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
+            </div>
           </div>
         </button>
-        <div className="flex items-center gap-2 mr-4 ml-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-                className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary transition-all"
-              >
-                <FileSpreadsheet className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Exportar para Excel</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                className="h-10 w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all"
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Excluir Conferência</TooltipContent>
-          </Tooltip>
-        </div>
       </div>
       <AnimatePresence>
         {open && (
@@ -434,22 +413,22 @@ export default function HistoryPanel() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background/50">
-       <div className="px-6 py-6 border-b border-border/40 bg-card/60 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-              <FolderOpen className="w-8 h-8 text-primary" />
-              Histórico de <span className="text-primary">Conferências</span>
+       <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-border/40 bg-card/60 backdrop-blur-md flex flex-col gap-4">
+          <div className="space-y-0.5">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 sm:gap-3">
+              <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
+              <span>Histórico de <span className="text-primary">Conferências</span></span>
             </h1>
-            <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest opacity-60 ml-11">Arquivo Digital Operacional</p>
+            <p className="text-muted-foreground text-[10px] sm:text-sm font-medium uppercase tracking-widest opacity-60 ml-8 sm:ml-11">Arquivo Digital Operacional</p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto max-w-md">
+          <div className="flex items-center gap-2 sm:gap-3 w-full">
             <div className="relative flex-1 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
               <input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
-                className="w-full h-11 pl-11 pr-4 rounded-2xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30" 
+                className="w-full h-10 sm:h-11 pl-9 sm:pl-11 pr-9 rounded-xl sm:rounded-2xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30" 
                 placeholder="Pesquisar histórico..." 
                 autoComplete="off" 
               />
@@ -460,25 +439,20 @@ export default function HistoryPanel() {
               )}
             </div>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setConfirmClearAll(true)}
-                  className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
-                  disabled={history.length === 0}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Limpar Histórico Geral</TooltipContent>
-            </Tooltip>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => setConfirmClearAll(true)}
+              className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 shrink-0"
+              disabled={history.length === 0}
+            >
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
           </div>
        </div>
 
-       <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
-          <div className="max-w-4xl mx-auto space-y-6">
+       <div className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 custom-scrollbar">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {filtered.map(conf => (
               <ConferenceCard 
                 key={conf.id} 
