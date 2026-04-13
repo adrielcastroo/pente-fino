@@ -1,9 +1,13 @@
 import { useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+
 
 type SubMode = 'motor' | 'controle';
 
