@@ -82,20 +82,20 @@ export default function LeftPanel() {
   const manualLarguraRef = useRef<HTMLInputElement>(null);
 
   // Helper setters for compatibility with existing code
-  const setItem = (val: string) => setFormData({ item: val });
-  const setNf = (val: string) => setFormData({ nf: val });
-  const setM2 = (val: string) => setFormData({ m2: val });
-  const setLote = (val: string) => setFormData({ lote: val });
-  const setEndereco = (val: string) => setFormData({ endereco: val });
-  const setAiLargura = (val: string) => setFormData({ aiLargura: val });
-  const setAiMLinear = (val: string) => setFormData({ aiMLinear: val });
-  const setDiversosTipo = (val: FormData['diversosTipo']) => setFormData({ diversosTipo: val });
-  const setDiversosMLinear = (val: string) => setFormData({ diversosMLinear: val });
-  const setManualLargura = (val: string) => setFormData({ manualLargura: val });
-  const setCoulisseMetragem = (val: 'm2' | 'mlinear') => setFormData({ coulisseMetragem: val });
-  const setLockMetragem = (val: boolean) => setFormData({ lockMetragem: val });
-  const setMadeiraTipo = (val: FormData['madeiraTipo']) => setFormData({ madeiraTipo: val });
-  const setQuantidade = (val: string) => setFormData({ quantidade: val });
+  const setItem = useCallback((val: string) => setFormData({ item: val }), [setFormData]);
+  const setNf = useCallback((val: string) => setFormData({ nf: val }), [setFormData]);
+  const setM2 = useCallback((val: string) => setFormData({ m2: val }), [setFormData]);
+  const setLote = useCallback((val: string) => setFormData({ lote: val }), [setFormData]);
+  const setEndereco = useCallback((val: string) => setFormData({ endereco: val }), [setFormData]);
+  const setAiLargura = useCallback((val: string) => setFormData({ aiLargura: val }), [setFormData]);
+  const setAiMLinear = useCallback((val: string) => setFormData({ aiMLinear: val }), [setFormData]);
+  const setDiversosTipo = useCallback((val: FormData['diversosTipo']) => setFormData({ diversosTipo: val }), [setFormData]);
+  const setDiversosMLinear = useCallback((val: string) => setFormData({ diversosMLinear: val }), [setFormData]);
+  const setManualLargura = useCallback((val: string) => setFormData({ manualLargura: val }), [setFormData]);
+  const setCoulisseMetragem = useCallback((val: 'm2' | 'mlinear') => setFormData({ coulisseMetragem: val }), [setFormData]);
+  const setLockMetragem = useCallback((val: boolean) => setFormData({ lockMetragem: val }), [setFormData]);
+  const setMadeiraTipo = useCallback((val: FormData['madeiraTipo']) => setFormData({ madeiraTipo: val }), [setFormData]);
+  const setQuantidade = useCallback((val: string) => setFormData({ quantidade: val }), [setFormData]);
 
   const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
   const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
@@ -297,15 +297,15 @@ export default function LeftPanel() {
     }
   };
 
-  const handleEnderecoChange = (val: string) => {
+  const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
     setEndereco(formatted);
     validateEndereco(formatted);
     if (lockEndereco) setLockedEndereco(formatted);
-  };
+  }, [lockEndereco, setEndereco, setLockedEndereco]);
 
-  const toggleLockEndereco = () => {
+  const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
       setLockedEndereco(endereco);
       setLockEndereco(true);
@@ -314,27 +314,25 @@ export default function LeftPanel() {
       setLockEndereco(false);
       toast.success('Endereço destravado');
     }
-  };
+  }, [lockEndereco, endereco, setLockedEndereco, setLockEndereco]);
 
-  const handleProcessoChange = (val: string) => {
+  const handleProcessoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     setProcesso(normalized);
     if (lockProcesso) setLockedProcesso(normalized);
-  };
+  }, [lockProcesso, setProcesso, setLockedProcesso]);
 
-  const handleNfChange = (val: string) => {
+  const handleNfChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     setNf(normalized);
     if (lockNf) setLockedNf(normalized);
-  };
+  }, [lockNf, setNf, setLockedNf]);
 
-  const normalizeScannerInput = (val: string) => val.replace(/[''`]/g, '-');
+  const handleItemChange = useCallback((val: string) => {
+    setItem(val.replace(/[''`]/g, '-'));
+  }, [setItem]);
 
-  const handleItemChange = (val: string) => {
-    setItem(normalizeScannerInput(val));
-  };
-
-  const toggleLockProcesso = () => {
+  const toggleLockProcesso = useCallback(() => {
     if (!lockProcesso) {
       setLockedProcesso(processo);
       setLockProcesso(true);
@@ -343,9 +341,9 @@ export default function LeftPanel() {
       setLockProcesso(false);
       toast.success('PROC destravado');
     }
-  };
+  }, [lockProcesso, processo, setLockedProcesso, setLockProcesso]);
 
-  const toggleLockNf = () => {
+  const toggleLockNf = useCallback(() => {
     if (!lockNf) {
       setLockedNf(nf);
       setLockNf(true);
@@ -354,7 +352,7 @@ export default function LeftPanel() {
       setLockNf(false);
       toast.success('NF destravada');
     }
-  };
+  }, [lockNf, nf, setLockedNf, setLockNf]);
 
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
