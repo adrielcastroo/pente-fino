@@ -146,35 +146,42 @@ export default function DashboardPage() {
     return () => { isMounted = false; };
   }, []);
 
-  const exportDashboardData = () => {
+  const exportDashboardData = useCallback(() => {
     if (!history.length) {
       addToast('Nenhum dado histórico para exportar.', 'warn');
       return;
     }
 
-    const data = history.flatMap(c => 
-      c.registros.map(r => ({
-        Conferente: c.conferente || 'Desconhecido',
-        Data: c.finishedAt ? new Date(c.finishedAt).toLocaleDateString() : '—',
-        Hora: c.finishedAt ? new Date(c.finishedAt).toLocaleTimeString() : '—',
-        Item: r.item || '',
-        NF: r.nf || '',
-        Processo: r.processo || '',
-        Categoria: r.modoOrigem || '',
-        Tipo: r.tipoTecido || '',
-        ML: r.mLinear || 0,
-        M2: r.m2 || 0,
-        Largura: r.largura || 0,
-        Quantidade: r.quantidade || 0
-      }))
-    );
+    const exportRows: any[] = [];
+    for (const conf of history) {
+      const conferente = conf.conferente || 'Desconhecido';
+      const dataStr = conf.finishedAt ? new Date(conf.finishedAt).toLocaleDateString() : '—';
+      const horaStr = conf.finishedAt ? new Date(conf.finishedAt).toLocaleTimeString() : '—';
+      
+      for (const r of conf.registros) {
+        exportRows.push({
+          Conferente: conferente,
+          Data: dataStr,
+          Hora: horaStr,
+          Item: r.item || '',
+          NF: r.nf || '',
+          Processo: r.processo || '',
+          Categoria: r.modoOrigem || '',
+          Tipo: r.tipoTecido || '',
+          ML: r.mLinear || 0,
+          M2: r.m2 || 0,
+          Largura: r.largura || 0,
+          Quantidade: r.quantidade || 0
+        });
+      }
+    }
 
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(exportRows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Histórico_Geral');
     XLSX.writeFile(wb, `dashboard_export_${new Date().toISOString().split('T')[0]}.xlsx`);
     addToast('Dados do dashboard exportados com sucesso!', 'ok');
-  };
+  }, [history, addToast]);
 
   const stockTotals = useMemo(() => {
     return stockData.reduce(
