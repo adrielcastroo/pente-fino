@@ -83,7 +83,7 @@ export default function SaidaPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="p-4 sm:p-10 lg:p-16 max-w-[1600px] mx-auto space-y-10 sm:space-y-16"
+      className="p-3 sm:p-10 lg:p-16 max-w-[1600px] mx-auto space-y-6 sm:space-y-16"
     >
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
         <div className="text-left space-y-3">

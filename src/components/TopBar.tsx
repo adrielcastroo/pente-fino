@@ -72,7 +72,7 @@ export default function TopBar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-500">
       <div className="flex h-14 sm:h-20 items-center gap-1.5 sm:gap-4 px-3 sm:px-8 max-w-[1800px] mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
           <SidebarTrigger className="h-9 w-9 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
           <div className="hidden xs:flex flex-col">
             <h2 className="text-[10px] sm:text-xs font-black tracking-[0.2em] leading-none uppercase text-muted-foreground/60">Painel Operacional</h2>
@@ -108,7 +108,7 @@ export default function TopBar() {
                 <Button 
                   onClick={exportExcel}
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-3 sm:px-8 h-10 sm:h-14 rounded-2xl shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-2 sm:gap-3 text-xs sm:text-base group/btn relative overflow-hidden"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2.5 sm:px-8 h-9 sm:h-14 rounded-xl sm:rounded-2xl shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-1.5 sm:gap-3 text-[10px] sm:text-base group/btn relative overflow-hidden shrink-0"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                   <Download className="w-4 h-4 sm:w-6 sm:h-6 animate-bounce-subtle relative z-10" />

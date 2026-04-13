@@ -163,7 +163,7 @@ export default function EstoquePage() {
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
-      className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 min-w-0"
+      className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 min-w-0"
     >
       <div className="space-y-1.5">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter">Estoque</h1>
@@ -200,7 +200,7 @@ export default function EstoquePage() {
             <div className="min-w-full sm:min-w-[600px] space-y-2">
                 {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
                   <div key={nivel} className="flex gap-2">
-                    <div className="w-10 sm:w-12 text-[8px] sm:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/20 rounded-lg">N{String(nivel).padStart(2, '0')}</div>
+                    <div className="w-8 sm:w-12 text-[7px] sm:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/20 rounded-lg shrink-0">N{String(nivel).padStart(2, '0')}</div>
                     {config.cols.map(col => {
                         const items = cellMap[`${col}-${nivel}`] || [];
                         return (
