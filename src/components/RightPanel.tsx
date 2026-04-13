@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePerformance } from '@/hooks/use-performance';
 // XLSX import removed for performance (moved to dynamic utility)
 import { Search, Download, Trash2, Undo2, Copy, X, Package, Filter, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
