@@ -58,17 +58,19 @@ export default function SaidaPage() {
     loadSaidas();
   }, []);
 
+  const searchableSaidas = useMemo(() => {
+    return saidas.map(s => ({
+      ...s,
+      searchKey: `${s.item} ${s.proc || ''} ${s.lote || ''} ${s.lote_sistema || ''} ${s.conferente_saida || ''} ${s.conferente_entrada || ''}`.toLowerCase()
+    }));
+  }, [saidas]);
+
   const filteredSaidas = useMemo(() => {
-    const q = search.toLowerCase();
-    return saidas.filter(s => 
-      s.item?.toLowerCase().includes(q) ||
-      s.proc?.toLowerCase().includes(q) ||
-      s.lote?.toLowerCase().includes(q) ||
-      s.lote_sistema?.toLowerCase().includes(q) ||
-      s.conferente_saida?.toLowerCase().includes(q) ||
-      s.conferente_entrada?.toLowerCase().includes(q)
-    );
-  }, [search, saidas]);
+    const q = search.toLowerCase().trim();
+    if (!q) return searchableSaidas;
+    return searchableSaidas.filter(s => s.searchKey.includes(q));
+  }, [search, searchableSaidas]);
+
 
   return (
     <motion.div
