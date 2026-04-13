@@ -297,15 +297,15 @@ export default function LeftPanel() {
     }
   };
 
-  const handleEnderecoChange = (val: string) => {
+  const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
     setEndereco(formatted);
     validateEndereco(formatted);
     if (lockEndereco) setLockedEndereco(formatted);
-  };
+  }, [lockEndereco, setEndereco, setLockedEndereco]);
 
-  const toggleLockEndereco = () => {
+  const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
       setLockedEndereco(endereco);
       setLockEndereco(true);
@@ -314,27 +314,25 @@ export default function LeftPanel() {
       setLockEndereco(false);
       toast.success('Endereço destravado');
     }
-  };
+  }, [lockEndereco, endereco, setLockedEndereco, setLockEndereco]);
 
-  const handleProcessoChange = (val: string) => {
+  const handleProcessoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     setProcesso(normalized);
     if (lockProcesso) setLockedProcesso(normalized);
-  };
+  }, [lockProcesso, setProcesso, setLockedProcesso]);
 
-  const handleNfChange = (val: string) => {
+  const handleNfChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     setNf(normalized);
     if (lockNf) setLockedNf(normalized);
-  };
+  }, [lockNf, setNf, setLockedNf]);
 
-  const normalizeScannerInput = (val: string) => val.replace(/[''`]/g, '-');
+  const handleItemChange = useCallback((val: string) => {
+    setItem(val.replace(/[''`]/g, '-'));
+  }, [setItem]);
 
-  const handleItemChange = (val: string) => {
-    setItem(normalizeScannerInput(val));
-  };
-
-  const toggleLockProcesso = () => {
+  const toggleLockProcesso = useCallback(() => {
     if (!lockProcesso) {
       setLockedProcesso(processo);
       setLockProcesso(true);
@@ -343,9 +341,9 @@ export default function LeftPanel() {
       setLockProcesso(false);
       toast.success('PROC destravado');
     }
-  };
+  }, [lockProcesso, processo, setLockedProcesso, setLockProcesso]);
 
-  const toggleLockNf = () => {
+  const toggleLockNf = useCallback(() => {
     if (!lockNf) {
       setLockedNf(nf);
       setLockNf(true);
@@ -354,7 +352,7 @@ export default function LeftPanel() {
       setLockNf(false);
       toast.success('NF destravada');
     }
-  };
+  }, [lockNf, nf, setLockedNf, setLockNf]);
 
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
