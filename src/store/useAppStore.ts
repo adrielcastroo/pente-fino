@@ -323,7 +323,7 @@ export const useAppStore = create<AppState>()(
                 estoqueRows.push({
                   estrutura, coluna, nivel, posicao: pos, status: 'ocupado', registro_id: r.id,
                   item: r.item, proc: original?.processo || state.processo || '', m2: r.m2, largura: r.largura,
-                  m_linear: r.mLinear, lote: r.lote, endereco: r.endereco, lote_sistema: r.lote_sistema,
+                  m_linear: r.m_linear, lote: r.lote, endereco: r.endereco, lote_sistema: r.lote_sistema,
                   conferente_saida: '', data_registro: new Date().toISOString(),
                 });
               }
