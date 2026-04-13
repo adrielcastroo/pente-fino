@@ -79,7 +79,7 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full flex-col lg:flex-row bg-background/30">
+      <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background/30 overflow-hidden">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
