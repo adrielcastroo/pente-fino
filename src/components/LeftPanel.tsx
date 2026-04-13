@@ -47,10 +47,7 @@ export default function LeftPanel() {
   const lockedEndereco = useAppStore(s => s.lockedEndereco);
   const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
   const formData = useAppStore(s => s.formData);
-  const setFormData = useAppStore(s => s.setFormData);
-  const resetFormData = useAppStore(s => s.resetFormData);
-  
-
+  const { isLow } = usePerformance();
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
