@@ -158,35 +158,104 @@ export default function SettingsPage() {
                 
                 {activeCategory === 'profile' && (
                   <>
-                    <Card className="border-border/40 shadow-sm">
-                      <CardHeader>
-                        <CardTitle className="text-base">Informações Pessoais</CardTitle>
-                        <CardDescription>Estes dados serão visíveis para outros membros da equipe.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Nome Completo</Label>
-                            <Input id="name" defaultValue="Usuário Administrador" onChange={() => setHasUnsavedChanges(true)} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <Card className="md:col-span-2 border-border/40 shadow-sm overflow-hidden">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-base">Informações Pessoais</CardTitle>
+                          <CardDescription>Estes dados serão visíveis para outros membros da equipe.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center pb-2">
+                             <div className="relative group">
+                                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-dashed border-primary/30 group-hover:border-primary transition-colors overflow-hidden">
+                                   <User className="w-8 h-8 text-primary/40 group-hover:text-primary transition-colors" />
+                                </div>
+                                <button className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-background border border-border shadow-sm hover:bg-muted transition-colors">
+                                   <Palette className="w-3.5 h-3.5" />
+                                </button>
+                             </div>
+                             <div className="space-y-1">
+                                <h3 className="font-semibold text-sm">Foto de Perfil</h3>
+                                <p className="text-xs text-muted-foreground">JPG, GIF ou PNG. Tamanho máximo de 2MB.</p>
+                                <div className="flex gap-2 mt-2">
+                                   <Button variant="outline" size="xs" className="text-[10px] h-7">Upload</Button>
+                                   <Button variant="ghost" size="xs" className="text-[10px] h-7 text-destructive">Remover</Button>
+                                </div>
+                             </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome Completo</Label>
+                              <Input id="name" defaultValue="Usuário Administrador" onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
+                              <Input id="email" type="email" defaultValue="admin@pentefino.com.br" onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
+                            </div>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" defaultValue="admin@pentefino.com.br" onChange={() => setHasUnsavedChanges(true)} />
+                            <Label htmlFor="bio" className="text-xs font-bold uppercase tracking-wider opacity-70">Bio</Label>
+                            <Input id="bio" placeholder="Uma breve descrição sobre você..." onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
                           </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="bio">Bio</Label>
-                          <Input id="bio" placeholder="Uma breve descrição sobre você..." onChange={() => setHasUnsavedChanges(true)} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-border/40 shadow-sm border-destructive/20">
-                      <CardHeader>
-                        <CardTitle className="text-base text-destructive">Zona de Perigo</CardTitle>
-                        <CardDescription>Ações irreversíveis que afetam sua conta.</CardDescription>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-border/40 shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
+                         <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Uso do Plano</CardTitle>
+                         </CardHeader>
+                         <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                               <div className="flex items-center justify-between text-xs">
+                                  <span className="font-medium">Registros este mês</span>
+                                  <span className="text-muted-foreground font-bold">1.240 / 5.000</span>
+                               </div>
+                               <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                                  <motion.div 
+                                     initial={{ width: 0 }}
+                                     animate={{ width: '24.8%' }}
+                                     transition={{ duration: 1, ease: "easeOut" }}
+                                     className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" 
+                                  />
+                               </div>
+                            </div>
+
+                            <div className="space-y-2">
+                               <div className="flex items-center justify-between text-xs">
+                                  <span className="font-medium">Armazenamento</span>
+                                  <span className="text-muted-foreground font-bold">450 MB / 2 GB</span>
+                               </div>
+                               <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                                  <motion.div 
+                                     initial={{ width: 0 }}
+                                     animate={{ width: '22.5%' }}
+                                     transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                                     className="h-full bg-gradient-to-r from-primary to-blue-500" 
+                                  />
+                               </div>
+                            </div>
+
+                            <Separator className="bg-primary/10" />
+
+                            <div className="pt-2 text-center">
+                               <p className="text-[10px] text-muted-foreground leading-relaxed">Você está no plano <b>Pro Mensal</b>.<br/>Próxima renovação em 12 de Outubro.</p>
+                               <Button variant="link" size="sm" className="text-primary text-[11px] h-auto p-0 mt-2">Ver faturas</Button>
+                            </div>
+                         </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card className="border-border/40 shadow-sm border-destructive/20 bg-destructive/5">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base text-destructive flex items-center gap-2">
+                           <Shield className="w-4 h-4" />
+                           Zona de Perigo
+                        </CardTitle>
+                        <CardDescription>Ações irreversíveis que afetam permanentemente sua conta e dados.</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <Button variant="destructive" size="sm">Excluir minha conta</Button>
+                        <Button variant="destructive" size="sm" className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-all border border-destructive/20">Excluir minha conta</Button>
                       </CardContent>
                     </Card>
                   </>
