@@ -538,10 +538,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       console.error('Error loading history:', e);
     }
   },
-    } catch (e) {
-      console.error('Error loading history:', e);
-    }
-  },
 
   deleteConference: async (id: string) => {
     try {
