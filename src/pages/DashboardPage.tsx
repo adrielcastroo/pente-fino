@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAppStore, type Conference } from '@/store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
+import { Conference } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Layers3, BarChart3, TrendingUp, Download, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';

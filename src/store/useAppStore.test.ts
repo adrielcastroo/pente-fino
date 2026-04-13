@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { formatML, extractLarguraFromItem, generateLoteSistema, type Registro } from './useAppStore';
+import { formatML, extractLarguraFromItem, generateLoteSistema } from '@/lib/app-utils';
+import { Registro } from '@/types';
 
 describe('useAppStore utilities', () => {
   describe('formatML', () => {

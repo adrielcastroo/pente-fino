@@ -1,5 +1,6 @@
 import { useState, useMemo, memo, useCallback } from 'react';
-import { useAppStore, formatML } from '@/store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
+import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
