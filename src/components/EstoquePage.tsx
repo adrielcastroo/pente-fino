@@ -60,12 +60,10 @@ function formatDateBR(iso: string | null) {
 }
 
 export default function EstoquePage() {
-  const { formData, setFormData } = useAppStore();
-  const {
-    estoqueActiveTec: activeTec,
-    estoqueSearch: search,
-    estoqueHighlightStatus: highlightStatus,
-  } = formData;
+  const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
+  const search = useAppStore(s => s.formData.estoqueSearch);
+  const highlightStatus = useAppStore(s => s.formData.estoqueHighlightStatus);
+  const setFormData = useAppStore(s => s.setFormData);
 
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
   const setSearch = (val: string) => setFormData({ estoqueSearch: val });
