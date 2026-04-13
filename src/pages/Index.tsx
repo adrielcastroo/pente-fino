@@ -63,7 +63,7 @@ const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolea
 export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);
   const { activeTab, handleTabChange } = useAppNavigation();
-  const [configOpen, setConfigOpen] = useState(false);
+  // configOpen removed
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
