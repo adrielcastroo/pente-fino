@@ -99,7 +99,7 @@ export default function Index() {
               >
                 <Suspense fallback={<PageSkeleton />}>
                   <div className="p-2 sm:p-6 lg:p-8 h-full">
-                    <TabRenderer activeTab={activeTab} />
+                    <TabRenderer activeTab={activeTab} isWide={true} />
                   </div>
                 </Suspense>
               </motion.div>
