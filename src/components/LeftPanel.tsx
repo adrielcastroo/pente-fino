@@ -1007,7 +1007,7 @@ export default function LeftPanel() {
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000 hidden xs:block">
              <Package className="w-32 h-32" />
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:gap-8 relative z-10">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-8 relative z-10">
             {isMadeira ? (
               <>
                 <div className="space-y-1">
