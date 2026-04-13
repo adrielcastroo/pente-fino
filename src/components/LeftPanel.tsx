@@ -771,404 +771,349 @@ export default function LeftPanel() {
             </motion.div>
           )}
         </AnimatePresence>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Form Fields */}
-        <div className="space-y-2.5">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <ScanBarcode className="w-3 h-3" /> {isMadeira ? 'Dados da Madeira' : 'Dados do Rolo'}
+        <div className="space-y-6">
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 opacity-60 ml-1">
+            <ScanBarcode className="w-3.5 h-3.5" /> {isMadeira ? 'Especificações da Madeira' : 'Especificações do Material'}
           </div>
 
-          {/* PROC field — Coulisse, IA, and Celular */}
-          {requiresProcesso && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">PROC</label>
-                <button
-                  onClick={toggleLockProcesso}
-                  className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
-                    lockProcesso
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* PROC field — Coulisse, IA, and Celular */}
+            {requiresProcesso && (
+              <div className="space-y-2 sm:col-span-2">
+                <div className="flex items-center justify-between px-1">
+                  <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Processo (PROC)</label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleLockProcesso}
+                    className={`h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                      lockProcesso
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                        : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {lockProcesso ? <Lock className="w-3 h-3 mr-1.5" /> : <Unlock className="w-3 h-3 mr-1.5" />}
+                    {lockProcesso ? 'Travado' : 'Travar'}
+                  </Button>
+                </div>
+                <input
+                  id="proc-input"
+                  value={processo}
+                  onChange={e => handleProcessoChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, itemRef)}
+                  className={`w-full h-14 rounded-2xl border-2 px-4 text-sm font-mono font-bold transition-all ${
+                    lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-card/40 border-border/40 focus:border-primary/50 focus:bg-background'
                   }`}
-                  title={lockProcesso ? 'Destravar PROC' : 'Travar PROC'}
-                >
-                  {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                  {lockProcesso ? 'Travado' : 'Travar'}
-                </button>
+                  placeholder="Número do Processo..."
+                  autoComplete="off"
+                  readOnly={lockProcesso && !!lockedProcesso}
+                />
               </div>
-              <input
-                value={processo}
-                onChange={e => handleProcessoChange(e.target.value)}
-                onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                className={`w-full border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:ring-2 transition-all ${
-                  lockProcesso ? 'bg-primary/5 border-primary/30' : 'border-border'
-                } focus:border-primary focus:ring-primary/10`}
-                placeholder="Processo *"
-                autoComplete="off"
-                readOnly={lockProcesso && !!lockedProcesso}
-              />
-            </div>
-          )}
-
-          {/* Item / Referência */}
-          <div>
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Item / Referência</label>
-            <input
-              ref={itemRef}
-              value={item}
-              onChange={e => handleItemChange(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-              className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono font-medium bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="SRC-3003-05-30-EB2" autoComplete="off"
-            />
-            {usesLarguraFromItem && largura > 0 && (
-              <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
             )}
-          </div>
 
-          {/* Coulisse: optional manual largura */}
-          {isCoulisse && (
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m) — opcional</label>
+            {/* Item / Referência */}
+            <div className="space-y-2 sm:col-span-2">
+              <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item / Referência</label>
               <input
-                ref={manualLarguraRef}
-                type="number" step="0.01" value={manualLargura}
-                onChange={e => setManualLargura(e.target.value)}
-                onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                placeholder="2.80" autoComplete="off" inputMode="decimal"
+                id="item-input"
+                ref={itemRef}
+                value={item}
+                onChange={e => handleItemChange(e.target.value)}
+                onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
+                className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-mono font-bold focus:border-primary/50 focus:bg-background transition-all"
+                placeholder="Ex: SRC-3003-05-30..." 
+                autoComplete="off"
               />
-              {largura > 0 && (
-                <div className="text-[10px] text-primary mt-1 font-medium">Largura: {largura.toFixed(2)}m</div>
+              {usesLarguraFromItem && largura > 0 && (
+                <Badge variant="secondary" className="mt-1 ml-1 bg-primary/10 text-primary border-none font-bold">Largura Detectada: {largura.toFixed(2)}m</Badge>
               )}
             </div>
-          )}
 
-          {/* NF field — Diversos except Celular */}
-          {requiresNF && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">NF</label>
-                <button
-                  onClick={toggleLockNf}
-                  className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
-                    lockNf
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  title={lockNf ? 'Destravar NF' : 'Travar NF'}
-                >
-                  {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                  {lockNf ? 'Travado' : 'Travar'}
-                </button>
-              </div>
-              <input
-                ref={nfRef}
-                value={nf}
-                onChange={e => handleNfChange(e.target.value)}
-                onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
-                className={`w-full border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:ring-2 transition-all ${
-                  lockNf ? 'bg-primary/5 border-primary/30' : 'border-border'
-                } focus:border-primary focus:ring-primary/10`}
-                placeholder="Nota fiscal *"
-                autoComplete="off"
-                readOnly={lockNf && !!lockedNf}
-              />
-            </div>
-          )}
-
-          {/* Madeira: Quantidade field */}
-          {isMadeira && (
-            <>
-              <div>
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch (opcional)</label>
+            {/* Coulisse: optional manual largura */}
+            {isCoulisse && (
+              <div className="space-y-2 sm:col-span-2">
+                <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura (Opcional)</label>
                 <input
-                  ref={loteRef}
-                  value={lote}
-                  onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
-                  onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
-                  className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder="Código do lote" autoComplete="off"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Quantidade por caixa (padrão: {madeiraDefaults[madeiraTipo]})
-                </label>
-                <input
-                  ref={quantidadeRef}
-                  type="number" step="1" value={quantidade}
-                  onChange={e => setQuantidade(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, null)}
-                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
-                />
-              </div>
-            </>
-          )}
-
-          {/* AI mode: M Linear + Largura fields */}
-          {!isMadeira && isAI ? (
-            <>
-              <div>
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
-                <input
-                  ref={m2Ref}
-                  type="number" step="0.1" value={aiMLinear}
-                  onChange={e => setAiMLinear(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, larguraRef)}
-                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder="27.5" autoComplete="off" inputMode="decimal"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Largura (m)</label>
-                <input
-                  ref={larguraRef}
-                  type="number" step="0.01" value={aiLargura}
-                  onChange={e => setAiLargura(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-                  className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  id="largura-manual"
+                  ref={manualLarguraRef}
+                  type="number" step="0.01" value={manualLargura}
+                  onChange={e => setManualLargura(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                  className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
                   placeholder="2.80" autoComplete="off" inputMode="decimal"
                 />
               </div>
-            </>
-          ) : !isMadeira ? (
-            <>
-              {(isPVT || coulisseUsesMLinear) ? (
-                /* PVT or Coulisse M Linear mode: direct M Linear input */
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">M Linear</label>
-                  <input
-                    ref={m2Ref}
-                    type="number" step="0.1" value={diversosMLinear}
-                    onChange={e => setDiversosMLinear(e.target.value)}
-                    onKeyDown={e => handleFieldKeyDown(e, loteRef)}
-                    className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                    placeholder="27.5" autoComplete="off" inputMode="decimal"
-                  />
-                </div>
-              ) : (
-                /* Coulisse M², Rolo, Cortina, Celular: M² input with calculated M Linear */
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    {isCelular ? `M² (÷ ${isHC45 ? '3,66' : '3,05'} = M Linear)` : 'M² (Metro Quadrado)'}
-                  </label>
-                  <input
-                    ref={m2Ref}
-                    type="number" step="0.1" value={m2}
-                    onChange={e => setM2(e.target.value)}
-                    onKeyDown={e => handleFieldKeyDown(e, loteRef)}
-                    className="w-full border border-border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                    placeholder="76.9" autoComplete="off" inputMode="decimal"
-                  />
-                  {mLinear > 0 && (
-                    <div className="text-[10px] text-primary mt-1 font-medium">M Linear: {formatML(mLinear)}</div>
-                  )}{isCelular && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5">Largura fixa: {isHC45 ? '3,66' : '3,05'}m {isHC45 ? '(HC-45)' : ''}</div>
-                  )}
-                </div>
-              )}
+            )}
 
-              {/* Coulisse: measurement type toggle */}
-              {isCoulisse && (
+            {/* NF field — Diversos except Celular */}
+            {requiresNF && (
+              <div className="space-y-2 sm:col-span-2">
                 <div className="flex items-center justify-between px-1">
-                  <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
-                    <button
-                      onClick={() => setCoulisseMetragem('m2')}
-                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                        coulisseMetragem === 'm2'
-                          ? 'surface-bg text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      M² → M Linear
-                    </button>
-                    <button
-                      onClick={() => setCoulisseMetragem('mlinear')}
-                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                        coulisseMetragem === 'mlinear'
-                          ? 'surface-bg text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      M Linear direto
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setLockMetragem(!lockMetragem);
-                      toast.success(lockMetragem ? 'Metragem destravada' : 'Metragem travada');
-                    }}
-                    className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
-                      lockMetragem
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:text-foreground'
+                  <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nota Fiscal (NF)</label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleLockNf}
+                    className={`h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                      lockNf
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                        : 'text-muted-foreground hover:bg-muted'
                     }`}
-                    title={lockMetragem ? 'Destravar metragem' : 'Travar metragem'}
                   >
-                    {lockMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    {lockMetragem ? 'Travado' : 'Travar'}
-                  </button>
+                    {lockNf ? <Lock className="w-3 h-3 mr-1.5" /> : <Unlock className="w-3 h-3 mr-1.5" />}
+                    {lockNf ? 'Travado' : 'Travar'}
+                  </Button>
                 </div>
-              )}
-              <div>
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Lote / Batch</label>
                 <input
-                  ref={loteRef}
-                  value={lote}
-                  onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
-                  onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
-                  className="w-full border border-border rounded-lg px-3 py-3 text-sm font-mono bg-card outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-                  placeholder="Código do lote" autoComplete="off"
+                  id="nf-input"
+                  ref={nfRef}
+                  value={nf}
+                  onChange={e => handleNfChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
+                  className={`w-full h-14 rounded-2xl border-2 px-4 text-sm font-mono font-bold transition-all ${
+                    lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-card/40 border-border/40 focus:border-primary/50 focus:bg-background'
+                  }`}
+                  placeholder="Número da NF..."
+                  autoComplete="off"
+                  readOnly={lockNf && !!lockedNf}
                 />
               </div>
-            </>
-          ) : null}
+            )}
 
-          {/* Endereço */}
-          {requiresEndereco && <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Endereço</label>
-              <button
-                onClick={toggleLockEndereco}
-                className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
-                  lockEndereco
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                title={lockEndereco ? 'Destravar endereço' : 'Travar endereço'}
-              >
-                {lockEndereco ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                {lockEndereco ? 'Travado' : 'Travar'}
-              </button>
+            {/* Madeira: Lote + Qtd */}
+            {isMadeira && (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="lote-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lote / Batch</label>
+                  <input
+                    id="lote-input"
+                    ref={loteRef}
+                    value={lote}
+                    onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
+                    onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
+                    className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-mono font-bold focus:border-primary/50 focus:bg-background transition-all"
+                    placeholder="Lote..." autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="qtd-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Qtd por Caixa</label>
+                  <input
+                    id="qtd-input"
+                    ref={quantidadeRef}
+                    type="number" step="1" value={quantidade}
+                    onChange={e => setQuantidade(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, null)}
+                    className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
+                    placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Metragem Fields */}
+            {!isMadeira && (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="metragem-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                    {isAI || isPVT || coulisseUsesMLinear ? 'M Linear' : 'Metragem (M²)'}
+                  </label>
+                  <input
+                    id="metragem-input"
+                    ref={m2Ref}
+                    type="number" step="0.1" 
+                    value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
+                    onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
+                    className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
+                    placeholder="0.0" autoComplete="off" inputMode="decimal"
+                  />
+                  {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
+                    <Badge variant="outline" className="mt-1 ml-1 border-primary/30 text-primary font-black">Linear: {formatML(mLinear)}</Badge>
+                  )}
+                </div>
+
+                {isAI ? (
+                  <div className="space-y-2">
+                    <label htmlFor="largura-ai" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura (m)</label>
+                    <input
+                      id="largura-ai"
+                      ref={larguraRef}
+                      type="number" step="0.01" value={aiLargura}
+                      onChange={e => setAiLargura(e.target.value)}
+                      onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
+                      className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
+                      placeholder="2.80" autoComplete="off" inputMode="decimal"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label htmlFor="lote-material" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lote / Batch</label>
+                    <input
+                      id="lote-material"
+                      ref={loteRef}
+                      value={lote}
+                      onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
+                      onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
+                      className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-mono font-bold focus:border-primary/50 focus:bg-background transition-all"
+                      placeholder="Lote..." autoComplete="off"
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Endereço */}
+            {requiresEndereco && (
+              <div className="space-y-2 sm:col-span-2">
+                <div className="flex items-center justify-between px-1">
+                  <label htmlFor="endereco-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endereço (TEC01.A.N03)</label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleLockEndereco}
+                    className={`h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                      lockEndereco
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                        : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {lockEndereco ? <Lock className="w-3 h-3 mr-1.5" /> : <Unlock className="w-3 h-3 mr-1.5" />}
+                    {lockEndereco ? 'Travado' : 'Travar'}
+                  </Button>
+                </div>
+                <input
+                  id="endereco-input"
+                  ref={enderecoRef}
+                  value={endereco}
+                  onChange={e => handleEnderecoChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, null)}
+                  className={`w-full h-14 rounded-2xl border-2 px-4 text-sm font-mono font-bold transition-all uppercase ${
+                    lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive/40 bg-destructive/5' : 'bg-card/40 border-border/40 focus:border-primary/50 focus:bg-background')
+                  }`}
+                  placeholder="TEC01.A.N03" autoComplete="off"
+                  readOnly={lockEndereco && !!lockedEndereco}
+                />
+                {enderecoError && <p className="text-[10px] text-destructive font-black uppercase tracking-wider ml-1">{enderecoError}</p>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Computed Preview Card */}
+        <div className="p-6 rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000">
+             <Package className="w-32 h-32" />
+          </div>
+          <div className="grid grid-cols-2 gap-8 relative z-10">
+            {isMadeira ? (
+              <>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Subtipo</p>
+                  <p className="text-xl font-black">{madeiraTipo}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Qtd</p>
+                  <p className="text-xl font-black">{quantidade || madeiraDefaults[madeiraTipo]}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Largura</p>
+                  <p className="text-xl font-black">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">M Linear</p>
+                  <p className="text-xl font-black">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
+                </div>
+              </>
+            )}
+            <div className="col-span-2 space-y-2 border-t border-white/10 pt-4">
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Lote Sistema Gerado</p>
+              <div className="p-3 rounded-xl bg-white/5 font-mono text-xs font-bold text-primary-foreground/90 truncate border border-white/5">
+                {previewLoteSistema}
+              </div>
             </div>
-            <input
-              ref={enderecoRef}
-              value={endereco}
-              onChange={e => handleEnderecoChange(e.target.value)}
-              onKeyDown={e => handleFieldKeyDown(e, null)}
-              className={`w-full border rounded-lg px-3 py-3 text-sm bg-card outline-none focus:ring-2 transition-all uppercase font-mono ${
-                lockEndereco ? 'bg-primary/5 border-primary/30' : ''
-              } ${
-                enderecoError ? 'border-destructive focus:border-destructive focus:ring-destructive/10' : 'border-border focus:border-primary focus:ring-primary/10'
-              }`}
-              placeholder="TEC01.A.N03" autoComplete="off"
-              readOnly={lockEndereco && !!lockedEndereco}
-            />
-            {enderecoError && <div className="text-[10px] text-destructive mt-1 font-medium">{enderecoError}</div>}
-          </div>}
+          </div>
         </div>
 
-        {/* Computed Card */}
-        <div className="comp-card">
-          {isMadeira ? (
-            <>
-              <div>
-                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Subtipo</div>
-                <div className="text-base font-semibold font-mono">{madeiraTipo}</div>
-              </div>
-              <div>
-                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Qtd</div>
-                <div className="text-base font-semibold font-mono">{quantidade || madeiraDefaults[madeiraTipo]}</div>
-              </div>
-              <div className="col-span-2">
-                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
-                <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Largura</div>
-                <div className="text-base font-semibold font-mono">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">M Linear</div>
-                <div className="text-base font-semibold font-mono">{mLinear > 0 ? formatML(mLinear) : '—'}</div>
-              </div>
-              <div className="col-span-2">
-                <div className="text-[10px] opacity-45 uppercase tracking-wider font-semibold mb-0.5">Lote Sistema</div>
-                <div className="text-xs font-mono opacity-70 truncate">{previewLoteSistema}</div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Add Button */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={handleAdd}
-          className="w-full h-12 sm:h-14 bg-primary text-primary-foreground rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.97] shadow-lg shadow-primary/20"
-        >
-          <Plus className="w-5 h-5" />
-          Adicionar à Tabela
-        </motion.button>
-
-        {/* Preview toggle - highlighted */}
-        {registros.length > 0 && (
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border transition-all duration-300 font-bold text-sm ${
-              showPreview 
-                ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' 
-                : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'
-            }`}
+        {/* Action Buttons */}
+        <div className="space-y-3 pt-2 pb-8">
+          <Button
+            onClick={handleAdd}
+            className="w-full h-16 rounded-[1.5rem] bg-primary text-white font-black text-base uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:-translate-y-1 active:translate-y-0 group"
           >
-            {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {showPreview ? 'Ocultar Preview' : `Visualizar Tabela (${registros.length})`}
-          </button>
-        )}
+            <Plus className="w-6 h-6 mr-2 group-hover:rotate-90 transition-transform duration-500" />
+            Adicionar Registro
+          </Button>
 
-        {/* Mini table preview */}
-        <AnimatePresence>
-          {showPreview && registros.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
+          {registros.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setShowPreview(!showPreview)}
+              className={`w-full h-14 rounded-[1.5rem] font-black uppercase tracking-widest transition-all duration-500 ${
+                showPreview 
+                  ? 'bg-primary/10 border-primary text-primary shadow-inner' 
+                  : 'border-border/60 hover:border-primary/40 hover:bg-primary/5'
+              }`}
             >
-              <div className="border border-border rounded-lg overflow-x-auto bg-card">
-                <table className="w-full text-[11px]">
-                  <thead>
-                    <tr className="surface-2-bg">
-                      <th className="px-2 py-1.5 text-left text-muted-foreground font-medium">#</th>
-                      <th className="px-2 py-1.5 text-left text-muted-foreground font-medium">Item</th>
-                      <th className="px-2 py-1.5 text-left text-muted-foreground font-medium">Lote Sistema</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registros.slice(-8).map((r, i) => (
-                      <tr key={r.id} className="border-t border-border/50">
-                        <td className="px-2 py-1 text-muted-foreground">{registros.length - 8 + i + 1 > 0 ? registros.indexOf(r) + 1 : i + 1}</td>
-                        <td className="px-2 py-1 font-semibold truncate max-w-[120px]">{r.item || '—'}</td>
-                        <td className="px-2 py-1 font-mono text-muted-foreground truncate max-w-[140px]">{r.loteSistema || '—'}</td>
+              {showPreview ? <EyeOff className="w-5 h-5 mr-3" /> : <Eye className="w-5 h-5 mr-3" />}
+              {showPreview ? 'Ocultar Detalhes' : `Ver Tabela Atual (${registros.length})`}
+            </Button>
+          )}
+
+          <AnimatePresence>
+            {showPreview && registros.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, height: 0 }}
+                animate={{ opacity: 1, scale: 1, height: 'auto' }}
+                exit={{ opacity: 0, scale: 0.95, height: 0 }}
+                className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 backdrop-blur-md shadow-2xl"
+              >
+                <div className="p-4 border-b border-border/40 bg-muted/30 flex items-center justify-between">
+                   <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Últimos Registros</span>
+                   <Badge className="bg-primary text-white font-black">{registros.length}</Badge>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <table className="w-full text-[11px] border-separate border-spacing-0">
+                    <thead className="sticky top-0 bg-muted/90 backdrop-blur-sm z-10">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">#</th>
+                        <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">Referência</th>
+                        <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">Lote Sistema</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    </thead>
+                    <tbody className="divide-y divide-border/20">
+                      {registros.slice(-10).reverse().map((r, i) => (
+                        <tr key={r.id} className="hover:bg-primary/5 transition-colors">
+                          <td className="px-4 py-3 font-mono opacity-40">{registros.length - i}</td>
+                          <td className="px-4 py-3 font-black text-foreground">{r.item}</td>
+                          <td className="px-4 py-3 font-mono text-primary/80 font-bold">{r.loteSistema}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="p-3 bg-muted/30 text-center">
+                   <Button variant="link" size="sm" className="font-black text-[10px] uppercase tracking-widest text-primary" onClick={() => useAppStore.getState().setFormData({ activeTab: 'table' })}>Abrir Tabela Completa</Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Duplicate warning */}
-        <AnimatePresence>
           {isDuplicate && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="ai-status-box ai-status-err text-xs"
-            >
-              ⚠ Item duplicado: "{item}" já existe na tabela
-            </motion.div>
+             <motion.div
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-destructive/5"
+             >
+               <AlertTriangle className="w-5 h-5 animate-bounce" />
+               Atenção: O item "{item}" já consta nesta conferência.
+             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     </motion.div>
   );
