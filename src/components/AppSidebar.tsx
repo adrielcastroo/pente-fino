@@ -83,7 +83,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
           </div>
           <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
             <span className="font-black text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
-            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-[0.2em] whitespace-nowrap opacity-70">Industrial v4.0</span>
+            <span className="text-[9px] text-foreground/70 dark:text-foreground/80 font-bold uppercase tracking-[0.2em] whitespace-nowrap opacity-70">Industrial v4.0</span>
           </div>
         </div>
       </SidebarHeader>
