@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { useAppStore, formatML } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +25,46 @@ const SORT_MAP: Record<string, (a: any, b: any) => number> = {
   'ml-a': (a, b) => (a.mLinear || 0) - (b.mLinear || 0),
   'end': (a, b) => (a.endereco || '').localeCompare(b.endereco || ''),
 };
+
+const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell }: any) => (
+  <motion.tr 
+    key={r.id}
+    initial={r.isNew ? { opacity: 0, scale: 0.98, backgroundColor: 'hsl(var(--primary) / 0.05)' } : false}
+    animate={{ opacity: 1, scale: 1, backgroundColor: 'transparent' }}
+    exit={{ opacity: 0, x: -10 }}
+    transition={{ duration: 0.35 }}
+    className="group hover:bg-muted/30 transition-all duration-200"
+  >
+    <td className="px-4 py-3 text-sm text-muted-foreground/60 font-medium tabular-nums">{i + 1}</td>
+    {columns.map((column: any) => (
+      <td 
+        key={column.key}
+        onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
+        className={`px-4 py-3 text-sm transition-colors ${column.key === 'item' ? 'font-bold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+      >
+        {renderCell(r, column)}
+      </td>
+    ))}
+    <td className="px-4 py-3">
+      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button 
+          onClick={() => onCopy(r.loteSistema)} 
+          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+          title="Copiar lote sistema"
+        >
+          <Copy className="w-3.5 h-3.5" />
+        </button>
+        <button 
+          onClick={() => onDelete(r.id)} 
+          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
+          title="Remover"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </td>
+  </motion.tr>
+));
 
 export default function RightPanel() {
   const registros = useAppStore(s => s.registros);
@@ -237,43 +277,17 @@ export default function RightPanel() {
             <tbody className="divide-y divide-border/30">
               <AnimatePresence initial={false}>
                 {rows.map((r, i) => (
-                  <motion.tr 
+                  <TableRow
                     key={r.id}
-                    initial={r.isNew ? { opacity: 0, scale: 0.98, backgroundColor: 'hsl(var(--primary) / 0.05)' } : false}
-                    animate={{ opacity: 1, scale: 1, backgroundColor: 'transparent' }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.35 }}
-                    className="group hover:bg-muted/30 transition-all duration-200"
-                  >
-                    <td className="px-4 py-3 text-sm text-muted-foreground/60 font-medium tabular-nums">{i + 1}</td>
-                    {columns.map(column => (
-                      <td 
-                        key={column.key}
-                        onDoubleClick={() => column.key !== 'loteSistema' ? startEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
-                        className={`px-4 py-3 text-sm transition-colors ${column.key === 'item' ? 'font-bold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
-                      >
-                        {renderCell(r, column)}
-                      </td>
-                    ))}
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button 
-                          onClick={() => copyText(r.loteSistema)} 
-                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
-                          title="Copiar lote sistema"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => deleteRegistro(r.id)} 
-                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
-                          title="Remover"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
+                    r={r}
+                    i={i}
+                    columns={columns}
+                    searchQuery={searchQuery}
+                    onStartEdit={startEdit}
+                    onDelete={deleteRegistro}
+                    onCopy={copyText}
+                    renderCell={renderCell}
+                  />
                 ))}
               </AnimatePresence>
             </tbody>
