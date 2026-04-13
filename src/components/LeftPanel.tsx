@@ -28,6 +28,7 @@ export default function LeftPanel() {
   const setMode = useAppStore(s => s.setMode);
   const processo = useAppStore(s => s.processo);
   const setProcesso = useAppStore(s => s.setProcesso);
+  const conferente = useAppStore(s => s.conferente);
   const registros = useAppStore(s => s.registros);
   const addRegistro = useAppStore(s => s.addRegistro);
   const undoAction = useAppStore(s => s.undo);
