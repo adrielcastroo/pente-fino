@@ -7,10 +7,14 @@ export function computeStats(history: Conference[]) {
   const catMap = new Map<string, number>();
   const subMap = new Map<string, number>();
   const tipoMap = new Map<string, number>();
+  const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
   for (const conference of history) {
     const name = conference.conferente || 'Desconhecido';
+    const date = new Date(conference.id).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    timelineMap.set(date, (timelineMap.get(date) || 0) + 1);
+
     let confSet = confMap.get(name);
     if (!confSet) {
       confSet = new Set();
@@ -36,11 +40,17 @@ export function computeStats(history: Conference[]) {
     }
   }
 
+  // Get last 7 days for timeline
+  const timeline = Array.from(timelineMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .slice(-7);
+
   return {
     topConferentes: Array.from(confMap.entries()).map(([name, set]) => ({ name, count: set.size })).sort((a, b) => b.count - a.count).slice(0, 5),
     categorias: Array.from(catMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
     ferramentas: Array.from(subMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
     tipos: Array.from(tipoMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6),
+    timeline,
     totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,
