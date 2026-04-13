@@ -1,22 +1,34 @@
 import { useAppStore } from '@/store/useAppStore';
-import { formatML } from '@/lib/app-utils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
-import { Download, User } from 'lucide-react';
+import { Download, User, Archive, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function TopBar() {
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
   
-
   const exportExcel = async () => {
-    if (!registros.length) { toast.warning('Nenhum rolo para exportar.'); return; }
+    if (!registros.length) { 
+      toast.warning('Nenhum registro para exportar.'); 
+      return; 
+    }
 
     const isMotorControle = registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
     const requiresProcesso = !isMotorControle && (registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
-    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (!conferente) { toast.warning('Preencha o campo CONFERENTE.'); return; }
+    
+    if (requiresProcesso && !processo.trim()) { 
+      toast.warning('Preencha o campo PROCESSO para continuar.'); 
+      return; 
+    }
+    
+    if (!conferente.trim()) { 
+      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.'); 
+      return; 
+    }
 
     const columns = getRegistroColumns(registros, currentMode);
     const headers = columns.map(column => column.label);
@@ -52,30 +64,67 @@ export default function TopBar() {
     XLSX.writeFile(wb, fileName);
     const count = registros.length;
     await archiveAndClear(archiveName);
-    toast.success(`Excel exportado — ${count} rolos arquivados`);
+    toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
+      icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
+    });
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/10 bg-background/50 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/40">
-      <div className="flex h-16 items-center gap-3 sm:gap-6 px-4 max-w-[1800px] mx-auto">
-        <div className="flex items-center">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
+      <div className="flex h-16 items-center gap-4 px-4 sm:px-6 max-w-[1800px] mx-auto">
+        <div className="flex items-center gap-2">
           <SidebarTrigger className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-xl" />
+          <div className="hidden lg:flex flex-col">
+            <h2 className="text-sm font-black tracking-tight leading-none uppercase text-muted-foreground/80">Painel Operacional</h2>
+            <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mt-0.5">Sistema de Conferência</p>
+          </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end">
-          <div className="flex items-center gap-3 relative group w-full max-w-[280px]">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
-              <User className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+        <div className="flex flex-1 items-center justify-end gap-3 sm:gap-4">
+          <div className="relative group w-full max-w-[200px] sm:max-w-[280px]">
+            <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10">
+              <User className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <input
-              className="h-10 sm:h-11 w-full rounded-xl sm:rounded-2xl border border-border/50 bg-muted/40 pl-10 sm:pl-11 pr-4 text-[11px] sm:text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/60 placeholder:font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/5 focus-visible:border-primary/40 transition-all duration-300 hover:bg-muted/60"
+              id="conferente-input"
+              className="h-10 sm:h-12 w-full rounded-2xl border border-border/50 bg-muted/30 pl-10 sm:pl-12 pr-4 text-xs sm:text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/50 placeholder:font-medium focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 shadow-sm"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
               placeholder="Nome do Conferente..."
-              autoComplete="off"
+              autoComplete="name"
               required
             />
           </div>
+
+          <div className="h-8 w-[1px] bg-border/40 mx-1 hidden sm:block" />
+
+          {registros.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={exportExcel}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-4 sm:px-6 h-10 sm:h-12 rounded-2xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 gap-2 text-xs sm:text-sm"
+                >
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce-subtle" />
+                  <span className="hidden sm:inline">Finalizar e Exportar</span>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-none ml-1 px-1.5 h-5 min-w-[20px] flex items-center justify-center font-black">
+                    {registros.length}
+                  </Badge>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Exporta os {registros.length} registros para Excel e limpa a tabela</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {registros.length === 0 && (
+            <Badge variant="outline" className="h-10 sm:h-12 px-4 rounded-2xl border-dashed border-muted-foreground/30 text-muted-foreground font-bold flex gap-2">
+              <Archive className="w-4 h-4" />
+              <span className="text-[10px] sm:text-xs">Aguardando Registros...</span>
+            </Badge>
+          )}
         </div>
       </div>
     </header>
