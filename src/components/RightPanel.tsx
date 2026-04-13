@@ -31,58 +31,74 @@ const SORT_MAP: Record<string, (a: any, b: any) => number> = {
   'end': (a, b) => (a.endereco || '').localeCompare(b.endereco || ''),
 };
 
-const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell }: any) => (
-  <motion.tr 
-    key={r.id}
-    initial={r.isNew ? { opacity: 0, scale: 0.98, x: 20 } : false}
-    animate={{ opacity: 1, scale: 1, x: 0 }}
-    exit={{ opacity: 0, x: -20 }}
-    transition={{ duration: 0.3, ease: "easeOut" }}
-    className={`group hover:bg-muted/40 transition-all duration-200 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}
-  >
-    <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
-    {columns.map((column: any) => (
-      <td 
-        key={column.key}
-        onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
-        className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
-      >
-        {renderCell(r, column)}
+const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell, isLow }: any) => {
+  const content = (
+    <>
+      <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
+      {columns.map((column: any) => (
+        <td 
+          key={column.key}
+          onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
+          className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+        >
+          {renderCell(r, column)}
+        </td>
+      ))}
+      <td className="px-2 sm:px-4 py-2 sm:py-3.5">
+        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => onCopy(r.loteSistema)} 
+                className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+             <TooltipContent>Copiar Lote Sistema</TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => onDelete(r.id)} 
+                className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Remover Registro</TooltipContent>
+          </Tooltip>
+        </div>
       </td>
-    ))}
-    <td className="px-2 sm:px-4 py-2 sm:py-3.5">
-      <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => onCopy(r.loteSistema)} 
-              className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
-            >
-              <Copy className="w-3.5 h-3.5" />
-            </Button>
-          </TooltipTrigger>
-           <TooltipContent>Copiar Lote Sistema</TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => onDelete(r.id)} 
-              className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Remover Registro</TooltipContent>
-        </Tooltip>
-      </div>
-    </td>
-  </motion.tr>
-));
+    </>
+  );
+
+  if (isLow) {
+    return (
+      <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
+        {content}
+      </tr>
+    );
+  }
+
+  return (
+    <motion.tr 
+      key={r.id}
+      initial={r.isNew ? { opacity: 0, scale: 0.98, x: 20 } : false}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={`group hover:bg-muted/40 transition-all duration-200 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}
+    >
+      {content}
+    </motion.tr>
+  );
+});
 
 export default function RightPanel() {
   const registros = useAppStore(s => s.registros);
@@ -94,8 +110,8 @@ export default function RightPanel() {
   const deleteRegistro = useAppStore(s => s.deleteRegistro);
   const undo = useAppStore(s => s.undo);
   const undoStack = useAppStore(s => s.undoStack);
-  const archiveAndClear = useAppStore(s => s.archiveAndClear);
   const updateRegistro = useAppStore(s => s.updateRegistro);
+  const { isLow } = usePerformance();
   
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -203,17 +219,13 @@ export default function RightPanel() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-sm"
-    >
+    <div className="flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-sm">
       <AnimatePresence>
         {undoStack.length > 0 && (
           <motion.div 
-            initial={{ height: 0, opacity: 0, y: -20 }} 
-            animate={{ height: 'auto', opacity: 1, y: 0 }} 
-            exit={{ height: 0, opacity: 0, y: -20 }}
+            initial={isLow ? false : { height: 0, opacity: 0, y: -20 }} 
+            animate={isLow ? { height: 'auto', opacity: 1, y: 0 } : { height: 'auto', opacity: 1, y: 0 }} 
+            exit={isLow ? false : { height: 0, opacity: 0, y: -20 }}
             className="bg-primary/95 backdrop-blur-md px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-xl z-20 border-b border-white/10"
           >
             <div className="flex items-center gap-3 text-white font-bold">
@@ -309,6 +321,7 @@ export default function RightPanel() {
                     onDelete={deleteRegistro}
                     onCopy={copyText}
                     renderCell={renderCell}
+                    isLow={isLow}
                   />
                 ))}
               </AnimatePresence>
@@ -332,11 +345,7 @@ export default function RightPanel() {
           </table>
 
           {rows.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-32 text-center px-6"
-            >
+            <div className="flex flex-col items-center justify-center py-32 text-center px-6">
               <div className="h-24 w-24 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 transition-transform hover:rotate-0 duration-500">
                 <Package className="w-12 h-12 text-primary/30" />
               </div>
@@ -351,10 +360,10 @@ export default function RightPanel() {
               >
                 Começar agora
               </Button>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
