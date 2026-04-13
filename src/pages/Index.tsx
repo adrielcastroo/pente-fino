@@ -55,6 +55,7 @@ const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolea
     case 'saida': return <SaidaPage />;
     case 'table': return <RightPanel />;
     case 'history': return <HistoryPanel />;
+    case 'settings': return <SettingsPage />;
     default: return <DashboardPage />;
   }
 };
