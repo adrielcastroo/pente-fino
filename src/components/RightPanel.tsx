@@ -19,6 +19,13 @@ function highlight(text: string, q: string) {
   );
 }
 
+const SORT_MAP: Record<string, (a: any, b: any) => number> = {
+  'item': (a, b) => (a.item || '').localeCompare(b.item || ''),
+  'ml-d': (a, b) => (b.mLinear || 0) - (a.mLinear || 0),
+  'ml-a': (a, b) => (a.mLinear || 0) - (b.mLinear || 0),
+  'end': (a, b) => (a.endereco || '').localeCompare(b.endereco || ''),
+};
+
 export default function RightPanel() {
   const registros = useAppStore(s => s.registros);
   const currentMode = useAppStore(s => s.currentMode);
@@ -39,20 +46,18 @@ export default function RightPanel() {
   const rows = useMemo(() => {
     let result = [...registros];
     const q = searchQuery.toLowerCase().trim();
-    if (q) result = result.filter(r =>
-      r.item.toLowerCase().includes(q) ||
-      r.endereco.toLowerCase().includes(q) ||
-      r.lote.toLowerCase().includes(q) ||
-      r.loteSistema.toLowerCase().includes(q)
-    );
+    if (q) {
+      result = result.filter(r =>
+        (r.item || '').toLowerCase().includes(q) ||
+        (r.endereco || '').toLowerCase().includes(q) ||
+        (r.lote || '').toLowerCase().includes(q) ||
+        (r.loteSistema || '').toLowerCase().includes(q)
+      );
+    }
 
-    const sortMap: Record<string, (a: any, b: any) => number> = {
-      'item': (a, b) => a.item.localeCompare(b.item),
-      'ml-d': (a, b) => b.mLinear - a.mLinear,
-      'ml-a': (a, b) => a.mLinear - b.mLinear,
-      'end': (a, b) => a.endereco.localeCompare(b.endereco),
-    };
-    if (sortBy && sortMap[sortBy]) result.sort(sortMap[sortBy]);
+    if (sortBy && SORT_MAP[sortBy]) {
+      result.sort(SORT_MAP[sortBy]);
+    }
     return result;
   }, [registros, searchQuery, sortBy]);
 

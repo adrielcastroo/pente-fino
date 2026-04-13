@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore, type Conference } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Layers3, BarChart3, TrendingUp, Warehouse, Download } from 'lucide-react';
@@ -21,56 +21,68 @@ const TIPO_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#ef4444', '#8b5cf6', '#10
 const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#94a3b8' };
 
 function computeStats(history: Conference[]) {
-  const allRegs = history.flatMap(c => c.registros.map(r => ({ ...r, conferente: c.conferente })));
-
-  // Conferentes by distinct NF + PROC
   const confMap = new Map<string, Set<string>>();
-  history.forEach(c => {
-    const name = c.conferente || 'Desconhecido';
-    if (!confMap.has(name)) confMap.set(name, new Set());
-    const set = confMap.get(name)!;
-    c.registros.forEach(r => {
-      if (r.nf) set.add(`NF:${r.nf}`);
-      if (r.processo) set.add(`PROC:${r.processo}`);
-    });
-  });
-  const topConferentes = [...confMap.entries()]
+  const catMap = new Map<string, number>();
+  const subMap = new Map<string, number>();
+  const tipoMap = new Map<string, number>();
+  let totalRegistros = 0;
+
+  for (const conference of history) {
+    const name = conference.conferente || 'Desconhecido';
+    let confSet = confMap.get(name);
+    if (!confSet) {
+      confSet = new Set();
+      confMap.set(name, confSet);
+    }
+
+    for (const r of conference.registros) {
+      totalRegistros++;
+      if (r.nf) confSet.add(`NF:${r.nf}`);
+      if (r.processo) confSet.add(`PROC:${r.processo}`);
+
+      const modo = r.modoOrigem || 'manual';
+      
+      // Category map
+      let cat = 'Tecido';
+      if (modo === 'madeira') cat = 'Madeira';
+      else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
+      catMap.set(cat, (catMap.get(cat) || 0) + 1);
+
+      // Sub map (Tools)
+      let sub = 'Coulisse';
+      if (modo === 'openrouter') sub = 'IA';
+      else if (modo === 'diversos') sub = 'Diversos';
+      else if (modo === 'madeira') sub = 'Madeira';
+      else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
+      subMap.set(sub, (subMap.get(sub) || 0) + 1);
+
+      // Tipo map
+      const tipo = r.tipoTecido || 'Rolo';
+      tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
+    }
+  }
+
+  const topConferentes = Array.from(confMap.entries())
     .map(([name, set]) => ({ name, count: set.size }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  const catMap = new Map<string, number>();
-  allRegs.forEach(r => {
-    const modo = r.modoOrigem || 'manual';
-    let cat = 'Tecido';
-    if (modo === 'madeira') cat = 'Madeira';
-    else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
-    catMap.set(cat, (catMap.get(cat) || 0) + 1);
-  });
-  const categorias = [...catMap.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  const categorias = Array.from(catMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
-  const subMap = new Map<string, number>();
-  allRegs.forEach(r => {
-    const modo = r.modoOrigem || 'manual';
-    let sub = 'Coulisse';
-    if (modo === 'openrouter') sub = 'IA';
-    else if (modo === 'diversos') sub = 'Diversos';
-    else if (modo === 'madeira') sub = 'Madeira';
-    else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
-    subMap.set(sub, (subMap.get(sub) || 0) + 1);
-  });
-  const ferramentas = [...subMap.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  const ferramentas = Array.from(subMap.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
 
-  const tipoMap = new Map<string, number>();
-  allRegs.forEach(r => {
-    const tipo = r.tipoTecido || 'Rolo';
-    tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
-  });
-  const tipos = [...tipoMap.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6);
+  const tipos = Array.from(tipoMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
 
   return {
     topConferentes, categorias, ferramentas, tipos,
-    totalRegistros: allRegs.length,
+    totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,
   };
@@ -134,35 +146,42 @@ export default function DashboardPage() {
     return () => { isMounted = false; };
   }, []);
 
-  const exportDashboardData = () => {
+  const exportDashboardData = useCallback(() => {
     if (!history.length) {
       addToast('Nenhum dado histórico para exportar.', 'warn');
       return;
     }
 
-    const data = history.flatMap(c => 
-      c.registros.map(r => ({
-        Conferente: c.conferente || 'Desconhecido',
-        Data: c.finishedAt ? new Date(c.finishedAt).toLocaleDateString() : '—',
-        Hora: c.finishedAt ? new Date(c.finishedAt).toLocaleTimeString() : '—',
-        Item: r.item || '',
-        NF: r.nf || '',
-        Processo: r.processo || '',
-        Categoria: r.modoOrigem || '',
-        Tipo: r.tipoTecido || '',
-        ML: r.mLinear || 0,
-        M2: r.m2 || 0,
-        Largura: r.largura || 0,
-        Quantidade: r.quantidade || 0
-      }))
-    );
+    const exportRows: any[] = [];
+    for (const conf of history) {
+      const conferente = conf.conferente || 'Desconhecido';
+      const dataStr = conf.finishedAt ? new Date(conf.finishedAt).toLocaleDateString() : '—';
+      const horaStr = conf.finishedAt ? new Date(conf.finishedAt).toLocaleTimeString() : '—';
+      
+      for (const r of conf.registros) {
+        exportRows.push({
+          Conferente: conferente,
+          Data: dataStr,
+          Hora: horaStr,
+          Item: r.item || '',
+          NF: r.nf || '',
+          Processo: r.processo || '',
+          Categoria: r.modoOrigem || '',
+          Tipo: r.tipoTecido || '',
+          ML: r.mLinear || 0,
+          M2: r.m2 || 0,
+          Largura: r.largura || 0,
+          Quantidade: r.quantidade || 0
+        });
+      }
+    }
 
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(exportRows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Histórico_Geral');
     XLSX.writeFile(wb, `dashboard_export_${new Date().toISOString().split('T')[0]}.xlsx`);
     addToast('Dados do dashboard exportados com sucesso!', 'ok');
-  };
+  }, [history, addToast]);
 
   const stockTotals = useMemo(() => {
     return stockData.reduce(
@@ -176,12 +195,12 @@ export default function DashboardPage() {
     );
   }, [stockData]);
 
-  const stockPieData = [
+  const stockPieData = useMemo(() => [
     { name: 'Ocupado', value: stockTotals.ocupado },
     { name: 'Reservado', value: stockTotals.reservado },
     { name: 'Bloqueado', value: stockTotals.bloqueado },
     { name: 'Livre', value: stockTotals.livre },
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [stockTotals]);
 
   const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
 
