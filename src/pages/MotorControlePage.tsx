@@ -337,19 +337,19 @@ export default function MotorControlePage() {
           </Button>
         </div>
 
-        {/* Preview table */}
+        {/* Preview table - Adaptive for mobile */}
         {currentCount > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-[2rem] border-2 border-primary/10 bg-card/60 backdrop-blur-xl shadow-2xl mt-8 relative z-10"
+            className="overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border-2 border-primary/10 bg-card/60 backdrop-blur-xl shadow-2xl mt-4 sm:mt-8 relative z-10"
           >
-            <div className="p-5 border-b border-border/10 bg-primary/5 flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/10 text-primary"><Eye className="w-4 h-4" /></div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Recém Cadastrados</span>
+            <div className="p-4 sm:p-5 border-b border-border/10 bg-primary/5 flex items-center justify-between">
+               <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-primary/10 text-primary"><Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-primary/80">Recém Cadastrados</span>
                </div>
-               <Badge className="bg-primary text-white font-black px-2.5 h-6 rounded-lg">{currentCount} Itens</Badge>
+               <Badge className="bg-primary text-white font-black px-2 sm:px-2.5 h-5 sm:h-6 rounded-lg text-[9px] sm:text-[10px]">{currentCount} Itens</Badge>
             </div>
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-[11px] border-separate border-spacing-0">
