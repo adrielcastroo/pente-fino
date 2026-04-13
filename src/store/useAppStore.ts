@@ -373,6 +373,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const startedAt = state.sessionStartedAt || finishedAt;
 
     try {
+      // 1. First insert the conference
       const { data: conf, error: confError } = await supabase
         .from('conferences')
         .insert({
@@ -386,6 +387,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (confError) throw confError;
 
+      // 2. Prepare and insert records
       const rows = state.registros.map(r => ({
         id: r.id,
         conference_id: conf.id,
@@ -408,37 +410,45 @@ export const useAppStore = create<AppState>((set, get) => ({
       const { data: insertedRegs, error: regError } = await supabase.from('registros').insert(rows as any).select();
       if (regError) throw regError;
 
-      // Populate estoque_posicoes for those with a valid address
-      const estoqueRows: any[] = [];
-      const localOccupied: Record<string, Set<number>> = {};
+      // 3. Update stock positions efficiently
+      const validEnderecos = (insertedRegs || [])
+        .map(r => ({ r, parsed: parseEndereco(r.endereco) }))
+        .filter(x => x.parsed !== null);
 
-      for (const r of insertedRegs || []) {
-        const parsed = parseEndereco(r.endereco);
-        if (parsed) {
-          const { estrutura, coluna, nivel } = parsed;
+      if (validEnderecos.length > 0) {
+        // Collect all structures we need to check
+        const structures = [...new Set(validEnderecos.map(x => x.parsed!.estrutura))];
+        
+        // Fetch all occupied positions for these structures at once
+        const { data: dbOccupied } = await supabase
+          .from('estoque_posicoes')
+          .select('estrutura, coluna, nivel, posicao')
+          .in('estrutura', structures)
+          .neq('status', 'saida')
+          .neq('status', 'livre');
+
+        // Map for quick lookup: cellKey -> Set of occupied positions
+        const occupiedMap: Record<string, Set<number>> = {};
+        (dbOccupied || []).forEach(p => {
+          const key = `${p.estrutura}.${p.coluna}.${p.nivel}`;
+          if (!occupiedMap[key]) occupiedMap[key] = new Set();
+          occupiedMap[key].add(p.posicao);
+        });
+
+        const estoqueRows: any[] = [];
+        for (const { r, parsed } of validEnderecos) {
+          const { estrutura, coluna, nivel } = parsed!;
           const cellKey = `${estrutura}.${coluna}.${nivel}`;
           
-          if (!localOccupied[cellKey]) {
-            const { data: dbOccupied } = await supabase
-              .from('estoque_posicoes')
-              .select('posicao')
-              .eq('estrutura', estrutura)
-              .eq('coluna', coluna)
-              .eq('nivel', nivel)
-              .neq('status', 'saida')
-              .neq('status', 'livre');
-            
-            localOccupied[cellKey] = new Set((dbOccupied || []).map(p => p.posicao));
-          }
-
+          if (!occupiedMap[cellKey]) occupiedMap[cellKey] = new Set();
+          
           let pos = 1;
-          while (pos <= 30 && localOccupied[cellKey].has(pos)) {
+          while (pos <= 30 && occupiedMap[cellKey].has(pos)) {
             pos++;
           }
 
           if (pos <= 30) {
-            localOccupied[cellKey].add(pos);
-            // Get original to retrieve 'processo' (which isn't in DB registros but is in local state)
+            occupiedMap[cellKey].add(pos);
             const original = state.registros.find(orig => orig.id === r.id);
             const proc = original?.processo || state.processo || '';
 
@@ -462,30 +472,28 @@ export const useAppStore = create<AppState>((set, get) => ({
             });
           }
         }
-      }
 
-      if (estoqueRows.length > 0) {
-        const { error: estoqueError } = await supabase
-          .from('estoque_posicoes')
-          .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
-        
-        if (estoqueError) {
-          console.error('Error populating estoque_posicoes:', estoqueError);
+        if (estoqueRows.length > 0) {
+          const { error: estoqueError } = await supabase
+            .from('estoque_posicoes')
+            .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
+          
+          if (estoqueError) {
+            console.error('Error populating estoque_posicoes:', estoqueError);
+          }
         }
       }
 
+      // 4. Success: clear state
       save([]);
       try { localStorage.removeItem(SESSION_START_KEY); } catch {}
       set({ registros: [], undoStack: [], sessionStartedAt: null });
-
       await get().loadHistory();
+      
     } catch (e) {
       console.error('Error archiving:', e);
-      // Even on error, we might want to clear local if it was partially successful, 
-      // but usually we keep it for retry. However, current UI clears it anyway.
-      save([]);
-      try { localStorage.removeItem(SESSION_START_KEY); } catch {}
-      set({ registros: [], undoStack: [], sessionStartedAt: null });
+      // Don't clear local state on error, allow user to retry
+      throw e; 
     }
   },
 

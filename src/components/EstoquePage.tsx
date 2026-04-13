@@ -60,12 +60,10 @@ function formatDateBR(iso: string | null) {
 }
 
 export default function EstoquePage() {
-  const { formData, setFormData } = useAppStore();
-  const {
-    estoqueActiveTec: activeTec,
-    estoqueSearch: search,
-    estoqueHighlightStatus: highlightStatus,
-  } = formData;
+  const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
+  const search = useAppStore(s => s.formData.estoqueSearch);
+  const highlightStatus = useAppStore(s => s.formData.estoqueHighlightStatus);
+  const setFormData = useAppStore(s => s.setFormData);
 
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
   const setSearch = (val: string) => setFormData({ estoqueSearch: val });
@@ -77,23 +75,27 @@ export default function EstoquePage() {
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
 
-  const config = TEC_CONFIG[activeTec];
+  const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
 
   const loadPosicoes = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('estoque_posicoes')
-      .select('*')
-      .eq('estrutura', activeTec)
-      .order('coluna')
-      .order('nivel')
-      .order('posicao');
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('id, estrutura, coluna, nivel, posicao, status, item, proc, m2, largura, m_linear, lote, endereco, lote_sistema, conferente_saida, data_registro, data_saida')
+        .eq('estrutura', activeTec)
+        .order('coluna')
+        .order('nivel')
+        .order('posicao');
+      
+      if (error) throw error;
+      setPosicoes((data as Posicao[]) || []);
+    } catch (error) {
       console.error(error);
       addToast('Erro ao carregar estoque', 'err');
+    } finally {
+      setLoading(false);
     }
-    setPosicoes((data as any[]) || []);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export default function EstoquePage() {
 
   // Compute stats
   const stats = useMemo(() => {
-    const totalSlots = config.cols.length * config.levels * 30;
+    const totalSlots = (config.cols?.length || 0) * (config.levels || 0) * 30;
     const occupied = posicoes.filter(p => p.status === 'ocupado').length;
     const blocked = posicoes.filter(p => p.status === 'bloqueado').length;
     const reserved = posicoes.filter(p => p.status === 'reservado').length;
@@ -134,19 +136,28 @@ export default function EstoquePage() {
   }, [search, posicoes]);
 
   const handleStatusChange = async (pos: Posicao, newStatus: string) => {
-    const updates: any = { status: newStatus };
+    const updates: Partial<Posicao> = { status: newStatus };
     if (newStatus === 'saida') {
       updates.data_saida = new Date().toISOString();
     }
+    
+    // Update local state first (optimistic)
+    setPosicoes(current => current.map(p => p.id === pos.id ? { ...p, ...updates } : p));
+    if (detailPos?.id === pos.id) {
+      setDetailPos({ ...detailPos, ...updates } as Posicao);
+    }
+
     const { error } = await supabase
       .from('estoque_posicoes')
-      .update(updates)
+      .update(updates as any)
       .eq('id', pos.id);
+
     if (error) {
       addToast('Erro ao atualizar status', 'err');
+      // Rollback on error
+      loadPosicoes();
     } else {
       addToast(`Status → ${STATUS_LABELS[newStatus]}`, 'ok');
-      loadPosicoes();
     }
   };
 
