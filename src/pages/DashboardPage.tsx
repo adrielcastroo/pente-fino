@@ -51,15 +51,15 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-10 max-w-7xl mx-auto overflow-x-hidden animate-in fade-in duration-500">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs">
-            <LayoutDashboard className="w-4 h-4" />
+    <div className="p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-10 max-w-7xl mx-auto overflow-x-hidden animate-in fade-in duration-500">
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
+            <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Sistema Pente Fino</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
-          <p className="text-muted-foreground text-sm sm:text-base font-medium max-w-xl">Acompanhe em tempo real o desempenho das conferências e o fluxo de materiais da planta.</p>
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
+          <p className="text-muted-foreground text-xs sm:text-sm md:text-base font-medium max-w-xl">Acompanhe em tempo real o desempenho das conferências e o fluxo de materiais da planta.</p>
         </div>
         
         <div className="flex items-center gap-3">
