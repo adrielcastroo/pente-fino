@@ -6,6 +6,7 @@ import { Search, Archive, Calendar, User, Clock, Filter, FileText } from 'lucide
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { usePerformance } from '@/hooks/use-performance';
 
 
 interface SaidaRegistro {

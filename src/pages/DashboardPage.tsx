@@ -20,14 +20,15 @@ export default function DashboardPage() {
     containerVariants,
     itemVariants
   } = useDashboard();
+  const { isLow } = usePerformance();
 
-  return (
-    <div className="p-3 sm:p-8 lg:p-12 space-y-6 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+  const content = (
+    <div className="p-3 sm:p-8 lg:p-12 space-y-6 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/10">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
-            <Zap className="w-3.5 h-3.5 animate-pulse" />
+            <Zap className={`w-3.5 h-3.5 ${isLow ? '' : 'animate-pulse'}`} />
             <span>Inteligência de Operação</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
@@ -55,8 +56,8 @@ export default function DashboardPage() {
       <StatCards 
         stats={stats} 
         onStatClick={handleStatClick} 
-        containerVariants={containerVariants} 
-        itemVariants={itemVariants} 
+        containerVariants={isLow ? undefined : containerVariants} 
+        itemVariants={isLow ? undefined : itemVariants} 
       />
 
       {/* Charts Grid */}
@@ -96,5 +97,17 @@ export default function DashboardPage() {
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
     </div>
+  );
+
+  if (isLow) return content;
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {content}
+    </motion.div>
   );
 }
