@@ -77,26 +77,26 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
   return (
     <Sidebar 
       collapsible="icon" 
-      className={`border-r border-border/50 bg-sidebar transition-all duration-300 ease-in-out ${collapsed ? 'w-[--sidebar-width-icon]' : 'w-[--sidebar-width]'}`}
+      className={`border-r border-border/10 bg-sidebar transition-all duration-500 ease-in-out ${collapsed ? 'w-[--sidebar-width-icon]' : 'w-[--sidebar-width]'}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <SidebarHeader className="p-3">
-        <div className="flex items-center gap-2 overflow-hidden bg-primary/5 rounded-xl p-1 border border-primary/10">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/20 transition-all duration-300">
-            <Logo className="w-6 h-6" />
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3 overflow-hidden bg-primary/5 rounded-2xl p-1.5 border border-primary/10 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/30 transition-all duration-500 hover:rotate-6">
+            <Logo className="w-6.5 h-6.5" />
           </div>
-          <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1'}`}>
-            <span className="font-bold text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
-            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest whitespace-nowrap">Industrial</span>
+          <div className={`flex flex-col transition-all duration-500 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
+            <span className="font-black text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
+            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-[0.2em] whitespace-nowrap opacity-70">Industrial v4.0</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-3">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1.5">
               {menuItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
@@ -109,18 +109,26 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                       tooltip={item.label}
                       isActive={isActive}
                       className={`
+                        h-11 rounded-xl transition-all duration-500
                         ${isActive 
-                          ? 'bg-primary/10 text-primary font-bold shadow-sm transition-all duration-300 scale-[1.02] ring-1 ring-primary/20' 
-                          : 'hover:bg-sidebar-accent/50 text-muted-foreground transition-all duration-300 hover:translate-x-1'}
+                          ? 'bg-primary/15 text-primary font-black shadow-[0_4px_20px_rgb(0,0,0,0.05)] scale-[1.02] ring-1 ring-primary/20' 
+                          : 'hover:bg-sidebar-accent/70 text-muted-foreground font-bold hover:translate-x-1'}
                         ${isTableTab && registros.length > 0 ? 'ring-2 ring-primary/40 animate-pulse-subtle' : ''}
                       `}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
-                      <span className={`font-medium tracking-tight transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                      <div className="relative">
+                        <Icon className={`w-4.5 h-4.5 transition-all duration-500 ${isActive ? 'text-primary scale-110' : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
+                        {isTableTab && registros.length > 0 && collapsed && (
+                          <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground ring-2 ring-sidebar animate-in zoom-in-50">
+                            {registros.length}
+                          </span>
+                        )}
+                      </div>
+                      <span className={`tracking-tight transition-all duration-500 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
                         {item.label}
                       </span>
-                      {isTableTab && registros.length > 0 && (
-                        <span className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm animate-in zoom-in ${collapsed ? 'absolute -top-1 -right-1' : ''}`}>
+                      {isTableTab && registros.length > 0 && !collapsed && (
+                        <span className="ml-auto flex h-5.5 w-5.5 items-center justify-center rounded-lg bg-primary text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/20 animate-in slide-in-from-right-2 duration-500">
                           {registros.length}
                         </span>
                       )}
@@ -133,21 +141,33 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 space-y-1">
-        <SidebarMenu>
+      <SidebarFooter className="p-3 border-t border-border/5 space-y-2">
+        <SidebarMenu className="gap-1">
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={toggleTheme} tooltip={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}>
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              <span className={`transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                {theme === 'dark' ? 'Claro' : 'Escuro'}
+            <SidebarMenuButton 
+              onClick={toggleTheme} 
+              className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-500"
+              tooltip={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+            >
+              <div className="w-4.5 h-4.5 flex items-center justify-center">
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </div>
+              <span className={`transition-all duration-500 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
+                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {onOpenConfig && (
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={onOpenConfig} tooltip="Configurações">
-                <Settings className="w-4 h-4" />
-                <span className={`transition-opacity duration-300 ${collapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+              <SidebarMenuButton 
+                onClick={onOpenConfig} 
+                className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-500"
+                tooltip="Acessar Configurações"
+              >
+                <div className="w-4.5 h-4.5 flex items-center justify-center">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <span className={`transition-all duration-500 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
                   Configurações
                 </span>
               </SidebarMenuButton>

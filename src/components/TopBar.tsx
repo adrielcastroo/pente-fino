@@ -55,19 +55,19 @@ export default function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/5 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
-      <div className="flex h-16 items-center gap-4 px-3 max-w-[1600px] mx-auto">
+    <header className="sticky top-0 z-40 w-full border-b border-border/10 bg-background/50 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/40">
+      <div className="flex h-16 items-center gap-6 px-4 max-w-[1800px] mx-auto">
         <div className="flex items-center">
-          <SidebarTrigger className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-colors -ml-3" />
+          <SidebarTrigger className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-xl" />
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="flex items-center gap-2 relative group w-full max-w-[240px]">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-              <User className="h-4 w-4" />
+        <div className="flex flex-1 items-center justify-end gap-6">
+          <div className="flex items-center gap-3 relative group w-full max-w-[280px]">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+              <User className="h-4.5 w-4.5" />
             </div>
             <input
-              className="h-10 w-full rounded-xl border border-border/50 bg-muted/30 pl-10 pr-4 text-sm font-medium ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/10 focus-visible:border-primary/50 transition-all duration-300"
+              className="h-11 w-full rounded-2xl border border-border/50 bg-muted/40 pl-11 pr-4 text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/60 placeholder:font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/5 focus-visible:border-primary/40 transition-all duration-500 hover:bg-muted/60"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
               placeholder="Nome do Conferente..."
@@ -77,14 +77,14 @@ export default function TopBar() {
           </div>
 
           <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 active:scale-95 disabled:opacity-50 group"
+            className="inline-flex h-11 items-center justify-center gap-2.5 rounded-2xl px-6 text-sm font-black bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-primary/20 hover:shadow-primary/40 transition-all duration-500 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 group"
             onClick={exportExcel}
             title="Exportar Excel e Arquivar"
           >
-            <Download className="h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
-            <span className="hidden sm:inline">Exportar Dados</span>
+            <Download className="h-4.5 w-4.5 group-hover:translate-y-0.5 transition-transform" />
+            <span className="hidden sm:inline">Exportar & Arquivar</span>
             {registros.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 bg-primary-foreground/20 rounded-md text-[10px] animate-pulse">
+              <span className="flex h-5 w-5 items-center justify-center bg-white/20 rounded-full text-[10px] font-black animate-in zoom-in-50 duration-500">
                 {registros.length}
               </span>
             )}
