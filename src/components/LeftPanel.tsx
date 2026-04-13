@@ -800,7 +800,7 @@ export default function LeftPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
-              <div className="space-y-3 sm:col-span-2 group/field">
+              <div className="space-y-3 sm:col-span-1 group/field">
                 <div className="flex items-center justify-between px-2">
                   <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Processo (PROC)</label>
                   <Button
@@ -836,7 +836,7 @@ export default function LeftPanel() {
             )}
 
             {/* Item / Referência */}
-            <div className="space-y-3 sm:col-span-2 group/field">
+            <div className="space-y-3 sm:col-span-1 group/field">
               <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Item / Referência</label>
               <div className="relative">
                 <input
@@ -859,7 +859,7 @@ export default function LeftPanel() {
 
             {/* Coulisse: optional manual largura */}
             {isCoulisse && (
-              <div className="space-y-3 sm:col-span-2 group/field">
+              <div className="space-y-3 sm:col-span-1 group/field">
                 <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Largura do Tecido (m)</label>
                 <input
                   id="largura-manual"
@@ -875,7 +875,7 @@ export default function LeftPanel() {
 
             {/* NF field — Diversos except Celular */}
             {requiresNF && (
-              <div className="space-y-3 sm:col-span-2 group/field">
+              <div className="space-y-3 sm:col-span-1 group/field">
                 <div className="flex items-center justify-between px-2">
                   <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Nota Fiscal (NF)</label>
                   <Button
