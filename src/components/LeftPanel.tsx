@@ -17,31 +17,29 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export default function LeftPanel() {
-  const {
-    currentMode,
-    setMode,
-    processo,
-    setProcesso,
-    registros,
-    addRegistro,
-    undo: undoAction,
-    undoStack,
-    lockProcesso,
-    setLockProcesso,
-    lockedProcesso,
-    setLockedProcesso,
-    lockNf,
-    setLockNf,
-    lockedNf,
-    setLockedNf,
-    lockEndereco,
-    setLockEndereco,
-    lockedEndereco,
-    setLockedEndereco,
-    formData,
-    setFormData,
-    resetFormData,
-  } = useAppStore();
+  const currentMode = useAppStore(s => s.currentMode);
+  const setMode = useAppStore(s => s.setMode);
+  const processo = useAppStore(s => s.processo);
+  const setProcesso = useAppStore(s => s.setProcesso);
+  const registros = useAppStore(s => s.registros);
+  const addRegistro = useAppStore(s => s.addRegistro);
+  const undoAction = useAppStore(s => s.undo);
+  const undoStack = useAppStore(s => s.undoStack);
+  const lockProcesso = useAppStore(s => s.lockProcesso);
+  const setLockProcesso = useAppStore(s => s.setLockProcesso);
+  const lockedProcesso = useAppStore(s => s.lockedProcesso);
+  const setLockedProcesso = useAppStore(s => s.setLockedProcesso);
+  const lockNf = useAppStore(s => s.lockNf);
+  const setLockNf = useAppStore(s => s.setLockNf);
+  const lockedNf = useAppStore(s => s.lockedNf);
+  const setLockedNf = useAppStore(s => s.setLockedNf);
+  const lockEndereco = useAppStore(s => s.lockEndereco);
+  const setLockEndereco = useAppStore(s => s.setLockEndereco);
+  const lockedEndereco = useAppStore(s => s.lockedEndereco);
+  const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
+  const formData = useAppStore(s => s.formData);
+  const setFormData = useAppStore(s => s.setFormData);
+  const resetFormData = useAppStore(s => s.resetFormData);
   const addToast = useToastStore(s => s.addToast);
 
   const {
