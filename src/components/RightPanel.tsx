@@ -278,9 +278,9 @@ export default function RightPanel() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar">
+      <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
-          <table className="w-full border-separate border-spacing-0">
+          <table className="w-full border-separate border-spacing-0 table-auto">
             <thead>
               <tr className="bg-muted/30">
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md w-[40px] sm:w-[50px]">#</th>
