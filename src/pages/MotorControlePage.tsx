@@ -191,7 +191,7 @@ export default function MotorControlePage() {
     >
       <div className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
         {/* Subtoggle */}
-        <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
+        <div className="flex surface-2-bg border border-border/40 rounded-xl p-1 gap-1 shadow-inner">
           {(['motor', 'controle'] as SubMode[]).map(mode => (
             <button
               key={mode}

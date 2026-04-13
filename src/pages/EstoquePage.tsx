@@ -160,7 +160,7 @@ export default function EstoquePage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 min-w-0">
       <h1 className="text-3xl font-black">Estoque</h1>
       
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">

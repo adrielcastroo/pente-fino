@@ -83,7 +83,7 @@ export default function DashboardPage() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
       >
         {[
           { label: 'Total de Conferências', value: stats.totalConferencias, icon: BarChart3, tab: 'history', color: 'from-blue-500/20 to-indigo-500/10 text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/20' },
