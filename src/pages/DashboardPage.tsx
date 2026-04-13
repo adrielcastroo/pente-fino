@@ -53,19 +53,19 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-4 sm:p-8 lg:p-12 space-y-8 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="p-3 sm:p-8 lg:p-12 space-y-6 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2.5 text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
-            <Zap className="w-4 h-4 text-primary animate-pulse" />
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[9px] sm:text-xs">
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary animate-pulse" />
             <span>Inteligência de Operação</span>
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter text-foreground leading-[0.9] lg:leading-[0.85]">
             Painel de <br className="hidden sm:block lg:hidden" />
-            <span className="text-primary relative">
+            <span className="text-primary relative inline-block">
               Controle
-              <div className="absolute -bottom-2 left-0 w-full h-1 sm:h-2 bg-primary/20 rounded-full blur-sm" />
+              <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-1 sm:h-2 bg-primary/20 rounded-full blur-sm" />
             </span>
           </h1>
         </div>
