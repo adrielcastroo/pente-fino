@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { Plus, Settings2, ScanBarcode, X, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,7 +32,7 @@ function sanitize(v: string) {
 
 export default function MotorControlePage() {
   const { registros, addRegistro, setMode, formData, setFormData, resetMotorFormData } = useAppStore();
-  const addToast = useToastStore(s => s.addToast);
+  
 
   const {
     motorSubMode: subMode,
@@ -95,13 +95,13 @@ export default function MotorControlePage() {
   };
 
   const handleAddMotor = () => {
-    if (!modelo.trim()) { addToast('Preencha o Modelo', 'warn'); return; }
+    if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     // NF is now optional
-    if (!serie.trim()) { addToast('Bipe a Série', 'warn'); return; }
+    if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
     const cleaned = cleanMotorSerie(serie, modelo);
-    if (!cleaned) { addToast('Série inválida', 'warn'); return; }
-    if (isDuplicate(cleaned)) { addToast('Série já cadastrada!', 'warn'); setSerie(''); return; }
+    if (!cleaned) { toast.warning('Série inválida'); return; }
+    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
     const loteSistema = nf.trim()
@@ -125,7 +125,7 @@ export default function MotorControlePage() {
       isNew: true,
     });
 
-    addToast(`Motor adicionado: ${cleaned}`, 'ok');
+    toast.success(`Motor adicionado: ${cleaned}`);
     setSerie('');
     serieRef.current?.focus();
   };
@@ -134,13 +134,13 @@ export default function MotorControlePage() {
     const resolvedModelo = mapModelo(modelo);
     setModelo(resolvedModelo);
 
-    if (!resolvedModelo.trim()) { addToast('Preencha o Modelo', 'warn'); return; }
+    if (!resolvedModelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     // NF is now optional
-    if (!serie.trim()) { addToast('Bipe a Série', 'warn'); return; }
+    if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
     const cleaned = cleanControleSerie(serie);
-    if (!cleaned) { addToast('Série inválida', 'warn'); return; }
-    if (isDuplicate(cleaned)) { addToast('Série já cadastrada!', 'warn'); setSerie(''); return; }
+    if (!cleaned) { toast.warning('Série inválida'); return; }
+    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     const seq = getSequencial();
     const loteSistema = nf.trim()
@@ -164,7 +164,7 @@ export default function MotorControlePage() {
       isNew: true,
     });
 
-    addToast(`Controle #${seq} adicionado: ${cleaned}`, 'ok');
+    toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     setSerie('');
     serieRef.current?.focus();
   };

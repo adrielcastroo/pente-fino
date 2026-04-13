@@ -1,21 +1,21 @@
 import { useAppStore, formatML } from '@/store/useAppStore';
 import * as XLSX from 'xlsx';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { Download, User } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function TopBar() {
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
-  const addToast = useToastStore(s => s.addToast);
+  
 
   const exportExcel = async () => {
-    if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
+    if (!registros.length) { toast.warning('Nenhum rolo para exportar.'); return; }
 
     const isMotorControle = registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
     const requiresProcesso = !isMotorControle && (registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
-    if (requiresProcesso && !processo.trim()) { addToast('Preencha o campo PROCESSO.', 'warn'); return; }
-    if (!conferente) { addToast('Preencha o campo CONFERENTE.', 'warn'); return; }
+    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
+    if (!conferente) { toast.warning('Preencha o campo CONFERENTE.'); return; }
 
     const columns = getRegistroColumns(registros, currentMode);
     const headers = columns.map(column => column.label);
@@ -51,7 +51,7 @@ export default function TopBar() {
     XLSX.writeFile(wb, fileName);
     const count = registros.length;
     await archiveAndClear(archiveName);
-    addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
+    toast.success(`Excel exportado — ${count} rolos arquivados`);
   };
 
   return (

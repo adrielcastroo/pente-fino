@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAppStore, formatML } from '@/store/useAppStore';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { Search, Download, Trash2, Undo2, Copy, X, Package } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function RightPanel() {
   const archiveAndClear = useAppStore(s => s.archiveAndClear);
   const updateRegistro = useAppStore(s => s.updateRegistro);
   
-  const addToast = useToastStore(s => s.addToast);
+  
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
 
@@ -66,7 +66,7 @@ export default function RightPanel() {
   const columns = useMemo(() => getRegistroColumns(rows, currentMode), [rows, currentMode]);
 
   const copyText = (t: string) => {
-    navigator.clipboard.writeText(t).then(() => addToast('Copiado: ' + t, 'ok'));
+    navigator.clipboard.writeText(t).then(() => toast.success('Copiado: ' + t));
   };
 
   const startEdit = (rowId: string, key: string, currentValue: string) => {
@@ -81,7 +81,7 @@ export default function RightPanel() {
       ? parseFloat(editValue) || 0
       : editValue });
     setEditingCell(null);
-    addToast('Célula atualizada', 'ok');
+    toast.success('Célula atualizada');
   };
 
   const renderCell = (r: any, column: any) => {
@@ -117,7 +117,7 @@ export default function RightPanel() {
   };
 
   const exportExcel = async () => {
-    if (!registros.length) { addToast('Nenhum rolo para exportar.', 'warn'); return; }
+    if (!registros.length) { toast.warning('Nenhum rolo para exportar.'); return; }
     const proc = useAppStore.getState().processo || 'sem_proc';
     const exportColumns = getRegistroColumns(registros, currentMode);
     const headers = exportColumns.map(column => column.label);
@@ -129,14 +129,14 @@ export default function RightPanel() {
     XLSX.writeFile(wb, `conferencia_PROC_${proc.replace(/[/\\]/g, '_')}.xlsx`);
     const count = registros.length;
     await archiveAndClear(`PROC ${proc}`);
-    addToast(`Excel exportado — ${count} rolos arquivados`, 'ok');
+    toast.success(`Excel exportado — ${count} rolos arquivados`);
   };
 
   const handleClearAll = () => {
     if (!registros.length) return;
     if (confirm(`Limpar todos os ${registros.length} registros?`)) {
       useAppStore.getState().clearAll();
-      addToast('Tabela limpa', 'warn');
+      toast.warning('Tabela limpa');
     }
   };
 
@@ -161,7 +161,7 @@ export default function RightPanel() {
               <span>Registro removido recentemente</span>
             </div>
             <button 
-              onClick={() => { const r = undo(); if (r) addToast('Registro restaurado', 'ok'); }}
+              onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado'); }}
               className="bg-white/20 hover:bg-white/30 text-white rounded-full px-4 py-1.5 text-xs font-bold transition-colors backdrop-blur-sm"
             >
               DESFAZER

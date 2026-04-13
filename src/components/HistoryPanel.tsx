@@ -439,7 +439,7 @@ export default function HistoryPanel() {
               conf={conf}
               onDelete={async () => {
                 await deleteConference(conf.id);
-                addToast('Conferência removida', 'ok');
+                toast.warning('Conferência removida');
               }}
             />
           ))

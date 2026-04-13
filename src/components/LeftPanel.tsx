@@ -438,7 +438,7 @@ export default function LeftPanel() {
     if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
     if (mLinear <= 0) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
-    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { addToast('Endereço inválido. Use: TEC01.A.N03', 'warn'); return; }
+    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear) ? 0 : m2Num;
@@ -469,14 +469,14 @@ export default function LeftPanel() {
       isNew: true,
     };
     addRegistro(reg);
-    addToast(`✓ ${item} adicionado (${registros.length + 1} rolos)`, 'ok');
+    toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
     resetForm();
     setTimeout(() => { reg.isNew = false; }, 400);
   };
 
   const handleUndo = () => {
     const restored = undoAction();
-    if (restored) addToast('Rolo restaurado', 'ok');
+    if (restored) toast.success('Rolo restaurado');
   };
 
   const tecidoModes = [
@@ -689,7 +689,7 @@ export default function LeftPanel() {
                       <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={openNativeCamera}><Camera className="w-4 h-4" /></button>
                       <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={() => fileInputRef.current?.click()}><Image className="w-4 h-4" /></button>
                       <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={openLiveCamera}><Video className="w-4 h-4" /></button>
-                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-primary/30 hover:bg-primary/5 transition-colors font-medium text-primary" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); addToast('Foto salva', 'ok'); } }}><Download className="w-4 h-4" /></button>
+                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-primary/30 hover:bg-primary/5 transition-colors font-medium text-primary" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('Foto salva'); } }}><Download className="w-4 h-4" /></button>
                       <button className="flex items-center justify-center text-xs p-2.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}><X className="w-4 h-4" /></button>
                     </>
                   )}
@@ -942,7 +942,7 @@ export default function LeftPanel() {
                   <button
                     onClick={() => {
                       setLockMetragem(!lockMetragem);
-                      addToast(lockMetragem ? 'Metragem destravada' : 'Metragem travada', 'ok');
+                      toast.success(lockMetragem ? 'Metragem destravada' : 'Metragem travada');
                     }}
                     className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors ${
                       lockMetragem
