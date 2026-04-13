@@ -85,10 +85,20 @@ export default function MotorControlePage() {
   }, []);
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => {
+    // 1. Check current session
     for (let i = 0, len = registros.length; i < len; i++) {
       const r = registros[i];
       if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote === cleanedSerie) {
         return true;
+      }
+    }
+    // 2. Check history
+    const history = useAppStore.getState().history;
+    for (const conf of history) {
+      for (const r of conf.registros) {
+        if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote === cleanedSerie) {
+          return true;
+        }
       }
     }
     return false;
@@ -96,12 +106,28 @@ export default function MotorControlePage() {
 
   const getSequencial = useCallback((): number => {
     let max = 0;
+    
+    // 1. Check history
+    const history = useAppStore.getState().history;
+    for (const conf of history) {
+      for (const r of conf.registros) {
+        if (r.modoOrigem === 'controle' && r.loteSistema) {
+          const lastPart = r.loteSistema.split('*').pop();
+          if (lastPart) {
+            const num = parseInt(lastPart, 10);
+            if (!isNaN(num) && num > max) max = num;
+          }
+        }
+      }
+    }
+
+    // 2. Check current session
     for (let i = 0, len = registros.length; i < len; i++) {
       const r = registros[i];
       if (r.modoOrigem === 'controle' && r.loteSistema) {
-        const parts = r.loteSistema.split('*');
-        if (parts.length > 1) {
-          const num = parseInt(parts[parts.length - 1], 10);
+        const lastPart = r.loteSistema.split('*').pop();
+        if (lastPart) {
+          const num = parseInt(lastPart, 10);
           if (!isNaN(num) && num > max) max = num;
         }
       }

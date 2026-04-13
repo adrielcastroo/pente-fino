@@ -125,7 +125,7 @@ export const useAppStore = create<AppState>()(
       addRegistro: (reg) => set(state => {
         const newRegs = [...state.registros, reg];
         let sessionStartedAt = state.sessionStartedAt;
-        if (!sessionStartedAt && state.registros.length === 0) {
+        if (!sessionStartedAt) {
           sessionStartedAt = new Date().toISOString();
         }
         return { registros: newRegs, sessionStartedAt };
