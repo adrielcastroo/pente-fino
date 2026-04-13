@@ -91,33 +91,48 @@ export default function DashboardPage() {
   const [stockData, setStockData] = useState<StockStats[]>([]);
 
   useEffect(() => {
-    loadStockStats();
-  }, []);
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        const tecConfigs: Record<string, number> = {
+          TEC00: 2 * 9 * 30, TEC01: 6 * 5 * 30, TEC02: 2 * 4 * 30,
+          TEC03: 2 * 9 * 30, TEC04: 3 * 5 * 30, TEC05: 3 * 5 * 30,
+        };
 
-  const loadStockStats = async () => {
-    const tecConfigs: Record<string, number> = {
-      TEC00: 2 * 9 * 30, TEC01: 6 * 5 * 30, TEC02: 2 * 4 * 30,
-      TEC03: 2 * 9 * 30, TEC04: 3 * 5 * 30, TEC05: 3 * 5 * 30,
+        const { data, error } = await supabase
+          .from('estoque_posicoes')
+          .select('estrutura, status')
+          .neq('status', 'livre');
+
+        if (error) throw error;
+        if (!isMounted) return;
+
+        const countMap: Record<string, Record<string, number>> = {};
+        (data || []).forEach((r) => {
+          if (!countMap[r.estrutura]) countMap[r.estrutura] = {};
+          countMap[r.estrutura][r.status] = (countMap[r.estrutura][r.status] || 0) + 1;
+        });
+
+        const result: StockStats[] = Object.entries(tecConfigs).map(([tec, total]) => {
+          const c = countMap[tec] || {};
+          // Only count items actually occupying a slot (not 'saida')
+          const occupied = (c.ocupado || 0) + (c.reservado || 0) + (c.bloqueado || 0);
+          return {
+            estrutura: tec,
+            ocupado: c.ocupado || 0,
+            reservado: c.reservado || 0,
+            bloqueado: c.bloqueado || 0,
+            livre: Math.max(0, total - occupied),
+          };
+        });
+        setStockData(result);
+      } catch (err) {
+        console.error('Error loading stock stats:', err);
+      }
     };
-    const { data } = await supabase.from('estoque_posicoes').select('estrutura, status');
-    const countMap: Record<string, Record<string, number>> = {};
-    (data || []).forEach((r: any) => {
-      if (!countMap[r.estrutura]) countMap[r.estrutura] = {};
-      countMap[r.estrutura][r.status] = (countMap[r.estrutura][r.status] || 0) + 1;
-    });
-    const result: StockStats[] = Object.entries(tecConfigs).map(([tec, total]) => {
-      const c = countMap[tec] || {};
-      const occupied = (c.ocupado || 0) + (c.reservado || 0) + (c.bloqueado || 0) + (c.saida || 0);
-      return {
-        estrutura: tec,
-        ocupado: c.ocupado || 0,
-        reservado: c.reservado || 0,
-        bloqueado: c.bloqueado || 0,
-        livre: total - occupied,
-      };
-    });
-    setStockData(result);
-  };
+    loadData();
+    return () => { isMounted = false; };
+  }, []);
 
   const exportDashboardData = () => {
     if (!history.length) {
