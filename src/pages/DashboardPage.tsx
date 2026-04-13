@@ -16,11 +16,10 @@ import { motion } from 'framer-motion';
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  '#06b6d4',
-  '#22d3ee',
-  '#0ea5e9',
-  '#8b5cf6',
-  '#a78bfa',
+  'hsl(var(--primary) / 0.8)',
+  'hsl(var(--primary) / 0.6)',
+  'hsl(var(--primary) / 0.4)',
+  'hsl(var(--primary) / 0.2)',
 ];
 
 export default function DashboardPage() {
