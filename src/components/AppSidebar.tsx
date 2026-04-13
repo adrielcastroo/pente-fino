@@ -141,11 +141,11 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={toggleTheme} 
-              className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-200"
+              className="h-11 rounded-xl hover:bg-sidebar-accent/50 text-foreground/80 dark:text-foreground transition-all duration-200"
               tooltip={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
             >
               <div className="w-4.5 h-4.5 flex items-center justify-center">
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-400" />}
               </div>
               <span className={`transition-all duration-200 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
                 {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
@@ -156,11 +156,11 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
             <SidebarMenuItem>
               <SidebarMenuButton 
                 onClick={onOpenConfig} 
-                className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-200"
+                className="h-11 rounded-xl hover:bg-sidebar-accent/50 text-foreground/80 dark:text-foreground transition-all duration-200"
                 tooltip="Acessar Configurações"
               >
                 <div className="w-4.5 h-4.5 flex items-center justify-center">
-                  <Settings className="w-4 h-4" />
+                  <Settings className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <span className={`transition-all duration-200 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
                   Configurações
