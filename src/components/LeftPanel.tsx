@@ -531,9 +531,9 @@ export default function LeftPanel() {
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="bg-background border-r border-border/50 overflow-hidden flex flex-col h-full"
+      className="bg-background md:border-r border-border/50 overflow-hidden flex flex-col h-full"
     >
-      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-5 custom-scrollbar">
+      <div className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
           <div className="flex bg-muted/30 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
