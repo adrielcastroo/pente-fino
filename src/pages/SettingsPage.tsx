@@ -178,8 +178,8 @@ export default function SettingsPage() {
                                 <h3 className="font-semibold text-sm">Foto de Perfil</h3>
                                 <p className="text-xs text-muted-foreground">JPG, GIF ou PNG. Tamanho máximo de 2MB.</p>
                                 <div className="flex gap-2 mt-2">
-                                   <Button variant="outline" size="xs" className="text-[10px] h-7">Upload</Button>
-                                   <Button variant="ghost" size="xs" className="text-[10px] h-7 text-destructive">Remover</Button>
+                                   <Button variant="outline" size="sm" className="text-[10px] h-7 px-2">Upload</Button>
+                                   <Button variant="ghost" size="sm" className="text-[10px] h-7 px-2 text-destructive">Remover</Button>
                                 </div>
                              </div>
                           </div>
