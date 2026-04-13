@@ -77,9 +77,9 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
       onMouseLeave={handleMouseLeave}
       aria-label="Menu Principal"
     >
-      <SidebarHeader className="p-4 group-data-[state=collapsed]:p-2 transition-all duration-300">
-        <div className="flex items-center gap-3 overflow-hidden rounded-2xl p-1.5 group-data-[state=collapsed]:p-0 transition-all duration-300">
-          <div className="flex items-center justify-center w-10 h-10 group-data-[state=collapsed]:w-9 group-data-[state=collapsed]:h-9 rounded-xl bg-primary/10 text-primary flex-shrink-0 transition-all duration-500 hover:rotate-12 hover:scale-110">
+      <SidebarHeader className="p-3 sm:p-4 group-data-[state=collapsed]:p-2 transition-all duration-300">
+        <div className="flex items-center gap-2 sm:gap-3 overflow-hidden rounded-2xl p-1 sm:p-1.5 group-data-[state=collapsed]:p-0 transition-all duration-300">
+          <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 group-data-[state=collapsed]:w-9 group-data-[state=collapsed]:h-9 rounded-xl bg-primary/10 text-primary flex-shrink-0 transition-all duration-500 hover:rotate-12 hover:scale-110">
             <Logo className="w-6 h-6 group-data-[state=collapsed]:w-5 group-data-[state=collapsed]:h-5" />
           </div>
           <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
@@ -106,7 +106,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
                       className={`
-                        h-12 rounded-xl transition-all duration-300 relative overflow-hidden group/btn
+                        h-10 sm:h-12 rounded-xl transition-all duration-300 relative overflow-hidden group/btn
                         ${isActive 
                           ? 'bg-primary text-primary-foreground font-extrabold shadow-lg shadow-primary/25 scale-[1.02]' 
                           : 'hover:bg-sidebar-accent/80 text-sidebar-foreground font-semibold hover:translate-x-1'}

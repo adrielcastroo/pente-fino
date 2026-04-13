@@ -71,17 +71,17 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
-      <div className="flex h-16 items-center gap-4 px-4 sm:px-6 max-w-[1800px] mx-auto">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-xl" />
-          <div className="hidden lg:flex flex-col">
-            <h2 className="text-sm font-black tracking-tight leading-none uppercase text-muted-foreground/80">Painel Operacional</h2>
-            <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mt-0.5">Sistema de Conferência</p>
+      <div className="flex h-16 items-center gap-3 px-3 sm:px-6 max-w-[1800px] mx-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-xl" />
+          <div className="hidden xs:flex lg:flex flex-col">
+            <h2 className="text-[10px] sm:text-sm font-black tracking-tight leading-none uppercase text-muted-foreground/80">Painel Operacional</h2>
+            <p className="text-[8px] sm:text-[10px] font-bold text-primary/80 uppercase tracking-widest mt-0.5">Sistema de Conferência</p>
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-3 sm:gap-4">
-          <div className="relative group w-full max-w-[200px] sm:max-w-[280px]">
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 min-w-0">
+          <div className="relative group w-full max-w-[140px] xs:max-w-[200px] sm:max-w-[280px]">
             <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
             <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10">
               <User className="h-4 w-4 sm:h-5 sm:w-5" />

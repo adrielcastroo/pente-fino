@@ -79,17 +79,17 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full flex-col md:flex-row">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
           onOpenConfig={() => setConfigOpen(true)} 
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden h-[100dvh]">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh]">
           <TopBar />
 
-          <div className="flex-1 overflow-y-auto bg-background/50">
+          <div className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}

@@ -160,7 +160,7 @@ export default function EstoquePage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 min-w-0">
       <h1 className="text-3xl font-black">Estoque</h1>
       
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
@@ -189,21 +189,23 @@ export default function EstoquePage() {
       </div>
 
       {loading ? <div>Carregando...</div> : (
-        <div className="overflow-x-auto">
-            {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
-              <div key={nivel} className="flex gap-2 mb-2">
-                <div className="w-12 text-[10px] font-bold text-muted-foreground flex items-center justify-center">N{String(nivel).padStart(2, '0')}</div>
-                {config.cols.map(col => {
-                    const items = cellMap[`${col}-${nivel}`] || [];
-                    return (
-                        <div key={col} onClick={() => setSelectedCell({ col, nivel })} className="flex-1 h-16 border rounded-lg cursor-pointer hover:border-primary p-1">
-                            <div className="text-[9px] font-bold">{col}·N{nivel}</div>
-                            <div className="text-[10px] text-muted-foreground">{items.length}/30</div>
-                        </div>
-                    )
-                })}
-              </div>
-            ))}
+        <div className="overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="min-w-[600px] space-y-2">
+                {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
+                  <div key={nivel} className="flex gap-2">
+                    <div className="w-10 sm:w-12 text-[8px] sm:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/20 rounded-lg">N{String(nivel).padStart(2, '0')}</div>
+                    {config.cols.map(col => {
+                        const items = cellMap[`${col}-${nivel}`] || [];
+                        return (
+                            <div key={col} onClick={() => setSelectedCell({ col, nivel })} className="flex-1 h-14 sm:h-16 border border-border/40 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/5 p-1.5 transition-all">
+                                <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-tighter opacity-60">{col}·N{nivel}</div>
+                                <div className="text-[10px] sm:text-xs font-black text-primary">{items.length}<span className="text-[8px] sm:text-[10px] text-muted-foreground font-bold ml-1">/ 30</span></div>
+                            </div>
+                        )
+                    })}
+                  </div>
+                ))}
+            </div>
         </div>
       )}
 

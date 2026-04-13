@@ -616,7 +616,7 @@ export default function LeftPanel() {
         {isDiversos && (
           <div className="space-y-3">
             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 opacity-60">Selecione o Tipo</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
                 <button
                   key={tipo}
@@ -637,7 +637,7 @@ export default function LeftPanel() {
         {isMadeira && (
           <div className="space-y-3">
             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 opacity-60">Subtipo de Material</div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
@@ -779,10 +779,10 @@ export default function LeftPanel() {
             <ScanBarcode className="w-3.5 h-3.5" /> {isMadeira ? 'Especificações da Madeira' : 'Especificações do Material'}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <div className="flex items-center justify-between px-1">
                   <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Processo (PROC)</label>
                   <Button
@@ -815,7 +815,7 @@ export default function LeftPanel() {
             )}
 
             {/* Item / Referência */}
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2 md:col-span-2">
               <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item / Referência</label>
               <input
                 id="item-input"
@@ -834,7 +834,7 @@ export default function LeftPanel() {
 
             {/* Coulisse: optional manual largura */}
             {isCoulisse && (
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura (Opcional)</label>
                 <input
                   id="largura-manual"
@@ -850,7 +850,7 @@ export default function LeftPanel() {
 
             {/* NF field — Diversos except Celular */}
             {requiresNF && (
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <div className="flex items-center justify-between px-1">
                   <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nota Fiscal (NF)</label>
                   <Button
@@ -967,7 +967,7 @@ export default function LeftPanel() {
 
             {/* Endereço */}
             {requiresEndereco && (
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <div className="flex items-center justify-between px-1">
                   <label htmlFor="endereco-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endereço (TEC01.A.N03)</label>
                   <Button
@@ -1003,11 +1003,11 @@ export default function LeftPanel() {
         </div>
 
         {/* Computed Preview Card */}
-        <div className="p-6 rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000">
+        <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000 hidden xs:block">
              <Package className="w-32 h-32" />
           </div>
-          <div className="grid grid-cols-2 gap-8 relative z-10">
+          <div className="grid grid-cols-2 gap-4 sm:gap-8 relative z-10">
             {isMadeira ? (
               <>
                 <div className="space-y-1">
