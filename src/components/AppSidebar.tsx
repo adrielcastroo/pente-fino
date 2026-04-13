@@ -24,14 +24,14 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
-  { key: 'inicio', label: 'Início', icon: Home },
-  { key: 'tecido', label: 'Tecido', icon: Layers3 },
-  { key: 'madeira', label: 'Madeira', icon: Package },
-  { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
-  { key: 'estoque', label: 'Estoque', icon: Warehouse },
-  { key: 'table', label: 'Tabela', icon: Table },
-  { key: 'history', label: 'Histórico', icon: FolderOpen },
+const menuItems: { key: AppTab; label: string; icon: typeof Home; color?: string }[] = [
+  { key: 'inicio', label: 'Início', icon: Home, color: 'text-primary' },
+  { key: 'tecido', label: 'Tecido', icon: Layers3, color: 'text-blue-500' },
+  { key: 'madeira', label: 'Madeira', icon: Package, color: 'text-amber-600' },
+  { key: 'motor', label: 'Motor/Controle', icon: Settings2, color: 'text-rose-500' },
+  { key: 'estoque', label: 'Estoque', icon: Warehouse, color: 'text-emerald-500' },
+  { key: 'table', label: 'Tabela', icon: Table, color: 'text-violet-500' },
+  { key: 'history', label: 'Histórico', icon: FolderOpen, color: 'text-slate-500' },
 ];
 
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
