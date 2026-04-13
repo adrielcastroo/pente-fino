@@ -1038,42 +1038,48 @@ export default function LeftPanel() {
 
 
         {/* Computed Preview Card */}
-        <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover/card:scale-150 transition-transform duration-1000 hidden xs:block">
-             <Package className="w-32 h-32" />
+        <div className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#0A0D14] text-white shadow-2xl relative overflow-hidden group/card transition-all duration-700 hover:scale-[1.02] border border-white/5">
+          <div className="absolute top-0 right-0 p-10 opacity-5 group-hover/card:scale-150 group-hover/card:rotate-12 transition-all duration-1000 hidden xs:block">
+             <Package className="w-40 h-40 text-primary" />
           </div>
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-8 relative z-10">
+          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-[80px]" />
+          
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-6 sm:gap-10 relative z-10">
             {isMadeira ? (
               <>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Subtipo</p>
-                  <p className="text-xl font-black">{madeiraTipo}</p>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Subtipo</p>
+                  <p className="text-2xl font-black tracking-tight">{madeiraTipo}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Qtd</p>
-                  <p className="text-xl font-black">{quantidade || madeiraDefaults[madeiraTipo]}</p>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Quantidade</p>
+                  <p className="text-2xl font-black tracking-tight">{quantidade || madeiraDefaults[madeiraTipo]} <span className="text-[10px] opacity-40">UND</span></p>
                 </div>
               </>
             ) : (
               <>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Largura</p>
-                  <p className="text-xl font-black">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Largura Real</p>
+                  <p className="text-2xl font-black tracking-tight">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">M Linear</p>
-                  <p className="text-xl font-black">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Metragem Linear</p>
+                  <p className="text-2xl font-black tracking-tight">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
                 </div>
               </>
             )}
-            <div className="col-span-2 space-y-2 border-t border-white/10 pt-4">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Lote Sistema Gerado</p>
-              <div className="p-3 rounded-xl bg-white/5 font-mono text-xs font-bold text-primary-foreground/90 truncate border border-white/5">
+            <div className="col-span-2 space-y-3 border-t border-white/10 pt-6">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Lote Sistema Gerado</p>
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              </div>
+              <div className="p-4 rounded-2xl bg-white/5 font-mono text-xs sm:text-sm font-bold text-primary-foreground/90 truncate border border-white/5 shadow-inner group-hover/card:border-primary/20 transition-colors duration-500">
                 {previewLoteSistema}
               </div>
             </div>
           </div>
         </div>
+
 
         {/* Action Buttons */}
         <div className="space-y-3 pt-2 pb-8">
