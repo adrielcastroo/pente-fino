@@ -111,7 +111,7 @@ export default function Index() {
       </div>
 
       <Suspense fallback={null}>
-        <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
+        {/* <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} /> */}
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </Suspense>
     </SidebarProvider>
