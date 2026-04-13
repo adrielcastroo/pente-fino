@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getRegistroColumns, type RegistroColumnKey } from './registroColumns';
-import type { Registro } from '@/store/useAppStore';
+import { Registro } from '@/types';
 
 const mockRegistro = (updates: Partial<Registro> = {}): Registro => ({
   id: '1',
