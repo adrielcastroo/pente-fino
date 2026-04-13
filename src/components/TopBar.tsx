@@ -56,18 +56,18 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/10 bg-background/50 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/40">
-      <div className="flex h-16 items-center gap-6 px-4 max-w-[1800px] mx-auto">
+      <div className="flex h-16 items-center gap-3 sm:gap-6 px-4 max-w-[1800px] mx-auto">
         <div className="flex items-center">
           <SidebarTrigger className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-xl" />
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-6">
+        <div className="flex flex-1 items-center justify-end">
           <div className="flex items-center gap-3 relative group w-full max-w-[280px]">
             <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
-              <User className="h-4.5 w-4.5" />
+              <User className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </div>
             <input
-              className="h-11 w-full rounded-2xl border border-border/50 bg-muted/40 pl-11 pr-4 text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/60 placeholder:font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/5 focus-visible:border-primary/40 transition-all duration-300 hover:bg-muted/60"
+              className="h-10 sm:h-11 w-full rounded-xl sm:rounded-2xl border border-border/50 bg-muted/40 pl-10 sm:pl-11 pr-4 text-[11px] sm:text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/60 placeholder:font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/5 focus-visible:border-primary/40 transition-all duration-300 hover:bg-muted/60"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
               placeholder="Nome do Conferente..."
@@ -75,7 +75,6 @@ export default function TopBar() {
               required
             />
           </div>
-
         </div>
       </div>
     </header>
