@@ -113,7 +113,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-10">
         {[
           { title: 'Conferentes', data: stats.topConferentes, type: 'bar' as const, icon: Users, desc: 'Top Volume de Produção' },
           { title: 'Categorias', data: stats.categorias, type: 'pie' as const, icon: Layers3, desc: 'Distribuição Setorial' },
@@ -122,25 +122,25 @@ export default function DashboardPage() {
         ].map(chart => (
           <Card key={chart.title} className="group border-none bg-card/30 backdrop-blur-md hover:bg-card/50 transition-all duration-700 shadow-2xl overflow-hidden relative">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:h-full transition-all duration-700" />
-            <CardHeader className="flex flex-row items-center justify-between px-6 sm:px-8 py-5 sm:py-6 border-b border-border/10">
+            <CardHeader className="flex flex-row items-center justify-between px-5 sm:px-8 py-4 sm:py-6 border-b border-border/10">
               <div className="space-y-1 min-w-0">
-                <CardTitle className="text-base sm:text-xl font-black flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shrink-0 shadow-lg shadow-primary/5">
-                    <chart.icon className="w-4 h-4 sm:w-5 h-5" />
+                <CardTitle className="text-sm sm:text-xl font-black flex items-center gap-2.5 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shrink-0 shadow-lg shadow-primary/5">
+                    <chart.icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                   </div>
                   <span className="truncate tracking-tight">{chart.title}</span>
                 </CardTitle>
-                <p className="text-[10px] sm:text-xs text-muted-foreground/40 font-bold uppercase tracking-widest ml-12">{chart.desc}</p>
+                <p className="text-[8px] sm:text-xs text-muted-foreground/40 font-bold uppercase tracking-widest ml-10 sm:ml-12 truncate">{chart.desc}</p>
               </div>
-              <div className="flex gap-2 shrink-0">
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })} aria-label={`Expandir ${chart.title}`}>
-                  <Eye className="w-4 h-4" />
+              <div className="flex gap-1.5 sm:gap-2 shrink-0">
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })} aria-label={`Expandir ${chart.title}`}>
+                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => handleExport(chart.data, chart.title)} aria-label={`Exportar ${chart.title}`}>
-                  <Download className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => handleExport(chart.data, chart.title)} aria-label={`Exportar ${chart.title}`}>
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
               </div>
-            </CardHeader>
+            </Header>
             <CardContent className="p-6 sm:p-10 h-[250px] sm:h-[350px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart.type === 'bar' ? (
