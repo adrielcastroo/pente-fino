@@ -1,7 +1,7 @@
 import { Home, Layers3, Package, Settings2, Table, FolderOpen, Warehouse, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Logo } from './Logo';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import {
   Sidebar,
@@ -37,7 +37,8 @@ const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
   const { state, setOpen, isMobile, toggleSidebar, open } = useSidebar();
   const registros = useAppStore(s => s.registros);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 

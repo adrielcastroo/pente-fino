@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Search, Upload, Download, Eye, Filter, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -69,7 +69,7 @@ export default function EstoquePage() {
   const setSearch = (val: string) => setFormData({ estoqueSearch: val });
   const setHighlightStatus = (val: string | null) => setFormData({ estoqueHighlightStatus: val });
 
-  const addToast = useToastStore(s => s.addToast);
+  
   const [posicoes, setPosicoes] = useState<Posicao[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
@@ -92,7 +92,7 @@ export default function EstoquePage() {
       setPosicoes((data as Posicao[]) || []);
     } catch (error) {
       console.error(error);
-      addToast('Erro ao carregar estoque', 'err');
+      toast.error('Erro ao carregar estoque');
     } finally {
       setLoading(false);
     }
@@ -153,11 +153,11 @@ export default function EstoquePage() {
       .eq('id', pos.id);
 
     if (error) {
-      addToast('Erro ao atualizar status', 'err');
+      toast.error('Erro ao atualizar status');
       // Rollback on error
       loadPosicoes();
     } else {
-      addToast(`Status → ${STATUS_LABELS[newStatus]}`, 'ok');
+      toast.success(`Status → ${STATUS_LABELS[newStatus]}`);
     }
   };
 

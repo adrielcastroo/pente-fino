@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ConfigModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const addToast = useToastStore(s => s.addToast);
+  
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
   const [orModel, setOrModel] = useState(localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku');
 
   const saveOR = () => {
-    if (!orKey.trim()) { addToast('Insira uma chave válida.', 'err'); return; }
+    if (!orKey.trim()) { toast.error('Insira uma chave válida.'); return; }
     localStorage.setItem('cft4_or_key', orKey.trim());
-    addToast('✓ Chave OpenRouter salva!', 'ok');
+    toast.success('Chave OpenRouter salva!');
     setTimeout(onClose, 800);
   };
 
@@ -56,7 +56,7 @@ export default function ConfigModal({ open, onClose }: { open: boolean; onClose:
               </div>
               <select
                 value={orModel}
-                onChange={e => { setOrModel(e.target.value); localStorage.setItem('cft4_or_model', e.target.value); addToast('Modelo OR: ' + e.target.value.split('/').pop(), 'ok'); }}
+                onChange={e => { setOrModel(e.target.value); localStorage.setItem('cft4_or_model', e.target.value); toast.success('Modelo OR: ' + e.target.value.split('/').pop()); }}
                 className="w-full mt-2 border border-border rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground bg-surface outline-none cursor-pointer"
               >
                 <option value="anthropic/claude-3-haiku">Claude 3 Haiku — rápido</option>
