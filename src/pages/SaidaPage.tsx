@@ -28,16 +28,8 @@ interface SaidaRegistro {
   posicao: number;
 }
 
-function formatDateBR(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
+import { formatDateBR } from '@/lib/app-utils';
+
 
 export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
