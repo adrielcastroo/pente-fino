@@ -547,7 +547,7 @@ export default function LeftPanel() {
         
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 border border-border/40 rounded-3xl p-1.5 gap-2 shadow-inner relative z-10 backdrop-blur-md">
+          <div className="flex bg-muted/40 border border-border/40 rounded-2xl sm:rounded-3xl p-1 gap-1 sm:gap-2 shadow-inner relative z-10 backdrop-blur-md overflow-x-auto no-scrollbar">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -555,15 +555,15 @@ export default function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-4 rounded-2xl text-[10px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2.5 uppercase tracking-[0.15em] relative overflow-hidden group/mode ${
+                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode ${
                     isActive
-                      ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-100'
+                      ? 'bg-primary text-white shadow-lg sm:shadow-xl shadow-primary/30 scale-100'
                       : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
                   }`}
                   aria-pressed={isActive}
                 >
                   {isActive && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
-                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${isActive ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0 group-hover/mode:scale-110'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${isActive ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0 group-hover/mode:scale-110'}`} />
                   <span className="relative z-10">{m.label}</span>
                 </button>
               );
