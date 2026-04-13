@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Search, Archive, Calendar, User, Clock, Filter, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+
 
 interface SaidaRegistro {
   id: string;
@@ -78,101 +80,125 @@ export default function SaidaPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8"
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="p-4 sm:p-10 lg:p-16 max-w-[1600px] mx-auto space-y-10 sm:space-y-16"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="text-center sm:text-left">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground flex items-center gap-2 justify-center sm:justify-start">
-            <Archive className="w-8 h-8 text-primary" />
-            Arquivos de Saída
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+        <div className="text-left space-y-3">
+          <div className="flex items-center gap-2.5 text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
+            <Archive className="w-4 h-4 text-primary" />
+            <span>Repositório Logístico</span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter text-foreground leading-[0.9]">
+            Arquivos de <br className="hidden sm:block" />
+            <span className="text-primary relative">
+              Saída
+              <div className="absolute -bottom-2 left-0 w-full h-1 sm:h-2 bg-primary/20 rounded-full blur-sm" />
+            </span>
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">Histórico completo de tecidos que saíram do estoque</p>
+          <p className="text-sm sm:text-lg text-muted-foreground font-medium max-w-lg tracking-tight">Histórico de tecidos expedidos do estoque físico.</p>
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="relative w-full lg:max-w-md group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+            <Search className="w-5 h-5" />
+          </div>
           <Input
-            placeholder="Buscar por item, PROC, conferente..."
+            placeholder="Filtrar por item, PROC, conferente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-11 bg-card border-border/50 focus:ring-primary/20"
+            className="pl-12 h-14 sm:h-16 rounded-2xl sm:rounded-3xl bg-card/40 backdrop-blur-md border-border/40 focus:ring-8 focus:ring-primary/5 focus:border-primary/40 text-base font-bold shadow-xl transition-all"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="h-48 bg-muted animate-pulse rounded-2xl" />
+            <div key={i} className="h-64 bg-muted/20 animate-pulse rounded-[2.5rem]" />
           ))}
         </div>
       ) : filteredSaidas.length === 0 ? (
-        <div className="text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
-          <Archive className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <p className="text-muted-foreground font-medium">Nenhum registro de saída encontrado.</p>
-        </div>
+        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-32 bg-muted/5 rounded-[3rem] border-2 border-dashed border-border/40">
+          <div className="h-24 w-24 bg-muted/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 opacity-20">
+             <Archive className="w-12 h-12" />
+          </div>
+          <p className="text-muted-foreground font-black uppercase tracking-widest text-sm">Nenhum registro de saída encontrado</p>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-10">
           {filteredSaidas.map((saida) => (
-            <Card key={saida.id} className="overflow-hidden border-none shadow-xl shadow-black/5 bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 group">
-              <div className="h-1.5 w-full bg-primary/20 group-hover:bg-primary transition-colors" />
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-base font-black truncate max-w-[200px]">{saida.item}</CardTitle>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{saida.proc || 'Sem PROC'}</p>
+            <Card key={saida.id} className="overflow-hidden border-none shadow-2xl bg-card/40 backdrop-blur-md hover:scale-[1.03] transition-all duration-500 group rounded-[2.5rem] relative">
+              <div className="absolute top-0 left-0 w-full h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-700" />
+              
+              <CardHeader className="p-8 pb-4">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="min-w-0">
+                    <CardTitle className="text-xl sm:text-2xl font-black truncate tracking-tighter text-foreground">{saida.item}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1.5">
+                       <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary rounded-lg">{saida.proc || 'Sem PROC'}</Badge>
+                    </div>
                   </div>
-                  <div className="px-2 py-1 rounded bg-muted text-[10px] font-mono font-bold text-muted-foreground">
+                  <div className="px-3 py-1.5 rounded-xl bg-muted/50 text-[10px] font-mono font-black text-muted-foreground border border-border/40 whitespace-nowrap shadow-inner shrink-0">
                     {saida.estrutura}.{saida.coluna}.N{String(saida.nivel).padStart(2, '0')} P{saida.posicao}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 pt-2">
-                <div className="grid grid-cols-2 gap-y-3 gap-x-4 border-y border-border/50 py-3">
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5" /> Saída
+
+              <CardContent className="p-8 pt-2 space-y-6">
+                <div className="grid grid-cols-2 gap-y-5 gap-x-6 border-y border-border/10 py-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5 opacity-50">
+                      <Clock className="w-3 h-3" /> Data Saída
                     </p>
-                    <p className="text-xs font-semibold">{formatDateBR(saida.data_saida)}</p>
+                    <p className="text-xs font-bold tracking-tight">{formatDateBR(saida.data_saida)}</p>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter flex items-center gap-1">
-                      <User className="w-2.5 h-2.5" /> Conferente
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5 opacity-50">
+                      <User className="w-3 h-3" /> Conferente
                     </p>
-                    <p className="text-xs font-semibold truncate">{saida.conferente_saida || '—'}</p>
+                    <p className="text-xs font-bold truncate tracking-tight">{saida.conferente_saida || '—'}</p>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter flex items-center gap-1">
-                      <Calendar className="w-2.5 h-2.5" /> Entrada
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5 opacity-50">
+                      <Calendar className="w-3 h-3" /> Entrada
                     </p>
-                    <p className="text-xs font-semibold">{formatDateBR(saida.data_registro)}</p>
+                    <p className="text-xs font-bold tracking-tight opacity-60">{formatDateBR(saida.data_registro)}</p>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter flex items-center gap-1">
-                      <User className="w-2.5 h-2.5" /> Incluído por
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5 opacity-50">
+                      <User className="w-3 h-3" /> Entrada por
                     </p>
-                    <p className="text-xs font-semibold truncate">{saida.conferente_entrada || '—'}</p>
+                    <p className="text-xs font-bold truncate tracking-tight opacity-60">{saida.conferente_entrada || '—'}</p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs border-b border-border/30 pb-1">
-                    <span className="text-muted-foreground">Lote:</span>
-                    <span className="font-bold">{saida.lote || '—'}</span>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-muted/20 p-3 rounded-2xl border border-border/10">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Lote</span>
+                    <span className="text-xs font-black font-mono text-primary/80">{saida.lote || '—'}</span>
                   </div>
-                  <div className="flex justify-between text-xs border-b border-border/30 pb-1">
-                    <span className="text-muted-foreground">M² / ML:</span>
-                    <span className="font-bold">{saida.m2} m² / {saida.m_linear}m</span>
+                  
+                  <div className="flex gap-3">
+                    <div className="flex-1 bg-muted/20 p-3 rounded-2xl border border-border/10 text-center">
+                       <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">M²</p>
+                       <p className="text-xs font-black">{saida.m2}</p>
+                    </div>
+                    <div className="flex-1 bg-muted/20 p-3 rounded-2xl border border-border/10 text-center">
+                       <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">M Linear</p>
+                       <p className="text-xs font-black">{saida.m_linear}m</p>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1 pt-1">
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter flex items-center gap-1">
-                      <FileText className="w-2.5 h-2.5" /> Lote Final
-                    </span>
-                    <span className="text-[11px] font-mono bg-muted/50 p-1.5 rounded-lg break-all border border-border/30">
+
+                  <div className="space-y-2 pt-2">
+                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5 opacity-50 ml-1">
+                      <FileText className="w-3 h-3" /> Lote Final Gerado
+                    </p>
+                    <div className="text-[10px] font-mono font-bold bg-[#0A0D14] text-primary-foreground/80 p-4 rounded-2xl break-all border border-white/5 shadow-2xl shadow-inner group-hover:border-primary/30 transition-colors duration-700">
                       {saida.lote_sistema || '—'}
-                    </span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -181,5 +207,6 @@ export default function SaidaPage() {
         </div>
       )}
     </motion.div>
+
   );
 }

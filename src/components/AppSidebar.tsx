@@ -77,22 +77,22 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
       onMouseLeave={handleMouseLeave}
       aria-label="Menu Principal"
     >
-      <SidebarHeader className="p-3 sm:p-4 group-data-[state=collapsed]:p-2 transition-all duration-300">
-        <div className="flex items-center gap-2 sm:gap-3 overflow-hidden rounded-2xl p-1 sm:p-1.5 group-data-[state=collapsed]:p-0 transition-all duration-300">
-          <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 group-data-[state=collapsed]:w-9 group-data-[state=collapsed]:h-9 rounded-xl bg-primary/10 text-primary flex-shrink-0 transition-all duration-500 hover:rotate-12 hover:scale-110">
-            <Logo className="w-6 h-6 group-data-[state=collapsed]:w-5 group-data-[state=collapsed]:h-5" />
+      <SidebarHeader className="p-4 sm:p-6 group-data-[state=collapsed]:p-3 transition-all duration-500">
+        <div className="flex items-center gap-3 overflow-hidden rounded-3xl p-2 group-data-[state=collapsed]:p-0 transition-all duration-500 hover:bg-sidebar-accent/30 group/logo">
+          <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:h-10 rounded-2xl bg-primary shadow-lg shadow-primary/30 text-primary-foreground flex-shrink-0 transition-all duration-500 group-hover/logo:rotate-12 group-hover/logo:scale-110">
+            <Logo className="w-6 h-6 sm:w-8 sm:h-8 group-data-[state=collapsed]:w-6 group-data-[state=collapsed]:h-6" />
           </div>
-          <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
-            <span className="font-extrabold text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
-            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Controle de Estoque</span>
+          <div className={`flex flex-col transition-all duration-500 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-2'}`}>
+            <span className="font-black text-lg text-foreground leading-none tracking-tighter whitespace-nowrap">Pente Fino</span>
+            <span className="text-[10px] text-muted-foreground font-extrabold uppercase tracking-[0.2em] mt-0.5">ESTOQUE</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 group-data-[state=collapsed]:px-1 mt-2">
+      <SidebarContent className="px-4 group-data-[state=collapsed]:px-2 mt-4 custom-scrollbar">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
+            <SidebarMenu className="gap-3">
               {menuItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
@@ -106,32 +106,32 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
                       className={`
-                        h-10 sm:h-12 rounded-xl transition-all duration-300 relative overflow-hidden group/btn
+                        h-12 sm:h-14 rounded-2xl transition-all duration-500 relative overflow-hidden group/btn
                         ${isActive 
-                          ? 'bg-primary text-primary-foreground font-extrabold shadow-lg shadow-primary/25 scale-[1.02]' 
-                          : 'hover:bg-sidebar-accent/80 text-sidebar-foreground font-semibold hover:translate-x-1'}
-                        ${isTableTab && registros.length > 0 && !isActive ? 'ring-2 ring-primary/40' : ''}
+                          ? 'bg-primary text-primary-foreground font-black shadow-xl shadow-primary/30 scale-[1.04]' 
+                          : 'hover:bg-sidebar-accent text-muted-foreground hover:text-foreground font-bold hover:translate-x-1.5'}
+                        ${isTableTab && registros.length > 0 && !isActive ? 'ring-2 ring-primary ring-offset-2 ring-offset-sidebar' : ''}
                       `}
                     >
-                      <div className="relative flex items-center justify-center">
-                        <Icon className={`w-5 h-5 transition-all duration-300 ${isActive ? 'scale-110 text-primary-foreground' : 'text-muted-foreground group-hover/btn:text-foreground'}`} />
+                      <div className="relative flex items-center justify-center shrink-0">
+                        <Icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-500 ${isActive ? 'scale-110 text-primary-foreground drop-shadow-md' : 'group-hover/btn:text-primary group-hover/btn:scale-110'}`} />
                         {isTableTab && registros.length > 0 && collapsed && (
-                          <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-black text-white ring-2 ring-sidebar animate-pulse">
+                          <span className="absolute -top-3 -right-3 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white ring-4 ring-sidebar shadow-lg animate-bounce">
                             {registros.length}
                           </span>
                         )}
                       </div>
-                      <span className={`tracking-tight transition-all duration-300 whitespace-nowrap ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-3'} ${isActive ? 'font-black' : 'font-bold'}`}>
+                      <span className={`tracking-tight transition-all duration-500 whitespace-nowrap ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-4'} ${isActive ? 'text-sm' : 'text-sm'}`}>
                         {item.label}
                       </span>
                       {isTableTab && registros.length > 0 && !collapsed && (
-                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-300 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-primary/20 animate-bounce'}`}>
+                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-500 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse'}`}>
                           {registros.length}
                         </span>
                       )}
                       
                       {isActive && (
-                        <div className="absolute left-0 w-1.5 h-6 bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                        <div className="absolute left-0 w-1.5 h-8 bg-white/40 rounded-r-full blur-[1px]" />
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -142,21 +142,21 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 group-data-[state=collapsed]:p-2 border-t border-border/40 space-y-2 bg-sidebar-accent/20">
-        <SidebarMenu className="gap-2">
+      <SidebarFooter className="p-4 group-data-[state=collapsed]:p-2 border-t border-border/20 space-y-3 bg-sidebar-accent/10 backdrop-blur-sm">
+        <SidebarMenu className="gap-3">
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={toggleTheme} 
-              className="h-11 rounded-xl hover:bg-sidebar-accent/80 text-sidebar-foreground transition-all duration-300 group/footer"
+              className="h-12 rounded-2xl hover:bg-sidebar-accent/80 text-muted-foreground hover:text-foreground transition-all duration-500 group/footer shadow-sm hover:shadow-md"
               tooltip={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               aria-label="Alternar Tema"
             >
-              <div className="w-5 h-5 flex items-center justify-center transition-transform group-hover/footer:rotate-45">
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-slate-500" />}
+              <div className="w-6 h-6 flex items-center justify-center transition-transform duration-500 group-hover/footer:rotate-180 group-hover/footer:scale-110">
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
               </div>
               {!collapsed && (
-                <span className="ml-3 font-bold tracking-tight">
-                  {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                <span className="ml-4 font-black text-xs tracking-widest uppercase opacity-70">
+                  {theme === 'dark' ? 'Dia' : 'Noite'}
                 </span>
               )}
             </SidebarMenuButton>
@@ -165,16 +165,16 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
             <SidebarMenuItem>
               <SidebarMenuButton 
                 onClick={onOpenConfig} 
-                className="h-11 rounded-xl hover:bg-sidebar-accent/80 text-sidebar-foreground transition-all duration-300 group/footer"
+                className="h-12 rounded-2xl hover:bg-sidebar-accent/80 text-muted-foreground hover:text-foreground transition-all duration-500 group/footer shadow-sm hover:shadow-md"
                 tooltip="Configurações"
                 aria-label="Abrir Configurações"
               >
-                <div className="w-5 h-5 flex items-center justify-center transition-transform group-hover/footer:rotate-90">
-                  <Settings className="w-5 h-5 text-muted-foreground group-hover/footer:text-foreground" />
+                <div className="w-6 h-6 flex items-center justify-center transition-transform duration-500 group-hover/footer:rotate-90 group-hover/footer:scale-110">
+                  <Settings className="w-5 h-5 group-hover/footer:text-primary" />
                 </div>
                 {!collapsed && (
-                  <span className="ml-3 font-bold tracking-tight text-muted-foreground group-hover/footer:text-foreground">
-                    Configurações
+                  <span className="ml-4 font-black text-xs tracking-widest uppercase opacity-70">
+                    Ajustes
                   </span>
                 )}
               </SidebarMenuButton>
@@ -182,6 +182,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
           )}
         </SidebarMenu>
       </SidebarFooter>
+
     </Sidebar>
   );
 }

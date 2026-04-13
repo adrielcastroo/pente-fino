@@ -53,54 +53,59 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-10 max-w-7xl mx-auto overflow-x-hidden animate-in fade-in duration-500">
+    <div className="p-4 sm:p-8 lg:p-12 space-y-8 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.25em] text-[9px] sm:text-[10px]">
-            <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span>Sistema Pente Fino</span>
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2.5 text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
+            <Zap className="w-4 h-4 text-primary animate-pulse" />
+            <span>Inteligência de Operação</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-foreground leading-none">
-            Painel de <span className="text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.4)]">Controle</span>
+          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter text-foreground leading-[0.9] lg:leading-[0.85]">
+            Painel de <br className="hidden sm:block lg:hidden" />
+            <span className="text-primary relative">
+              Controle
+              <div className="absolute -bottom-2 left-0 w-full h-1 sm:h-2 bg-primary/20 rounded-full blur-sm" />
+            </span>
           </h1>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-2.5 py-1 rounded-lg border-primary/30 bg-primary/5 text-primary text-[10px] font-black flex gap-1.5 shadow-lg shadow-primary/10">
-            <Activity className="w-3 h-3 animate-pulse" />
-            <span className="hidden sm:inline">Sincronizado</span>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="px-4 py-2 rounded-xl border-primary/20 bg-primary/5 text-primary text-[10px] font-black flex gap-2 shadow-xl shadow-primary/5 border">
+            <Activity className="w-3.5 h-3.5 animate-pulse" />
+            <span className="tracking-widest uppercase">Sistema Ativo</span>
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg border-border/40 bg-card/50 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all" onClick={() => handleExport(history, 'Historico_Geral')}>
-                <Download className="w-4 h-4" />
+              <Button variant="outline" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl border-border/40 bg-card/40 backdrop-blur-md hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all shadow-lg" onClick={() => handleExport(history, 'Historico_Geral')}>
+                <Download className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Exportar Histórico</TooltipContent>
+            <TooltipContent className="bg-popover/95 backdrop-blur-md border-border/40 font-bold p-3 rounded-xl shadow-2xl">Exportar Banco de Dados (Excel)</TooltipContent>
           </Tooltip>
         </div>
       </header>
       
       {/* Stat Cards */}
-      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-3 gap-3 sm:gap-5">
+      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
         {statCards.map(s => (
           <motion.div key={s.label} variants={item}>
             <Card 
               onClick={() => handleStatClick(s.tab)} 
-              className={`group cursor-pointer border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:border-primary/40 shadow-xl ${s.glow}`}
+              className={`group cursor-pointer border-none bg-card/40 backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.05] shadow-2xl relative ${s.glow}`}
               role="button"
               aria-label={`Ver detalhes de ${s.label}`}
             >
-              <CardContent className="p-3 sm:p-5 flex flex-col items-center sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <div className={`p-2 sm:p-3 rounded-xl bg-primary/5 border border-primary/10 ${s.accent} group-hover:bg-primary/10 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-500`}>
-                  <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
+              <CardContent className="p-6 sm:p-10 flex flex-row items-center gap-6 relative z-10">
+                <div className={`p-4 sm:p-6 rounded-3xl bg-primary/5 border border-primary/10 ${s.accent} group-hover:bg-primary group-hover:text-primary-foreground group-hover:rotate-6 group-hover:shadow-2xl group-hover:shadow-primary/40 transition-all duration-700`}>
+                  <s.icon className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
-                <div className="text-center sm:text-left">
-                  <div className={`text-2xl sm:text-4xl font-black tracking-tighter tabular-nums ${s.accent} drop-shadow-[0_0_8px_currentColor]`}>{s.value}</div>
-                  <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mt-0.5">{s.label}</p>
+                <div className="flex-1">
+                  <div className={`text-4xl sm:text-6xl font-black tracking-tighter tabular-nums ${s.accent} group-hover:scale-105 transition-transform duration-700 origin-left drop-shadow-xl`}>{s.value}</div>
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1">{s.label}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all ml-auto hidden sm:block" />
+                <ChevronRight className="w-6 h-6 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-2 transition-all duration-500 hidden sm:block" />
               </CardContent>
             </Card>
           </motion.div>
@@ -108,57 +113,60 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
         {[
-          { title: 'Conferentes', data: stats.topConferentes, type: 'bar' as const, icon: Users, desc: 'Top por volume' },
-          { title: 'Categorias', data: stats.categorias, type: 'pie' as const, icon: Layers3, desc: 'Distribuição' },
-          { title: 'Ferramentas', data: stats.ferramentas, type: 'bar' as const, icon: BarChart3, desc: 'Frequência de uso' },
-          { title: 'Materiais', data: stats.tipos, type: 'pie' as const, icon: TrendingUp, desc: 'Especificações' },
+          { title: 'Conferentes', data: stats.topConferentes, type: 'bar' as const, icon: Users, desc: 'Top Volume de Produção' },
+          { title: 'Categorias', data: stats.categorias, type: 'pie' as const, icon: Layers3, desc: 'Distribuição Setorial' },
+          { title: 'Ferramentas', data: stats.ferramentas, type: 'bar' as const, icon: BarChart3, desc: 'Fluxo de Processos' },
+          { title: 'Materiais', data: stats.tipos, type: 'pie' as const, icon: TrendingUp, desc: 'Especificações Técnicas' },
         ].map(chart => (
-          <Card key={chart.title} className="group border border-border/30 bg-card/40 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 shadow-xl shadow-black/10 overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-border/20">
-              <div className="space-y-0.5 min-w-0">
-                <CardTitle className="text-sm sm:text-base font-black flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-500 shrink-0">
-                    <chart.icon className="w-3.5 h-3.5" />
+          <Card key={chart.title} className="group border-none bg-card/30 backdrop-blur-md hover:bg-card/50 transition-all duration-700 shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:h-full transition-all duration-700" />
+            <CardHeader className="flex flex-row items-center justify-between px-6 sm:px-8 py-5 sm:py-6 border-b border-border/10">
+              <div className="space-y-1 min-w-0">
+                <CardTitle className="text-base sm:text-xl font-black flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shrink-0 shadow-lg shadow-primary/5">
+                    <chart.icon className="w-4 h-4 sm:w-5 h-5" />
                   </div>
-                  <span className="truncate">{chart.title}</span>
+                  <span className="truncate tracking-tight">{chart.title}</span>
                 </CardTitle>
-                <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-semibold uppercase tracking-[0.15em] ml-8">{chart.desc}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground/40 font-bold uppercase tracking-widest ml-12">{chart.desc}</p>
               </div>
-              <div className="flex gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })} aria-label={`Expandir ${chart.title}`}>
-                  <Eye className="w-3.5 h-3.5" />
+              <div className="flex gap-2 shrink-0">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })} aria-label={`Expandir ${chart.title}`}>
+                  <Eye className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary" onClick={() => handleExport(chart.data, chart.title)} aria-label={`Exportar ${chart.title}`}>
-                  <Download className="w-3.5 h-3.5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => handleExport(chart.data, chart.title)} aria-label={`Exportar ${chart.title}`}>
+                  <Download className="w-4 h-4" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-3 sm:p-5 h-[200px] sm:h-[280px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
+            <CardContent className="p-6 sm:p-10 h-[250px] sm:h-[350px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart.type === 'bar' ? (
-                  <BarChart data={chart.data} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
-                    <XAxis dataKey="name" fontSize={9} hide />
-                    <YAxis fontSize={9} axisLine={false} tickLine={false} hide />
+                  <BarChart data={chart.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" fontSize={10} hide />
+                    <YAxis fontSize={10} axisLine={false} tickLine={false} hide />
                     <ChartTooltip 
-                      cursor={{ fill: 'hsl(var(--primary) / 0.08)', radius: 6 }} 
+                      cursor={{ fill: 'hsl(var(--primary) / 0.05)', radius: 12 }} 
                       contentStyle={{ 
-                        borderRadius: '10px', 
-                        border: '1px solid hsl(var(--border))', 
-                        background: 'hsl(var(--card))',
-                        boxShadow: '0 8px 32px -4px hsl(var(--primary) / 0.15)',
-                        fontWeight: 'bold',
-                        fontSize: '12px'
+                        borderRadius: '16px', 
+                        border: '1px solid hsl(var(--border) / 0.5)', 
+                        background: 'hsl(var(--card) / 0.9)',
+                        backdropFilter: 'blur(12px)',
+                        boxShadow: '0 20px 50px -10px hsl(var(--primary) / 0.2)',
+                        fontWeight: '800',
+                        fontSize: '13px',
+                        padding: '12px 16px'
                       }}
                     />
                     <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id={`gradient-${chart.title}`} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
                       </linearGradient>
                     </defs>
-                    <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 2, 2]} barSize={20} />
+                    <Bar dataKey="count" fill={`url(#gradient-${chart.title})`} radius={[10, 10, 4, 4]} barSize={32} />
                   </BarChart>
                 ) : (
                   <PieChart>
@@ -166,26 +174,40 @@ export default function DashboardPage() {
                       data={chart.data} 
                       dataKey="value" 
                       nameKey="name" 
-                      innerRadius="55%" 
-                      outerRadius="80%" 
-                      stroke="hsl(var(--border))"
-                      strokeWidth={1}
-                      paddingAngle={4}
+                      innerRadius="60%" 
+                      outerRadius="85%" 
+                      stroke="transparent"
+                      paddingAngle={6}
                       className="focus:outline-none"
                     >
-                      {chart.data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="hover:opacity-80 transition-opacity drop-shadow-[0_0_6px_currentColor]" />)}
+                      {chart.data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer drop-shadow-2xl" />)}
                     </Pie>
                     <ChartTooltip 
                       contentStyle={{ 
-                        borderRadius: '10px', 
-                        border: '1px solid hsl(var(--border))', 
-                        background: 'hsl(var(--card))',
-                        boxShadow: '0 8px 32px -4px hsl(var(--primary) / 0.15)',
-                        fontWeight: 'bold',
-                        fontSize: '12px'
+                        borderRadius: '16px', 
+                        border: '1px solid hsl(var(--border) / 0.5)', 
+                        background: 'hsl(var(--card) / 0.9)',
+                        backdropFilter: 'blur(12px)',
+                        boxShadow: '0 20px 50px -10px hsl(var(--primary) / 0.2)',
+                        fontWeight: '800',
+                        fontSize: '13px',
+                        padding: '12px 16px'
                       }}
                     />
-                    <Legend iconType="circle" iconSize={6} wrapperStyle={{ paddingTop: '12px', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em' }} />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="rect" 
+                      iconSize={10} 
+                      wrapperStyle={{ 
+                        paddingTop: '20px', 
+                        fontSize: '10px', 
+                        fontWeight: '900', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.15em',
+                        color: 'hsl(var(--muted-foreground))'
+                      }} 
+                    />
                   </PieChart>
                 )}
               </ResponsiveContainer>
@@ -193,6 +215,7 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
 
       {/* Detail Dialog */}
       <Dialog open={!!detailChart} onOpenChange={() => setDetailChart(null)}>
