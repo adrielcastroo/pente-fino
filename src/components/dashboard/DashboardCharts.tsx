@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Activity, Download, Eye, Layers3, Users, TrendingUp } from 'lucide-react';
@@ -19,7 +20,7 @@ interface TimelineChartProps {
   onExport: (data: any[], fileName: string) => void;
 }
 
-export const TimelineChart = ({ data, onExport }: TimelineChartProps) => (
+export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps) => (
   <Card className="md:col-span-3 group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
     <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20" />
     <CardHeader className="flex flex-row items-center justify-between px-6 py-4">
