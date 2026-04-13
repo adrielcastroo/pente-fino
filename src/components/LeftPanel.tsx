@@ -541,13 +541,13 @@ export default function LeftPanel() {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="bg-background/40 backdrop-blur-xl lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-500"
     >
-      <div className="p-3 sm:p-8 lg:p-10 flex-1 overflow-y-auto space-y-5 sm:space-y-10 custom-scrollbar relative">
+      <div className="p-3 sm:p-6 lg:p-10 flex-1 overflow-y-auto space-y-4 sm:space-y-10 custom-scrollbar relative">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 border border-border/40 rounded-3xl p-1.5 gap-2 shadow-inner relative z-10 backdrop-blur-md">
+          <div className="flex bg-muted/40 border border-border/40 rounded-2xl sm:rounded-3xl p-1 gap-1 sm:gap-2 shadow-inner relative z-10 backdrop-blur-md overflow-x-auto no-scrollbar">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -555,15 +555,15 @@ export default function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-4 rounded-2xl text-[10px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2.5 uppercase tracking-[0.15em] relative overflow-hidden group/mode ${
+                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode ${
                     isActive
-                      ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-100'
+                      ? 'bg-primary text-white shadow-lg sm:shadow-xl shadow-primary/30 scale-100'
                       : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
                   }`}
                   aria-pressed={isActive}
                 >
                   {isActive && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
-                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${isActive ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0 group-hover/mode:scale-110'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${isActive ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0 group-hover/mode:scale-110'}`} />
                   <span className="relative z-10">{m.label}</span>
                 </button>
               );
@@ -800,7 +800,7 @@ export default function LeftPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
-              <div className="space-y-3 sm:col-span-2 group/field">
+              <div className="space-y-3 sm:col-span-1 group/field">
                 <div className="flex items-center justify-between px-2">
                   <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Processo (PROC)</label>
                   <Button
@@ -836,7 +836,7 @@ export default function LeftPanel() {
             )}
 
             {/* Item / Referência */}
-            <div className="space-y-3 sm:col-span-2 group/field">
+            <div className="space-y-3 sm:col-span-1 group/field">
               <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Item / Referência</label>
               <div className="relative">
                 <input
@@ -859,7 +859,7 @@ export default function LeftPanel() {
 
             {/* Coulisse: optional manual largura */}
             {isCoulisse && (
-              <div className="space-y-3 sm:col-span-2 group/field">
+              <div className="space-y-3 sm:col-span-1 group/field">
                 <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Largura do Tecido (m)</label>
                 <input
                   id="largura-manual"
@@ -875,7 +875,7 @@ export default function LeftPanel() {
 
             {/* NF field — Diversos except Celular */}
             {requiresNF && (
-              <div className="space-y-3 sm:col-span-2 group/field">
+              <div className="space-y-3 sm:col-span-1 group/field">
                 <div className="flex items-center justify-between px-2">
                   <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Nota Fiscal (NF)</label>
                   <Button
