@@ -779,7 +779,7 @@ export default function LeftPanel() {
             <ScanBarcode className="w-3.5 h-3.5" /> {isMadeira ? 'Especificações da Madeira' : 'Especificações do Material'}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
               <div className="space-y-2 md:col-span-2">
