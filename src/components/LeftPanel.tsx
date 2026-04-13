@@ -1038,17 +1038,17 @@ export default function LeftPanel() {
 
 
         {/* Computed Preview Card */}
-        <div className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#0A0D14] text-white shadow-2xl relative overflow-hidden group/card transition-all duration-700 hover:scale-[1.02] border border-white/5">
-          <div className="absolute top-0 right-0 p-10 opacity-5 group-hover/card:scale-150 group-hover/card:rotate-12 transition-all duration-1000 hidden xs:block">
+        <div className="p-5 sm:p-8 rounded-[1.8rem] sm:rounded-[2.5rem] bg-[#0A0D14] text-white shadow-2xl relative overflow-hidden group/card transition-all duration-700 hover:scale-[1.02] border border-white/5">
+          <div className="absolute top-0 right-0 p-10 opacity-5 group-hover/card:scale-150 group-hover/card:rotate-12 transition-all duration-1000 hidden sm:block">
              <Package className="w-40 h-40 text-primary" />
           </div>
           <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-[80px]" />
           
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-6 sm:gap-10 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-10 relative z-10">
             {isMadeira ? (
               <>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Subtipo</p>
+                <div className="space-y-1 sm:space-y-1.5">
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Subtipo</p>
                   <p className="text-2xl font-black tracking-tight">{madeiraTipo}</p>
                 </div>
                 <div className="space-y-1.5">
