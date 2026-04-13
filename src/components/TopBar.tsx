@@ -67,7 +67,7 @@ export default function TopBar() {
               <User className="h-4.5 w-4.5" />
             </div>
             <input
-              className="h-11 w-full rounded-2xl border border-border/50 bg-muted/40 pl-11 pr-4 text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/60 placeholder:font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/5 focus-visible:border-primary/40 transition-all duration-500 hover:bg-muted/60"
+              className="h-11 w-full rounded-2xl border border-border/50 bg-muted/40 pl-11 pr-4 text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/60 placeholder:font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/5 focus-visible:border-primary/40 transition-all duration-300 hover:bg-muted/60"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
               placeholder="Nome do Conferente..."
