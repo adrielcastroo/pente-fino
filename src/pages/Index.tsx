@@ -15,7 +15,7 @@ const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
 const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
 const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
-const ConfigModal = lazy(() => import('@/components/ConfigModal'));
+// ConfigModal removed in favor of SettingsPage
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = () => (
