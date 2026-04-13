@@ -39,17 +39,17 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
     transition={{ duration: 0.3, ease: "easeOut" }}
     className={`group hover:bg-muted/40 transition-all duration-200 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}
   >
-    <td className="px-4 py-3.5 text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
+    <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
     {columns.map((column: any) => (
       <td 
         key={column.key}
         onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
-        className={`px-4 py-3.5 text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+        className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
       >
         {renderCell(r, column)}
       </td>
     ))}
-    <td className="px-4 py-3.5">
+    <td className="px-2 sm:px-4 py-2 sm:py-3.5">
       <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
         <Tooltip>
           <TooltipTrigger asChild>
