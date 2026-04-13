@@ -296,9 +296,9 @@ export default function MotorControlePage() {
         {/* Add button */}
         <button
           onClick={subMode === 'motor' ? handleAddMotor : handleAddControle}
-          className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all"
+          className="w-full flex items-center justify-center gap-2 rounded-xl h-12 sm:h-14 text-sm font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
         </button>
 

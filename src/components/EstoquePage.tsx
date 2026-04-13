@@ -182,28 +182,28 @@ export default function EstoquePage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-4 sm:p-6 max-w-6xl mx-auto space-y-4"
+      className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-8"
     >
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Estoque 2D</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visualização das estruturas de tecido</p>
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Estoque 2D</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">Visualização das estruturas de tecido</p>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Total', value: stats.totalSlots, color: 'text-foreground' },
-          { label: 'Ocupado', value: stats.occupied, color: 'text-emerald-500', pctVal: pct(stats.occupied) },
-          { label: 'Reservado', value: stats.reserved, color: 'text-amber-500', pctVal: pct(stats.reserved) },
-          { label: 'Bloqueado', value: stats.blocked, color: 'text-red-500', pctVal: pct(stats.blocked) },
-          { label: 'Saída', value: stats.exited, color: 'text-violet-500', pctVal: pct(stats.exited) },
-          { label: 'Livre', value: stats.free, color: 'text-primary', pctVal: pct(stats.free) },
+          { label: 'Total', value: stats.totalSlots, color: 'text-foreground', bg: 'bg-muted/30' },
+          { label: 'Ocupado', value: stats.occupied, color: 'text-emerald-600 dark:text-emerald-400', pctVal: pct(stats.occupied), bg: 'bg-emerald-500/10' },
+          { label: 'Reservado', value: stats.reserved, color: 'text-amber-600 dark:text-amber-400', pctVal: pct(stats.reserved), bg: 'bg-amber-500/10' },
+          { label: 'Bloqueado', value: stats.blocked, color: 'text-red-600 dark:text-red-400', pctVal: pct(stats.blocked), bg: 'bg-red-500/10' },
+          { label: 'Saída', value: stats.exited, color: 'text-violet-600 dark:text-violet-400', pctVal: pct(stats.exited), bg: 'bg-violet-500/10' },
+          { label: 'Livre', value: stats.free, color: 'text-primary', pctVal: pct(stats.free), bg: 'bg-primary/10' },
         ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-3 text-center">
-              <div className={`text-lg font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              {s.pctVal && <div className="text-[9px] text-muted-foreground">{s.pctVal}%</div>}
+          <Card key={s.label} className={`${s.bg} border-none shadow-sm`}>
+            <CardContent className="p-4 text-center">
+              <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
+              <div className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">{s.label}</div>
+              {s.pctVal && <div className="text-[10px] font-medium text-muted-foreground/70">{s.pctVal}%</div>}
             </CardContent>
           </Card>
         ))}
