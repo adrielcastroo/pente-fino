@@ -351,12 +351,12 @@ export default function DashboardPage() {
                 <BarChart data={stats.ferramentas} margin={{ left: -30, right: 12, top: 10, bottom: 20 }}>
                   <XAxis 
                     dataKey="name" 
-                    tick={(props) => {
+                    tick={(props: any) => {
                       const { x, y, payload } = props;
                       const index = stats.ferramentas.findIndex(f => f.name === payload.value);
                       const color = TOOL_COLORS[index % TOOL_COLORS.length];
                       return (
-                        <text x={x} y={y + 16} fill={color} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700 }}>
+                        <text x={x} y={Number(y) + 16} fill={color} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700 }}>
                           {payload.value}
                         </text>
                       );
