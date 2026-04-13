@@ -5,14 +5,17 @@ export const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
 export function parseEndereco(addr: string) {
   if (!addr || !ENDERECO_REGEX.test(addr)) return null;
   const [est, col, nivStr] = addr.split('.');
-  const nivel = parseInt(nivStr.replace('N', ''), 10);
+  const rawNivel = nivStr.replace('N', '');
+  const nivel = parseInt(rawNivel, 10);
+  if (isNaN(nivel)) return null;
   return { estrutura: est, coluna: col, nivel };
 }
 
 export function fmtML(v: number): string {
-  if (!v || v === 0) return '';
-  const rounded = parseFloat(v.toFixed(1));
-  return (rounded % 1 === 0 ? Math.round(rounded) : rounded.toFixed(1).replace('.', ',')) + 'M';
+  if (typeof v !== 'number' || v === 0) return '';
+  const rounded = Math.round(v * 10) / 10;
+  if (rounded === 0) return '';
+  return (rounded % 1 === 0 ? Math.round(rounded).toString() : rounded.toFixed(1).replace('.', ',')) + 'M';
 }
 
 export function formatML(v: number): string {
