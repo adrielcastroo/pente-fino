@@ -791,139 +791,149 @@ export default function LeftPanel() {
         </AnimatePresence>
 
         {/* Form Fields */}
-        <div className="space-y-6">
-          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 opacity-60 ml-1">
-            <ScanBarcode className="w-3.5 h-3.5" /> {isMadeira ? 'Especificações da Madeira' : 'Especificações do Material'}
+        <div className="space-y-8 relative z-10">
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] flex items-center gap-2 opacity-50 ml-2">
+            <Sparkles className="w-3.5 h-3.5 text-primary" /> {isMadeira ? 'Especificações Técnicas' : 'Detalhamento do Material'}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
-              <div className="space-y-2 sm:col-span-2">
-                <div className="flex items-center justify-between px-1">
-                  <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Processo (PROC)</label>
+              <div className="space-y-3 sm:col-span-2 group/field">
+                <div className="flex items-center justify-between px-2">
+                  <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Processo (PROC)</label>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={toggleLockProcesso}
-                    className={`h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                       lockProcesso
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-muted'
+                        : 'text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
-                    {lockProcesso ? <Lock className="w-3 h-3 mr-1.5" /> : <Unlock className="w-3 h-3 mr-1.5" />}
-                    {lockProcesso ? 'Travado' : 'Travar'}
+                    {lockProcesso ? <Lock className="w-3 h-3 mr-2" /> : <Unlock className="w-3 h-3 mr-2" />}
+                    {lockProcesso ? 'Bloqueado' : 'Travar'}
                   </Button>
                 </div>
-                <input
-                  id="proc-input"
-                  value={processo}
-                  onChange={e => handleProcessoChange(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                  className={`w-full h-14 rounded-2xl border-2 px-4 text-sm font-mono font-bold transition-all ${
-                    lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-card/40 border-border/40 focus:border-primary/50 focus:bg-background'
-                  }`}
-                  placeholder="Número do Processo..."
-                  autoComplete="off"
-                  readOnly={lockProcesso && !!lockedProcesso}
-                />
+                <div className="relative">
+                  <input
+                    id="proc-input"
+                    value={processo}
+                    onChange={e => handleProcessoChange(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, itemRef)}
+                    className={`w-full h-16 rounded-3xl border-2 px-6 text-sm font-mono font-bold transition-all duration-500 shadow-sm ${
+                      lockProcesso ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-card/30 border-border/40 focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5'
+                    }`}
+                    placeholder="Ex: 123456..."
+                    autoComplete="off"
+                    readOnly={lockProcesso && !!lockedProcesso}
+                  />
+                  {lockProcesso && <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/30"><Lock className="w-4 h-4" /></div>}
+                </div>
               </div>
             )}
 
             {/* Item / Referência */}
-            <div className="space-y-2 sm:col-span-2">
-              <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item / Referência</label>
-              <input
-                id="item-input"
-                ref={itemRef}
-                value={item}
-                onChange={e => handleItemChange(e.target.value)}
-                onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-mono font-bold focus:border-primary/50 focus:bg-background transition-all"
-                placeholder="Ex: SRC-3003-05-30..." 
-                autoComplete="off"
-              />
-              {usesLarguraFromItem && largura > 0 && (
-                <Badge variant="secondary" className="mt-1 ml-1 bg-primary/10 text-primary border-none font-bold">Largura Detectada: {largura.toFixed(2)}m</Badge>
-              )}
+            <div className="space-y-3 sm:col-span-2 group/field">
+              <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Item / Referência</label>
+              <div className="relative">
+                <input
+                  id="item-input"
+                  ref={itemRef}
+                  value={item}
+                  onChange={e => handleItemChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
+                  className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm placeholder:opacity-30"
+                  placeholder="Ex: SRC-3003-05-30..." 
+                  autoComplete="off"
+                />
+                {usesLarguraFromItem && largura > 0 && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <Badge variant="secondary" className="bg-primary text-white border-none font-black text-[9px] uppercase tracking-tighter px-2 h-6 shadow-lg shadow-primary/20">Larg: {largura.toFixed(2)}m</Badge>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Coulisse: optional manual largura */}
             {isCoulisse && (
-              <div className="space-y-2 sm:col-span-2">
-                <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura (Opcional)</label>
+              <div className="space-y-3 sm:col-span-2 group/field">
+                <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Largura do Tecido (m)</label>
                 <input
                   id="largura-manual"
                   ref={manualLarguraRef}
                   type="number" step="0.01" value={manualLargura}
                   onChange={e => setManualLargura(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                  className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
-                  placeholder="2.80" autoComplete="off" inputMode="decimal"
+                  className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm placeholder:opacity-30"
+                  placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                 />
               </div>
             )}
 
             {/* NF field — Diversos except Celular */}
             {requiresNF && (
-              <div className="space-y-2 sm:col-span-2">
-                <div className="flex items-center justify-between px-1">
-                  <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nota Fiscal (NF)</label>
+              <div className="space-y-3 sm:col-span-2 group/field">
+                <div className="flex items-center justify-between px-2">
+                  <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Nota Fiscal (NF)</label>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={toggleLockNf}
-                    className={`h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                       lockNf
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-muted'
+                        : 'text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
-                    {lockNf ? <Lock className="w-3 h-3 mr-1.5" /> : <Unlock className="w-3 h-3 mr-1.5" />}
-                    {lockNf ? 'Travado' : 'Travar'}
+                    {lockNf ? <Lock className="w-3 h-3 mr-2" /> : <Unlock className="w-3 h-3 mr-2" />}
+                    {lockNf ? 'Bloqueado' : 'Travar'}
                   </Button>
                 </div>
-                <input
-                  id="nf-input"
-                  ref={nfRef}
-                  value={nf}
-                  onChange={e => handleNfChange(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
-                  className={`w-full h-14 rounded-2xl border-2 px-4 text-sm font-mono font-bold transition-all ${
-                    lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-card/40 border-border/40 focus:border-primary/50 focus:bg-background'
-                  }`}
-                  placeholder="Número da NF..."
-                  autoComplete="off"
-                  readOnly={lockNf && !!lockedNf}
-                />
+                <div className="relative">
+                  <input
+                    id="nf-input"
+                    ref={nfRef}
+                    value={nf}
+                    onChange={e => handleNfChange(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
+                    className={`w-full h-16 rounded-3xl border-2 px-6 text-sm font-mono font-bold transition-all duration-500 shadow-sm ${
+                      lockNf ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-card/30 border-border/40 focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5'
+                    }`}
+                    placeholder="NF..."
+                    autoComplete="off"
+                    readOnly={lockNf && !!lockedNf}
+                  />
+                  {lockNf && <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/30"><Lock className="w-4 h-4" /></div>}
+                </div>
               </div>
             )}
 
             {/* Madeira: Lote + Qtd */}
             {isMadeira && (
               <>
-                <div className="space-y-2">
-                  <label htmlFor="lote-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lote / Batch</label>
+                <div className="space-y-3 group/field">
+                  <label htmlFor="lote-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Lote / Batch</label>
                   <input
                     id="lote-input"
                     ref={loteRef}
                     value={lote}
                     onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                     onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
-                    className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-mono font-bold focus:border-primary/50 focus:bg-background transition-all"
+                    className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
                     placeholder="Lote..." autoComplete="off"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label htmlFor="qtd-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Qtd por Caixa</label>
+                <div className="space-y-3 group/field">
+                  <label htmlFor="qtd-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Qtd por Caixa</label>
                   <input
                     id="qtd-input"
                     ref={quantidadeRef}
                     type="number" step="1" value={quantidade}
                     onChange={e => setQuantidade(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
+                    className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
                     placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
                   />
                 </div>
@@ -933,48 +943,52 @@ export default function LeftPanel() {
             {/* Metragem Fields */}
             {!isMadeira && (
               <>
-                <div className="space-y-2">
-                  <label htmlFor="metragem-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-                    {isAI || isPVT || coulisseUsesMLinear ? 'M Linear' : 'Metragem (M²)'}
+                <div className="space-y-3 group/field">
+                  <label htmlFor="metragem-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">
+                    {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
                   </label>
-                  <input
-                    id="metragem-input"
-                    ref={m2Ref}
-                    type="number" step="0.1" 
-                    value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
-                    onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
-                    onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
-                    className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
-                    placeholder="0.0" autoComplete="off" inputMode="decimal"
-                  />
-                  {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
-                    <Badge variant="outline" className="mt-1 ml-1 border-primary/30 text-primary font-black">Linear: {formatML(mLinear)}</Badge>
-                  )}
+                  <div className="relative">
+                    <input
+                      id="metragem-input"
+                      ref={m2Ref}
+                      type="number" step="0.1" 
+                      value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
+                      onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
+                      onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
+                      className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                      placeholder="0.0" autoComplete="off" inputMode="decimal"
+                    />
+                    {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <Badge variant="outline" className="border-primary text-primary font-black bg-primary/5">Linear: {formatML(mLinear)}</Badge>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {isAI ? (
-                  <div className="space-y-2">
-                    <label htmlFor="largura-ai" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura (m)</label>
+                  <div className="space-y-3 group/field">
+                    <label htmlFor="largura-ai" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Largura Detectada (m)</label>
                     <input
                       id="largura-ai"
                       ref={larguraRef}
                       type="number" step="0.01" value={aiLargura}
                       onChange={e => setAiLargura(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-                      className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-bold focus:border-primary/50 focus:bg-background transition-all"
-                      placeholder="2.80" autoComplete="off" inputMode="decimal"
+                      className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                      placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                     />
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <label htmlFor="lote-material" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lote / Batch</label>
+                  <div className="space-y-3 group/field">
+                    <label htmlFor="lote-material" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Lote / Batch</label>
                     <input
                       id="lote-material"
                       ref={loteRef}
                       value={lote}
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
-                      className="w-full h-14 rounded-2xl border-2 border-border/40 bg-card/40 px-4 text-sm font-mono font-bold focus:border-primary/50 focus:bg-background transition-all"
+                      className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
                       placeholder="Lote..." autoComplete="off"
                     />
                   </div>
@@ -984,40 +998,44 @@ export default function LeftPanel() {
 
             {/* Endereço */}
             {requiresEndereco && (
-              <div className="space-y-2 sm:col-span-2">
-                <div className="flex items-center justify-between px-1">
-                  <label htmlFor="endereco-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endereço (TEC01.A.N03)</label>
+              <div className="space-y-3 sm:col-span-2 group/field">
+                <div className="flex items-center justify-between px-2">
+                  <label htmlFor="endereco-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Endereço de Armazenagem</label>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={toggleLockEndereco}
-                    className={`h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                       lockEndereco
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-muted'
+                        : 'text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
-                    {lockEndereco ? <Lock className="w-3 h-3 mr-1.5" /> : <Unlock className="w-3 h-3 mr-1.5" />}
-                    {lockEndereco ? 'Travado' : 'Travar'}
+                    {lockEndereco ? <Lock className="w-3 h-3 mr-2" /> : <Unlock className="w-3 h-3 mr-2" />}
+                    {lockEndereco ? 'Bloqueado' : 'Travar'}
                   </Button>
                 </div>
-                <input
-                  id="endereco-input"
-                  ref={enderecoRef}
-                  value={endereco}
-                  onChange={e => handleEnderecoChange(e.target.value)}
-                  onKeyDown={e => handleFieldKeyDown(e, null)}
-                  className={`w-full h-14 rounded-2xl border-2 px-4 text-sm font-mono font-bold transition-all uppercase ${
-                    lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive/40 bg-destructive/5' : 'bg-card/40 border-border/40 focus:border-primary/50 focus:bg-background')
-                  }`}
-                  placeholder="TEC01.A.N03" autoComplete="off"
-                  readOnly={lockEndereco && !!lockedEndereco}
-                />
-                {enderecoError && <p className="text-[10px] text-destructive font-black uppercase tracking-wider ml-1">{enderecoError}</p>}
+                <div className="relative">
+                  <input
+                    id="endereco-input"
+                    ref={enderecoRef}
+                    value={endereco}
+                    onChange={e => handleEnderecoChange(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, null)}
+                    className={`w-full h-16 rounded-3xl border-2 px-6 text-sm font-mono font-bold transition-all duration-500 uppercase shadow-sm ${
+                      lockEndereco ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-card/30 border-border/40 focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5')
+                    }`}
+                    placeholder="TEC01.A.N03" autoComplete="off"
+                    readOnly={lockEndereco && !!lockedEndereco}
+                  />
+                  {lockEndereco && <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/30"><Lock className="w-4 h-4" /></div>}
+                </div>
+                {enderecoError && <p className="text-[10px] text-destructive font-black uppercase tracking-[0.2em] ml-2 animate-bounce">{enderecoError}</p>}
               </div>
             )}
           </div>
         </div>
+
 
         {/* Computed Preview Card */}
         <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-navy text-white shadow-2xl relative overflow-hidden group/card transition-all hover:scale-[1.01]">
