@@ -32,7 +32,6 @@ const menuItems: { key: AppTab; label: string; icon: any; color?: string }[] = [
   { key: 'saida', label: 'Saída', icon: Archive, color: 'text-violet-500' },
   { key: 'table', label: 'Tabela', icon: Table, color: 'text-violet-500' },
   { key: 'history', label: 'Histórico', icon: FolderOpen, color: 'text-slate-500' },
-  { key: 'settings', label: 'Ajustes', icon: Settings, color: 'text-slate-600' },
 ];
 
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
