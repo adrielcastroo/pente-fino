@@ -530,15 +530,15 @@ export default function LeftPanel() {
 
   return (
     <motion.div
-      initial={{ x: -20, opacity: 0 }}
+      initial={{ x: -30, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="bg-background md:border-r border-border/50 overflow-hidden flex flex-col h-full"
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="bg-background/40 backdrop-blur-md md:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-2xl"
     >
-      <div className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
+      <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-8 custom-scrollbar">
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex bg-muted/30 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
+          <div className="flex bg-muted/40 border border-border/50 rounded-2xl p-1.5 gap-1.5 shadow-inner">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -546,14 +546,15 @@ export default function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-2 rounded-full text-[11px] font-bold transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-3 rounded-xl text-[10px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2 uppercase tracking-widest ${
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-md scale-100'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 scale-95'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-100'
+                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
                   }`}
+                  aria-pressed={isActive}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span className="uppercase tracking-tight">{m.label}</span>
+                  <Icon className={`w-4 h-4 transition-transform duration-500 ${isActive ? 'rotate-0' : '-rotate-12'}`} />
+                  <span>{m.label}</span>
                 </button>
               );
             })}
@@ -565,45 +566,64 @@ export default function LeftPanel() {
           {!isAI && (
             <motion.div
               key={currentMode + diversosTipo}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="ai-status-box text-xs leading-relaxed flex items-center justify-between"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-sm"
             >
-              <div>
-                <ScanBarcode className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
-                {isMadeira ? `${madeiraTipo}: Item + Lote + Quantidade` : isDiversos ? `${diversosTipo}: preencha apenas os campos exibidos` : 'Bipe cada campo — avança automaticamente com'} <kbd className="kbd">Enter</kbd>
+              <div className="flex items-center gap-3 font-medium text-primary/80">
+                <div className="p-2 rounded-xl bg-primary/10 group-hover/tip:scale-110 transition-transform duration-500">
+                  <ScanBarcode className="w-4 h-4" />
+                </div>
+                <span>
+                   {isMadeira ? (
+                     <><strong className="text-primary">{madeiraTipo}:</strong> Item + Lote + Qtd</>
+                   ) : isDiversos ? (
+                     <><strong className="text-primary">{diversosTipo}:</strong> Preencha os campos destacados</>
+                   ) : (
+                     <>Bipe cada campo — avance com <kbd className="kbd ml-1 shadow-sm font-black border-primary/30">Enter</kbd></>
+                   )}
+                </span>
               </div>
-              <div className="flex gap-1 flex-shrink-0 ml-2">
+              <div className="flex gap-1.5 flex-shrink-0 ml-4">
                 {undoStack.length > 0 && (
-                  <button onClick={handleUndo} className="p-1 rounded border border-border hover:bg-muted transition-colors" title="Desfazer">
-                    <Undo2 className="w-3 h-3 text-muted-foreground" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={handleUndo} className="h-8 w-8 rounded-lg border border-border/40 hover:bg-primary/10 hover:text-primary transition-all">
+                        <Undo2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Desfazer última ação</TooltipContent>
+                  </Tooltip>
                 )}
-                <button onClick={resetForm} className="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted transition-colors text-[10px] font-medium text-muted-foreground border border-border">
-                  <X className="w-3 h-3" />
-                  Limpar
-                </button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={resetForm} className="h-8 w-8 rounded-lg border border-border/40 hover:bg-destructive/10 hover:text-destructive transition-all">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Limpar campos</TooltipContent>
+                  </Tooltip>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {isDiversos && (
-          <div className="space-y-2">
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tipo de tecido</div>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 opacity-60">Selecione o Tipo</div>
+            <div className="grid grid-cols-2 gap-3">
               {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
                 <button
                   key={tipo}
                   onClick={() => setDiversosTipo(tipo)}
-                  className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition-colors ${
+                  className={`rounded-2xl border-2 px-4 py-4 text-xs font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                     diversosTipo === tipo
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/5 scale-100'
+                      : 'border-border/40 bg-card/40 text-muted-foreground/60 hover:text-foreground hover:bg-white/50 hover:border-border scale-[0.98]'
                   }`}
                 >
-                  {tipo === 'Celular' ? 'Celular/Plissada' : tipo}
+                  {tipo === 'Celular' ? 'Celular' : tipo}
                 </button>
               ))}
             </div>
@@ -611,17 +631,17 @@ export default function LeftPanel() {
         )}
 
         {isMadeira && (
-          <div className="space-y-2">
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtipo</div>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-3">
+            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 opacity-60">Subtipo de Material</div>
+            <div className="grid grid-cols-3 gap-3">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`rounded-lg border px-3 py-2.5 text-xs font-medium transition-colors ${
+                  className={`rounded-2xl border-2 px-3 py-4 text-xs font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                     madeiraTipo === tipo
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/5 scale-100'
+                      : 'border-border/40 bg-card/40 text-muted-foreground/60 hover:text-foreground hover:bg-white/50 hover:border-border scale-[0.98]'
                   }`}
                 >
                   {tipo}
