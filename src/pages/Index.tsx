@@ -87,7 +87,7 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background/30 overflow-hidden">
+      <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background/30 overflow-hidden relative">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
@@ -97,7 +97,7 @@ export default function Index() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
           <TopBar />
 
-          <div className="flex-1 overflow-y-auto bg-background/20 custom-scrollbar relative">
+          <main className="flex-1 overflow-y-auto bg-background/20 custom-scrollbar relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -105,14 +105,16 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="h-full"
+                className="h-full w-full max-w-[2000px] mx-auto"
               >
                 <Suspense fallback={<PageSkeleton />}>
-                  {renderActiveTab()}
+                  <div className="p-4 sm:p-6 lg:p-8 h-full">
+                    {renderActiveTab()}
+                  </div>
                 </Suspense>
               </motion.div>
             </AnimatePresence>
-          </div>
+          </main>
         </div>
       </div>
 
