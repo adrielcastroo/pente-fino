@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore, formatML, type Conference, type Registro } from '@/store/useAppStore';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -33,7 +33,6 @@ function EditRegistroDialog({
   conferenceId: string;
 }) {
   const updateHistoryRegistro = useAppStore(s => s.updateHistoryRegistro);
-  const addToast = useToastStore(s => s.addToast);
   const [form, setForm] = useState<Registro | null>(registro);
   const [saving, setSaving] = useState(false);
 
@@ -51,7 +50,7 @@ function EditRegistroDialog({
   const handleSave = async () => {
     if (!form) return;
     if (!form.item.trim()) {
-      addToast('Informe o Item/Referência.', 'warn');
+      toast.warning('Informe o Item/Referência.');
       return;
     }
 
@@ -67,10 +66,10 @@ function EditRegistroDialog({
         tipoTecido: form.tipoTecido || '',
         modoOrigem: form.modoOrigem || '',
       });
-      addToast('Tecido atualizado', 'ok');
+      toast.success('Tecido atualizado');
       onOpenChange(false);
     } catch {
-      addToast('Erro ao salvar edição', 'err');
+      toast.error('Erro ao salvar edição');
     } finally {
       setSaving(false);
     }
@@ -367,7 +366,7 @@ function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => 
 
 export default function HistoryPanel() {
   const { history, loadHistory, deleteConference, clearHistory } = useAppStore();
-  const addToast = useToastStore(s => s.addToast);
+  
   const [search, setSearch] = useState('');
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
@@ -378,7 +377,7 @@ export default function HistoryPanel() {
   const handleClearAll = async () => {
     await clearHistory();
     setConfirmClearAll(false);
-    addToast('Histórico limpo', 'warn');
+    toast.warning('Histórico limpo');
   };
 
   const q = search.toLowerCase().trim();
