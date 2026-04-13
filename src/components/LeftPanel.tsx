@@ -437,7 +437,7 @@ export default function LeftPanel() {
       toast.success(`✓ ${item} — ${madeiraTipo} CX${(registros.filter(r => r.item.trim().toLowerCase() === item.trim().toLowerCase()).length + 1).toString().padStart(2, '0')}`);
       resetForm();
       setQuantidade(madeiraDefaults[madeiraTipo].toString());
-      setTimeout(() => { reg.isNew = false; }, 400);
+      setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
       return;
     }
 
@@ -478,7 +478,7 @@ export default function LeftPanel() {
     addRegistro(reg);
     toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
     resetForm();
-    setTimeout(() => { reg.isNew = false; }, 400);
+    setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
   };
 
   const handleUndo = () => {

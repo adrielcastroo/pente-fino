@@ -134,9 +134,14 @@ export default function RightPanel() {
   const commitEdit = () => {
     if (!editingCell) return;
     const { rowId, key } = editingCell;
-    updateRegistro(rowId, { [key]: key === 'm2' || key === 'mLinear' || key === 'largura' || key === 'quantidade'
+    const numericKeys = ['m2', 'mLinear', 'largura'];
+    const intKeys = ['quantidade'];
+    const parsedValue = numericKeys.includes(key)
       ? parseFloat(editValue) || 0
-      : editValue });
+      : intKeys.includes(key)
+        ? parseInt(editValue, 10) || 0
+        : editValue;
+    updateRegistro(rowId, { [key]: parsedValue });
     setEditingCell(null);
     toast.success('Registro atualizado com sucesso.');
   };
