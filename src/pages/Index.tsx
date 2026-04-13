@@ -73,8 +73,8 @@ export default function Index() {
   useKeyboardShortcuts({
     shortcutsOpen,
     setShortcutsOpen,
-    configOpen,
-    setConfigOpen,
+    configOpen: activeTab === 'settings',
+    setConfigOpen: () => handleTabChange('settings'),
   });
 
   return (
@@ -83,7 +83,6 @@ export default function Index() {
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
-          onOpenConfig={() => setConfigOpen(true)} 
         />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
