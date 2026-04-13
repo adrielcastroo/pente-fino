@@ -491,30 +491,28 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadHistory: async () => {
     try {
+      // Fetch both conferences and records in a single fetch using Supabase join
       const { data: confs, error } = await supabase
         .from('conferences')
-        .select('*')
+        .select(`
+          *,
+          registros (*)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const history: Conference[] = [];
-      for (const c of confs || []) {
-        const { data: regs } = await supabase
-          .from('registros')
-          .select('*')
-          .eq('conference_id', c.id)
-          .order('created_at', { ascending: true });
-
-        history.push({
-          id: c.id,
-          name: c.processo,
-          processo: c.processo,
-          conferente: c.conferente,
-          date: c.created_at,
-          startedAt: (c as any).started_at || null,
-          finishedAt: (c as any).finished_at || null,
-          registros: (regs || []).map(r => ({
+      const history: Conference[] = (confs || []).map(c => ({
+        id: c.id,
+        name: c.processo,
+        processo: c.processo,
+        conferente: c.conferente,
+        date: c.created_at,
+        startedAt: (c as any).started_at || null,
+        finishedAt: (c as any).finished_at || null,
+        registros: ((c as any).registros || [])
+          .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          .map((r: any) => ({
             id: r.id,
             item: r.item,
             processo: r.modo_origem === 'diversos' ? '' : c.processo,
@@ -533,10 +531,13 @@ export const useAppStore = create<AppState>((set, get) => ({
             editedAt: r.edited_at,
             quantidade: (r as any).quantidade || undefined,
           })),
-        });
-      }
+      }));
 
       set({ history });
+    } catch (e) {
+      console.error('Error loading history:', e);
+    }
+  },
     } catch (e) {
       console.error('Error loading history:', e);
     }
