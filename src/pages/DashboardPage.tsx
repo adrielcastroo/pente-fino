@@ -55,33 +55,29 @@ export default function DashboardPage() {
   return (
     <div className="p-3 sm:p-8 lg:p-12 space-y-6 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
-        <div className="space-y-1.5 sm:space-y-2">
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[9px] sm:text-xs">
-            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary animate-pulse" />
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
+            <Zap className="w-3.5 h-3.5 animate-pulse" />
             <span>Inteligência de Operação</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter text-foreground leading-[0.9] lg:leading-[0.85]">
-            Painel de <br className="hidden sm:block lg:hidden" />
-            <span className="text-primary relative inline-block">
-              Controle
-              <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-1 sm:h-2 bg-primary/20 rounded-full blur-sm" />
-            </span>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
+            Dashboard de <span className="text-primary italic">Performance</span>
           </h1>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="px-4 py-2 rounded-xl border-primary/20 bg-primary/5 text-primary text-[10px] font-black flex gap-2 shadow-xl shadow-primary/5 border">
-            <Activity className="w-3.5 h-3.5 animate-pulse" />
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-border/40 bg-card/40 text-foreground text-[10px] font-bold flex gap-2 shadow-sm border">
+            <Activity className="w-3.5 h-3.5 text-primary" />
             <span className="tracking-widest uppercase">Sistema Ativo</span>
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl border-border/40 bg-card/40 backdrop-blur-md hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all shadow-lg" onClick={() => handleExport(history, 'Historico_Geral')}>
-                <Download className="w-5 h-5" />
+              <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border/40 bg-card/40 backdrop-blur-md hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-all shadow-sm" onClick={() => handleExport(history, 'Historico_Geral')}>
+                <Download className="w-4 h-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="bg-popover/95 backdrop-blur-md border-border/40 font-bold p-3 rounded-xl shadow-2xl">Exportar Banco de Dados (Excel)</TooltipContent>
+            <TooltipContent className="bg-popover/95 backdrop-blur-md font-bold p-2 rounded-lg shadow-xl">Exportar Banco de Dados</TooltipContent>
           </Tooltip>
         </div>
       </header>
