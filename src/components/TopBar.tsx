@@ -72,7 +72,7 @@ export default function TopBar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-500">
       <div className="flex h-14 sm:h-20 items-center gap-1.5 sm:gap-4 px-3 sm:px-8 max-w-[1800px] mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
           <SidebarTrigger className="h-9 w-9 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
           <div className="hidden xs:flex flex-col">
             <h2 className="text-[10px] sm:text-xs font-black tracking-[0.2em] leading-none uppercase text-muted-foreground/60">Painel Operacional</h2>
