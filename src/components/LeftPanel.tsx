@@ -782,7 +782,7 @@ export default function LeftPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 sm:col-span-2">
                 <div className="flex items-center justify-between px-1">
                   <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Processo (PROC)</label>
                   <Button
@@ -815,7 +815,7 @@ export default function LeftPanel() {
             )}
 
             {/* Item / Referência */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 sm:col-span-2">
               <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item / Referência</label>
               <input
                 id="item-input"
@@ -834,7 +834,7 @@ export default function LeftPanel() {
 
             {/* Coulisse: optional manual largura */}
             {isCoulisse && (
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 sm:col-span-2">
                 <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura (Opcional)</label>
                 <input
                   id="largura-manual"
@@ -850,7 +850,7 @@ export default function LeftPanel() {
 
             {/* NF field — Diversos except Celular */}
             {requiresNF && (
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 sm:col-span-2">
                 <div className="flex items-center justify-between px-1">
                   <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nota Fiscal (NF)</label>
                   <Button
@@ -967,7 +967,7 @@ export default function LeftPanel() {
 
             {/* Endereço */}
             {requiresEndereco && (
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 sm:col-span-2">
                 <div className="flex items-center justify-between px-1">
                   <label htmlFor="endereco-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endereço (TEC01.A.N03)</label>
                   <Button
