@@ -13,15 +13,16 @@ export function useAppNavigation() {
     
     // Sync mode with tab for better consistency
     if (tab === 'tecido') {
-      if (currentMode === 'madeira' || currentMode === 'motor' || currentMode === 'controle') {
+      if (!['manual', 'openrouter', 'diversos'].includes(currentMode)) {
         setMode('manual');
       }
     } else if (tab === 'madeira') {
       setMode('madeira');
     } else if (tab === 'motor') {
-      // Restore submode from formData when entering motor tab
       const state = useAppStore.getState();
       setMode(state.formData.motorSubMode || 'motor');
+    } else if (tab === 'inicio') {
+       // Optional: reset to a default mode when going home
     }
   }, [currentMode, setMode, setFormData]);
 

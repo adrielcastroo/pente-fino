@@ -12,9 +12,8 @@ export function parseEndereco(addr: string) {
 }
 
 export function fmtML(v: number): string {
-  if (typeof v !== 'number' || v === 0) return '';
+  if (typeof v !== 'number') return '';
   const rounded = Math.round(v * 10) / 10;
-  if (rounded === 0) return '';
   return (rounded % 1 === 0 ? Math.round(rounded).toString() : rounded.toFixed(1).replace('.', ',')) + 'M';
 }
 
