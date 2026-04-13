@@ -3,7 +3,7 @@ import { useAppStore, type Conference } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Layers3, BarChart3, TrendingUp, Warehouse, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { useToastStore } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -98,7 +98,7 @@ interface StockStats {
 
 export default function DashboardPage() {
   const history = useAppStore(s => s.history);
-  const addToast = useToastStore(s => s.addToast);
+  
   const stats = useMemo(() => computeStats(history), [history]);
   const [stockData, setStockData] = useState<StockStats[]>([]);
 
@@ -148,7 +148,7 @@ export default function DashboardPage() {
 
   const exportDashboardData = useCallback(() => {
     if (!history.length) {
-      addToast('Nenhum dado histórico para exportar.', 'warn');
+      toast.warning('Nenhum dado histórico para exportar.');
       return;
     }
 
@@ -180,8 +180,8 @@ export default function DashboardPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Histórico_Geral');
     XLSX.writeFile(wb, `dashboard_export_${new Date().toISOString().split('T')[0]}.xlsx`);
-    addToast('Dados do dashboard exportados com sucesso!', 'ok');
-  }, [history, addToast]);
+    toast.success('Dados do dashboard exportados com sucesso!');
+  }, [history]);
 
   const stockTotals = useMemo(() => {
     return stockData.reduce(
