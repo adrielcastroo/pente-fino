@@ -66,34 +66,48 @@ function layoutFromMode(mode: RegistroMode) {
 export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode = 'manual'): RegistroColumn[] {
   if (!rows.length) return layoutFromMode(fallbackMode).map(key => COLUMN_MAP[key]);
 
-  const modes = Array.from(new Set(rows.map(row => normalizeMode(row.modoOrigem, fallbackMode))));
-  if (modes.length === 1) {
-    const [mode] = modes;
+  let firstMode: RegistroMode | undefined;
+  let hasMultipleModes = false;
+  let firstTipo: string | undefined;
+  let hasMultipleTipos = false;
 
-    if (mode === 'diversos') {
-      const tipos = Array.from(new Set(rows.map(row => normalizeTipo(row.tipoTecido)).filter(Boolean)));
-      if (tipos.length === 1) {
-        return layoutForDiversosTipo(tipos[0]).map(key => COLUMN_MAP[key]);
+  const visibility: Record<RegistroColumnKey, boolean> = {
+    item: false, nf: false, processo: false, m2: false, largura: false,
+    mLinear: false, quantidade: false, lote: false, endereco: false, loteSistema: false
+  };
+
+  for (const row of rows) {
+    const m = normalizeMode(row.modoOrigem, fallbackMode);
+    if (firstMode === undefined) firstMode = m;
+    else if (firstMode !== m) hasMultipleModes = true;
+
+    if (m === 'diversos') {
+      const t = normalizeTipo(row.tipoTecido);
+      if (t) {
+        if (firstTipo === undefined) firstTipo = t;
+        else if (firstTipo !== t) hasMultipleTipos = true;
       }
     }
 
-    return layoutFromMode(mode).map(key => COLUMN_MAP[key]);
+    if (!visibility.item && row.item?.trim()) visibility.item = true;
+    if (!visibility.nf && row.nf?.trim()) visibility.nf = true;
+    if (!visibility.processo && row.processo?.trim()) visibility.processo = true;
+    if (!visibility.m2 && Number(row.m2) > 0) visibility.m2 = true;
+    if (!visibility.largura && Number(row.largura) > 0) visibility.largura = true;
+    if (!visibility.mLinear && Number(row.mLinear) > 0) visibility.mLinear = true;
+    if (!visibility.quantidade && Number(row.quantidade) > 0) visibility.quantidade = true;
+    if (!visibility.lote && row.lote?.trim()) visibility.lote = true;
+    if (!visibility.endereco && row.endereco?.trim()) visibility.endereco = true;
+    if (!visibility.loteSistema && row.loteSistema?.trim()) visibility.loteSistema = true;
   }
 
-  // Mixed modes: show all columns that have data
-  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'loteSistema'];
-  const visibility: Record<RegistroColumnKey, boolean> = {
-    item: rows.some(row => !!row.item?.trim()),
-    nf: rows.some(row => !!row.nf?.trim()),
-    processo: rows.some(row => !!row.processo?.trim()),
-    m2: rows.some(row => Number(row.m2) > 0),
-    largura: rows.some(row => Number(row.largura) > 0),
-    mLinear: rows.some(row => Number(row.mLinear) > 0),
-    quantidade: rows.some(row => Number(row.quantidade) > 0),
-    lote: rows.some(row => !!row.lote?.trim()),
-    endereco: rows.some(row => !!row.endereco?.trim()),
-    loteSistema: rows.some(row => !!row.loteSistema?.trim()),
-  };
+  if (!hasMultipleModes && firstMode) {
+    if (firstMode === 'diversos' && !hasMultipleTipos && firstTipo) {
+      return layoutForDiversosTipo(firstTipo).map(key => COLUMN_MAP[key]);
+    }
+    return layoutFromMode(firstMode).map(key => COLUMN_MAP[key]);
+  }
 
+  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'loteSistema'];
   return mixedOrder.filter(key => visibility[key]).map(key => COLUMN_MAP[key]);
 }
