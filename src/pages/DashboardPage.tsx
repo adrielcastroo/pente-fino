@@ -87,25 +87,25 @@ export default function DashboardPage() {
       </header>
       
       {/* Stat Cards */}
-      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
+      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
         {statCards.map(s => (
           <motion.div key={s.label} variants={item}>
             <Card 
               onClick={() => handleStatClick(s.tab)} 
-              className={`group cursor-pointer border-none bg-card/40 backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.05] shadow-2xl relative ${s.glow}`}
+              className={`group cursor-pointer border-none bg-card/40 backdrop-blur-md overflow-hidden transition-all duration-500 hover:scale-[1.03] active:scale-[0.98] shadow-2xl relative ${s.glow}`}
               role="button"
               aria-label={`Ver detalhes de ${s.label}`}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
-              <CardContent className="p-6 sm:p-10 flex flex-row items-center gap-6 relative z-10">
-                <div className={`p-4 sm:p-6 rounded-3xl bg-primary/5 border border-primary/10 ${s.accent} group-hover:bg-primary group-hover:text-primary-foreground group-hover:rotate-6 group-hover:shadow-2xl group-hover:shadow-primary/40 transition-all duration-700`}>
-                  <s.icon className="w-6 h-6 sm:w-8 sm:h-8" />
+              <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-primary/5 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl sm:blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
+              <CardContent className="p-5 sm:p-10 flex flex-row items-center gap-4 sm:gap-6 relative z-10">
+                <div className={`p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-primary/5 border border-primary/10 ${s.accent} group-hover:bg-primary group-hover:text-primary-foreground group-hover:rotate-6 group-hover:shadow-2xl group-hover:shadow-primary/40 transition-all duration-700`}>
+                  <s.icon className="w-5 h-5 sm:w-8 sm:h-8" />
                 </div>
-                <div className="flex-1">
-                  <div className={`text-4xl sm:text-6xl font-black tracking-tighter tabular-nums ${s.accent} group-hover:scale-105 transition-transform duration-700 origin-left drop-shadow-xl`}>{s.value}</div>
-                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1">{s.label}</p>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-3xl sm:text-6xl font-black tracking-tighter tabular-nums ${s.accent} group-hover:scale-105 transition-transform duration-700 origin-left drop-shadow-xl truncate`}>{s.value}</div>
+                  <p className="text-[9px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground/60 mt-0.5 sm:mt-1 truncate">{s.label}</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-2 transition-all duration-500 hidden sm:block" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-2 transition-all duration-500 hidden xs:block" />
               </CardContent>
             </Card>
           </motion.div>
