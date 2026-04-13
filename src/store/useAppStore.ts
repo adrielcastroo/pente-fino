@@ -186,9 +186,11 @@ export function generateLoteSistema(processo: string, endereco: string, mLinear:
 /** Generate Lote Sistema with box numbering (CXnn) for Madeira and Celular modes */
 export function generateLoteSistemaCaixa(processo: string, item: string, mLinear: number, existingRegistros: Registro[]): string {
   const itemNorm = (item || '').trim().toLowerCase();
-  const count = existingRegistros.filter(r => (r.item || '').trim().toLowerCase() === itemNorm).length;
-  const caixaNum = count + 1;
-  const cxLabel = `CX${caixaNum.toString().padStart(2, '0')}`;
+  let count = 0;
+  for (const r of existingRegistros) {
+    if ((r.item || '').trim().toLowerCase() === itemNorm) count++;
+  }
+  const cxLabel = `CX${(count + 1).toString().padStart(2, '0')}`;
   const procTrimmed = processo.trim();
   const mlFormatted = fmtML(mLinear);
   const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', mlFormatted].filter(Boolean);
