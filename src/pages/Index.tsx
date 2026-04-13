@@ -31,7 +31,10 @@ const PageSkeleton = () => (
 );
 
 export default function Index() {
-  const { undo, loadHistory, setMode, currentMode } = useAppStore();
+  const undo = useAppStore(s => s.undo);
+  const loadHistory = useAppStore(s => s.loadHistory);
+  const setMode = useAppStore(s => s.setMode);
+  const currentMode = useAppStore(s => s.currentMode);
   
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);

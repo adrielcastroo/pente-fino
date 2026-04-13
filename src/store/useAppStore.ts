@@ -151,30 +151,25 @@ export function generateLoteSistema(processo: string, endereco: string, mLinear:
   const base = baseParts.join(' ');
   const itemNorm = (itemCode || '').trim().toLowerCase();
   
-  let count = 0;
-  for (const r of existingRegistros) {
-    if ((r.item || '').trim().toLowerCase() !== itemNorm) continue;
-    if (fmtML(r.mLinear) !== mlFormatted) continue;
-    if ((r.endereco || '').trim() !== addrTrimmed) continue;
+  const count = existingRegistros.reduce((acc, r) => {
+    if ((r.item || '').trim().toLowerCase() !== itemNorm) return acc;
+    if (fmtML(r.mLinear) !== mlFormatted) return acc;
+    if ((r.endereco || '').trim() !== addrTrimmed) return acc;
 
     const rProc = (r.processo || '').trim();
     const rNf = (r.nf || '').trim();
     const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
     
-    if (rLabel === labelPrefix) {
-      count++;
-    }
-  }
+    return rLabel === labelPrefix ? acc + 1 : acc;
+  }, 0);
   
   return count === 0 ? base : `${base}-${count}`;
 }
 
 export function generateLoteSistemaCaixa(processo: string, item: string, mLinear: number, existingRegistros: Registro[]): string {
   const itemNorm = (item || '').trim().toLowerCase();
-  let count = 0;
-  for (const r of existingRegistros) {
-    if ((r.item || '').trim().toLowerCase() === itemNorm) count++;
-  }
+  const count = existingRegistros.reduce((acc, r) => 
+    (r.item || '').trim().toLowerCase() === itemNorm ? acc + 1 : acc, 0);
   const cxLabel = `CX${(count + 1).toString().padStart(2, '0')}`;
   const procTrimmed = processo.trim();
   const mlFormatted = fmtML(mLinear);
@@ -287,26 +282,43 @@ export const useAppStore = create<AppState>()(
           }));
           const { data: insertedRegs, error: regError } = await supabase.from('registros').insert(rows as any).select();
           if (regError) throw regError;
-          const validEnderecos = (insertedRegs || []).map(r => ({ r, parsed: parseEndereco(r.endereco) })).filter(x => x.parsed !== null);
+
+          const validEnderecos = (insertedRegs || [])
+            .map(r => ({ r, parsed: parseEndereco(r.endereco) }))
+            .filter(x => x.parsed !== null);
+
           if (validEnderecos.length > 0) {
             const structures = [...new Set(validEnderecos.map(x => x.parsed!.estrutura))];
-            const { data: dbOccupied } = await supabase.from('estoque_posicoes').select('estrutura, coluna, nivel, posicao').in('estrutura', structures).neq('status', 'saida').neq('status', 'livre');
-            const occupiedMap: Record<string, Set<number>> = {};
+            
+            // Parallelize fetching occupied positions
+            const { data: dbOccupied } = await supabase
+              .from('estoque_posicoes')
+              .select('estrutura, coluna, nivel, posicao')
+              .in('estrutura', structures)
+              .not('status', 'in', '("saida","livre")');
+
+            const occupiedMap = new Map<string, Set<number>>();
             (dbOccupied || []).forEach(p => {
               const key = `${p.estrutura}.${p.coluna}.${p.nivel}`;
-              if (!occupiedMap[key]) occupiedMap[key] = new Set();
-              occupiedMap[key].add(p.posicao);
+              if (!occupiedMap.has(key)) occupiedMap.set(key, new Set());
+              occupiedMap.get(key)!.add(p.posicao);
             });
+
             const regMap = new Map(state.registros.map(r => [r.id, r]));
             const estoqueRows: any[] = [];
+
             for (const { r, parsed } of validEnderecos) {
               const { estrutura, coluna, nivel } = parsed!;
               const cellKey = `${estrutura}.${coluna}.${nivel}`;
-              if (!occupiedMap[cellKey]) occupiedMap[cellKey] = new Set();
+              
+              if (!occupiedMap.has(cellKey)) occupiedMap.set(cellKey, new Set());
+              const occupiedSet = occupiedMap.get(cellKey)!;
+              
               let pos = 1;
-              while (pos <= 30 && occupiedMap[cellKey].has(pos)) pos++;
+              while (pos <= 30 && occupiedSet.has(pos)) pos++;
+              
               if (pos <= 30) {
-                occupiedMap[cellKey].add(pos);
+                occupiedSet.add(pos);
                 const original = regMap.get(r.id);
                 estoqueRows.push({
                   estrutura, coluna, nivel, posicao: pos, status: 'ocupado', registro_id: r.id,
@@ -316,7 +328,10 @@ export const useAppStore = create<AppState>()(
                 });
               }
             }
-            if (estoqueRows.length > 0) await supabase.from('estoque_posicoes').upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
+
+            if (estoqueRows.length > 0) {
+              await supabase.from('estoque_posicoes').upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
+            }
           }
           set({ registros: [], undoStack: [], sessionStartedAt: null });
           await get().loadHistory();

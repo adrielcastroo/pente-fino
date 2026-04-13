@@ -20,6 +20,27 @@ const TOOL_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06
 const TIPO_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
 const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#94a3b8' };
 
+const StatCard = ({ label, value, icon: Icon, color, textColor, bgIcon, index }: any) => (
+  <Card className={`group relative overflow-hidden border-none shadow-2xl shadow-black/5 bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-500 ${index === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
+    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+    <CardContent className="p-6 sm:p-8 relative">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{label}</p>
+          <div className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-500">
+            {value}
+          </div>
+        </div>
+        <div className={`p-4 sm:p-5 ${bgIcon} rounded-2xl sm:rounded-3xl group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-500`}>
+          <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${textColor}`} />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const MemoizedStatCard = (StatCard);
+
 function computeStats(history: Conference[]) {
   const confMap = new Map<string, Set<string>>();
   const catMap = new Map<string, number>();
@@ -27,7 +48,8 @@ function computeStats(history: Conference[]) {
   const tipoMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  for (const conference of history) {
+  for (let i = 0; i < history.length; i++) {
+    const conference = history[i];
     const name = conference.conferente || 'Desconhecido';
     let confSet = confMap.get(name);
     if (!confSet) {
@@ -35,20 +57,20 @@ function computeStats(history: Conference[]) {
       confMap.set(name, confSet);
     }
 
-    for (const r of conference.registros) {
+    const regs = conference.registros;
+    for (let j = 0; j < regs.length; j++) {
+      const r = regs[j];
       totalRegistros++;
       if (r.nf) confSet.add(`NF:${r.nf}`);
       if (r.processo) confSet.add(`PROC:${r.processo}`);
 
       const modo = r.modoOrigem || 'manual';
       
-      // Category map
       let cat = 'Tecido';
       if (modo === 'madeira') cat = 'Madeira';
       else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
 
-      // Sub map (Tools)
       let sub = 'Coulisse';
       if (modo === 'openrouter') sub = 'IA';
       else if (modo === 'diversos') sub = 'Diversos';
@@ -56,7 +78,6 @@ function computeStats(history: Conference[]) {
       else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
       subMap.set(sub, (subMap.get(sub) || 0) + 1);
 
-      // Tipo map
       const tipo = r.tipoTecido || 'Rolo';
       tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
     }
@@ -252,22 +273,16 @@ export default function DashboardPage() {
             bgIcon: 'bg-amber-500/20'
           }
         ].map((stat, i) => (
-          <Card key={i} className={`group relative overflow-hidden border-none shadow-2xl shadow-black/5 bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-500 ${i === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            <CardContent className="p-6 sm:p-8 relative">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1 sm:space-y-2">
-                  <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</p>
-                  <div className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-500">
-                    {stat.value}
-                  </div>
-                </div>
-                <div className={`p-4 sm:p-5 ${stat.bgIcon} rounded-2xl sm:rounded-3xl group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-500`}>
-                  <stat.icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.textColor}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MemoizedStatCard 
+            key={i} 
+            index={i}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+            textColor={stat.textColor}
+            bgIcon={stat.bgIcon}
+          />
         ))}
       </div>
 
