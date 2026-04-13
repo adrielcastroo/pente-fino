@@ -87,7 +87,7 @@ interface StockStats {
 export default function DashboardPage() {
   const history = useAppStore(s => s.history);
   const addToast = useToastStore(s => s.addToast);
-  const stats = computeStats(history);
+  const stats = useMemo(() => computeStats(history), [history]);
   const [stockData, setStockData] = useState<StockStats[]>([]);
 
   useEffect(() => {

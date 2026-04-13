@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAppStore, extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX, type AppState } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,31 +17,29 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export default function LeftPanel() {
-  const {
-    currentMode,
-    setMode,
-    processo,
-    setProcesso,
-    registros,
-    addRegistro,
-    undo: undoAction,
-    undoStack,
-    lockProcesso,
-    setLockProcesso,
-    lockedProcesso,
-    setLockedProcesso,
-    lockNf,
-    setLockNf,
-    lockedNf,
-    setLockedNf,
-    lockEndereco,
-    setLockEndereco,
-    lockedEndereco,
-    setLockedEndereco,
-    formData,
-    setFormData,
-    resetFormData,
-  } = useAppStore();
+  const currentMode = useAppStore(s => s.currentMode);
+  const setMode = useAppStore(s => s.setMode);
+  const processo = useAppStore(s => s.processo);
+  const setProcesso = useAppStore(s => s.setProcesso);
+  const registros = useAppStore(s => s.registros);
+  const addRegistro = useAppStore(s => s.addRegistro);
+  const undoAction = useAppStore(s => s.undo);
+  const undoStack = useAppStore(s => s.undoStack);
+  const lockProcesso = useAppStore(s => s.lockProcesso);
+  const setLockProcesso = useAppStore(s => s.setLockProcesso);
+  const lockedProcesso = useAppStore(s => s.lockedProcesso);
+  const setLockedProcesso = useAppStore(s => s.setLockedProcesso);
+  const lockNf = useAppStore(s => s.lockNf);
+  const setLockNf = useAppStore(s => s.setLockNf);
+  const lockedNf = useAppStore(s => s.lockedNf);
+  const setLockedNf = useAppStore(s => s.setLockedNf);
+  const lockEndereco = useAppStore(s => s.lockEndereco);
+  const setLockEndereco = useAppStore(s => s.setLockEndereco);
+  const lockedEndereco = useAppStore(s => s.lockedEndereco);
+  const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
+  const formData = useAppStore(s => s.formData);
+  const setFormData = useAppStore(s => s.setFormData);
+  const resetFormData = useAppStore(s => s.resetFormData);
   const addToast = useToastStore(s => s.addToast);
 
   const {
@@ -91,11 +89,11 @@ export default function LeftPanel() {
   const setMadeiraTipo = (val: AppState['formData']['madeiraTipo']) => setFormData({ madeiraTipo: val });
   const setQuantidade = (val: string) => setFormData({ quantidade: val });
 
-  const m2Num = parseFloat(m2) || 0;
-  const aiLarguraNum = parseFloat(aiLargura) || 0;
-  const aiMLinearNum = parseFloat(aiMLinear) || 0;
-  const diversosMLinearNum = parseFloat(diversosMLinear) || 0;
-  const manualLarguraNum = parseFloat(manualLargura) || 0;
+  const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
+  const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
+  const aiMLinearNum = useMemo(() => parseFloat(aiMLinear) || 0, [aiMLinear]);
+  const diversosMLinearNum = useMemo(() => parseFloat(diversosMLinear) || 0, [diversosMLinear]);
+  const manualLarguraNum = useMemo(() => parseFloat(manualLargura) || 0, [manualLargura]);
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isMadeira = currentMode === 'madeira';
@@ -118,18 +116,29 @@ export default function LeftPanel() {
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
-  const largura = isAI ? aiLarguraNum
+  const largura = useMemo(() => 
+    isAI ? aiLarguraNum
     : isMadeira ? 0
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
     : isCelular ? celularDivisor
     : usesLarguraFromItem ? extractLarguraFromItem(item)
-    : 0;
-  const mLinear = isAI ? aiMLinearNum
+    : 0,
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, item, isCelular, celularDivisor, usesLarguraFromItem]
+  );
+
+  const mLinear = useMemo(() => 
+    isAI ? aiMLinearNum
     : isMadeira ? 0
     : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
     : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
-    : (largura > 0 ? m2Num / largura : 0);
-  const isDuplicate = !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
+    : (largura > 0 ? m2Num / largura : 0),
+    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
+  );
+  
+  const isDuplicate = useMemo(() => 
+    !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase()),
+    [isMadeira, item, registros]
+  );
 
   
 

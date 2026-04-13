@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAppStore, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,31 +20,45 @@ function highlight(text: string, q: string) {
 }
 
 export default function RightPanel() {
-  const { registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy, deleteRegistro, undo, undoStack, archiveAndClear, updateRegistro } = useAppStore();
+  const registros = useAppStore(s => s.registros);
+  const currentMode = useAppStore(s => s.currentMode);
+  const searchQuery = useAppStore(s => s.searchQuery);
+  const setSearchQuery = useAppStore(s => s.setSearchQuery);
+  const sortBy = useAppStore(s => s.sortBy);
+  const setSortBy = useAppStore(s => s.setSortBy);
+  const deleteRegistro = useAppStore(s => s.deleteRegistro);
+  const undo = useAppStore(s => s.undo);
+  const undoStack = useAppStore(s => s.undoStack);
+  const archiveAndClear = useAppStore(s => s.archiveAndClear);
+  const updateRegistro = useAppStore(s => s.updateRegistro);
+  
   const addToast = useToastStore(s => s.addToast);
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  let rows = [...registros];
-  const q = searchQuery.toLowerCase().trim();
-  if (q) rows = rows.filter(r =>
-    r.item.toLowerCase().includes(q) ||
-    r.endereco.toLowerCase().includes(q) ||
-    r.lote.toLowerCase().includes(q) ||
-    r.loteSistema.toLowerCase().includes(q)
-  );
+  const rows = useMemo(() => {
+    let result = [...registros];
+    const q = searchQuery.toLowerCase().trim();
+    if (q) result = result.filter(r =>
+      r.item.toLowerCase().includes(q) ||
+      r.endereco.toLowerCase().includes(q) ||
+      r.lote.toLowerCase().includes(q) ||
+      r.loteSistema.toLowerCase().includes(q)
+    );
 
-  const sortMap: Record<string, (a: any, b: any) => number> = {
-    'item': (a, b) => a.item.localeCompare(b.item),
-    'ml-d': (a, b) => b.mLinear - a.mLinear,
-    'ml-a': (a, b) => a.mLinear - b.mLinear,
-    'end': (a, b) => a.endereco.localeCompare(b.endereco),
-  };
-  if (sortBy && sortMap[sortBy]) rows.sort(sortMap[sortBy]);
+    const sortMap: Record<string, (a: any, b: any) => number> = {
+      'item': (a, b) => a.item.localeCompare(b.item),
+      'ml-d': (a, b) => b.mLinear - a.mLinear,
+      'ml-a': (a, b) => a.mLinear - b.mLinear,
+      'end': (a, b) => a.endereco.localeCompare(b.endereco),
+    };
+    if (sortBy && sortMap[sortBy]) result.sort(sortMap[sortBy]);
+    return result;
+  }, [registros, searchQuery, sortBy]);
 
-  const totalML = rows.reduce((a, r) => a + r.mLinear, 0);
-  const totalM2 = rows.reduce((a, r) => a + r.m2, 0);
-  const columns = getRegistroColumns(rows, currentMode);
+  const totalML = useMemo(() => rows.reduce((a, r) => a + r.mLinear, 0), [rows]);
+  const totalM2 = useMemo(() => rows.reduce((a, r) => a + r.m2, 0), [rows]);
+  const columns = useMemo(() => getRegistroColumns(rows, currentMode), [rows, currentMode]);
 
   const copyText = (t: string) => {
     navigator.clipboard.writeText(t).then(() => addToast('Copiado: ' + t, 'ok'));
@@ -92,8 +106,8 @@ export default function RightPanel() {
     if (column.key === 'loteSistema') {
       return <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>;
     }
-    if (column.key === 'item') return highlight(r.item || '—', q);
-    if (column.key === 'endereco') return highlight(r.endereco || '—', q);
+    if (column.key === 'item') return highlight(r.item || '—', searchQuery.toLowerCase().trim());
+    if (column.key === 'endereco') return highlight(r.endereco || '—', searchQuery.toLowerCase().trim());
     return displayVal;
   };
 
