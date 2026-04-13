@@ -217,8 +217,8 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const folderName = getConferenceFolderName(conf);
   const modeBadges = getModeBadges(conf);
 
-  const startTime = formatTime(conf.startedAt);
-  const endTime = formatTime(conf.finishedAt);
+  const startTime = formatTimeBR(conf.startedAt);
+  const endTime = formatTimeBR(conf.finishedAt);
 
   return (
     <motion.div 
@@ -241,7 +241,8 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
               </div>
             </div>
             <div className="text-[9px] sm:text-xs text-muted-foreground font-bold flex items-center gap-1.5 sm:gap-2.5 mt-1 flex-wrap">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDate(conf.date)}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDateBR(conf.date)}</span>
+
               <span className="hidden xs:block h-3 w-[1px] bg-border" />
               <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
               {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
