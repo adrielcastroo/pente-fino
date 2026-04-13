@@ -185,20 +185,20 @@ export default function DashboardPage() {
       <Dialog open={!!detailChart} onOpenChange={() => setDetailChart(null)}>
         <DialogContent className="max-w-3xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-background">
           <DialogHeader className="p-8 pb-4 bg-muted/30">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary">
                 {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
               </div>
               <DialogTitle className="text-2xl font-black tracking-tight">{detailChart?.title}</DialogTitle>
             </div>
-          </Badge>
+          </DialogHeader>
           <div className="p-8 h-[450px]">
             {detailChart && (
                 <ResponsiveContainer width="100%" height="100%">
                     {detailChart.type === 'bar' ? (
                       <BarChart data={detailChart.data} margin={{ bottom: 60, top: 10 }}>
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} fontSize={10} fontStyle="bold" axisLine={false} tickLine={false} />
-                        <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} fontSize={10} axisLine={false} tickLine={false} />
+                        <YAxis axisLine={false} tickLine={false} fontSize={10} />
                         <ChartTooltip 
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
                         />
