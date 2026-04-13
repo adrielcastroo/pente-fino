@@ -83,7 +83,7 @@ export default function Index() {
                 className="h-full w-full max-w-[2000px] mx-auto"
               >
                 <Suspense fallback={<PageSkeleton />}>
-                  <div className="p-4 sm:p-6 lg:p-8 h-full">
+                  <div className="p-2 sm:p-6 lg:p-8 h-full">
                     <TabRenderer activeTab={activeTab} />
                   </div>
                 </Suspense>
