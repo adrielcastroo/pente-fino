@@ -1043,7 +1043,7 @@ export default function LeftPanel() {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleAdd}
-          className="w-full h-14 bg-primary text-primary-foreground rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.97]"
+          className="w-full h-12 sm:h-14 bg-primary text-primary-foreground rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.97] shadow-lg shadow-primary/20"
         >
           <Plus className="w-5 h-5" />
           Adicionar à Tabela
