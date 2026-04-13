@@ -432,6 +432,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           occupiedMap[key].add(p.posicao);
         });
 
+        const regMap = new Map(state.registros.map(r => [r.id, r]));
         const estoqueRows: any[] = [];
         for (const { r, parsed } of validEnderecos) {
           const { estrutura, coluna, nivel } = parsed!;
@@ -446,7 +447,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
           if (pos <= 30) {
             occupiedMap[cellKey].add(pos);
-            const original = state.registros.find(orig => orig.id === r.id);
+            const original = regMap.get(r.id);
             const proc = original?.processo || state.processo || '';
 
             estoqueRows.push({
