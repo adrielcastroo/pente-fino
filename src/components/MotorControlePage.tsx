@@ -187,9 +187,9 @@ export default function MotorControlePage() {
       initial={{ x: -40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="surface-bg border-r border-border overflow-hidden flex flex-col h-full"
+      className="bg-background md:border-r border-border/50 overflow-hidden flex flex-col h-full"
     >
-      <div className="p-4 flex-1 overflow-y-auto space-y-3">
+      <div className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-6 sm:space-y-8 custom-scrollbar">
         {/* Subtoggle */}
         <div className="flex surface-2-bg border border-border rounded-lg p-0.5 gap-0.5">
           {(['motor', 'controle'] as SubMode[]).map(mode => (
@@ -235,7 +235,7 @@ export default function MotorControlePage() {
 
         {/* Motor: caixa toggle */}
         {subMode === 'motor' && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border shadow-sm">
             <Switch checked={temCaixa} onCheckedChange={setTemCaixa} />
             <span className="text-xs font-medium text-foreground">Motor em Caixa</span>
             {temCaixa && (
@@ -304,7 +304,7 @@ export default function MotorControlePage() {
 
         {/* Preview table */}
         {currentCount > 0 && (
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <Eye className="w-4 h-4 text-muted-foreground" />
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
