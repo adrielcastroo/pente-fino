@@ -77,16 +77,6 @@ export default function Index() {
     setConfigOpen: () => handleTabChange('settings'),
   });
 
-  const animationProps = useMemo(() => {
-    if (isLow) return {};
-    return {
-      initial: { opacity: 0, y: 10 },
-      animate: { opacity: 1, y: 0 },
-      exit: { opacity: 0, y: -10 },
-      transition: { duration: 0.15, ease: "easeOut" }
-    };
-  }, [isLow]);
-
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background/30 overflow-hidden relative">
@@ -111,7 +101,10 @@ export default function Index() {
               ) : (
                 <motion.div
                   key={activeTab}
-                  {...animationProps}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
                   className="h-full w-full max-w-[2000px] mx-auto"
                 >
                   <Suspense fallback={<PageSkeleton />}>
