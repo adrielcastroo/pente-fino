@@ -107,19 +107,19 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                         h-11 rounded-xl transition-all duration-200
                         ${isActive 
                           ? 'bg-primary/15 text-primary font-black shadow-[0_4px_20px_rgb(0,0,0,0.05)] scale-[1.02] ring-1 ring-primary/20' 
-                          : 'hover:bg-sidebar-accent/70 text-muted-foreground font-bold hover:translate-x-1'}
+                          : 'hover:bg-sidebar-accent/70 text-foreground/80 dark:text-foreground font-bold hover:translate-x-1'}
                         ${isTableTab && registros.length > 0 ? 'ring-2 ring-primary/40 animate-pulse-subtle' : ''}
                       `}
                     >
                       <div className="relative">
-                        <Icon className={`w-4.5 h-4.5 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
+                        <Icon className={`w-4.5 h-4.5 transition-all duration-200 ${isActive ? 'scale-110 ' + item.color : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
                         {isTableTab && registros.length > 0 && collapsed && (
                           <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground ring-2 ring-sidebar animate-in zoom-in-50">
                             {registros.length}
                           </span>
                         )}
                       </div>
-                      <span className={`tracking-tight transition-all duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
+                      <span className={`tracking-tight transition-all duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'} ${isActive ? 'font-black' : 'font-bold'} ${isActive ? item.color : ''}`}>
                         {item.label}
                       </span>
                       {isTableTab && registros.length > 0 && !collapsed && (
