@@ -5,7 +5,7 @@ import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle, Calendar, LayoutGrid, FileSpreadsheet, X } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { exportConferenceToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -180,11 +180,9 @@ function downloadConferenceExcel(conf: Conference) {
       default: return '';
     }
   }));
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-  columns.forEach((c, i) => { ws['!cols'] = ws['!cols'] || []; (ws['!cols'] as any)[i] = { wch: c.width }; });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
-  XLSX.writeFile(wb, `conferencia_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+  const columnWidths = columns.map(c => c.width);
+  const fileName = `conferencia_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  exportConferenceToExcel(headers, data, fileName, columnWidths);
 }
 
 function getModeBadges(conf: Conference): string[] {
