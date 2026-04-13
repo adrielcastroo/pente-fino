@@ -87,10 +87,16 @@ export default function EstoquePage() {
 
   const stats = useMemo(() => {
     const totalSlots = Object.values(TEC_CONFIG).reduce((acc, c) => acc + c.cols.length * c.levels * 30, 0);
-    const occupied = allPosicoes.filter(p => p.status === 'ocupado').length;
-    const blocked = allPosicoes.filter(p => p.status === 'bloqueado').length;
-    const reserved = allPosicoes.filter(p => p.status === 'reservado').length;
-    const exited = allPosicoes.filter(p => p.status === 'saida').length;
+    let occupied = 0, blocked = 0, reserved = 0, exited = 0;
+    
+    for (let i = 0, len = allPosicoes.length; i < len; i++) {
+      const p = allPosicoes[i];
+      if (p.status === 'ocupado') occupied++;
+      else if (p.status === 'bloqueado') blocked++;
+      else if (p.status === 'reservado') reserved++;
+      else if (p.status === 'saida') exited++;
+    }
+    
     const free = totalSlots - occupied - blocked - reserved - exited;
     return { totalSlots, occupied, blocked, reserved, exited, free };
   }, [allPosicoes]);
