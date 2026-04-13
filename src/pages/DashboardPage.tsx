@@ -141,7 +141,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6 sm:p-10 h-[250px] sm:h-[350px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
+            <CardContent className="p-4 sm:p-10 h-[220px] sm:h-[350px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart.type === 'bar' ? (
                   <BarChart data={chart.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
