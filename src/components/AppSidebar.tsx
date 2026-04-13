@@ -4,6 +4,7 @@ import { Logo } from './Logo';
 import { useTheme } from 'next-themes';
 import { AppTab } from '@/types';
 import { useState } from 'react';
+import { usePerformance } from '@/hooks/use-performance';
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { isLow } = usePerformance();
 
   const handleMouseEnter = () => {
     if (hoverTimeout) clearTimeout(hoverTimeout);

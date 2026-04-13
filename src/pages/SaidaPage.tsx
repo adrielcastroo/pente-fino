@@ -36,6 +36,7 @@ export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const { isLow } = usePerformance();
 
   const loadSaidas = async () => {
     setLoading(true);
