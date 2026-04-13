@@ -100,64 +100,79 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
 
 TimelineChart.displayName = 'TimelineChart';
 
-export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey }: any) => (
-  <Card className="group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
-    <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
-      <div>
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <Icon className="w-3.5 h-3.5 text-primary" />
-          <span>{title}</span>
-        </CardTitle>
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{desc}</p>
-      </div>
-      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDetailClick({ title, data, type })}>
-        <Eye className="w-3.5 h-3.5" />
-      </Button>
-    </CardHeader>
-    <CardContent className="px-4 pb-6 h-[180px]">
-      <ResponsiveContainer width="100%" height="100%">
-        {type === 'bar' ? (
-          <BarChart data={data} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-            <XAxis dataKey="name" hide />
-            <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[4, 4, 2, 2]} barSize={24} />
-            <ChartTooltip 
-              cursor={{ fill: 'hsl(var(--primary) / 0.05)' }}
-              contentStyle={{ 
-                borderRadius: '8px', 
-                border: '1px solid hsl(var(--border) / 0.5)', 
-                background: 'hsl(var(--card) / 0.95)',
-                fontSize: '11px'
-              }}
-              formatter={(val: any) => [val, 'Quantidade']}
-              labelFormatter={(label: any) => label}
-            />
-          </BarChart>
-        ) : (
-          <PieChart>
-            <Pie 
-              data={data} 
-              dataKey={chartKey} 
-              innerRadius="60%" 
-              outerRadius="85%" 
-              stroke="transparent"
-              paddingAngle={4}
-            >
-              {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-            </Pie>
-            <ChartTooltip 
-              contentStyle={{ 
-                borderRadius: '8px', 
-                border: '1px solid hsl(var(--border) / 0.5)', 
-                background: 'hsl(var(--card) / 0.95)',
-                fontSize: '11px'
-              }}
-              formatter={(val: any) => [val, 'Quantidade']}
-            />
-          </PieChart>
-        )}
-      </ResponsiveContainer>
-    </CardContent>
-  </Card>
-));
+export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey }: any) => {
+  const { isLow } = usePerformance();
+  const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
+
+  return (
+    <Card className="group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
+      <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <Icon className="w-3.5 h-3.5 text-primary" />
+            <span>{title}</span>
+          </CardTitle>
+          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{desc}</p>
+        </div>
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDetailClick({ title, data, type })}>
+          <Eye className="w-3.5 h-3.5" />
+        </Button>
+      </CardHeader>
+      <CardContent className="px-4 pb-6 h-[180px]">
+        <ResponsiveContainer width="100%" height="100%">
+          {type === 'bar' ? (
+            <BarChart data={processedData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+              <XAxis dataKey="name" hide />
+              <Bar 
+                dataKey={chartKey} 
+                fill="hsl(var(--primary))" 
+                radius={[4, 4, 2, 2]} 
+                barSize={24} 
+                isAnimationActive={!isLow} 
+              />
+              <ChartTooltip 
+                cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.05)' } : false}
+                contentStyle={{ 
+                  borderRadius: '8px', 
+                  border: '1px solid hsl(var(--border) / 0.5)', 
+                  background: 'hsl(var(--card) / 0.95)',
+                  fontSize: '11px',
+                  boxShadow: isLow ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'
+                }}
+                formatter={(val: any) => [val, 'Quantidade']}
+                labelFormatter={(label: any) => label}
+              />
+            </BarChart>
+          ) : (
+            <PieChart>
+              <Pie 
+                data={processedData} 
+                dataKey={chartKey} 
+                innerRadius="60%" 
+                outerRadius="85%" 
+                stroke="transparent"
+                paddingAngle={isLow ? 0 : 4}
+                isAnimationActive={!isLow}
+                animationDuration={0}
+              >
+                {processedData.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <ChartTooltip 
+                contentStyle={{ 
+                  borderRadius: '8px', 
+                  border: '1px solid hsl(var(--border) / 0.5)', 
+                  background: 'hsl(var(--card) / 0.95)',
+                  fontSize: '11px',
+                  boxShadow: isLow ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'
+                }}
+                formatter={(val: any) => [val, 'Quantidade']}
+              />
+            </PieChart>
+          )}
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+});
 
 SummaryChart.displayName = 'SummaryChart';
