@@ -1,36 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import TopBar from '@/components/TopBar';
-import LeftPanel from '@/components/LeftPanel';
-import RightPanel from '@/components/RightPanel';
-import HistoryPanel from '@/components/HistoryPanel';
-
-import ConfigModal from '@/components/ConfigModal';
-import ShortcutsModal from '@/components/ShortcutsModal';
 import AppSidebar from '@/components/AppSidebar';
-import DashboardPage from '@/components/DashboardPage';
-import MotorControlePage from '@/components/MotorControlePage';
-import EstoquePage from '@/components/EstoquePage';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Lazy loading components for better initial load performance
+const LeftPanel = lazy(() => import('@/components/LeftPanel'));
+const RightPanel = lazy(() => import('@/components/RightPanel'));
+const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
+const DashboardPage = lazy(() => import('@/components/DashboardPage'));
+const MotorControlePage = lazy(() => import('@/components/MotorControlePage'));
+const EstoquePage = lazy(() => import('@/components/EstoquePage'));
+const ConfigModal = lazy(() => import('@/components/ConfigModal'));
+const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
+
 type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
 
+const PageSkeleton = () => (
+  <div className="p-8 space-y-4 animate-pulse">
+    <div className="h-8 bg-muted rounded w-1/4" />
+    <div className="h-32 bg-muted rounded w-full" />
+    <div className="grid grid-cols-3 gap-4">
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
+    </div>
+  </div>
+);
+
 export default function Index() {
-  const { loadFromStorage, undo, loadHistory, setMode, currentMode } = useAppStore();
+  const { undo, loadHistory, setMode, currentMode } = useAppStore();
   
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const activeTab = useAppStore(s => s.formData.activeTab);
   const setFormData = useAppStore(s => s.setFormData);
-  const setActiveTab = (tab: AppTab) => setFormData({ activeTab: tab });
+  
+  const setActiveTab = useCallback((tab: AppTab) => setFormData({ activeTab: tab }), [setFormData]);
 
   useEffect(() => {
-    loadFromStorage();
     loadHistory();
-  }, [loadFromStorage, loadHistory]);
+  }, [loadHistory]);
 
+  // Optimized keyboard shortcuts handler
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const activeElement = document.activeElement as HTMLElement;
@@ -39,52 +53,76 @@ export default function Index() {
         activeElement?.tagName === 'TEXTAREA' || 
         activeElement?.isContentEditable;
 
-      if (shortcutsOpen || configOpen) {
-        if (e.key === 'Escape') { 
-          setShortcutsOpen(false); 
-          setConfigOpen(false); 
+      // Handle Escape to close modals
+      if (e.key === 'Escape') {
+        if (shortcutsOpen || configOpen) {
+          setShortcutsOpen(false);
+          setConfigOpen(false);
+          return;
         }
-        return;
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { 
+      if (shortcutsOpen || configOpen) return;
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const cmdKey = isMac ? e.metaKey : e.ctrlKey;
+
+      if (cmdKey && e.key.toLowerCase() === 'z') { 
         e.preventDefault(); 
         const r = undo(); 
         if (r) toast.success('Rolo restaurado'); 
       }
       
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !isTyping) {
+      if (cmdKey && e.key.toLowerCase() === 'f' && !isTyping) {
         e.preventDefault();
         document.querySelector<HTMLInputElement>('[placeholder*="Filtrar"]')?.focus();
       }
       
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { 
+      if (cmdKey && e.key.toLowerCase() === 'k') { 
         e.preventDefault(); 
         setShortcutsOpen(true); 
       }
       
-      if ((e.ctrlKey || e.metaKey) && e.key === ',') { 
+      if (cmdKey && e.key === ',') { 
         e.preventDefault(); 
         setConfigOpen(true); 
       }
     };
+
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [undo, configOpen, shortcutsOpen]);
 
-  const handleTabChange = (tab: AppTab) => {
+  const handleTabChange = useCallback((tab: AppTab) => {
     setActiveTab(tab);
     if (tab === 'tecido') {
       if (currentMode === 'madeira') setMode('manual');
     } else if (tab === 'madeira') {
       setMode('madeira');
     }
+  }, [setActiveTab, currentMode, setMode]);
+
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'inicio': return <DashboardPage />;
+      case 'tecido':
+      case 'madeira': return <LeftPanel />;
+      case 'motor': return <MotorControlePage />;
+      case 'estoque': return <EstoquePage />;
+      case 'table': return <RightPanel />;
+      case 'history': return <HistoryPanel />;
+      default: return <DashboardPage />;
+    }
   };
 
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
-        <AppSidebar activeTab={activeTab} onTabChange={handleTabChange} onOpenConfig={() => setConfigOpen(true)} />
+        <AppSidebar 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange} 
+          onOpenConfig={() => setConfigOpen(true)} 
+        />
 
         <div className="flex-1 flex flex-col overflow-hidden h-[100dvh]">
           <TopBar />
@@ -96,25 +134,22 @@ export default function Index() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
                 className="h-full"
               >
-                {activeTab === 'inicio' && <DashboardPage />}
-                {activeTab === 'tecido' && <LeftPanel />}
-                {activeTab === 'madeira' && <LeftPanel />}
-                {activeTab === 'motor' && <MotorControlePage />}
-                {activeTab === 'estoque' && <EstoquePage />}
-                {activeTab === 'table' && <RightPanel />}
-                {activeTab === 'history' && <HistoryPanel />}
+                <Suspense fallback={<PageSkeleton />}>
+                  {renderActiveTab()}
+                </Suspense>
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
       </div>
 
-      
-      <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
-      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <Suspense fallback={null}>
+        <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
+        <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      </Suspense>
     </SidebarProvider>
   );
 }
