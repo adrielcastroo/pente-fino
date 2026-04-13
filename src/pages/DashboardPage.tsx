@@ -101,7 +101,7 @@ export default function DashboardPage() {
                 <div className={`p-6 flex items-center justify-between bg-gradient-to-br ${s.color}`}>
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-80">{s.label}</p>
-                    <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums">{s.value}</div>
+                    <div className="text-3xl sm:text-5xl font-black tracking-tighter tabular-nums">{s.value}</div>
                   </div>
                   <div className="p-4 rounded-2xl bg-white/20 dark:bg-black/20 shadow-inner group-hover:rotate-12 transition-transform duration-500">
                     <s.icon className="w-8 h-8" />
