@@ -131,8 +131,12 @@ function fmtML(v: number): string {
   return (rounded % 1 === 0 ? Math.round(rounded) : rounded.toFixed(1).replace('.', ',')) + 'M';
 }
 
+let saveTimeout: any = null;
 function save(registros: Registro[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch {}
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch {}
+  }, 500);
 }
 
 export function formatML(v: number): string {
