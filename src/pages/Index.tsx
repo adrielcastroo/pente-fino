@@ -14,7 +14,8 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
 const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
 const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
-const ConfigModal = lazy(() => import('@/components/ConfigModal'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+// ... keep existing code
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = () => (
@@ -54,6 +55,7 @@ const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolea
     case 'saida': return <SaidaPage />;
     case 'table': return <RightPanel />;
     case 'history': return <HistoryPanel />;
+    case 'settings': return <SettingsPage />;
     default: return <DashboardPage />;
   }
 };
@@ -61,7 +63,7 @@ const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolea
 export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);
   const { activeTab, handleTabChange } = useAppNavigation();
-  const [configOpen, setConfigOpen] = useState(false);
+  // configOpen removed
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
@@ -71,8 +73,8 @@ export default function Index() {
   useKeyboardShortcuts({
     shortcutsOpen,
     setShortcutsOpen,
-    configOpen,
-    setConfigOpen,
+    configOpen: activeTab === 'settings',
+    setConfigOpen: () => handleTabChange('settings'),
   });
 
   return (
@@ -81,7 +83,6 @@ export default function Index() {
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
-          onOpenConfig={() => setConfigOpen(true)} 
         />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
@@ -109,7 +110,7 @@ export default function Index() {
       </div>
 
       <Suspense fallback={null}>
-        <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
+        {/* <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} /> */}
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </Suspense>
     </SidebarProvider>

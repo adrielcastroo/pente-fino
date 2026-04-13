@@ -161,25 +161,24 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
               )}
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {onOpenConfig && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                onClick={onOpenConfig} 
-                className="h-12 rounded-2xl hover:bg-sidebar-accent/80 text-muted-foreground hover:text-foreground transition-all duration-500 group/footer shadow-sm hover:shadow-md"
-                tooltip="Configurações"
-                aria-label="Abrir Configurações"
-              >
-                <div className="w-6 h-6 flex items-center justify-center transition-transform duration-500 group-hover/footer:rotate-90 group-hover/footer:scale-110">
-                  <Settings className="w-5 h-5 group-hover/footer:text-primary" />
-                </div>
-                {!collapsed && (
-                  <span className="ml-4 font-black text-xs tracking-widest uppercase opacity-70">
-                    Ajustes
-                  </span>
-                )}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={() => handleTabClick('settings')} 
+              isActive={activeTab === 'settings'}
+              className="h-12 rounded-2xl hover:bg-sidebar-accent/80 text-muted-foreground hover:text-foreground transition-all duration-500 group/footer shadow-sm hover:shadow-md"
+              tooltip="Configurações"
+              aria-label="Abrir Configurações"
+            >
+              <div className="w-6 h-6 flex items-center justify-center transition-transform duration-500 group-hover/footer:rotate-90 group-hover/footer:scale-110">
+                <Settings className={`w-5 h-5 ${activeTab === 'settings' ? 'text-primary' : ''} group-hover/footer:text-primary`} />
+              </div>
+              {!collapsed && (
+                <span className="ml-4 font-black text-xs tracking-widest uppercase opacity-70">
+                  Ajustes
+                </span>
+              )}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
 
