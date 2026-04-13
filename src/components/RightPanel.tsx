@@ -223,9 +223,9 @@ export default function RightPanel() {
       <AnimatePresence>
         {undoStack.length > 0 && (
           <motion.div 
-            initial={isLow ? false : { height: 0, opacity: 0, y: -20 }} 
-            animate={isLow ? { height: 'auto', opacity: 1, y: 0 } : { height: 'auto', opacity: 1, y: 0 }} 
-            exit={isLow ? false : { height: 0, opacity: 0, y: -20 }}
+            initial={isLow ? undefined : { height: 0, opacity: 0, y: -20 }} 
+            animate={{ height: 'auto', opacity: 1, y: 0 }} 
+            exit={isLow ? undefined : { height: 0, opacity: 0, y: -20 }}
             className="bg-primary/95 backdrop-blur-md px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-xl z-20 border-b border-white/10"
           >
             <div className="flex items-center gap-3 text-white font-bold">
