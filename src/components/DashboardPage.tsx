@@ -205,19 +205,19 @@ export default function DashboardPage() {
   const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tight text-foreground lg:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+        <div className="space-y-1 text-center sm:text-left">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground lg:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
             Início
           </h1>
-          <p className="text-lg text-muted-foreground font-medium">
+          <p className="text-base sm:text-lg text-muted-foreground font-medium">
             Monitoramento em tempo real do desempenho e estoque.
           </p>
         </div>
         <button
           onClick={exportDashboardData}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-1 active:scale-95 sm:w-auto"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 sm:px-8 py-3.5 sm:py-4 text-sm font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-1 active:scale-95 w-full sm:w-auto"
         >
           <Download className="h-4 w-4" />
           Exportar Relatório Geral
@@ -225,7 +225,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
         {[
           { 
             label: 'Conferências', 
@@ -252,18 +252,18 @@ export default function DashboardPage() {
             bgIcon: 'bg-amber-500/20'
           }
         ].map((stat, i) => (
-          <Card key={i} className="group relative overflow-hidden border-none shadow-2xl shadow-black/5 bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-500">
+          <Card key={i} className={`group relative overflow-hidden border-none shadow-2xl shadow-black/5 bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-500 ${i === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            <CardContent className="p-8 relative">
+            <CardContent className="p-6 sm:p-8 relative">
               <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</p>
-                  <div className="text-5xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-500">
+                <div className="space-y-1 sm:space-y-2">
+                  <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</p>
+                  <div className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-500">
                     {stat.value}
                   </div>
                 </div>
-                <div className={`p-5 ${stat.bgIcon} rounded-3xl group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-500`}>
-                  <stat.icon className={`w-8 h-8 ${stat.textColor}`} />
+                <div className={`p-4 sm:p-5 ${stat.bgIcon} rounded-2xl sm:rounded-3xl group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-500`}>
+                  <stat.icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.textColor}`} />
                 </div>
               </div>
             </CardContent>
