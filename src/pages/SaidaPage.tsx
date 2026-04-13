@@ -29,7 +29,7 @@ interface SaidaRegistro {
   posicao: number;
 }
 
-import { formatDateBR } from '@/lib/app-utils';
+import { formatDateBR as formatDateApp } from '@/lib/app-utils';
 
 
 export default function SaidaPage() {
