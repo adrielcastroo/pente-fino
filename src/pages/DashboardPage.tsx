@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Users, Layers3, BarChart3, TrendingUp, Download, Eye, LayoutDashboard, ChevronRight, Activity, Zap } from 'lucide-react';
-import { computeStats, exportToExcel } from '@/lib/dashboard-utils';
+import { computeStats } from '@/lib/dashboard-utils';
+import { exportToExcel } from '@/lib/export-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import * as XLSX from 'xlsx';
+// XLSX import removed for performance (moved to dynamic utility)
 import { Search, Download, Trash2, Undo2, Copy, X, Package, Filter, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
@@ -122,16 +122,16 @@ export default function RightPanel() {
   const totalQtd = useMemo(() => rows.reduce((a, r) => a + (r.quantidade || 0), 0), [rows]);
   const columns = useMemo(() => getRegistroColumns(rows, currentMode), [rows, currentMode]);
 
-  const copyText = (t: string) => {
+  const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
-  };
+  }, []);
 
-  const startEdit = (rowId: string, key: string, currentValue: string) => {
+  const startEdit = useCallback((rowId: string, key: string, currentValue: string) => {
     setEditingCell({ rowId, key });
     setEditValue(currentValue);
-  };
+  }, []);
 
-  const commitEdit = () => {
+  const commitEdit = useCallback(() => {
     if (!editingCell) return;
     const { rowId, key } = editingCell;
     const numericKeys = ['m2', 'mLinear', 'largura'];
@@ -144,9 +144,9 @@ export default function RightPanel() {
     updateRegistro(rowId, { [key]: parsedValue });
     setEditingCell(null);
     toast.success('Registro atualizado com sucesso.');
-  };
+  }, [editingCell, editValue, updateRegistro]);
 
-  const renderCell = (r: any, column: any) => {
+  const renderCell = useCallback((r: any, column: any) => {
     const isEditing = editingCell?.rowId === r.id && editingCell?.key === column.key;
     if (isEditing) {
       return (
@@ -184,7 +184,8 @@ export default function RightPanel() {
     if (column.key === 'item') return highlight(r.item || '—', searchQuery.toLowerCase().trim());
     if (column.key === 'endereco') return highlight(r.endereco || '—', searchQuery.toLowerCase().trim());
     return displayVal;
-  };
+  }, [editingCell, editValue, searchQuery, copyText, commitEdit]);
+
 
   const handleClearAll = () => {
     if (!registros.length) return;

@@ -1,5 +1,5 @@
 import { useAppStore } from '@/store/useAppStore';
-import * as XLSX from 'xlsx';
+import { exportConferenceToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
 import { Download, User, Archive, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -33,10 +33,7 @@ export default function TopBar() {
     const columns = getRegistroColumns(registros, currentMode);
     const headers = columns.map(column => column.label);
     const data = registros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    ws['!cols'] = columns.map(column => ({ wch: column.width }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
+    const columnWidths = columns.map(column => column.width);
 
     let fileLabel: string;
     let archiveName: string;
@@ -58,10 +55,10 @@ export default function TopBar() {
     }
 
     const fileName = isMotorControle
-      ? `${fileLabel}.xlsx`
-      : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}.xlsx`;
+      ? fileLabel
+      : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}`;
 
-    XLSX.writeFile(wb, fileName);
+    await exportConferenceToExcel(headers, data, fileName, columnWidths);
     const count = registros.length;
     await archiveAndClear(archiveName);
     toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
