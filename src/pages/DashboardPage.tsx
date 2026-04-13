@@ -140,7 +140,7 @@ export default function DashboardPage() {
                   <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
               </div>
-            </Header>
+            </CardHeader>
             <CardContent className="p-6 sm:p-10 h-[250px] sm:h-[350px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart.type === 'bar' ? (
