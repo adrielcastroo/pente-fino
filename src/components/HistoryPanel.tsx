@@ -4,13 +4,14 @@ import { formatML } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle } from 'lucide-react';
+import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle, Calendar, LayoutGrid, FileSpreadsheet, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -68,10 +69,10 @@ function EditRegistroDialog({
         tipoTecido: form.tipoTecido || '',
         modoOrigem: form.modoOrigem || '',
       });
-      toast.success('Tecido atualizado');
+      toast.success('Registro histórico atualizado com sucesso.');
       onOpenChange(false);
     } catch {
-      toast.error('Erro ao salvar edição');
+      toast.error('Erro ao salvar as alterações no histórico.');
     } finally {
       setSaving(false);
     }
@@ -79,64 +80,67 @@ function EditRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Editar tecido</DialogTitle>
-          <DialogDescription>
-            {form?.tipoTecido ? `${form.tipoTecido} • ` : ''}Atualize os dados individuais deste registro.
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none">
+        <DialogHeader className="p-8 bg-muted/30">
+          <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
+             Editar Registro
+          </DialogTitle>
+          <DialogDescription className="text-sm font-medium mt-1">
+            {form?.tipoTecido ? `${form.tipoTecido} • ` : ''}Ajuste as especificações deste item no histórico.
           </DialogDescription>
         </DialogHeader>
 
         {form && (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Item / Referência</label>
-              <Input value={form.item} onChange={e => updateField('item', e.target.value)} />
+          <div className="p-8 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Referência do Item</label>
+              <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.item} onChange={e => updateField('item', e.target.value)} />
             </div>
 
             {isDiversos && (
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">NF</label>
-                <Input value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Nota Fiscal</label>
+                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
               </div>
             )}
 
             {!isPVT && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">M²</label>
-                  <Input type="number" step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
+                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Largura</label>
-                  <Input type="number" step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Largura (m)</label>
+                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">M Linear</label>
-                <Input type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metro Linear</label>
+                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Lote / Batch</label>
-                <Input value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
+                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
               </div>
             </div>
 
             {!isPVT && (
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Endereço</label>
-                <Input value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Endereço de Armazenagem</label>
+                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all uppercase" value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
               </div>
             )}
           </div>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar edição'}</Button>
+        <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
+          <Button variant="outline" className="rounded-xl font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
+          <Button className="rounded-xl font-black px-8 h-11 bg-primary shadow-lg shadow-primary/20" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -144,14 +148,12 @@ function EditRegistroDialog({
 }
 
 function getConferenceFolderName(conf: Conference): string {
-  // For Motor/Controle, use NF as folder name
   const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
   if (isMotorControle) {
     const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
     if (nfs.length > 0) return `NF ${nfs.join(', ')}`;
-    return 'Motor/Controle';
+    return 'Motores / Controle';
   }
-  // For Diversos mode, use NF as folder name
   const isDiversos = conf.registros.some(r => r.modoOrigem === 'diversos');
   if (isDiversos) {
     const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
@@ -191,7 +193,7 @@ function getModeBadges(conf: Conference): string[] {
     if (r.modoOrigem === 'madeira') badges.add('Madeira');
     else if (r.modoOrigem === 'motor') badges.add('Motor');
     else if (r.modoOrigem === 'controle') badges.add('Controle');
-    else if (r.modoOrigem === 'openrouter') badges.add('IA');
+    else if (r.modoOrigem === 'openrouter') badges.add('IA Vision');
     else if (r.modoOrigem === 'diversos') {
       const tipo = (r.tipoTecido || '').trim();
       if (tipo) badges.add(tipo === 'Celular' ? 'Celular/Plissada' : tipo);
@@ -230,101 +232,132 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const endTime = formatTime(conf.finishedAt);
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden bg-card">
-      <div className="flex items-center">
-        <button onClick={() => setOpen(!open)} className="flex-1 px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left">
-          <FolderOpen className="w-4 h-4 text-primary flex-shrink-0" />
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="border border-border/60 rounded-[1.5rem] overflow-hidden bg-card/40 backdrop-blur-md shadow-xl shadow-black/5 hover:border-primary/20 transition-all duration-300"
+    >
+      <div className="flex items-center group/header">
+        <button onClick={() => setOpen(!open)} className="flex-1 px-6 py-4 flex items-center gap-4 hover:bg-muted/30 transition-all text-left">
+          <div className={`p-3 rounded-2xl transition-all duration-500 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
+            <FolderOpen className="w-5 h-5" />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold truncate">{folderName}</span>
-              {modeBadges.map(b => (
-                <Badge key={b} variant="secondary" className="text-[9px] px-1.5 py-0">{b}</Badge>
-              ))}
+              <span className="text-base font-black tracking-tight truncate">{folderName}</span>
+              <div className="flex gap-1">
+                {modeBadges.map(b => (
+                  <Badge key={b} variant="secondary" className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/80 border-primary/10">{b}</Badge>
+                ))}
+              </div>
             </div>
-            <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <Clock className="w-3 h-3" />
-              {formatDate(conf.date)} · {getSmartCount(conf)} · {formatML(totalML)}
+            <div className="text-[10px] sm:text-xs text-muted-foreground font-bold flex items-center gap-2.5 mt-1 uppercase tracking-widest opacity-70">
+              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDate(conf.date)}</span>
+              <span className="h-3 w-[1px] bg-border" />
+              <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {getSmartCount(conf)}</span>
+              <span className="h-3 w-[1px] bg-border" />
+              <span className="text-primary/90">{formatML(totalML)}</span>
               {conf.conferente && (
-                <span className="flex items-center gap-0.5">
-                  <User className="w-3 h-3" /> {conf.conferente}
-                </span>
+                <>
+                  <span className="h-3 w-[1px] bg-border" />
+                  <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> {conf.conferente}</span>
+                </>
               )}
               {startTime && endTime && (
-                <span className="text-muted-foreground/70">
-                  {startTime} → {endTime}
-                </span>
+                <>
+                  <span className="h-3 w-[1px] bg-border" />
+                  <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {startTime} → {endTime}</span>
+                </>
               )}
             </div>
           </div>
-          {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          <div className={`p-2 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
+             <ChevronDown className="w-5 h-5 text-muted-foreground/50" />
+          </div>
         </button>
-        <div className="flex items-center gap-1 mr-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-[10px] font-medium text-primary"
-            title="Baixar Excel"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Excel</span>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-destructive/10 transition-colors text-[10px] font-medium text-destructive"
-            title="Remover conferência"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex items-center gap-2 mr-4 ml-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+                className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary transition-all"
+              >
+                <FileSpreadsheet className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Exportar para Excel</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                className="h-10 w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all"
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Excluir Conferência</TooltipContent>
+          </Tooltip>
         </div>
       </div>
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-            <div className="border-t border-border overflow-x-auto">
-              <table className="w-full text-xs min-w-[500px]">
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }} 
+            className="overflow-hidden border-t border-border/40"
+          >
+            <div className="overflow-x-auto bg-muted/5">
+              <table className="w-full text-xs min-w-[700px] border-separate border-spacing-0">
                 <thead>
-                  <tr className="surface-2-bg">
+                  <tr className="bg-muted/30">
                     {columns.map(column => (
-                      <th key={column.key} className="px-3 py-2 text-left text-muted-foreground font-medium">{column.shortLabel || column.label}</th>
+                      <th key={column.key} className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/20">{column.shortLabel || column.label}</th>
                     ))}
-                    <th className="px-3 py-2 text-left text-muted-foreground font-medium w-[74px]"></th>
+                    <th className="px-5 py-3 border-b border-border/20 w-[60px]"></th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border/20">
                   {conf.registros.map((r, i) => (
-                    <tr key={i} className="border-t border-border/50">
+                    <tr key={r.id} className="group/row hover:bg-white/50 dark:hover:bg-black/20 transition-colors">
                       {columns.map(column => (
-                        <td key={column.key} className={`px-3 py-1.5 ${column.key === 'item' ? 'font-semibold' : 'font-mono'}`}>
-                          {column.key === 'item' && (
+                        <td key={column.key} className={`px-5 py-3.5 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
+                          {column.key === 'item' ? (
                             <div className="flex flex-col gap-1">
                               <span>{r.item || '—'}</span>
-                              {r.tipoTecido && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground w-fit">{r.tipoTecido}</span>}
+                              {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-1.5 h-4 w-fit bg-muted/20 border-border/50">{r.tipoTecido}</Badge>}
                             </div>
-                          )}
-                          {column.key === 'nf' && (r.nf || '—')}
-                          {column.key === 'processo' && (r.processo || '—')}
-                          {column.key === 'm2' && (r.m2 > 0 ? r.m2.toFixed(1) : '—')}
-                          {column.key === 'mLinear' && formatML(r.mLinear)}
-                          {column.key === 'largura' && (r.largura > 0 ? r.largura.toFixed(2) : '—')}
-                          {column.key === 'lote' && (r.lote || '—')}
-                          {column.key === 'endereco' && (r.endereco || '—')}
-                          {column.key === 'loteSistema' && (r.loteSistema || '—')}
-                          {column.key === 'quantidade' && (r.quantidade || '—')}
+                          ) : column.key === 'mLinear' ? formatML(r.mLinear) 
+                          : column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
+                          : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
+                          : ((r as any)[column.key] || '—')}
                         </td>
                       ))}
-                      <td className="px-3 py-1.5">
-                        <div className="flex flex-col gap-1">
-                          <button
+                      <td className="px-5 py-3.5">
+                        <div className="flex flex-col items-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setEditingRegistro(r)}
-                            className="inline-flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                            title="Editar tecido"
+                            className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all opacity-0 group-hover/row:opacity-100"
                           >
                             <Pencil className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                           {r.wasEdited && (
-                            <div className="flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
-                              <CheckCircle2 className="w-3 h-3 text-primary" />
-                              {r.editedBy || 'Conferente atual'}
-                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter text-primary/60">
+                                  <CheckCircle2 className="w-3 h-3" /> EDITADO
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
+                            </Tooltip>
                           )}
                         </div>
                       </td>
@@ -344,25 +377,24 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         conferenceId={conf.id}
       />
 
-      {/* Delete confirmation dialog */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-              Confirmar exclusão
+        <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-8 bg-destructive/5">
+            <DialogTitle className="flex items-center gap-3 text-destructive text-2xl font-black">
+              <div className="p-2.5 rounded-2xl bg-destructive/10"><AlertTriangle className="w-6 h-6" /></div>
+              Confirmar Exclusão
             </DialogTitle>
-            <DialogDescription>
-              Deseja remover a conferência <strong>"{folderName}"</strong> com {conf.registros.length} rolos? Esta ação não pode ser desfeita.
+            <DialogDescription className="text-sm font-medium pt-2">
+              Deseja remover permanentemente a conferência <strong>"{folderName}"</strong> com {conf.registros.length} registros? Esta ação não poderá ser desfeita.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => { setConfirmDelete(false); onDelete(); }}>Remover</Button>
+          <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
+            <Button variant="outline" className="rounded-xl font-bold h-11 px-6" onClick={() => setConfirmDelete(false)}>Manter Conferência</Button>
+            <Button variant="destructive" className="rounded-xl font-black h-11 px-8 shadow-lg shadow-destructive/20" onClick={() => { setConfirmDelete(false); onDelete(); }}>Remover Histórico</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 });
 
@@ -382,7 +414,7 @@ export default function HistoryPanel() {
   const handleClearAll = async () => {
     await clearHistory();
     setConfirmClearAll(false);
-    toast.warning('Histórico limpo');
+    toast.success('O histórico geral foi limpo com sucesso.');
   };
 
   const filtered = useMemo(() => {
@@ -401,75 +433,102 @@ export default function HistoryPanel() {
   }, [history, search]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col h-full overflow-hidden bg-background"
-    >
-      <div className="px-4 py-3 border-b border-border flex-shrink-0 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico de Conferências</span>
-          {history.length > 0 && (
-            <button
-              onClick={() => setConfirmClearAll(true)}
-              className="flex items-center gap-1 text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors"
-            >
-              <Trash2 className="w-3 h-3" /> Limpar tudo
-            </button>
-          )}
-        </div>
-        {history.length > 0 && (
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Filtrar por NF, processo, item, conferente..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            />
+    <div className="flex flex-col h-full overflow-hidden bg-background/50">
+       <div className="px-6 py-6 border-b border-border/40 bg-card/60 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
+              <FolderOpen className="w-8 h-8 text-primary" />
+              Histórico de <span className="text-primary">Conferências</span>
+            </h1>
+            <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest opacity-60 ml-11">Arquivo Digital Operacional</p>
           </div>
-        )}
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Package className="w-10 h-10 text-muted-foreground/20 mb-3" />
-            <div className="text-sm font-medium text-foreground/60 mb-1">{search ? 'Nenhum resultado encontrado' : 'Nenhuma conferência arquivada'}</div>
-            <div className="text-xs text-muted-foreground">{search ? 'Tente outro termo de busca' : 'Ao exportar o Excel, a conferência será salva aqui'}</div>
-          </div>
-        ) : (
-          filtered.map(conf => (
-            <ConferenceCard
-              key={conf.id}
-              conf={conf}
-              onDelete={async () => {
-                await deleteConference(conf.id);
-                toast.warning('Conferência removida');
-              }}
-            />
-          ))
-        )}
-      </div>
 
-      {/* Clear all confirmation dialog */}
-      <Dialog open={confirmClearAll} onOpenChange={setConfirmClearAll}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-              Limpar todo o histórico
-            </DialogTitle>
-            <DialogDescription>
-              Deseja remover todas as {history.length} conferências do histórico? Esta ação não pode ser desfeita.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmClearAll(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleClearAll}>Limpar tudo</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </motion.div>
+          <div className="flex items-center gap-3 w-full sm:w-auto max-w-md">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+              <input 
+                value={search} 
+                onChange={e => setSearch(e.target.value)}
+                className="w-full h-11 pl-11 pr-4 rounded-2xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30" 
+                placeholder="Pesquisar histórico..." 
+                autoComplete="off" 
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted/60 text-muted-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setConfirmClearAll(true)}
+                  className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
+                  disabled={history.length === 0}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Limpar Histórico Geral</TooltipContent>
+            </Tooltip>
+          </div>
+       </div>
+
+       <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {filtered.map(conf => (
+              <ConferenceCard 
+                key={conf.id} 
+                conf={conf} 
+                onDelete={() => deleteConference(conf.id)} 
+              />
+            ))}
+
+            {filtered.length === 0 && history.length > 0 && (
+              <div className="py-24 text-center">
+                 <div className="inline-flex p-6 rounded-[2.5rem] bg-muted/30 text-muted-foreground/40 mb-6">
+                    <Search className="w-12 h-12" />
+                 </div>
+                 <h3 className="text-xl font-black tracking-tight text-foreground">Nenhum resultado encontrado</h3>
+                 <p className="text-muted-foreground font-medium mt-2">Tente ajustar seus termos de pesquisa.</p>
+                 <Button variant="link" className="mt-4 font-bold text-primary" onClick={() => setSearch('')}>Limpar pesquisa</Button>
+              </div>
+            )}
+
+            {history.length === 0 && (
+              <div className="py-32 text-center flex flex-col items-center">
+                 <div className="p-8 rounded-[3rem] bg-primary/5 text-primary/30 mb-8 -rotate-12">
+                    <LayoutGrid className="w-16 h-16" />
+                 </div>
+                 <h3 className="text-2xl font-black tracking-tight text-foreground">O histórico está vazio</h3>
+                 <p className="text-muted-foreground font-medium max-w-[320px] mx-auto mt-4 leading-relaxed">
+                   Aqui ficarão armazenadas todas as conferências finalizadas e exportadas.
+                 </p>
+              </div>
+            )}
+          </div>
+       </div>
+
+       <Dialog open={confirmClearAll} onOpenChange={setConfirmClearAll}>
+          <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+            <DialogHeader className="p-8 bg-destructive/5">
+              <DialogTitle className="flex items-center gap-3 text-destructive text-2xl font-black">
+                <div className="p-2.5 rounded-2xl bg-destructive/10"><AlertTriangle className="w-6 h-6" /></div>
+                Limpar Histórico
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium pt-2 leading-relaxed">
+                Você está prestes a apagar <strong>TODO</strong> o histórico de conferências ({history.length} pastas). Esta ação é irreversível e removerá todos os registros permanentes.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
+              <Button variant="outline" className="rounded-xl font-bold h-11 px-6" onClick={() => setConfirmClearAll(false)}>Manter Histórico</Button>
+              <Button variant="destructive" className="rounded-xl font-black h-11 px-8 shadow-lg shadow-destructive/20" onClick={handleClearAll}>Apagar Tudo</Button>
+            </DialogFooter>
+          </DialogContent>
+       </Dialog>
+    </div>
   );
 }
