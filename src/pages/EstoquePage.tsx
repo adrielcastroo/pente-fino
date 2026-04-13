@@ -160,21 +160,28 @@ export default function EstoquePage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 min-w-0">
-      <h1 className="text-3xl font-black">Estoque</h1>
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 min-w-0"
+    >
+      <div className="space-y-1.5">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter">Estoque</h1>
+        <p className="text-muted-foreground text-sm sm:text-base font-medium">Controle de posições e níveis das estruturas TEC.</p>
+      </div>
       
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {[
-          { label: 'Total', value: stats.totalSlots, color: 'text-foreground' },
-          { label: 'Ocupado', value: stats.occupied, color: 'text-emerald-500' },
-          { label: 'Reservado', value: stats.reserved, color: 'text-amber-500' },
-          { label: 'Bloqueado', value: stats.blocked, color: 'text-red-500' },
-          { label: 'Livre', value: stats.free, color: 'text-primary' },
+          { label: 'Total', value: stats.totalSlots, color: 'text-foreground', bg: 'bg-muted/10' },
+          { label: 'Ocupado', value: stats.occupied, color: 'text-emerald-500', bg: 'bg-emerald-500/5' },
+          { label: 'Reservado', value: stats.reserved, color: 'text-amber-500', bg: 'bg-amber-500/5' },
+          { label: 'Bloqueado', value: stats.blocked, color: 'text-red-500', bg: 'bg-red-500/5' },
+          { label: 'Livre', value: stats.free, color: 'text-primary', bg: 'bg-primary/5' },
         ].map(s => (
-          <Card key={s.label} className="border-none shadow-sm bg-card cursor-pointer hover:scale-[1.02] transition-transform">
-            <CardContent className="p-4 text-center">
-              <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-              <div className="text-xs font-bold text-muted-foreground uppercase">{s.label}</div>
+          <Card key={s.label} className={`border-none shadow-sm ${s.bg} cursor-pointer hover:scale-[1.02] transition-all duration-300`}>
+            <CardContent className="p-3 sm:p-4 text-center space-y-0.5">
+              <div className={`text-xl sm:text-2xl font-black ${s.color}`}>{s.value}</div>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{s.label}</div>
             </CardContent>
           </Card>
         ))}
