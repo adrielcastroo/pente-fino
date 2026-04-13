@@ -51,15 +51,15 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-10 max-w-7xl mx-auto overflow-x-hidden animate-in fade-in duration-500">
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-4">
-        <div className="space-y-1 sm:space-y-2">
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] md:text-xs">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8 sm:space-y-12 max-w-7xl mx-auto overflow-x-hidden animate-in fade-in duration-500">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1.5 sm:space-y-3">
+          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs">
             <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Sistema Pente Fino</span>
           </div>
-          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
-          <p className="text-muted-foreground text-xs sm:text-sm md:text-base font-medium max-w-xl">Acompanhe em tempo real o desempenho das conferências e o fluxo de materiais da planta.</p>
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
+          <p className="text-muted-foreground text-sm sm:text-base font-medium max-w-2xl leading-relaxed">Acompanhe em tempo real o desempenho das conferências e o fluxo de materiais da planta.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -83,7 +83,7 @@ export default function DashboardPage() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
       >
         {[
           { label: 'Total de Conferências', value: stats.totalConferencias, icon: BarChart3, tab: 'history', color: 'from-blue-500/20 to-indigo-500/10 text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/20' },
@@ -117,7 +117,7 @@ export default function DashboardPage() {
         ))}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {[
           { title: 'Conferentes em Destaque', data: stats.topConferentes, type: 'bar' as const, icon: Users, desc: 'Top conferentes por volume de registros' },
           { title: 'Distribuição por Categoria', data: stats.categorias, type: 'pie' as const, icon: Layers3, desc: 'Proporção de materiais processados' },
