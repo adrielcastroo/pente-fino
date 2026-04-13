@@ -46,6 +46,7 @@ export default function LeftPanel() {
   const setLockEndereco = useAppStore(s => s.setLockEndereco);
   const lockedEndereco = useAppStore(s => s.lockedEndereco);
   const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
+  const formData = useAppStore(s => s.formData);
   const setFormData = useAppStore(s => s.setFormData);
   const resetFormData = useAppStore(s => s.resetFormData);
   const { isLow } = usePerformance();
