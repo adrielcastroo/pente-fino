@@ -5,7 +5,7 @@ import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
-import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle, Calendar, LayoutGrid, FileSpreadsheet, X } from 'lucide-react';
+import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet } from 'lucide-react';
 import { exportConferenceToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,6 @@ import { Button } from '@/components/ui/button';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-
 
 function EditRegistroDialog({
   open,
@@ -219,10 +217,63 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const folderName = getConferenceFolderName(conf);
   const modeBadges = getModeBadges(conf);
 
-  const startTime = formatTimeBR(conf.startedAt);
-  const endTime = formatTimeBR(conf.finishedAt);
+  const tableContent = (
+    <div className="overflow-x-auto bg-muted/5">
+      <table className="w-full text-xs min-w-[700px] border-separate border-spacing-0">
+        <thead>
+          <tr className="bg-muted/30">
+            {columns.map(column => (
+              <th key={column.key} className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/20">{column.shortLabel || column.label}</th>
+            ))}
+            <th className="px-5 py-3 border-b border-border/20 w-[60px]"></th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/20">
+          {conf.registros.map((r, i) => (
+            <tr key={r.id} className="group/row hover:bg-white/50 dark:hover:bg-black/20 transition-colors">
+              {columns.map(column => (
+                <td key={column.key} className={`px-5 py-3.5 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
+                  {column.key === 'item' ? (
+                    <div className="flex flex-col gap-1">
+                      <span>{r.item || '—'}</span>
+                      {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-1.5 h-4 w-fit bg-muted/20 border-border/50">{r.tipoTecido}</Badge>}
+                    </div>
+                  ) : column.key === 'mLinear' ? formatML(r.mLinear) 
+                  : column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
+                  : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
+                  : ((r as any)[column.key] || '—')}
+                </td>
+              ))}
+              <td className="px-5 py-3.5">
+                <div className="flex flex-col items-end gap-1.5">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingRegistro(r)}
+                    className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all sm:opacity-0 sm:group-hover/row:opacity-100"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  {r.wasEdited && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter text-primary/60">
+                          <CheckCircle2 className="w-3 h-3" /> EDITADO
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
-  const content = (
+  const headerContent = (
     <div className="group/header">
       <button onClick={() => setOpen(!open)} className="w-full px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
         <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
@@ -273,142 +324,38 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
     </div>
   );
 
-  if (isLow) {
-    return (
-      <div className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 shadow-lg shadow-black/5">
-        {content}
-        {open && (
-           <div className="overflow-hidden border-t border-border/40">
-              <div className="overflow-x-auto bg-muted/5">
-                <table className="w-full text-xs min-w-[700px] border-separate border-spacing-0">
-                  {/* Table content simplified/copied from below */}
-                  {/* ... wait, I need to keep the actual table code too */}
-                </table>
-              </div>
-           </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-md shadow-lg shadow-black/5 hover:border-primary/20 transition-all duration-300"
-    >
-      <div className="group/header">
-        <button onClick={() => setOpen(!open)} className="w-full px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
-          <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
-            <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="text-sm sm:text-base font-black tracking-tight truncate">{folderName}</span>
-              <div className="flex gap-1 flex-wrap">
-                {modeBadges.map(b => (
-                  <Badge key={b} variant="secondary" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-0.5 bg-primary/5 text-primary/80 border-primary/10">{b}</Badge>
-                ))}
-              </div>
+    <>
+      {isLow ? (
+        <div className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 shadow-lg shadow-black/5">
+          {headerContent}
+          {open && (
+            <div className="overflow-hidden border-t border-border/40">
+              {tableContent}
             </div>
-            <div className="text-[9px] sm:text-xs text-muted-foreground font-bold flex items-center gap-1.5 sm:gap-2.5 mt-1 flex-wrap">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDateBR(conf.date)}</span>
-
-              <span className="hidden xs:block h-3 w-[1px] bg-border" />
-              <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
-              {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
-              {conf.conferente && (
-                <span className="hidden sm:flex items-center gap-1"><User className="w-3 h-3 shrink-0" /> {conf.conferente}</span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-primary/10 text-primary transition-all"
-            >
-              <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-destructive/10 text-destructive transition-all"
-            >
-              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-            <div className={`p-1.5 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
-               <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
-            </div>
-          </div>
-        </button>
-      </div>
-      <AnimatePresence>
-        {open && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }} 
-            animate={{ height: 'auto', opacity: 1 }} 
-            exit={{ height: 0, opacity: 0 }} 
-            className="overflow-hidden border-t border-border/40"
-          >
-            <div className="overflow-x-auto bg-muted/5">
-              <table className="w-full text-xs min-w-[700px] border-separate border-spacing-0">
-                <thead>
-                  <tr className="bg-muted/30">
-                    {columns.map(column => (
-                      <th key={column.key} className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/20">{column.shortLabel || column.label}</th>
-                    ))}
-                    <th className="px-5 py-3 border-b border-border/20 w-[60px]"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/20">
-                  {conf.registros.map((r, i) => (
-                    <tr key={r.id} className="group/row hover:bg-white/50 dark:hover:bg-black/20 transition-colors">
-                      {columns.map(column => (
-                        <td key={column.key} className={`px-5 py-3.5 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
-                          {column.key === 'item' ? (
-                            <div className="flex flex-col gap-1">
-                              <span>{r.item || '—'}</span>
-                              {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-1.5 h-4 w-fit bg-muted/20 border-border/50">{r.tipoTecido}</Badge>}
-                            </div>
-                          ) : column.key === 'mLinear' ? formatML(r.mLinear) 
-                          : column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
-                          : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
-                          : ((r as any)[column.key] || '—')}
-                        </td>
-                      ))}
-                      <td className="px-5 py-3.5">
-                        <div className="flex flex-col items-end gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingRegistro(r)}
-                            className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all opacity-0 group-hover/row:opacity-100"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                          {r.wasEdited && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter text-primary/60">
-                                  <CheckCircle2 className="w-3 h-3" /> EDITADO
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-md shadow-lg shadow-black/5 hover:border-primary/20 transition-all duration-300"
+        >
+          {headerContent}
+          <AnimatePresence>
+            {open && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }} 
+                animate={{ height: 'auto', opacity: 1 }} 
+                exit={{ height: 0, opacity: 0 }} 
+                className="overflow-hidden border-t border-border/40"
+              >
+                {tableContent}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       <EditRegistroDialog
         open={!!editingRegistro}
@@ -418,160 +365,83 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
       />
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-8 bg-destructive/5">
-            <DialogTitle className="flex items-center gap-3 text-destructive text-2xl font-black">
-              <div className="p-2.5 rounded-2xl bg-destructive/10"><AlertTriangle className="w-6 h-6" /></div>
-              Confirmar Exclusão
-            </DialogTitle>
-            <DialogDescription className="text-sm font-medium pt-2">
-              Deseja remover permanentemente a conferência <strong>"{folderName}"</strong> com {conf.registros.length} registros? Esta ação não poderá ser desfeita.
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader>
+            <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <Trash2 className="w-8 h-8" />
+            </div>
+            <DialogTitle className="text-2xl font-black tracking-tight text-center">Excluir Histórico?</DialogTitle>
+            <DialogDescription className="text-center text-sm font-medium mt-2 leading-relaxed">
+              Esta ação removerá permanentemente a conferência <span className="text-foreground font-black">"{folderName}"</span> e todos os seus registros do banco de dados.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-            <Button variant="outline" className="rounded-xl font-bold h-11 px-6" onClick={() => setConfirmDelete(false)}>Manter Conferência</Button>
-            <Button variant="destructive" className="rounded-xl font-black h-11 px-8 shadow-lg shadow-destructive/20" onClick={() => { setConfirmDelete(false); onDelete(); }}>Remover Histórico</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
+            <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <Button variant="destructive" className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </>
   );
 });
 
 export default function HistoryPanel() {
   const history = useAppStore(s => s.history);
-  const loadHistory = useAppStore(s => s.loadHistory);
   const deleteConference = useAppStore(s => s.deleteConference);
   const clearHistory = useAppStore(s => s.clearHistory);
-  
-  const [search, setSearch] = useState('');
-  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { isLow } = usePerformance();
 
-  useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
-
-  const handleClearAll = async () => {
-    await clearHistory();
-    setConfirmClearAll(false);
-    toast.success('O histórico geral foi limpo com sucesso.');
-  };
-
-  // Pre-calculate search keys to avoid expensive operations during every search character change
-  const searchableHistory = useMemo(() => {
-    return history.map(conf => {
-      const folderName = getConferenceFolderName(conf).toLowerCase();
-      const conferente = (conf.conferente || '').toLowerCase();
-      const itemsString = conf.registros.map(r => 
-        `${r.item} ${r.nf || ''} ${r.lote || ''}`.toLowerCase()
-      ).join(' ');
-      
-      return { 
-        ...conf, 
-        searchKey: `${folderName} ${conferente} ${itemsString}`
-      };
-    });
-  }, [history]);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return searchableHistory;
-    return searchableHistory.filter(conf => conf.searchKey.includes(q));
-  }, [searchableHistory, search]);
-
+  const filteredHistory = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return history;
+    return history.filter(c => 
+      c.name.toLowerCase().includes(q) || 
+      c.registros.some(r => r.item.toLowerCase().includes(q) || (r.nf || '').toLowerCase().includes(q) || (r.lote || '').toLowerCase().includes(q))
+    );
+  }, [history, searchQuery]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background/50">
-       <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-border/40 bg-card/60 backdrop-blur-md flex flex-col gap-4">
-          <div className="space-y-0.5">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 sm:gap-3">
-              <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
-              <span>Histórico de <span className="text-primary">Conferências</span></span>
-            </h1>
-            <p className="text-muted-foreground text-[10px] sm:text-sm font-medium uppercase tracking-widest opacity-60 ml-8 sm:ml-11">Arquivo Digital Operacional</p>
-          </div>
+    <div className="flex flex-col h-full bg-background/30 backdrop-blur-sm">
+      <div className="px-6 py-4 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 flex-shrink-0">
+        <div className="relative flex-1 w-full sm:w-auto">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+          <input 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 transition-all placeholder:text-muted-foreground/40" 
+            placeholder="Buscar no histórico por nome, item, NF ou lote..." 
+          />
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            if (confirm('Deseja realmente limpar TODO o histórico? Esta ação não pode ser desfeita.')) clearHistory();
+          }}
+          className="h-11 px-6 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/5 font-bold flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Limpar Tudo</span>
+        </Button>
+      </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 w-full">
-            <div className="relative flex-1 group">
-              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
-              <input 
-                value={search} 
-                onChange={e => setSearch(e.target.value)}
-                className="w-full h-10 sm:h-11 pl-9 sm:pl-11 pr-9 rounded-xl sm:rounded-2xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30" 
-                placeholder="Pesquisar histórico..." 
-                autoComplete="off" 
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted/60 text-muted-foreground">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+        <div className="grid grid-cols-1 gap-4 max-w-5xl mx-auto">
+          {filteredHistory.map(conf => (
+            <ConferenceCard key={conf.id} conf={conf} onDelete={() => deleteConference(conf.id)} />
+          ))}
+
+          {filteredHistory.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
+              <div className="h-20 w-20 bg-muted rounded-[2rem] flex items-center justify-center mb-6">
+                <Search className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <p className="text-lg font-black tracking-tight text-muted-foreground">Nenhuma conferência encontrada</p>
             </div>
-
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => setConfirmClearAll(true)}
-              className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 shrink-0"
-              disabled={history.length === 0}
-            >
-              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-          </div>
-       </div>
-
-       <div className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 custom-scrollbar">
-          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-            {filtered.map(conf => (
-              <ConferenceCard 
-                key={conf.id} 
-                conf={conf} 
-                onDelete={() => deleteConference(conf.id)} 
-              />
-            ))}
-
-            {filtered.length === 0 && history.length > 0 && (
-              <div className="py-24 text-center">
-                 <div className="inline-flex p-6 rounded-[2.5rem] bg-muted/30 text-muted-foreground/40 mb-6">
-                    <Search className="w-12 h-12" />
-                 </div>
-                 <h3 className="text-xl font-black tracking-tight text-foreground">Nenhum resultado encontrado</h3>
-                 <p className="text-muted-foreground font-medium mt-2">Tente ajustar seus termos de pesquisa.</p>
-                 <Button variant="link" className="mt-4 font-bold text-primary" onClick={() => setSearch('')}>Limpar pesquisa</Button>
-              </div>
-            )}
-
-            {history.length === 0 && (
-              <div className="py-32 text-center flex flex-col items-center">
-                 <div className="p-8 rounded-[3rem] bg-primary/5 text-primary/30 mb-8 -rotate-12">
-                    <LayoutGrid className="w-16 h-16" />
-                 </div>
-                 <h3 className="text-2xl font-black tracking-tight text-foreground">O histórico está vazio</h3>
-                 <p className="text-muted-foreground font-medium max-w-[320px] mx-auto mt-4 leading-relaxed">
-                   Aqui ficarão armazenadas todas as conferências finalizadas e exportadas.
-                 </p>
-              </div>
-            )}
-          </div>
-       </div>
-
-       <Dialog open={confirmClearAll} onOpenChange={setConfirmClearAll}>
-          <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-            <DialogHeader className="p-8 bg-destructive/5">
-              <DialogTitle className="flex items-center gap-3 text-destructive text-2xl font-black">
-                <div className="p-2.5 rounded-2xl bg-destructive/10"><AlertTriangle className="w-6 h-6" /></div>
-                Limpar Histórico
-              </DialogTitle>
-              <DialogDescription className="text-sm font-medium pt-2 leading-relaxed">
-                Você está prestes a apagar <strong>TODO</strong> o histórico de conferências ({history.length} pastas). Esta ação é irreversível e removerá todos os registros permanentes.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-              <Button variant="outline" className="rounded-xl font-bold h-11 px-6" onClick={() => setConfirmClearAll(false)}>Manter Histórico</Button>
-              <Button variant="destructive" className="rounded-xl font-black h-11 px-8 shadow-lg shadow-destructive/20" onClick={handleClearAll}>Apagar Tudo</Button>
-            </DialogFooter>
-          </DialogContent>
-       </Dialog>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
