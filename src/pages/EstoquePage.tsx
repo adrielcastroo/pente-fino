@@ -87,8 +87,7 @@ export default function EstoquePage() {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
     
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
-      const p = allPosicoes[i];
-      const status = p.status;
+      const status = allPosicoes[i].status;
       if (status === 'ocupado') occupied++;
       else if (status === 'bloqueado') blocked++;
       else if (status === 'reservado') reserved++;
