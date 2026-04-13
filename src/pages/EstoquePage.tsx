@@ -197,7 +197,7 @@ export default function EstoquePage() {
 
       {loading ? <div>Carregando...</div> : (
         <div className="overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="min-w-[600px] space-y-2">
+            <div className="min-w-full sm:min-w-[600px] space-y-2">
                 {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
                   <div key={nivel} className="flex gap-2">
                     <div className="w-10 sm:w-12 text-[8px] sm:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/20 rounded-lg">N{String(nivel).padStart(2, '0')}</div>

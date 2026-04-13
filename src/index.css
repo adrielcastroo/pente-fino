@@ -121,6 +121,11 @@
       radial-gradient(at 100% 100%, hsl(var(--primary) / 0.03) 0px, transparent 50%);
     background-attachment: fixed;
     background-size: cover;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    touch-action: manipulation;
   }
 
   html {

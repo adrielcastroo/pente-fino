@@ -71,7 +71,7 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-300">
-      <div className="flex h-14 sm:h-16 items-center gap-2 sm:gap-3 px-3 sm:px-6 max-w-[1800px] mx-auto">
+      <div className="flex h-14 sm:h-16 items-center gap-1.5 sm:gap-3 px-2 sm:px-6 max-w-[1800px] mx-auto">
         <div className="flex items-center gap-1 sm:gap-2">
           <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-lg sm:rounded-xl shrink-0" />
           <div className="hidden xs:flex lg:flex flex-col">
@@ -80,7 +80,7 @@ export default function TopBar() {
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-4 min-w-0">
+        <div className="flex flex-1 items-center justify-end gap-1 sm:gap-4 min-w-0">
           <div className="relative group w-full max-w-[120px] xs:max-w-[180px] sm:max-w-[280px]">
             <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
             <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10">

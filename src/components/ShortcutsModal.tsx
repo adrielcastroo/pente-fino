@@ -29,7 +29,7 @@ export default function ShortcutsModal({ open, onClose }: { open: boolean; onClo
             className="surface-bg rounded-2xl p-7 w-[480px] max-w-[92vw] shadow-2xl"
           >
             <h2 className="text-base font-semibold mb-4">Atalhos de Teclado</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {shortcuts.map(s => (
                 <div key={s.desc} className="flex items-center justify-between px-3 py-2 surface-2-bg rounded-md">
                   <span className="text-xs text-muted-foreground">{s.desc}</span>

@@ -58,7 +58,7 @@ export default function DashboardPage() {
             <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Sistema Pente Fino</span>
           </div>
-          <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
+          <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
           <p className="text-muted-foreground text-sm sm:text-base font-medium max-w-2xl leading-relaxed">Acompanhe em tempo real o desempenho das conferências e o fluxo de materiais da planta.</p>
         </div>
         
@@ -101,7 +101,7 @@ export default function DashboardPage() {
                 <div className={`p-6 flex items-center justify-between bg-gradient-to-br ${s.color}`}>
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-80">{s.label}</p>
-                    <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums">{s.value}</div>
+                    <div className="text-3xl sm:text-5xl font-black tracking-tighter tabular-nums">{s.value}</div>
                   </div>
                   <div className="p-4 rounded-2xl bg-white/20 dark:bg-black/20 shadow-inner group-hover:rotate-12 transition-transform duration-500">
                     <s.icon className="w-8 h-8" />
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6 h-[300px] cursor-pointer group/content" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
+            <CardContent className="p-4 sm:p-6 h-[220px] sm:h-[300px] cursor-pointer group/content" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
               <ResponsiveContainer width="100%" height="100%">
                 {chart.type === 'bar' ? (
                   <BarChart data={chart.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
