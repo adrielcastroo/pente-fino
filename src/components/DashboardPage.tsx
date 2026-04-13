@@ -195,12 +195,12 @@ export default function DashboardPage() {
     );
   }, [stockData]);
 
-  const stockPieData = [
+  const stockPieData = useMemo(() => [
     { name: 'Ocupado', value: stockTotals.ocupado },
     { name: 'Reservado', value: stockTotals.reservado },
     { name: 'Bloqueado', value: stockTotals.bloqueado },
     { name: 'Livre', value: stockTotals.livre },
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [stockTotals]);
 
   const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
 
