@@ -230,21 +230,21 @@ export default function RightPanel() {
         )}
       </AnimatePresence>
 
-      <div className="px-2 sm:px-6 py-3 sm:py-4 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+      <div className="px-3 sm:px-6 py-4 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input 
               value={searchQuery} 
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl sm:rounded-2xl border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
-              placeholder="Buscar..." 
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
+              placeholder="Buscar material, lote ou endereço..." 
               autoComplete="off" 
             />
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="flex-1 sm:flex-none h-10 px-3 sm:px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-2 transition-all hover:bg-muted/50 group">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 sm:flex-none h-11 px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-2 transition-all hover:bg-muted/50 group">
               <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-primary" />
               <select 
                 value={sortBy} 
@@ -265,10 +265,10 @@ export default function RightPanel() {
                   variant="outline" 
                   size="icon" 
                   onClick={handleClearAll} 
-                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
+                  className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
                   disabled={registros.length === 0}
                 >
-                  <Trash2 className="w-4 h-4 sm:w-5 h-5" />
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Limpar Tabela</TooltipContent>
