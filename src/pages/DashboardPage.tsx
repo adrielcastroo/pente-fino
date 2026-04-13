@@ -58,7 +58,7 @@ export default function DashboardPage() {
             <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Sistema Pente Fino</span>
           </div>
-          <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
+          <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-tight">Painel de <span className="text-primary">Controle</span></h1>
           <p className="text-muted-foreground text-sm sm:text-base font-medium max-w-2xl leading-relaxed">Acompanhe em tempo real o desempenho das conferências e o fluxo de materiais da planta.</p>
         </div>
         
