@@ -1,45 +1,24 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore, type Conference } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Layers3, BarChart3, TrendingUp, Warehouse, Download } from 'lucide-react';
+import { Users, Layers3, BarChart3, TrendingUp, Download, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Tecido: '#6366f1', // Indigo modern
-  Madeira: '#f59e0b', // Amber
-  'Motor/Controle': '#ef4444', // Red
+  Tecido: '#6366f1',
+  Madeira: '#f59e0b',
+  'Motor/Controle': '#ef4444',
 };
 
 const TOOL_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-const TIPO_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
-const STOCK_COLORS = { ocupado: '#10b981', reservado: '#f59e0b', bloqueado: '#ef4444', livre: '#94a3b8' };
-
-const StatCard = ({ label, value, icon: Icon, color, textColor, bgIcon, index }: any) => (
-  <Card className={`group relative overflow-hidden border-none shadow-2xl shadow-black/5 bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-500 ${index === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
-    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-    <CardContent className="p-6 sm:p-8 relative">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1 sm:space-y-2">
-          <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{label}</p>
-          <div className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-500">
-            {value}
-          </div>
-        </div>
-        <div className={`p-4 sm:p-5 ${bgIcon} rounded-2xl sm:rounded-3xl group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-500`}>
-          <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${textColor}`} />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const MemoizedStatCard = (StatCard);
 
 function computeStats(history: Conference[]) {
   const confMap = new Map<string, Set<string>>();
@@ -48,455 +27,155 @@ function computeStats(history: Conference[]) {
   const tipoMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  for (let i = 0; i < history.length; i++) {
-    const conference = history[i];
+  for (const conference of history) {
     const name = conference.conferente || 'Desconhecido';
     let confSet = confMap.get(name);
     if (!confSet) {
       confSet = new Set();
       confMap.set(name, confSet);
     }
-
-    const regs = conference.registros;
-    for (let j = 0; j < regs.length; j++) {
-      const r = regs[j];
+    for (const r of conference.registros) {
       totalRegistros++;
       if (r.nf) confSet.add(`NF:${r.nf}`);
       if (r.processo) confSet.add(`PROC:${r.processo}`);
-
       const modo = r.modoOrigem || 'manual';
-      
       let cat = 'Tecido';
       if (modo === 'madeira') cat = 'Madeira';
       else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
-
       let sub = 'Coulisse';
       if (modo === 'openrouter') sub = 'IA';
       else if (modo === 'diversos') sub = 'Diversos';
       else if (modo === 'madeira') sub = 'Madeira';
       else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
       subMap.set(sub, (subMap.get(sub) || 0) + 1);
-
       const tipo = r.tipoTecido || 'Rolo';
       tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
     }
   }
 
-  const topConferentes = Array.from(confMap.entries())
-    .map(([name, set]) => ({ name, count: set.size }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const categorias = Array.from(catMap.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-
-  const ferramentas = Array.from(subMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-
-  const tipos = Array.from(tipoMap.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6);
-
   return {
-    topConferentes, categorias, ferramentas, tipos,
+    topConferentes: Array.from(confMap.entries()).map(([name, set]) => ({ name, count: set.size })).sort((a, b) => b.count - a.count).slice(0, 5),
+    categorias: Array.from(catMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
+    ferramentas: Array.from(subMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+    tipos: Array.from(tipoMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6),
     totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,
   };
 }
 
-interface StockStats {
-  estrutura: string;
-  ocupado: number;
-  reservado: number;
-  bloqueado: number;
-  livre: number;
-}
-
 export default function DashboardPage() {
   const history = useAppStore(s => s.history);
-  
+  const setFormData = useAppStore(s => s.setFormData);
   const stats = useMemo(() => computeStats(history), [history]);
-  const [stockData, setStockData] = useState<StockStats[]>([]);
+  const [detailChart, setDetailChart] = useState<{ title: string; data: any[]; type: 'pie' | 'bar' } | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadData = async () => {
-      try {
-        const tecConfigs: Record<string, number> = {
-          TEC00: 2 * 9 * 30, TEC01: 6 * 5 * 30, TEC02: 2 * 4 * 30,
-          TEC03: 2 * 9 * 30, TEC04: 3 * 5 * 30, TEC05: 3 * 5 * 30,
-        };
+  const handleStatClick = (tab: any) => {
+    setFormData({ activeTab: tab });
+  };
 
-        const { data, error } = await supabase
-          .from('estoque_posicoes')
-          .select('estrutura, status')
-          .neq('status', 'livre');
-
-        if (error) throw error;
-        if (!isMounted) return;
-
-        const countMap: Record<string, Record<string, number>> = {};
-        (data || []).forEach((r) => {
-          if (!countMap[r.estrutura]) countMap[r.estrutura] = {};
-          countMap[r.estrutura][r.status] = (countMap[r.estrutura][r.status] || 0) + 1;
-        });
-
-        const result: StockStats[] = Object.entries(tecConfigs).map(([tec, total]) => {
-          const c = countMap[tec] || {};
-          // Only count items actually occupying a slot (not 'saida')
-          const occupied = (c.ocupado || 0) + (c.reservado || 0) + (c.bloqueado || 0);
-          return {
-            estrutura: tec,
-            ocupado: c.ocupado || 0,
-            reservado: c.reservado || 0,
-            bloqueado: c.bloqueado || 0,
-            livre: Math.max(0, total - occupied),
-          };
-        });
-        setStockData(result);
-      } catch (err) {
-        console.error('Error loading stock stats:', err);
-      }
-    };
-    loadData();
-    return () => { isMounted = false; };
+  const exportExcel = useCallback((data: any[], fileName: string) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+    XLSX.writeFile(wb, `${fileName}.xlsx`);
+    toast.success('Relatório exportado!');
   }, []);
 
-  const exportDashboardData = useCallback(() => {
-    if (!history.length) {
-      toast.warning('Nenhum dado histórico para exportar.');
-      return;
-    }
-
-    const exportRows: any[] = [];
-    for (const conf of history) {
-      const conferente = conf.conferente || 'Desconhecido';
-      const dataStr = conf.finishedAt ? new Date(conf.finishedAt).toLocaleDateString() : '—';
-      const horaStr = conf.finishedAt ? new Date(conf.finishedAt).toLocaleTimeString() : '—';
-      
-      for (const r of conf.registros) {
-        exportRows.push({
-          Conferente: conferente,
-          Data: dataStr,
-          Hora: horaStr,
-          Item: r.item || '',
-          NF: r.nf || '',
-          Processo: r.processo || '',
-          Categoria: r.modoOrigem || '',
-          Tipo: r.tipoTecido || '',
-          ML: r.mLinear || 0,
-          M2: r.m2 || 0,
-          Largura: r.largura || 0,
-          Quantidade: r.quantidade || 0
-        });
-      }
-    }
-
-    const ws = XLSX.utils.json_to_sheet(exportRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Histórico_Geral');
-    XLSX.writeFile(wb, `dashboard_export_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success('Dados do dashboard exportados com sucesso!');
-  }, [history]);
-
-  const stockTotals = useMemo(() => {
-    return stockData.reduce(
-      (acc, s) => ({
-        ocupado: acc.ocupado + s.ocupado,
-        reservado: acc.reservado + s.reservado,
-        bloqueado: acc.bloqueado + s.bloqueado,
-        livre: acc.livre + s.livre,
-      }),
-      { ocupado: 0, reservado: 0, bloqueado: 0, livre: 0 }
-    );
-  }, [stockData]);
-
-  const stockPieData = useMemo(() => [
-    { name: 'Ocupado', value: stockTotals.ocupado },
-    { name: 'Reservado', value: stockTotals.reservado },
-    { name: 'Bloqueado', value: stockTotals.bloqueado },
-    { name: 'Livre', value: stockTotals.livre },
-  ].filter(d => d.value > 0), [stockTotals]);
-
-  const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
-
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="space-y-1 text-center sm:text-left">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground lg:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-            Início
-          </h1>
-          <p className="text-base sm:text-lg text-muted-foreground font-medium">
-            Monitoramento em tempo real do desempenho e estoque.
-          </p>
-        </div>
-        <button
-          onClick={exportDashboardData}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 sm:px-8 py-3.5 sm:py-4 text-sm font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-1 active:scale-95 w-full sm:w-auto"
-        >
-          <Download className="h-4 w-4" />
-          Exportar Relatório Geral
-        </button>
-      </div>
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto overflow-x-hidden">
+      <h1 className="text-3xl sm:text-4xl font-black">Dashboard</h1>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { 
-            label: 'Conferências', 
-            value: stats.totalConferencias, 
-            icon: BarChart3, 
-            color: 'from-blue-500/20 to-indigo-500/20',
-            textColor: 'text-blue-600 dark:text-blue-400',
-            bgIcon: 'bg-blue-500/20'
-          },
-          { 
-            label: 'Itens Bipados', 
-            value: stats.totalRegistros, 
-            icon: Layers3, 
-            color: 'from-emerald-500/20 to-teal-500/20',
-            textColor: 'text-emerald-600 dark:text-emerald-400',
-            bgIcon: 'bg-emerald-500/20'
-          },
-          { 
-            label: 'Conferentes', 
-            value: stats.totalConferentes, 
-            icon: Users, 
-            color: 'from-amber-500/20 to-orange-500/20',
-            textColor: 'text-amber-600 dark:text-amber-400',
-            bgIcon: 'bg-amber-500/20'
-          }
-        ].map((stat, i) => (
-          <MemoizedStatCard 
-            key={i} 
-            index={i}
-            label={stat.label}
-            value={stat.value}
-            icon={stat.icon}
-            color={stat.color}
-            textColor={stat.textColor}
-            bgIcon={stat.bgIcon}
-          />
+          { label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, tab: 'history', color: 'bg-blue-500/10 text-blue-600' },
+          { label: 'Itens Bipados', value: stats.totalRegistros, icon: Layers3, tab: 'table', color: 'bg-emerald-500/10 text-emerald-600' },
+          { label: 'Conferentes', value: stats.totalConferentes, icon: Users, tab: 'inicio', color: 'bg-amber-500/10 text-amber-600' },
+        ].map(s => (
+          <Card key={s.label} onClick={() => handleStatClick(s.tab)} className="cursor-pointer hover:scale-[1.02] transition-transform border-none shadow-sm bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase">{s.label}</p>
+                <div className="text-4xl font-black">{s.value}</div>
+              </div>
+              <div className={`p-4 rounded-2xl ${s.color}`}><s.icon className="w-8 h-8" /></div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Users className="w-4 h-4 text-primary" />
-              </div> 
-              Principais Conferentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.topConferentes.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
-                <p className="text-sm text-muted-foreground italic">Nenhum dado disponível</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={stats.topConferentes} layout="vertical" margin={{ left: -10, right: 12, top: 4, bottom: 4 }}>
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12, fill: 'hsl(var(--foreground))', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
-                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                  />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} name="NF/PROC" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Layers3 className="w-4 h-4 text-primary" />
-              </div>
-              Distribuição por Categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.categorias.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
-                <p className="text-sm text-muted-foreground italic">Sem dados registrados</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={stats.categorias} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} stroke="none">
-                    {stats.categorias.map(e => <Cell key={e.name} fill={CATEGORY_COLORS[e.name] || '#999'} />)}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: '10px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <BarChart3 className="w-4 h-4 text-primary" />
-              </div>
-              Uso de Ferramentas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.ferramentas.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
-                <p className="text-sm text-muted-foreground italic">Sem dados de ferramentas</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={stats.ferramentas} margin={{ left: -30, right: 12, top: 10, bottom: 20 }}>
-                  <XAxis 
-                    dataKey="name" 
-                    tick={(props: any) => {
-                      const { x, y, payload } = props;
-                      const index = stats.ferramentas.findIndex(f => f.name === payload.value);
-                      const color = TOOL_COLORS[index % TOOL_COLORS.length];
-                      return (
-                        <text x={x} y={Number(y) + 16} fill={color} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700 }}>
-                          {payload.value}
-                        </text>
-                      );
-                    }}
-                    axisLine={false} 
-                    tickLine={false} 
-                  />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
-                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                  />
-                  <Bar dataKey="count" name="Itens" radius={[6, 6, 0, 0]}>
-                    {stats.ferramentas.map((_, i) => <Cell key={i} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border/40 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <TrendingUp className="w-4 h-4 text-primary" />
-              </div>
-              Tipos de Tecido Mais Comuns
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.tipos.length === 0 ? (
-              <div className="h-[220px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
-                <p className="text-sm text-muted-foreground italic">Sem tipos detectados</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={stats.tipos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} stroke="none">
-                    {stats.tipos.map((_, i) => <Cell key={i} fill={TIPO_COLORS[i % TIPO_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '8px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: '10px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2 lg:col-span-4 border border-border/40 shadow-sm hover:shadow-md transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Warehouse className="w-4 h-4 text-primary" />
-              </div>
-              Status do Estoque por Estrutura
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stockData.length === 0 ? (
-              <div className="h-[250px] flex items-center justify-center border-2 border-dashed border-muted rounded-xl">
-                <p className="text-sm text-muted-foreground italic">Sincronizando estoque...</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={stockData} margin={{ left: -20, right: 12, top: 10, bottom: 10 }}>
-                  <XAxis dataKey="estrutura" tick={{ fontSize: 12, fill: 'hsl(var(--foreground))', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
-                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                  />
-                  <Bar dataKey="ocupado" stackId="a" fill="#10b981" name="Ocupado" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="reservado" stackId="a" fill="#f59e0b" name="Reservado" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="bloqueado" stackId="a" fill="#ef4444" name="Bloqueado" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="livre" stackId="a" fill="#334155" name="Livre" radius={[6, 6, 0, 0]} />
-                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: '20px' }} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {stockPieData.length > 0 && (
-          <Card className="md:col-span-2 lg:col-span-4 border border-border/40 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-border/10 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[
+          { title: 'Conferentes', data: stats.topConferentes, type: 'bar' as const, icon: Users },
+          { title: 'Categorias', data: stats.categorias, type: 'pie' as const, icon: Layers3 },
+          { title: 'Ferramentas', data: stats.ferramentas, type: 'bar' as const, icon: BarChart3 },
+          { title: 'Tipos', data: stats.tipos, type: 'pie' as const, icon: TrendingUp },
+        ].map(chart => (
+          <Card key={chart.title} className="hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b mb-4">
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Warehouse className="w-4 h-4 text-primary" />
-                </div>
-                Resumo Geral da Capacidade
+                <chart.icon className="w-4 h-4 text-primary" /> {chart.title}
               </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={stockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={4} stroke="none">
-                        {stockPieData.map((_, i) => <Cell key={i} fill={stockPieColors[i]} />)}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ fontSize: 12, borderRadius: '12px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-4">
-                  {stockPieData.map((item, i) => (
-                    <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stockPieColors[i] }} />
-                        <span className="text-sm font-medium text-foreground">{item.name}</span>
-                      </div>
-                      <span className="text-sm font-bold text-foreground">{item.value} unidades</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => exportExcel(chart.data, chart.title)}>
+                  <Download className="w-4 h-4" />
+                </Button>
               </div>
+            </CardHeader>
+            <CardContent className="h-[250px] cursor-pointer" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
+              <ResponsiveContainer width="100%" height="100%">
+                {chart.type === 'bar' ? (
+                  <BarChart data={chart.data}>
+                    <XAxis dataKey="name" fontSize={10} hide />
+                    <YAxis hide />
+                    <Tooltip cursor={{fill: 'transparent'}} />
+                    <Bar dataKey={chart.title === 'Conferentes' ? 'count' : 'count'} fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                ) : (
+                  <PieChart>
+                    <Pie data={chart.data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} stroke="none">
+                      {chart.data.map((_, i) => <Cell key={i} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                )}
+              </ResponsiveContainer>
             </CardContent>
           </Card>
-        )}
+        ))}
       </div>
+
+      <Dialog open={!!detailChart} onOpenChange={() => setDetailChart(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{detailChart?.title}</DialogTitle></DialogHeader>
+          <div className="h-[400px]">
+            {detailChart && (
+                <ResponsiveContainer width="100%" height="100%">
+                    {detailChart.type === 'bar' ? (
+                      <BarChart data={detailChart.data} margin={{ bottom: 40 }}>
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} fontSize={12} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey={detailChart.title === 'Conferentes' ? 'count' : 'count'} fill="#6366f1" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    ) : (
+                      <PieChart>
+                        <Pie data={detailChart.data} dataKey="value" nameKey="name" outerRadius={120} label>
+                          {detailChart.data.map((_, i) => <Cell key={i} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    )}
+                </ResponsiveContainer>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

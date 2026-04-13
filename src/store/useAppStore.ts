@@ -80,7 +80,7 @@ export interface AppState {
     estoqueActiveTec: string;
     estoqueSearch: string;
     estoqueHighlightStatus: string | null;
-    activeTab: 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
+    activeTab: 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'table' | 'history';
   };
 
   setMode: (mode: AppState['currentMode']) => void;
@@ -324,6 +324,7 @@ export const useAppStore = create<AppState>()(
                   estrutura, coluna, nivel, posicao: pos, status: 'ocupado', registro_id: r.id,
                   item: r.item, proc: original?.processo || state.processo || '', m2: r.m2, largura: r.largura,
                   m_linear: r.m_linear, lote: r.lote, endereco: r.endereco, lote_sistema: r.lote_sistema,
+                  conferente_entrada: state.conferente,
                   conferente_saida: '', data_registro: new Date().toISOString(),
                 });
               }

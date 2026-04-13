@@ -13,10 +13,11 @@ const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
 const DashboardPage = lazy(() => import('@/components/DashboardPage'));
 const MotorControlePage = lazy(() => import('@/components/MotorControlePage'));
 const EstoquePage = lazy(() => import('@/components/EstoquePage'));
+const SaidaPage = lazy(() => import('@/components/SaidaPage'));
 const ConfigModal = lazy(() => import('@/components/ConfigModal'));
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
-type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
+type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'table' | 'history';
 
 const PageSkeleton = () => (
   <div className="p-8 space-y-4 animate-pulse">
@@ -112,6 +113,7 @@ export default function Index() {
       case 'madeira': return <LeftPanel />;
       case 'motor': return <MotorControlePage />;
       case 'estoque': return <EstoquePage />;
+      case 'saida': return <SaidaPage />;
       case 'table': return <RightPanel />;
       case 'history': return <HistoryPanel />;
       default: return <DashboardPage />;
