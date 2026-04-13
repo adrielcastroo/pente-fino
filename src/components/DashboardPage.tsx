@@ -171,72 +171,70 @@ export default function DashboardPage() {
   const stockPieColors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">Início</h1>
-          <p className="text-base text-muted-foreground max-w-2xl">
-            Monitore o desempenho das conferências e o status do estoque em tempo real.
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black tracking-tight text-foreground lg:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+            Início
+          </h1>
+          <p className="text-lg text-muted-foreground font-medium">
+            Monitoramento em tempo real do desempenho e estoque.
           </p>
         </div>
         <button
           onClick={exportDashboardData}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 active:scale-95 sm:w-auto"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-1 active:scale-95 sm:w-auto"
         >
           <Download className="h-4 w-4" />
-          Exportar Todos os Dados
+          Exportar Relatório Geral
         </button>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="group overflow-hidden border border-border/40 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-primary/10 via-card to-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-primary/80 uppercase tracking-wider">Conferências</p>
-                <div className="text-4xl font-bold tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-300">
-                  {stats.totalConferencias}
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        {[
+          { 
+            label: 'Conferências', 
+            value: stats.totalConferencias, 
+            icon: BarChart3, 
+            color: 'from-blue-500/20 to-indigo-500/20',
+            textColor: 'text-blue-600 dark:text-blue-400',
+            bgIcon: 'bg-blue-500/20'
+          },
+          { 
+            label: 'Itens Bipados', 
+            value: stats.totalRegistros, 
+            icon: Layers3, 
+            color: 'from-emerald-500/20 to-teal-500/20',
+            textColor: 'text-emerald-600 dark:text-emerald-400',
+            bgIcon: 'bg-emerald-500/20'
+          },
+          { 
+            label: 'Conferentes', 
+            value: stats.totalConferentes, 
+            icon: Users, 
+            color: 'from-amber-500/20 to-orange-500/20',
+            textColor: 'text-amber-600 dark:text-amber-400',
+            bgIcon: 'bg-amber-500/20'
+          }
+        ].map((stat, i) => (
+          <Card key={i} className="group relative overflow-hidden border-none shadow-2xl shadow-black/5 bg-card/50 backdrop-blur-sm hover:bg-card transition-all duration-500">
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+            <CardContent className="p-8 relative">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</p>
+                  <div className="text-5xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-500">
+                    {stat.value}
+                  </div>
+                </div>
+                <div className={`p-5 ${stat.bgIcon} rounded-3xl group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-500`}>
+                  <stat.icon className={`w-8 h-8 ${stat.textColor}`} />
                 </div>
               </div>
-              <div className="p-4 bg-primary/20 rounded-2xl group-hover:rotate-12 transition-transform duration-300">
-                <BarChart3 className="w-7 h-7 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="group overflow-hidden border border-border/40 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-emerald-500/10 via-card to-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">Itens bipados</p>
-                <div className="text-4xl font-bold tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-300">
-                  {stats.totalRegistros}
-                </div>
-              </div>
-              <div className="p-4 bg-emerald-500/20 rounded-2xl group-hover:-rotate-12 transition-transform duration-300">
-                <Layers3 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="group overflow-hidden border border-border/40 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-amber-500/10 via-card to-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider">Conferentes</p>
-                <div className="text-4xl font-bold tracking-tighter text-foreground group-hover:scale-110 transition-transform origin-left duration-300">
-                  {stats.totalConferentes}
-                </div>
-              </div>
-              <div className="p-4 bg-amber-500/20 rounded-2xl group-hover:rotate-12 transition-transform duration-300">
-                <Users className="w-7 h-7 text-amber-600 dark:text-amber-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
