@@ -21,6 +21,12 @@ export interface AppState {
   lockEndereco: boolean;
   lockedEndereco: string;
   formData: FormData;
+  
+  // Loading & Error States
+  isArchiving: boolean;
+  archiveError: string | null;
+  isHistoryLoading: boolean;
+  historyError: string | null;
 
   setMode: (mode: AppMode) => void;
   updateRegistro: (id: string, updates: Partial<Registro>) => void;
@@ -75,6 +81,11 @@ export const useAppStore = create<AppState>()(
       lockEndereco: false,
       lockedEndereco: '',
       formData: INITIAL_FORM_DATA,
+      
+      isArchiving: false,
+      archiveError: null,
+      isHistoryLoading: false,
+      historyError: null,
 
       setMode: (mode) => set({ currentMode: mode }),
       updateRegistro: (id, updates) => set(state => ({
@@ -100,7 +111,6 @@ export const useAppStore = create<AppState>()(
       resetFormData: () => {
         const state = get();
         const newData = { ...INITIAL_FORM_DATA };
-        // Preserve active tab and locked fields
         newData.activeTab = state.formData.activeTab;
         newData.estoqueActiveTec = state.formData.estoqueActiveTec;
         if (state.lockNf) newData.nf = state.lockedNf;
@@ -140,11 +150,13 @@ export const useAppStore = create<AppState>()(
         return last.reg;
       },
       
-      clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null }),
+      clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null }),
       
       archiveAndClear: async (name: string) => {
         const state = get();
-        if (!state.registros.length) return;
+        if (!state.registros.length || state.isArchiving) return;
+        
+        set({ isArchiving: true, archiveError: null });
         const finishedAt = new Date().toISOString();
         const startedAt = state.sessionStartedAt || finishedAt;
         
@@ -156,20 +168,37 @@ export const useAppStore = create<AppState>()(
             state.registros,
             state.currentMode
           );
-          set({ registros: [], undoStack: [], sessionStartedAt: null });
+          set({ 
+            registros: [], 
+            undoStack: [], 
+            sessionStartedAt: null, 
+            isArchiving: false 
+          });
           await get().loadHistory();
-        } catch (e) {
+        } catch (e: any) {
           console.error('Error archiving:', e);
+          set({ 
+            isArchiving: false, 
+            archiveError: e.message || 'Falha ao arquivar conferência' 
+          });
           throw e;
         }
       },
       
       loadHistory: async () => {
+        const state = get();
+        if (state.isHistoryLoading) return;
+        
+        set({ isHistoryLoading: true, historyError: null });
         try {
           const history = await apiService.fetchHistory();
-          set({ history });
-        } catch (e) { 
-          console.error('Error loading history:', e); 
+          set({ history, isHistoryLoading: false });
+        } catch (e: any) { 
+          console.error('Error loading history:', e);
+          set({ 
+            isHistoryLoading: false, 
+            historyError: e.message || 'Falha ao carregar histórico' 
+          });
         }
       },
       
@@ -177,8 +206,9 @@ export const useAppStore = create<AppState>()(
         try {
           await apiService.deleteConference(id);
           await get().loadHistory();
-        } catch (e) { 
-          console.error('Error deleting conference:', e); 
+        } catch (e: any) { 
+          console.error('Error deleting conference:', e);
+          throw e;
         }
       },
       
@@ -186,8 +216,9 @@ export const useAppStore = create<AppState>()(
         try {
           await apiService.clearAllHistory();
           set({ history: [] });
-        } catch (e) { 
+        } catch (e: any) { 
           console.error('Error clearing history:', e); 
+          throw e;
         }
       },
       
@@ -209,7 +240,7 @@ export const useAppStore = create<AppState>()(
           const normalizedEndereco = merged.endereco || '';
           const normalizedItem = (merged.item || '').trim();
           const normalizedNf = (merged.nf || '').trim();
-          const editedBy = state.conferente || merged.editedBy || '';
+          const editedBy = state.conferente || merged.editedBy || 'Sistema';
           const editedAt = new Date().toISOString();
           
           const siblingRegistros = conference.registros.filter(r => r.id !== registroId);
@@ -217,7 +248,7 @@ export const useAppStore = create<AppState>()(
             normalizedProcesso, 
             normalizedEndereco, 
             normalizedML, 
-            siblingRegistros as Registro[], 
+            siblingRegistros, 
             normalizedNf, 
             normalizedItem
           );
@@ -254,13 +285,32 @@ export const useAppStore = create<AppState>()(
             }),
           });
           set({ history: newHistory });
-        } catch (e) {
+        } catch (e: any) {
           console.error('Error updating history registro:', e);
+          throw e;
         }
       },
     }),
     {
       name: 'cft4-registros',
+      partialize: (state) => ({
+        registros: state.registros,
+        undoStack: state.undoStack,
+        currentMode: state.currentMode,
+        processo: state.processo,
+        conferente: state.conferente,
+        searchQuery: state.searchQuery,
+        sortBy: state.sortBy,
+        sessionStartedAt: state.sessionStartedAt,
+        lockProcesso: state.lockProcesso,
+        lockedProcesso: state.lockedProcesso,
+        lockNf: state.lockNf,
+        lockedNf: state.lockedNf,
+        lockEndereco: state.lockEndereco,
+        lockedEndereco: state.lockedEndereco,
+        formData: state.formData,
+        // We do NOT persist loading/error states
+      }),
     }
   )
 );
