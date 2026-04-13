@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore, type Conference } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Layers3, BarChart3, TrendingUp, Warehouse, Download } from 'lucide-react';
