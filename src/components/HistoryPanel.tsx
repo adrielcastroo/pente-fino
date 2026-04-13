@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, memo } from 'react';
 import { useAppStore, formatML, type Conference, type Registro } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -215,7 +215,7 @@ function getSmartCount(conf: Conference): string {
   return `${regs.length} rolos`;
 }
 
-function ConferenceCard({ conf, onDelete }: { conf: Conference; onDelete: () => void }) {
+const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: () => void }) => {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -380,19 +380,20 @@ export default function HistoryPanel() {
     toast.warning('Histórico limpo');
   };
 
-  const q = search.toLowerCase().trim();
-  const filtered = q
-    ? history.filter(conf => {
-        const folderName = getConferenceFolderName(conf).toLowerCase();
-        if (folderName.includes(q)) return true;
-        if (conf.conferente?.toLowerCase().includes(q)) return true;
-        return conf.registros.some(r =>
-          r.item.toLowerCase().includes(q) ||
-          (r.nf || '').toLowerCase().includes(q) ||
-          (r.lote || '').toLowerCase().includes(q)
-        );
-      })
-    : history;
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return history;
+    return history.filter(conf => {
+      const folderName = getConferenceFolderName(conf).toLowerCase();
+      if (folderName.includes(q)) return true;
+      if (conf.conferente?.toLowerCase().includes(q)) return true;
+      return conf.registros.some(r =>
+        r.item.toLowerCase().includes(q) ||
+        (r.nf || '').toLowerCase().includes(q) ||
+        (r.lote || '').toLowerCase().includes(q)
+      );
+    });
+  }, [history, search]);
 
   return (
     <motion.div
