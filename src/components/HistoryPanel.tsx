@@ -433,8 +433,8 @@ export default function HistoryPanel() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Package className="w-10 h-10 text-muted-foreground/20 mb-3" />
-            <div className="text-sm font-medium text-foreground/60 mb-1">{q ? 'Nenhum resultado encontrado' : 'Nenhuma conferência arquivada'}</div>
-            <div className="text-xs text-muted-foreground">{q ? 'Tente outro termo de busca' : 'Ao exportar o Excel, a conferência será salva aqui'}</div>
+            <div className="text-sm font-medium text-foreground/60 mb-1">{search ? 'Nenhum resultado encontrado' : 'Nenhuma conferência arquivada'}</div>
+            <div className="text-xs text-muted-foreground">{search ? 'Tente outro termo de busca' : 'Ao exportar o Excel, a conferência será salva aqui'}</div>
           </div>
         ) : (
           filtered.map(conf => (
