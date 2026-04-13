@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import { usePerformance } from '@/hooks/use-performance';
 
 
 type SubMode = 'motor' | 'controle';
@@ -41,6 +42,7 @@ export default function MotorControlePage() {
   const formData = useAppStore(s => s.formData);
   const setFormData = useAppStore(s => s.setFormData);
   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
+  const { isLow } = usePerformance();
   
   const subMode = formData.motorSubMode;
   const modelo = formData.motorModelo;
