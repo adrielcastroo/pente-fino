@@ -10,10 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const LeftPanel = lazy(() => import('@/components/LeftPanel'));
 const RightPanel = lazy(() => import('@/components/RightPanel'));
 const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
-const DashboardPage = lazy(() => import('@/components/DashboardPage'));
-const MotorControlePage = lazy(() => import('@/components/MotorControlePage'));
-const EstoquePage = lazy(() => import('@/components/EstoquePage'));
-const SaidaPage = lazy(() => import('@/components/SaidaPage'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
+const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
+const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
 const ConfigModal = lazy(() => import('@/components/ConfigModal'));
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
