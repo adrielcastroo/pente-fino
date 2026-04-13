@@ -157,35 +157,30 @@ export function extractLarguraFromItem(item: string): number {
 /** Generate Lote Sistema with NF/PROC label prefix and serial for duplicates */
 export function generateLoteSistema(processo: string, endereco: string, mLinear: number, existingRegistros: Registro[], nf?: string, itemCode?: string): string {
   const mlFormatted = fmtML(mLinear) || '0M';
-  
-  // Build label prefix: "PROC xxx" or "NF xxx" depending on what's available
   const procTrimmed = processo.trim();
   const nfTrimmed = (nf || '').trim();
-  let labelPrefix = '';
-  if (procTrimmed) labelPrefix = `PROC ${procTrimmed}`;
-  else if (nfTrimmed) labelPrefix = `NF ${nfTrimmed}`;
-
-  const parts = [endereco.trim(), labelPrefix, mlFormatted].filter(Boolean);
-  const base = parts.join(' ');
-  
+  const labelPrefix = procTrimmed ? `PROC ${procTrimmed}` : (nfTrimmed ? `NF ${nfTrimmed}` : '');
+  const addrTrimmed = (endereco || '').trim();
+  const baseParts = [addrTrimmed, labelPrefix, mlFormatted].filter(Boolean);
+  const base = baseParts.join(' ');
   const itemNorm = (itemCode || '').trim().toLowerCase();
   
-  // Count existing registros with same item + endereco + proc/nf + mLinear
-  const count = existingRegistros.filter(r => {
-    const rItem = (r.item || '').trim().toLowerCase();
-    if (rItem !== itemNorm) return false;
+  let count = 0;
+  for (const r of existingRegistros) {
+    if ((r.item || '').trim().toLowerCase() !== itemNorm) continue;
+    if (fmtML(r.mLinear) !== mlFormatted) continue;
+    if ((r.endereco || '').trim() !== addrTrimmed) continue;
+
     const rProc = (r.processo || '').trim();
     const rNf = (r.nf || '').trim();
-    let rLabel = '';
-    if (rProc) rLabel = `PROC ${rProc}`;
-    else if (rNf) rLabel = `NF ${rNf}`;
-    const rParts = [(r.endereco?.trim() || ''), rLabel, fmtML(r.mLinear) || '0M'].filter(Boolean);
-    const rBase = rParts.join(' ');
-    return rBase === base;
-  }).length;
+    const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
+    
+    if (rLabel === labelPrefix) {
+      count++;
+    }
+  }
   
-  if (count === 0) return base;
-  return `${base}-${count}`;
+  return count === 0 ? base : `${base}-${count}`;
 }
 
 /** Generate Lote Sistema with box numbering (CXnn) for Madeira and Celular modes */
