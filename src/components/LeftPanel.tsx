@@ -662,33 +662,38 @@ export default function LeftPanel() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
+              className="space-y-4"
             >
-              <div className="mb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.24em] text-center">
-                Marina e Yuma
+              <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] text-center opacity-80 flex items-center justify-center gap-3">
+                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-primary/20" />
+                <span>Marina Vision IA</span>
+                <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-primary/20" />
               </div>
+              
               <div
-                className={`dropzone ${preview ? 'has-img' : ''}`}
+                className={`dropzone group/dz border-2 rounded-3xl transition-all duration-500 overflow-hidden relative ${preview ? 'border-primary shadow-2xl shadow-primary/10' : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 shadow-inner'}`}
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
-                style={{ height: preview || cameraActive ? 200 : 160 }}
+                style={{ height: preview || cameraActive ? 240 : 180 }}
               >
                 {cameraActive && (
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover rounded-xl absolute inset-0" />
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0 transition-opacity duration-1000" />
                 )}
                 {preview && !cameraActive && (
-                  <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                  <motion.img initial={{ scale: 1.1 }} animate={{ scale: 1 }} src={preview} alt="Etiqueta Capturada" className="w-full h-full object-cover" />
                 )}
                 {!preview && !cameraActive && (
-                  <div className="text-center p-4 select-none flex flex-col items-center gap-3">
-                    <Camera className="w-8 h-8 text-muted-foreground/30" />
-                    <div className="text-xs text-muted-foreground">Tire uma foto ou selecione da galeria</div>
+                  <div className="text-center p-6 select-none flex flex-col items-center gap-4">
+                    <div className="p-4 rounded-full bg-primary/5 text-primary group-hover/dz:scale-110 group-hover/dz:rotate-6 transition-all duration-500">
+                      <Camera className="w-10 h-10 opacity-30 group-hover/dz:opacity-100" />
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-sm font-black text-foreground">Capturar Etiqueta</p>
+                       <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Arraste uma foto ou use a câmera</p>
+                    </div>
                     <div className="flex gap-2">
-                      <button onClick={(e) => { e.stopPropagation(); openNativeCamera(); }} className="flex items-center gap-1.5 text-xs px-4 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors bg-card font-medium">
-                        <Camera className="w-4 h-4" /> Câmera
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex items-center gap-1.5 text-xs px-4 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors bg-card font-medium">
-                        <Image className="w-4 h-4" /> Galeria
-                      </button>
+                       <Button variant="secondary" onClick={(e) => { e.stopPropagation(); openNativeCamera(); }} className="rounded-xl h-10 px-4 font-bold border-border/50 shadow-sm"><Camera className="w-4 h-4 mr-2" /> Câmera</Button>
+                       <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="rounded-xl h-10 px-4 font-bold border-border/50 shadow-sm"><Image className="w-4 h-4 mr-2" /> Galeria</Button>
                     </div>
                   </div>
                 )}
@@ -699,44 +704,73 @@ export default function LeftPanel() {
               <canvas ref={canvasRef} className="hidden" />
 
               {(preview || cameraActive) && (
-                <div className="flex gap-2 mt-2.5">
+                <div className="flex gap-2.5">
                   {cameraActive ? (
                     <>
-                      <button className="flex-1 flex items-center justify-center gap-2 text-xs px-4 py-2.5 rounded-lg navy-3-bg text-primary-foreground font-medium" onClick={snapPhoto}>
-                        <Camera className="w-4 h-4" /> Capturar
-                      </button>
-                      <button className="p-2.5 rounded-lg border border-border hover:bg-muted" onClick={stopCamera}>
-                        <X className="w-4 h-4 text-muted-foreground" />
-                      </button>
+                      <Button className="flex-1 rounded-2xl h-12 font-black uppercase tracking-widest shadow-lg shadow-primary/20" onClick={snapPhoto}>
+                        <Camera className="w-5 h-5 mr-2" /> Capturar Foto
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-border/60" onClick={stopCamera}>
+                        <X className="w-5 h-5" />
+                      </Button>
                     </>
                   ) : (
                     <>
-                      <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={openNativeCamera}><Camera className="w-4 h-4" /></button>
-                      <button className="flex items-center justify-center gap-1 flex-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={() => fileInputRef.current?.click()}><Image className="w-4 h-4" /></button>
-                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium" onClick={openLiveCamera}><Video className="w-4 h-4" /></button>
-                      <button className="flex items-center justify-center gap-1 text-xs px-3 py-2.5 rounded-lg border border-primary/30 hover:bg-primary/5 transition-colors font-medium text-primary" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('Foto salva'); } }}><Download className="w-4 h-4" /></button>
-                      <button className="flex items-center justify-center text-xs p-2.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}><X className="w-4 h-4" /></button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openNativeCamera}><Camera className="w-5 h-5" /></Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Retirar Foto</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={() => fileInputRef.current?.click()}><Image className="w-5 h-5" /></Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Abrir Galeria</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openLiveCamera}><Video className="w-5 h-5" /></Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Câmera ao Vivo</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-primary/20 bg-primary/5 text-primary font-bold hover:bg-primary hover:text-white transition-all" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('A foto foi salva com sucesso no dispositivo.'); } }}><Download className="w-5 h-5" /></Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Baixar Foto</TooltipContent>
+                      </Tooltip>
+                      <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}><Trash2 className="w-5 h-5" /></Button>
                     </>
                   )}
                 </div>
               )}
 
-              <div className="progress-bar mt-2"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
+              <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden shadow-inner">
+                 <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+              </div>
 
               {preview && !cameraActive && (
-                <button onClick={processOpenRouter} disabled={aiLoading} className="w-full mt-2.5 h-11 navy-3-bg text-primary-foreground rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
-                  {aiLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-fast" /> : <Zap className="w-4 h-4" />}
-                  <span>{aiLoading ? 'Enviando…' : 'Processar com IA'}</span>
-                </button>
+                <Button onClick={processOpenRouter} disabled={aiLoading} className="w-full h-14 rounded-[1.5rem] font-black uppercase tracking-[0.15em] shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50">
+                  {aiLoading ? <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin-fast mr-2" /> : <Zap className="w-5 h-5 mr-2 animate-pulse text-yellow-300 fill-yellow-300" />}
+                  <span>{aiLoading ? 'Processando...' : 'Analisar com Marina Vision IA'}</span>
+                </Button>
               )}
 
               <AnimatePresence>
                 {aiStatus && (
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`mt-2 ai-status-box ${aiStatus.type === 'ok' ? 'ai-status-ok' : 'ai-status-err'}`}>
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                       {aiStatus.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                       <span className="uppercase tracking-widest">{aiStatus.type === 'ok' ? 'Análise Concluída' : 'Erro na Análise'}</span>
+                    </div>
                     {aiStatus.msg}
                   </motion.div>
                 )}
               </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
