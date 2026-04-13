@@ -76,19 +76,6 @@ export default function TopBar() {
             />
           </div>
 
-          <button
-            className="inline-flex h-11 items-center justify-center gap-2.5 rounded-2xl px-6 text-sm font-black bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-primary/20 hover:shadow-primary/40 transition-all duration-500 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 group"
-            onClick={exportExcel}
-            title="Exportar Excel e Arquivar"
-          >
-            <Download className="h-4.5 w-4.5 group-hover:translate-y-0.5 transition-transform" />
-            <span className="hidden sm:inline">Exportar & Arquivar</span>
-            {registros.length > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center bg-white/20 rounded-full text-[10px] font-black animate-in zoom-in-50 duration-500">
-                {registros.length}
-              </span>
-            )}
-          </button>
         </div>
       </div>
     </header>
