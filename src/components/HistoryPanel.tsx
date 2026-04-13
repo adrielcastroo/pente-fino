@@ -3,7 +3,16 @@ import { useAppStore } from '@/store/useAppStore';
 import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
-// ... keep existing code
+import { motion, AnimatePresence } from 'framer-motion';
+import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle, Calendar, LayoutGrid, FileSpreadsheet, X } from 'lucide-react';
+import { exportConferenceToExcel } from '@/lib/export-utils';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { getRegistroColumns } from '@/lib/registroColumns';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 
 function EditRegistroDialog({
