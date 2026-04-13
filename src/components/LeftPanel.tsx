@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
-  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff
+  Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
+  Trash2, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
