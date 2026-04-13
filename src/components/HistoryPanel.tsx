@@ -394,20 +394,28 @@ export default function HistoryPanel() {
     toast.success('O histórico geral foi limpo com sucesso.');
   };
 
+  // Pre-calculate search keys to avoid expensive operations during every search character change
+  const searchableHistory = useMemo(() => {
+    return history.map(conf => {
+      const folderName = getConferenceFolderName(conf).toLowerCase();
+      const conferente = (conf.conferente || '').toLowerCase();
+      const itemsString = conf.registros.map(r => 
+        `${r.item} ${r.nf || ''} ${r.lote || ''}`.toLowerCase()
+      ).join(' ');
+      
+      return { 
+        ...conf, 
+        searchKey: `${folderName} ${conferente} ${itemsString}`
+      };
+    });
+  }, [history]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return history;
-    return history.filter(conf => {
-      const folderName = getConferenceFolderName(conf).toLowerCase();
-      if (folderName.includes(q)) return true;
-      if (conf.conferente?.toLowerCase().includes(q)) return true;
-      return conf.registros.some(r =>
-        r.item.toLowerCase().includes(q) ||
-        (r.nf || '').toLowerCase().includes(q) ||
-        (r.lote || '').toLowerCase().includes(q)
-      );
-    });
-  }, [history, search]);
+    if (!q) return searchableHistory;
+    return searchableHistory.filter(conf => conf.searchKey.includes(q));
+  }, [searchableHistory, search]);
+
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background/50">
