@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
@@ -6,6 +6,7 @@ import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePerformance } from '@/hooks/use-performance';
 
 const LeftPanel = lazy(() => import('@/components/LeftPanel'));
 const RightPanel = lazy(() => import('@/components/RightPanel'));
@@ -15,7 +16,6 @@ const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
 const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
 const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
-// ... keep existing code
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = () => (
@@ -63,8 +63,8 @@ const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolea
 export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);
   const { activeTab, handleTabChange } = useAppNavigation();
-  // configOpen removed
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const { isLow } = usePerformance();
 
   useEffect(() => {
     loadHistory();
@@ -76,6 +76,16 @@ export default function Index() {
     configOpen: activeTab === 'settings',
     setConfigOpen: () => handleTabChange('settings'),
   });
+
+  const animationProps = useMemo(() => {
+    if (isLow) return { initial: false, animate: false, exit: false, transition: { duration: 0 } };
+    return {
+      initial: { opacity: 0, y: 10 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -10 },
+      transition: { duration: 0.15, ease: "easeOut" }
+    };
+  }, [isLow]);
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -92,10 +102,7 @@ export default function Index() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
+                {...animationProps}
                 className="h-full w-full max-w-[2000px] mx-auto"
               >
                 <Suspense fallback={<PageSkeleton />}>
@@ -110,7 +117,6 @@ export default function Index() {
       </div>
 
       <Suspense fallback={null}>
-        {/* <ConfigModal open={configOpen} onClose={() => setConfigOpen(false)} /> */}
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </Suspense>
     </SidebarProvider>
