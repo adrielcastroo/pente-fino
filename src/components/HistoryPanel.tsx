@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo, memo } from 'react';
-import { useAppStore, formatML, type Conference, type Registro } from '@/store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
+import { formatML } from '@/lib/app-utils';
+import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, ChevronDown, ChevronRight, Package, Clock, Trash2, User, Pencil, CheckCircle2, Download, Search, AlertTriangle } from 'lucide-react';

@@ -2,6 +2,7 @@ import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive
 import { useAppStore } from '@/store/useAppStore';
 import { Logo } from './Logo';
 import { useTheme } from 'next-themes';
+import { AppTab } from '@/types';
 import { useState } from 'react';
 import {
   Sidebar,
@@ -16,7 +17,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'table' | 'history';
+// type moved to @/types/index.ts
 
 interface AppSidebarProps {
   activeTab: AppTab;

@@ -1,4 +1,5 @@
-import { useAppStore, formatML } from '@/store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
+import { formatML } from '@/lib/app-utils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { Download, User } from 'lucide-react';

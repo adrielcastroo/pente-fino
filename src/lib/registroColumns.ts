@@ -1,4 +1,4 @@
-import type { Registro } from '@/store/useAppStore';
+import { Registro } from "@/types";
 
 export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
 export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade';

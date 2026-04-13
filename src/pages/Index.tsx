@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { AppTab } from '@/types';
 import { toast } from 'sonner';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
@@ -10,14 +12,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 const LeftPanel = lazy(() => import('@/components/LeftPanel'));
 const RightPanel = lazy(() => import('@/components/RightPanel'));
 const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
-const DashboardPage = lazy(() => import('@/components/DashboardPage'));
-const MotorControlePage = lazy(() => import('@/components/MotorControlePage'));
-const EstoquePage = lazy(() => import('@/components/EstoquePage'));
-const SaidaPage = lazy(() => import('@/components/SaidaPage'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
+const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
+const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
 const ConfigModal = lazy(() => import('@/components/ConfigModal'));
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
-
-type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'table' | 'history';
 
 const PageSkeleton = () => (
   <div className="p-8 space-y-4 animate-pulse">
@@ -32,7 +32,6 @@ const PageSkeleton = () => (
 );
 
 export default function Index() {
-  const undo = useAppStore(s => s.undo);
   const loadHistory = useAppStore(s => s.loadHistory);
   const setMode = useAppStore(s => s.setMode);
   const currentMode = useAppStore(s => s.currentMode);
@@ -48,54 +47,12 @@ export default function Index() {
     loadHistory();
   }, [loadHistory]);
 
-  // Optimized keyboard shortcuts handler
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const activeElement = document.activeElement as HTMLElement;
-      const isTyping = 
-        activeElement?.tagName === 'INPUT' || 
-        activeElement?.tagName === 'TEXTAREA' || 
-        activeElement?.isContentEditable;
-
-      // Handle Escape to close modals
-      if (e.key === 'Escape') {
-        if (shortcutsOpen || configOpen) {
-          setShortcutsOpen(false);
-          setConfigOpen(false);
-          return;
-        }
-      }
-
-      if (shortcutsOpen || configOpen) return;
-
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const cmdKey = isMac ? e.metaKey : e.ctrlKey;
-
-      if (cmdKey && e.key.toLowerCase() === 'z') { 
-        e.preventDefault(); 
-        const r = undo(); 
-        if (r) toast.success('Rolo restaurado'); 
-      }
-      
-      if (cmdKey && e.key.toLowerCase() === 'f' && !isTyping) {
-        e.preventDefault();
-        document.querySelector<HTMLInputElement>('[placeholder*="Filtrar"]')?.focus();
-      }
-      
-      if (cmdKey && e.key.toLowerCase() === 'k') { 
-        e.preventDefault(); 
-        setShortcutsOpen(true); 
-      }
-      
-      if (cmdKey && e.key === ',') { 
-        e.preventDefault(); 
-        setConfigOpen(true); 
-      }
-    };
-
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [undo, configOpen, shortcutsOpen]);
+  useKeyboardShortcuts({
+    shortcutsOpen,
+    setShortcutsOpen,
+    configOpen,
+    setConfigOpen,
+  });
 
   const handleTabChange = useCallback((tab: AppTab) => {
     setActiveTab(tab);

@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAppStore, type Conference } from '@/store/useAppStore';
-import { supabase } from '@/integrations/supabase/client';
+import { useAppStore } from '@/store/useAppStore';
+import { Conference } from '@/types';
 import { Users, Layers3, BarChart3, TrendingUp, Download, Eye } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import { computeStats, exportToExcel } from '@/lib/dashboard-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,50 +20,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const TOOL_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
-function computeStats(history: Conference[]) {
-  const confMap = new Map<string, Set<string>>();
-  const catMap = new Map<string, number>();
-  const subMap = new Map<string, number>();
-  const tipoMap = new Map<string, number>();
-  let totalRegistros = 0;
-
-  for (const conference of history) {
-    const name = conference.conferente || 'Desconhecido';
-    let confSet = confMap.get(name);
-    if (!confSet) {
-      confSet = new Set();
-      confMap.set(name, confSet);
-    }
-    for (const r of conference.registros) {
-      totalRegistros++;
-      if (r.nf) confSet.add(`NF:${r.nf}`);
-      if (r.processo) confSet.add(`PROC:${r.processo}`);
-      const modo = r.modoOrigem || 'manual';
-      let cat = 'Tecido';
-      if (modo === 'madeira') cat = 'Madeira';
-      else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
-      catMap.set(cat, (catMap.get(cat) || 0) + 1);
-      let sub = 'Coulisse';
-      if (modo === 'openrouter') sub = 'IA';
-      else if (modo === 'diversos') sub = 'Diversos';
-      else if (modo === 'madeira') sub = 'Madeira';
-      else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
-      subMap.set(sub, (subMap.get(sub) || 0) + 1);
-      const tipo = r.tipoTecido || 'Rolo';
-      tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
-    }
-  }
-
-  return {
-    topConferentes: Array.from(confMap.entries()).map(([name, set]) => ({ name, count: set.size })).sort((a, b) => b.count - a.count).slice(0, 5),
-    categorias: Array.from(catMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
-    ferramentas: Array.from(subMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
-    tipos: Array.from(tipoMap.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6),
-    totalRegistros,
-    totalConferencias: history.length,
-    totalConferentes: confMap.size,
-  };
-}
+// logic moved to @/lib/dashboard-utils.ts
 
 export default function DashboardPage() {
   const history = useAppStore(s => s.history);
@@ -75,12 +32,8 @@ export default function DashboardPage() {
     setFormData({ activeTab: tab });
   };
 
-  const exportExcel = useCallback((data: any[], fileName: string) => {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Dados');
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
-    toast.success('Relatório exportado!');
+  const handleExport = useCallback((data: any[], fileName: string) => {
+    exportToExcel(data, fileName);
   }, []);
 
   return (
@@ -121,7 +74,7 @@ export default function DashboardPage() {
                 <Button variant="ghost" size="icon" onClick={() => setDetailChart({ title: chart.title, data: chart.data, type: chart.type })}>
                   <Eye className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => exportExcel(chart.data, chart.title)}>
+                <Button variant="ghost" size="icon" onClick={() => handleExport(chart.data, chart.title)}>
                   <Download className="w-4 h-4" />
                 </Button>
               </div>
