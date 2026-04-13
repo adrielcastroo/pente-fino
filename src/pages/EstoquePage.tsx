@@ -163,7 +163,7 @@ export default function EstoquePage() {
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
-      className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 min-w-0"
+      className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 min-w-0"
     >
       <div className="space-y-1.5">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter">Estoque</h1>
