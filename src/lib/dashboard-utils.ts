@@ -1,5 +1,4 @@
 import { Conference } from '@/types';
-import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 export function computeStats(history: Conference[]) {
@@ -57,10 +56,5 @@ export function computeStats(history: Conference[]) {
   };
 }
 
-export function exportToExcel(data: any[], fileName: string) {
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Dados');
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
-  toast.success('Relatório exportado!');
-}
+// Note: exportToExcel was moved to @/lib/export-utils for performance (dynamic import)
+
