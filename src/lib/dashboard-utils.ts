@@ -20,7 +20,7 @@ export function computeStats(history: Conference[]) {
     let dateStr = dateCache.get(conference.id);
     if (!dateStr) {
       try {
-        const d = new Date(conference.id);
+        const d = new Date(conference.date);
         dateStr = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
         dateCache.set(conference.id, dateStr);
       } catch {

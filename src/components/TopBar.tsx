@@ -9,9 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function TopBar() {
-  const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
+  const { 
+    currentMode, processo, conferente, setConferente, registros, 
+    archiveAndClear, isArchiving, archiveError 
+  } = useAppStore();
   
   const exportExcel = async () => {
+    if (isArchiving) return;
     if (!registros.length) { 
       toast.warning('Nenhum registro para exportar.'); 
       return; 
@@ -58,12 +62,16 @@ export default function TopBar() {
       ? fileLabel
       : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}`;
 
-    await exportConferenceToExcel(headers, data, fileName, columnWidths);
-    const count = registros.length;
-    await archiveAndClear(archiveName);
-    toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
-      icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
-    });
+    try {
+      const count = registros.length;
+      await exportConferenceToExcel(headers, data, fileName, columnWidths);
+      await archiveAndClear(archiveName);
+      toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
+        icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Falha ao exportar e arquivar registros.');
+    }
   };
 
   return (
@@ -105,14 +113,21 @@ export default function TopBar() {
                 <Button 
                   onClick={exportExcel}
                   size="sm"
+                  disabled={isArchiving}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2 sm:px-8 h-9 sm:h-14 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-1 sm:gap-3 text-[9px] sm:text-base group/btn relative overflow-hidden shrink-0"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-                  <Download className="w-3.5 h-3.5 sm:w-6 sm:h-6 animate-bounce-subtle relative z-10" />
-                  <span className="hidden xs:inline relative z-10">Exportar</span>
-                  <Badge variant="secondary" className="bg-white/20 text-white border-none px-1 h-4 sm:h-6 min-w-[16px] sm:min-w-[24px] flex items-center justify-center font-black text-[8px] sm:text-xs relative z-10">
-                    {registros.length}
-                  </Badge>
+                  {isArchiving ? (
+                    <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 sm:w-6 sm:h-6 animate-bounce-subtle relative z-10" />
+                  )}
+                  <span className="hidden xs:inline relative z-10">{isArchiving ? 'Processando...' : 'Exportar'}</span>
+                  {!isArchiving && (
+                    <Badge variant="secondary" className="bg-white/20 text-white border-none px-1 h-4 sm:h-6 min-w-[16px] sm:min-w-[24px] flex items-center justify-center font-black text-[8px] sm:text-xs relative z-10">
+                      {registros.length}
+                    </Badge>
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="bg-popover/90 backdrop-blur-md border-border/40 shadow-2xl p-3 rounded-xl font-bold text-sm">

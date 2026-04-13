@@ -58,12 +58,31 @@ export const conferenceService = {
   },
 
   async deleteConference(id: string) {
-    await supabase.from('registros').delete().eq('conference_id', id);
-    await supabase.from('conferences').delete().eq('id', id);
+    try {
+      // Supabase doesn't support cascading deletes easily from the client without RLS/Trigger support
+      // So we delete children first
+      const { error: regError } = await supabase.from('registros').delete().eq('conference_id', id);
+      if (regError) throw regError;
+      
+      const { error: confError } = await supabase.from('conferences').delete().eq('id', id);
+      if (confError) throw confError;
+    } catch (e) {
+      console.error('Error in deleteConference:', e);
+      throw e;
+    }
   },
 
   async clearAllHistory() {
-    await supabase.from('registros').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('conferences').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    try {
+      // To clear everything efficiently, we can use a range or just match all non-null
+      const { error: regError } = await supabase.from('registros').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (regError) throw regError;
+      
+      const { error: confError } = await supabase.from('conferences').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (confError) throw confError;
+    } catch (e) {
+      console.error('Error in clearAllHistory:', e);
+      throw e;
+    }
   }
 };

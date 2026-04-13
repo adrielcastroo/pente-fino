@@ -95,11 +95,18 @@ export default function MotorControlePage() {
   }, [registros]);
 
   const getSequencial = useCallback((): number => {
-    let count = 0;
+    let max = 0;
     for (let i = 0, len = registros.length; i < len; i++) {
-      if (registros[i].modoOrigem === 'controle') count++;
+      const r = registros[i];
+      if (r.modoOrigem === 'controle' && r.loteSistema) {
+        const parts = r.loteSistema.split('*');
+        if (parts.length > 1) {
+          const num = parseInt(parts[parts.length - 1], 10);
+          if (!isNaN(num) && num > max) max = num;
+        }
+      }
     }
-    return count + 1;
+    return max + 1;
   }, [registros]);
 
   const handleModeloBlur = useCallback(() => {

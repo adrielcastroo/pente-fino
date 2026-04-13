@@ -386,62 +386,127 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 });
 
 export default function HistoryPanel() {
-  const history = useAppStore(s => s.history);
-  const deleteConference = useAppStore(s => s.deleteConference);
-  const clearHistory = useAppStore(s => s.clearHistory);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory } = useAppStore();
+  const [search, setSearch] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { isLow } = usePerformance();
 
-  const filteredHistory = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
     if (!q) return history;
     return history.filter(c => 
-      c.name.toLowerCase().includes(q) || 
-      c.registros.some(r => r.item.toLowerCase().includes(q) || (r.nf || '').toLowerCase().includes(q) || (r.lote || '').toLowerCase().includes(q))
+      c.processo.toLowerCase().includes(q) || 
+      c.conferente.toLowerCase().includes(q) ||
+      c.registros.some(r => r.item.toLowerCase().includes(q) || (r.nf || '').toLowerCase().includes(q))
     );
-  }, [history, searchQuery]);
+  }, [history, search]);
+
+  const handleClear = async () => {
+    try {
+      await clearHistory();
+      toast.success('Todo o histórico foi removido.');
+      setShowClearConfirm(false);
+    } catch {
+      toast.error('Erro ao limpar o histórico.');
+    }
+  };
+
+  if (isHistoryLoading && history.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-xs">Sincronizando Histórico...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full bg-background/30 backdrop-blur-sm">
-      <div className="px-6 py-4 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 flex-shrink-0">
-        <div className="relative flex-1 w-full sm:w-auto">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-          <input 
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 transition-all placeholder:text-muted-foreground/40" 
-            placeholder="Buscar no histórico por nome, item, NF ou lote..." 
-          />
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => {
-            if (confirm('Deseja realmente limpar TODO o histórico? Esta ação não pode ser desfeita.')) clearHistory();
-          }}
-          className="h-11 px-6 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/5 font-bold flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span className="hidden sm:inline">Limpar Tudo</span>
-        </Button>
-      </div>
+    <div className="flex flex-col h-full bg-background/30 backdrop-blur-sm overflow-hidden">
+      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-shrink-0">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div className="space-y-2">
+             <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
+                <FolderOpen className="w-3.5 h-3.5" />
+                <span>Arquivo Digital</span>
+             </div>
+             <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
+               Histórico de <span className="text-primary italic">Conferências</span>
+             </h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+             <div className="relative group flex-1 sm:w-64 lg:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                <Input 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Buscar no histórico..." 
+                  className="pl-10 h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold"
+                />
+             </div>
+             {history.length > 0 && (
+               <Button 
+                 variant="outline" 
+                 size="icon" 
+                 onClick={() => setShowClearConfirm(true)}
+                 className="h-11 w-11 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/40 transition-all"
+               >
+                 <Trash2 className="w-5 h-5" />
+               </Button>
+             )}
+          </div>
+        </header>
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
-        <div className="grid grid-cols-1 gap-4 max-w-5xl mx-auto">
-          {filteredHistory.map(conf => (
-            <ConferenceCard key={conf.id} conf={conf} onDelete={() => deleteConference(conf.id)} />
-          ))}
-
-          {filteredHistory.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
-              <div className="h-20 w-20 bg-muted rounded-[2rem] flex items-center justify-center mb-6">
-                <Search className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <p className="text-lg font-black tracking-tight text-muted-foreground">Nenhuma conferência encontrada</p>
+        {historyError && (
+          <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3 text-destructive font-bold text-sm">
+              <span>⚠️ {historyError}</span>
             </div>
-          )}
-        </div>
+            <Button variant="ghost" size="sm" onClick={() => loadHistory()} className="h-8 rounded-lg font-black uppercase text-[10px] hover:bg-destructive/10 text-destructive">Tentar Novamente</Button>
+          </div>
+        )}
       </div>
+
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
+        {filtered.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 max-w-[1400px] mx-auto">
+            {filtered.map(conf => (
+              <ConferenceCard 
+                key={conf.id} 
+                conf={conf} 
+                onDelete={() => deleteConference(conf.id)} 
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="w-24 h-24 rounded-[2.5rem] bg-muted/10 flex items-center justify-center mb-6 rotate-6 transition-all duration-500">
+              <FolderOpen className="w-12 h-12 text-muted-foreground/20" />
+            </div>
+            <h3 className="text-xl font-black text-foreground mb-2">Histórico Vazio</h3>
+            <p className="text-muted-foreground text-sm font-medium max-w-xs">Nenhuma conferência encontrada {search ? 'para sua busca' : 'no banco de dados'}.</p>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <DialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
+          <DialogHeader className="p-2">
+            <DialogTitle className="text-2xl font-black tracking-tight text-center">Limpar Tudo?</DialogTitle>
+            <DialogDescription className="font-bold text-sm leading-relaxed mt-2 text-muted-foreground text-center">
+              Você está prestes a remover permanentemente <span className="text-destructive font-black">{history.length} conferências</span>. Esta ação limpará todo o banco de dados histórico.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="p-2 gap-3 mt-6">
+            <Button variant="outline" className="flex-1 rounded-2xl font-bold h-12" onClick={() => setShowClearConfirm(false)}>Manter Dados</Button>
+            <Button variant="destructive" className="flex-1 rounded-2xl font-black h-12 shadow-lg shadow-destructive/20" onClick={handleClear}>Limpar Tudo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
