@@ -97,9 +97,9 @@ export function generateLoteSistema(
     .map(r => {
       const ls = r.loteSistema || '';
       if (ls === base) return 0;
-      const parts = ls.split('-');
-      const last = parts[parts.length - 1];
-      const num = parseInt(last, 10);
+      const lastPart = ls.split('-').pop();
+      if (!lastPart) return 0;
+      const num = parseInt(lastPart, 10);
       return isNaN(num) ? 0 : num;
     });
 
