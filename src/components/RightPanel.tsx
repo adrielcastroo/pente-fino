@@ -277,16 +277,16 @@ export default function RightPanel() {
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="bg-muted/30">
-                <th className="sticky top-0 z-10 px-4 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md w-[50px]">#</th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md w-[40px] sm:w-[50px]">#</th>
                 {columns.map(column => (
                   <th 
                     key={column.key} 
-                    className="sticky top-0 z-10 px-4 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md"
+                    className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md"
                   >
                     {column.shortLabel || column.label}
                   </th>
                 ))}
-                <th className="sticky top-0 z-10 px-4 py-4 text-right border-b border-border/40 bg-background/80 backdrop-blur-md w-[100px]"></th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background/80 backdrop-blur-md w-[80px] sm:w-[100px]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
