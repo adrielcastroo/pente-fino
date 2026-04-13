@@ -85,9 +85,11 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
       </ResponsiveContainer>
     </CardContent>
   </Card>
-);
+));
 
-export const SummaryChart = ({ title, desc, data, type, icon: Icon, onDetailClick, chartKey }: any) => (
+TimelineChart.displayName = 'TimelineChart';
+
+export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey }: any) => (
   <Card className="group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
     <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
       <div>
@@ -142,4 +144,6 @@ export const SummaryChart = ({ title, desc, data, type, icon: Icon, onDetailClic
       </ResponsiveContainer>
     </CardContent>
   </Card>
-);
+));
+
+SummaryChart.displayName = 'SummaryChart';
