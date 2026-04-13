@@ -362,10 +362,13 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
       </Dialog>
     </div>
   );
-}
+});
 
 export default function HistoryPanel() {
-  const { history, loadHistory, deleteConference, clearHistory } = useAppStore();
+  const history = useAppStore(s => s.history);
+  const loadHistory = useAppStore(s => s.loadHistory);
+  const deleteConference = useAppStore(s => s.deleteConference);
+  const clearHistory = useAppStore(s => s.clearHistory);
   
   const [search, setSearch] = useState('');
   const [confirmClearAll, setConfirmClearAll] = useState(false);
