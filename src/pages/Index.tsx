@@ -1,14 +1,12 @@
-import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
-import { AppTab } from '@/types';
-import { toast } from 'sonner';
+import { useAppNavigation } from '@/hooks/useAppNavigation';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Lazy loading components for better initial load performance
 const LeftPanel = lazy(() => import('@/components/LeftPanel'));
 const RightPanel = lazy(() => import('@/components/RightPanel'));
 const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
@@ -31,17 +29,25 @@ const PageSkeleton = () => (
   </div>
 );
 
+const TabRenderer = ({ activeTab }: { activeTab: string }) => {
+  switch (activeTab) {
+    case 'inicio': return <DashboardPage />;
+    case 'tecido':
+    case 'madeira': return <LeftPanel />;
+    case 'motor': return <MotorControlePage />;
+    case 'estoque': return <EstoquePage />;
+    case 'saida': return <SaidaPage />;
+    case 'table': return <RightPanel />;
+    case 'history': return <HistoryPanel />;
+    default: return <DashboardPage />;
+  }
+};
+
 export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);
-  const setMode = useAppStore(s => s.setMode);
-  const currentMode = useAppStore(s => s.currentMode);
-  
+  const { activeTab, handleTabChange } = useAppNavigation();
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const activeTab = useAppStore(s => s.formData.activeTab);
-  const setFormData = useAppStore(s => s.setFormData);
-  
-  const setActiveTab = useCallback((tab: AppTab) => setFormData({ activeTab: tab }), [setFormData]);
 
   useEffect(() => {
     loadHistory();
@@ -53,37 +59,6 @@ export default function Index() {
     configOpen,
     setConfigOpen,
   });
-
-  const handleTabChange = useCallback((tab: AppTab) => {
-    setActiveTab(tab);
-    
-    // Sync mode with tab for better consistency
-    if (tab === 'tecido') {
-      if (currentMode === 'madeira' || currentMode === 'motor' || currentMode === 'controle') {
-        setMode('manual');
-      }
-    } else if (tab === 'madeira') {
-      setMode('madeira');
-    } else if (tab === 'motor') {
-      // Restore submode from formData when entering motor tab
-      const state = useAppStore.getState();
-      setMode(state.formData.motorSubMode || 'motor');
-    }
-  }, [setActiveTab, currentMode, setMode]);
-
-  const renderActiveTab = () => {
-    switch (activeTab) {
-      case 'inicio': return <DashboardPage />;
-      case 'tecido':
-      case 'madeira': return <LeftPanel />;
-      case 'motor': return <MotorControlePage />;
-      case 'estoque': return <EstoquePage />;
-      case 'saida': return <SaidaPage />;
-      case 'table': return <RightPanel />;
-      case 'history': return <HistoryPanel />;
-      default: return <DashboardPage />;
-    }
-  };
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -109,7 +84,7 @@ export default function Index() {
               >
                 <Suspense fallback={<PageSkeleton />}>
                   <div className="p-4 sm:p-6 lg:p-8 h-full">
-                    {renderActiveTab()}
+                    <TabRenderer activeTab={activeTab} />
                   </div>
                 </Suspense>
               </motion.div>
