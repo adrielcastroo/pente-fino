@@ -29,7 +29,22 @@ const PageSkeleton = () => (
   </div>
 );
 
-const TabRenderer = ({ activeTab }: { activeTab: string }) => {
+const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
+  const isFormTab = ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab);
+  
+  if (isWide && isFormTab) {
+    return (
+      <div className="flex flex-col xl:flex-row h-full gap-6">
+        <div className="w-full xl:w-[450px] 2xl:w-[550px] shrink-0 h-full">
+          {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
+        </div>
+        <div className="flex-1 min-w-0 h-full border-l border-border/20 pl-6 hidden xl:block">
+          <RightPanel />
+        </div>
+      </div>
+    );
+  }
+
   switch (activeTab) {
     case 'inicio': return <DashboardPage />;
     case 'tecido':
