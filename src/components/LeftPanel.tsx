@@ -534,15 +534,18 @@ export default function LeftPanel() {
 
   return (
     <motion.div
-      initial={{ x: -10, opacity: 0 }}
+      initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="bg-background/40 backdrop-blur-md lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-2xl transition-all duration-300"
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-background/40 backdrop-blur-xl lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-500"
     >
-      <div className="p-3 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-4 sm:space-y-8 custom-scrollbar">
+      <div className="p-4 sm:p-8 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-10 custom-scrollbar relative">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+        
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 border border-border/50 rounded-2xl p-1.5 gap-1.5 shadow-inner">
+          <div className="flex bg-muted/40 border border-border/40 rounded-3xl p-1.5 gap-2 shadow-inner relative z-10 backdrop-blur-md">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -550,20 +553,22 @@ export default function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-3 rounded-xl text-[10px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2 uppercase tracking-widest ${
+                  className={`flex-1 py-4 rounded-2xl text-[10px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2.5 uppercase tracking-[0.15em] relative overflow-hidden group/mode ${
                     isActive
-                      ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-100'
+                      ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-100'
                       : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
                   }`}
                   aria-pressed={isActive}
                 >
-                  <Icon className={`w-4 h-4 transition-transform duration-500 ${isActive ? 'rotate-0' : '-rotate-12'}`} />
-                  <span>{m.label}</span>
+                  {isActive && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${isActive ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0 group-hover/mode:scale-110'}`} />
+                  <span className="relative z-10">{m.label}</span>
                 </button>
               );
             })}
           </div>
         )}
+
 
         {/* Manual tip */}
         <AnimatePresence mode="wait">
