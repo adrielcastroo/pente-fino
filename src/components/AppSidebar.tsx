@@ -24,14 +24,14 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-const menuItems: { key: AppTab; label: string; icon: typeof Home }[] = [
-  { key: 'inicio', label: 'Início', icon: Home },
-  { key: 'tecido', label: 'Tecido', icon: Layers3 },
-  { key: 'madeira', label: 'Madeira', icon: Package },
-  { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
-  { key: 'estoque', label: 'Estoque', icon: Warehouse },
-  { key: 'table', label: 'Tabela', icon: Table },
-  { key: 'history', label: 'Histórico', icon: FolderOpen },
+const menuItems: { key: AppTab; label: string; icon: typeof Home; color?: string }[] = [
+  { key: 'inicio', label: 'Início', icon: Home, color: 'text-primary' },
+  { key: 'tecido', label: 'Tecido', icon: Layers3, color: 'text-blue-500' },
+  { key: 'madeira', label: 'Madeira', icon: Package, color: 'text-amber-600' },
+  { key: 'motor', label: 'Motor/Controle', icon: Settings2, color: 'text-rose-500' },
+  { key: 'estoque', label: 'Estoque', icon: Warehouse, color: 'text-emerald-500' },
+  { key: 'table', label: 'Tabela', icon: Table, color: 'text-violet-500' },
+  { key: 'history', label: 'Histórico', icon: FolderOpen, color: 'text-slate-500' },
 ];
 
 export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: AppSidebarProps) {
@@ -83,7 +83,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
           </div>
           <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
             <span className="font-black text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
-            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-[0.2em] whitespace-nowrap opacity-70">Industrial v4.0</span>
+            <span className="text-[9px] text-foreground/70 dark:text-foreground/80 font-bold uppercase tracking-[0.2em] whitespace-nowrap opacity-70">Industrial v4.0</span>
           </div>
         </div>
       </SidebarHeader>
@@ -107,19 +107,19 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
                         h-11 rounded-xl transition-all duration-200
                         ${isActive 
                           ? 'bg-primary/15 text-primary font-black shadow-[0_4px_20px_rgb(0,0,0,0.05)] scale-[1.02] ring-1 ring-primary/20' 
-                          : 'hover:bg-sidebar-accent/70 text-muted-foreground font-bold hover:translate-x-1'}
+                          : 'hover:bg-sidebar-accent/70 text-foreground/80 dark:text-foreground font-bold hover:translate-x-1'}
                         ${isTableTab && registros.length > 0 ? 'ring-2 ring-primary/40 animate-pulse-subtle' : ''}
                       `}
                     >
                       <div className="relative">
-                        <Icon className={`w-4.5 h-4.5 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
+                        <Icon className={`w-4.5 h-4.5 transition-all duration-200 ${isActive ? 'scale-110 ' + item.color : 'text-muted-foreground'} ${isTableTab && registros.length > 0 ? 'text-primary' : ''}`} />
                         {isTableTab && registros.length > 0 && collapsed && (
                           <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground ring-2 ring-sidebar animate-in zoom-in-50">
                             {registros.length}
                           </span>
                         )}
                       </div>
-                      <span className={`tracking-tight transition-all duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
+                      <span className={`tracking-tight transition-all duration-200 ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'} ${isActive ? 'font-black' : 'font-bold'} ${isActive ? item.color : ''}`}>
                         {item.label}
                       </span>
                       {isTableTab && registros.length > 0 && !collapsed && (
@@ -141,11 +141,11 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={toggleTheme} 
-              className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-200"
+              className="h-11 rounded-xl hover:bg-sidebar-accent/50 text-foreground/80 dark:text-foreground transition-all duration-200"
               tooltip={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
             >
               <div className="w-4.5 h-4.5 flex items-center justify-center">
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-400" />}
               </div>
               <span className={`transition-all duration-200 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
                 {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
@@ -156,11 +156,11 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
             <SidebarMenuItem>
               <SidebarMenuButton 
                 onClick={onOpenConfig} 
-                className="h-11 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-200"
+                className="h-11 rounded-xl hover:bg-sidebar-accent/50 text-foreground/80 dark:text-foreground transition-all duration-200"
                 tooltip="Acessar Configurações"
               >
                 <div className="w-4.5 h-4.5 flex items-center justify-center">
-                  <Settings className="w-4 h-4" />
+                  <Settings className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <span className={`transition-all duration-200 font-bold tracking-tight ${collapsed ? 'opacity-0 w-0' : 'opacity-100 ml-2'}`}>
                   Configurações
