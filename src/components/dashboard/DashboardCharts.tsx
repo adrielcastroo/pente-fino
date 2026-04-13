@@ -1,0 +1,144 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Activity, Download, Eye, Layers3, Users, TrendingUp } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid
+} from 'recharts';
+
+const CHART_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--primary) / 0.8)',
+  'hsl(var(--primary) / 0.6)',
+  'hsl(var(--primary) / 0.4)',
+  'hsl(var(--primary) / 0.2)',
+];
+
+interface TimelineChartProps {
+  data: any[];
+  onExport: (data: any[], fileName: string) => void;
+}
+
+export const TimelineChart = ({ data, onExport }: TimelineChartProps) => (
+  <Card className="md:col-span-3 group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
+    <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20" />
+    <CardHeader className="flex flex-row items-center justify-between px-6 py-4">
+      <div>
+        <CardTitle className="text-lg font-bold flex items-center gap-2">
+          <Activity className="w-4 h-4 text-primary" />
+          <span>Volume de Operações</span>
+        </CardTitle>
+        <p className="text-xs text-muted-foreground font-medium">Histórico recente de conferências</p>
+      </div>
+      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => onExport(data, 'Timeline_Operacoes')}>
+        <Download className="w-4 h-4" />
+      </Button>
+    </CardHeader>
+    <CardContent className="px-2 pb-6 pt-2 h-[280px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground) / 0.1)" />
+          <XAxis 
+            dataKey="name" 
+            fontSize={10} 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            dy={10}
+          />
+          <YAxis 
+            fontSize={10} 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            dx={-10}
+          />
+          <ChartTooltip 
+            cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
+            contentStyle={{ 
+              borderRadius: '12px', 
+              border: '1px solid hsl(var(--border) / 0.5)', 
+              background: 'hsl(var(--card) / 0.95)',
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+              fontSize: '12px',
+              fontWeight: '600'
+            }}
+          />
+          <Area 
+            type="monotone" 
+            dataKey="value" 
+            stroke="hsl(var(--primary))" 
+            strokeWidth={2}
+            fillOpacity={1} 
+            fill="url(#colorValue)" 
+            animationDuration={1500}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </CardContent>
+  </Card>
+);
+
+export const SummaryChart = ({ title, desc, data, type, icon: Icon, onDetailClick, chartKey }: any) => (
+  <Card className="group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
+    <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
+      <div>
+        <CardTitle className="text-sm font-bold flex items-center gap-2">
+          <Icon className="w-3.5 h-3.5 text-primary" />
+          <span>{title}</span>
+        </CardTitle>
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{desc}</p>
+      </div>
+      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDetailClick({ title, data, type })}>
+        <Eye className="w-3.5 h-3.5" />
+      </Button>
+    </CardHeader>
+    <CardContent className="px-4 pb-6 h-[180px]">
+      <ResponsiveContainer width="100%" height="100%">
+        {type === 'bar' ? (
+          <BarChart data={data} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+            <XAxis dataKey="name" hide />
+            <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[4, 4, 2, 2]} barSize={24} />
+            <ChartTooltip 
+              cursor={{ fill: 'hsl(var(--primary) / 0.05)' }}
+              contentStyle={{ 
+                borderRadius: '8px', 
+                border: '1px solid hsl(var(--border) / 0.5)', 
+                background: 'hsl(var(--card) / 0.95)',
+                fontSize: '11px'
+              }}
+            />
+          </BarChart>
+        ) : (
+          <PieChart>
+            <Pie 
+              data={data} 
+              dataKey={chartKey} 
+              innerRadius="60%" 
+              outerRadius="85%" 
+              stroke="transparent"
+              paddingAngle={4}
+            >
+              {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Pie>
+            <ChartTooltip 
+              contentStyle={{ 
+                borderRadius: '8px', 
+                border: '1px solid hsl(var(--border) / 0.5)', 
+                background: 'hsl(var(--card) / 0.95)',
+                fontSize: '11px'
+              }}
+            />
+          </PieChart>
+        )}
+      </ResponsiveContainer>
+    </CardContent>
+  </Card>
+);
