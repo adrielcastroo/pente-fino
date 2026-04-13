@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Search, Archive, Calendar, User, Clock, Filter, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+
 
 interface SaidaRegistro {
   id: string;
