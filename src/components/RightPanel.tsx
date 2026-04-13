@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAppStore, formatML } from '@/store/useAppStore';
 import { useToastStore } from '@/hooks/useToast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -106,8 +106,8 @@ export default function RightPanel() {
     if (column.key === 'loteSistema') {
       return <span className="cursor-pointer text-primary hover:underline" onClick={() => copyText(r.loteSistema)}>{r.loteSistema || '—'}</span>;
     }
-    if (column.key === 'item') return highlight(r.item || '—', q);
-    if (column.key === 'endereco') return highlight(r.endereco || '—', q);
+    if (column.key === 'item') return highlight(r.item || '—', searchQuery.toLowerCase().trim());
+    if (column.key === 'endereco') return highlight(r.endereco || '—', searchQuery.toLowerCase().trim());
     return displayVal;
   };
 
