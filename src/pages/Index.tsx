@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'table' | 'history';
 
 export default function Index() {
-  const { loadFromStorage, undo, loadHistory, setMode } = useAppStore();
+  const { loadFromStorage, undo, loadHistory, setMode, currentMode } = useAppStore();
   const addToast = useToastStore(s => s.addToast);
   const [configOpen, setConfigOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -33,19 +33,40 @@ export default function Index() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const tag = (document.activeElement as HTMLElement)?.tagName;
-      const typing = tag === 'INPUT' || tag === 'TEXTAREA';
+      const activeElement = document.activeElement as HTMLElement;
+      const isTyping = 
+        activeElement?.tagName === 'INPUT' || 
+        activeElement?.tagName === 'TEXTAREA' || 
+        activeElement?.isContentEditable;
+
       if (shortcutsOpen || configOpen) {
-        if (e.key === 'Escape') { setShortcutsOpen(false); setConfigOpen(false); }
+        if (e.key === 'Escape') { 
+          setShortcutsOpen(false); 
+          setConfigOpen(false); 
+        }
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); const r = undo(); if (r) addToast('Rolo restaurado', 'ok'); }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !typing) {
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { 
+        e.preventDefault(); 
+        const r = undo(); 
+        if (r) addToast('Rolo restaurado', 'ok'); 
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !isTyping) {
         e.preventDefault();
         document.querySelector<HTMLInputElement>('[placeholder*="Filtrar"]')?.focus();
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setShortcutsOpen(true); }
-      if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); setConfigOpen(true); }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { 
+        e.preventDefault(); 
+        setShortcutsOpen(true); 
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') { 
+        e.preventDefault(); 
+        setConfigOpen(true); 
+      }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
@@ -54,7 +75,6 @@ export default function Index() {
   const handleTabChange = (tab: AppTab) => {
     setActiveTab(tab);
     if (tab === 'tecido') {
-      const currentMode = useAppStore.getState().currentMode;
       if (currentMode === 'madeira') setMode('manual');
     } else if (tab === 'madeira') {
       setMode('madeira');
