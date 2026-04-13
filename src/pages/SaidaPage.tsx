@@ -28,16 +28,8 @@ interface SaidaRegistro {
   posicao: number;
 }
 
-function formatDateBR(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
+import { formatDateBR } from '@/lib/app-utils';
+
 
 export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
@@ -66,23 +58,25 @@ export default function SaidaPage() {
     loadSaidas();
   }, []);
 
+  const searchableSaidas = useMemo(() => {
+    return saidas.map(s => ({
+      ...s,
+      searchKey: `${s.item} ${s.proc || ''} ${s.lote || ''} ${s.lote_sistema || ''} ${s.conferente_saida || ''} ${s.conferente_entrada || ''}`.toLowerCase()
+    }));
+  }, [saidas]);
+
   const filteredSaidas = useMemo(() => {
-    const q = search.toLowerCase();
-    return saidas.filter(s => 
-      s.item?.toLowerCase().includes(q) ||
-      s.proc?.toLowerCase().includes(q) ||
-      s.lote?.toLowerCase().includes(q) ||
-      s.lote_sistema?.toLowerCase().includes(q) ||
-      s.conferente_saida?.toLowerCase().includes(q) ||
-      s.conferente_entrada?.toLowerCase().includes(q)
-    );
-  }, [search, saidas]);
+    const q = search.toLowerCase().trim();
+    if (!q) return searchableSaidas;
+    return searchableSaidas.filter(s => s.searchKey.includes(q));
+  }, [search, searchableSaidas]);
+
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className="p-3 sm:p-10 lg:p-16 max-w-[1600px] mx-auto space-y-6 sm:space-y-16"
     >
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">

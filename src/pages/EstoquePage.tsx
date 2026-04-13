@@ -58,7 +58,6 @@ export default function EstoquePage() {
   const setFormData = useAppStore(s => s.setFormData);
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
-  const [posicoes, setPosicoes] = useState<Posicao[]>([]);
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
@@ -68,22 +67,18 @@ export default function EstoquePage() {
 
   const loadPosicoes = async () => {
     setLoading(true);
-    const { data: allData } = await supabase.from('estoque_posicoes').select('*');
-    setAllPosicoes((allData as Posicao[]) || []);
-
-    const { data, error } = await supabase
-      .from('estoque_posicoes')
-      .select('*')
-      .eq('estrutura', activeTec)
-      .order('coluna')
-      .order('nivel')
-      .order('posicao');
-    
-    if (!error) setPosicoes((data as Posicao[]) || []);
+    const { data: allData, error } = await supabase.from('estoque_posicoes').select('*');
+    if (!error && allData) {
+      setAllPosicoes(allData as Posicao[]);
+    }
     setLoading(false);
   };
 
-  useEffect(() => { loadPosicoes(); }, [activeTec]);
+  useEffect(() => { loadPosicoes(); }, []);
+
+  const posicoes = useMemo(() => {
+    return allPosicoes.filter(p => p.estrutura === activeTec);
+  }, [allPosicoes, activeTec]);
 
   const stats = useMemo(() => {
     const totalSlots = Object.values(TEC_CONFIG).reduce((acc, c) => acc + c.cols.length * c.levels * 30, 0);
@@ -91,10 +86,11 @@ export default function EstoquePage() {
     
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
       const p = allPosicoes[i];
-      if (p.status === 'ocupado') occupied++;
-      else if (p.status === 'bloqueado') blocked++;
-      else if (p.status === 'reservado') reserved++;
-      else if (p.status === 'saida') exited++;
+      const status = p.status;
+      if (status === 'ocupado') occupied++;
+      else if (status === 'bloqueado') blocked++;
+      else if (status === 'reservado') reserved++;
+      else if (status === 'saida') exited++;
     }
     
     const free = totalSlots - occupied - blocked - reserved - exited;
@@ -103,13 +99,15 @@ export default function EstoquePage() {
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
-    for (const p of posicoes) {
+    for (let i = 0, len = posicoes.length; i < len; i++) {
+      const p = posicoes[i];
       const key = `${p.coluna}-${p.nivel}`;
       if (!map[key]) map[key] = [];
       map[key].push(p);
     }
     return map;
   }, [posicoes]);
+
 
   const handleStatusChange = async (pos: Posicao, newStatus: string) => {
     if (newStatus === 'saida') {

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { formatML } from '@/lib/app-utils';
+import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,16 +13,7 @@ import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
 
-function formatTime(iso: string | null | undefined) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-}
 
 function EditRegistroDialog({
   open,
@@ -226,8 +217,8 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const folderName = getConferenceFolderName(conf);
   const modeBadges = getModeBadges(conf);
 
-  const startTime = formatTime(conf.startedAt);
-  const endTime = formatTime(conf.finishedAt);
+  const startTime = formatTimeBR(conf.startedAt);
+  const endTime = formatTimeBR(conf.finishedAt);
 
   return (
     <motion.div 
@@ -250,7 +241,8 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
               </div>
             </div>
             <div className="text-[9px] sm:text-xs text-muted-foreground font-bold flex items-center gap-1.5 sm:gap-2.5 mt-1 flex-wrap">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDate(conf.date)}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDateBR(conf.date)}</span>
+
               <span className="hidden xs:block h-3 w-[1px] bg-border" />
               <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
               {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
@@ -394,20 +386,28 @@ export default function HistoryPanel() {
     toast.success('O histórico geral foi limpo com sucesso.');
   };
 
+  // Pre-calculate search keys to avoid expensive operations during every search character change
+  const searchableHistory = useMemo(() => {
+    return history.map(conf => {
+      const folderName = getConferenceFolderName(conf).toLowerCase();
+      const conferente = (conf.conferente || '').toLowerCase();
+      const itemsString = conf.registros.map(r => 
+        `${r.item} ${r.nf || ''} ${r.lote || ''}`.toLowerCase()
+      ).join(' ');
+      
+      return { 
+        ...conf, 
+        searchKey: `${folderName} ${conferente} ${itemsString}`
+      };
+    });
+  }, [history]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return history;
-    return history.filter(conf => {
-      const folderName = getConferenceFolderName(conf).toLowerCase();
-      if (folderName.includes(q)) return true;
-      if (conf.conferente?.toLowerCase().includes(q)) return true;
-      return conf.registros.some(r =>
-        r.item.toLowerCase().includes(q) ||
-        (r.nf || '').toLowerCase().includes(q) ||
-        (r.lote || '').toLowerCase().includes(q)
-      );
-    });
-  }, [history, search]);
+    if (!q) return searchableHistory;
+    return searchableHistory.filter(conf => conf.searchKey.includes(q));
+  }, [searchableHistory, search]);
+
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background/50">

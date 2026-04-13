@@ -1,5 +1,36 @@
 import { Registro } from "@/types";
 
+// Shared, memoized date formatters for consistent, efficient performance
+const dateFormatterBR = new Intl.DateTimeFormat('pt-BR', { 
+  day: '2-digit', month: '2-digit', year: 'numeric', 
+  hour: '2-digit', minute: '2-digit' 
+});
+
+const timeFormatterBR = new Intl.DateTimeFormat('pt-BR', { 
+  hour: '2-digit', minute: '2-digit' 
+});
+
+export function formatDateBR(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? '—' : dateFormatterBR.format(d);
+  } catch {
+    return '—';
+  }
+}
+
+export function formatTimeBR(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? '—' : timeFormatterBR.format(d);
+  } catch {
+    return '—';
+  }
+}
+
+
 export const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
 
 export function parseEndereco(addr: string) {
