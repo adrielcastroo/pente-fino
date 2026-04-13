@@ -28,6 +28,7 @@ export default function LeftPanel() {
   const setMode = useAppStore(s => s.setMode);
   const processo = useAppStore(s => s.processo);
   const setProcesso = useAppStore(s => s.setProcesso);
+  const conferente = useAppStore(s => s.conferente);
   const registros = useAppStore(s => s.registros);
   const addRegistro = useAppStore(s => s.addRegistro);
   const undoAction = useAppStore(s => s.undo);
@@ -406,18 +407,18 @@ export default function LeftPanel() {
   };
 
   const handleAdd = () => {
-    const state = useAppStore.getState();
-    const proc = state.processo.trim();
-    const conf = state.conferente;
-    if (requiresProcesso && !proc) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (!conf) { toast.warning('Preencha o campo CONFERENTE.'); return; }
+    // Basic validations that apply to all tecido modes
+    if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
+    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
     if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+
+    const proc = processo.trim();
 
     if (isMadeira) {
       const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
       const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
-      const reg = {
+      const reg: Registro = {
         id: crypto.randomUUID(),
         item,
         processo: proc,
@@ -430,11 +431,11 @@ export default function LeftPanel() {
         loteSistema,
         quantidade: qtd,
         tipoTecido: madeiraTipo,
-        modoOrigem: 'madeira' as const,
+        modoOrigem: 'madeira',
         isNew: true,
       };
       addRegistro(reg);
-      toast.success(`✓ ${item} — ${madeiraTipo} CX${(registros.filter(r => r.item.trim().toLowerCase() === item.trim().toLowerCase()).length + 1).toString().padStart(2, '0')}`);
+      toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
       resetForm();
       setQuantidade(madeiraDefaults[madeiraTipo].toString());
       setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);

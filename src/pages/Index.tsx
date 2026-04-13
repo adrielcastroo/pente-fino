@@ -56,10 +56,18 @@ export default function Index() {
 
   const handleTabChange = useCallback((tab: AppTab) => {
     setActiveTab(tab);
+    
+    // Sync mode with tab for better consistency
     if (tab === 'tecido') {
-      if (currentMode === 'madeira') setMode('manual');
+      if (currentMode === 'madeira' || currentMode === 'motor' || currentMode === 'controle') {
+        setMode('manual');
+      }
     } else if (tab === 'madeira') {
       setMode('madeira');
+    } else if (tab === 'motor') {
+      // Restore submode from formData when entering motor tab
+      const state = useAppStore.getState();
+      setMode(state.formData.motorSubMode || 'motor');
     }
   }, [setActiveTab, currentMode, setMode]);
 

@@ -62,7 +62,7 @@ export const apiService = {
         .from('estoque_posicoes')
         .select('estrutura, coluna, nivel, posicao')
         .in('estrutura', structures)
-        .not('status', 'in', '("saida","livre")');
+        .not('status', 'in', '(saida,livre)');
 
       const occupiedMap = new Map<string, Set<number>>();
       (dbOccupied || []).forEach(p => {
@@ -126,7 +126,7 @@ export const apiService = {
         .map((r: any) => ({
           id: r.id,
           item: r.item,
-          processo: r.modo_origem === 'diversos' ? '' : c.processo,
+          processo: (r.modo_origem === 'diversos' && r.tipo_tecido !== 'Celular') ? '' : c.processo,
           nf: r.nf || '',
           endereco: r.endereco,
           m2: Number(r.m2),
