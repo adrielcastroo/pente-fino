@@ -108,7 +108,7 @@ export default function TopBar() {
                 <Button 
                   onClick={exportExcel}
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-3 sm:px-8 h-10 sm:h-14 rounded-2xl shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-2 sm:gap-3 text-xs sm:text-base group/btn relative overflow-hidden"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2.5 sm:px-8 h-9 sm:h-14 rounded-xl sm:rounded-2xl shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-1.5 sm:gap-3 text-[10px] sm:text-base group/btn relative overflow-hidden shrink-0"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                   <Download className="w-4 h-4 sm:w-6 sm:h-6 animate-bounce-subtle relative z-10" />
