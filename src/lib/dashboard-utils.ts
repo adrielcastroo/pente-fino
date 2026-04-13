@@ -9,24 +9,25 @@ export function computeStats(history: Conference[]) {
   const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  // Use a persistent cache for date strings across calls if we can identify conference by ID
-  // For now, let's just optimize the current loop
+  // Pre-create formatter and cache results to avoid expensive operations in the loop
   const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
+  const dateCache = new Map<string, string>();
 
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || 'Desconhecido';
     
-    // Conference ID is expected to be a timestamp string or ISO date
-    let dateStr = '??/??';
-    try {
-      const d = new Date(conference.id);
-      if (!isNaN(d.getTime())) {
-        dateStr = dateFormatter.format(d);
+    let dateStr = dateCache.get(conference.id);
+    if (!dateStr) {
+      try {
+        const d = new Date(conference.id);
+        dateStr = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
+        dateCache.set(conference.id, dateStr);
+      } catch {
+        dateStr = '??/??';
       }
-    } catch (e) {
-      console.warn('Invalid conference ID as date:', conference.id);
     }
+
     
     timelineMap.set(dateStr, (timelineMap.get(dateStr) || 0) + 1);
 
