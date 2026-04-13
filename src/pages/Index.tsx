@@ -78,7 +78,7 @@ export default function Index() {
   });
 
   const animationProps = useMemo(() => {
-    if (isLow) return { initial: false, animate: false, exit: false, transition: { duration: 0 } };
+    if (isLow) return {};
     return {
       initial: { opacity: 0, y: 10 },
       animate: { opacity: 1, y: 0 },
@@ -100,17 +100,27 @@ export default function Index() {
 
           <main className="flex-1 overflow-y-auto bg-background/20 custom-scrollbar relative">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                {...animationProps}
-                className="h-full w-full max-w-[2000px] mx-auto"
-              >
-                <Suspense fallback={<PageSkeleton />}>
-                  <div className="p-2 sm:p-6 lg:p-8 h-full">
-                    <TabRenderer activeTab={activeTab} isWide={true} />
-                  </div>
-                </Suspense>
-              </motion.div>
+              {isLow ? (
+                <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
+                  <Suspense fallback={<PageSkeleton />}>
+                    <div className="p-2 sm:p-6 lg:p-8 h-full">
+                      <TabRenderer activeTab={activeTab} isWide={true} />
+                    </div>
+                  </Suspense>
+                </div>
+              ) : (
+                <motion.div
+                  key={activeTab}
+                  {...animationProps}
+                  className="h-full w-full max-w-[2000px] mx-auto"
+                >
+                  <Suspense fallback={<PageSkeleton />}>
+                    <div className="p-2 sm:p-6 lg:p-8 h-full">
+                      <TabRenderer activeTab={activeTab} isWide={true} />
+                    </div>
+                  </Suspense>
+                </motion.div>
+              )}
             </AnimatePresence>
           </main>
         </div>
