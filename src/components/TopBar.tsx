@@ -9,9 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function TopBar() {
-  const { currentMode, processo, conferente, setConferente, registros, archiveAndClear } = useAppStore();
+  const { 
+    currentMode, processo, conferente, setConferente, registros, 
+    archiveAndClear, isArchiving, archiveError 
+  } = useAppStore();
   
   const exportExcel = async () => {
+    if (isArchiving) return;
     if (!registros.length) { 
       toast.warning('Nenhum registro para exportar.'); 
       return; 
@@ -58,12 +62,16 @@ export default function TopBar() {
       ? fileLabel
       : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}`;
 
-    await exportConferenceToExcel(headers, data, fileName, columnWidths);
-    const count = registros.length;
-    await archiveAndClear(archiveName);
-    toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
-      icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
-    });
+    try {
+      const count = registros.length;
+      await exportConferenceToExcel(headers, data, fileName, columnWidths);
+      await archiveAndClear(archiveName);
+      toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
+        icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Falha ao exportar e arquivar registros.');
+    }
   };
 
   return (
