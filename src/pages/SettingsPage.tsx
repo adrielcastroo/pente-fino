@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -10,11 +10,15 @@ import {
   Cpu, 
   Users,
   Search,
+  Check,
   ChevronRight,
   Save,
   Moon,
   Sun,
-  Laptop
+  Laptop,
+  Mail,
+  Lock,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +53,7 @@ export default function SettingsPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
 
+  // Existing settings from ConfigModal
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
   const [orModel, setOrModel] = useState(localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku');
 
@@ -87,10 +92,14 @@ export default function SettingsPage() {
         
         <div className="flex items-center gap-2">
           {hasUnsavedChanges && (
-            <span className="text-xs font-medium text-amber-500 animate-pulse flex items-center gap-1 mr-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-xs font-medium text-amber-500 flex items-center gap-1 mr-2 px-2 py-1 bg-amber-500/10 rounded-full border border-amber-500/20"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               Alterações não salvas
-            </span>
+            </motion.span>
           )}
           <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/20">
             <Save className="w-4 h-4" />
@@ -100,6 +109,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 flex-1 overflow-hidden">
+        {/* Sidebar Nav */}
         <aside className="w-full lg:w-72 flex flex-col gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -133,6 +143,7 @@ export default function SettingsPage() {
           </nav>
         </aside>
 
+        {/* Content Area */}
         <main className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-10">
           <AnimatePresence mode="wait">
             <motion.div
@@ -154,6 +165,7 @@ export default function SettingsPage() {
 
               <Separator className="bg-border/50" />
 
+              {/* Dynamic Content based on activeCategory */}
               <div className="grid gap-6">
                 
                 {activeCategory === 'profile' && (
@@ -401,7 +413,56 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
-                {['preferences', 'security', 'advanced', 'users'].includes(activeCategory) && (
+                {activeCategory === 'security' && (
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Card className="border-border/40 shadow-sm">
+                        <CardHeader>
+                          <CardTitle className="text-base">Alterar Senha</CardTitle>
+                          <CardDescription>Recomendamos uma senha forte com pelo menos 12 caracteres.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                             <Label htmlFor="current-password">Senha Atual</Label>
+                             <Input id="current-password" type="password" />
+                          </div>
+                          <div className="space-y-2">
+                             <Label htmlFor="new-password">Nova Senha</Label>
+                             <Input id="new-password" type="password" />
+                          </div>
+                          <div className="space-y-2">
+                             <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                             <Input id="confirm-password" type="password" />
+                          </div>
+                          <Button size="sm" className="w-full">Atualizar Senha</Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-border/40 shadow-sm">
+                        <CardHeader>
+                          <CardTitle className="text-base">Autenticação de Dois Fatores (2FA)</CardTitle>
+                          <CardDescription>Adicione uma camada extra de segurança à sua conta.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                              <div className="flex items-center gap-3">
+                                 <div className="p-2 rounded-md bg-primary/10">
+                                    <Shield className="w-4 h-4 text-primary" />
+                                 </div>
+                                 <div className="text-xs">
+                                    <p className="font-bold">App de Autenticação</p>
+                                    <p className="text-muted-foreground">Google Authenticator, Authy, etc.</p>
+                                 </div>
+                              </div>
+                              <Switch />
+                           </div>
+                           <p className="text-[10px] text-muted-foreground italic">* O 2FA via SMS está disponível apenas para planos Enterprise.</p>
+                        </CardContent>
+                      </Card>
+                   </div>
+                )}
+
+                {/* Categories with placeholder content */}
+                {['preferences', 'advanced', 'users'].includes(activeCategory) && (
                   <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-muted/20 rounded-2xl border border-dashed border-border/60">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                        {categories.find(c => c.id === activeCategory)?.icon && (
