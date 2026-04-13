@@ -44,6 +44,7 @@ export type Database = {
       estoque_posicoes: {
         Row: {
           coluna: string
+          conferente_entrada: string | null
           conferente_saida: string | null
           created_at: string
           data_registro: string | null
@@ -65,6 +66,7 @@ export type Database = {
         }
         Insert: {
           coluna: string
+          conferente_entrada?: string | null
           conferente_saida?: string | null
           created_at?: string
           data_registro?: string | null
@@ -86,6 +88,7 @@ export type Database = {
         }
         Update: {
           coluna?: string
+          conferente_entrada?: string | null
           conferente_saida?: string | null
           created_at?: string
           data_registro?: string | null
@@ -114,6 +117,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      estoque_saidas: {
+        Row: {
+          coluna: string | null
+          conferente_entrada: string | null
+          conferente_saida: string | null
+          created_at: string | null
+          data_registro: string | null
+          data_saida: string | null
+          endereco: string | null
+          estrutura: string | null
+          id: string
+          item: string | null
+          largura: number | null
+          lote: string | null
+          lote_sistema: string | null
+          m_linear: number | null
+          m2: number | null
+          nivel: number | null
+          posicao: number | null
+          proc: string | null
+          registro_id: string | null
+        }
+        Insert: {
+          coluna?: string | null
+          conferente_entrada?: string | null
+          conferente_saida?: string | null
+          created_at?: string | null
+          data_registro?: string | null
+          data_saida?: string | null
+          endereco?: string | null
+          estrutura?: string | null
+          id?: string
+          item?: string | null
+          largura?: number | null
+          lote?: string | null
+          lote_sistema?: string | null
+          m_linear?: number | null
+          m2?: number | null
+          nivel?: number | null
+          posicao?: number | null
+          proc?: string | null
+          registro_id?: string | null
+        }
+        Update: {
+          coluna?: string | null
+          conferente_entrada?: string | null
+          conferente_saida?: string | null
+          created_at?: string | null
+          data_registro?: string | null
+          data_saida?: string | null
+          endereco?: string | null
+          estrutura?: string | null
+          id?: string
+          item?: string | null
+          largura?: number | null
+          lote?: string | null
+          lote_sistema?: string | null
+          m_linear?: number | null
+          m2?: number | null
+          nivel?: number | null
+          posicao?: number | null
+          proc?: string | null
+          registro_id?: string | null
+        }
+        Relationships: []
       }
       registros: {
         Row: {
