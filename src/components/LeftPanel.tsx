@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
-import { Registro } from '@/types';
+import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -83,12 +83,12 @@ export default function LeftPanel() {
   const setEndereco = (val: string) => setFormData({ endereco: val });
   const setAiLargura = (val: string) => setFormData({ aiLargura: val });
   const setAiMLinear = (val: string) => setFormData({ aiMLinear: val });
-  const setDiversosTipo = (val: AppState['formData']['diversosTipo']) => setFormData({ diversosTipo: val });
+  const setDiversosTipo = (val: FormData['diversosTipo']) => setFormData({ diversosTipo: val });
   const setDiversosMLinear = (val: string) => setFormData({ diversosMLinear: val });
   const setManualLargura = (val: string) => setFormData({ manualLargura: val });
   const setCoulisseMetragem = (val: 'm2' | 'mlinear') => setFormData({ coulisseMetragem: val });
   const setLockMetragem = (val: boolean) => setFormData({ lockMetragem: val });
-  const setMadeiraTipo = (val: AppState['formData']['madeiraTipo']) => setFormData({ madeiraTipo: val });
+  const setMadeiraTipo = (val: FormData['madeiraTipo']) => setFormData({ madeiraTipo: val });
   const setQuantidade = (val: string) => setFormData({ quantidade: val });
 
   const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
