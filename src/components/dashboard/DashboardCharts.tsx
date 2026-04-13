@@ -71,6 +71,8 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
               fontSize: '12px',
               fontWeight: '600'
             }}
+            formatter={(val: any) => [val, 'Quantidade']}
+            labelFormatter={(label: any) => `Data: ${label}`}
           />
           <Area 
             type="monotone" 
@@ -117,6 +119,8 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 background: 'hsl(var(--card) / 0.95)',
                 fontSize: '11px'
               }}
+              formatter={(val: any) => [val, 'Quantidade']}
+              labelFormatter={(label: any) => label}
             />
           </BarChart>
         ) : (
@@ -138,6 +142,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 background: 'hsl(var(--card) / 0.95)',
                 fontSize: '11px'
               }}
+              formatter={(val: any) => [val, 'Quantidade']}
             />
           </PieChart>
         )}
