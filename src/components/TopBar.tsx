@@ -70,34 +70,37 @@ export default function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-300">
-      <div className="flex h-14 sm:h-16 items-center gap-1.5 sm:gap-3 px-2 sm:px-6 max-w-[1800px] mx-auto">
-        <div className="flex items-center gap-1 sm:gap-2">
-          <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 rounded-lg sm:rounded-xl shrink-0" />
-          <div className="hidden xs:flex lg:flex flex-col">
-            <h2 className="text-[10px] sm:text-sm font-black tracking-tight leading-none uppercase text-muted-foreground/80">Painel Operacional</h2>
-            <p className="text-[8px] sm:text-[10px] font-bold text-primary/80 uppercase tracking-widest mt-0.5">Sistema de Conferência</p>
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-500">
+      <div className="flex h-14 sm:h-20 items-center gap-1.5 sm:gap-4 px-3 sm:px-8 max-w-[1800px] mx-auto">
+        <div className="flex items-center gap-1.5 sm:gap-4">
+          <SidebarTrigger className="h-9 w-9 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
+          <div className="hidden xs:flex flex-col">
+            <h2 className="text-[10px] sm:text-xs font-black tracking-[0.2em] leading-none uppercase text-muted-foreground/60">Painel Operacional</h2>
+            <p className="text-xs sm:text-base font-black text-foreground uppercase tracking-tight mt-1">
+              Sistema <span className="text-primary">Pente Fino</span>
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-1 sm:gap-4 min-w-0">
-          <div className="relative group w-full max-w-[120px] xs:max-w-[180px] sm:max-w-[280px]">
+        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-6 min-w-0">
+          <div className="relative group w-full max-w-[140px] xs:max-w-[200px] sm:max-w-[320px]">
             <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
-            <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10">
-              <User className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+            <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10">
+              <User className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <input
               id="conferente-input"
-              className="h-9 sm:h-12 w-full rounded-xl sm:rounded-2xl border border-border/50 bg-muted/30 pl-8 sm:pl-12 pr-3 text-[10px] sm:text-sm font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/50 placeholder:font-medium focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 shadow-sm"
+              className="h-10 sm:h-14 w-full rounded-2xl border border-border/50 bg-muted/30 pl-10 sm:pl-14 pr-4 text-xs sm:text-base font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-medium focus:bg-background focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all duration-300 shadow-inner group-hover:border-border/80"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
-              placeholder="Conferente..."
+              placeholder="Nome do Conferente..."
               autoComplete="name"
               required
+              aria-required="true"
             />
           </div>
 
-          <div className="h-6 sm:h-8 w-[1px] bg-border/40 mx-0.5 sm:mx-1 hidden xs:block" />
+          <div className="h-8 sm:h-10 w-[1px] bg-border/40 mx-1 hidden xs:block" />
 
           {registros.length > 0 && (
             <Tooltip>
@@ -105,29 +108,31 @@ export default function TopBar() {
                 <Button 
                   onClick={exportExcel}
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2.5 sm:px-6 h-9 sm:h-12 rounded-xl sm:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 gap-1.5 sm:gap-2 text-[10px] sm:text-sm shrink-0"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-3 sm:px-8 h-10 sm:h-14 rounded-2xl shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-2 sm:gap-3 text-xs sm:text-base group/btn relative overflow-hidden"
                 >
-                  <Download className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-bounce-subtle" />
-                  <span className="hidden sm:inline">Finalizar e Exportar</span>
-                  <Badge variant="secondary" className="bg-white/20 text-white border-none px-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] flex items-center justify-center font-black text-[8px] sm:text-[10px]">
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                  <Download className="w-4 h-4 sm:w-6 sm:h-6 animate-bounce-subtle relative z-10" />
+                  <span className="hidden sm:inline relative z-10">Finalizar e Exportar</span>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-none px-1.5 h-5 sm:h-6 min-w-[20px] sm:min-w-[24px] flex items-center justify-center font-black text-[10px] sm:text-xs relative z-10">
                     {registros.length}
                   </Badge>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Exporta os {registros.length} registros para Excel e limpa a tabela</p>
+              <TooltipContent className="bg-popover/90 backdrop-blur-md border-border/40 shadow-2xl p-3 rounded-xl font-bold text-sm">
+                <p>Exportar {registros.length} registros para Excel</p>
               </TooltipContent>
             </Tooltip>
           )}
 
           {registros.length === 0 && (
-            <Badge variant="outline" className="h-9 sm:h-12 px-2.5 sm:px-4 rounded-xl sm:rounded-2xl border-dashed border-muted-foreground/30 text-muted-foreground font-bold flex gap-1.5 sm:gap-2 shrink-0">
-              <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="text-[8px] sm:text-xs whitespace-nowrap">Aguardando...</span>
+            <Badge variant="outline" className="h-10 sm:h-14 px-3 sm:px-6 rounded-2xl border-dashed border-muted-foreground/20 bg-muted/5 text-muted-foreground/60 font-bold flex gap-2 shrink-0 transition-all hover:bg-muted/10">
+              <Archive className="w-4 h-4 sm:w-5 sm:h-5 opacity-40" />
+              <span className="text-[10px] sm:text-sm whitespace-nowrap tracking-wide">Aguardando registros...</span>
             </Badge>
           )}
         </div>
       </div>
     </header>
+
   );
 }
