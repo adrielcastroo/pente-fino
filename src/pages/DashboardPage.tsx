@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar
+  PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar,
+  AreaChart, Area, CartesianGrid
 } from 'recharts';
 import { motion } from 'framer-motion';
 
