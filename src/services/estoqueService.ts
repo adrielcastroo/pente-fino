@@ -15,7 +15,7 @@ export const estoqueService = {
       .from('estoque_posicoes')
       .select('estrutura, coluna, nivel, posicao')
       .in('estrutura', structures)
-      .not('status', 'in', '(saida,livre)');
+      .not('status', 'in', ['saida', 'livre']);
 
     const occupiedMap = new Map<string, Set<number>>();
     (dbOccupied || []).forEach(p => {
