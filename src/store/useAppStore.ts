@@ -100,6 +100,9 @@ export const useAppStore = create<AppState>()(
       resetFormData: () => {
         const state = get();
         const newData = { ...INITIAL_FORM_DATA };
+        // Preserve active tab and locked fields
+        newData.activeTab = state.formData.activeTab;
+        newData.estoqueActiveTec = state.formData.estoqueActiveTec;
         if (state.lockNf) newData.nf = state.lockedNf;
         if (state.lockEndereco) newData.endereco = state.lockedEndereco;
         set({ formData: newData });

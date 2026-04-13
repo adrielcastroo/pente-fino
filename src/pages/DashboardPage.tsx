@@ -233,10 +233,16 @@ export default function DashboardPage() {
               <ResponsiveContainer width="100%" height="100%">
                 {detailChart.type === 'bar' ? (
                   <BarChart data={detailChart.data} margin={{ bottom: 60, top: 10 }}>
+                    <defs>
+                      <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      </linearGradient>
+                    </defs>
                     <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} fontSize={10} axisLine={false} tickLine={false} stroke="hsl(var(--muted-foreground))" />
                     <YAxis axisLine={false} tickLine={false} fontSize={10} stroke="hsl(var(--muted-foreground))" />
                     <ChartTooltip contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} />
-                    <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 2, 2]} barSize={28} />
+                    <Bar dataKey="count" fill="url(#detailBarGradient)" radius={[6, 6, 2, 2]} barSize={28} />
                   </BarChart>
                 ) : (
                   <PieChart>
