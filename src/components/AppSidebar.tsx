@@ -75,10 +75,10 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3 overflow-hidden bg-primary/5 rounded-2xl p-1.5 border border-primary/10 shadow-sm backdrop-blur-sm transition-all duration-300">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/30 transition-transform duration-300 hover:rotate-6">
-            <Logo className="w-6.5 h-6.5" />
+      <SidebarHeader className="p-4 group-data-[state=collapsed]:p-2 transition-all duration-300">
+        <div className="flex items-center gap-3 overflow-hidden bg-primary/5 group-data-[state=collapsed]:bg-transparent rounded-2xl p-1.5 group-data-[state=collapsed]:p-0 border border-primary/10 group-data-[state=collapsed]:border-transparent shadow-sm group-data-[state=collapsed]:shadow-none backdrop-blur-sm transition-all duration-300">
+          <div className="flex items-center justify-center w-10 h-10 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 rounded-xl bg-primary text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/30 transition-transform duration-300 hover:rotate-6">
+            <Logo className="w-6.5 h-6.5 group-data-[state=collapsed]:w-5 group-data-[state=collapsed]:h-5" />
           </div>
           <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 ml-0' : 'opacity-100 ml-1.5'}`}>
             <span className="font-black text-sm text-foreground leading-tight tracking-tight whitespace-nowrap">Pente Fino</span>
@@ -87,7 +87,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3">
+      <SidebarContent className="px-3 group-data-[state=collapsed]:px-1">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
@@ -135,7 +135,7 @@ export default function AppSidebar({ activeTab, onTabChange, onOpenConfig }: App
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-border/5 space-y-2">
+      <SidebarFooter className="p-3 group-data-[state=collapsed]:p-1.5 border-t border-border/5 space-y-2">
         <SidebarMenu className="gap-1">
           <SidebarMenuItem>
             <SidebarMenuButton 
