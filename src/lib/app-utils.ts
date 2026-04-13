@@ -71,7 +71,7 @@ export function generateLoteSistema(
   itemCode?: string
 ): string {
   const mlFormatted = fmtML(mLinear) || '0M';
-  const procTrimmed = processo.trim();
+  const procTrimmed = (processo || '').trim();
   const nfTrimmed = (nf || '').trim();
   const labelPrefix = procTrimmed ? `PROC ${procTrimmed}` : (nfTrimmed ? `NF ${nfTrimmed}` : '');
   const addrTrimmed = (endereco || '').trim();
@@ -79,19 +79,34 @@ export function generateLoteSistema(
   const base = baseParts.join(' ');
   const itemNorm = (itemCode || '').trim().toLowerCase();
   
-  const count = existingRegistros.reduce((acc, r) => {
-    if ((r.item || '').trim().toLowerCase() !== itemNorm) return acc;
-    if (fmtML(r.mLinear) !== mlFormatted) return acc;
-    if ((r.endereco || '').trim() !== addrTrimmed) return acc;
+  // To prevent collisions even after deletions, we check all existing suffixes
+  const usedSuffixes = existingRegistros
+    .filter(r => {
+      const rItemNorm = (r.item || '').trim().toLowerCase();
+      const rAddrTrimmed = (r.endereco || '').trim();
+      const rProc = (r.processo || '').trim();
+      const rNf = (r.nf || '').trim();
+      const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
+      const rMlFormatted = fmtML(r.mLinear);
 
-    const rProc = (r.processo || '').trim();
-    const rNf = (r.nf || '').trim();
-    const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
-    
-    return rLabel === labelPrefix ? acc + 1 : acc;
-  }, 0);
+      return rItemNorm === itemNorm && 
+             rAddrTrimmed === addrTrimmed && 
+             rLabel === labelPrefix && 
+             rMlFormatted === mlFormatted;
+    })
+    .map(r => {
+      const ls = r.loteSistema || '';
+      if (ls === base) return 0;
+      const parts = ls.split('-');
+      const last = parts[parts.length - 1];
+      const num = parseInt(last, 10);
+      return isNaN(num) ? 0 : num;
+    });
+
+  if (usedSuffixes.length === 0) return base;
   
-  return count === 0 ? base : `${base}-${count}`;
+  const maxSuffix = Math.max(...usedSuffixes);
+  return `${base}-${maxSuffix + 1}`;
 }
 
 export function generateLoteSistemaCaixa(
