@@ -89,11 +89,11 @@ export default function LeftPanel() {
   const setMadeiraTipo = (val: AppState['formData']['madeiraTipo']) => setFormData({ madeiraTipo: val });
   const setQuantidade = (val: string) => setFormData({ quantidade: val });
 
-  const m2Num = parseFloat(m2) || 0;
-  const aiLarguraNum = parseFloat(aiLargura) || 0;
-  const aiMLinearNum = parseFloat(aiMLinear) || 0;
-  const diversosMLinearNum = parseFloat(diversosMLinear) || 0;
-  const manualLarguraNum = parseFloat(manualLargura) || 0;
+  const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
+  const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
+  const aiMLinearNum = useMemo(() => parseFloat(aiMLinear) || 0, [aiMLinear]);
+  const diversosMLinearNum = useMemo(() => parseFloat(diversosMLinear) || 0, [diversosMLinear]);
+  const manualLarguraNum = useMemo(() => parseFloat(manualLargura) || 0, [manualLargura]);
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isMadeira = currentMode === 'madeira';
@@ -116,18 +116,29 @@ export default function LeftPanel() {
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
-  const largura = isAI ? aiLarguraNum
+  const largura = useMemo(() => 
+    isAI ? aiLarguraNum
     : isMadeira ? 0
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
     : isCelular ? celularDivisor
     : usesLarguraFromItem ? extractLarguraFromItem(item)
-    : 0;
-  const mLinear = isAI ? aiMLinearNum
+    : 0,
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, item, isCelular, celularDivisor, usesLarguraFromItem]
+  );
+
+  const mLinear = useMemo(() => 
+    isAI ? aiMLinearNum
     : isMadeira ? 0
     : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
     : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
-    : (largura > 0 ? m2Num / largura : 0);
-  const isDuplicate = !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase());
+    : (largura > 0 ? m2Num / largura : 0),
+    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
+  );
+  
+  const isDuplicate = useMemo(() => 
+    !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase()),
+    [isMadeira, item, registros]
+  );
 
   
 
