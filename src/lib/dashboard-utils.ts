@@ -9,20 +9,26 @@ export function computeStats(history: Conference[]) {
   const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  // Cache for date strings to avoid repeated toLocaleDateString calls
-  const dateCache = new Map<string, string>();
+  // Use a persistent cache for date strings across calls if we can identify conference by ID
+  // For now, let's just optimize the current loop
+  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
 
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || 'Desconhecido';
     
-    let date = dateCache.get(conference.id);
-    if (!date) {
-      date = new Date(conference.id).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-      dateCache.set(conference.id, date);
+    // Conference ID is expected to be a timestamp string or ISO date
+    let dateStr = '??/??';
+    try {
+      const d = new Date(conference.id);
+      if (!isNaN(d.getTime())) {
+        dateStr = dateFormatter.format(d);
+      }
+    } catch (e) {
+      console.warn('Invalid conference ID as date:', conference.id);
     }
     
-    timelineMap.set(date, (timelineMap.get(date) || 0) + 1);
+    timelineMap.set(dateStr, (timelineMap.get(dateStr) || 0) + 1);
 
     let confSet = confMap.get(name);
     if (!confSet) {
@@ -56,7 +62,7 @@ export function computeStats(history: Conference[]) {
     }
   }
 
-  // Get last 7 days for timeline - more efficient conversion
+  // Get last 7 entries for timeline
   const timeline = Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7);
 
   return {
