@@ -345,56 +345,33 @@ export default function RightPanel() {
                 {columns.map(column => (
                   <th 
                     key={column.key} 
-                    className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md"
+                    className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
                   >
                     {column.shortLabel || column.label}
                   </th>
                 ))}
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background/80 backdrop-blur-md w-[80px] sm:w-[100px]"></th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
-              {isLow ? (
-                sortedRows.map((r, i) => (
-                  <TableRow
-                    key={r.id}
-                    r={r}
-                    i={i}
-                    columns={columns}
-                    searchQuery={trimmedQuery}
-                    onStartEdit={startEdit}
-                    onDelete={deleteRegistro}
-                    onCopy={copyText}
-                    isLow={isLow}
-                    editingCell={editingCell}
-                    editValue={editValue}
-                    onEditValueChange={setEditValue}
-                    onCommitEdit={commitEdit}
-                    onCancelEdit={cancelEdit}
-                  />
-                ))
-              ) : (
-                <AnimatePresence initial={false}>
-                  {sortedRows.map((r, i) => (
-                    <TableRow
-                      key={r.id}
-                      r={r}
-                      i={i}
-                      columns={columns}
-                      searchQuery={trimmedQuery}
-                      onStartEdit={startEdit}
-                      onDelete={deleteRegistro}
-                      onCopy={copyText}
-                      isLow={isLow}
-                      editingCell={editingCell}
-                      editValue={editValue}
-                      onEditValueChange={setEditValue}
-                      onCommitEdit={commitEdit}
-                      onCancelEdit={cancelEdit}
-                    />
-                  ))}
-                </AnimatePresence>
-              )}
+              {sortedRows.map((r, i) => (
+                <TableRow
+                  key={r.id}
+                  r={r}
+                  i={i}
+                  columns={columns}
+                  searchQuery={trimmedQuery}
+                  onStartEdit={startEdit}
+                  onDelete={deleteRegistro}
+                  onCopy={copyText}
+                  isLow={isLow}
+                  editingCell={editingCell}
+                  editValue={editValue}
+                  onEditValueChange={setEditValue}
+                  onCommitEdit={commitEdit}
+                  onCancelEdit={cancelEdit}
+                />
+              ))}
             </tbody>
             {sortedRows.length > 0 && (
               <tfoot className="sticky bottom-0 z-10">
