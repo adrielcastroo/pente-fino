@@ -5,7 +5,7 @@ import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
@@ -33,7 +33,7 @@ const LeftPanel = memo(function LeftPanel() {
     lockNf, setLockNf, lockedNf, setLockedNf,
     lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco,
     formData, setFormData, resetFormData
-  } = useAppStore(s => ({
+  } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     setMode: s.setMode,
     processo: s.processo,
@@ -58,7 +58,7 @@ const LeftPanel = memo(function LeftPanel() {
     formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData
-  }), shallow);
+  })));
 
   const { isLow } = usePerformance();
   const {
