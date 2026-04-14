@@ -33,11 +33,11 @@ const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: b
   
   if (isWide && isFormTab) {
     return (
-      <div className="flex flex-col lg:flex-row h-full gap-4 xl:gap-8">
-        <div className="w-full lg:w-[420px] xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
+      <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-8">
+        <div className="w-full xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden lg:block">
+        <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden xl:block">
           <RightPanel />
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background overflow-hidden relative">
+      <div className="min-h-[100dvh] flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
@@ -91,7 +91,7 @@ export default function Index() {
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
             <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-2 sm:p-6 lg:p-8 h-full">
+                <div className="p-2 sm:p-4 xl:p-8 h-full">
                   <TabRenderer activeTab={activeTab} isWide={true} />
                 </div>
               </Suspense>

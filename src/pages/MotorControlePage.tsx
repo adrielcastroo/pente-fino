@@ -243,9 +243,9 @@ export default function MotorControlePage() {
 
   return (
     <div
-      className="bg-background/40 md:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-300"
+      className="bg-background/40 xl:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-300"
     >
-      <div className="p-3 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-4 sm:space-y-8 custom-scrollbar relative">
+      <div className="p-3 sm:p-5 xl:p-8 flex-1 overflow-y-auto space-y-4 sm:space-y-6 xl:space-y-8 custom-scrollbar relative">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
         {/* Subtoggle */}

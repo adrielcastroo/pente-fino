@@ -547,8 +547,8 @@ const LeftPanel = memo(function LeftPanel() {
   }, [madeiraTipo, isMadeira]);
 
   return (
-    <div className="bg-background lg:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-3 sm:p-6 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-10 custom-scrollbar relative">
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
+      <div className="p-3 sm:p-5 xl:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-8 xl:space-y-10 custom-scrollbar relative">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         
