@@ -1155,11 +1155,11 @@ const LeftPanel = memo(function LeftPanel() {
              >
                <AlertTriangle className="w-5 h-5" />
                Atenção: O item "{item}" já consta nesta conferência.
-             </motion.div>
+             </div>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 });
 
