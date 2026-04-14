@@ -33,30 +33,43 @@ const PageSkeleton = memo(() => (
 const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab), [activeTab]);
   
+  // On desktop/wide screens, show form and table side-by-side
   if (isWide && isFormTab) {
     return (
-      <div className="flex flex-col lg:flex-row h-full gap-4 xl:gap-6">
-        <div className="w-full lg:w-[400px] xl:w-[450px] 2xl:w-[550px] shrink-0 h-full">
+      <div className="flex flex-col lg:flex-row h-full gap-4 xl:gap-8">
+        <div className="w-full lg:w-[420px] xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full border-l border-border/20 pl-4 xl:pl-6 hidden lg:block">
+        <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden lg:block">
           <RightPanel />
         </div>
       </div>
     );
   }
 
+  // Fallback for mobile or non-form tabs
   return (
-    <div className="h-full">
-      {activeTab === 'inicio' && <DashboardPage />}
-      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
-      {activeTab === 'motor' && <MotorControlePage />}
-      {activeTab === 'estoque' && <EstoquePage />}
-      {activeTab === 'saida' && <SaidaPage />}
-      {activeTab === 'table' && <RightPanel />}
-      {activeTab === 'history' && <HistoryPanel />}
-      {activeTab === 'settings' && <SettingsPage />}
-      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
+    <div className="h-full w-full max-w-full overflow-x-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="h-full"
+        >
+          {activeTab === 'inicio' && <DashboardPage />}
+          {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
+          {activeTab === 'motor' && <MotorControlePage />}
+          {activeTab === 'estoque' && <EstoquePage />}
+          {activeTab === 'saida' && <SaidaPage />}
+          {activeTab === 'table' && <RightPanel />}
+          {activeTab === 'history' && <HistoryPanel />}
+          {activeTab === 'settings' && <SettingsPage />}
+          {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 });
