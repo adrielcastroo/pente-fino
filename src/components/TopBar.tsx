@@ -151,4 +151,6 @@ const TopBar = memo(function TopBar() {
     </header>
 
   );
-}
+});
+
+export default TopBar;
