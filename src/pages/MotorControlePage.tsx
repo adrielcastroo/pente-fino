@@ -315,13 +315,19 @@ export default function MotorControlePage() {
             {temCaixa && (
               <div className="flex items-center gap-2 sm:gap-3 ml-auto bg-primary/10 px-3 sm:px-4 py-2 rounded-2xl border border-primary/20 flex-shrink-0">
                 <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Nº Caixa:</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={caixaNum}
-                  onChange={e => setCaixaNum(e.target.value)}
-                  className="w-10 sm:w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
-                />
+                <div className="relative group">
+                  <input
+                    type="number"
+                    min="1"
+                    value={caixaNum}
+                    onChange={e => setCaixaNum(e.target.value)}
+                    className="w-12 sm:w-14 bg-background text-center border-2 border-primary/30 rounded-lg text-primary font-black text-sm outline-none p-1 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-text hover:border-primary/50"
+                    title="Clique para editar o número da caixa"
+                  />
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Clique para editar
+                  </div>
+                </div>
                 <Badge className="bg-primary text-white font-black text-[10px] rounded-lg whitespace-nowrap">CX{caixaNum.padStart(2, '0')}</Badge>
               </div>
             )}
