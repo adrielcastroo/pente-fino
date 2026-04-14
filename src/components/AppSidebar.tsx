@@ -189,11 +189,9 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                   : <Moon className="h-[18px] w-[18px] text-indigo-400" />
                 }
               </div>
-              {!collapsed && (
-                <span className="text-xs font-bold uppercase tracking-widest opacity-70">
-                  {theme === 'dark' ? 'Dia' : 'Noite'}
-                </span>
-              )}
+              <span className="text-xs font-bold uppercase tracking-widest opacity-70 transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                {theme === 'dark' ? 'Dia' : 'Noite'}
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -220,13 +218,12 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
               </div>
-              {!collapsed && (
-                <span className="text-xs font-bold uppercase tracking-widest opacity-70">
-                  Ajustes
-                </span>
-              )}
+              <span className="text-xs font-bold uppercase tracking-widest opacity-70 transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                Ajustes
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
