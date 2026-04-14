@@ -1148,10 +1148,8 @@ const LeftPanel = memo(function LeftPanel() {
           </AnimatePresence>
 
           {isDuplicate && (
-             <motion.div
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-destructive/5"
+             <div
+               className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-sm"
              >
                <AlertTriangle className="w-5 h-5" />
                Atenção: O item "{item}" já consta nesta conferência.
