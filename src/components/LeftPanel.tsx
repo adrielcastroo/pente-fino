@@ -418,8 +418,10 @@ const LeftPanel = memo(function LeftPanel() {
       setProgress(80);
       if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${resp.status}`); }
       const data = await resp.json();
-      const raw = (data.choices?.[0]?.message?.content || '').replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(raw);
+      const raw = (data.choices?.[0]?.message?.content || '');
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Não foi possível encontrar o JSON na resposta do modelo.");
+      const parsed = JSON.parse(jsonMatch[0]);
       const summary = applyResult(parsed, model.split('/').pop() || 'OpenRouter');
       setProgress(100); setTimeout(() => setProgress(0), 700);
       setAiStatus({ msg: summary, type: 'ok' });
