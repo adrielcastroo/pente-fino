@@ -68,6 +68,7 @@ export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);
   const { activeTab, handleTabChange } = useAppNavigation();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadHistory();
