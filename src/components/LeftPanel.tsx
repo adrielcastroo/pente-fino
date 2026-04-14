@@ -9,11 +9,12 @@ import { useShallow } from 'zustand/react/shallow';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
-  Trash2, CheckCircle2, AlertTriangle, LayoutGrid, Sparkles
+  Trash2, CheckCircle2, AlertTriangle, LayoutGrid, Sparkles, FileUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import ImportTecidosModal from '@/components/ImportTecidosModal';
 
 
 
@@ -88,6 +89,7 @@ const LeftPanel = memo(function LeftPanel() {
   const enderecoRef = useRef<HTMLInputElement>(null);
 
   const [showPreview, setShowPreview] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const quantidadeRef = useRef<HTMLInputElement>(null);
   const manualLarguraRef = useRef<HTMLInputElement>(null);
 
@@ -619,6 +621,14 @@ const LeftPanel = memo(function LeftPanel() {
                 </div>
               </div>
               <div className="flex gap-1.5 flex-shrink-0 ml-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setImportOpen(true)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
+                      <FileUp className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Importar Planilha</TooltipContent>
+                </Tooltip>
                 {undoStack.length > 0 && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1160,6 +1170,7 @@ const LeftPanel = memo(function LeftPanel() {
           )}
         </div>
       </div>
+      <ImportTecidosModal open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 });
