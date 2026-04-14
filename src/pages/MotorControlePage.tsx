@@ -79,8 +79,8 @@ export default function MotorControlePage() {
   }, []);
 
   const cleanControleSerie = useCallback((raw: string): string => {
-    const idx = raw.search(/[Ff]/);
-    if (idx > 0) return raw.slice(0, idx).trim();
+    const idx = raw.toUpperCase().indexOf('FF');
+    if (idx !== -1) return raw.slice(0, idx).trim();
     return raw.trim();
   }, []);
 
