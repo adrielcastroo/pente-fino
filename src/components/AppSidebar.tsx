@@ -74,11 +74,10 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
     }
   }, [onTabChange, isMobile, setOpenMobile, setOpen]);
 
-
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border/30 bg-sidebar"
+      className="border-r border-border/40 bg-sidebar"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       aria-label="Menu Principal"
@@ -86,14 +85,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       {/* ── Header / Logo ── */}
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-2 group-data-[state=collapsed]:py-3">
         <div className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
-            <Logo className="h-6 w-6" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <Logo className="h-5 w-5" />
           </div>
           <div className="flex flex-col overflow-hidden transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
-            <span className="text-base font-black leading-tight tracking-tighter text-foreground whitespace-nowrap">
+            <span className="text-sm font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
               Pente Fino
             </span>
-            <span className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               ESTOQUE
             </span>
           </div>
@@ -104,7 +103,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       <SidebarContent className="px-3 group-data-[state=collapsed]:px-2 custom-scrollbar">
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
+            <SidebarMenu className="gap-0.5">
               {menuItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
@@ -120,41 +119,41 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
                       className={`
-                        relative h-11 rounded-xl transition-all duration-100 active:scale-95
-                        group-data-[state=collapsed]:!h-11 group-data-[state=collapsed]:!w-11
+                        relative h-10 rounded-lg transition-all duration-150 active:scale-[0.97]
+                        group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
                         group-data-[state=collapsed]:justify-center
                         ${isActive
-                          ? 'bg-primary text-white font-bold shadow-lg shadow-primary/25 scale-[1.02]'
-                          : 'text-muted-foreground hover:bg-primary/10 hover:text-primary font-medium'}
-                        ${hasRecords && !isActive ? 'ring-1 ring-primary/40 ring-offset-1 ring-offset-sidebar' : ''}
+                          ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground font-medium'}
+                        ${hasRecords && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
                       `}
                     >
                       {/* Active indicator bar */}
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-white/50" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40" />
                       )}
 
                       {/* Icon */}
                       <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
                         <Icon className="h-[18px] w-[18px]" />
                         {hasRecords && collapsed && (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-black text-white shadow-sm">
+                          <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
                             {registros.length}
                           </span>
                         )}
                       </div>
 
                       {/* Label */}
-                      <span className="truncate text-sm transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
+                      <span className="truncate text-[13px] transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
                         {item.label}
                       </span>
 
                       {/* Badge (expanded) */}
                       {hasRecords && (
                         <span
-                          className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1 text-[10px] font-black tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
+                          className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
                             isActive
-                              ? 'bg-white/20 text-white'
+                              ? 'bg-primary-foreground/20 text-primary-foreground'
                               : 'bg-primary/10 text-primary'
                           }`}
                         >
@@ -170,10 +169,9 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
         </SidebarGroup>
       </SidebarContent>
 
-
       {/* ── Footer ── */}
-      <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-2 border-t border-border/20">
-        <SidebarMenu className="gap-1">
+      <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-2 border-t border-border/30">
+        <SidebarMenu className="gap-0.5">
           {/* Theme toggle */}
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -181,7 +179,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               onClick={toggleTheme}
               tooltip={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               aria-label="Alternar Tema"
-              className="h-11 rounded-xl text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors duration-150 group-data-[state=collapsed]:!h-11 group-data-[state=collapsed]:!w-11 group-data-[state=collapsed]:justify-center"
+              className="h-10 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center"
             >
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 {theme === 'dark'
@@ -189,8 +187,8 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                   : <Moon className="h-[18px] w-[18px] text-indigo-400" />
                 }
               </div>
-              <span className="text-xs font-bold uppercase tracking-widest opacity-70 transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
-                {theme === 'dark' ? 'Dia' : 'Noite'}
+              <span className="text-xs font-medium transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -204,26 +202,25 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               tooltip="Configurações"
               aria-label="Abrir Configurações"
               className={`
-                h-11 rounded-xl transition-colors duration-150
-                group-data-[state=collapsed]:!h-11 group-data-[state=collapsed]:!w-11
+                h-10 rounded-lg transition-colors duration-150
+                group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
                 group-data-[state=collapsed]:justify-center
                 ${activeTab === 'settings'
-                  ? 'bg-primary text-primary-foreground font-bold shadow-sm shadow-primary/20'
-                  : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'}
+                  ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'}
               `}
             >
               {activeTab === 'settings' && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-white/50" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40" />
               )}
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-widest opacity-70 transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
-                Ajustes
+              <span className="text-xs font-medium transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                Configurações
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

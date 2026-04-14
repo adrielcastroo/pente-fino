@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, Download, Eye, Layers3, Users, TrendingUp } from 'lucide-react';
+import { Activity, Download, Eye } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
@@ -10,9 +10,9 @@ import {
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  'hsl(var(--primary) / 0.8)',
-  'hsl(var(--primary) / 0.6)',
-  'hsl(var(--primary) / 0.4)',
+  'hsl(var(--primary) / 0.75)',
+  'hsl(var(--primary) / 0.55)',
+  'hsl(var(--primary) / 0.35)',
   'hsl(var(--primary) / 0.2)',
 ];
 
@@ -26,17 +26,16 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 group border border-border/40 bg-card/20  hover:bg-card/30 transition-colors shadow-sm overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20" />
-      <CardHeader className="flex flex-row items-center justify-between px-6 py-4">
+    <Card className="md:col-span-3 border border-border/50 bg-card shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between px-5 sm:px-6 py-4">
         <div>
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
             <span>Volume de Operações</span>
           </CardTitle>
-          <p className="text-xs text-muted-foreground font-medium">Histórico recente de conferências</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Histórico recente de conferências</p>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => onExport(data, 'Timeline_Operacoes')}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary" onClick={() => onExport(data, 'Timeline_Operacoes')}>
           <Download className="w-4 h-4" />
         </Button>
       </CardHeader>
@@ -46,12 +45,12 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
             {!isLow && (
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15}/>
                   <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
             )}
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground) / 0.1)" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
             <XAxis 
               dataKey="name" 
               fontSize={10} 
@@ -70,13 +69,12 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
             <ChartTooltip 
               cursor={!isLow ? { stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' } : false}
               contentStyle={{ 
-                borderRadius: '12px', 
-                border: '1px solid hsl(var(--border) / 0.5)', 
-                background: 'hsl(var(--card) / 0.95)',
-                backdropFilter: isLow ? 'none' : 'blur(12px)',
-                boxShadow: isLow ? 'none' : '0 8px 32px rgba(0,0,0,0.08)',
+                borderRadius: '10px', 
+                border: '1px solid hsl(var(--border))', 
+                background: 'hsl(var(--card))',
                 fontSize: '12px',
-                fontWeight: '600'
+                fontWeight: '600',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
               }}
               formatter={(val: any) => [val, 'Quantidade']}
               labelFormatter={(label: any) => `Data: ${label}`}
@@ -88,7 +86,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
               strokeWidth={2}
               fillOpacity={isLow ? 0.05 : 1} 
               fill={isLow ? "hsl(var(--primary))" : "url(#colorValue)"} 
-              animationDuration={isLow ? 0 : 1500}
+              animationDuration={isLow ? 0 : 1200}
               isAnimationActive={!isLow}
             />
           </AreaChart>
@@ -105,16 +103,16 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
   const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
 
   return (
-    <Card className="group border border-border/40 bg-card/20  hover:bg-card/30 transition-colors shadow-sm overflow-hidden relative">
-      <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
+    <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden transition-colors hover:border-primary/20">
+      <CardHeader className="px-5 sm:px-6 py-4 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Icon className="w-3.5 h-3.5 text-primary" />
             <span>{title}</span>
           </CardTitle>
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{desc}</p>
+          <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{desc}</p>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDetailClick({ title, data, type })}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={() => onDetailClick({ title, data, type })}>
           <Eye className="w-3.5 h-3.5" />
         </Button>
       </CardHeader>
@@ -134,10 +132,11 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.05)' } : false}
                 contentStyle={{ 
                   borderRadius: '8px', 
-                  border: '1px solid hsl(var(--border) / 0.5)', 
-                  background: 'hsl(var(--card) / 0.95)',
+                  border: '1px solid hsl(var(--border))', 
+                  background: 'hsl(var(--card))',
                   fontSize: '11px',
-                  boxShadow: isLow ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'
+                  fontWeight: '600',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                 }}
                 formatter={(val: any) => [val, 'Quantidade']}
                 labelFormatter={(label: any) => label}
@@ -151,7 +150,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 innerRadius="60%" 
                 outerRadius="85%" 
                 stroke="transparent"
-                paddingAngle={isLow ? 0 : 4}
+                paddingAngle={isLow ? 0 : 3}
                 isAnimationActive={!isLow}
                 animationDuration={0}
               >
@@ -160,10 +159,11 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
               <ChartTooltip 
                 contentStyle={{ 
                   borderRadius: '8px', 
-                  border: '1px solid hsl(var(--border) / 0.5)', 
-                  background: 'hsl(var(--card) / 0.95)',
+                  border: '1px solid hsl(var(--border))', 
+                  background: 'hsl(var(--card))',
                   fontSize: '11px',
-                  boxShadow: isLow ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'
+                  fontWeight: '600',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                 }}
                 formatter={(val: any) => [val, 'Quantidade']}
               />
