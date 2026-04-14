@@ -1,5 +1,4 @@
 import { useEffect, useState, lazy, Suspense, useMemo, memo } from 'react';
-console.log('Index page mounting...');
 import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
@@ -30,17 +29,29 @@ const PageSkeleton = memo(() => (
   </div>
 ));
 
+const TAB_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  inicio: DashboardPage,
+  tecido: LeftPanel,
+  madeira: LeftPanel,
+  motor: MotorControlePage,
+  estoque: EstoquePage,
+  saida: SaidaPage,
+  table: RightPanel,
+  history: HistoryPanel,
+  settings: SettingsPage,
+};
+
 const TabRenderer = memo(({ activeTab, isMobile }: { activeTab: string; isMobile: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
-  
-  // Dynamic wide layout detection instead of hardcoded prop
-  const [isWide, setIsWide] = useState(window.innerWidth >= 1280);
+  const [isWide, setIsWide] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1280 : false);
 
   useEffect(() => {
     const handleResize = () => setIsWide(window.innerWidth >= 1280);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardPage;
 
   if (isWide && isFormTab && !isMobile) {
     return (
@@ -64,20 +75,7 @@ const TabRenderer = memo(({ activeTab, isMobile }: { activeTab: string; isMobile
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden">
       <Suspense fallback={<PageSkeleton />}>
-        {(() => {
-          switch (activeTab) {
-            case 'inicio': return <DashboardPage />;
-            case 'tecido': return <LeftPanel />;
-            case 'madeira': return <LeftPanel />;
-            case 'motor': return <MotorControlePage />;
-            case 'estoque': return <EstoquePage />;
-            case 'saida': return <SaidaPage />;
-            case 'table': return <RightPanel />;
-            case 'history': return <HistoryPanel />;
-            case 'settings': return <SettingsPage />;
-            default: return <DashboardPage />;
-          }
-        })()}
+        <ActiveComponent />
       </Suspense>
     </div>
   );
@@ -92,7 +90,6 @@ export default function Index() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Only load if not already loading - extra guard
     const state = useAppStore.getState();
     if (!state.isHistoryLoading && state.history.length === 0) {
       loadHistory();
@@ -109,14 +106,9 @@ export default function Index() {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
-        <AppSidebar 
-          activeTab={activeTab} 
-          onTabChange={handleTabChange} 
-        />
-
+        <AppSidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen relative">
           <TopBar />
-
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
             <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
               <div className="p-2 sm:p-4 xl:p-8 h-full">
@@ -126,7 +118,6 @@ export default function Index() {
           </main>
         </div>
       </div>
-
       <Suspense fallback={null}>
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </Suspense>
