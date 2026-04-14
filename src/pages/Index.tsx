@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, useMemo } from 'react';
+import { useEffect, useState, lazy, Suspense, useMemo, memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
@@ -18,7 +18,7 @@ const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
-const PageSkeleton = () => (
+const PageSkeleton = memo(() => (
   <div className="p-8 space-y-4 animate-pulse">
     <div className="h-8 bg-muted rounded w-1/4" />
     <div className="h-32 bg-muted rounded w-full" />
@@ -28,9 +28,9 @@ const PageSkeleton = () => (
       <div className="h-24 bg-muted rounded" />
     </div>
   </div>
-);
+));
 
-const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
+const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
   const isFormTab = ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab);
   
   if (isWide && isFormTab) {
@@ -58,7 +58,9 @@ const TabRenderer = ({ activeTab, isWide }: { activeTab: string; isWide?: boolea
     case 'settings': return <SettingsPage />;
     default: return <DashboardPage />;
   }
-};
+});
+
+TabRenderer.displayName = 'TabRenderer';
 
 export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);

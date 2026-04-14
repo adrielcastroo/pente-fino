@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { exportConferenceToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
@@ -8,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export default function TopBar() {
-  const { 
-    currentMode, processo, conferente, setConferente, registros, 
-    archiveAndClear, isArchiving, archiveError 
-  } = useAppStore();
+const TopBar = memo(function TopBar() {
+  const currentMode = useAppStore(s => s.currentMode);
+  const processo = useAppStore(s => s.processo);
+  const conferente = useAppStore(s => s.conferente);
+  const setConferente = useAppStore(s => s.setConferente);
+  const registros = useAppStore(s => s.registros);
+  const archiveAndClear = useAppStore(s => s.archiveAndClear);
+  const isArchiving = useAppStore(s => s.isArchiving);
   
   const exportExcel = async () => {
     if (isArchiving) return;
@@ -147,4 +151,6 @@ export default function TopBar() {
     </header>
 
   );
-}
+});
+
+export default TopBar;
