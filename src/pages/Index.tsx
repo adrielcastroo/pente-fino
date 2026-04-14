@@ -86,13 +86,13 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-[100dvh] flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
+      <div className="min-h-screen flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
         />
 
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen relative">
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">

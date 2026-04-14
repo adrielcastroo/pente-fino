@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: "esnext", // Modern browsers only
+    target: "es2020", // Better compatibility for older tablets like TCL Tab 10L
     minify: "esbuild", // Fast minification
     cssCodeSplit: true,
     reportCompressedSize: false, // Performance improvement during build
