@@ -562,15 +562,15 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode ${
+                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-150 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode active:scale-95 ${
                     isActive
                       ? 'bg-primary text-white shadow-lg sm:shadow-xl shadow-primary/30 scale-100'
-                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
+                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-primary/5 scale-[0.98]'
                   }`}
                   aria-pressed={isActive}
                 >
-                  {isActive && <div className="absolute inset-0 bg-primary shadow-sm shadow-primary/30 z-0 rounded-xl sm:rounded-2xl" />}
-                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-300 ${isActive ? 'rotate-0' : 'group-hover/mode:scale-105'}`} />
+                  {isActive && <div className="absolute inset-0 bg-primary/20 animate-pulse z-0 rounded-xl sm:rounded-2xl" />}
+                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-200 ${isActive ? 'rotate-0' : 'group-hover/mode:scale-105'}`} />
                   <span className="relative z-10">{m.label}</span>
                 </button>
               );
