@@ -128,7 +128,7 @@ const AppSidebar = memo(({ activeTab, onTabChange, onOpenConfig }: AppSidebarPro
                         {item.label}
                       </span>
                       {isTableTab && registros.length > 0 && !collapsed && (
-                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-300 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse'}`}>
+                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-300 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}>
                           {registros.length}
                         </span>
                       )}

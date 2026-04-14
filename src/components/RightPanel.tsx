@@ -240,7 +240,7 @@ export default function RightPanel() {
             className="bg-primary/95 backdrop-blur-md px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-xl z-20 border-b border-white/10"
           >
             <div className="flex items-center gap-3 text-white font-bold">
-              <Undo2 className="w-5 h-5 animate-pulse" />
+              <Undo2 className="w-5 h-5" />
               <span>Você removeu um registro. Deseja restaurar?</span>
             </div>
             <Button 

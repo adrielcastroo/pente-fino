@@ -1081,7 +1081,7 @@ const LeftPanel = memo(function LeftPanel() {
             <div className="col-span-2 space-y-3 border-t border-white/10 pt-6">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Lote Sistema Gerado</p>
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
               </div>
               <div className="p-4 rounded-2xl bg-white/5 font-mono text-xs sm:text-sm font-bold text-primary-foreground/90 truncate border border-white/5 shadow-inner group-hover/card:border-primary/20 transition-colors duration-500">
                 {previewLoteSistema}
