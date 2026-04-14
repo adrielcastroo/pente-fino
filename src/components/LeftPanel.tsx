@@ -194,10 +194,10 @@ const LeftPanel = memo(function LeftPanel() {
 
   // Sync locked endereco
   useEffect(() => {
-    if (lockEndereco && lockedEndereco) {
+    if (lockEndereco && lockedEndereco && endereco !== lockedEndereco) {
       setEndereco(lockedEndereco);
     }
-  }, [lockEndereco, lockedEndereco]);
+  }, [lockEndereco, lockedEndereco, endereco, setEndereco]);
 
   useEffect(() => {
     if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
@@ -206,10 +206,10 @@ const LeftPanel = memo(function LeftPanel() {
   }, [lockProcesso, lockedProcesso, processo, setProcesso]);
 
   useEffect(() => {
-    if (lockNf && lockedNf) {
+    if (lockNf && lockedNf && nf !== lockedNf) {
       setNf(lockedNf);
     }
-  }, [lockNf, lockedNf]);
+  }, [lockNf, lockedNf, nf, setNf]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -567,9 +567,12 @@ const LeftPanel = memo(function LeftPanel() {
   // Set default quantidade when madeiraTipo changes
   useEffect(() => {
     if (isMadeira) {
-      setQuantidade(madeiraDefaults[madeiraTipo].toString());
+      const defaultQtd = madeiraDefaults[madeiraTipo].toString();
+      if (quantidade !== defaultQtd) {
+        setQuantidade(defaultQtd);
+      }
     }
-  }, [madeiraTipo, isMadeira]);
+  }, [madeiraTipo, isMadeira, quantidade, setQuantidade]);
 
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">

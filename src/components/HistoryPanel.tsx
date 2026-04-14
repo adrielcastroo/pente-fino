@@ -396,7 +396,11 @@ export default function HistoryPanel() {
   const { isLow } = usePerformance();
 
   useEffect(() => {
-    loadHistory();
+    // Basic guard to prevent infinite loops if loadHistory identity was unstable
+    const state = useAppStore.getState();
+    if (!state.isHistoryLoading) {
+      loadHistory();
+    }
   }, [loadHistory]);
 
   const filtered = useMemo(() => {
