@@ -154,16 +154,27 @@ const LeftPanel = memo(function LeftPanel() {
   );
   
   const isDuplicate = useMemo(() => {
-    if (isMadeira || !item || !lote) return false;
-    const lowerItem = item.toLowerCase();
-    const lowerLote = lote.toLowerCase();
+    // Para madeira, não aplicamos check de duplicidade por lote aqui
+    if (isMadeira || !item) return false;
     
-    return registros.some(r => 
-      (r.item || '').toLowerCase() === lowerItem && 
-      (r.lote || '').toLowerCase() === lowerLote &&
-      (r.nf || '').trim() === (nf || '').trim()
-    );
-  }, [isMadeira, item, lote, registros, nf]);
+    const lowerItem = item.toLowerCase();
+    const lowerLote = (lote || '').toLowerCase();
+    const currentNfTrimmed = (nf || '').trim().toLowerCase();
+    const currentProcTrimmed = (processo || '').trim().toLowerCase();
+    
+    return registros.some(r => {
+      const itemMatch = (r.item || '').toLowerCase() === lowerItem;
+      const loteMatch = (r.lote || '').toLowerCase() === lowerLote;
+      
+      if (isDiversos && !isCelular) {
+        // No modo diversos (exceto Celular), validamos por NF
+        return itemMatch && loteMatch && (r.nf || '').trim().toLowerCase() === currentNfTrimmed;
+      }
+      
+      // Nos outros modos, validamos por Processo
+      return itemMatch && loteMatch && (r.processo || '').trim().toLowerCase() === currentProcTrimmed;
+    });
+  }, [isMadeira, item, lote, registros, nf, processo, isDiversos, isCelular]);
 
   
 
