@@ -70,32 +70,33 @@ export function generateLoteSistema(
   nf?: string,
   itemCode?: string
 ): string {
-  const mlFormatted = fmtML(mLinear) || '0M';
+  const len = existingRegistros.length;
   const procTrimmed = (processo || '').trim();
   const nfTrimmed = (nf || '').trim();
-  const labelPrefix = procTrimmed ? `PROC ${procTrimmed}` : (nfTrimmed ? `NF ${nfTrimmed}` : '');
   const addrTrimmed = (endereco || '').trim();
-  const baseParts = [addrTrimmed, labelPrefix, mlFormatted].filter(Boolean);
-  const base = baseParts.join(' ');
   const itemNorm = (itemCode || '').trim().toLowerCase();
   
-  // To prevent collisions even after deletions, we check all existing suffixes
-  // Optimized: Early return if no registers or if first part matches
-  if (existingRegistros.length === 0) return base;
+  const mlFormatted = fmtML(mLinear) || '0M';
+  const labelPrefix = procTrimmed ? `PROC ${procTrimmed}` : (nfTrimmed ? `NF ${nfTrimmed}` : '');
+  const baseParts = [addrTrimmed, labelPrefix, mlFormatted].filter(Boolean);
+  const base = baseParts.join(' ');
+  
+  if (len === 0) return base;
 
   const usedSuffixes: number[] = [];
-  const len = existingRegistros.length;
   
   for (let i = 0; i < len; i++) {
     const r = existingRegistros[i];
     
-    // Quick checks to avoid heavy string operations
+    // Quick, non-string checks first
     if (r.mLinear !== mLinear) continue;
     if (r.endereco !== endereco) continue;
     
+    // Check item
     const rItemNorm = (r.item || '').trim().toLowerCase();
     if (rItemNorm !== itemNorm) continue;
     
+    // Check proc/nf label
     const rProc = (r.processo || '').trim();
     const rNf = (r.nf || '').trim();
     const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
@@ -108,7 +109,7 @@ export function generateLoteSistema(
     }
     
     const lastDashIndex = ls.lastIndexOf('-');
-    if (lastDashIndex !== -1) {
+    if (lastDashIndex !== -1 && lastDashIndex > base.length - 1) {
       const suffixStr = ls.slice(lastDashIndex + 1);
       const num = parseInt(suffixStr, 10);
       if (!isNaN(num)) usedSuffixes.push(num);
@@ -118,7 +119,7 @@ export function generateLoteSistema(
   if (usedSuffixes.length === 0) return base;
   
   let maxSuffix = 0;
-  for (let i = 0, len = usedSuffixes.length; i < len; i++) {
+  for (let i = 0, uLen = usedSuffixes.length; i < uLen; i++) {
     if (usedSuffixes[i] > maxSuffix) maxSuffix = usedSuffixes[i];
   }
   
