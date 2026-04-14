@@ -28,7 +28,7 @@ Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<
 const LeftPanel = memo(function LeftPanel() {
   const {
     currentMode, setMode, processo, setProcesso, conferente, registros, addRegistro,
-    undoStack, lockProcesso, setLockProcesso, lockedProcesso, setLockedProcesso,
+    undoStack, undoAction, lockProcesso, setLockProcesso, lockedProcesso, setLockedProcesso,
     lockNf, setLockNf, lockedNf, setLockedNf, lockEndereco, setLockEndereco,
     lockedEndereco, setLockedEndereco, formData, setFormData, resetFormData
   } = useAppStore(useShallow(s => ({
@@ -40,6 +40,7 @@ const LeftPanel = memo(function LeftPanel() {
     registros: s.registros,
     addRegistro: s.addRegistro,
     undoStack: s.undoStack,
+    undoAction: s.undo,
     lockProcesso: s.lockProcesso,
     setLockProcesso: s.setLockProcesso,
     lockedProcesso: s.lockedProcesso,

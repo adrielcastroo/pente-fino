@@ -1,4 +1,6 @@
 import { useState, useMemo, memo, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+
 import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
