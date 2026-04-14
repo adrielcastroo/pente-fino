@@ -795,7 +795,7 @@ export default function LeftPanel() {
             <Sparkles className="w-3.5 h-3.5 text-primary" /> {isMadeira ? 'Especificações Técnicas' : 'Detalhamento do Material'}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
               <div className="space-y-3 sm:col-span-1 group/field">
