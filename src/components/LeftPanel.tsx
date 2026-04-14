@@ -622,9 +622,8 @@ const LeftPanel = memo(function LeftPanel() {
                     <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
                   </Tooltip>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
         {isDiversos && (
           <div className="space-y-4">
