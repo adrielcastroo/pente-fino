@@ -19,7 +19,7 @@ export const StatCard = ({ label, value, icon: Icon, tab, onClick, variants }: S
       className="group cursor-pointer border border-border/40 bg-card/10 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:bg-card/30 hover:shadow-lg active:scale-[0.98] relative"
       role="button"
     >
-      <CardContent className="p-8 flex flex-row items-center gap-6 relative z-10">
+      <CardContent className="p-6 sm:p-8 flex flex-row items-center gap-4 sm:gap-6 relative z-10">
         <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
           <Icon className="w-6 h-6" />
         </div>

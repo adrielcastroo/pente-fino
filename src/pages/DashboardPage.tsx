@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const { isLow } = usePerformance();
 
   const content = (
-    <div className="p-3 sm:p-8 lg:p-12 space-y-6 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden">
+    <div className="p-4 sm:p-8 lg:p-12 space-y-8 sm:space-y-12 max-w-[1600px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/10">
         <div className="space-y-1">

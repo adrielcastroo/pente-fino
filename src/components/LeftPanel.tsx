@@ -539,7 +539,7 @@ export default function LeftPanel() {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="bg-background/40 backdrop-blur-xl lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-500"
     >
-      <div className="p-3 sm:p-6 lg:p-10 flex-1 overflow-y-auto space-y-4 sm:space-y-10 custom-scrollbar relative">
+      <div className="p-3 sm:p-6 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-10 custom-scrollbar relative">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         
@@ -627,7 +627,7 @@ export default function LeftPanel() {
             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-50 flex items-center gap-2">
               <Layers3 className="w-3.5 h-3.5" /> Categorias Disponíveis
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
               {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
                 <button
                   key={tipo}
@@ -651,7 +651,7 @@ export default function LeftPanel() {
             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-50 flex items-center gap-2">
               <LayoutGrid className="w-3.5 h-3.5" /> Subtipos de Material
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
@@ -795,7 +795,7 @@ export default function LeftPanel() {
             <Sparkles className="w-3.5 h-3.5 text-primary" /> {isMadeira ? 'Especificações Técnicas' : 'Detalhamento do Material'}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
               <div className="space-y-3 sm:col-span-1 group/field">
