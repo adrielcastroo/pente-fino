@@ -119,8 +119,15 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
       <CardContent className="px-4 pb-6 h-[180px]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
-            <BarChart data={processedData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-              <XAxis dataKey="name" hide />
+            <BarChart data={processedData} margin={{ top: 10, right: 10, left: -10, bottom: 20 }}>
+              <XAxis 
+                dataKey="name" 
+                fontSize={9} 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                interval={0}
+              />
               <Bar 
                 dataKey={chartKey} 
                 fill="hsl(var(--primary))" 
