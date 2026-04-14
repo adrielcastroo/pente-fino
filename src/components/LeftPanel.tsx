@@ -194,10 +194,10 @@ const LeftPanel = memo(function LeftPanel() {
 
   // Sync locked endereco
   useEffect(() => {
-    if (lockEndereco && lockedEndereco) {
+    if (lockEndereco && lockedEndereco && endereco !== lockedEndereco) {
       setEndereco(lockedEndereco);
     }
-  }, [lockEndereco, lockedEndereco]);
+  }, [lockEndereco, lockedEndereco, endereco, setEndereco]);
 
   useEffect(() => {
     if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
@@ -206,10 +206,10 @@ const LeftPanel = memo(function LeftPanel() {
   }, [lockProcesso, lockedProcesso, processo, setProcesso]);
 
   useEffect(() => {
-    if (lockNf && lockedNf) {
+    if (lockNf && lockedNf && nf !== lockedNf) {
       setNf(lockedNf);
     }
-  }, [lockNf, lockedNf]);
+  }, [lockNf, lockedNf, nf, setNf]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
