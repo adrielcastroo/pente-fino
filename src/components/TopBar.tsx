@@ -80,36 +80,36 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-500">
-      <div className="flex h-16 sm:h-20 items-center gap-2 px-3 sm:px-8 max-w-[1800px] mx-auto">
+      <div className="flex h-16 sm:h-20 lg:h-24 items-center gap-2 sm:gap-4 px-3 sm:px-8 max-w-[2000px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <SidebarTrigger className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
-          <div className="hidden sm:flex flex-col">
+          <div className="hidden md:flex flex-col">
             <h2 className="text-[10px] font-black tracking-[0.2em] leading-none uppercase text-muted-foreground/60">Painel Operacional</h2>
             <p className="text-sm font-black text-foreground uppercase tracking-tight mt-1">
-              Sistema <span className="text-primary">Pente Fino</span>
+              Sistema <span className="text-primary italic">Pente Fino</span>
             </p>
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-6 min-w-0">
-          <div className="relative group w-full max-w-[120px] xs:max-w-[180px] sm:max-w-[320px]">
+        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-4 md:gap-6 min-w-0">
+          <div className="relative group w-full max-w-[140px] xs:max-w-[200px] sm:max-w-[280px] lg:max-w-[380px]">
             <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
-            <div className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10">
+            <div className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary group-hover:text-primary/70 transition-all z-10 pointer-events-none">
               <User className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
             </div>
             <input
               id="conferente-input"
-              className="h-9 sm:h-14 w-full rounded-xl sm:rounded-2xl border border-border/50 bg-muted/30 pl-8 sm:pl-14 pr-3 text-[10px] sm:text-base font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-medium focus:bg-background focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all duration-300 shadow-inner group-hover:border-border/80"
+              className="h-9 sm:h-12 lg:h-14 w-full rounded-xl sm:rounded-2xl border border-border/50 bg-muted/30 pl-8 sm:pl-12 lg:pl-14 pr-3 text-[10px] sm:text-sm lg:text-base font-bold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-medium focus:bg-background focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all duration-300 shadow-inner group-hover:border-border/80"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
-              placeholder="Conferente..."
+              placeholder="Identificação..."
               autoComplete="name"
               required
               aria-required="true"
             />
           </div>
 
-          <div className="h-6 sm:h-10 w-[1px] bg-border/40 mx-0.5 hidden sm:block" />
+          <div className="h-6 sm:h-10 w-[1px] bg-border/20 mx-0.5 hidden sm:block" />
 
           {registros.length > 0 && (
             <Tooltip>
@@ -118,17 +118,17 @@ const TopBar = memo(function TopBar() {
                   onClick={exportExcel}
                   size="sm"
                   disabled={isArchiving}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2 sm:px-8 h-9 sm:h-14 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-primary/25 transition-all active:translate-y-0.5 gap-1 sm:gap-3 text-[9px] sm:text-base group/btn relative overflow-hidden shrink-0"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2 sm:px-6 lg:px-8 h-9 sm:h-12 lg:h-14 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-primary/25 transition-all active:translate-y-0.5 gap-1 sm:gap-2.5 text-[9px] sm:text-xs lg:text-sm group/btn relative overflow-hidden shrink-0 min-w-[40px] sm:min-w-[120px]"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                   {isArchiving ? (
-                    <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
+                    <div className="w-4 h-4 sm:w-5 lg:w-6 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
                   ) : (
-                    <Download className="w-3.5 h-3.5 sm:w-6 sm:h-6 relative z-10" />
+                    <Download className="w-3.5 h-3.5 sm:w-5 lg:w-5 relative z-10" />
                   )}
-                  <span className="hidden xs:inline relative z-10">{isArchiving ? 'Processando...' : 'Exportar'}</span>
+                  <span className="hidden xs:inline relative z-10 uppercase tracking-wider">{isArchiving ? 'Aguarde...' : 'Exportar'}</span>
                   {!isArchiving && (
-                    <Badge variant="secondary" className="bg-white/20 text-white border-none px-1 h-4 sm:h-6 min-w-[16px] sm:min-w-[24px] flex items-center justify-center font-black text-[8px] sm:text-xs relative z-10">
+                    <Badge variant="secondary" className="bg-white/20 text-white border-none px-1 h-4 sm:h-5 lg:h-6 min-w-[16px] sm:min-w-[20px] lg:min-w-[24px] flex items-center justify-center font-black text-[8px] sm:text-[10px] lg:text-xs relative z-10 rounded-md">
                       {registros.length}
                     </Badge>
                   )}
@@ -141,9 +141,9 @@ const TopBar = memo(function TopBar() {
           )}
 
           {registros.length === 0 && (
-            <Badge variant="outline" className="h-9 sm:h-14 px-2 sm:px-6 rounded-xl sm:rounded-2xl border-dashed border-muted-foreground/20 bg-muted/5 text-muted-foreground/60 font-bold flex gap-1.5 sm:gap-2 shrink-0 transition-all hover:bg-muted/10">
-              <Archive className="w-3.5 h-3.5 sm:w-5 sm:h-5 opacity-40" />
-              <span className="text-[9px] sm:text-sm whitespace-nowrap tracking-wide">Vazio</span>
+            <Badge variant="outline" className="h-9 sm:h-12 lg:h-14 px-2 sm:px-4 lg:px-6 rounded-xl sm:rounded-2xl border-dashed border-muted-foreground/20 bg-muted/5 text-muted-foreground/60 font-bold flex gap-1.5 sm:gap-2 shrink-0 transition-all hover:bg-muted/10 border group">
+              <Archive className="w-3.5 h-3.5 sm:w-4 lg:w-5 opacity-40 group-hover:opacity-100 transition-opacity" />
+              <span className="text-[9px] sm:text-[10px] lg:text-xs whitespace-nowrap tracking-widest uppercase">Vazio</span>
             </Badge>
           )}
         </div>
