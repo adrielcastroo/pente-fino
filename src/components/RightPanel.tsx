@@ -4,13 +4,11 @@ import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
-import { useShallow } from 'zustand/react/shallow';
-import { Search, Download, Trash2, Undo2, Copy, X, Package, Filter, ArrowUpDown, CheckCircle2 } from 'lucide-react';
+import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
 
 const HighlightedText = memo(({ text, q }: { text: string; q: string }) => {
   if (!q) return <>{text}</>;
@@ -34,6 +32,72 @@ const SORT_MAP: Record<string, (a: any, b: any) => number> = {
   'end': (a, b) => (a.endereco || '').localeCompare(b.endereco || ''),
 };
 
+interface TableCellProps {
+  r: any;
+  column: any;
+  searchQuery: string;
+  isEditing: boolean;
+  editValue: string;
+  onEditValueChange: (val: string) => void;
+  onCommitEdit: () => void;
+  onCancelEdit: () => void;
+  onStartEdit: (rowId: string, key: string, val: string) => void;
+  onCopy: (t: string) => void;
+}
+
+const TableCell = memo(({ r, column, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy }: TableCellProps) => {
+  if (isEditing) {
+    return (
+      <td className="px-2 sm:px-4 py-2 sm:py-3.5">
+        <input
+          autoFocus
+          value={editValue}
+          onChange={e => onEditValueChange(e.target.value)}
+          onBlur={onCommitEdit}
+          onKeyDown={e => { if (e.key === 'Enter') onCommitEdit(); if (e.key === 'Escape') onCancelEdit(); }}
+          className="w-full bg-background border-2 border-primary rounded-lg px-2 py-1 text-sm outline-none shadow-lg shadow-primary/10"
+        />
+      </td>
+    );
+  }
+
+  const val = (r as any)[column.key];
+  const displayVal = column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
+    : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
+    : column.key === 'mLinear' ? formatML(r.mLinear)
+    : column.key === 'loteSistema' ? null
+    : column.key === 'item' ? null
+    : column.key === 'endereco' ? null
+    : (val || '—');
+
+  let content: React.ReactNode = displayVal;
+
+  if (column.key === 'loteSistema') {
+    content = (
+      <Badge 
+        variant="outline" 
+        className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed" 
+        onClick={() => onCopy(r.loteSistema)}
+      >
+        {r.loteSistema || '—'}
+      </Badge>
+    );
+  } else if (column.key === 'item' || column.key === 'endereco') {
+    content = <HighlightedText text={String(val || '—')} q={searchQuery} />;
+  }
+
+  return (
+    <td 
+      onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String(val ?? '')) : undefined}
+      className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+    >
+      {content}
+    </td>
+  );
+});
+
+TableCell.displayName = 'TableCell';
+
 interface TableRowProps {
   r: any;
   i: number;
@@ -51,18 +115,23 @@ interface TableRowProps {
 }
 
 const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit }: TableRowProps) => {
-
   const content = (
     <>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
       {columns.map((column: any) => (
-        <td 
+        <TableCell
           key={column.key}
-          onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String((r as any)[column.key] ?? '')) : undefined}
-          className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
-        >
-          {renderCell(r, column)}
-        </td>
+          r={r}
+          column={column}
+          searchQuery={searchQuery}
+          isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
+          editValue={editValue}
+          onEditValueChange={onEditValueChange}
+          onCommitEdit={onCommitEdit}
+          onCancelEdit={onCancelEdit}
+          onStartEdit={onStartEdit}
+          onCopy={onCopy}
+        />
       ))}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
@@ -120,6 +189,8 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
   );
 });
 
+TableRow.displayName = 'TableRow';
+
 export default function RightPanel() {
   const registros = useAppStore(s => s.registros);
   const currentMode = useAppStore(s => s.currentMode);
@@ -131,7 +202,6 @@ export default function RightPanel() {
   const undo = useAppStore(s => s.undo);
   const undoStack = useAppStore(s => s.undoStack);
   const updateRegistro = useAppStore(s => s.updateRegistro);
-
 
   const { isLow } = usePerformance();
   
@@ -168,9 +238,7 @@ export default function RightPanel() {
     }), { ml: 0, m2: 0, qtd: 0 });
   }, [filteredRows]);
 
-  const rows = sortedRows;
   const columns = useMemo(() => getRegistroColumns(registros.length > 0 ? [registros[0]] : [], currentMode), [currentMode, registros.length]);
-
 
   const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
@@ -201,8 +269,6 @@ export default function RightPanel() {
   }, []);
 
   const trimmedQuery = useMemo(() => searchQuery.toLowerCase().trim(), [searchQuery]);
-
-
 
   const handleClearAll = () => {
     if (!registros.length) return;
@@ -310,7 +376,7 @@ export default function RightPanel() {
             </thead>
             <tbody className="divide-y divide-border/20">
               <AnimatePresence initial={false}>
-                {rows.map((r, i) => (
+                {sortedRows.map((r, i) => (
                   <TableRow
                     key={r.id}
                     r={r}
@@ -328,29 +394,27 @@ export default function RightPanel() {
                     onCancelEdit={cancelEdit}
                   />
                 ))}
-
               </AnimatePresence>
             </tbody>
-            {rows.length > 0 && (
+            {sortedRows.length > 0 && (
               <tfoot className="sticky bottom-0 z-10">
                 <tr className="bg-primary/95 text-white font-black font-mono text-[11px] backdrop-blur-lg shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
                   <td className="px-4 py-4">FIM</td>
                   {columns.map(column => (
                     <td key={column.key} className="px-4 py-4">
-                      {column.key === 'item' ? `${rows.length} ${rows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
+                      {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
                       {column.key === 'mLinear' ? formatML(totals.ml) : ''}
                       {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
                       {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
                     </td>
                   ))}
-
                   <td className="px-4 py-4"></td>
                 </tr>
               </tfoot>
             )}
           </table>
 
-          {rows.length === 0 && (
+          {sortedRows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-center px-6">
               <div className="h-24 w-24 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 transition-transform hover:rotate-0 duration-500">
                 <Package className="w-12 h-12 text-primary/30" />
