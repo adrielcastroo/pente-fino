@@ -75,7 +75,11 @@ export default function Index() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    loadHistory();
+    // Only load if not already loading - extra guard
+    const state = useAppStore.getState();
+    if (!state.isHistoryLoading && state.history.length === 0) {
+      loadHistory();
+    }
   }, [loadHistory]);
 
   useKeyboardShortcuts({
