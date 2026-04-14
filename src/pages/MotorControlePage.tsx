@@ -370,7 +370,7 @@ export default function MotorControlePage() {
                   placeholder="Bipe o código agora..."
                   className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-3xl border-2 border-border/40 bg-card/30 px-4 sm:px-6 text-sm font-black focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm font-mono placeholder:opacity-30"
                 />
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/40"><ScanBarcode className="w-5 h-5" /></div>
+                <div className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 text-primary/40"><ScanBarcode className="w-5 h-5" /></div>
               </div>
             </div>
           </div>
