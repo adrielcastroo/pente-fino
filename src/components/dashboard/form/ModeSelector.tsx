@@ -9,6 +9,7 @@ interface ModeSelectorProps {
   currentMode: AppMode;
   onModeChange: (mode: AppMode) => void;
   isLow: boolean;
+  allowedModes?: string[];
 }
 
 const MODES = [
@@ -18,10 +19,15 @@ const MODES = [
   { id: 'madeira', label: 'Madeira', icon: Package, color: 'text-amber-600', bg: 'bg-amber-600/10', border: 'border-amber-600/20' },
 ] as const;
 
-export const ModeSelector = memo(({ currentMode, onModeChange, isLow }: ModeSelectorProps) => {
+export const ModeSelector = memo(({ currentMode, onModeChange, isLow, allowedModes }: ModeSelectorProps) => {
+  const filteredModes = allowedModes ? MODES.filter(m => allowedModes.includes(m.id)) : MODES;
+  const gridCols = filteredModes.length <= 1 ? 'grid-cols-1' : filteredModes.length === 2 ? 'grid-cols-2' : filteredModes.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4';
+  
+  if (filteredModes.length <= 1) return null;
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-1.5 pt-1 mb-6">
-      {MODES.map((mode) => {
+    <div className={`grid ${gridCols} gap-2 px-1.5 pt-1 mb-6`}>
+      {filteredModes.map((mode) => {
         const Icon = mode.icon;
         const isActive = currentMode === mode.id;
         
