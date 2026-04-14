@@ -257,6 +257,28 @@ export default function RightPanel() {
 
   const trimmedQuery = useMemo(() => searchQuery.toLowerCase().trim(), [searchQuery]);
 
+  const isMotorControle = currentMode === 'motor' || currentMode === 'controle';
+
+  // Group rows by CX label for motor/controle view
+  const motorGroups = useMemo(() => {
+    if (!isMotorControle) return [];
+    const groups: { cxLabel: string; item: string; rows: Registro[] }[] = [];
+    let currentGroup: { cxLabel: string; item: string; rows: Registro[] } | null = null;
+
+    for (const r of sortedRows) {
+      // Extract CX label from loteSistema (e.g. "CX01 NF ..." or "CX01 NFe ...")
+      const cxMatch = r.loteSistema?.match(/^(CX\d+|S\/CX)/i);
+      const cxLabel = cxMatch ? cxMatch[1].toUpperCase() : 'S/CX';
+
+      if (!currentGroup || currentGroup.cxLabel !== cxLabel || currentGroup.item !== r.item) {
+        currentGroup = { cxLabel, item: r.item, rows: [] };
+        groups.push(currentGroup);
+      }
+      currentGroup.rows.push(r);
+    }
+    return groups;
+  }, [isMotorControle, sortedRows]);
+
   const handleClearAll = () => {
     if (!registros.length) return;
     toast.error('Limpar todos os registros?', {
