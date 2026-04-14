@@ -5,9 +5,9 @@ import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
 
 // Custom Hooks
-import { useCamera } from '@/hooks/use-camera';
-import { useAIVision } from '@/hooks/use-ai-vision';
-import { useLeftPanelForm } from '@/hooks/use-left-panel-form';
+import { useCamera } from '@/hooks/useCamera';
+import { useAIVision } from '@/hooks/useAIVision';
+import { useLeftPanelForm } from '@/hooks/useLeftPanelForm';
 
 // UI Components
 import { Button } from '@/components/ui/button';
