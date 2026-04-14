@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut } from 'lucide-react';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -155,11 +154,7 @@ export default function EstoquePage() {
   const occupiedCount = selectedCellItems.length;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0"
-    >
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
       {/* Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
@@ -469,6 +464,6 @@ export default function EstoquePage() {
           })()}
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 }
