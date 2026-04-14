@@ -9,6 +9,7 @@ import { TimelineChart, SummaryChart } from '@/components/dashboard/DashboardCha
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 
 export default function DashboardPage() {
+  const isMobile = useIsMobile();
   const {
     history,
     stats,
