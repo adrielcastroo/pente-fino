@@ -350,7 +350,7 @@ export default function RightPanel() {
                     {column.shortLabel || column.label}
                   </th>
                 ))}
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px]"></th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
