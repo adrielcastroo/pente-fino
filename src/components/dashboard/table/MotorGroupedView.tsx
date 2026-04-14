@@ -1,8 +1,8 @@
+import React, { memo, useMemo, Fragment } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Copy, X } from 'lucide-react';
-import { memo, useMemo } from 'react';
 import { Registro } from '@/types';
 
 interface MotorGroupedViewProps {
