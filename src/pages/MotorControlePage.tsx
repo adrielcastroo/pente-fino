@@ -132,7 +132,7 @@ export default function MotorControlePage() {
     }
     
     return { allSeriesSet: set, maxSequencial: max };
-  }, [registros, modelo, subMode, nf]);
+  }, [registros, modelo, subMode, nf, useAppStore.getState().history]);
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => {
     return allSeriesSet.has(`${cleanedSerie}|${nf.trim()}`);

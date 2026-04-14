@@ -32,6 +32,18 @@ const PageSkeleton = memo(() => (
 const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; isWide?: boolean; isMobile: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
   
+  const componentsMap: Record<string, JSX.Element> = {
+    'inicio': <DashboardPage />,
+    'tecido': <LeftPanel />,
+    'madeira': <LeftPanel />,
+    'motor': <MotorControlePage />,
+    'estoque': <EstoquePage />,
+    'saida': <SaidaPage />,
+    'table': <RightPanel />,
+    'history': <HistoryPanel />,
+    'settings': <SettingsPage />,
+  };
+
   if (isWide && isFormTab && !isMobile) {
     return (
       <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-8">
@@ -47,15 +59,7 @@ const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; 
 
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden">
-      {activeTab === 'inicio' && <DashboardPage />}
-      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
-      {activeTab === 'motor' && <MotorControlePage />}
-      {activeTab === 'estoque' && <EstoquePage />}
-      {activeTab === 'saida' && <SaidaPage />}
-      {activeTab === 'table' && <RightPanel />}
-      {activeTab === 'history' && <HistoryPanel />}
-      {activeTab === 'settings' && <SettingsPage />}
-      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
+      {componentsMap[activeTab] || <DashboardPage />}
     </div>
   );
 });

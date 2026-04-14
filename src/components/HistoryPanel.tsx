@@ -35,6 +35,7 @@ function EditRegistroDialog({
 
   const isPVT = form?.tipoTecido === 'PVT';
   const isDiversos = form?.modoOrigem === 'diversos';
+  const isMadeira = form?.modoOrigem === 'madeira';
 
   const updateField = <K extends keyof Registro>(key: K, value: Registro[K]) => {
     setForm(current => current ? { ...current, [key]: value } : current);
@@ -55,9 +56,11 @@ function EditRegistroDialog({
         mLinear: Number(form.mLinear) || 0,
         largura: Number(form.largura) || 0,
         lote: form.lote || '',
+        nf: form.nf || '', // BUGFIX: NF was missing
         endereco: isPVT ? '' : (form.endereco || '').toUpperCase(),
         tipoTecido: form.tipoTecido || '',
         modoOrigem: form.modoOrigem || '',
+        quantidade: form.quantidade, // BUGFIX: Quantidade was missing
       });
       toast.success('Registro histórico atualizado com sucesso.');
       onOpenChange(false);
@@ -118,6 +121,13 @@ function EditRegistroDialog({
                 <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
               </div>
             </div>
+
+            {isMadeira && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Quantidade</label>
+                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
+              </div>
+            )}
 
             {!isPVT && (
               <div className="space-y-2">
