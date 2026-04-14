@@ -9,11 +9,12 @@ import { useShallow } from 'zustand/react/shallow';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
-  Trash2, CheckCircle2, AlertTriangle, LayoutGrid, Sparkles
+  Trash2, CheckCircle2, AlertTriangle, LayoutGrid, Sparkles, FileUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import ImportTecidosModal from '@/components/ImportTecidosModal';
 
 
 
