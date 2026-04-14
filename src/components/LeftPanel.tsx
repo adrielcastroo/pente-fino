@@ -154,16 +154,27 @@ const LeftPanel = memo(function LeftPanel() {
   );
   
   const isDuplicate = useMemo(() => {
-    if (isMadeira || !item || !lote) return false;
-    const lowerItem = item.toLowerCase();
-    const lowerLote = lote.toLowerCase();
+    // Para madeira, não aplicamos check de duplicidade por lote aqui
+    if (isMadeira || !item) return false;
     
-    return registros.some(r => 
-      (r.item || '').toLowerCase() === lowerItem && 
-      (r.lote || '').toLowerCase() === lowerLote &&
-      (r.nf || '').trim() === (nf || '').trim()
-    );
-  }, [isMadeira, item, lote, registros, nf]);
+    const lowerItem = item.toLowerCase();
+    const lowerLote = (lote || '').toLowerCase();
+    const currentNfTrimmed = (nf || '').trim().toLowerCase();
+    const currentProcTrimmed = (processo || '').trim().toLowerCase();
+    
+    return registros.some(r => {
+      const itemMatch = (r.item || '').toLowerCase() === lowerItem;
+      const loteMatch = (r.lote || '').toLowerCase() === lowerLote;
+      
+      if (isDiversos && !isCelular) {
+        // No modo diversos (exceto Celular), validamos por NF
+        return itemMatch && loteMatch && (r.nf || '').trim().toLowerCase() === currentNfTrimmed;
+      }
+      
+      // Nos outros modos, validamos por Processo
+      return itemMatch && loteMatch && (r.processo || '').trim().toLowerCase() === currentProcTrimmed;
+    });
+  }, [isMadeira, item, lote, registros, nf, processo, isDiversos, isCelular]);
 
   
 
@@ -318,9 +329,14 @@ const LeftPanel = memo(function LeftPanel() {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
     setEndereco(formatted);
-    validateEndereco(formatted);
+    // validateEndereco(formatted); // This will be handled by the effect below
     if (lockEndereco) setLockedEndereco(formatted);
   }, [lockEndereco, setEndereco, setLockedEndereco]);
+
+  // Ensure endereco is validated whenever it changes, including sync from store
+  useEffect(() => {
+    validateEndereco(endereco);
+  }, [endereco]);
 
   const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
@@ -407,8 +423,10 @@ const LeftPanel = memo(function LeftPanel() {
       setProgress(80);
       if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${resp.status}`); }
       const data = await resp.json();
-      const raw = (data.choices?.[0]?.message?.content || '').replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(raw);
+      const raw = (data.choices?.[0]?.message?.content || '');
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Não foi possível encontrar o JSON na resposta do modelo.");
+      const parsed = JSON.parse(jsonMatch[0]);
       const summary = applyResult(parsed, model.split('/').pop() || 'OpenRouter');
       setProgress(100); setTimeout(() => setProgress(0), 700);
       setAiStatus({ msg: summary, type: 'ok' });
@@ -422,11 +440,13 @@ const LeftPanel = memo(function LeftPanel() {
   };
 
   const handleAdd = () => {
-    // Basic validations that apply to all tecido modes
     if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
     if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
     if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+    if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
+    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
+    if (isDuplicate) { toast.error('Este item e lote já foram registrados nesta conferência.'); return; }
 
     const proc = processo.trim();
 
