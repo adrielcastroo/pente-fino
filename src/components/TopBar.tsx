@@ -118,13 +118,13 @@ const TopBar = memo(function TopBar() {
                   onClick={exportExcel}
                   size="sm"
                   disabled={isArchiving}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2 sm:px-8 h-9 sm:h-14 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 active:translate-y-0.5 gap-1 sm:gap-3 text-[9px] sm:text-base group/btn relative overflow-hidden shrink-0"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-2 sm:px-8 h-9 sm:h-14 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-primary/25 transition-all active:translate-y-0.5 gap-1 sm:gap-3 text-[9px] sm:text-base group/btn relative overflow-hidden shrink-0"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                   {isArchiving ? (
                     <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
                   ) : (
-                    <Download className="w-3.5 h-3.5 sm:w-6 sm:h-6 animate-bounce-subtle relative z-10" />
+                    <Download className="w-3.5 h-3.5 sm:w-6 sm:h-6 relative z-10" />
                   )}
                   <span className="hidden xs:inline relative z-10">{isArchiving ? 'Processando...' : 'Exportar'}</span>
                   {!isArchiving && (
