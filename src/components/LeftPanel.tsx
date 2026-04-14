@@ -621,6 +621,14 @@ const LeftPanel = memo(function LeftPanel() {
                 </div>
               </div>
               <div className="flex gap-1.5 flex-shrink-0 ml-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setImportOpen(true)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
+                      <FileUp className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Importar Planilha</TooltipContent>
+                </Tooltip>
                 {undoStack.length > 0 && (
                   <Tooltip>
                     <TooltipTrigger asChild>
