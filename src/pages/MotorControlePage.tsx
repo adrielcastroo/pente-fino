@@ -35,13 +35,17 @@ function sanitize(v: string) {
 }
 
 export default function MotorControlePage() {
-  const registros = useAppStore(s => s.registros);
-  const addRegistro = useAppStore(s => s.addRegistro);
-  const setMode = useAppStore(s => s.setMode);
-  const formData = useAppStore(s => s.formData);
-  const setFormData = useAppStore(s => s.setFormData);
-  const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
-  const { isLow } = usePerformance();
+  const { 
+    registros, addRegistro, setMode, formData, setFormData, resetMotorFormData, history 
+  } = useAppStore(s => ({
+    registros: s.registros,
+    addRegistro: s.addRegistro,
+    setMode: s.setMode,
+    formData: s.formData,
+    setFormData: s.setFormData,
+    resetMotorFormData: s.resetMotorFormData,
+    history: s.history
+  }));
 
   
   const subMode = formData.motorSubMode;

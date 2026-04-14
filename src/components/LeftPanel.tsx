@@ -329,9 +329,14 @@ const LeftPanel = memo(function LeftPanel() {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
     setEndereco(formatted);
-    validateEndereco(formatted);
+    // validateEndereco(formatted); // This will be handled by the effect below
     if (lockEndereco) setLockedEndereco(formatted);
   }, [lockEndereco, setEndereco, setLockedEndereco]);
+
+  // Ensure endereco is validated whenever it changes, including sync from store
+  useEffect(() => {
+    validateEndereco(endereco);
+  }, [endereco]);
 
   const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
