@@ -9,6 +9,7 @@ interface ModeSelectorProps {
   currentMode: AppMode;
   onModeChange: (mode: AppMode) => void;
   isLow: boolean;
+  allowedModes?: string[];
 }
 
 const MODES = [
