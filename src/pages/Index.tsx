@@ -34,11 +34,11 @@ const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; 
   
   if (isWide && isFormTab && !isMobile) {
     return (
-      <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-8">
-        <div className="w-full xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
+      <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-6">
+        <div className="w-full xl:w-[480px] 2xl:w-[560px] shrink-0 h-full">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden xl:block">
+        <div className="flex-1 min-w-0 h-full hidden xl:block">
           <RightPanel />
         </div>
       </div>
