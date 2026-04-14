@@ -13,23 +13,17 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: "esnext", // Modern browsers only
+    target: "es2020", // Better compatibility for older tablets like TCL Tab 10L
     minify: "esbuild", // Fast minification
     cssCodeSplit: true,
     reportCompressedSize: false, // Performance improvement during build
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('react')) return 'vendor-react';
-            if (id.includes('lucide-react')) return 'vendor-icons';
-            if (id.includes('recharts') || id.includes('d3')) return 'vendor-charts';
-            if (id.includes('framer-motion')) return 'vendor-motion';
-            if (id.includes('xlsx')) return 'vendor-xlsx';
-            if (id.includes('radix-ui')) return 'vendor-ui';
-            if (id.includes('date-fns')) return 'vendor-utils';
-            return 'vendor-others';
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['@tanstack/react-query', 'lucide-react', 'sonner'],
+          'vendor-charts': ['recharts'],
+          'vendor-xlsx': ['xlsx'],
         },
       },
     },
