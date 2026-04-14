@@ -35,7 +35,7 @@ const menuItems: { key: AppTab; label: string; icon: any }[] = [
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
-  const { state, setOpen, isMobile, open } = useSidebar();
+  const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const registros = useAppStore(s => s.registros);
   const { theme, setTheme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -67,10 +67,13 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
 
   const handleTabClick = useCallback((tab: AppTab) => {
     onTabChange(tab);
-    if (isMobile || window.innerWidth < 1024) {
+    if (isMobile) {
+      setOpenMobile(false);
+    } else if (window.innerWidth < 1024) {
       setOpen(false);
     }
-  }, [onTabChange, isMobile, setOpen]);
+  }, [onTabChange, isMobile, setOpenMobile, setOpen]);
+
 
   return (
     <Sidebar
@@ -86,16 +89,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
             <Logo className="h-6 w-6" />
           </div>
-          {!collapsed && (
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-base font-black leading-tight tracking-tighter text-foreground whitespace-nowrap">
-                Pente Fino
-              </span>
-              <span className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
-                ESTOQUE
-              </span>
-            </div>
-          )}
+          <div className="flex flex-col overflow-hidden transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
+            <span className="text-base font-black leading-tight tracking-tighter text-foreground whitespace-nowrap">
+              Pente Fino
+            </span>
+            <span className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
+              ESTOQUE
+            </span>
+          </div>
         </div>
       </SidebarHeader>
 
@@ -144,14 +145,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                       </div>
 
                       {/* Label */}
-                      {!collapsed && (
-                        <span className="truncate text-sm">{item.label}</span>
-                      )}
+                      <span className="truncate text-sm transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
+                        {item.label}
+                      </span>
 
                       {/* Badge (expanded) */}
-                      {hasRecords && !collapsed && (
+                      {hasRecords && (
                         <span
-                          className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1 text-[10px] font-black tabular-nums ${
+                          className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1 text-[10px] font-black tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
                             isActive
                               ? 'bg-white/20 text-white'
                               : 'bg-primary/10 text-primary'
@@ -168,6 +169,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
 
       {/* ── Footer ── */}
       <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-2 border-t border-border/20">
@@ -187,11 +189,9 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                   : <Moon className="h-[18px] w-[18px] text-indigo-400" />
                 }
               </div>
-              {!collapsed && (
-                <span className="text-xs font-bold uppercase tracking-widest opacity-70">
-                  {theme === 'dark' ? 'Dia' : 'Noite'}
-                </span>
-              )}
+              <span className="text-xs font-bold uppercase tracking-widest opacity-70 transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                {theme === 'dark' ? 'Dia' : 'Noite'}
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -218,13 +218,12 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
               </div>
-              {!collapsed && (
-                <span className="text-xs font-bold uppercase tracking-widest opacity-70">
-                  Ajustes
-                </span>
-              )}
+              <span className="text-xs font-bold uppercase tracking-widest opacity-70 transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                Ajustes
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
