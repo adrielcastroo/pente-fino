@@ -550,13 +550,11 @@ const LeftPanel = memo(function LeftPanel() {
 
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-3 sm:p-5 xl:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-8 xl:space-y-10 custom-scrollbar relative">
-        {/* Decorative background elements */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+      <div className="p-3 sm:p-5 xl:p-8 flex-1 overflow-y-auto space-y-5 sm:space-y-6 xl:space-y-8 custom-scrollbar relative">
         
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 border border-border/40 rounded-2xl sm:rounded-3xl p-1 gap-1 sm:gap-2 shadow-inner relative z-10 overflow-x-auto no-scrollbar">
+          <div className="flex bg-muted/50 border border-border/50 rounded-xl p-1 gap-1 relative z-10 overflow-x-auto no-scrollbar">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -564,16 +562,15 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-150 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode active:scale-95 ${
+                  className={`flex-1 min-w-[90px] py-2.5 sm:py-3 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95 ${
                     isActive
-                      ? 'bg-primary text-white shadow-lg sm:shadow-xl shadow-primary/30 scale-100'
-                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-primary/5 scale-[0.98]'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                   aria-pressed={isActive}
                 >
-                  {isActive && <div className="absolute inset-0 bg-primary/20 animate-pulse z-0 rounded-xl sm:rounded-2xl" />}
-                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-200 ${isActive ? 'rotate-0' : 'group-hover/mode:scale-105'}`} />
-                  <span className="relative z-10">{m.label}</span>
+                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>{m.label}</span>
                 </button>
               );
             })}
@@ -583,45 +580,41 @@ const LeftPanel = memo(function LeftPanel() {
 
         {/* Manual tip */}
           {!isAI && (
-            <div
-              className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-sm relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/tip:bg-primary/10 transition-colors duration-1000" />
-              <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
-                <div className="p-2.5 rounded-2xl bg-primary/10 transition-all duration-300 shadow-sm border border-primary/10">
-                  <ScanBarcode className="w-5 h-5 text-primary" />
+            <div className="p-4 rounded-xl bg-muted/40 border border-border/50 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <ScanBarcode className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex flex-col">
-                   <span className="text-[9px] uppercase tracking-widest opacity-60">Instruções de Registro</span>
-                   <span className="text-foreground/80 font-black">
+                   <span className="text-foreground font-bold text-[13px]">
                     {isMadeira ? (
                       <><span className="text-primary">{madeiraTipo}:</span> Item + Lote + Qtd</>
                     ) : isDiversos ? (
-                      <><span className="text-primary">{diversosTipo}:</span> Preencha os campos destacados</>
+                      <><span className="text-primary">{diversosTipo}:</span> Preencha os campos</>
                     ) : (
-                      <>Bipe cada campo — avance com <kbd className="kbd ml-1 px-2 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black text-xs">Enter</kbd></>
+                      <>Bipe cada campo — avance com <kbd className="px-1.5 py-0.5 rounded bg-background text-primary border border-border font-bold text-[11px]">Enter</kbd></>
                     )}
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0 ml-4 relative z-10">
+              <div className="flex gap-1.5 flex-shrink-0 ml-3">
                 {undoStack.length > 0 && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={handleUndo} className="h-9 w-9 rounded-xl border border-border/40 hover:bg-primary hover:text-white transition-all shadow-sm hover:shadow-primary/30">
+                      <Button variant="ghost" size="icon" onClick={handleUndo} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
                         <Undo2 className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Desfazer última ação</TooltipContent>
+                    <TooltipContent>Desfazer</TooltipContent>
                   </Tooltip>
                 )}
                 <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={resetForm} className="h-9 w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
+                      <Button variant="ghost" size="icon" onClick={resetForm} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive">
                         <X className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
+                    <TooltipContent>Limpar</TooltipContent>
                   </Tooltip>
               </div>
             </div>
