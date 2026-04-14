@@ -161,7 +161,7 @@ const LeftPanel = memo(function LeftPanel() {
     return registros.some(r => 
       (r.item || '').toLowerCase() === lowerItem && 
       (r.lote || '').toLowerCase() === lowerLote &&
-      (r.nf || '').trim() === nf.trim()
+      (r.nf || '').trim() === (nf || '').trim()
     );
   }, [isMadeira, item, lote, registros, nf]);
 
