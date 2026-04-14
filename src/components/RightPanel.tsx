@@ -104,21 +104,17 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 });
 
 export default function RightPanel() {
-  const {
-    registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
-    deleteRegistro, undo, undoStack, updateRegistro
-  } = useAppStore(useShallow(s => ({
-    registros: s.registros,
-    currentMode: s.currentMode,
-    searchQuery: s.searchQuery,
-    setSearchQuery: s.setSearchQuery,
-    sortBy: s.sortBy,
-    setSortBy: s.setSortBy,
-    deleteRegistro: s.deleteRegistro,
-    undo: s.undo,
-    undoStack: s.undoStack,
-    updateRegistro: s.updateRegistro,
-  })));
+  const registros = useAppStore(s => s.registros);
+  const currentMode = useAppStore(s => s.currentMode);
+  const searchQuery = useAppStore(s => s.searchQuery);
+  const setSearchQuery = useAppStore(s => s.setSearchQuery);
+  const sortBy = useAppStore(s => s.sortBy);
+  const setSortBy = useAppStore(s => s.setSortBy);
+  const deleteRegistro = useAppStore(s => s.deleteRegistro);
+  const undo = useAppStore(s => s.undo);
+  const undoStack = useAppStore(s => s.undoStack);
+  const updateRegistro = useAppStore(s => s.updateRegistro);
+
 
   const { isLow } = usePerformance();
   
