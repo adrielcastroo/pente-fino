@@ -121,7 +121,7 @@ export default function RightPanel() {
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const { rows, totals } = useMemo(() => {
+  const filteredRows = useMemo(() => {
     let result = [...registros];
     const q = searchQuery.toLowerCase().trim();
     if (q) {
@@ -132,26 +132,28 @@ export default function RightPanel() {
         (r.loteSistema || '').toLowerCase().includes(q)
       );
     }
+    return result;
+  }, [registros, searchQuery]);
 
+  const sortedRows = useMemo(() => {
+    let result = [...filteredRows];
     if (sortBy && SORT_MAP[sortBy]) {
       result.sort(SORT_MAP[sortBy]);
     }
+    return result;
+  }, [filteredRows, sortBy]);
 
-    const t = result.reduce((acc, r) => ({
+  const totals = useMemo(() => {
+    return filteredRows.reduce((acc, r) => ({
       ml: acc.ml + r.mLinear,
       m2: acc.m2 + r.m2,
       qtd: acc.qtd + (r.quantidade || 0)
     }), { ml: 0, m2: 0, qtd: 0 });
+  }, [filteredRows]);
 
-    return { rows: result, totals: t };
-  }, [registros, searchQuery, sortBy]);
+  const rows = sortedRows;
+  const columns = useMemo(() => getRegistroColumns(registros.length > 0 ? [registros[0]] : [], currentMode), [currentMode, registros.length]);
 
-  const totalML = totals.ml;
-  const totalM2 = totals.m2;
-  const totalQtd = totals.qtd;
-
-  // Use all registros for columns to keep them stable while searching
-  const columns = useMemo(() => getRegistroColumns(registros, currentMode), [registros, currentMode]);
 
   const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
