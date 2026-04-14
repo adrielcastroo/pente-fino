@@ -95,7 +95,8 @@ export default function MotorControlePage() {
     for (let i = 0, len = registros.length; i < len; i++) {
       const r = registros[i];
       if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
-        set.add(`${r.lote}|${(r.nf || '').trim()}`);
+        // Broaden the duplicate check to across all NFs for serial numbers
+        set.add(r.lote.trim().toLowerCase());
       }
       if (r.modoOrigem === 'controle' && r.loteSistema) {
         if (currentModelo && r.item !== currentModelo) continue;
@@ -109,15 +110,14 @@ export default function MotorControlePage() {
       }
     }
 
-    // 2. Process history
-    const history = useAppStore.getState().history;
+    // 2. Process history (now using the reactive history from store)
     for (let i = 0, len = history.length; i < len; i++) {
       const conf = history[i];
       const regs = conf.registros;
       for (let j = 0, rLen = regs.length; j < rLen; j++) {
         const r = regs[j];
         if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
-          set.add(`${r.lote}|${(r.nf || '').trim()}`);
+          set.add(r.lote.trim().toLowerCase());
         }
         if (r.modoOrigem === 'controle' && r.loteSistema) {
           if (currentModelo && r.item !== currentModelo) continue;
@@ -133,11 +133,11 @@ export default function MotorControlePage() {
     }
     
     return { allSeriesSet: set, maxSequencial: max };
-  }, [registros, modelo, subMode, nf]);
+  }, [registros, history, modelo, subMode, nf]);
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => {
-    return allSeriesSet.has(`${cleanedSerie}|${nf.trim()}`);
-  }, [allSeriesSet, nf]);
+    return allSeriesSet.has(cleanedSerie.trim().toLowerCase());
+  }, [allSeriesSet]);
 
   const getSequencial = useCallback((): number => {
     return maxSequencial + 1;
