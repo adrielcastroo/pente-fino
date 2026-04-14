@@ -50,7 +50,7 @@ interface TableRowProps {
   onCancelEdit: () => void;
 }
 
-const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell, isLow }: TableRowProps) => {
+const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit }: TableRowProps) => {
 
   const content = (
     <>
