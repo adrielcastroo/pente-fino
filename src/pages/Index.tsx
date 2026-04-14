@@ -96,7 +96,7 @@ export default function Index() {
             <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 xl:p-8 h-full">
-                  <TabRenderer activeTab={activeTab} isWide={true} />
+                  <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} />
                 </div>
               </Suspense>
             </div>
