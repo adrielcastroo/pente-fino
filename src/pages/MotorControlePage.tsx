@@ -276,26 +276,26 @@ export default function MotorControlePage() {
 
         {/* Tip bar */}
         <div
-          className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-lg relative overflow-hidden z-10"
+          className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between gap-2 group/tip shadow-lg relative overflow-hidden z-10"
         >
-          <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
-            <div className="p-2.5 rounded-2xl bg-primary/10 group-hover/tip:scale-110 transition-all duration-300 shadow-sm border border-primary/10">
-              <ScanBarcode className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-3 sm:gap-4 font-bold text-primary/70 relative z-10 min-w-0">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 flex-shrink-0 group-hover/tip:scale-110 transition-all duration-300 shadow-sm border border-primary/10">
+              <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="text-[9px] uppercase tracking-widest opacity-60">Assistente de Registro</span>
-              <span className="text-foreground/80 font-black">
+              <span className="text-foreground/80 font-black text-[11px] sm:text-xs">
                 {subMode === 'motor'
-                  ? <>Leitor configurado com <kbd className="kbd px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black">Enter</kbd> automático.</>
+                  ? <>Leitor configurado com <kbd className="kbd px-1 sm:px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black text-[10px]">Enter</kbd> automático.</>
                   : <>Extração automática antes de "FF". Sequência atual: <span className="text-primary">#{getSequencial()}</span></>
                 }
               </span>
             </div>
           </div>
-          <div className="flex gap-2 flex-shrink-0 ml-4 relative z-10">
+          <div className="flex gap-2 flex-shrink-0 relative z-10">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={resetFields} className="h-9 w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
+                <Button variant="ghost" size="icon" onClick={resetFields} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
                   <X className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -306,23 +306,23 @@ export default function MotorControlePage() {
 
         {/* Motor: caixa toggle */}
         {subMode === 'motor' && (
-          <div className="flex items-center gap-4 p-5 rounded-3xl bg-card/30 border border-border/40 shadow-sm relative z-10 backdrop-blur-md transition-all hover:border-primary/20">
-            <Switch checked={temCaixa} onCheckedChange={setTemCaixa} className="data-[state=checked]:bg-primary" />
-          <div className="flex flex-col">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 p-3 sm:p-5 rounded-3xl bg-card/30 border border-border/40 shadow-sm relative z-10 backdrop-blur-md transition-all hover:border-primary/20">
+            <Switch checked={temCaixa} onCheckedChange={setTemCaixa} className="data-[state=checked]:bg-primary flex-shrink-0" />
+            <div className="flex flex-col min-w-0">
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Logística</span>
                <span className="text-xs font-black text-foreground">Motor Armazenado em Caixa</span>
             </div>
             {temCaixa && (
-              <div className="flex items-center gap-3 ml-auto bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20">
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Nº Caixa:</span>
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto bg-primary/10 px-3 sm:px-4 py-2 rounded-2xl border border-primary/20 flex-shrink-0">
+                <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Nº Caixa:</span>
                 <input
                   type="number"
                   min="1"
                   value={caixaNum}
                   onChange={e => setCaixaNum(e.target.value)}
-                  className="w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
+                  className="w-10 sm:w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
                 />
-                <Badge className="bg-primary text-white font-black text-[10px] rounded-lg">CX{caixaNum.padStart(2, '0')}</Badge>
+                <Badge className="bg-primary text-white font-black text-[10px] rounded-lg whitespace-nowrap">CX{caixaNum.padStart(2, '0')}</Badge>
               </div>
             )}
           </div>
@@ -370,7 +370,7 @@ export default function MotorControlePage() {
                   placeholder="Bipe o código agora..."
                   className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-3xl border-2 border-border/40 bg-card/30 px-4 sm:px-6 text-sm font-black focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm font-mono placeholder:opacity-30"
                 />
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/40"><ScanBarcode className="w-5 h-5" /></div>
+                <div className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 text-primary/40"><ScanBarcode className="w-5 h-5" /></div>
               </div>
             </div>
           </div>
