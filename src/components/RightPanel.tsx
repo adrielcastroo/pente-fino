@@ -192,45 +192,12 @@ export default function RightPanel() {
     toast.success('Registro atualizado com sucesso.');
   }, [editingCell, editValue, updateRegistro]);
 
-  const renderCell = useCallback((r: any, column: any) => {
-    const isEditing = editingCell?.rowId === r.id && editingCell?.key === column.key;
-    if (isEditing) {
-      return (
-        <input
-          autoFocus
-          value={editValue}
-          onChange={e => setEditValue(e.target.value)}
-          onBlur={commitEdit}
-          onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingCell(null); }}
-          className="w-full bg-background border-2 border-primary rounded-lg px-2 py-1 text-sm outline-none shadow-lg shadow-primary/10"
-        />
-      );
-    }
+  const cancelEdit = useCallback(() => {
+    setEditingCell(null);
+  }, []);
 
-    const val = (r as any)[column.key];
-    const displayVal = column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
-      : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
-      : column.key === 'mLinear' ? formatML(r.mLinear)
-      : column.key === 'loteSistema' ? null
-      : column.key === 'item' ? null
-      : column.key === 'endereco' ? null
-      : (val || '—');
+  const trimmedQuery = useMemo(() => searchQuery.toLowerCase().trim(), [searchQuery]);
 
-    if (column.key === 'loteSistema') {
-      return (
-        <Badge 
-          variant="outline" 
-          className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed" 
-          onClick={() => copyText(r.loteSistema)}
-        >
-          {r.loteSistema || '—'}
-        </Badge>
-      );
-    }
-    if (column.key === 'item') return <HighlightedText text={r.item || '—'} q={searchQuery.toLowerCase().trim()} />;
-    if (column.key === 'endereco') return <HighlightedText text={r.endereco || '—'} q={searchQuery.toLowerCase().trim()} />;
-    return displayVal;
-  }, [editingCell, editValue, searchQuery, copyText, commitEdit]);
 
 
   const handleClearAll = () => {
@@ -345,14 +312,19 @@ export default function RightPanel() {
                     r={r}
                     i={i}
                     columns={columns}
-                    searchQuery={searchQuery}
+                    searchQuery={trimmedQuery}
                     onStartEdit={startEdit}
                     onDelete={deleteRegistro}
                     onCopy={copyText}
-                    renderCell={renderCell}
                     isLow={isLow}
+                    editingCell={editingCell}
+                    editValue={editValue}
+                    onEditValueChange={setEditValue}
+                    onCommitEdit={commitEdit}
+                    onCancelEdit={cancelEdit}
                   />
                 ))}
+
               </AnimatePresence>
             </tbody>
             {rows.length > 0 && (
