@@ -224,30 +224,37 @@ export default function EstoquePage() {
             </div>
             {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
               <div key={nivel} className="flex gap-1.5">
-                <div className="w-10 sm:w-14 text-[8px] sm:text-[10px] font-black text-muted-foreground/60 flex items-center justify-center bg-muted/10 rounded-lg shrink-0 border border-border/20">
+                <div className="w-10 sm:w-14 text-[8px] sm:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/40 dark:bg-muted/20 rounded-lg shrink-0 border border-border/40 dark:border-border/30">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
                   const items = cellMap[`${col}-${nivel}`] || [];
                   const fillPercent = Math.round((items.length / 30) * 100);
+                  const hasItems = items.length > 0;
                   return (
                     <div 
                       key={col} 
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className="flex-1 h-16 sm:h-[4.5rem] border border-border/30 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 p-2 sm:p-2.5 transition-all duration-200 group relative overflow-hidden"
+                      className={`flex-1 h-16 sm:h-[4.5rem] rounded-xl cursor-pointer p-2 sm:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
+                        hasItems
+                          ? 'bg-accent/60 dark:bg-accent/20 border-border/50 dark:border-border/40 hover:border-primary/60 hover:bg-primary/10'
+                          : 'bg-muted/30 dark:bg-muted/10 border-border/40 dark:border-border/25 hover:border-primary/40 hover:bg-primary/5'
+                      }`}
                     >
                       {/* Fill bar */}
-                      <div 
-                        className="absolute bottom-0 left-0 right-0 bg-primary/8 transition-all duration-500" 
-                        style={{ height: `${fillPercent}%` }} 
-                      />
+                      {hasItems && (
+                        <div 
+                          className="absolute bottom-0 left-0 right-0 bg-primary/10 dark:bg-primary/8" 
+                          style={{ height: `${fillPercent}%` }} 
+                        />
+                      )}
                       <div className="relative z-10">
-                        <div className="text-[7px] sm:text-[8px] font-bold uppercase tracking-tight text-muted-foreground/50 group-hover:text-primary/60 transition-colors">
-                          {col}·N{nivel}
+                        <div className="text-[7px] sm:text-[8px] font-bold uppercase tracking-tight text-muted-foreground/70 dark:text-muted-foreground/50 group-hover:text-primary transition-colors">
+                          {col}-N{nivel}
                         </div>
                         <div className="text-sm sm:text-base font-black text-foreground mt-0.5">
                           {items.length}
-                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/40 font-semibold ml-0.5">/30</span>
+                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/60 dark:text-muted-foreground/40 font-semibold ml-0.5">/30</span>
                         </div>
                       </div>
                     </div>
