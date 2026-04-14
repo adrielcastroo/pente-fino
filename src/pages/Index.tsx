@@ -42,7 +42,7 @@ const TAB_COMPONENTS: Record<string, React.ComponentType<any>> = {
 };
 
 const TabRenderer = memo(({ activeTab, isMobile }: { activeTab: string; isMobile: boolean }) => {
-  const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
+  const isFormTab = useMemo(() => ['motor'].includes(activeTab), [activeTab]);
   const [isWide, setIsWide] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1280 : false);
 
   useEffect(() => {
