@@ -635,14 +635,14 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={tipo}
                   onClick={() => setDiversosTipo(tipo)}
-                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/cat relative overflow-hidden ${
+                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-150 active:scale-90 group/cat relative overflow-hidden ${
                     diversosTipo === tipo
-                      ? 'border-primary bg-primary/5 text-primary shadow-xl shadow-primary/10'
-                      : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/20'
+                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
+                      : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/40'
                   }`}
                 >
                   <span className="relative z-10">{tipo}</span>
-                  <div className={`absolute bottom-0 left-0 w-full h-1 bg-primary transition-transform duration-700 ${diversosTipo === tipo ? 'scale-x-100' : 'scale-x-0'}`} />
+                  <div className={`absolute bottom-0 left-0 w-full h-1 bg-white/20 transition-transform duration-500 ${diversosTipo === tipo ? 'scale-x-100' : 'scale-x-0'}`} />
                 </button>
               ))}
             </div>
@@ -659,14 +659,14 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/cat relative overflow-hidden ${
+                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-150 active:scale-90 group/cat relative overflow-hidden ${
                     madeiraTipo === tipo
-                      ? 'border-primary bg-primary/5 text-primary shadow-xl shadow-primary/10'
-                      : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/20'
+                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
+                      : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/40'
                   }`}
                 >
                   <span className="relative z-10">{tipo}</span>
-                  <div className={`absolute bottom-0 left-0 w-full h-1 bg-primary transition-transform duration-700 ${madeiraTipo === tipo ? 'scale-x-100' : 'scale-x-0'}`} />
+                  <div className={`absolute bottom-0 left-0 w-full h-1 bg-white/20 transition-transform duration-500 ${madeiraTipo === tipo ? 'scale-x-100' : 'scale-x-0'}`} />
                 </button>
               ))}
             </div>
