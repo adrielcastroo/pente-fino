@@ -271,32 +271,25 @@ export default function RightPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-sm">
-      <AnimatePresence>
-        {undoStack.length > 0 && (
-          <motion.div 
-            initial={isLow ? undefined : { height: 0, opacity: 0, y: -20 }} 
-            animate={{ height: 'auto', opacity: 1, y: 0 }} 
-            exit={isLow ? undefined : { height: 0, opacity: 0, y: -20 }}
-            className="bg-primary/95 backdrop-blur-md px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-xl z-20 border-b border-white/10"
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      {undoStack.length > 0 && (
+        <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
+          <div className="flex items-center gap-3 text-white font-bold">
+            <Undo2 className="w-5 h-5" />
+            <span>Você removeu um registro. Deseja restaurar?</span>
+          </div>
+          <Button 
+            size="sm"
+            variant="secondary"
+            onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
+            className="rounded-full px-6 font-black uppercase tracking-wider text-[10px] bg-white text-primary hover:bg-white/90"
           >
-            <div className="flex items-center gap-3 text-white font-bold">
-              <Undo2 className="w-5 h-5" />
-              <span>Você removeu um registro. Deseja restaurar?</span>
-            </div>
-            <Button 
-              size="sm"
-              variant="secondary"
-              onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
-              className="rounded-full px-6 font-black uppercase tracking-wider text-[10px] bg-white text-primary hover:bg-white/90"
-            >
-              Desfazer Ação
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Desfazer Ação
+          </Button>
+        </div>
+      )}
 
-      <div className="px-3 sm:px-6 py-4 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
+      <div className="px-3 sm:px-6 py-4 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
