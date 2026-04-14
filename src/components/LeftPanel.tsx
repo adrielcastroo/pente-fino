@@ -1,10 +1,7 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
-import { Registro, FormData } from '@/types';
-import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
+import { shallow } from 'zustand/shallow';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
