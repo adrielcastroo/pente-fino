@@ -677,13 +677,7 @@ const LeftPanel = memo(function LeftPanel() {
         {/* Dropzone for AI modes */}
         
           {showDropzone && (
-            <div
-              key="dropzone"
-             }
-             }
-             }
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] text-center opacity-80 flex items-center justify-center gap-3">
                 <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-primary/20" />
                 <span>Marina Vision IA</span>
@@ -767,7 +761,7 @@ const LeftPanel = memo(function LeftPanel() {
               )}
 
               <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden shadow-inner">
-                 <div}%` }} className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                 <div style={{ width: `${progress}%` }} className="h-full bg-primary" />
               </div>
 
               {preview && !cameraActive && (
@@ -777,9 +771,8 @@ const LeftPanel = memo(function LeftPanel() {
                 </Button>
               )}
 
-              
-                {aiStatus && (
-                  <div}}} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
+              {aiStatus && (
+                  <div className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-sm ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
                     <div className="flex items-center gap-2 mb-1">
                        {aiStatus.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
                        <span className="uppercase tracking-widest">{aiStatus.type === 'ok' ? 'Análise Concluída' : 'Erro na Análise'}</span>
@@ -1108,14 +1101,8 @@ const LeftPanel = memo(function LeftPanel() {
             </Button>
           )}
 
-          
-            {showPreview && registros.length > 0 && (
-              <div
-               }
-               }
-               }
-                className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60  shadow-2xl"
-              >
+          {showPreview && registros.length > 0 && (
+              <div className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 shadow-md">
                 <div className="p-4 border-b border-border/40 bg-muted/30 flex items-center justify-between">
                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Últimos Registros</span>
                    <Badge className="bg-primary text-white font-black">{registros.length}</Badge>
