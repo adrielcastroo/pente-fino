@@ -396,9 +396,10 @@ export default function HistoryPanel() {
   const { isLow } = usePerformance();
 
   useEffect(() => {
-    // Basic guard to prevent infinite loops if loadHistory identity was unstable
+    // Only load if history is empty to avoid infinite re-render cycles
+    // and preserve performance on mobile devices.
     const state = useAppStore.getState();
-    if (!state.isHistoryLoading) {
+    if (state.history.length === 0 && !state.isHistoryLoading) {
       loadHistory();
     }
   }, [loadHistory]);

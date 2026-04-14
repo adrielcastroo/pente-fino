@@ -90,8 +90,9 @@ export default function Index() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    // Only load if history is empty to avoid infinite loops
     const state = useAppStore.getState();
-    if (!state.isHistoryLoading && state.history.length === 0) {
+    if (state.history.length === 0 && !state.isHistoryLoading && !state.historyError) {
       loadHistory();
     }
   }, [loadHistory]);
