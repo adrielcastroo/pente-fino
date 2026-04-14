@@ -35,7 +35,7 @@ const menuItems: { key: AppTab; label: string; icon: any }[] = [
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
-  const { state, setOpen, isMobile, open } = useSidebar();
+  const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const registros = useAppStore(s => s.registros);
   const { theme, setTheme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -67,10 +67,13 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
 
   const handleTabClick = useCallback((tab: AppTab) => {
     onTabChange(tab);
-    if (isMobile || window.innerWidth < 1024) {
+    if (isMobile) {
+      setOpenMobile(false);
+    } else if (window.innerWidth < 1024) {
       setOpen(false);
     }
-  }, [onTabChange, isMobile, setOpen]);
+  }, [onTabChange, isMobile, setOpenMobile, setOpen]);
+
 
   return (
     <Sidebar
