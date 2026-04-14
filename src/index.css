@@ -221,8 +221,39 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* Optimization for Low-End Devices (TCL Tab 10L Gen 2, etc.) */
+.low-perf * {
+  /* Disable expensive CSS transitions on all elements */
+  transition-duration: 0s !important;
+  /* Disable blurs */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.low-perf .animate-float,
+.low-perf .animate-spin,
+.low-perf .animate-pulse,
+.low-perf .animate-bounce {
+  animation: none !important;
+}
+
+.low-perf .glass-card,
+.low-perf .bg-background\/80 {
+  background-color: hsl(var(--card)) !important;
+}
+
+.low-perf header {
+  background-color: hsl(var(--background)) !important;
+}
+
 .page-enter {
   @apply animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out;
+}
+
+.low-perf .page-enter {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 /* Accessibility: Focus visible improvements */
@@ -239,4 +270,10 @@
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* Hardware acceleration for scrollable containers */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  will-change: transform;
 }
