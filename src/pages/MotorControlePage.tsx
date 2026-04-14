@@ -109,7 +109,7 @@ export default function MotorControlePage() {
     }
 
     // 2. Process history
-    const history = useAppStore.getState().history;
+    // 2. Process history (already available via hook and dependencies)
     for (let i = 0, len = history.length; i < len; i++) {
       const conf = history[i];
       const regs = conf.registros;
