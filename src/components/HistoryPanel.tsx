@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
 import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet } from 'lucide-react';
-import { exportConferenceToExcel } from '@/lib/export-utils';
+import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -153,6 +153,15 @@ function getConferenceFolderName(conf: Conference): string {
 }
 
 function downloadConferenceExcel(conf: Conference) {
+  const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+  
+  if (isMotorControle) {
+    const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+    const fileName = nfs.length > 0 ? `Motores NF ${nfs.join(' ')}` : 'Motores';
+    exportMotorControleToExcel(conf.registros, fileName);
+    return;
+  }
+
   const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
   const folderName = getConferenceFolderName(conf);
   const headers = columns.map(c => c.label);
