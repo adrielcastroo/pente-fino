@@ -3,11 +3,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 
 export default function DashboardPage() {
+  const isMobile = useIsMobile();
   const {
     history,
     stats,
@@ -72,25 +74,29 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart} 
         />
         
-        <SummaryChart 
-          title="Distribuição" 
-          desc="Setores Operacionais" 
-          data={stats.categorias} 
-          type="pie" 
-          icon={Layers3} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
+        {!isMobile && (
+          <>
+            <SummaryChart 
+              title="Distribuição" 
+              desc="Setores Operacionais" 
+              data={stats.categorias} 
+              type="pie" 
+              icon={Layers3} 
+              chartKey="value"
+              onDetailClick={setDetailChart} 
+            />
 
-        <SummaryChart 
-          title="Especificações" 
-          desc="Materiais / Tipos" 
-          data={stats.tipos} 
-          type="pie" 
-          icon={TrendingUp} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
+            <SummaryChart 
+              title="Especificações" 
+              desc="Materiais / Tipos" 
+              data={stats.tipos} 
+              type="pie" 
+              icon={TrendingUp} 
+              chartKey="value"
+              onDetailClick={setDetailChart} 
+            />
+          </>
+        )}
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
