@@ -567,9 +567,12 @@ const LeftPanel = memo(function LeftPanel() {
   // Set default quantidade when madeiraTipo changes
   useEffect(() => {
     if (isMadeira) {
-      setQuantidade(madeiraDefaults[madeiraTipo].toString());
+      const defaultQtd = madeiraDefaults[madeiraTipo].toString();
+      if (quantidade !== defaultQtd) {
+        setQuantidade(defaultQtd);
+      }
     }
-  }, [madeiraTipo, isMadeira]);
+  }, [madeiraTipo, isMadeira, quantidade, setQuantidade]);
 
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
