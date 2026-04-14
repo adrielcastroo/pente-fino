@@ -153,10 +153,14 @@ const LeftPanel = memo(function LeftPanel() {
     [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
   );
   
-  const isDuplicate = useMemo(() => 
-    !isMadeira && item && registros.some(r => r.item.toLowerCase() === item.toLowerCase()),
-    [isMadeira, item, registros]
-  );
+  const isDuplicate = useMemo(() => {
+    if (isMadeira || !item) return false;
+    const lowerItem = item.toLowerCase();
+    for (let i = 0, len = registros.length; i < len; i++) {
+      if ((registros[i].item || '').toLowerCase() === lowerItem) return true;
+    }
+    return false;
+  }, [isMadeira, item, registros]);
 
   
 
