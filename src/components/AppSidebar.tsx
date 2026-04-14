@@ -64,8 +64,9 @@ const AppSidebar = memo(({ activeTab, onTabChange, onOpenConfig }: AppSidebarPro
 
   const handleTabClick = (tab: AppTab) => {
     onTabChange(tab);
-    if (isMobile) {
-      toggleSidebar();
+    // Explicitly check for mobile to close sidebar after selection
+    if (isMobile || window.innerWidth < 1024) {
+      setOpen(false);
     }
   };
 
