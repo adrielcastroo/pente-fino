@@ -383,8 +383,8 @@ export default function RightPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
-              <AnimatePresence initial={false}>
-                {sortedRows.map((r, i) => (
+              {isLow ? (
+                sortedRows.map((r, i) => (
                   <TableRow
                     key={r.id}
                     r={r}
@@ -401,8 +401,29 @@ export default function RightPanel() {
                     onCommitEdit={commitEdit}
                     onCancelEdit={cancelEdit}
                   />
-                ))}
-              </AnimatePresence>
+                ))
+              ) : (
+                <AnimatePresence initial={false}>
+                  {sortedRows.map((r, i) => (
+                    <TableRow
+                      key={r.id}
+                      r={r}
+                      i={i}
+                      columns={columns}
+                      searchQuery={trimmedQuery}
+                      onStartEdit={startEdit}
+                      onDelete={deleteRegistro}
+                      onCopy={copyText}
+                      isLow={isLow}
+                      editingCell={editingCell}
+                      editValue={editValue}
+                      onEditValueChange={setEditValue}
+                      onCommitEdit={commitEdit}
+                      onCancelEdit={cancelEdit}
+                    />
+                  ))}
+                </AnimatePresence>
+              )}
             </tbody>
             {sortedRows.length > 0 && (
               <tfoot className="sticky bottom-0 z-10">
