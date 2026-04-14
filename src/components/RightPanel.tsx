@@ -136,34 +136,31 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
         />
       ))}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
-        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => onCopy(r.loteSistema)} 
-                className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-             <TooltipContent>Copiar Lote Sistema</TooltipContent>
-          </Tooltip>
+        <div className={`flex justify-end gap-1.5 transition-opacity ${isLow ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          {!isLow && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => onCopy(r.loteSistema)} 
+                  className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+               <TooltipContent>Copiar Lote Sistema</TooltipContent>
+            </Tooltip>
+          )}
           
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => onDelete(r.id)} 
-                className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Remover Registro</TooltipContent>
-          </Tooltip>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => onDelete(r.id)} 
+            className={`h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors ${isLow ? 'text-destructive/50' : ''}`}
+          >
+            <X className="w-4 h-4" />
+          </Button>
         </div>
       </td>
     </tr>
