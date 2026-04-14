@@ -134,13 +134,21 @@ export function generateLoteSistemaCaixa(
   existingRegistros: Registro[]
 ): string {
   const itemNorm = (item || '').trim().toLowerCase();
-  let count = 0;
+  let maxCx = 0;
+  
+  // Find the highest CX number already used for this item
   for (let i = 0, len = existingRegistros.length; i < len; i++) {
-    if ((existingRegistros[i].item || '').trim().toLowerCase() === itemNorm) {
-      count++;
+    const r = existingRegistros[i];
+    if ((r.item || '').trim().toLowerCase() === itemNorm && r.loteSistema?.startsWith('CX')) {
+      const match = r.loteSistema.match(/^CX(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxCx) maxCx = num;
+      }
     }
   }
-  const cxLabel = `CX${(count + 1).toString().padStart(2, '0')}`;
+  
+  const cxLabel = `CX${(maxCx + 1).toString().padStart(2, '0')}`;
   const procTrimmed = (processo || '').trim();
   const mlFormatted = fmtML(mLinear);
   const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', mlFormatted].filter(Boolean);

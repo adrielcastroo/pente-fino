@@ -21,7 +21,8 @@ export const conferenceService = {
     const { data: confs, error } = await supabase
       .from('conferences')
       .select('*, registros (*)')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .order('created_at', { foreignTable: 'registros', ascending: true });
       
     if (error) throw error;
     
