@@ -87,6 +87,7 @@ export default function MotorControlePage() {
   const { allSeriesSet, maxSequencial } = useMemo(() => {
     const set = new Set<string>();
     let max = 0;
+    const currentModelo = subMode === 'controle' ? mapModelo(modelo) : null;
     
     // 1. Process current session
     for (let i = 0, len = registros.length; i < len; i++) {
@@ -95,6 +96,8 @@ export default function MotorControlePage() {
         set.add(r.lote);
       }
       if (r.modoOrigem === 'controle' && r.loteSistema) {
+        if (currentModelo && r.item !== currentModelo) continue;
+
         const lastPart = r.loteSistema.split('*').pop();
         if (lastPart) {
           const num = parseInt(lastPart, 10);
@@ -114,6 +117,8 @@ export default function MotorControlePage() {
           set.add(r.lote);
         }
         if (r.modoOrigem === 'controle' && r.loteSistema) {
+          if (currentModelo && r.item !== currentModelo) continue;
+
           const lastPart = r.loteSistema.split('*').pop();
           if (lastPart) {
             const num = parseInt(lastPart, 10);
@@ -124,7 +129,7 @@ export default function MotorControlePage() {
     }
     
     return { allSeriesSet: set, maxSequencial: max };
-  }, [registros]);
+  }, [registros, modelo, subMode]);
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => {
     return allSeriesSet.has(cleanedSerie);
