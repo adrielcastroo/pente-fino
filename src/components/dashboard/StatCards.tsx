@@ -20,14 +20,14 @@ export const StatCard = ({ label, value, icon: Icon, tab, onClick, variants }: S
       role="button"
     >
       <CardContent className="p-6 sm:p-8 flex flex-row items-center gap-4 sm:gap-6 relative z-10">
-        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
+        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary transition-all duration-300">
           <Icon className="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{value}</div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mt-1">{label}</p>
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all duration-300" />
       </CardContent>
     </Card>
   </motion.div>
