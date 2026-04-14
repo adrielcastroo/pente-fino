@@ -84,32 +84,33 @@ export function generateLoteSistema(
   if (existingRegistros.length === 0) return base;
 
   const usedSuffixes: number[] = [];
-  for (let i = 0, len = existingRegistros.length; i < len; i++) {
+  const len = existingRegistros.length;
+  
+  for (let i = 0; i < len; i++) {
     const r = existingRegistros[i];
-    const rItemNorm = (r.item || '').trim().toLowerCase();
     
-    // Quick filter check
+    // Quick checks to avoid heavy string operations
+    if (r.mLinear !== mLinear) continue;
+    if (r.endereco !== endereco) continue;
+    
+    const rItemNorm = (r.item || '').trim().toLowerCase();
     if (rItemNorm !== itemNorm) continue;
     
-    const rAddrTrimmed = (r.endereco || '').trim();
-    if (rAddrTrimmed !== addrTrimmed) continue;
-
     const rProc = (r.processo || '').trim();
     const rNf = (r.nf || '').trim();
     const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
     if (rLabel !== labelPrefix) continue;
-
-    const rMlFormatted = fmtML(r.mLinear);
-    if (rMlFormatted !== mlFormatted) continue;
 
     const ls = r.loteSistema || '';
     if (ls === base) {
       usedSuffixes.push(0);
       continue;
     }
-    const lastPart = ls.split('-').pop();
-    if (lastPart) {
-      const num = parseInt(lastPart, 10);
+    
+    const lastDashIndex = ls.lastIndexOf('-');
+    if (lastDashIndex !== -1) {
+      const suffixStr = ls.slice(lastDashIndex + 1);
+      const num = parseInt(suffixStr, 10);
       if (!isNaN(num)) usedSuffixes.push(num);
     }
   }
