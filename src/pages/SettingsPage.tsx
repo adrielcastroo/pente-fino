@@ -121,14 +121,14 @@ export default function SettingsPage() {
             />
           </div>
 
-          <nav className="flex flex-col gap-1 overflow-y-auto pr-2 custom-scrollbar">
+          <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-y-auto pr-0 lg:pr-2 pb-2 lg:pb-0 custom-scrollbar -mx-2 px-2">
             {filteredCategories.map((cat) => {
               const Icon = cat.icon;
               return (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                  className={`flex items-center gap-2 sm:gap-3 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 group whitespace-nowrap ${
                     activeCategory === cat.id 
                       ? 'bg-primary text-primary-foreground shadow-md' 
                       : 'hover:bg-muted text-muted-foreground hover:text-foreground'
