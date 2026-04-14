@@ -623,27 +623,33 @@ const LeftPanel = memo(function LeftPanel() {
               <div className="flex gap-1.5 flex-shrink-0 ml-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setImportOpen(true)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
+                    <span>
+                      <Button variant="ghost" size="icon" onClick={() => setImportOpen(true)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
                       <FileUp className="w-4 h-4" />
                     </Button>
+                  </span>
                   </TooltipTrigger>
                   <TooltipContent>Importar Planilha</TooltipContent>
                 </Tooltip>
                 {undoStack.length > 0 && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={handleUndo} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
+                      <span>
+                        <Button variant="ghost" size="icon" onClick={handleUndo} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
                         <Undo2 className="w-4 h-4" />
                       </Button>
+                    </span>
                     </TooltipTrigger>
                     <TooltipContent>Desfazer</TooltipContent>
                   </Tooltip>
                 )}
                 <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={resetForm} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                      <span>
+                        <Button variant="ghost" size="icon" onClick={resetForm} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive">
                         <X className="w-4 h-4" />
                       </Button>
+                    </span>
                     </TooltipTrigger>
                     <TooltipContent>Limpar</TooltipContent>
                   </Tooltip>
@@ -758,25 +764,33 @@ const LeftPanel = memo(function LeftPanel() {
                     <>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openNativeCamera}><Camera className="w-5 h-5" /></Button>
+                          <span>
+                            <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openNativeCamera}><Camera className="w-5 h-5" /></Button>
+                        </span>
                         </TooltipTrigger>
                         <TooltipContent>Retirar Foto</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={() => fileInputRef.current?.click()}><Image className="w-5 h-5" /></Button>
+                           <span>
+                             <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={() => fileInputRef.current?.click()}><Image className="w-5 h-5" /></Button>
+                        </span>
                         </TooltipTrigger>
                         <TooltipContent>Abrir Galeria</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openLiveCamera}><Video className="w-5 h-5" /></Button>
+                           <span>
+                             <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openLiveCamera}><Video className="w-5 h-5" /></Button>
+                        </span>
                         </TooltipTrigger>
                         <TooltipContent>Câmera ao Vivo</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-primary/20 bg-primary/5 text-primary font-bold hover:bg-primary hover:text-white transition-all" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('A foto foi salva com sucesso no dispositivo.'); } }}><Download className="w-5 h-5" /></Button>
+                           <span>
+                             <Button variant="outline" className="flex-1 rounded-2xl h-12 border-primary/20 bg-primary/5 text-primary font-bold hover:bg-primary hover:text-white transition-all" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('A foto foi salva com sucesso no dispositivo.'); } }}><Download className="w-5 h-5" /></Button>
+                        </span>
                         </TooltipTrigger>
                         <TooltipContent>Baixar Foto</TooltipContent>
                       </Tooltip>

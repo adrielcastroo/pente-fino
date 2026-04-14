@@ -140,7 +140,8 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
           {!isLow && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <span>
+                  <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => onCopy(r.loteSistema)} 
@@ -148,6 +149,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                 >
                   <Copy className="w-3.5 h-3.5" />
                 </Button>
+              </span>
               </TooltipTrigger>
                <TooltipContent>Copiar Lote Sistema</TooltipContent>
             </Tooltip>
@@ -340,7 +342,8 @@ export default function RightPanel() {
             
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <span>
+                  <Button 
                   variant="outline" 
                   size="icon" 
                   onClick={handleClearAll} 
@@ -349,6 +352,7 @@ export default function RightPanel() {
                 >
                   <Trash2 className="w-5 h-5" />
                 </Button>
+              </span>
               </TooltipTrigger>
               <TooltipContent>Limpar Tabela</TooltipContent>
             </Tooltip>
@@ -415,17 +419,21 @@ export default function RightPanel() {
                           <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
+                                <span>
+                                  <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
                                   <Copy className="w-3 h-3" />
                                 </Button>
+                              </span>
                               </TooltipTrigger>
                               <TooltipContent>Copiar</TooltipContent>
                             </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                                <span>
+                                  <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
                                   <X className="w-3.5 h-3.5" />
                                 </Button>
+                              </span>
                               </TooltipTrigger>
                               <TooltipContent>Remover</TooltipContent>
                             </Tooltip>
