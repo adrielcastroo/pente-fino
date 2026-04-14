@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
-import { exportConferenceToExcel } from '@/lib/export-utils';
+import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
 import { Download, User, Archive, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -71,7 +71,11 @@ const TopBar = memo(function TopBar() {
 
     try {
       const count = registros.length;
-      await exportConferenceToExcel(headers, data, fileName, columnWidths);
+      if (isMotorControle) {
+        await exportMotorControleToExcel(registros, fileName);
+      } else {
+        await exportConferenceToExcel(headers, data, fileName, columnWidths);
+      }
       await archiveAndClear(archiveName);
       toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
