@@ -11,10 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-function highlight(text: string, q: string) {
-  if (!q) return text;
+const HighlightedText = memo(({ text, q }: { text: string; q: string }) => {
+  if (!q) return <>{text}</>;
   const i = text.toLowerCase().indexOf(q.toLowerCase());
-  if (i === -1) return text;
+  if (i === -1) return <>{text}</>;
   return (
     <>
       {text.slice(0, i)}
@@ -22,7 +22,9 @@ function highlight(text: string, q: string) {
       {text.slice(i + q.length)}
     </>
   );
-}
+});
+
+HighlightedText.displayName = 'HighlightedText';
 
 const SORT_MAP: Record<string, (a: any, b: any) => number> = {
   'item': (a, b) => (a.item || '').localeCompare(b.item || ''),
