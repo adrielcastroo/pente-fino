@@ -1,5 +1,8 @@
 import { Conference } from '@/types';
-import { toast } from 'sonner';
+
+// Memoized date formatter to avoid recreation
+const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
+const dateCache = new Map<string, string>();
 
 export function computeStats(history: Conference[]) {
   const confMap = new Map<string, Set<string>>();
@@ -9,14 +12,11 @@ export function computeStats(history: Conference[]) {
   const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  // Pre-create formatter and cache results to avoid expensive operations in the loop
-  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
-  const dateCache = new Map<string, string>();
-
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || 'Desconhecido';
     
+    // Efficiently get or cache formatted date
     let dateStr = dateCache.get(conference.id);
     if (!dateStr) {
       try {
@@ -28,7 +28,6 @@ export function computeStats(history: Conference[]) {
       }
     }
 
-    
     timelineMap.set(dateStr, (timelineMap.get(dateStr) || 0) + 1);
 
     let confSet = confMap.get(name);
@@ -49,6 +48,7 @@ export function computeStats(history: Conference[]) {
       let cat = 'Tecido';
       if (modo === 'madeira') cat = 'Madeira';
       else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
+      
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
       
       let sub = 'Coulisse';
@@ -56,6 +56,7 @@ export function computeStats(history: Conference[]) {
       else if (modo === 'diversos') sub = 'Diversos';
       else if (modo === 'madeira') sub = 'Madeira';
       else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
+      
       subMap.set(sub, (subMap.get(sub) || 0) + 1);
       
       const tipo = r.tipoTecido || 'Rolo';
@@ -63,7 +64,7 @@ export function computeStats(history: Conference[]) {
     }
   }
 
-  // Get last 7 entries for timeline
+  // Pre-allocate arrays if possible, but map/from are fine for typical sizes
   const timeline = Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7);
 
   return {
@@ -83,6 +84,7 @@ export function computeStats(history: Conference[]) {
     totalConferentes: confMap.size,
   };
 }
+
 
 // Note: exportToExcel was moved to @/lib/export-utils for performance (dynamic import)
 
