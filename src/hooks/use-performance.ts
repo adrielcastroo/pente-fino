@@ -13,13 +13,12 @@ export function usePerformance() {
       return;
     }
 
-    // Default is 'low' (lightweight mode) but upgrade if resources are decent.
+    // Default is 'low' (lightweight mode). Only upgrade to 'high' on powerful desktops.
     const cores = navigator.hardwareConcurrency || 4;
     const memory = (navigator as any).deviceMemory || 4;
     const isDesktop = window.innerWidth >= 1024;
 
-    // Relaxed criteria: 4 cores and 4GB memory is enough for high mode on desktop
-    if (isDesktop && cores >= 4 && memory >= 4) {
+    if (isDesktop && cores >= 8 && memory >= 8) {
       setLevel('high');
     }
   }, []);

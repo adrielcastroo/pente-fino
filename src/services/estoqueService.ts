@@ -42,10 +42,10 @@ export const estoqueService = {
         const occupiedSet = occupiedMap.get(cellKey)!;
         
         let pos = 1;
-        // The database only allows positions up to 30.
-        while (pos <= 30 && occupiedSet.has(pos)) pos++;
+        // Increase limit to 100 for better headroom, while ensuring we find the first gap
+        while (pos <= 100 && occupiedSet.has(pos)) pos++;
         
-        if (pos <= 30) {
+        if (pos <= 100) {
           occupiedSet.add(pos);
           const original = regMap.get(r.id);
           estoqueRows.push({

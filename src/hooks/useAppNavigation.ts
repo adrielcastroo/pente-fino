@@ -20,10 +20,7 @@ export function useAppNavigation() {
       setMode('madeira');
     } else if (tab === 'motor') {
       const state = useAppStore.getState();
-      const targetMode = state.formData.motorSubMode || 'motor';
-      if (currentMode !== targetMode) {
-        setMode(targetMode);
-      }
+      setMode(state.formData.motorSubMode || 'motor');
     } else if (tab === 'inicio') {
        // Optional: reset to a default mode when going home
     }

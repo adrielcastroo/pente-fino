@@ -114,7 +114,6 @@ export const useAppStore = create<AppState>()(
         const newData = { ...INITIAL_FORM_DATA };
         newData.activeTab = state.formData.activeTab;
         newData.estoqueActiveTec = state.formData.estoqueActiveTec;
-        newData.motorSubMode = state.formData.motorSubMode; // BUGFIX: Preserve motor sub-mode
         if (state.lockNf) newData.nf = state.lockedNf;
         if (state.lockEndereco) newData.endereco = state.lockedEndereco;
         set({ formData: newData });
@@ -193,7 +192,6 @@ export const useAppStore = create<AppState>()(
         
         set({ isHistoryLoading: true, historyError: null });
         try {
-          // Add a small delay to simulate network/processing and avoid rapid-fire calls
           const history = await apiService.fetchHistory();
           set({ history, isHistoryLoading: false });
         } catch (e: any) { 
@@ -237,12 +235,9 @@ export const useAppStore = create<AppState>()(
           const normalizedML = Number(merged.mLinear) || 0;
           const normalizedM2 = Number(merged.m2) || 0;
           const normalizedLargura = Number(merged.largura) || 0;
-          
-          // Use updates.processo if provided, otherwise fallback to current.processo or conference.processo
-          const normalizedProcesso = (merged.modoOrigem === 'diversos' && merged.tipoTecido !== 'Celular') 
+          const normalizedProcesso = (merged.modoOrigem === 'diversos' || current.modoOrigem === 'diversos') 
             ? '' 
-            : (updates.processo ?? current.processo ?? conference.processo);
-          
+            : (merged.processo ?? current.processo ?? conference.processo);
           const normalizedEndereco = merged.endereco || '';
           const normalizedItem = (merged.item || '').trim();
           const normalizedNf = (merged.nf || '').trim();

@@ -6,16 +6,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import DashboardPage from '@/pages/DashboardPage.tsx';
-import LeftPanel from '@/components/LeftPanel.tsx';
 
-const RightPanel = lazy(() => import('@/components/RightPanel.tsx'));
-const HistoryPanel = lazy(() => import('@/components/HistoryPanel.tsx'));
-const MotorControlePage = lazy(() => import('@/pages/MotorControlePage.tsx'));
-const EstoquePage = lazy(() => import('@/pages/EstoquePage.tsx'));
-const SaidaPage = lazy(() => import('@/pages/SaidaPage.tsx'));
-const SettingsPage = lazy(() => import('@/pages/SettingsPage.tsx'));
-const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal.tsx'));
+const LeftPanel = lazy(() => import('@/components/LeftPanel'));
+const RightPanel = lazy(() => import('@/components/RightPanel'));
+const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
+const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
+const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = memo(() => (
   <div className="p-8 space-y-4">
@@ -29,44 +29,17 @@ const PageSkeleton = memo(() => (
   </div>
 ));
 
-const TAB_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  inicio: DashboardPage,
-  tecido: LeftPanel,
-  madeira: LeftPanel,
-  motor: MotorControlePage,
-  estoque: EstoquePage,
-  saida: SaidaPage,
-  table: RightPanel,
-  history: HistoryPanel,
-  settings: SettingsPage,
-};
-
-const TabRenderer = memo(({ activeTab, isMobile }: { activeTab: string; isMobile: boolean }) => {
-  const isFormTab = useMemo(() => ['motor'].includes(activeTab), [activeTab]);
-  const [isWide, setIsWide] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1280 : false);
-
-  useEffect(() => {
-    const handleResize = () => setIsWide(window.innerWidth >= 1280);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardPage;
-
+const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; isWide?: boolean; isMobile: boolean }) => {
+  const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
+  
   if (isWide && isFormTab && !isMobile) {
     return (
       <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-8">
         <div className="w-full xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
-          {activeTab === 'motor' ? (
-            <Suspense fallback={<PageSkeleton />}>
-              <MotorControlePage />
-            </Suspense>
-          ) : <LeftPanel />}
+          {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
         <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden xl:block">
-          <Suspense fallback={<PageSkeleton />}>
-            <RightPanel />
-          </Suspense>
+          <RightPanel />
         </div>
       </div>
     );
@@ -74,9 +47,15 @@ const TabRenderer = memo(({ activeTab, isMobile }: { activeTab: string; isMobile
 
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden">
-      <Suspense fallback={<PageSkeleton />}>
-        <ActiveComponent />
-      </Suspense>
+      {activeTab === 'inicio' && <DashboardPage />}
+      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
+      {activeTab === 'motor' && <MotorControlePage />}
+      {activeTab === 'estoque' && <EstoquePage />}
+      {activeTab === 'saida' && <SaidaPage />}
+      {activeTab === 'table' && <RightPanel />}
+      {activeTab === 'history' && <HistoryPanel />}
+      {activeTab === 'settings' && <SettingsPage />}
+      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
     </div>
   );
 });
@@ -90,11 +69,7 @@ export default function Index() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Only load if history is empty to avoid infinite loops
-    const state = useAppStore.getState();
-    if (state.history.length === 0 && !state.isHistoryLoading && !state.historyError) {
-      loadHistory();
-    }
+    loadHistory();
   }, [loadHistory]);
 
   useKeyboardShortcuts({
@@ -106,19 +81,27 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
-        <AppSidebar activeTab={activeTab} onTabChange={handleTabChange} />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen relative">
+      <div className="min-h-[100dvh] flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
+        <AppSidebar 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange} 
+        />
+
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
           <TopBar />
+
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
             <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
-              <div className="p-2 sm:p-4 xl:p-8 h-full">
-                <TabRenderer activeTab={activeTab} isMobile={isMobile} />
-              </div>
+              <Suspense fallback={<PageSkeleton />}>
+                <div className="p-2 sm:p-4 xl:p-8 h-full">
+                  <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} />
+                </div>
+              </Suspense>
             </div>
           </main>
         </div>
       </div>
+
       <Suspense fallback={null}>
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </Suspense>

@@ -43,11 +43,9 @@ export default function DashboardPage() {
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span>
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
                 <Download className="w-4 h-4" />
               </Button>
-            </span>
             </TooltipTrigger>
             <TooltipContent className="font-semibold">Exportar Banco de Dados</TooltipContent>
           </Tooltip>

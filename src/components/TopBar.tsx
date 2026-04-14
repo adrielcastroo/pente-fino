@@ -120,8 +120,7 @@ const TopBar = memo(function TopBar() {
           {registros.length > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span>
-                  <Button 
+                <Button 
                   onClick={exportExcel}
                   size="sm"
                   disabled={isArchiving}
@@ -139,7 +138,6 @@ const TopBar = memo(function TopBar() {
                     </Badge>
                   )}
                 </Button>
-              </span>
               </TooltipTrigger>
               <TooltipContent className="font-semibold">
                 <p>Exportar {registros.length} registros para Excel</p>

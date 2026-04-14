@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: "es2020", // Better compatibility for older tablets like TCL Tab 10L
+    target: "esnext", // Modern browsers only
     minify: "esbuild", // Fast minification
     cssCodeSplit: true,
     reportCompressedSize: false, // Performance improvement during build
@@ -21,14 +21,22 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['@tanstack/react-query', 'lucide-react', 'sonner'],
+          'vendor-ui': [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tooltip',
+          ],
+          'vendor-motion': ['framer-motion'],
           'vendor-charts': ['recharts'],
-          'vendor-xlsx': ['xlsx'],
+          'vendor-utils': ['date-fns', 'zod', 'zustand', '@tanstack/react-query'],
         },
       },
     },
-    // Chunks over 500kb will trigger warnings, but with chunking it's okay
-    chunkSizeWarningLimit: 600,
   },
   plugins: [
     react(),

@@ -53,19 +53,3 @@ export function useIsLandscape() {
 
   return isLandscape;
 }
-
-export function useIsLowPerformance() {
-  const [isLowPerf, setIsLowPerf] = React.useState(false);
-
-  React.useEffect(() => {
-    const check = () => {
-      const cores = navigator.hardwareConcurrency || 4;
-      // @ts-ignore
-      const memory = navigator.deviceMemory || 4;
-      setIsLowPerf(cores <= 4 || memory <= 3);
-    };
-    check();
-  }, []);
-
-  return isLowPerf;
-}

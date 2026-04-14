@@ -41,7 +41,7 @@ export default function MotorControlePage() {
   const formData = useAppStore(s => s.formData);
   const setFormData = useAppStore(s => s.setFormData);
   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
-  const history = useAppStore(s => s.history);
+  const { isLow } = usePerformance();
 
   
   const subMode = formData.motorSubMode;
@@ -109,7 +109,7 @@ export default function MotorControlePage() {
     }
 
     // 2. Process history
-    // 2. Process history (already available via hook and dependencies)
+    const history = useAppStore.getState().history;
     for (let i = 0, len = history.length; i < len; i++) {
       const conf = history[i];
       const regs = conf.registros;
@@ -132,7 +132,7 @@ export default function MotorControlePage() {
     }
     
     return { allSeriesSet: set, maxSequencial: max };
-  }, [registros, modelo, subMode, nf, history]);
+  }, [registros, modelo, subMode, nf]);
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => {
     return allSeriesSet.has(`${cleanedSerie}|${nf.trim()}`);
@@ -295,11 +295,9 @@ export default function MotorControlePage() {
           <div className="flex gap-2 flex-shrink-0 relative z-10">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span>
-                  <Button variant="ghost" size="icon" onClick={resetFields} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </span>
+                <Button variant="ghost" size="icon" onClick={resetFields} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
+                  <X className="w-4 h-4" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
             </Tooltip>
@@ -317,19 +315,13 @@ export default function MotorControlePage() {
             {temCaixa && (
               <div className="flex items-center gap-2 sm:gap-3 ml-auto bg-primary/10 px-3 sm:px-4 py-2 rounded-2xl border border-primary/20 flex-shrink-0">
                 <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Nº Caixa:</span>
-                <div className="relative group">
-                  <input
-                    type="number"
-                    min="1"
-                    value={caixaNum}
-                    onChange={e => setCaixaNum(e.target.value)}
-                    className="w-12 sm:w-14 bg-background text-center border-2 border-primary/30 rounded-lg text-primary font-black text-sm outline-none p-1 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-text hover:border-primary/50"
-                    title="Clique para editar o número da caixa"
-                  />
-                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Clique para editar
-                  </div>
-                </div>
+                <input
+                  type="number"
+                  min="1"
+                  value={caixaNum}
+                  onChange={e => setCaixaNum(e.target.value)}
+                  className="w-10 sm:w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
+                />
                 <Badge className="bg-primary text-white font-black text-[10px] rounded-lg whitespace-nowrap">CX{caixaNum.padStart(2, '0')}</Badge>
               </div>
             )}
