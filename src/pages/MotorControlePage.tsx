@@ -299,9 +299,11 @@ export default function MotorControlePage() {
           <div className="flex gap-2 flex-shrink-0 relative z-10">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={resetFields} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
-                  <X className="w-4 h-4" />
-                </Button>
+                <span>
+                  <Button variant="ghost" size="icon" onClick={resetFields} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </span>
               </TooltipTrigger>
               <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
             </Tooltip>
