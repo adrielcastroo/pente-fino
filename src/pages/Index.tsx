@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense, useMemo, memo } from 'react';
+console.log('Index page mounting...');
 import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
