@@ -118,7 +118,7 @@ export default function RightPanel() {
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const rows = useMemo(() => {
+  const { rows, totals } = useMemo(() => {
     let result = [...registros];
     const q = searchQuery.toLowerCase().trim();
     if (q) {
@@ -133,13 +133,22 @@ export default function RightPanel() {
     if (sortBy && SORT_MAP[sortBy]) {
       result.sort(SORT_MAP[sortBy]);
     }
-    return result;
+
+    const t = result.reduce((acc, r) => ({
+      ml: acc.ml + r.mLinear,
+      m2: acc.m2 + r.m2,
+      qtd: acc.qtd + (r.quantidade || 0)
+    }), { ml: 0, m2: 0, qtd: 0 });
+
+    return { rows: result, totals: t };
   }, [registros, searchQuery, sortBy]);
 
-  const totalML = useMemo(() => rows.reduce((a, r) => a + r.mLinear, 0), [rows]);
-  const totalM2 = useMemo(() => rows.reduce((a, r) => a + r.m2, 0), [rows]);
-  const totalQtd = useMemo(() => rows.reduce((a, r) => a + (r.quantidade || 0), 0), [rows]);
-  const columns = useMemo(() => getRegistroColumns(rows, currentMode), [rows, currentMode]);
+  const totalML = totals.ml;
+  const totalM2 = totals.m2;
+  const totalQtd = totals.qtd;
+
+  // Use all registros for columns to keep them stable while searching
+  const columns = useMemo(() => getRegistroColumns(registros, currentMode), [registros, currentMode]);
 
   const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
@@ -200,8 +209,8 @@ export default function RightPanel() {
         </Badge>
       );
     }
-    if (column.key === 'item') return highlight(r.item || '—', searchQuery.toLowerCase().trim());
-    if (column.key === 'endereco') return highlight(r.endereco || '—', searchQuery.toLowerCase().trim());
+    if (column.key === 'item') return <HighlightedText text={r.item || '—'} q={searchQuery.toLowerCase().trim()} />;
+    if (column.key === 'endereco') return <HighlightedText text={r.endereco || '—'} q={searchQuery.toLowerCase().trim()} />;
     return displayVal;
   }, [editingCell, editValue, searchQuery, copyText, commitEdit]);
 
