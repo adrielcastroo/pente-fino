@@ -551,7 +551,7 @@ const LeftPanel = memo(function LeftPanel() {
 
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-3 sm:p-5 xl:p-8 flex-1 overflow-y-auto space-y-5 sm:space-y-6 xl:space-y-8 custom-scrollbar relative">
+      <div className="p-3 sm:p-5 xl:p-6 flex-1 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar relative">
         
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
@@ -782,12 +782,12 @@ const LeftPanel = memo(function LeftPanel() {
         
 
         {/* Form Fields */}
-        <div className="space-y-8 relative z-10">
-          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] flex items-center gap-2 opacity-50 ml-2">
+        <div className="space-y-4 relative z-10 p-4 sm:p-5 rounded-2xl border border-border/50 bg-card/40">
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] flex items-center gap-2 opacity-50">
             <Sparkles className="w-3.5 h-3.5 text-primary" /> {isMadeira ? 'Especificações Técnicas' : 'Detalhamento do Material'}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
             {/* PROC field — Coulisse, IA, and Celular */}
             {requiresProcesso && (
               <div className="space-y-3 sm:col-span-1 group/field">
@@ -813,8 +813,8 @@ const LeftPanel = memo(function LeftPanel() {
                     value={processo}
                     onChange={e => handleProcessoChange(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                    className={`w-full h-16 rounded-3xl border-2 px-6 text-sm font-mono font-bold transition-all duration-500 shadow-sm ${
-                      lockProcesso ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-card/30 border-border/40 focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5'
+                    className={`w-full h-12 rounded-2xl border-2 px-5 text-sm font-mono font-bold transition-all duration-300 ${
+                      lockProcesso ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-muted/30 border-border/40 focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5'
                     }`}
                     placeholder="Ex: 123456..."
                     autoComplete="off"
@@ -835,7 +835,7 @@ const LeftPanel = memo(function LeftPanel() {
                   value={item}
                   onChange={e => handleItemChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                  className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm placeholder:opacity-30"
+                  className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:opacity-30"
                   placeholder="Ex: SRC-3003-05-30..." 
                   autoComplete="off"
                 />
@@ -857,7 +857,7 @@ const LeftPanel = memo(function LeftPanel() {
                   type="number" step="0.01" value={manualLargura}
                   onChange={e => setManualLargura(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                  className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm placeholder:opacity-30"
+                  className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:opacity-30"
                   placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                 />
               </div>
@@ -912,7 +912,7 @@ const LeftPanel = memo(function LeftPanel() {
                     value={lote}
                     onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                     onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
-                    className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                    className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
                     placeholder="Lote..." autoComplete="off"
                   />
                 </div>
@@ -924,7 +924,7 @@ const LeftPanel = memo(function LeftPanel() {
                     type="number" step="1" value={quantidade}
                     onChange={e => setQuantidade(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                    className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
                     placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
                   />
                 </div>
@@ -946,7 +946,7 @@ const LeftPanel = memo(function LeftPanel() {
                       value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
                       onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
-                      className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                      className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
                     />
                     {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
@@ -966,7 +966,7 @@ const LeftPanel = memo(function LeftPanel() {
                       type="number" step="0.01" value={aiLargura}
                       onChange={e => setAiLargura(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-                      className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                      className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
                       placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                     />
                   </div>
@@ -979,7 +979,7 @@ const LeftPanel = memo(function LeftPanel() {
                       value={lote}
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
-                      className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                      className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
                       placeholder="Lote..." autoComplete="off"
                     />
                   </div>
@@ -1013,8 +1013,8 @@ const LeftPanel = memo(function LeftPanel() {
                     value={endereco}
                     onChange={e => handleEnderecoChange(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className={`w-full h-16 rounded-3xl border-2 px-6 text-sm font-mono font-bold transition-all duration-500 uppercase shadow-sm ${
-                      lockEndereco ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-card/30 border-border/40 focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5')
+                    className={`w-full h-12 rounded-2xl border-2 px-5 text-sm font-mono font-bold transition-all duration-300 uppercase ${
+                      lockEndereco ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/30 border-border/40 focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5')
                     }`}
                     placeholder="TEC01.A.N03" autoComplete="off"
                     readOnly={lockEndereco && !!lockedEndereco}
@@ -1029,13 +1029,13 @@ const LeftPanel = memo(function LeftPanel() {
 
 
         {/* Computed Preview Card */}
-        <div className="p-5 sm:p-8 rounded-[1.8rem] sm:rounded-[2.5rem] bg-[#0A0D14] text-white shadow-2xl relative overflow-hidden group/card transition-all duration-700 hover:scale-[1.02] border border-white/5">
-          <div className="absolute top-0 right-0 p-10 opacity-5 group-hover/card:scale-150 group-hover/card:rotate-12 transition-all duration-1000 hidden sm:block">
-             <Package className="w-40 h-40 text-primary" />
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#0A0D14] text-white shadow-xl relative overflow-hidden group/card border border-white/5">
+          <div className="absolute top-0 right-0 p-8 opacity-5 hidden sm:block">
+             <Package className="w-32 h-32 text-primary" />
           </div>
-          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-10 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 relative z-10">
             {isMadeira ? (
               <>
                 <div className="space-y-1 sm:space-y-1.5">
@@ -1059,7 +1059,7 @@ const LeftPanel = memo(function LeftPanel() {
                 </div>
               </>
             )}
-            <div className="col-span-2 space-y-3 border-t border-white/10 pt-6">
+            <div className="col-span-2 space-y-2 border-t border-white/10 pt-4">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Lote Sistema Gerado</p>
                 <div className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -1073,12 +1073,12 @@ const LeftPanel = memo(function LeftPanel() {
 
 
         {/* Action Buttons */}
-        <div className="space-y-3 pt-2 pb-8">
+        <div className="space-y-3 pt-1 pb-6">
           <Button
             onClick={handleAdd}
-            className="w-full h-16 rounded-[1.5rem] bg-primary text-white font-black text-base uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:-translate-y-1 active:translate-y-0 group"
+            className="w-full h-14 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 group"
           >
-            <Plus className="w-6 h-6 mr-2 group-hover:rotate-90 transition-transform duration-500" />
+            <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-500" />
             Adicionar Registro
           </Button>
 
@@ -1086,7 +1086,7 @@ const LeftPanel = memo(function LeftPanel() {
             <Button
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className={`w-full h-14 rounded-[1.5rem] font-black uppercase tracking-widest transition-all duration-500 ${
+              className={`w-full h-12 rounded-2xl font-black uppercase tracking-widest transition-all duration-300 ${
                 showPreview 
                   ? 'bg-primary/10 border-primary text-primary shadow-inner' 
                   : 'border-border/60 hover:border-primary/40 hover:bg-primary/5'
