@@ -3,42 +3,25 @@ import { useState, useEffect } from 'react';
 export type PerformanceLevel = 'low' | 'high';
 
 export function usePerformance() {
-  const [level, setLevel] = useState<PerformanceLevel>('high');
+  const [level, setLevel] = useState<PerformanceLevel>('low');
 
   useEffect(() => {
-    const checkPerformance = () => {
-      // 1. Check hardware concurrency (CPU cores)
-      const cores = navigator.hardwareConcurrency || 4;
-      
-      // 2. Check device memory (RAM) - Not supported in all browsers
-      const memory = (navigator as any).deviceMemory || 8;
-      
-      // 3. Check connection (if available)
-      const connection = (navigator as any).connection;
-      const isSlowConn = connection && (connection.saveData || ['slow-2g', '2g', '3g'].includes(connection.effectiveType));
-
-      // 4. Simple check for low-end mobile devices based on screen size + cores
-      const isMobile = window.innerWidth < 768;
-      const isOldMobile = isMobile && cores < 8;
-
-      // 5. Heuristic for "low" performance
-      if (cores < 4 || memory < 4 || isSlowConn || isOldMobile) {
-        setLevel('low');
-      } else {
-        setLevel('high');
-      }
-    };
-
-    checkPerformance();
-    
-    // Optional: Allow manual override via localStorage
+    // Allow manual override via localStorage
     const override = localStorage.getItem('performance-mode');
-    if (override === 'low' || override === 'high') {
-      setLevel(override as PerformanceLevel);
+    if (override === 'high') {
+      setLevel('high');
+      return;
+    }
+
+    // Default is 'low' (lightweight mode). Only upgrade to 'high' on powerful desktops.
+    const cores = navigator.hardwareConcurrency || 4;
+    const memory = (navigator as any).deviceMemory || 4;
+    const isDesktop = window.innerWidth >= 1024;
+
+    if (isDesktop && cores >= 8 && memory >= 8) {
+      setLevel('high');
     }
   }, []);
 
-  const isLow = level === 'low';
-
-  return { level, isLow, setLevel };
+  return { level, isLow: level === 'low', setLevel };
 }

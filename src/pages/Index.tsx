@@ -5,8 +5,6 @@ import { useAppNavigation } from '@/hooks/useAppNavigation';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePerformance } from '@/hooks/use-performance';
 
 const LeftPanel = lazy(() => import('@/components/LeftPanel'));
 const RightPanel = lazy(() => import('@/components/RightPanel'));
@@ -19,7 +17,7 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = memo(() => (
-  <div className="p-8 space-y-4 animate-pulse">
+  <div className="p-8 space-y-4">
     <div className="h-8 bg-muted rounded w-1/4" />
     <div className="h-32 bg-muted rounded w-full" />
     <div className="grid grid-cols-3 gap-4">
@@ -33,7 +31,6 @@ const PageSkeleton = memo(() => (
 const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab), [activeTab]);
   
-  // On desktop/wide screens, show form and table side-by-side
   if (isWide && isFormTab) {
     return (
       <div className="flex flex-col lg:flex-row h-full gap-4 xl:gap-8">
@@ -47,33 +44,20 @@ const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: b
     );
   }
 
-  // Fallback for mobile or non-form tabs
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="h-full"
-        >
-          {activeTab === 'inicio' && <DashboardPage />}
-          {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
-          {activeTab === 'motor' && <MotorControlePage />}
-          {activeTab === 'estoque' && <EstoquePage />}
-          {activeTab === 'saida' && <SaidaPage />}
-          {activeTab === 'table' && <RightPanel />}
-          {activeTab === 'history' && <HistoryPanel />}
-          {activeTab === 'settings' && <SettingsPage />}
-          {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
-        </motion.div>
-      </AnimatePresence>
+      {activeTab === 'inicio' && <DashboardPage />}
+      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
+      {activeTab === 'motor' && <MotorControlePage />}
+      {activeTab === 'estoque' && <EstoquePage />}
+      {activeTab === 'saida' && <SaidaPage />}
+      {activeTab === 'table' && <RightPanel />}
+      {activeTab === 'history' && <HistoryPanel />}
+      {activeTab === 'settings' && <SettingsPage />}
+      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
     </div>
   );
 });
-
 
 TabRenderer.displayName = 'TabRenderer';
 
@@ -81,7 +65,6 @@ export default function Index() {
   const loadHistory = useAppStore(s => s.loadHistory);
   const { activeTab, handleTabChange } = useAppNavigation();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const { isLow } = usePerformance();
 
   useEffect(() => {
     loadHistory();
@@ -96,7 +79,7 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background/30 overflow-hidden relative">
+      <div className="min-h-[100dvh] flex w-full flex-col lg:flex-row bg-background overflow-hidden relative">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
@@ -105,33 +88,14 @@ export default function Index() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
           <TopBar />
 
-          <main className="flex-1 overflow-y-auto bg-background/20 custom-scrollbar relative">
-            <AnimatePresence mode="wait">
-              {isLow ? (
-                <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
-                  <Suspense fallback={<PageSkeleton />}>
-                    <div className="p-2 sm:p-6 lg:p-8 h-full">
-                      <TabRenderer activeTab={activeTab} isWide={true} />
-                    </div>
-                  </Suspense>
+          <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
+            <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
+              <Suspense fallback={<PageSkeleton />}>
+                <div className="p-2 sm:p-6 lg:p-8 h-full">
+                  <TabRenderer activeTab={activeTab} isWide={true} />
                 </div>
-              ) : (
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="h-full w-full max-w-[2000px] mx-auto"
-                >
-                  <Suspense fallback={<PageSkeleton />}>
-                    <div className="p-2 sm:p-6 lg:p-8 h-full">
-                      <TabRenderer activeTab={activeTab} isWide={true} />
-                    </div>
-                  </Suspense>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </Suspense>
+            </div>
           </main>
         </div>
       </div>

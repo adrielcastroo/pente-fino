@@ -6,8 +6,6 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
-import { usePerformance } from '@/hooks/use-performance';
-import { motion } from 'framer-motion';
 
 export default function DashboardPage() {
   const {
@@ -17,12 +15,9 @@ export default function DashboardPage() {
     setDetailChart,
     handleStatClick,
     handleExport,
-    containerVariants,
-    itemVariants
   } = useDashboard();
-  const { isLow } = usePerformance();
 
-  const content = (
+  return (
     <div className="p-4 sm:p-6 lg:p-10 xl:p-12 space-y-8 sm:space-y-10 lg:space-y-12 max-w-[2000px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-border/10">
@@ -41,16 +36,16 @@ export default function DashboardPage() {
         
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <Badge variant="outline" className="px-3 py-2 rounded-xl border-border/40 bg-card/40 text-foreground text-[10px] font-black flex gap-2 shadow-sm border uppercase tracking-widest whitespace-nowrap">
-            <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <Activity className="w-3.5 h-3.5 text-primary" />
             <span>Sistema Ativo</span>
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-border/40 bg-card/40 backdrop-blur-md hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-all shadow-sm" onClick={() => handleExport(history, 'Historico_Geral')}>
+              <Button variant="outline" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl border-border/40 bg-card/40 hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-colors shadow-sm" onClick={() => handleExport(history, 'Historico_Geral')}>
                 <Download className="w-4 h-5 sm:w-5 sm:h-6" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="bg-popover/95 backdrop-blur-md font-bold p-2 rounded-lg shadow-xl">Exportar Banco de Dados</TooltipContent>
+            <TooltipContent className="font-bold p-2 rounded-lg shadow-xl">Exportar Banco de Dados</TooltipContent>
           </Tooltip>
         </div>
       </header>
@@ -59,8 +54,6 @@ export default function DashboardPage() {
       <StatCards 
         stats={stats} 
         onStatClick={handleStatClick} 
-        containerVariants={isLow ? undefined : containerVariants} 
-        itemVariants={isLow ? undefined : itemVariants} 
       />
 
       {/* Charts Grid */}
@@ -102,17 +95,5 @@ export default function DashboardPage() {
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
     </div>
-  );
-
-  if (isLow) return content;
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {content}
-    </motion.div>
   );
 }
