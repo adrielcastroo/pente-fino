@@ -85,8 +85,11 @@ export default function EstoquePage() {
     return allPosicoes.filter(p => p.estrutura === activeTec);
   }, [allPosicoes, activeTec]);
 
+  const totalSlots = useMemo(() => {
+    return Object.values(TEC_CONFIG).reduce((acc, c) => acc + c.cols.length * c.levels * 30, 0);
+  }, []);
+
   const stats = useMemo(() => {
-    const totalSlots = Object.values(TEC_CONFIG).reduce((acc, c) => acc + c.cols.length * c.levels * 30, 0);
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
     
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
@@ -99,7 +102,7 @@ export default function EstoquePage() {
     
     const free = totalSlots - occupied - blocked - reserved - exited;
     return { totalSlots, occupied, blocked, reserved, exited, free };
-  }, [allPosicoes]);
+  }, [allPosicoes, totalSlots]);
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
