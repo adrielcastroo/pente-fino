@@ -361,58 +361,149 @@ export default function RightPanel() {
 
       <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
-          <table className="w-full border-separate border-spacing-0 table-auto">
-            <thead>
-              <tr className="bg-muted/30">
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
-                {columns.map(column => (
-                  <th 
-                    key={column.key} 
-                    className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
-                  >
-                    {column.shortLabel || column.label}
+          {isMotorControle ? (
+            /* ===== MOTOR/CONTROLE GROUPED VIEW ===== */
+            <table className="w-full border-separate border-spacing-0 table-auto">
+              <thead>
+                <tr className="bg-muted/30">
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                    Séries Bipadas
                   </th>
-                ))}
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/20">
-              {sortedRows.map((r, i) => (
-                <TableRow
-                  key={r.id}
-                  r={r}
-                  i={i}
-                  columns={columns}
-                  searchQuery={trimmedQuery}
-                  onStartEdit={startEdit}
-                  onDelete={deleteRegistro}
-                  onCopy={copyText}
-                  isLow={isLow}
-                  editingCell={editingCell}
-                  editValue={editValue}
-                  onEditValueChange={setEditValue}
-                  onCommitEdit={commitEdit}
-                  onCancelEdit={cancelEdit}
-                />
-              ))}
-            </tbody>
-            {sortedRows.length > 0 && (
-              <tfoot className="sticky bottom-0 z-10">
-                <tr className="bg-primary/95 text-white font-black font-mono text-[11px]  shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
-                  <td className="px-4 py-4">FIM</td>
-                  {columns.map(column => (
-                    <td key={column.key} className="px-4 py-4">
-                      {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
-                      {column.key === 'mLinear' ? formatML(totals.ml) : ''}
-                      {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
-                      {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
-                    </td>
-                  ))}
-                  <td className="px-4 py-4"></td>
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                    Séries Sistema
+                  </th>
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
+                    Ações
+                  </th>
                 </tr>
-              </tfoot>
-            )}
-          </table>
+              </thead>
+              <tbody>
+                {motorGroups.map((group, gi) => (
+                  <>
+                    {/* Spacer between groups */}
+                    {gi > 0 && (
+                      <>
+                        <tr key={`spacer1-${gi}`}><td colSpan={3} className="h-4 bg-background"></td></tr>
+                        <tr key={`spacer2-${gi}`}><td colSpan={3} className="h-4 bg-background"></td></tr>
+                      </>
+                    )}
+                    {/* Group header */}
+                    <tr key={`header-${gi}`} className="bg-primary/10">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-foreground">
+                        {group.cxLabel} {group.item}
+                      </td>
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-primary">
+                        séries
+                      </td>
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] text-muted-foreground font-bold">
+                        {group.rows.length} itens
+                      </td>
+                    </tr>
+                    {/* Group rows */}
+                    {group.rows.map((r) => (
+                      <tr key={r.id} className={`group hover:bg-muted/40 border-b border-border/20 ${r.isNew ? 'bg-primary/5' : ''}`}>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-muted-foreground/90">
+                          {r.item} {r.lote}
+                        </td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-foreground font-bold">
+                          <Badge 
+                            variant="outline" 
+                            className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed"
+                            onClick={() => copyText(r.loteSistema)}
+                          >
+                            {r.loteSistema || '—'}
+                          </Badge>
+                        </td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3">
+                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Copiar</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                                  <X className="w-3.5 h-3.5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Remover</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+              {sortedRows.length > 0 && (
+                <tfoot className="sticky bottom-0 z-10">
+                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                    <td className="px-4 py-4">{sortedRows.length} {sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}</td>
+                    <td className="px-4 py-4">{motorGroups.length} {motorGroups.length !== 1 ? 'CAIXAS' : 'CAIXA'}</td>
+                    <td className="px-4 py-4"></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          ) : (
+            /* ===== DEFAULT TABLE VIEW ===== */
+            <table className="w-full border-separate border-spacing-0 table-auto">
+              <thead>
+                <tr className="bg-muted/30">
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
+                  {columns.map(column => (
+                    <th 
+                      key={column.key} 
+                      className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
+                    >
+                      {column.shortLabel || column.label}
+                    </th>
+                  ))}
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/20">
+                {sortedRows.map((r, i) => (
+                  <TableRow
+                    key={r.id}
+                    r={r}
+                    i={i}
+                    columns={columns}
+                    searchQuery={trimmedQuery}
+                    onStartEdit={startEdit}
+                    onDelete={deleteRegistro}
+                    onCopy={copyText}
+                    isLow={isLow}
+                    editingCell={editingCell}
+                    editValue={editValue}
+                    onEditValueChange={setEditValue}
+                    onCommitEdit={commitEdit}
+                    onCancelEdit={cancelEdit}
+                  />
+                ))}
+              </tbody>
+              {sortedRows.length > 0 && (
+                <tfoot className="sticky bottom-0 z-10">
+                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px]  shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                    <td className="px-4 py-4">FIM</td>
+                    {columns.map(column => (
+                      <td key={column.key} className="px-4 py-4">
+                        {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
+                        {column.key === 'mLinear' ? formatML(totals.ml) : ''}
+                        {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
+                        {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
+                      </td>
+                    ))}
+                    <td className="px-4 py-4"></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          )}
 
           {sortedRows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-center px-6">
