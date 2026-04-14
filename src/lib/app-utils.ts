@@ -134,10 +134,14 @@ export function generateLoteSistemaCaixa(
   existingRegistros: Registro[]
 ): string {
   const itemNorm = (item || '').trim().toLowerCase();
-  const count = existingRegistros.reduce((acc, r) => 
-    (r.item || '').trim().toLowerCase() === itemNorm ? acc + 1 : acc, 0);
+  let count = 0;
+  for (let i = 0, len = existingRegistros.length; i < len; i++) {
+    if ((existingRegistros[i].item || '').trim().toLowerCase() === itemNorm) {
+      count++;
+    }
+  }
   const cxLabel = `CX${(count + 1).toString().padStart(2, '0')}`;
-  const procTrimmed = processo.trim();
+  const procTrimmed = (processo || '').trim();
   const mlFormatted = fmtML(mLinear);
   const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', mlFormatted].filter(Boolean);
   return parts.join(' ');
