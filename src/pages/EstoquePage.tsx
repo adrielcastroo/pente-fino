@@ -68,7 +68,9 @@ export default function EstoquePage() {
 
   const loadPosicoes = async () => {
     setLoading(true);
-    const { data: allData, error } = await supabase.from('estoque_posicoes').select('*');
+    const { data: allData, error } = await supabase
+      .from('estoque_posicoes')
+      .select('id,estrutura,coluna,nivel,posicao,status,item,proc,m2,largura,m_linear,lote,endereco,lote_sistema,conferente_entrada,conferente_saida,data_registro,data_saida');
     if (!error && allData) {
       setAllPosicoes(allData as Posicao[]);
     }

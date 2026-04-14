@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
 import { Download, User, Archive, CheckCircle2 } from 'lucide-react';
@@ -10,13 +11,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TopBar = memo(function TopBar() {
-  const currentMode = useAppStore(s => s.currentMode);
-  const processo = useAppStore(s => s.processo);
-  const conferente = useAppStore(s => s.conferente);
-  const setConferente = useAppStore(s => s.setConferente);
-  const registros = useAppStore(s => s.registros);
-  const archiveAndClear = useAppStore(s => s.archiveAndClear);
-  const isArchiving = useAppStore(s => s.isArchiving);
+  const { currentMode, processo, conferente, setConferente, registros, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
+    currentMode: s.currentMode,
+    processo: s.processo,
+    conferente: s.conferente,
+    setConferente: s.setConferente,
+    registros: s.registros,
+    archiveAndClear: s.archiveAndClear,
+    isArchiving: s.isArchiving,
+  })));
   
   const exportExcel = async () => {
     if (isArchiving) return;
