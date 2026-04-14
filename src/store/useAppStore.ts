@@ -93,6 +93,7 @@ export const useAppStore = create<AppState>()(
           ...r, 
           ...updates, 
           wasEdited: true, 
+          editedBy: state.conferente || 'Sistema',
           editedAt: new Date().toISOString() 
         } : r)
       })),
@@ -267,7 +268,7 @@ export const useAppStore = create<AppState>()(
             was_edited: true,
             edited_by: editedBy,
             edited_at: editedAt,
-            quantidade: merged.quantidade || null
+            quantidade: merged.quantidade ?? null
           };
           
           await apiService.updateRegistro(conferenceId, registroId, payload);

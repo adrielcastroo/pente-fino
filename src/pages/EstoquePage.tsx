@@ -29,6 +29,7 @@ interface Posicao {
   conferente_saida: string;
   data_registro: string | null;
   data_saida: string | null;
+  registro_id: string | null;
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
@@ -71,7 +72,7 @@ export default function EstoquePage() {
     setLoading(true);
     const { data: allData, error } = await supabase
       .from('estoque_posicoes')
-      .select('id,estrutura,coluna,nivel,posicao,status,item,proc,m2,largura,m_linear,lote,endereco,lote_sistema,conferente_entrada,conferente_saida,data_registro,data_saida');
+      .select('id,estrutura,coluna,nivel,posicao,status,item,proc,m2,largura,m_linear,lote,endereco,lote_sistema,conferente_entrada,conferente_saida,data_registro,data_saida,registro_id');
     if (!error && allData) {
       setAllPosicoes(allData as Posicao[]);
     }
@@ -117,7 +118,7 @@ export default function EstoquePage() {
       if (!confirm('Dar saída neste tecido? Isso removerá o item do estoque e arquivará o registro.')) return;
       
       const { error: saError } = await supabase.from('estoque_saidas').insert({
-        registro_id: pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
+        registro_id: pos.registro_id || pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
         lote: pos.lote, endereco: pos.endereco, lote_sistema: pos.lote_sistema, estrutura: pos.estrutura,
         coluna: pos.coluna, nivel: pos.nivel, posicao: pos.posicao, conferente_entrada: pos.conferente_entrada,
         conferente_saida: useAppStore.getState().conferente || 'Sistema',

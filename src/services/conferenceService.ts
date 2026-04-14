@@ -52,7 +52,7 @@ export const conferenceService = {
           wasEdited: r.was_edited,
           editedBy: r.edited_by,
           editedAt: r.edited_at,
-          quantidade: r.quantidade || undefined,
+          quantidade: r.quantidade ?? undefined,
         })),
     }));
   },
