@@ -84,33 +84,35 @@ export default function MotorControlePage() {
     return raw.trim();
   }, []);
 
-  const isDuplicate = useCallback((cleanedSerie: string): boolean => {
-    // 1. Check current session
+  const { allSeriesSet, maxSequencial } = useMemo(() => {
+    const set = new Set<string>();
+    let max = 0;
+    
+    // 1. Process current session
     for (let i = 0, len = registros.length; i < len; i++) {
       const r = registros[i];
-      if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote === cleanedSerie) {
-        return true;
+      if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
+        set.add(r.lote);
       }
-    }
-    // 2. Check history
-    const history = useAppStore.getState().history;
-    for (const conf of history) {
-      for (const r of conf.registros) {
-        if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote === cleanedSerie) {
-          return true;
+      if (r.modoOrigem === 'controle' && r.loteSistema) {
+        const lastPart = r.loteSistema.split('*').pop();
+        if (lastPart) {
+          const num = parseInt(lastPart, 10);
+          if (!isNaN(num) && num > max) max = num;
         }
       }
     }
-    return false;
-  }, [registros]);
 
-  const getSequencial = useCallback((): number => {
-    let max = 0;
-    
-    // 1. Check history
+    // 2. Process history
     const history = useAppStore.getState().history;
-    for (const conf of history) {
-      for (const r of conf.registros) {
+    for (let i = 0, len = history.length; i < len; i++) {
+      const conf = history[i];
+      const regs = conf.registros;
+      for (let j = 0, rLen = regs.length; j < rLen; j++) {
+        const r = regs[j];
+        if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
+          set.add(r.lote);
+        }
         if (r.modoOrigem === 'controle' && r.loteSistema) {
           const lastPart = r.loteSistema.split('*').pop();
           if (lastPart) {
@@ -120,20 +122,17 @@ export default function MotorControlePage() {
         }
       }
     }
-
-    // 2. Check current session
-    for (let i = 0, len = registros.length; i < len; i++) {
-      const r = registros[i];
-      if (r.modoOrigem === 'controle' && r.loteSistema) {
-        const lastPart = r.loteSistema.split('*').pop();
-        if (lastPart) {
-          const num = parseInt(lastPart, 10);
-          if (!isNaN(num) && num > max) max = num;
-        }
-      }
-    }
-    return max + 1;
+    
+    return { allSeriesSet: set, maxSequencial: max };
   }, [registros]);
+
+  const isDuplicate = useCallback((cleanedSerie: string): boolean => {
+    return allSeriesSet.has(cleanedSerie);
+  }, [allSeriesSet]);
+
+  const getSequencial = useCallback((): number => {
+    return maxSequencial + 1;
+  }, [maxSequencial]);
 
   const handleModeloBlur = useCallback(() => {
     if (subMode === 'controle') {

@@ -12,11 +12,11 @@ export function computeStats(history: Conference[]) {
   const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
+  // Use a single pass over the history
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || 'Desconhecido';
     
-    // Efficiently get or cache formatted date
     let dateStr = dateCache.get(conference.id);
     if (!dateStr) {
       try {
@@ -46,26 +46,33 @@ export function computeStats(history: Conference[]) {
       
       const modo = r.modoOrigem || 'manual';
       let cat = 'Tecido';
-      if (modo === 'madeira') cat = 'Madeira';
-      else if (modo === 'motor' || modo === 'controle') cat = 'Motor/Controle';
+      let sub = 'Coulisse';
+
+      switch (modo) {
+        case 'madeira':
+          cat = 'Madeira';
+          sub = 'Madeira';
+          break;
+        case 'motor':
+        case 'controle':
+          cat = 'Motor/Controle';
+          sub = 'Motor/Controle';
+          break;
+        case 'openrouter':
+          sub = 'IA';
+          break;
+        case 'diversos':
+          sub = 'Diversos';
+          break;
+      }
       
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
-      
-      let sub = 'Coulisse';
-      if (modo === 'openrouter') sub = 'IA';
-      else if (modo === 'diversos') sub = 'Diversos';
-      else if (modo === 'madeira') sub = 'Madeira';
-      else if (modo === 'motor' || modo === 'controle') sub = 'Motor/Controle';
-      
       subMap.set(sub, (subMap.get(sub) || 0) + 1);
       
       const tipo = r.tipoTecido || 'Rolo';
       tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
     }
   }
-
-  // Pre-allocate arrays if possible, but map/from are fine for typical sizes
-  const timeline = Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7);
 
   return {
     topConferentes: Array.from(confMap, ([name, set]) => ({ name, count: set.size }))
@@ -78,7 +85,7 @@ export function computeStats(history: Conference[]) {
     tipos: Array.from(tipoMap, ([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 6),
-    timeline,
+    timeline: Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7),
     totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,

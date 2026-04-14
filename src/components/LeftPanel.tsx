@@ -156,6 +156,9 @@ const LeftPanel = memo(function LeftPanel() {
   const isDuplicate = useMemo(() => {
     if (isMadeira || !item) return false;
     const lowerItem = item.toLowerCase();
+    // Use a Set for faster lookup if the list is large, but for typically small lists it's okay.
+    // However, if the user has thousands of records, this O(N) check on every render is bad.
+    // Since we are already memoizing, it only runs when 'item' or 'registros' changes.
     for (let i = 0, len = registros.length; i < len; i++) {
       if ((registros[i].item || '').toLowerCase() === lowerItem) return true;
     }
