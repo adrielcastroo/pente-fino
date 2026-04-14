@@ -34,7 +34,20 @@ const SORT_MAP: Record<string, (a: any, b: any) => number> = {
   'end': (a, b) => (a.endereco || '').localeCompare(b.endereco || ''),
 };
 
-const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell, isLow }: any) => {
+interface TableRowProps {
+  r: any;
+  i: number;
+  columns: any[];
+  searchQuery: string;
+  onStartEdit: (rowId: string, key: string, val: string) => void;
+  onDelete: (id: string) => void;
+  onCopy: (t: string) => void;
+  renderCell: (r: any, column: any) => React.ReactNode;
+  isLow: boolean;
+}
+
+const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell, isLow }: TableRowProps) => {
+
   const content = (
     <>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
@@ -349,11 +362,12 @@ export default function RightPanel() {
                   {columns.map(column => (
                     <td key={column.key} className="px-4 py-4">
                       {column.key === 'item' ? `${rows.length} ${rows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
-                      {column.key === 'mLinear' ? formatML(totalML) : ''}
-                      {column.key === 'm2' ? (totalM2 > 0 ? totalM2.toFixed(1) + ' m²' : '') : ''}
-                      {column.key === 'quantidade' ? (totalQtd > 0 ? `${totalQtd} UND` : '') : ''}
+                      {column.key === 'mLinear' ? formatML(totals.ml) : ''}
+                      {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
+                      {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
                     </td>
                   ))}
+
                   <td className="px-4 py-4"></td>
                 </tr>
               </tfoot>
