@@ -245,7 +245,7 @@ export default function MotorControlePage() {
     <div
       className="bg-background/40 md:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-300"
     >
-      <div className="p-3 sm:p-8 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-12 custom-scrollbar relative">
+      <div className="p-3 sm:p-6 lg:p-8 flex-1 overflow-y-auto space-y-4 sm:space-y-8 custom-scrollbar relative">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
         {/* Subtoggle */}
@@ -332,11 +332,11 @@ export default function MotorControlePage() {
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Modelo / Marca</label>
               <input
                 ref={modeloRef}
-                value={modelo}
+              value={modelo}
                 onChange={e => setModelo(sanitize(e.target.value))}
                 onBlur={handleModeloBlur}
                 placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
-                className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
+                className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-3xl border-2 border-border/40 bg-card/30 px-4 sm:px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm"
               />
             </div>
 
@@ -347,7 +347,7 @@ export default function MotorControlePage() {
                 value={nf}
                 onChange={e => setNf(sanitize(e.target.value))}
                 placeholder="Ex: 146842"
-                className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm font-mono"
+                className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-3xl border-2 border-border/40 bg-card/30 px-4 sm:px-6 text-sm font-bold focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm font-mono"
               />
             </div>
 
@@ -361,7 +361,7 @@ export default function MotorControlePage() {
                   onChange={e => setSerie(e.target.value)}
                   onKeyDown={handleSerieKeyDown}
                   placeholder="Bipe o código agora..."
-                  className="w-full h-16 rounded-3xl border-2 border-border/40 bg-card/30 px-6 text-sm font-black focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm font-mono placeholder:opacity-30"
+                  className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-3xl border-2 border-border/40 bg-card/30 px-4 sm:px-6 text-sm font-black focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5 transition-all duration-500 shadow-sm font-mono placeholder:opacity-30"
                 />
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/40"><ScanBarcode className="w-5 h-5" /></div>
               </div>
@@ -373,7 +373,7 @@ export default function MotorControlePage() {
         <div className="pt-4 relative z-10">
           <Button
             onClick={subMode === 'motor' ? handleAddMotor : handleAddControle}
-            className="w-full h-16 sm:h-20 rounded-[1.8rem] bg-primary text-white font-black text-sm sm:text-lg uppercase tracking-[0.25em] shadow-[0_20px_40px_-10px_rgba(var(--primary),0.3)] transition-all hover:-translate-y-1.5 active:translate-y-0.5 group/add relative overflow-hidden"
+            className="w-full h-14 sm:h-16 rounded-2xl sm:rounded-[1.8rem] bg-primary text-white font-black text-sm sm:text-lg uppercase tracking-[0.15em] sm:tracking-[0.25em] shadow-[0_20px_40px_-10px_rgba(var(--primary),0.3)] transition-all hover:-translate-y-1 active:translate-y-0.5 group/add relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/add:translate-y-0 transition-transform duration-500" />
             <div className="relative z-10 flex items-center justify-center gap-3">
