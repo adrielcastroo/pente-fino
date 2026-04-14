@@ -30,17 +30,32 @@ const PageSkeleton = memo(() => (
   </div>
 ));
 
-const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; isWide?: boolean; isMobile: boolean }) => {
+const TabRenderer = memo(({ activeTab, isMobile }: { activeTab: string; isMobile: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
   
+  // Dynamic wide layout detection instead of hardcoded prop
+  const [isWide, setIsWide] = useState(window.innerWidth >= 1280);
+
+  useEffect(() => {
+    const handleResize = () => setIsWide(window.innerWidth >= 1280);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (isWide && isFormTab && !isMobile) {
     return (
       <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-8">
         <div className="w-full xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
-          {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
+          {activeTab === 'motor' ? (
+            <Suspense fallback={<PageSkeleton />}>
+              <MotorControlePage />
+            </Suspense>
+          ) : <LeftPanel />}
         </div>
         <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden xl:block">
-          <RightPanel />
+          <Suspense fallback={<PageSkeleton />}>
+            <RightPanel />
+          </Suspense>
         </div>
       </div>
     );
@@ -48,20 +63,22 @@ const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; 
 
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden">
-      {(() => {
-        switch (activeTab) {
-          case 'inicio': return <DashboardPage />;
-          case 'tecido': return <LeftPanel />;
-          case 'madeira': return <LeftPanel />;
-          case 'motor': return <MotorControlePage />;
-          case 'estoque': return <EstoquePage />;
-          case 'saida': return <SaidaPage />;
-          case 'table': return <RightPanel />;
-          case 'history': return <HistoryPanel />;
-          case 'settings': return <SettingsPage />;
-          default: return <DashboardPage />;
-        }
-      })()}
+      <Suspense fallback={<PageSkeleton />}>
+        {(() => {
+          switch (activeTab) {
+            case 'inicio': return <DashboardPage />;
+            case 'tecido': return <LeftPanel />;
+            case 'madeira': return <LeftPanel />;
+            case 'motor': return <MotorControlePage />;
+            case 'estoque': return <EstoquePage />;
+            case 'saida': return <SaidaPage />;
+            case 'table': return <RightPanel />;
+            case 'history': return <HistoryPanel />;
+            case 'settings': return <SettingsPage />;
+            default: return <DashboardPage />;
+          }
+        })()}
+      </Suspense>
     </div>
   );
 });
@@ -102,11 +119,9 @@ export default function Index() {
 
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
             <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
-              <Suspense fallback={<PageSkeleton />}>
-                <div className="p-2 sm:p-4 xl:p-8 h-full">
-                  <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} />
-                </div>
-              </Suspense>
+              <div className="p-2 sm:p-4 xl:p-8 h-full">
+                <TabRenderer activeTab={activeTab} isMobile={isMobile} />
+              </div>
             </div>
           </main>
         </div>
