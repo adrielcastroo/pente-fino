@@ -149,7 +149,7 @@
 
 @layer components {
   .glass-card {
-    @apply backdrop-blur-md bg-white/5 border border-white/10 shadow-xl;
+    @apply bg-white/5 border border-white/10 shadow-sm;
   }
 
   .glass-input {
@@ -169,7 +169,7 @@
   }
 
   .stat-card {
-    @apply relative overflow-hidden rounded-2xl p-6 border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20;
+    @apply relative overflow-hidden rounded-2xl p-6 border border-border/50 bg-card/50 transition-colors hover:shadow-md hover:border-primary/20;
   }
 
   .badge-status {
