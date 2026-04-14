@@ -144,7 +144,20 @@ const LeftPanel = memo(function LeftPanel() {
       <CameraOverlay cameraActive={cameraActive} videoRef={videoRef} stopCamera={stopCamera} snapPhoto={snapPhoto} />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-1.5 sm:px-2 pb-6">
-        <ModeSelector currentMode={form.currentMode} onModeChange={handleModeChange} isLow={isLow} />
+        {(() => {
+          const activeTab = form.formData.activeTab;
+          const allowedModes = activeTab === 'madeira' 
+            ? ['madeira'] 
+            : ['openrouter', 'manual', 'diversos'];
+          return (
+            <ModeSelector 
+              currentMode={form.currentMode} 
+              onModeChange={handleModeChange} 
+              isLow={isLow} 
+              allowedModes={allowedModes}
+            />
+          );
+        })()}
 
         <FormInputs 
           {...form} 

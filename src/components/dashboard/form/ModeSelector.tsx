@@ -27,7 +27,7 @@ export const ModeSelector = memo(({ currentMode, onModeChange, isLow, allowedMod
 
   return (
     <div className={`grid ${gridCols} gap-2 px-1.5 pt-1 mb-6`}>
-      {MODES.map((mode) => {
+      {filteredModes.map((mode) => {
         const Icon = mode.icon;
         const isActive = currentMode === mode.id;
         
