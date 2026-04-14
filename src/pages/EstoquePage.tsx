@@ -314,9 +314,9 @@ export default function EstoquePage() {
                     return (
                       <motion.button
                         key={pos}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: pos * 0.012, duration: 0.2 }}
+                        initial={isLow ? false : { opacity: 0, scale: 0.8 }}
+                        animate={isLow ? false : { opacity: 1, scale: 1 }}
+                        transition={isLow ? undefined : { delay: pos * 0.012, duration: 0.2 }}
                         onClick={() => item && setDetailPos(item)}
                         disabled={!item}
                         className={`relative h-14 sm:h-16 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center gap-0.5 group ${
