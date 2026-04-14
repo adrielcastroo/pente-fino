@@ -1169,4 +1169,6 @@ const LeftPanel = memo(function LeftPanel() {
       </div>
     </motion.div>
   );
-}
+});
+
+export default LeftPanel;
