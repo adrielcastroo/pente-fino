@@ -31,7 +31,7 @@ const PageSkeleton = memo(() => (
 ));
 
 const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
-  const isFormTab = ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab);
+  const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab), [activeTab]);
   
   if (isWide && isFormTab) {
     return (
@@ -46,19 +46,21 @@ const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: b
     );
   }
 
-  switch (activeTab) {
-    case 'inicio': return <DashboardPage />;
-    case 'tecido':
-    case 'madeira': return <LeftPanel />;
-    case 'motor': return <MotorControlePage />;
-    case 'estoque': return <EstoquePage />;
-    case 'saida': return <SaidaPage />;
-    case 'table': return <RightPanel />;
-    case 'history': return <HistoryPanel />;
-    case 'settings': return <SettingsPage />;
-    default: return <DashboardPage />;
-  }
+  return (
+    <div className="h-full">
+      {activeTab === 'inicio' && <DashboardPage />}
+      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
+      {activeTab === 'motor' && <MotorControlePage />}
+      {activeTab === 'estoque' && <EstoquePage />}
+      {activeTab === 'saida' && <SaidaPage />}
+      {activeTab === 'table' && <RightPanel />}
+      {activeTab === 'history' && <HistoryPanel />}
+      {activeTab === 'settings' && <SettingsPage />}
+      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
+    </div>
+  );
 });
+
 
 TabRenderer.displayName = 'TabRenderer';
 
