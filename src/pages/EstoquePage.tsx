@@ -219,13 +219,13 @@ export default function EstoquePage() {
         </div>
       ) : (
         <div className="overflow-x-auto pb-4 custom-scrollbar">
-          <div className="min-w-full space-y-1.5">
+          <div className="min-w-full space-y-1 sm:space-y-1.5">
             {/* Column headers */}
-            <div className="flex gap-1.5">
-              <div className="w-10 sm:w-14 shrink-0" />
+            <div className="flex gap-1 sm:gap-1.5">
+              <div className="w-8 sm:w-10 md:w-14 shrink-0" />
               {config.cols.map(col => (
-                <div key={col} className="flex-1 text-center text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest py-1">
-                  Col {col}
+                <div key={col} className="flex-1 text-center text-[7px] sm:text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest py-1">
+                  {col}
                 </div>
               ))}
             </div>
