@@ -134,7 +134,7 @@ const TopBar = memo(function TopBar() {
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="bg-popover/90 backdrop-blur-md border-border/40 shadow-2xl p-3 rounded-xl font-bold text-sm">
+              <TooltipContent className="bg-popover/90  border-border/40 shadow-2xl p-3 rounded-xl font-bold text-sm">
                 <p>Exportar {registros.length} registros para Excel</p>
               </TooltipContent>
             </Tooltip>

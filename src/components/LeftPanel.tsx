@@ -1114,7 +1114,7 @@ const LeftPanel = memo(function LeftPanel() {
                }
                }
                }
-                className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 backdrop-blur-md shadow-2xl"
+                className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60  shadow-2xl"
               >
                 <div className="p-4 border-b border-border/40 bg-muted/30 flex items-center justify-between">
                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Últimos Registros</span>
@@ -1122,7 +1122,7 @@ const LeftPanel = memo(function LeftPanel() {
                 </div>
                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                   <table className="w-full text-[11px] border-separate border-spacing-0">
-                    <thead className="sticky top-0 bg-muted/90 backdrop-blur-sm z-10">
+                    <thead className="sticky top-0 bg-muted/90  z-10">
                       <tr>
                         <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">#</th>
                         <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">Referência</th>

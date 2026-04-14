@@ -341,7 +341,7 @@ export default function RightPanel() {
           <table className="w-full border-separate border-spacing-0 table-auto">
             <thead>
               <tr className="bg-muted/30">
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md w-[40px] sm:w-[50px]">#</th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
                 {columns.map(column => (
                   <th 
                     key={column.key} 
@@ -375,7 +375,7 @@ export default function RightPanel() {
             </tbody>
             {sortedRows.length > 0 && (
               <tfoot className="sticky bottom-0 z-10">
-                <tr className="bg-primary/95 text-white font-black font-mono text-[11px] backdrop-blur-lg shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                <tr className="bg-primary/95 text-white font-black font-mono text-[11px]  shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
                   <td className="px-4 py-4">FIM</td>
                   {columns.map(column => (
                     <td key={column.key} className="px-4 py-4">

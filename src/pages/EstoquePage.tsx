@@ -174,7 +174,7 @@ export default function EstoquePage() {
           { label: 'Bloqueado', value: stats.blocked, config: STATUS_CONFIG.bloqueado },
           { label: 'Livre', value: stats.free, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
         ].map(s => (
-          <Card key={s.label} className={`border ${s.config.border} ${s.config.bg} backdrop-blur-sm shadow-none hover:scale-[1.02] transition-all duration-300 cursor-default`}>
+          <Card key={s.label} className={`border ${s.config.border} ${s.config.bg}  shadow-none hover:scale-[1.02] transition-all duration-300 cursor-default`}>
             <CardContent className="p-4 text-center space-y-1">
               <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
               <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
@@ -259,7 +259,7 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card/95 backdrop-blur-xl overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card/95  overflow-hidden rounded-2xl">
           {selectedCell && (
             <>
               {/* Dialog Header */}
@@ -363,7 +363,7 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card/95 backdrop-blur-xl overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card/95  overflow-hidden rounded-2xl">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             return (
