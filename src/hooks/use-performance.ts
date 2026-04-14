@@ -17,8 +17,12 @@ export function usePerformance() {
       const connection = (navigator as any).connection;
       const isSlowConn = connection && (connection.saveData || ['slow-2g', '2g', '3g'].includes(connection.effectiveType));
 
-      // 4. Heuristic for "low" performance
-      if (cores < 4 || memory < 4 || isSlowConn) {
+      // 4. Simple check for low-end mobile devices based on screen size + cores
+      const isMobile = window.innerWidth < 768;
+      const isOldMobile = isMobile && cores < 8;
+
+      // 5. Heuristic for "low" performance
+      if (cores < 4 || memory < 4 || isSlowConn || isOldMobile) {
         setLevel('low');
       } else {
         setLevel('high');
