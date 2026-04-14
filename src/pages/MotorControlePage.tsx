@@ -35,17 +35,13 @@ function sanitize(v: string) {
 }
 
 export default function MotorControlePage() {
-  const { 
-    registros, addRegistro, setMode, formData, setFormData, resetMotorFormData, history 
-  } = useAppStore(s => ({
-    registros: s.registros,
-    addRegistro: s.addRegistro,
-    setMode: s.setMode,
-    formData: s.formData,
-    setFormData: s.setFormData,
-    resetMotorFormData: s.resetMotorFormData,
-    history: s.history
-  }));
+  const registros = useAppStore(s => s.registros);
+  const addRegistro = useAppStore(s => s.addRegistro);
+  const setMode = useAppStore(s => s.setMode);
+  const formData = useAppStore(s => s.formData);
+  const setFormData = useAppStore(s => s.setFormData);
+  const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
+  const history = useAppStore(s => s.history);
 
   
   const subMode = formData.motorSubMode;
@@ -113,7 +109,7 @@ export default function MotorControlePage() {
     }
 
     // 2. Process history
-    const history = useAppStore.getState().history;
+    // 2. Process history (already available via hook and dependencies)
     for (let i = 0, len = history.length; i < len; i++) {
       const conf = history[i];
       const regs = conf.registros;
