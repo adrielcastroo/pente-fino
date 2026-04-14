@@ -10,6 +10,7 @@ import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Registro } from '@/types';
 
 const HighlightedText = memo(({ text, q }: { text: string; q: string }) => {
   if (!q) return <>{text}</>;
