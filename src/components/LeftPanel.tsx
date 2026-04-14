@@ -435,11 +435,13 @@ const LeftPanel = memo(function LeftPanel() {
   };
 
   const handleAdd = () => {
-    // Basic validations that apply to all tecido modes
     if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
     if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
     if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+    if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
+    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
+    if (isDuplicate) { toast.error('Este item e lote já foram registrados nesta conferência.'); return; }
 
     const proc = processo.trim();
 
