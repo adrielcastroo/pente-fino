@@ -83,9 +83,9 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background">
-      <div className="flex h-16 sm:h-20 xl:h-24 items-center gap-2 sm:gap-4 px-3 sm:px-8 max-w-[2000px] mx-auto">
+      <div className="flex h-14 sm:h-20 xl:h-24 items-center gap-2 sm:gap-4 px-3 sm:px-8 max-w-[2000px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          <SidebarTrigger className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
+          <SidebarTrigger className="h-9 w-9 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
           <div className="hidden md:flex flex-col">
             <h2 className="text-[10px] font-black tracking-[0.2em] leading-none uppercase text-muted-foreground/60">Painel Operacional</h2>
             <p className="text-sm font-black text-foreground uppercase tracking-tight mt-1">
