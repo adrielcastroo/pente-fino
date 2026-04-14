@@ -3,7 +3,6 @@ import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
@@ -243,11 +242,8 @@ export default function MotorControlePage() {
   const currentCount = subMode === 'motor' ? motorCount : controleCount;
 
   return (
-    <motion.div
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-background/40 backdrop-blur-xl md:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-500"
+    <div
+      className="bg-background/40 md:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-300"
     >
       <div className="p-3 sm:p-8 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-12 custom-scrollbar relative">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
@@ -258,65 +254,59 @@ export default function MotorControlePage() {
             <button
               key={mode}
               onClick={() => handleSubModeChange(mode)}
-              className={`flex-1 py-4 rounded-[1.2rem] text-[10px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2.5 uppercase tracking-[0.15em] relative overflow-hidden group/mode ${
+              className={`flex-1 py-4 rounded-[1.2rem] text-[10px] sm:text-xs font-black transition-all duration-300 flex items-center justify-center gap-2.5 uppercase tracking-[0.15em] relative overflow-hidden group/mode ${
                 subMode === mode
-                  ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-100'
-                  : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
+                  ? 'bg-primary text-white shadow-xl shadow-primary/30'
+                  : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20'
               }`}
             >
-              {subMode === mode && <motion.div layoutId="submode-bg" className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
-              <Settings2 className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${subMode === mode ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0'}`} />
+              {subMode === mode && <div className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
+              <Settings2 className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-transform duration-300 ${subMode === mode ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0'}`} />
               <span className="relative z-10">{mode === 'motor' ? 'Motores' : 'Controles'}</span>
             </button>
           ))}
         </div>
 
         {/* Tip bar */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={subMode}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-lg relative overflow-hidden z-10"
-          >
-            <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
-              <div className="p-2.5 rounded-2xl bg-primary/10 group-hover/tip:scale-110 group-hover/tip:rotate-12 transition-all duration-700 shadow-sm border border-primary/10">
-                <ScanBarcode className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase tracking-widest opacity-60">Assistente de Registro</span>
-                <span className="text-foreground/80 font-black">
-                  {subMode === 'motor'
-                    ? <>Leitor configurado com <kbd className="kbd px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black">Enter</kbd> automático.</>
-                    : <>Extração automática antes de "F". Sequência atual: <span className="text-primary">#{getSequencial()}</span></>
-                  }
-                </span>
-              </div>
+        <div
+          className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-lg relative overflow-hidden z-10"
+        >
+          <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
+            <div className="p-2.5 rounded-2xl bg-primary/10 group-hover/tip:scale-110 transition-all duration-300 shadow-sm border border-primary/10">
+              <ScanBarcode className="w-5 h-5 text-primary" />
             </div>
-            <div className="flex gap-2 flex-shrink-0 ml-4 relative z-10">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={resetFields} className="h-9 w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
-              </Tooltip>
+            <div className="flex flex-col">
+              <span className="text-[9px] uppercase tracking-widest opacity-60">Assistente de Registro</span>
+              <span className="text-foreground/80 font-black">
+                {subMode === 'motor'
+                  ? <>Leitor configurado com <kbd className="kbd px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black">Enter</kbd> automático.</>
+                  : <>Extração automática antes de "F". Sequência atual: <span className="text-primary">#{getSequencial()}</span></>
+                }
+              </span>
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+          <div className="flex gap-2 flex-shrink-0 ml-4 relative z-10">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={resetFields} className="h-9 w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
+                  <X className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
 
         {/* Motor: caixa toggle */}
         {subMode === 'motor' && (
           <div className="flex items-center gap-4 p-5 rounded-3xl bg-card/30 border border-border/40 shadow-sm relative z-10 backdrop-blur-md transition-all hover:border-primary/20">
             <Switch checked={temCaixa} onCheckedChange={setTemCaixa} className="data-[state=checked]:bg-primary" />
-            <div className="flex flex-col">
+          <div className="flex flex-col">
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Logística</span>
                <span className="text-xs font-black text-foreground">Motor Armazenado em Caixa</span>
             </div>
             {temCaixa && (
-              <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3 ml-auto bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20">
+              <div className="flex items-center gap-3 ml-auto bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20">
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">Nº Caixa:</span>
                 <input
                   type="number"
@@ -326,7 +316,7 @@ export default function MotorControlePage() {
                   className="w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
                 />
                 <Badge className="bg-primary text-white font-black text-[10px] rounded-lg">CX{caixaNum.padStart(2, '0')}</Badge>
-              </motion.div>
+              </div>
             )}
           </div>
         )}
@@ -395,10 +385,8 @@ export default function MotorControlePage() {
 
         {/* Preview table - Adaptive for mobile */}
         {currentCount > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border-2 border-primary/10 bg-card/60 backdrop-blur-xl shadow-2xl mt-4 sm:mt-8 relative z-10"
+          <div 
+            className="overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border-2 border-primary/10 bg-card/60 shadow-2xl mt-4 sm:mt-8 relative z-10"
           >
             <div className="p-4 sm:p-5 border-b border-border/10 bg-primary/5 flex items-center justify-between">
                <div className="flex items-center gap-2 sm:gap-3">
@@ -447,10 +435,10 @@ export default function MotorControlePage() {
             <div className="p-4 bg-muted/20 border-t border-border/10 text-center">
                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Exibindo os últimos 5 itens registrados</p>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 

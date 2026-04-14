@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 import { Search, Archive, Calendar, User, Clock, Filter, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
-
+import { formatDateBR } from '@/lib/app-utils';
 
 interface SaidaRegistro {
   id: string;
@@ -28,9 +27,6 @@ interface SaidaRegistro {
   nivel: number;
   posicao: number;
 }
-
-import { formatDateBR } from '@/lib/app-utils';
-
 
 export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
@@ -73,14 +69,8 @@ export default function SaidaPage() {
     return searchableSaidas.filter(s => s.searchKey.includes(q));
   }, [search, searchableSaidas]);
 
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="p-3 sm:p-10 lg:p-16 max-w-[1600px] mx-auto space-y-6 sm:space-y-16"
-    >
+    <div className="p-3 sm:p-10 lg:p-16 max-w-[1600px] mx-auto space-y-6 sm:space-y-16">
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
         <div className="text-left space-y-3">
           <div className="flex items-center gap-2.5 text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
@@ -105,7 +95,7 @@ export default function SaidaPage() {
             placeholder="Filtrar por item, PROC, conferente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-14 sm:h-16 rounded-2xl sm:rounded-3xl bg-card/40 backdrop-blur-md border-border/40 focus:ring-8 focus:ring-primary/5 focus:border-primary/40 text-base font-bold shadow-xl transition-all"
+            className="pl-12 h-14 sm:h-16 rounded-2xl sm:rounded-3xl bg-card/40 border-border/40 focus:ring-8 focus:ring-primary/5 focus:border-primary/40 text-base font-bold shadow-xl transition-all"
           />
         </div>
       </div>
@@ -117,17 +107,17 @@ export default function SaidaPage() {
           ))}
         </div>
       ) : filteredSaidas.length === 0 ? (
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-32 bg-muted/5 rounded-[3rem] border-2 border-dashed border-border/40">
+        <div className="text-center py-32 bg-muted/5 rounded-[3rem] border-2 border-dashed border-border/40">
           <div className="h-24 w-24 bg-muted/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 opacity-20">
              <Archive className="w-12 h-12" />
           </div>
           <p className="text-muted-foreground font-black uppercase tracking-widest text-sm">Nenhum registro de saída encontrado</p>
-        </motion.div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-10">
           {filteredSaidas.map((saida) => (
-            <Card key={saida.id} className="overflow-hidden border-none shadow-2xl bg-card/40 backdrop-blur-md hover:scale-[1.03] transition-all duration-500 group rounded-[2.5rem] relative">
-              <div className="absolute top-0 left-0 w-full h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-700" />
+            <Card key={saida.id} className="overflow-hidden border-none shadow-2xl bg-card/40 hover:scale-[1.02] transition-all duration-300 group rounded-[2.5rem] relative">
+              <div className="absolute top-0 left-0 w-full h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-300" />
               
               <CardHeader className="p-8 pb-4">
                 <div className="flex justify-between items-start gap-4">
@@ -192,7 +182,7 @@ export default function SaidaPage() {
                     <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5 opacity-50 ml-1">
                       <FileText className="w-3 h-3" /> Lote Final Gerado
                     </p>
-                    <div className="text-[10px] font-mono font-bold bg-[#0A0D14] text-primary-foreground/80 p-4 rounded-2xl break-all border border-white/5 shadow-2xl shadow-inner group-hover:border-primary/30 transition-colors duration-700">
+                    <div className="text-[10px] font-mono font-bold bg-card dark:bg-muted/30 text-foreground/80 p-4 rounded-2xl break-all border border-border/20 shadow-inner group-hover:border-primary/30 transition-colors duration-300">
                       {saida.lote_sistema || '—'}
                     </div>
                   </div>
@@ -202,7 +192,6 @@ export default function SaidaPage() {
           ))}
         </div>
       )}
-    </motion.div>
-
+    </div>
   );
 }
