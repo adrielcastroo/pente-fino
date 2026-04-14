@@ -276,26 +276,26 @@ export default function MotorControlePage() {
 
         {/* Tip bar */}
         <div
-          className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-lg relative overflow-hidden z-10"
+          className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between gap-2 group/tip shadow-lg relative overflow-hidden z-10"
         >
-          <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
-            <div className="p-2.5 rounded-2xl bg-primary/10 group-hover/tip:scale-110 transition-all duration-300 shadow-sm border border-primary/10">
-              <ScanBarcode className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-3 sm:gap-4 font-bold text-primary/70 relative z-10 min-w-0">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 flex-shrink-0 group-hover/tip:scale-110 transition-all duration-300 shadow-sm border border-primary/10">
+              <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="text-[9px] uppercase tracking-widest opacity-60">Assistente de Registro</span>
-              <span className="text-foreground/80 font-black">
+              <span className="text-foreground/80 font-black text-[11px] sm:text-xs">
                 {subMode === 'motor'
-                  ? <>Leitor configurado com <kbd className="kbd px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black">Enter</kbd> automático.</>
+                  ? <>Leitor configurado com <kbd className="kbd px-1 sm:px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black text-[10px]">Enter</kbd> automático.</>
                   : <>Extração automática antes de "FF". Sequência atual: <span className="text-primary">#{getSequencial()}</span></>
                 }
               </span>
             </div>
           </div>
-          <div className="flex gap-2 flex-shrink-0 ml-4 relative z-10">
+          <div className="flex gap-2 flex-shrink-0 relative z-10">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={resetFields} className="h-9 w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
+                <Button variant="ghost" size="icon" onClick={resetFields} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-border/40 hover:bg-destructive hover:text-white transition-all shadow-sm hover:shadow-destructive/30">
                   <X className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
