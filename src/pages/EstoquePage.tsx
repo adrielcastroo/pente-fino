@@ -193,12 +193,12 @@ export default function EstoquePage() {
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30">
+      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 overflow-x-auto custom-scrollbar">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide transition-all duration-200 ${
+            className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -230,8 +230,8 @@ export default function EstoquePage() {
               ))}
             </div>
             {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
-              <div key={nivel} className="flex gap-1.5">
-                <div className="w-10 sm:w-14 text-[8px] sm:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/40 dark:bg-muted/20 rounded-lg shrink-0 border border-border/40 dark:border-border/30">
+              <div key={nivel} className="flex gap-1 sm:gap-1.5">
+                <div className="w-8 sm:w-10 md:w-14 text-[7px] sm:text-[8px] md:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/40 dark:bg-muted/20 rounded-md sm:rounded-lg shrink-0 border border-border/40 dark:border-border/30">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
@@ -242,7 +242,7 @@ export default function EstoquePage() {
                     <div 
                       key={col} 
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 h-16 sm:h-[4.5rem] rounded-xl cursor-pointer p-2 sm:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
+                      className={`flex-1 min-w-0 h-12 sm:h-16 md:h-[4.5rem] rounded-lg sm:rounded-xl cursor-pointer p-1.5 sm:p-2 md:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
                         hasItems
                           ? 'bg-accent/60 dark:bg-accent/20 border-border/50 dark:border-border/40 hover:border-primary/60 hover:bg-primary/10'
                           : 'bg-muted/30 dark:bg-muted/10 border-border/40 dark:border-border/25 hover:border-primary/40 hover:bg-primary/5'
