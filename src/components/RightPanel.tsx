@@ -4,12 +4,13 @@ import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
-// XLSX import removed for performance (moved to dynamic utility)
+import { useShallow } from 'zustand/react/shallow';
 import { Search, Download, Trash2, Undo2, Copy, X, Package, Filter, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 const HighlightedText = memo(({ text, q }: { text: string; q: string }) => {
   if (!q) return <>{text}</>;
@@ -113,6 +114,8 @@ export default function RightPanel() {
   const undo = useAppStore(s => s.undo);
   const undoStack = useAppStore(s => s.undoStack);
   const updateRegistro = useAppStore(s => s.updateRegistro);
+
+
   const { isLow } = usePerformance();
   
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);

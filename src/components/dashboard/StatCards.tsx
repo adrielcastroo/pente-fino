@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
@@ -12,7 +12,7 @@ interface StatCardProps {
   variants: any;
 }
 
-export const StatCard = ({ label, value, icon: Icon, tab, onClick, variants }: StatCardProps) => (
+export const StatCard = memo(({ label, value, icon: Icon, tab, onClick, variants }: StatCardProps) => (
   <motion.div variants={variants}>
     <Card 
       onClick={() => onClick(tab)} 
@@ -31,16 +31,18 @@ export const StatCard = ({ label, value, icon: Icon, tab, onClick, variants }: S
       </CardContent>
     </Card>
   </motion.div>
-);
+));
+
+StatCard.displayName = 'StatCard';
 
 const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users };
 
-export const StatCards = ({ stats, onStatClick, containerVariants, itemVariants }: { stats: any, onStatClick: (tab: any) => void, containerVariants: any, itemVariants: any }) => {
-  const cards = [
+export const StatCards = memo(({ stats, onStatClick, containerVariants, itemVariants }: { stats: any, onStatClick: (tab: any) => void, containerVariants: any, itemVariants: any }) => {
+  const cards = useMemo(() => [
     { label: 'Conferências', value: stats.totalConferencias, icon: 'BarChart3', tab: 'history' },
     { label: 'Registros', value: stats.totalRegistros, icon: 'Layers3', tab: 'table' },
     { label: 'Conferentes', value: stats.totalConferentes, icon: 'Users', tab: 'inicio' },
-  ];
+  ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -57,4 +59,6 @@ export const StatCards = ({ stats, onStatClick, containerVariants, itemVariants 
       ))}
     </motion.div>
   );
-};
+});
+
+StatCards.displayName = 'StatCards';

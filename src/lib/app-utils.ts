@@ -80,34 +80,50 @@ export function generateLoteSistema(
   const itemNorm = (itemCode || '').trim().toLowerCase();
   
   // To prevent collisions even after deletions, we check all existing suffixes
-  const usedSuffixes = existingRegistros
-    .filter(r => {
-      const rItemNorm = (r.item || '').trim().toLowerCase();
-      const rAddrTrimmed = (r.endereco || '').trim();
-      const rProc = (r.processo || '').trim();
-      const rNf = (r.nf || '').trim();
-      const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
-      const rMlFormatted = fmtML(r.mLinear);
+  // Optimized: Early return if no registers or if first part matches
+  if (existingRegistros.length === 0) return base;
 
-      return rItemNorm === itemNorm && 
-             rAddrTrimmed === addrTrimmed && 
-             rLabel === labelPrefix && 
-             rMlFormatted === mlFormatted;
-    })
-    .map(r => {
-      const ls = r.loteSistema || '';
-      if (ls === base) return 0;
-      const lastPart = ls.split('-').pop();
-      if (!lastPart) return 0;
+  const usedSuffixes: number[] = [];
+  for (let i = 0, len = existingRegistros.length; i < len; i++) {
+    const r = existingRegistros[i];
+    const rItemNorm = (r.item || '').trim().toLowerCase();
+    
+    // Quick filter check
+    if (rItemNorm !== itemNorm) continue;
+    
+    const rAddrTrimmed = (r.endereco || '').trim();
+    if (rAddrTrimmed !== addrTrimmed) continue;
+
+    const rProc = (r.processo || '').trim();
+    const rNf = (r.nf || '').trim();
+    const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
+    if (rLabel !== labelPrefix) continue;
+
+    const rMlFormatted = fmtML(r.mLinear);
+    if (rMlFormatted !== mlFormatted) continue;
+
+    const ls = r.loteSistema || '';
+    if (ls === base) {
+      usedSuffixes.push(0);
+      continue;
+    }
+    const lastPart = ls.split('-').pop();
+    if (lastPart) {
       const num = parseInt(lastPart, 10);
-      return isNaN(num) ? 0 : num;
-    });
+      if (!isNaN(num)) usedSuffixes.push(num);
+    }
+  }
 
   if (usedSuffixes.length === 0) return base;
   
-  const maxSuffix = Math.max(...usedSuffixes);
+  let maxSuffix = 0;
+  for (let i = 0, len = usedSuffixes.length; i < len; i++) {
+    if (usedSuffixes[i] > maxSuffix) maxSuffix = usedSuffixes[i];
+  }
+  
   return `${base}-${maxSuffix + 1}`;
 }
+
 
 export function generateLoteSistemaCaixa(
   processo: string,
