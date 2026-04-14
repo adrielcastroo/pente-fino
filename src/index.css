@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 220 20% 97%;
     --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
@@ -18,13 +18,13 @@
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 220 14% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 220 14% 96%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -36,8 +36,8 @@
     --warning: 38 92% 50%;
     --warning-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.75rem;
@@ -47,39 +47,39 @@
     --navy-3: 215 20% 65%;
 
     --surface: 0 0% 100%;
-    --surface-2: 210 40% 98%;
-    --surface-3: 214 32% 91%;
+    --surface-2: 220 20% 98%;
+    --surface-3: 220 13% 91%;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215.4 16.3% 46.9%;
+    --sidebar-background: 220 20% 99%;
+    --sidebar-foreground: 220 9% 46%;
     --sidebar-primary: 221.2 83.2% 53.3%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent: 220 14% 96%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 221.2 83.2% 53.3%;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
+    --background: 228 14% 7%;
     --foreground: 210 40% 98%;
 
-    --card: 224 71.4% 4.1%;
+    --card: 228 14% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 224 71.4% 4.1%;
+    --popover: 228 14% 9%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 224 14% 14%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 224 14% 14%;
+    --muted-foreground: 218 11% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 224 14% 14%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -91,25 +91,25 @@
     --warning: 48 96% 53%;
     --warning-foreground: 222.2 47.4% 11.2%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 224 14% 16%;
+    --input: 224 14% 16%;
     --ring: 224.3 76.3% 48%;
 
-    --navy: 224 71.4% 4.1%;
-    --navy-2: 222.2 84% 6.9%;
-    --navy-3: 217.2 32.6% 25%;
+    --navy: 228 14% 7%;
+    --navy-2: 228 14% 9%;
+    --navy-3: 224 14% 22%;
 
-    --surface: 222.2 84% 6.9%;
-    --surface-2: 222.2 84% 8.9%;
-    --surface-3: 217.2 32.6% 12%;
+    --surface: 228 14% 9%;
+    --surface-2: 228 14% 11%;
+    --surface-3: 224 14% 14%;
 
-    --sidebar-background: 224 71.4% 4.1%;
-    --sidebar-foreground: 215 20.2% 65.1%;
+    --sidebar-background: 228 14% 7%;
+    --sidebar-foreground: 218 11% 60%;
     --sidebar-primary: 217.2 91.2% 59.8%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent: 224 14% 14%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-border: 224 14% 16%;
     --sidebar-ring: 224.3 76.3% 48%;
   }
 }
@@ -122,11 +122,6 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary;
     font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-    background-image: 
-      radial-gradient(at 0% 0%, hsl(var(--primary) / 0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsl(var(--primary) / 0.03) 0px, transparent 50%);
-    background-attachment: fixed;
-    background-size: cover;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
@@ -149,15 +144,15 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 border border-white/10 shadow-sm;
+    @apply bg-card/80 border border-border/60 shadow-sm;
   }
 
   .glass-input {
-    @apply rounded-xl px-4 py-2 text-sm outline-none transition-all duration-200 bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:border-primary/50 focus:bg-white/10;
+    @apply rounded-xl px-4 py-2 text-sm outline-none transition-all duration-200 bg-muted/50 border border-border/60 text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50 focus:bg-background;
   }
 
   .glass-btn {
-    @apply flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-white/5 border border-white/10 text-white/80 hover:bg-white/15 hover:text-white;
+    @apply flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-muted/50 border border-border/60 text-foreground/80 hover:bg-muted hover:text-foreground;
   }
 
   .primary-btn {
@@ -169,7 +164,7 @@
   }
 
   .stat-card {
-    @apply relative overflow-hidden rounded-2xl p-6 border border-border/50 bg-card/50 transition-colors hover:shadow-md hover:border-primary/20;
+    @apply relative overflow-hidden rounded-2xl p-6 border border-border/50 bg-card transition-colors hover:shadow-md hover:border-primary/20;
   }
 
   .badge-status {
@@ -183,7 +178,7 @@
   .scrollbar-thin,
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.15) transparent;
+    scrollbar-color: hsl(var(--primary) / 0.12) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar,
@@ -200,18 +195,18 @@
 
   .scrollbar-thin::-webkit-scrollbar-thumb,
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.15);
+    background: hsl(var(--primary) / 0.12);
     border-radius: 9999px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover,
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.3);
+    background: hsl(var(--primary) / 0.25);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:active,
   .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: hsl(var(--primary) / 0.45);
+    background: hsl(var(--primary) / 0.4);
   }
 }
 
