@@ -94,7 +94,7 @@ export default function MotorControlePage() {
     for (let i = 0, len = registros.length; i < len; i++) {
       const r = registros[i];
       if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
-        set.add(r.lote);
+        set.add(`${r.lote}|${(r.nf || '').trim()}`);
       }
       if (r.modoOrigem === 'controle' && r.loteSistema) {
         if (currentModelo && r.item !== currentModelo) continue;
@@ -116,7 +116,7 @@ export default function MotorControlePage() {
       for (let j = 0, rLen = regs.length; j < rLen; j++) {
         const r = regs[j];
         if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
-          set.add(r.lote);
+          set.add(`${r.lote}|${(r.nf || '').trim()}`);
         }
         if (r.modoOrigem === 'controle' && r.loteSistema) {
           if (currentModelo && r.item !== currentModelo) continue;
@@ -135,8 +135,8 @@ export default function MotorControlePage() {
   }, [registros, modelo, subMode, nf]);
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => {
-    return allSeriesSet.has(cleanedSerie);
-  }, [allSeriesSet]);
+    return allSeriesSet.has(`${cleanedSerie}|${nf.trim()}`);
+  }, [allSeriesSet, nf]);
 
   const getSequencial = useCallback((): number => {
     return maxSequencial + 1;
