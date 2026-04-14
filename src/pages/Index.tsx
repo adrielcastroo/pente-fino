@@ -29,7 +29,7 @@ const PageSkeleton = memo(() => (
   </div>
 ));
 
-const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: boolean }) => {
+const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; isWide?: boolean; isMobile: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor', 'manual'].includes(activeTab), [activeTab]);
   
   if (isWide && isFormTab) {
@@ -38,9 +38,11 @@ const TabRenderer = memo(({ activeTab, isWide }: { activeTab: string; isWide?: b
         <div className="w-full xl:w-[480px] 2xl:w-[580px] shrink-0 h-full">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden xl:block">
-          <RightPanel />
-        </div>
+        {!isMobile && (
+          <div className="flex-1 min-w-0 h-full border-l border-border/10 pl-4 xl:pl-8 hidden xl:block">
+            <RightPanel />
+          </div>
+        )}
       </div>
     );
   }
