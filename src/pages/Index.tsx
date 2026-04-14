@@ -6,11 +6,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import DashboardPage from '@/pages/DashboardPage.tsx';
+import LeftPanel from '@/components/LeftPanel.tsx';
 
-const LeftPanel = lazy(() => import('@/components/LeftPanel.tsx'));
 const RightPanel = lazy(() => import('@/components/RightPanel.tsx'));
 const HistoryPanel = lazy(() => import('@/components/HistoryPanel.tsx'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage.tsx'));
 const MotorControlePage = lazy(() => import('@/pages/MotorControlePage.tsx'));
 const EstoquePage = lazy(() => import('@/pages/EstoquePage.tsx'));
 const SaidaPage = lazy(() => import('@/pages/SaidaPage.tsx'));
