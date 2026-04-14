@@ -132,7 +132,7 @@ const LeftPanel = memo(function LeftPanel() {
 
   return (
     <div 
-      className="relative flex flex-col h-full overflow-hidden bg-background p-1.5 sm:p-4"
+      className="relative flex flex-col h-full overflow-hidden bg-background p-1.5 sm:p-4 max-w-7xl mx-auto w-full"
       onDragOver={e => e.preventDefault()}
       onDrop={e => {
         e.preventDefault();
