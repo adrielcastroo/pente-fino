@@ -71,7 +71,11 @@ const TopBar = memo(function TopBar() {
 
     try {
       const count = registros.length;
-      await exportConferenceToExcel(headers, data, fileName, columnWidths);
+      if (isMotorControle) {
+        await exportMotorControleToExcel(registros, fileName);
+      } else {
+        await exportConferenceToExcel(headers, data, fileName, columnWidths);
+      }
       await archiveAndClear(archiveName);
       toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
