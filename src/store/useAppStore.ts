@@ -310,7 +310,6 @@ export const useAppStore = create<AppState>()(
         lockEndereco: state.lockEndereco,
         lockedEndereco: state.lockedEndereco,
         formData: state.formData,
-        // We do NOT persist loading/error states
       }),
     }
   )
