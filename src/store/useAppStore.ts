@@ -299,7 +299,7 @@ export const useAppStore = create<AppState>()(
         currentMode: state.currentMode,
         processo: state.processo,
         conferente: state.conferente,
-        searchQuery: state.searchQuery,
+        // searchQuery: state.searchQuery, // Removed from persistence to avoid frequent localStorage writes on keystroke
         sortBy: state.sortBy,
         sessionStartedAt: state.sessionStartedAt,
         lockProcesso: state.lockProcesso,
