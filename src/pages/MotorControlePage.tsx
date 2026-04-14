@@ -36,6 +36,7 @@ function sanitize(v: string) {
 
 export default function MotorControlePage() {
   const registros = useAppStore(s => s.registros);
+  const history = useAppStore(s => s.history);
   const addRegistro = useAppStore(s => s.addRegistro);
   const setMode = useAppStore(s => s.setMode);
   const formData = useAppStore(s => s.formData);
