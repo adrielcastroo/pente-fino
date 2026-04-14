@@ -3,8 +3,8 @@ import { useAppStore } from '@/store/useAppStore';
 import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
+import { useShallow } from 'zustand/react/shallow';
 import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet } from 'lucide-react';
 import { exportConferenceToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -326,36 +326,14 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 
   return (
     <>
-      {isLow ? (
-        <div className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 shadow-lg shadow-black/5">
-          {headerContent}
-          {open && (
-            <div className="overflow-hidden border-t border-border/40">
-              {tableContent}
-            </div>
-          )}
-        </div>
-      ) : (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 backdrop-blur-md shadow-lg shadow-black/5 hover:border-primary/20 transition-all duration-300"
-        >
-          {headerContent}
-          <AnimatePresence>
-            {open && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }} 
-                animate={{ height: 'auto', opacity: 1 }} 
-                exit={{ height: 0, opacity: 0 }} 
-                className="overflow-hidden border-t border-border/40"
-              >
-                {tableContent}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
+      <div className="border border-border/60 rounded-2xl overflow-hidden bg-card/40 shadow-sm hover:border-primary/20 transition-colors duration-200">
+        {headerContent}
+        {open && (
+          <div className="overflow-hidden border-t border-border/40">
+            {tableContent}
+          </div>
+        )}
+      </div>
 
       <EditRegistroDialog
         open={!!editingRegistro}
@@ -386,7 +364,14 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 });
 
 export default function HistoryPanel() {
-  const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory } = useAppStore();
+  const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory } = useAppStore(useShallow(s => ({
+    history: s.history,
+    isHistoryLoading: s.isHistoryLoading,
+    historyError: s.historyError,
+    deleteConference: s.deleteConference,
+    clearHistory: s.clearHistory,
+    loadHistory: s.loadHistory,
+  })));
   const [search, setSearch] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { isLow } = usePerformance();
@@ -425,7 +410,7 @@ export default function HistoryPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background/30 backdrop-blur-sm overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-shrink-0">
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-2">
