@@ -19,24 +19,22 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false, // Performance improvement during build
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tooltip',
-          ],
-          'vendor-motion': ['framer-motion'],
-          'vendor-charts': ['recharts'],
-          'vendor-utils': ['date-fns', 'zod', 'zustand', '@tanstack/react-query'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'vendor-react';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('recharts') || id.includes('d3')) return 'vendor-charts';
+            if (id.includes('framer-motion')) return 'vendor-motion';
+            if (id.includes('xlsx')) return 'vendor-xlsx';
+            if (id.includes('radix-ui')) return 'vendor-ui';
+            if (id.includes('date-fns')) return 'vendor-utils';
+            return 'vendor-others';
+          }
         },
       },
     },
+    // Chunks over 500kb will trigger warnings, but with chunking it's okay
+    chunkSizeWarningLimit: 600,
   },
   plugins: [
     react(),
