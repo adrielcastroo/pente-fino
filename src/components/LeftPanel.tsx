@@ -675,13 +675,13 @@ const LeftPanel = memo(function LeftPanel() {
 
 
         {/* Dropzone for AI modes */}
-        <AnimatePresence mode="wait">
+        
           {showDropzone && (
-            <motion.div
+            <div
               key="dropzone"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+             }
+             }
+             }
               className="space-y-4"
             >
               <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] text-center opacity-80 flex items-center justify-center gap-3">
@@ -767,7 +767,7 @@ const LeftPanel = memo(function LeftPanel() {
               )}
 
               <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden shadow-inner">
-                 <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                 <div}%` }} className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
               </div>
 
               {preview && !cameraActive && (
@@ -777,20 +777,20 @@ const LeftPanel = memo(function LeftPanel() {
                 </Button>
               )}
 
-              <AnimatePresence>
+              
                 {aiStatus && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
+                  <div}}} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
                     <div className="flex items-center gap-2 mb-1">
                        {aiStatus.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
                        <span className="uppercase tracking-widest">{aiStatus.type === 'ok' ? 'Análise Concluída' : 'Erro na Análise'}</span>
                     </div>
                     {aiStatus.msg}
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </motion.div>
+              
+            </div>
           )}
-        </AnimatePresence>
+        
 
         {/* Form Fields */}
         <div className="space-y-8 relative z-10">
@@ -1108,12 +1108,12 @@ const LeftPanel = memo(function LeftPanel() {
             </Button>
           )}
 
-          <AnimatePresence>
+          
             {showPreview && registros.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, height: 0 }}
-                animate={{ opacity: 1, scale: 1, height: 'auto' }}
-                exit={{ opacity: 0, scale: 0.95, height: 0 }}
+              <div
+               }
+               }
+               }
                 className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 backdrop-blur-md shadow-2xl"
               >
                 <div className="p-4 border-b border-border/40 bg-muted/30 flex items-center justify-between">
@@ -1143,9 +1143,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <div className="p-3 bg-muted/30 text-center">
                    <Button variant="link" size="sm" className="font-black text-[10px] uppercase tracking-widest text-primary" onClick={() => useAppStore.getState().setFormData({ activeTab: 'table' })}>Abrir Tabela Completa</Button>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
 
           {isDuplicate && (
              <div
