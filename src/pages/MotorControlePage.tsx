@@ -306,23 +306,23 @@ export default function MotorControlePage() {
 
         {/* Motor: caixa toggle */}
         {subMode === 'motor' && (
-          <div className="flex items-center gap-4 p-5 rounded-3xl bg-card/30 border border-border/40 shadow-sm relative z-10 backdrop-blur-md transition-all hover:border-primary/20">
-            <Switch checked={temCaixa} onCheckedChange={setTemCaixa} className="data-[state=checked]:bg-primary" />
-          <div className="flex flex-col">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 p-3 sm:p-5 rounded-3xl bg-card/30 border border-border/40 shadow-sm relative z-10 backdrop-blur-md transition-all hover:border-primary/20">
+            <Switch checked={temCaixa} onCheckedChange={setTemCaixa} className="data-[state=checked]:bg-primary flex-shrink-0" />
+            <div className="flex flex-col min-w-0">
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Logística</span>
                <span className="text-xs font-black text-foreground">Motor Armazenado em Caixa</span>
             </div>
             {temCaixa && (
-              <div className="flex items-center gap-3 ml-auto bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20">
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Nº Caixa:</span>
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto bg-primary/10 px-3 sm:px-4 py-2 rounded-2xl border border-primary/20 flex-shrink-0">
+                <span className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Nº Caixa:</span>
                 <input
                   type="number"
                   min="1"
                   value={caixaNum}
                   onChange={e => setCaixaNum(e.target.value)}
-                  className="w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
+                  className="w-10 sm:w-12 bg-transparent border-none text-primary font-black text-sm outline-none p-0 focus:ring-0"
                 />
-                <Badge className="bg-primary text-white font-black text-[10px] rounded-lg">CX{caixaNum.padStart(2, '0')}</Badge>
+                <Badge className="bg-primary text-white font-black text-[10px] rounded-lg whitespace-nowrap">CX{caixaNum.padStart(2, '0')}</Badge>
               </div>
             )}
           </div>
