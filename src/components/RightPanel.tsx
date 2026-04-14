@@ -294,7 +294,7 @@ export default function RightPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
       {undoStack.length > 0 && (
         <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
           <div className="flex items-center gap-3 text-white font-bold">
@@ -312,7 +312,7 @@ export default function RightPanel() {
         </div>
       )}
 
-      <div className="px-3 sm:px-6 py-4 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
+      <div className="px-3 sm:px-5 py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
