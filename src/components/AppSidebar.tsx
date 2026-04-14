@@ -119,12 +119,12 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
                       className={`
-                        relative h-11 rounded-xl transition-colors duration-150
+                        relative h-11 rounded-xl transition-all duration-100 active:scale-95
                         group-data-[state=collapsed]:!h-11 group-data-[state=collapsed]:!w-11
                         group-data-[state=collapsed]:justify-center
                         ${isActive
-                          ? 'bg-primary text-primary-foreground font-bold shadow-sm shadow-primary/20'
-                          : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground font-medium'}
+                          ? 'bg-primary text-white font-bold shadow-lg shadow-primary/25 scale-[1.02]'
+                          : 'text-muted-foreground hover:bg-primary/10 hover:text-primary font-medium'}
                         ${hasRecords && !isActive ? 'ring-1 ring-primary/40 ring-offset-1 ring-offset-sidebar' : ''}
                       `}
                     >
