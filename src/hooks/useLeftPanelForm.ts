@@ -1,41 +1,32 @@
 import { useCallback, useMemo, useEffect, useState, useRef } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, ENDERECO_REGEX, generateLoteSistema, generateLoteSistemaCaixa } from '@/lib/app-utils';
-import { FormData, Registro } from '@/types';
+import { Registro } from '@/types';
 import { toast } from 'sonner';
 
 export function useLeftPanelForm() {
-  const {
-    currentMode, setMode, processo, setProcesso, registros, addRegistro,
-    lockProcesso, setLockProcesso, lockedProcesso, setLockedProcesso,
-    lockNf, setLockNf, lockedNf, setLockedNf, lockEndereco, setLockEndereco,
-    lockedEndereco, setLockedEndereco, formData, setFormData, resetFormData,
-    conferente
-  } = useAppStore(useShallow(s => ({
-    currentMode: s.currentMode,
-    setMode: s.setMode,
-    processo: s.processo,
-    setProcesso: s.setProcesso,
-    conferente: s.conferente,
-    registros: s.registros,
-    addRegistro: s.addRegistro,
-    lockProcesso: s.lockProcesso,
-    setLockProcesso: s.setLockProcesso,
-    lockedProcesso: s.lockedProcesso,
-    setLockedProcesso: s.setLockedProcesso,
-    lockNf: s.lockNf,
-    setLockNf: s.setLockNf,
-    lockedNf: s.lockedNf,
-    setLockedNf: s.setLockedNf,
-    lockEndereco: s.lockEndereco,
-    setLockEndereco: s.setLockEndereco,
-    lockedEndereco: s.lockedEndereco,
-    setLockedEndereco: s.setLockedEndereco,
-    formData: s.formData,
-    setFormData: s.setFormData,
-    resetFormData: s.resetFormData,
-  })));
+  const currentMode = useAppStore(s => s.currentMode);
+  const setMode = useAppStore(s => s.setMode);
+  const processo = useAppStore(s => s.processo);
+  const setProcesso = useAppStore(s => s.setProcesso);
+  const conferente = useAppStore(s => s.conferente);
+  const registros = useAppStore(s => s.registros);
+  const addRegistro = useAppStore(s => s.addRegistro);
+  const lockProcesso = useAppStore(s => s.lockProcesso);
+  const setLockProcesso = useAppStore(s => s.setLockProcesso);
+  const lockedProcesso = useAppStore(s => s.lockedProcesso);
+  const setLockedProcesso = useAppStore(s => s.setLockedProcesso);
+  const lockNf = useAppStore(s => s.lockNf);
+  const setLockNf = useAppStore(s => s.setLockNf);
+  const lockedNf = useAppStore(s => s.lockedNf);
+  const setLockedNf = useAppStore(s => s.setLockedNf);
+  const lockEndereco = useAppStore(s => s.lockEndereco);
+  const setLockEndereco = useAppStore(s => s.setLockEndereco);
+  const lockedEndereco = useAppStore(s => s.lockedEndereco);
+  const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
+  const formData = useAppStore(s => s.formData);
+  const setFormData = useAppStore(s => s.setFormData);
+  const resetFormData = useAppStore(s => s.resetFormData);
 
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
@@ -67,7 +58,7 @@ export function useLeftPanelForm() {
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
   const isCortina = isDiversos && diversosTipo === 'Cortina';
-  const isHC45 = isCelular && item.toUpperCase().startsWith('HC-45');
+  const isHC45 = isCelular && (item || '').toUpperCase().startsWith('HC-45');
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   const isCoulisse = currentMode === 'manual';
@@ -93,28 +84,32 @@ export function useLeftPanelForm() {
     [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
   );
 
-  // Sync locks logic
+  // Sync locks logic (Refactored to avoid loops)
   useEffect(() => {
     if (lockEndereco && lockedEndereco && endereco !== lockedEndereco) {
       setFormData({ endereco: lockedEndereco });
     }
-  }, [lockEndereco, lockedEndereco, endereco, setFormData]);
+  }, [lockEndereco, lockedEndereco]); // Removed 'endereco' from dependencies to prevent immediate loops - rely on lock logic
 
   useEffect(() => {
     if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
       setProcesso(lockedProcesso);
     }
-  }, [lockProcesso, lockedProcesso, processo, setProcesso]);
+  }, [lockProcesso, lockedProcesso]);
 
   useEffect(() => {
     if (lockNf && lockedNf && nf !== lockedNf) {
       setFormData({ nf: lockedNf });
     }
-  }, [lockNf, lockedNf, nf, setFormData]);
+  }, [lockNf, lockedNf]);
 
   const validateEndereco = useCallback((val: string) => {
-    if (!val) { setEnderecoError(''); return; }
-    setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
+    if (!val) { 
+      setEnderecoError(''); 
+      return; 
+    }
+    const isValid = ENDERECO_REGEX.test(val);
+    setEnderecoError(isValid ? '' : 'Padrão: TEC01.A.N03');
   }, []);
 
   useEffect(() => {
@@ -155,28 +150,20 @@ export function useLeftPanelForm() {
       duration: 3000
     });
 
-    const nextItem = '';
-    const nextLote = '';
-    const nextM2 = '';
-    const nextAiLargura = '';
-    const nextAiMLinear = '';
-    const nextDiversosMLinear = '';
-    const nextQuantidade = '';
-    
     setFormData({
-      item: nextItem,
-      lote: nextLote,
-      m2: nextM2,
-      aiLargura: nextAiLargura,
-      aiMLinear: nextAiMLinear,
-      diversosMLinear: nextDiversosMLinear,
-      quantidade: nextQuantidade
+      item: '',
+      lote: '',
+      m2: '',
+      aiLargura: '',
+      aiMLinear: '',
+      diversosMLinear: '',
+      quantidade: ''
     });
 
     setTimeout(() => itemRef.current?.focus(), 50);
   }, [item, lote, isMadeira, isDiversos, diversosTipo, currentMode, processo, endereco, mLinear, registros, nf, m2, largura, quantidade, addRegistro, conferente, setFormData]);
 
-  return {
+  return useMemo(() => ({
     formData,
     setFormData,
     processo,
@@ -209,5 +196,10 @@ export function useLeftPanelForm() {
     setLockEndereco,
     lockedEndereco,
     setLockedEndereco
-  };
+  }), [
+    formData, setFormData, processo, setProcesso, registros, currentMode, setMode,
+    enderecoError, largura, mLinear, handleAdd, resetFormData, lockProcesso,
+    setLockProcesso, lockedProcesso, setLockedProcesso, lockNf, setLockNf,
+    lockedNf, setLockedNf, lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco
+  ]);
 }
