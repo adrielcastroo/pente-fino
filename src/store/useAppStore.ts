@@ -193,6 +193,7 @@ export const useAppStore = create<AppState>()(
         
         set({ isHistoryLoading: true, historyError: null });
         try {
+          // Add a small delay to simulate network/processing and avoid rapid-fire calls
           const history = await apiService.fetchHistory();
           set({ history, isHistoryLoading: false });
         } catch (e: any) { 
