@@ -479,6 +479,60 @@ export default function EstoquePage() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* ===== STAT DETAIL DIALOG ===== */}
+      <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+          {selectedStat && (() => {
+            const statItems: { label: string; value: number; percent: number; color: string }[] = [
+              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground' },
+              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500' },
+              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500' },
+              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-red-500' },
+              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary' },
+            ];
+            const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
+
+            // Per-TEC breakdown
+            const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
+              const tecPosicoes = allPosicoes.filter(p => p.estrutura === tec);
+              const totalForTec = cfg.cols.length * cfg.levels * 30;
+              let val = 0;
+              if (selectedStat === 'total') val = totalForTec;
+              else if (selectedStat === 'livre') val = totalForTec - tecPosicoes.length;
+              else val = tecPosicoes.filter(p => p.status === selectedStat).length;
+              return { tec, value: val, total: totalForTec, percent: totalForTec ? Math.round((val / totalForTec) * 100) : 0 };
+            });
+
+            return (
+              <>
+                <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
+                  <DialogTitle className="text-lg font-black tracking-tight flex items-center gap-3">
+                    <div className={`text-3xl font-black tabular-nums ${current.color}`}>{current.value}</div>
+                    <div>
+                      <div className="text-base font-black">{current.label}</div>
+                      <DialogDescription className="text-xs text-muted-foreground font-medium">{current.percent}% do total de posições</DialogDescription>
+                    </div>
+                  </DialogTitle>
+                </div>
+                <div className="p-5 sm:p-6 space-y-3">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Por Estrutura</div>
+                  {tecBreakdown.map(t => (
+                    <div key={t.tec} className="flex items-center gap-3">
+                      <span className="text-xs font-black w-14 shrink-0">{t.tec}</span>
+                      <div className="flex-1 h-2 rounded-full bg-muted/40 overflow-hidden">
+                        <div className={`h-full rounded-full ${current.color.replace('text-', 'bg-')}`} style={{ width: `${t.percent}%` }} />
+                      </div>
+                      <span className="text-xs font-bold tabular-nums w-16 text-right text-muted-foreground">{t.value}/{t.total}</span>
+                      <span className="text-[10px] font-semibold tabular-nums w-10 text-right text-muted-foreground/70">{t.percent}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
