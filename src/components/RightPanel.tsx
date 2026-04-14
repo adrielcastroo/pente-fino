@@ -42,8 +42,12 @@ interface TableRowProps {
   onStartEdit: (rowId: string, key: string, val: string) => void;
   onDelete: (id: string) => void;
   onCopy: (t: string) => void;
-  renderCell: (r: any, column: any) => React.ReactNode;
   isLow: boolean;
+  editingCell: { rowId: string; key: string } | null;
+  editValue: string;
+  onEditValueChange: (val: string) => void;
+  onCommitEdit: () => void;
+  onCancelEdit: () => void;
 }
 
 const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, renderCell, isLow }: TableRowProps) => {
