@@ -9,7 +9,6 @@ import {
   CheckCircle2, 
   AlertCircle,
   FileText,
-  Table as TableIcon,
   Info
 } from 'lucide-react';
 import { 
@@ -74,6 +73,8 @@ export default function ImportTecidosModal({ open, onOpenChange }: ImportTecidos
       } else if (extension === 'txt' || extension === 'csv') {
         const text = await file.text();
         const lines = text.split('\n');
+        if (lines.length < 2) throw new Error('O arquivo está vazio ou não possui cabeçalho.');
+        
         const headers = lines[0].split(/[,\t;]/).map(h => h.trim().toLowerCase());
         
         importedData = lines.slice(1).filter(line => line.trim()).map(line => {
@@ -91,12 +92,7 @@ export default function ImportTecidosModal({ open, onOpenChange }: ImportTecidos
           return obj;
         });
       } else if (extension === 'pdf' || extension === 'docx') {
-        // Para PDF e DOCX, como não temos bibliotecas pesadas instaladas, 
-        // vamos exibir uma mensagem que por enquanto o suporte é experimental 
-        // ou pedir para converter para XLSX/TXT.
-        // No entanto, o usuário pediu especificamente. 
-        // Vou tentar extrair texto simples se possível ou orientar.
-        throw new Error(`O formato .${extension} requer processamento avançado. Por favor, utilize XLSX, XLS ou TXT para maior precisão.`);
+        throw new Error(`O formato .${extension} requer processamento avançado. Por favor, utilize XLSX, XLS ou TXT.`);
       } else {
         throw new Error('Formato de arquivo não suportado.');
       }
@@ -108,16 +104,16 @@ export default function ImportTecidosModal({ open, onOpenChange }: ImportTecidos
 
       importedData.forEach((row: any, index) => {
         try {
-          const item = (row.Item || row.item || '').toString();
+          const item = (row.Item || row.item || '').toString().trim();
           if (!item) throw new Error(`Linha ${index + 2}: Item não informado`);
 
-          const m2 = parseFloat(row.M2 || row.m2 || 0);
-          const largura = parseFloat(row.Largura || row.largura || 0);
+          const m2 = parseFloat((row.M2 || row.m2 || 0).toString().replace(',', '.'));
+          const largura = parseFloat((row.Largura || row.largura || 0).toString().replace(',', '.'));
           const mLinear = largura > 0 ? m2 / largura : 0;
-          const processo = (row.Processo || row.processo || '').toString();
-          const nf = (row.NF || row.nf || '').toString();
-          const endereco = (row.Endereco || row.endereco || '').toString();
-          const lote = (row.Lote || row.lote || '').toString();
+          const processo = (row.Processo || row.processo || '').toString().trim();
+          const nf = (row.NF || row.nf || '').toString().trim();
+          const endereco = (row.Endereco || row.endereco || '').toString().trim();
+          const lote = (row.Lote || row.lote || '').toString().trim();
 
           const loteSistema = generateLoteSistema(
             processo,
@@ -182,13 +178,12 @@ export default function ImportTecidosModal({ open, onOpenChange }: ImportTecidos
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Instruções */}
           <div className="bg-muted/40 border border-border/50 rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary/70">
               <Info className="w-3.5 h-3.5" /> Modelo Sugerido
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              O arquivo deve conter as seguintes colunas (ou campos separados por vírgula/ponto-e-vírgula):
+              O arquivo deve conter as seguintes colunas:
             </p>
             <div className="flex flex-wrap gap-1.5">
               {['Item', 'Processo', 'NF', 'M2', 'Largura', 'Lote', 'Endereco'].map(field => (
@@ -255,12 +250,12 @@ export default function ImportTecidosModal({ open, onOpenChange }: ImportTecidos
             </div>
           ) : (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-success/10 border border-success/20">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                  <CheckCircle2 className="w-6 h-6 text-success" />
                   <div>
-                    <p className="text-sm font-black text-emerald-600">Importação Concluída</p>
-                    <p className="text-xs font-bold text-emerald-600/70">{results.success} registros adicionados</p>
+                    <p className="text-sm font-black text-success">Importação Concluída</p>
+                    <p className="text-xs font-bold text-success/70">{results.success} registros adicionados</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setResults(null)} className="h-8 rounded-lg">
@@ -270,12 +265,12 @@ export default function ImportTecidosModal({ open, onOpenChange }: ImportTecidos
 
               {results.errors.length > 0 && (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-500/70 ml-2">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-destructive/70 ml-2">
                     <AlertCircle className="w-3.5 h-3.5" /> Erros Encontrados ({results.errors.length})
                   </div>
-                  <div className="max-h-32 overflow-y-auto rounded-xl border border-red-500/20 bg-red-500/5 p-3 custom-scrollbar">
+                  <div className="max-h-32 overflow-y-auto rounded-xl border border-destructive/20 bg-destructive/5 p-3 custom-scrollbar">
                     {results.errors.map((err, i) => (
-                      <p key={i} className="text-[10px] font-medium text-red-600/80 mb-1 last:mb-0">
+                      <p key={i} className="text-[10px] font-medium text-destructive/80 mb-1 last:mb-0">
                         • {err}
                       </p>
                     ))}
