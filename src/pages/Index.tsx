@@ -81,19 +81,19 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-[100dvh] flex w-full flex-col xl:flex-row bg-background overflow-hidden relative">
+      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
         />
 
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-[100dvh] relative">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
-            <div key={activeTab} className="h-full w-full max-w-[2000px] mx-auto">
+            <div key={activeTab} className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-2 sm:p-4 xl:p-8 h-full">
+                <div className="p-2 sm:p-4 xl:p-8">
                   <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} />
                 </div>
               </Suspense>
