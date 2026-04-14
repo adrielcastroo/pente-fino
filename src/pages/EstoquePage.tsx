@@ -62,6 +62,7 @@ export default function EstoquePage() {
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
+  const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
