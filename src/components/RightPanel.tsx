@@ -4,7 +4,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -117,8 +116,8 @@ interface TableRowProps {
 }
 
 const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit }: TableRowProps) => {
-  const content = (
-    <>
+  return (
+    <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
       {columns.map((column: any) => (
         <TableCell
@@ -136,7 +135,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
         />
       ))}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
-        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
+        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
@@ -166,28 +165,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
           </Tooltip>
         </div>
       </td>
-    </>
-  );
-
-  if (isLow) {
-    return (
-      <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
-        {content}
-      </tr>
-    );
-  }
-
-  return (
-    <motion.tr 
-      key={r.id}
-      initial={r.isNew ? { opacity: 0, scale: 0.98, x: 20 } : false}
-      animate={{ opacity: 1, scale: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`group hover:bg-muted/40 transition-all duration-200 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}
-    >
-      {content}
-    </motion.tr>
+    </tr>
   );
 });
 
@@ -293,32 +271,25 @@ export default function RightPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-sm">
-      <AnimatePresence>
-        {undoStack.length > 0 && (
-          <motion.div 
-            initial={isLow ? undefined : { height: 0, opacity: 0, y: -20 }} 
-            animate={{ height: 'auto', opacity: 1, y: 0 }} 
-            exit={isLow ? undefined : { height: 0, opacity: 0, y: -20 }}
-            className="bg-primary/95 backdrop-blur-md px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-xl z-20 border-b border-white/10"
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      {undoStack.length > 0 && (
+        <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
+          <div className="flex items-center gap-3 text-white font-bold">
+            <Undo2 className="w-5 h-5" />
+            <span>Você removeu um registro. Deseja restaurar?</span>
+          </div>
+          <Button 
+            size="sm"
+            variant="secondary"
+            onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
+            className="rounded-full px-6 font-black uppercase tracking-wider text-[10px] bg-white text-primary hover:bg-white/90"
           >
-            <div className="flex items-center gap-3 text-white font-bold">
-              <Undo2 className="w-5 h-5" />
-              <span>Você removeu um registro. Deseja restaurar?</span>
-            </div>
-            <Button 
-              size="sm"
-              variant="secondary"
-              onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
-              className="rounded-full px-6 font-black uppercase tracking-wider text-[10px] bg-white text-primary hover:bg-white/90"
-            >
-              Desfazer Ação
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Desfazer Ação
+          </Button>
+        </div>
+      )}
 
-      <div className="px-3 sm:px-6 py-4 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
+      <div className="px-3 sm:px-6 py-4 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
@@ -370,64 +341,41 @@ export default function RightPanel() {
           <table className="w-full border-separate border-spacing-0 table-auto">
             <thead>
               <tr className="bg-muted/30">
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md w-[40px] sm:w-[50px]">#</th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
                 {columns.map(column => (
                   <th 
                     key={column.key} 
-                    className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80 backdrop-blur-md"
+                    className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
                   >
                     {column.shortLabel || column.label}
                   </th>
                 ))}
-                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background/80 backdrop-blur-md w-[80px] sm:w-[100px]"></th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
-              {isLow ? (
-                sortedRows.map((r, i) => (
-                  <TableRow
-                    key={r.id}
-                    r={r}
-                    i={i}
-                    columns={columns}
-                    searchQuery={trimmedQuery}
-                    onStartEdit={startEdit}
-                    onDelete={deleteRegistro}
-                    onCopy={copyText}
-                    isLow={isLow}
-                    editingCell={editingCell}
-                    editValue={editValue}
-                    onEditValueChange={setEditValue}
-                    onCommitEdit={commitEdit}
-                    onCancelEdit={cancelEdit}
-                  />
-                ))
-              ) : (
-                <AnimatePresence initial={false}>
-                  {sortedRows.map((r, i) => (
-                    <TableRow
-                      key={r.id}
-                      r={r}
-                      i={i}
-                      columns={columns}
-                      searchQuery={trimmedQuery}
-                      onStartEdit={startEdit}
-                      onDelete={deleteRegistro}
-                      onCopy={copyText}
-                      isLow={isLow}
-                      editingCell={editingCell}
-                      editValue={editValue}
-                      onEditValueChange={setEditValue}
-                      onCommitEdit={commitEdit}
-                      onCancelEdit={cancelEdit}
-                    />
-                  ))}
-                </AnimatePresence>
-              )}
+              {sortedRows.map((r, i) => (
+                <TableRow
+                  key={r.id}
+                  r={r}
+                  i={i}
+                  columns={columns}
+                  searchQuery={trimmedQuery}
+                  onStartEdit={startEdit}
+                  onDelete={deleteRegistro}
+                  onCopy={copyText}
+                  isLow={isLow}
+                  editingCell={editingCell}
+                  editValue={editValue}
+                  onEditValueChange={setEditValue}
+                  onCommitEdit={commitEdit}
+                  onCancelEdit={cancelEdit}
+                />
+              ))}
             </tbody>
             {sortedRows.length > 0 && (
               <tfoot className="sticky bottom-0 z-10">
-                <tr className="bg-primary/95 text-white font-black font-mono text-[11px] backdrop-blur-lg shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                <tr className="bg-primary/95 text-white font-black font-mono text-[11px]  shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
                   <td className="px-4 py-4">FIM</td>
                   {columns.map(column => (
                     <td key={column.key} className="px-4 py-4">

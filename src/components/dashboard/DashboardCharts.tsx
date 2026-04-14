@@ -26,7 +26,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
+    <Card className="md:col-span-3 group border border-border/40 bg-card/20  hover:bg-card/30 transition-colors shadow-sm overflow-hidden relative">
       <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20" />
       <CardHeader className="flex flex-row items-center justify-between px-6 py-4">
         <div>
@@ -105,7 +105,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
   const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
 
   return (
-    <Card className="group border border-border/40 bg-card/20 backdrop-blur-sm hover:bg-card/30 transition-all duration-500 shadow-sm overflow-hidden relative">
+    <Card className="group border border-border/40 bg-card/20  hover:bg-card/30 transition-colors shadow-sm overflow-hidden relative">
       <CardHeader className="px-6 py-4 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-sm font-bold flex items-center gap-2">

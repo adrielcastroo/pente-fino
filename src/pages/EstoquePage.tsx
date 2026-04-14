@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -155,11 +154,7 @@ export default function EstoquePage() {
   const occupiedCount = selectedCellItems.length;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0"
-    >
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
       {/* Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
@@ -179,7 +174,7 @@ export default function EstoquePage() {
           { label: 'Bloqueado', value: stats.blocked, config: STATUS_CONFIG.bloqueado },
           { label: 'Livre', value: stats.free, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
         ].map(s => (
-          <Card key={s.label} className={`border ${s.config.border} ${s.config.bg} backdrop-blur-sm shadow-none hover:scale-[1.02] transition-all duration-300 cursor-default`}>
+          <Card key={s.label} className={`border ${s.config.border} ${s.config.bg}  shadow-none hover:scale-[1.02] transition-all duration-300 cursor-default`}>
             <CardContent className="p-4 text-center space-y-1">
               <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
               <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
@@ -264,7 +259,7 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card/95 backdrop-blur-xl overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card/95  overflow-hidden rounded-2xl">
           {selectedCell && (
             <>
               {/* Dialog Header */}
@@ -293,11 +288,9 @@ export default function EstoquePage() {
                 </div>
                 {/* Occupation bar */}
                 <div className="mt-4 h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }} 
-                    animate={{ width: `${(occupiedCount/30)*100}%` }} 
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className={`h-full rounded-full ${
+                  <div 
+                    style={{ width: `${(occupiedCount/30)*100}%` }}
+                    className={`h-full rounded-full transition-all ${
                       occupiedCount >= 25 ? 'bg-red-500' : occupiedCount >= 15 ? 'bg-amber-500' : 'bg-primary'
                     }`} 
                   />
@@ -312,16 +305,13 @@ export default function EstoquePage() {
                     const statusCfg = item ? STATUS_CONFIG[item.status] || STATUS_CONFIG.livre : null;
                     
                     return (
-                      <motion.button
+                      <button
                         key={pos}
-                        initial={isLow ? false : { opacity: 0, scale: 0.8 }}
-                        animate={isLow ? false : { opacity: 1, scale: 1 }}
-                        transition={isLow ? undefined : { delay: pos * 0.012, duration: 0.2 }}
                         onClick={() => item && setDetailPos(item)}
                         disabled={!item}
-                        className={`relative h-14 sm:h-16 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center gap-0.5 group ${
+                        className={`relative h-14 sm:h-16 rounded-xl border transition-colors flex flex-col items-center justify-center gap-0.5 group ${
                           item 
-                            ? `${statusCfg!.bg} ${statusCfg!.border} cursor-pointer hover:scale-105 hover:shadow-lg active:scale-95` 
+                            ? `${statusCfg!.bg} ${statusCfg!.border} cursor-pointer hover:shadow-md active:scale-[0.97]` 
                             : 'bg-muted/10 border-border/20 cursor-default opacity-50'
                         }`}
                       >
@@ -343,7 +333,7 @@ export default function EstoquePage() {
                             }`} />
                           </div>
                         )}
-                      </motion.button>
+                      </button>
                     );
                   })}
                 </div>
@@ -373,7 +363,7 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card/95 backdrop-blur-xl overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card/95  overflow-hidden rounded-2xl">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             return (
@@ -474,6 +464,6 @@ export default function EstoquePage() {
           })()}
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 }

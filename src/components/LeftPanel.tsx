@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+// animations removed for lightweight mode
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
 import {
@@ -547,19 +547,14 @@ const LeftPanel = memo(function LeftPanel() {
   }, [madeiraTipo, isMadeira]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="bg-background/40 backdrop-blur-xl lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-300"
-    >
+    <div className="bg-background lg:border-r border-border/40 overflow-hidden flex flex-col h-full">
       <div className="p-3 sm:p-6 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-10 custom-scrollbar relative">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         
         {/* Mode Toggle — only for Tecido (not Madeira) */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 border border-border/40 rounded-2xl sm:rounded-3xl p-1 gap-1 sm:gap-2 shadow-inner relative z-10 backdrop-blur-md overflow-x-auto no-scrollbar">
+          <div className="flex bg-muted/40 border border-border/40 rounded-2xl sm:rounded-3xl p-1 gap-1 sm:gap-2 shadow-inner relative z-10 overflow-x-auto no-scrollbar">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -574,7 +569,7 @@ const LeftPanel = memo(function LeftPanel() {
                   }`}
                   aria-pressed={isActive}
                 >
-                  {isActive && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
+                  {isActive && <div className="absolute inset-0 bg-primary shadow-sm shadow-primary/30 z-0 rounded-xl sm:rounded-2xl" />}
                   <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-300 ${isActive ? 'rotate-0' : 'group-hover/mode:scale-105'}`} />
                   <span className="relative z-10">{m.label}</span>
                 </button>
@@ -585,14 +580,9 @@ const LeftPanel = memo(function LeftPanel() {
 
 
         {/* Manual tip */}
-        <AnimatePresence mode="wait">
           {!isAI && (
-            <motion.div
-              key={currentMode + diversosTipo}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-lg relative overflow-hidden"
+            <div
+              className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-sm relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/tip:bg-primary/10 transition-colors duration-1000" />
               <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
@@ -632,9 +622,8 @@ const LeftPanel = memo(function LeftPanel() {
                     <TooltipContent className="font-bold rounded-xl shadow-2xl p-3 bg-popover/95">Limpar campos</TooltipContent>
                   </Tooltip>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
         {isDiversos && (
           <div className="space-y-4">
@@ -686,15 +675,9 @@ const LeftPanel = memo(function LeftPanel() {
 
 
         {/* Dropzone for AI modes */}
-        <AnimatePresence mode="wait">
+        
           {showDropzone && (
-            <motion.div
-              key="dropzone"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] text-center opacity-80 flex items-center justify-center gap-3">
                 <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-primary/20" />
                 <span>Marina Vision IA</span>
@@ -778,7 +761,7 @@ const LeftPanel = memo(function LeftPanel() {
               )}
 
               <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden shadow-inner">
-                 <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                 <div style={{ width: `${progress}%` }} className="h-full bg-primary" />
               </div>
 
               {preview && !cameraActive && (
@@ -788,20 +771,19 @@ const LeftPanel = memo(function LeftPanel() {
                 </Button>
               )}
 
-              <AnimatePresence>
-                {aiStatus && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
+              {aiStatus && (
+                  <div className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-sm ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
                     <div className="flex items-center gap-2 mb-1">
                        {aiStatus.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
                        <span className="uppercase tracking-widest">{aiStatus.type === 'ok' ? 'Análise Concluída' : 'Erro na Análise'}</span>
                     </div>
                     {aiStatus.msg}
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </motion.div>
+              
+            </div>
           )}
-        </AnimatePresence>
+        
 
         {/* Form Fields */}
         <div className="space-y-8 relative z-10">
@@ -1119,21 +1101,15 @@ const LeftPanel = memo(function LeftPanel() {
             </Button>
           )}
 
-          <AnimatePresence>
-            {showPreview && registros.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, height: 0 }}
-                animate={{ opacity: 1, scale: 1, height: 'auto' }}
-                exit={{ opacity: 0, scale: 0.95, height: 0 }}
-                className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 backdrop-blur-md shadow-2xl"
-              >
+          {showPreview && registros.length > 0 && (
+              <div className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 shadow-md">
                 <div className="p-4 border-b border-border/40 bg-muted/30 flex items-center justify-between">
                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Últimos Registros</span>
                    <Badge className="bg-primary text-white font-black">{registros.length}</Badge>
                 </div>
                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                   <table className="w-full text-[11px] border-separate border-spacing-0">
-                    <thead className="sticky top-0 bg-muted/90 backdrop-blur-sm z-10">
+                    <thead className="sticky top-0 bg-muted/90  z-10">
                       <tr>
                         <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">#</th>
                         <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">Referência</th>
@@ -1154,23 +1130,21 @@ const LeftPanel = memo(function LeftPanel() {
                 <div className="p-3 bg-muted/30 text-center">
                    <Button variant="link" size="sm" className="font-black text-[10px] uppercase tracking-widest text-primary" onClick={() => useAppStore.getState().setFormData({ activeTab: 'table' })}>Abrir Tabela Completa</Button>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
 
           {isDuplicate && (
-             <motion.div
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-destructive/5"
+             <div
+               className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-sm"
              >
                <AlertTriangle className="w-5 h-5" />
                Atenção: O item "{item}" já consta nesta conferência.
-             </motion.div>
+             </div>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 });
 

@@ -79,7 +79,7 @@ const TopBar = memo(function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 transition-all duration-500">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background">
       <div className="flex h-16 sm:h-20 lg:h-24 items-center gap-2 sm:gap-4 px-3 sm:px-8 max-w-[2000px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <SidebarTrigger className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl shrink-0 border border-transparent hover:border-primary/20" />
@@ -134,7 +134,7 @@ const TopBar = memo(function TopBar() {
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="bg-popover/90 backdrop-blur-md border-border/40 shadow-2xl p-3 rounded-xl font-bold text-sm">
+              <TooltipContent className="bg-popover/90  border-border/40 shadow-2xl p-3 rounded-xl font-bold text-sm">
                 <p>Exportar {registros.length} registros para Excel</p>
               </TooltipContent>
             </Tooltip>
