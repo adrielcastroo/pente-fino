@@ -28,7 +28,7 @@ export default function DashboardPage() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/10">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
-            <Zap className={`w-3.5 h-3.5 ${isLow ? '' : 'animate-pulse'}`} />
+            <Zap className="w-3.5 h-3.5" />
             <span>Inteligência de Operação</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
@@ -103,9 +103,9 @@ export default function DashboardPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
       {content}
     </motion.div>

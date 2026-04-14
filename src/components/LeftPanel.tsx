@@ -545,10 +545,10 @@ const LeftPanel = memo(function LeftPanel() {
 
   return (
     <motion.div
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-background/40 backdrop-blur-xl lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-500"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="bg-background/40 backdrop-blur-xl lg:border-r border-border/40 overflow-hidden flex flex-col h-full shadow-[20px_0_50px_-20px_rgba(0,0,0,0.1)] transition-all duration-300"
     >
       <div className="p-3 sm:p-6 lg:p-10 flex-1 overflow-y-auto space-y-6 sm:space-y-10 custom-scrollbar relative">
         {/* Decorative background elements */}
@@ -564,7 +564,7 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-500 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode ${
+                  className={`flex-1 min-w-[100px] py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] relative overflow-hidden group/mode ${
                     isActive
                       ? 'bg-primary text-white shadow-lg sm:shadow-xl shadow-primary/30 scale-100'
                       : 'text-muted-foreground/60 hover:text-foreground hover:bg-white/50 dark:hover:bg-black/20 scale-[0.98]'
@@ -572,7 +572,7 @@ const LeftPanel = memo(function LeftPanel() {
                   aria-pressed={isActive}
                 >
                   {isActive && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-primary shadow-xl shadow-primary/30 z-0" />}
-                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-700 ${isActive ? 'rotate-0' : '-rotate-12 group-hover/mode:rotate-0 group-hover/mode:scale-110'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-300 ${isActive ? 'rotate-0' : 'group-hover/mode:scale-105'}`} />
                   <span className="relative z-10">{m.label}</span>
                 </button>
               );
@@ -586,14 +586,14 @@ const LeftPanel = memo(function LeftPanel() {
           {!isAI && (
             <motion.div
               key={currentMode + diversosTipo}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="p-5 rounded-3xl bg-primary/5 border border-primary/20 text-xs leading-relaxed flex items-center justify-between group/tip shadow-lg relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover/tip:bg-primary/10 transition-colors duration-1000" />
               <div className="flex items-center gap-4 font-bold text-primary/70 relative z-10">
-                <div className="p-2.5 rounded-2xl bg-primary/10 group-hover/tip:scale-110 group-hover/tip:rotate-12 transition-all duration-700 shadow-sm border border-primary/10">
+                <div className="p-2.5 rounded-2xl bg-primary/10 transition-all duration-300 shadow-sm border border-primary/10">
                   <ScanBarcode className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex flex-col">
@@ -643,7 +643,7 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={tipo}
                   onClick={() => setDiversosTipo(tipo)}
-                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 transform active:scale-95 group/cat relative overflow-hidden ${
+                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/cat relative overflow-hidden ${
                     diversosTipo === tipo
                       ? 'border-primary bg-primary/5 text-primary shadow-xl shadow-primary/10'
                       : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/20'
@@ -667,7 +667,7 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 transform active:scale-95 group/cat relative overflow-hidden ${
+                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/cat relative overflow-hidden ${
                     madeiraTipo === tipo
                       ? 'border-primary bg-primary/5 text-primary shadow-xl shadow-primary/10'
                       : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/20'
@@ -699,21 +699,21 @@ const LeftPanel = memo(function LeftPanel() {
               </div>
               
               <div
-                className={`dropzone group/dz border-2 rounded-3xl transition-all duration-500 overflow-hidden relative ${preview ? 'border-primary shadow-2xl shadow-primary/10' : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 shadow-inner'}`}
+                className={`dropzone group/dz border-2 rounded-3xl transition-all duration-300 overflow-hidden relative ${preview ? 'border-primary shadow-2xl shadow-primary/10' : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 shadow-inner'}`}
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
                 style={{ height: preview || cameraActive ? 240 : 180 }}
               >
                 {cameraActive && (
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0 transition-opacity duration-1000" />
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0" />
                 )}
                 {preview && !cameraActive && (
-                  <motion.img initial={{ scale: 1.1 }} animate={{ scale: 1 }} src={preview} alt="Etiqueta Capturada" className="w-full h-full object-cover" />
+                  <img src={preview} alt="Etiqueta Capturada" className="w-full h-full object-cover" />
                 )}
                 {!preview && !cameraActive && (
                   <div className="text-center p-6 select-none flex flex-col items-center gap-4">
-                    <div className="p-4 rounded-full bg-primary/5 text-primary group-hover/dz:scale-110 group-hover/dz:rotate-6 transition-all duration-500">
-                      <Camera className="w-10 h-10 opacity-30 group-hover/dz:opacity-100" />
+                    <div className="p-4 rounded-full bg-primary/5 text-primary transition-all duration-300">
+                      <Camera className="w-10 h-10 opacity-30" />
                     </div>
                     <div className="space-y-1">
                        <p className="text-sm font-black text-foreground">Capturar Etiqueta</p>
@@ -780,14 +780,14 @@ const LeftPanel = memo(function LeftPanel() {
 
               {preview && !cameraActive && (
                 <Button onClick={processOpenRouter} disabled={aiLoading} className="w-full h-14 rounded-[1.5rem] font-black uppercase tracking-[0.15em] shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50">
-                  {aiLoading ? <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin-fast mr-2" /> : <Zap className="w-5 h-5 mr-2 animate-pulse text-yellow-300 fill-yellow-300" />}
+                  {aiLoading ? <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin mr-2" /> : <Zap className="w-5 h-5 mr-2 text-yellow-300 fill-yellow-300" />}
                   <span>{aiLoading ? 'Processando...' : 'Analisar com Marina Vision IA'}</span>
                 </Button>
               )}
 
               <AnimatePresence>
                 {aiStatus && (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-lg ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
                     <div className="flex items-center gap-2 mb-1">
                        {aiStatus.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
                        <span className="uppercase tracking-widest">{aiStatus.type === 'ok' ? 'Análise Concluída' : 'Erro na Análise'}</span>
@@ -1081,7 +1081,7 @@ const LeftPanel = memo(function LeftPanel() {
             <div className="col-span-2 space-y-3 border-t border-white/10 pt-6">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Lote Sistema Gerado</p>
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
               </div>
               <div className="p-4 rounded-2xl bg-white/5 font-mono text-xs sm:text-sm font-bold text-primary-foreground/90 truncate border border-white/5 shadow-inner group-hover/card:border-primary/20 transition-colors duration-500">
                 {previewLoteSistema}
@@ -1161,7 +1161,7 @@ const LeftPanel = memo(function LeftPanel() {
                animate={{ opacity: 1, scale: 1 }}
                className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-destructive/5"
              >
-               <AlertTriangle className="w-5 h-5 animate-bounce" />
+               <AlertTriangle className="w-5 h-5" />
                Atenção: O item "{item}" já consta nesta conferência.
              </motion.div>
           )}

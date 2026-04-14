@@ -119,7 +119,7 @@ const AppSidebar = memo(({ activeTab, onTabChange, onOpenConfig }: AppSidebarPro
                       <div className="relative flex items-center justify-center shrink-0">
                         <Icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ${isActive ? 'scale-110 text-primary-foreground drop-shadow-md' : 'group-hover/btn:text-primary group-hover/btn:scale-110'}`} />
                         {isTableTab && registros.length > 0 && collapsed && (
-                          <span className="absolute -top-3 -right-3 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white ring-4 ring-sidebar shadow-lg animate-bounce">
+                          <span className="absolute -top-3 -right-3 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white ring-4 ring-sidebar shadow-lg">
                             {registros.length}
                           </span>
                         )}
@@ -128,7 +128,7 @@ const AppSidebar = memo(({ activeTab, onTabChange, onOpenConfig }: AppSidebarPro
                         {item.label}
                       </span>
                       {isTableTab && registros.length > 0 && !collapsed && (
-                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-300 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse'}`}>
+                        <span className={`ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-black shadow-inner transition-all duration-300 ${isActive ? 'bg-white/20 text-white' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}>
                           {registros.length}
                         </span>
                       )}
