@@ -79,8 +79,8 @@ export default function MotorControlePage() {
   }, []);
 
   const cleanControleSerie = useCallback((raw: string): string => {
-    const idx = raw.search(/[Ff]/);
-    if (idx > 0) return raw.slice(0, idx).trim();
+    const idx = raw.toUpperCase().indexOf('FF');
+    if (idx !== -1) return raw.slice(0, idx).trim();
     return raw.trim();
   }, []);
 
@@ -284,7 +284,7 @@ export default function MotorControlePage() {
               <span className="text-foreground/80 font-black">
                 {subMode === 'motor'
                   ? <>Leitor configurado com <kbd className="kbd px-1.5 py-0.5 rounded-lg bg-background text-primary border-b-4 border-primary/20 font-black">Enter</kbd> automático.</>
-                  : <>Extração automática antes de "F". Sequência atual: <span className="text-primary">#{getSequencial()}</span></>
+                  : <>Extração automática antes de "FF". Sequência atual: <span className="text-primary">#{getSequencial()}</span></>
                 }
               </span>
             </div>
