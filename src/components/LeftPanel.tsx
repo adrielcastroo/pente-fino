@@ -89,6 +89,7 @@ const LeftPanel = memo(function LeftPanel() {
   const enderecoRef = useRef<HTMLInputElement>(null);
 
   const [showPreview, setShowPreview] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const quantidadeRef = useRef<HTMLInputElement>(null);
   const manualLarguraRef = useRef<HTMLInputElement>(null);
 
@@ -1161,6 +1162,7 @@ const LeftPanel = memo(function LeftPanel() {
           )}
         </div>
       </div>
+      <ImportTecidosModal open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 });
