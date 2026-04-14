@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense, useMemo, memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
