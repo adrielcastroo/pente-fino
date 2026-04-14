@@ -889,8 +889,8 @@ const LeftPanel = memo(function LeftPanel() {
                     value={nf}
                     onChange={e => handleNfChange(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
-                    className={`w-full h-16 rounded-3xl border-2 px-6 text-sm font-mono font-bold transition-all duration-500 shadow-sm ${
-                      lockNf ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-card/30 border-border/40 focus:border-primary focus:bg-background focus:ring-8 focus:ring-primary/5'
+                    className={`w-full h-12 rounded-2xl border-2 px-5 text-sm font-mono font-bold transition-all duration-300 ${
+                      lockNf ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-muted/30 border-border/40 focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5'
                     }`}
                     placeholder="NF..."
                     autoComplete="off"
