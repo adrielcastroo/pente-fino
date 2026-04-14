@@ -4,7 +4,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2 } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -117,8 +116,8 @@ interface TableRowProps {
 }
 
 const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit }: TableRowProps) => {
-  const content = (
-    <>
+  return (
+    <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
       {columns.map((column: any) => (
         <TableCell
@@ -136,7 +135,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
         />
       ))}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
-        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
+        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
@@ -166,28 +165,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
           </Tooltip>
         </div>
       </td>
-    </>
-  );
-
-  if (isLow) {
-    return (
-      <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
-        {content}
-      </tr>
-    );
-  }
-
-  return (
-    <motion.tr 
-      key={r.id}
-      initial={r.isNew ? { opacity: 0, scale: 0.98, x: 20 } : false}
-      animate={{ opacity: 1, scale: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`group hover:bg-muted/40 transition-all duration-200 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}
-    >
-      {content}
-    </motion.tr>
+    </tr>
   );
 });
 
