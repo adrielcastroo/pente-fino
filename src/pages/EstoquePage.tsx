@@ -452,7 +452,7 @@ export default function EstoquePage() {
                     ].map(f => (
                       <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
                         <div className="text-[8px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
-                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-words leading-snug truncate">{f.value}</div>
+                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-all leading-snug">{f.value}</div>
                       </div>
                     ))}
                   </div>
