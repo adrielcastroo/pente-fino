@@ -65,6 +65,11 @@ const LeftPanel = memo(function LeftPanel() {
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
   } = formData;
 
+  const [localItem, setLocalItem] = useState(item);
+  const [localNf, setLocalNf] = useState(nf);
+  const [localProcesso, setLocalProcesso] = useState(processo);
+  const [localEndereco, setLocalEndereco] = useState(endereco);
+
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
   const [preview, setPreview] = useState<string | null>(null);
