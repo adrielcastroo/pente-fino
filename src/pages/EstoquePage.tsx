@@ -332,7 +332,7 @@ export default function EstoquePage() {
                     const item = selectedCellItems.find(p => p.posicao === pos);
                     const statusCfg = item ? STATUS_CONFIG[item.status] || STATUS_CONFIG.livre : null;
                     
-                    return (
+                    const posButton = (
                       <button
                         key={pos}
                         onClick={() => item && setDetailPos(item)}
@@ -362,6 +362,25 @@ export default function EstoquePage() {
                           </div>
                         )}
                       </button>
+                    );
+
+                    if (!item) return posButton;
+
+                    return (
+                      <Tooltip key={pos} delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          {posButton}
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-[hsl(var(--card))] border border-border/40 rounded-xl px-3 py-2 shadow-xl max-w-[280px]">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-foreground tracking-wide">
+                            <span className="truncate">{item.item || '—'}</span>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-muted-foreground">{item.lote || '—'}</span>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-primary whitespace-nowrap">{item.m_linear ?? 0}m</span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     );
                   })}
                 </div>
