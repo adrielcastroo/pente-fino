@@ -298,9 +298,9 @@ export default function MotorControlePage() {
               <div className="flex items-center gap-2 ml-auto bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
                 <span className="text-[10px] font-semibold text-primary uppercase">Nº Caixa:</span>
                 <input
-                  type="number" min="1" value={caixaNum}
-                  onChange={e => setCaixaNum(e.target.value)}
-                  className="w-12 bg-background border border-border/60 rounded-md text-center text-primary font-bold text-sm outline-none p-1 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:border-primary/50 transition-colors"
+                  type="text" inputMode="numeric" value={caixaNum}
+                  onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v) setCaixaNum(v); }}
+                  className="w-10 bg-background border border-border/60 rounded-md text-center text-primary font-bold text-sm outline-none py-1 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:border-primary/50 transition-colors"
                   title="Clique para alterar o número da caixa"
                 />
                 <Badge className="bg-primary text-primary-foreground font-bold text-[10px] rounded">CX{caixaNum.padStart(2, '0')}</Badge>
