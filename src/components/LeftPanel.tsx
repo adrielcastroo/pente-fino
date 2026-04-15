@@ -578,21 +578,9 @@ const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Tip bar */}
+        {/* Action buttons */}
         {!isAI && (
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <ScanBarcode className="w-3.5 h-3.5 text-primary" />
-              <span className="font-medium text-foreground/80">
-                {isMadeira ? (
-                  <><span className="text-primary">{madeiraTipo}:</span> Item + Lote + Qtd</>
-                ) : isDiversos ? (
-                  <><span className="text-primary">{diversosTipo}:</span> Preencha os campos</>
-                ) : (
-                  <>Avance com <kbd className="px-1 py-0.5 rounded bg-muted text-primary border border-border text-[10px] font-mono">Enter</kbd></>
-                )}
-              </span>
-            </div>
+          <div className="flex items-center justify-end text-xs text-muted-foreground">
             <div className="flex gap-1">
               {undoStack.length > 0 && (
                 <Button variant="ghost" size="icon" onClick={handleUndo} className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary">
