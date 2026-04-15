@@ -551,11 +551,11 @@ const LeftPanel = memo(function LeftPanel() {
 
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-3 sm:p-5 xl:p-6 flex-1 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar relative">
+      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
         
-        {/* Mode Toggle — only for Tecido (not Madeira) */}
+        {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="flex bg-muted/50 border border-border/50 rounded-xl p-1 gap-1 relative z-10 overflow-x-auto no-scrollbar">
+          <div className="flex bg-muted/40 rounded-lg p-0.5 gap-0.5">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -563,14 +563,14 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 min-w-[90px] py-2.5 sm:py-3 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95 ${
+                  className={`flex-1 py-2 rounded-md text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   aria-pressed={isActive}
                 >
-                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Icon className="w-3.5 h-3.5" />
                   <span>{m.label}</span>
                 </button>
               );
@@ -578,256 +578,183 @@ const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-
-        {/* Manual tip */}
-          {!isAI && (
-            <div className="p-4 rounded-xl bg-muted/40 border border-border/50 text-xs flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <ScanBarcode className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex flex-col">
-                   <span className="text-foreground font-bold text-[13px]">
-                    {isMadeira ? (
-                      <><span className="text-primary">{madeiraTipo}:</span> Item + Lote + Qtd</>
-                    ) : isDiversos ? (
-                      <><span className="text-primary">{diversosTipo}:</span> Preencha os campos</>
-                    ) : (
-                      <>Bipe cada campo — avance com <kbd className="px-1.5 py-0.5 rounded bg-background text-primary border border-border font-bold text-[11px]">Enter</kbd></>
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-1.5 flex-shrink-0 ml-3">
-                {undoStack.length > 0 && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={handleUndo} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
-                        <Undo2 className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Desfazer</TooltipContent>
-                  </Tooltip>
+        {/* Tip bar */}
+        {!isAI && (
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <ScanBarcode className="w-3.5 h-3.5 text-primary" />
+              <span className="font-medium text-foreground/80">
+                {isMadeira ? (
+                  <><span className="text-primary">{madeiraTipo}:</span> Item + Lote + Qtd</>
+                ) : isDiversos ? (
+                  <><span className="text-primary">{diversosTipo}:</span> Preencha os campos</>
+                ) : (
+                  <>Avance com <kbd className="px-1 py-0.5 rounded bg-muted text-primary border border-border text-[10px] font-mono">Enter</kbd></>
                 )}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={resetForm} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Limpar</TooltipContent>
-                  </Tooltip>
-              </div>
+              </span>
             </div>
-          )}
-
-        {isDiversos && (
-          <div className="space-y-4">
-            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-50 flex items-center gap-2">
-              <Layers3 className="w-3.5 h-3.5" /> Categorias Disponíveis
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-              {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
-                <button
-                  key={tipo}
-                  onClick={() => setDiversosTipo(tipo)}
-                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-150 active:scale-90 group/cat relative overflow-hidden ${
-                    diversosTipo === tipo
-                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
-                      : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/40'
-                  }`}
-                >
-                  <span className="relative z-10">{tipo}</span>
-                  <div className={`absolute bottom-0 left-0 w-full h-1 bg-white/20 transition-transform duration-500 ${diversosTipo === tipo ? 'scale-x-100' : 'scale-x-0'}`} />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {isMadeira && (
-          <div className="space-y-4">
-            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-50 flex items-center gap-2">
-              <LayoutGrid className="w-3.5 h-3.5" /> Subtipos de Material
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-              {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
-                <button
-                  key={tipo}
-                  onClick={() => setMadeiraTipo(tipo)}
-                  className={`rounded-[1.5rem] border-2 px-3 py-5 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-150 active:scale-90 group/cat relative overflow-hidden ${
-                    madeiraTipo === tipo
-                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
-                      : 'border-border/40 bg-card/20 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 hover:border-primary/40'
-                  }`}
-                >
-                  <span className="relative z-10">{tipo}</span>
-                  <div className={`absolute bottom-0 left-0 w-full h-1 bg-white/20 transition-transform duration-500 ${madeiraTipo === tipo ? 'scale-x-100' : 'scale-x-0'}`} />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-
-        {/* Dropzone for AI modes */}
-        
-          {showDropzone && (
-            <div className="space-y-4">
-              <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] text-center opacity-80 flex items-center justify-center gap-3">
-                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-primary/20" />
-                <span>Marina Vision IA</span>
-                <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-primary/20" />
-              </div>
-              
-              <div
-                className={`dropzone group/dz border-2 rounded-3xl transition-all duration-300 overflow-hidden relative ${preview ? 'border-primary shadow-2xl shadow-primary/10' : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 shadow-inner'}`}
-                onDragOver={e => e.preventDefault()}
-                onDrop={handleDrop}
-                style={{ height: preview || cameraActive ? 240 : 180 }}
-              >
-                {cameraActive && (
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0" />
-                )}
-                {preview && !cameraActive && (
-                  <img src={preview} alt="Etiqueta Capturada" className="w-full h-full object-cover" />
-                )}
-                {!preview && !cameraActive && (
-                  <div className="text-center p-6 select-none flex flex-col items-center gap-4">
-                    <div className="p-4 rounded-full bg-primary/5 text-primary transition-all duration-300">
-                      <Camera className="w-10 h-10 opacity-30" />
-                    </div>
-                    <div className="space-y-1">
-                       <p className="text-sm font-black text-foreground">Capturar Etiqueta</p>
-                       <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Arraste uma foto ou use a câmera</p>
-                    </div>
-                    <div className="flex gap-2">
-                       <Button variant="secondary" onClick={(e) => { e.stopPropagation(); openNativeCamera(); }} className="rounded-xl h-10 px-4 font-bold border-border/50 shadow-sm"><Camera className="w-4 h-4 mr-2" /> Câmera</Button>
-                       <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="rounded-xl h-10 px-4 font-bold border-border/50 shadow-sm"><Image className="w-4 h-4 mr-2" /> Galeria</Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f, { autoSave: true }); e.target.value = ''; }} />
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }} />
-              <canvas ref={canvasRef} className="hidden" />
-
-              {(preview || cameraActive) && (
-                <div className="flex gap-2.5">
-                  {cameraActive ? (
-                    <>
-                      <Button className="flex-1 rounded-2xl h-12 font-black uppercase tracking-widest shadow-lg shadow-primary/20" onClick={snapPhoto}>
-                        <Camera className="w-5 h-5 mr-2" /> Capturar Foto
-                      </Button>
-                      <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-border/60" onClick={stopCamera}>
-                        <X className="w-5 h-5" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openNativeCamera}><Camera className="w-5 h-5" /></Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Retirar Foto</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={() => fileInputRef.current?.click()}><Image className="w-5 h-5" /></Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Abrir Galeria</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-border/50 font-bold hover:bg-primary/5 hover:text-primary transition-all" onClick={openLiveCamera}><Video className="w-5 h-5" /></Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Câmera ao Vivo</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="outline" className="flex-1 rounded-2xl h-12 border-primary/20 bg-primary/5 text-primary font-bold hover:bg-primary hover:text-white transition-all" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('A foto foi salva com sucesso no dispositivo.'); } }}><Download className="w-5 h-5" /></Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Baixar Foto</TooltipContent>
-                      </Tooltip>
-                      <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}><Trash2 className="w-5 h-5" /></Button>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden shadow-inner">
-                 <div style={{ width: `${progress}%` }} className="h-full bg-primary" />
-              </div>
-
-              {preview && !cameraActive && (
-                <Button onClick={processOpenRouter} disabled={aiLoading} className="w-full h-14 rounded-[1.5rem] font-black uppercase tracking-[0.15em] shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50">
-                  {aiLoading ? <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin mr-2" /> : <Zap className="w-5 h-5 mr-2 text-yellow-300 fill-yellow-300" />}
-                  <span>{aiLoading ? 'Processando...' : 'Analisar com Marina Vision IA'}</span>
+            <div className="flex gap-1">
+              {undoStack.length > 0 && (
+                <Button variant="ghost" size="icon" onClick={handleUndo} className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary">
+                  <Undo2 className="w-3.5 h-3.5" />
                 </Button>
               )}
-
-              {aiStatus && (
-                  <div className={`p-4 rounded-2xl border-2 text-xs font-bold leading-relaxed shadow-sm ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                       {aiStatus.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                       <span className="uppercase tracking-widest">{aiStatus.type === 'ok' ? 'Análise Concluída' : 'Erro na Análise'}</span>
-                    </div>
-                    {aiStatus.msg}
-                  </div>
-                )}
-              
+              <Button variant="ghost" size="icon" onClick={resetForm} className="h-7 w-7 rounded-md hover:bg-destructive/10 hover:text-destructive">
+                <X className="w-3.5 h-3.5" />
+              </Button>
             </div>
-          )}
-        
-
-        {/* Form Fields */}
-        <div className="space-y-4 relative z-10 p-4 sm:p-5 rounded-2xl border border-border/50 bg-card/40">
-          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] flex items-center gap-2 opacity-50">
-            <Sparkles className="w-3.5 h-3.5 text-primary" /> {isMadeira ? 'Especificações Técnicas' : 'Detalhamento do Material'}
           </div>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
-            {/* PROC field — Coulisse, IA, and Celular */}
-            {requiresProcesso && (
-              <div className="space-y-3 sm:col-span-1 group/field">
-                <div className="flex items-center justify-between px-2">
-                  <label htmlFor="proc-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Processo (PROC)</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleLockProcesso}
-                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                      lockProcesso
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    {lockProcesso ? <Lock className="w-3 h-3 mr-2" /> : <Unlock className="w-3 h-3 mr-2" />}
-                    {lockProcesso ? 'Bloqueado' : 'Travar'}
-                  </Button>
+        {/* Diversos categories */}
+        {isDiversos && (
+          <div className="grid grid-cols-4 gap-1.5">
+            {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
+              <button
+                key={tipo}
+                onClick={() => setDiversosTipo(tipo)}
+                className={`rounded-lg border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  diversosTipo === tipo
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/40 text-muted-foreground hover:border-primary/40 hover:text-primary'
+                }`}
+              >
+                {tipo}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Madeira subtypes */}
+        {isMadeira && (
+          <div className="grid grid-cols-3 gap-1.5">
+            {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
+              <button
+                key={tipo}
+                onClick={() => setMadeiraTipo(tipo)}
+                className={`rounded-lg border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  madeiraTipo === tipo
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/40 text-muted-foreground hover:border-primary/40 hover:text-primary'
+                }`}
+              >
+                {tipo}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* AI Dropzone */}
+        {showDropzone && (
+          <div className="space-y-3">
+            <div
+              className={`border rounded-xl transition-all overflow-hidden relative ${preview ? 'border-primary/40' : 'border-dashed border-border/60 hover:border-primary/30'}`}
+              onDragOver={e => e.preventDefault()}
+              onDrop={handleDrop}
+              style={{ height: preview || cameraActive ? 200 : 140 }}
+            >
+              {cameraActive && (
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0" />
+              )}
+              {preview && !cameraActive && (
+                <img src={preview} alt="Etiqueta" className="w-full h-full object-cover" />
+              )}
+              {!preview && !cameraActive && (
+                <div className="text-center p-4 flex flex-col items-center justify-center h-full gap-2">
+                  <Camera className="w-8 h-8 text-muted-foreground/30" />
+                  <p className="text-xs text-muted-foreground">Arraste uma foto ou use a câmera</p>
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openNativeCamera(); }} className="rounded-lg h-8 text-xs"><Camera className="w-3.5 h-3.5 mr-1" /> Câmera</Button>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="rounded-lg h-8 text-xs"><Image className="w-3.5 h-3.5 mr-1" /> Galeria</Button>
+                  </div>
                 </div>
-                <div className="relative">
-                  <input
-                    id="proc-input"
-                    value={processo}
-                    onChange={e => handleProcessoChange(e.target.value)}
-                    onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                    className={`w-full h-12 rounded-2xl border-2 px-5 text-sm font-mono font-bold transition-all duration-300 ${
-                      lockProcesso ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-muted/30 border-border/40 focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5'
-                    }`}
-                    placeholder="Ex: 123456..."
-                    autoComplete="off"
-                    readOnly={lockProcesso && !!lockedProcesso}
-                  />
-                  {lockProcesso && <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/30"><Lock className="w-4 h-4" /></div>}
-                </div>
+              )}
+            </div>
+
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f, { autoSave: true }); e.target.value = ''; }} />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = ''; }} />
+            <canvas ref={canvasRef} className="hidden" />
+
+            {(preview || cameraActive) && (
+              <div className="flex gap-1.5">
+                {cameraActive ? (
+                  <>
+                    <Button className="flex-1 rounded-lg h-10 font-semibold" onClick={snapPhoto}>
+                      <Camera className="w-4 h-4 mr-1.5" /> Capturar
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-10 w-10 rounded-lg" onClick={stopCamera}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" onClick={openNativeCamera}><Camera className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" onClick={() => fileInputRef.current?.click()}><Image className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" onClick={openLiveCamera}><Video className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" onClick={() => { if (preview) { downloadDataUrl(preview, getPhotoFileName()); toast.success('Foto salva'); } }}><Download className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive" onClick={() => { setFotoB64(null); setPreview(null); setAiStatus(null); setProgress(0); }}><Trash2 className="w-4 h-4" /></Button>
+                  </>
+                )}
               </div>
             )}
 
-            {/* Item / Referência */}
-            <div className="space-y-3 sm:col-span-1 group/field">
-              <label htmlFor="item-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Item / Referência</label>
+            {progress > 0 && (
+              <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
+                <div style={{ width: `${progress}%` }} className="h-full bg-primary transition-all" />
+              </div>
+            )}
+
+            {preview && !cameraActive && (
+              <Button onClick={processOpenRouter} disabled={aiLoading} className="w-full h-11 rounded-lg font-semibold">
+                {aiLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2 text-yellow-300 fill-yellow-300" />}
+                {aiLoading ? 'Processando...' : 'Analisar com IA'}
+              </Button>
+            )}
+
+            {aiStatus && (
+              <div className={`p-3 rounded-lg border text-xs font-medium ${aiStatus.type === 'ok' ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-destructive/5 border-destructive/20 text-destructive'}`}>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {aiStatus.type === 'ok' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                  <span className="font-semibold text-[10px] uppercase">{aiStatus.type === 'ok' ? 'Concluído' : 'Erro'}</span>
+                </div>
+                {aiStatus.msg}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Form Fields */}
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            {/* PROCESSO */}
+            {requiresProcesso && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
+                  <button onClick={toggleLockProcesso} className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+                    {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    {lockProcesso ? 'Travado' : 'Travar'}
+                  </button>
+                </div>
+                <input
+                  id="proc-input"
+                  value={processo}
+                  onChange={e => handleProcessoChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, itemRef)}
+                  className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
+                    lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  }`}
+                  placeholder="Ex: 123456..."
+                  autoComplete="off"
+                  readOnly={lockProcesso && !!lockedProcesso}
+                />
+              </div>
+            )}
+
+            {/* Item */}
+            <div className="space-y-1.5">
+              <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
               <div className="relative">
                 <input
                   id="item-input"
@@ -835,151 +762,139 @@ const LeftPanel = memo(function LeftPanel() {
                   value={item}
                   onChange={e => handleItemChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                  className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:opacity-30"
-                  placeholder="Ex: SRC-3003-05-30..." 
+                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
                 />
                 {usesLarguraFromItem && largura > 0 && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    <Badge variant="secondary" className="bg-primary text-white border-none font-black text-[9px] uppercase tracking-tighter px-2 h-6 shadow-lg shadow-primary/20">Larg: {largura.toFixed(2)}m</Badge>
-                  </div>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    {largura.toFixed(2)}m
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Coulisse: optional manual largura */}
+            {/* Coulisse largura */}
             {isCoulisse && (
-              <div className="space-y-3 sm:col-span-1 group/field">
-                <label htmlFor="largura-manual" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Largura do Tecido (m)</label>
+              <div className="space-y-1.5">
+                <label htmlFor="largura-manual" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label>
                 <input
                   id="largura-manual"
                   ref={manualLarguraRef}
                   type="number" step="0.01" value={manualLargura}
                   onChange={e => setManualLargura(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                  className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:opacity-30"
+                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
                   placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                 />
               </div>
             )}
 
-            {/* NF field — Diversos except Celular */}
+            {/* NF */}
             {requiresNF && (
-              <div className="space-y-3 sm:col-span-1 group/field">
-                <div className="flex items-center justify-between px-2">
-                  <label htmlFor="nf-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Nota Fiscal (NF)</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleLockNf}
-                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                      lockNf
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    {lockNf ? <Lock className="w-3 h-3 mr-2" /> : <Unlock className="w-3 h-3 mr-2" />}
-                    {lockNf ? 'Bloqueado' : 'Travar'}
-                  </Button>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="nf-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NF)</label>
+                  <button onClick={toggleLockNf} className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${lockNf ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+                    {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    {lockNf ? 'Travado' : 'Travar'}
+                  </button>
                 </div>
-                <div className="relative">
-                  <input
-                    id="nf-input"
-                    ref={nfRef}
-                    value={nf}
-                    onChange={e => handleNfChange(e.target.value)}
-                    onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
-                    className={`w-full h-12 rounded-2xl border-2 px-5 text-sm font-mono font-bold transition-all duration-300 ${
-                      lockNf ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : 'bg-muted/30 border-border/40 focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5'
-                    }`}
-                    placeholder="NF..."
-                    autoComplete="off"
-                    readOnly={lockNf && !!lockedNf}
-                  />
-                  {lockNf && <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/30"><Lock className="w-4 h-4" /></div>}
-                </div>
+                <input
+                  id="nf-input"
+                  ref={nfRef}
+                  value={nf}
+                  onChange={e => handleNfChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
+                  className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
+                    lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  }`}
+                  placeholder="NF..."
+                  autoComplete="off"
+                  readOnly={lockNf && !!lockedNf}
+                />
               </div>
             )}
 
             {/* Madeira: Lote + Qtd */}
             {isMadeira && (
               <>
-                <div className="space-y-3 group/field">
-                  <label htmlFor="lote-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Lote / Batch</label>
+                <div className="space-y-1.5">
+                  <label htmlFor="lote-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
                   <input
                     id="lote-input"
                     ref={loteRef}
                     value={lote}
                     onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                     onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
-                    className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
+                    className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
                     placeholder="Lote..." autoComplete="off"
                   />
                 </div>
-                <div className="space-y-3 group/field">
-                  <label htmlFor="qtd-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Qtd por Caixa</label>
+                <div className="space-y-1.5">
+                  <label htmlFor="qtd-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Quantidade</label>
                   <input
                     id="qtd-input"
                     ref={quantidadeRef}
                     type="number" step="1" value={quantidade}
                     onChange={e => setQuantidade(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
+                    className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
                     placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
                   />
                 </div>
               </>
             )}
 
-            {/* Metragem Fields */}
+            {/* Metragem */}
             {!isMadeira && (
               <>
-                <div className="space-y-3 group/field">
-                  <label htmlFor="metragem-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">
+                <div className="space-y-1.5">
+                  <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                     {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
                   </label>
                   <div className="relative">
                     <input
                       id="metragem-input"
                       ref={m2Ref}
-                      type="number" step="0.1" 
+                      type="number" step="0.1"
                       value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
                       onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
-                      className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
+                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
                     />
                     {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <Badge variant="outline" className="border-primary text-primary font-black bg-primary/5">Linear: {formatML(mLinear)}</Badge>
-                      </div>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary">
+                        Linear: {formatML(mLinear)}
+                      </span>
                     )}
                   </div>
                 </div>
 
                 {isAI ? (
-                  <div className="space-y-3 group/field">
-                    <label htmlFor="largura-ai" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Largura Detectada (m)</label>
+                  <div className="space-y-1.5">
+                    <label htmlFor="largura-ai" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
                     <input
                       id="largura-ai"
                       ref={larguraRef}
                       type="number" step="0.01" value={aiLargura}
                       onChange={e => setAiLargura(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-                      className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
+                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
                       placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                     />
                   </div>
                 ) : (
-                  <div className="space-y-3 group/field">
-                    <label htmlFor="lote-material" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 group-focus-within/field:text-primary transition-colors">Lote / Batch</label>
+                  <div className="space-y-1.5">
+                    <label htmlFor="lote-material" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
                     <input
                       id="lote-material"
                       ref={loteRef}
                       value={lote}
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
-                      className="w-full h-12 rounded-2xl border-2 border-border/40 bg-muted/30 px-5 text-sm font-mono font-bold focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all duration-300"
+                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
                       placeholder="Lote..." autoComplete="off"
                     />
                   </div>
@@ -989,96 +904,74 @@ const LeftPanel = memo(function LeftPanel() {
 
             {/* Endereço */}
             {requiresEndereco && (
-              <div className="space-y-3 sm:col-span-2 group/field">
-                <div className="flex items-center justify-between px-2">
-                  <label htmlFor="endereco-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground group-focus-within/field:text-primary transition-colors">Endereço de Armazenagem</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleLockEndereco}
-                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                      lockEndereco
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    {lockEndereco ? <Lock className="w-3 h-3 mr-2" /> : <Unlock className="w-3 h-3 mr-2" />}
-                    {lockEndereco ? 'Bloqueado' : 'Travar'}
-                  </Button>
+              <div className="space-y-1.5 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="endereco-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Endereço de Armazenagem</label>
+                  <button onClick={toggleLockEndereco} className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${lockEndereco ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+                    {lockEndereco ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    {lockEndereco ? 'Travado' : 'Travar'}
+                  </button>
                 </div>
-                <div className="relative">
-                  <input
-                    id="endereco-input"
-                    ref={enderecoRef}
-                    value={endereco}
-                    onChange={e => handleEnderecoChange(e.target.value)}
-                    onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className={`w-full h-12 rounded-2xl border-2 px-5 text-sm font-mono font-bold transition-all duration-300 uppercase ${
-                      lockEndereco ? 'bg-primary/5 border-primary/30 text-primary shadow-inner' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/30 border-border/40 focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/5')
-                    }`}
-                    placeholder="TEC01.A.N03" autoComplete="off"
-                    readOnly={lockEndereco && !!lockedEndereco}
-                  />
-                  {lockEndereco && <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/30"><Lock className="w-4 h-4" /></div>}
-                </div>
-                {enderecoError && <p className="text-[10px] text-destructive font-black uppercase tracking-[0.2em] ml-2 animate-bounce">{enderecoError}</p>}
+                <input
+                  id="endereco-input"
+                  ref={enderecoRef}
+                  value={endereco}
+                  onChange={e => handleEnderecoChange(e.target.value)}
+                  onKeyDown={e => handleFieldKeyDown(e, null)}
+                  className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
+                    lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
+                  }`}
+                  placeholder="TEC01.A.N03" autoComplete="off"
+                  readOnly={lockEndereco && !!lockedEndereco}
+                />
+                {enderecoError && <p className="text-[10px] text-destructive font-medium ml-1">{enderecoError}</p>}
               </div>
             )}
           </div>
         </div>
 
-
-        {/* Computed Preview Card */}
-        <div className="p-4 sm:p-6 rounded-2xl bg-[#0A0D14] text-white shadow-xl relative overflow-hidden group/card border border-white/5">
-          <div className="absolute top-0 right-0 p-8 opacity-5 hidden sm:block">
-             <Package className="w-32 h-32 text-primary" />
-          </div>
-          <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 relative z-10">
+        {/* Preview Card */}
+        <div className="p-4 rounded-xl bg-card border border-border/50">
+          <div className="grid grid-cols-2 gap-3">
             {isMadeira ? (
               <>
-                <div className="space-y-1 sm:space-y-1.5">
-                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Subtipo</p>
-                  <p className="text-2xl font-black tracking-tight">{madeiraTipo}</p>
+                <div>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Subtipo</p>
+                  <p className="text-lg font-bold">{madeiraTipo}</p>
                 </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Quantidade</p>
-                  <p className="text-2xl font-black tracking-tight">{quantidade || madeiraDefaults[madeiraTipo]} <span className="text-[10px] opacity-40">UND</span></p>
+                <div>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Quantidade</p>
+                  <p className="text-lg font-bold">{quantidade || madeiraDefaults[madeiraTipo]} <span className="text-xs text-muted-foreground">und</span></p>
                 </div>
               </>
             ) : (
               <>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Largura Real</p>
-                  <p className="text-2xl font-black tracking-tight">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
+                <div>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Largura</p>
+                  <p className="text-lg font-bold">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
                 </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Metragem Linear</p>
-                  <p className="text-2xl font-black tracking-tight">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
+                <div>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">M. Linear</p>
+                  <p className="text-lg font-bold">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
                 </div>
               </>
             )}
-            <div className="col-span-2 space-y-2 border-t border-white/10 pt-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Lote Sistema Gerado</p>
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-              </div>
-              <div className="p-4 rounded-2xl bg-white/5 font-mono text-xs sm:text-sm font-bold text-primary-foreground/90 truncate border border-white/5 shadow-inner group-hover/card:border-primary/20 transition-colors duration-500">
+            <div className="col-span-2 pt-2 border-t border-border/30">
+              <p className="text-[10px] font-medium uppercase text-muted-foreground mb-1">Lote Sistema</p>
+              <div className="p-2.5 rounded-lg bg-muted/30 font-mono text-xs font-medium text-foreground/80 truncate border border-border/30">
                 {previewLoteSistema}
               </div>
             </div>
           </div>
         </div>
 
-
-        {/* Action Buttons */}
-        <div className="space-y-3 pt-1 pb-6">
+        {/* Actions */}
+        <div className="space-y-2 pb-4">
           <Button
             onClick={handleAdd}
-            className="w-full h-14 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 group"
+            className="w-full h-12 rounded-xl font-semibold text-sm"
           >
-            <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-500" />
+            <Plus className="w-4 h-4 mr-2" />
             Adicionar Registro
           </Button>
 
@@ -1086,57 +979,43 @@ const LeftPanel = memo(function LeftPanel() {
             <Button
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className={`w-full h-12 rounded-2xl font-black uppercase tracking-widest transition-all duration-300 ${
-                showPreview 
-                  ? 'bg-primary/10 border-primary text-primary shadow-inner' 
-                  : 'border-border/60 hover:border-primary/40 hover:bg-primary/5'
-              }`}
+              className="w-full h-10 rounded-xl text-xs font-medium"
             >
-              {showPreview ? <EyeOff className="w-5 h-5 mr-3" /> : <Eye className="w-5 h-5 mr-3" />}
-              {showPreview ? 'Ocultar Detalhes' : `Ver Tabela Atual (${registros.length})`}
+              {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+              {showPreview ? 'Ocultar' : `Ver Tabela (${registros.length})`}
             </Button>
           )}
 
           {showPreview && registros.length > 0 && (
-              <div className="overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/60 shadow-md">
-                <div className="p-4 border-b border-border/40 bg-muted/30 flex items-center justify-between">
-                   <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Últimos Registros</span>
-                   <Badge className="bg-primary text-white font-black">{registros.length}</Badge>
-                </div>
-                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                  <table className="w-full text-[11px] border-separate border-spacing-0">
-                    <thead className="sticky top-0 bg-muted/90  z-10">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">#</th>
-                        <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">Referência</th>
-                        <th className="px-4 py-3 text-left font-black uppercase tracking-tighter opacity-40">Lote Sistema</th>
+            <div className="rounded-xl border border-border/50 overflow-hidden">
+              <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
+                <table className="w-full text-[11px]">
+                  <thead className="sticky top-0 bg-muted/90 z-10">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">#</th>
+                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Referência</th>
+                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lote Sistema</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {registros.slice(-10).reverse().map((r, i) => (
+                      <tr key={r.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-3 py-2 font-mono text-muted-foreground">{registros.length - i}</td>
+                        <td className="px-3 py-2 font-medium">{r.item}</td>
+                        <td className="px-3 py-2 font-mono text-primary/80">{r.loteSistema}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/20">
-                      {registros.slice(-10).reverse().map((r, i) => (
-                        <tr key={r.id} className="hover:bg-primary/5 transition-colors">
-                          <td className="px-4 py-3 font-mono opacity-40">{registros.length - i}</td>
-                          <td className="px-4 py-3 font-black text-foreground">{r.item}</td>
-                          <td className="px-4 py-3 font-mono text-primary/80 font-bold">{r.loteSistema}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="p-3 bg-muted/30 text-center">
-                   <Button variant="link" size="sm" className="font-black text-[10px] uppercase tracking-widest text-primary" onClick={() => useAppStore.getState().setFormData({ activeTab: 'table' })}>Abrir Tabela Completa</Button>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          
+            </div>
+          )}
 
           {isDuplicate && (
-             <div
-               className="p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-sm"
-             >
-               <AlertTriangle className="w-5 h-5" />
-               Atenção: O item "{item}" já consta nesta conferência.
-             </div>
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              Item "{item}" já consta nesta conferência.
+            </div>
           )}
         </div>
       </div>
