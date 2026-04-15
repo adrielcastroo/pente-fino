@@ -142,6 +142,7 @@ export default function EstoquePage() {
     if (error) toast.error('Erro ao atualizar status');
     else {
       toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`);
+      setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
       loadPosicoes();
     }
   };
