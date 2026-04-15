@@ -52,6 +52,7 @@ const SidebarProvider = React.forwardRef<
   const isTabletDevice = useIsTablet();
   const isMobile = isMobileDevice || isTabletDevice;
   const [openMobile, setOpenMobile] = React.useState(false);
+  const touchStartRef = React.useRef<number | null>(null);
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -107,6 +108,27 @@ const SidebarProvider = React.forwardRef<
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
   );
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    const clientX = e.touches[0].clientX;
+    // Somente inicia o rastreio se o toque começar perto da borda esquerda (até 40px)
+    if (clientX < 40) {
+      touchStartRef.current = clientX;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartRef.current === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const distance = touchEnd - touchStartRef.current;
+    
+    // Se deslizou mais de 70px para a direita, abre a sidebar no mobile
+    if (distance > 70) {
+      setOpenMobile(true);
+    }
+    touchStartRef.current = null;
+  };
+
   return (
     <SidebarContext.Provider value={contextValue}>
       <TooltipProvider delayDuration={0}>
@@ -120,6 +142,8 @@ const SidebarProvider = React.forwardRef<
           }
           className={cn("group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar", className)}
           ref={ref}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           {...props}
         >
           {children}
