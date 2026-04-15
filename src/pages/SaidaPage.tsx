@@ -56,18 +56,18 @@ export default function SaidaPage() {
     loadSaidas();
   }, []);
 
-  const searchableSaidas = useMemo(() => {
-    return saidas.map(s => ({
-      ...s,
-      searchKey: `${s.item} ${s.proc || ''} ${s.lote || ''} ${s.lote_sistema || ''} ${s.conferente_saida || ''} ${s.conferente_entrada || ''}`.toLowerCase()
-    }));
-  }, [saidas]);
-
   const filteredSaidas = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return searchableSaidas;
-    return searchableSaidas.filter(s => s.searchKey.includes(q));
-  }, [search, searchableSaidas]);
+    if (!q) return saidas;
+    return saidas.filter(s => 
+      s.item.toLowerCase().includes(q) ||
+      (s.proc || '').toLowerCase().includes(q) ||
+      (s.lote || '').toLowerCase().includes(q) ||
+      (s.lote_sistema || '').toLowerCase().includes(q) ||
+      (s.conferente_saida || '').toLowerCase().includes(q) ||
+      (s.conferente_entrada || '').toLowerCase().includes(q)
+    );
+  }, [saidas, search]);
 
   return (
     <div className="p-3 sm:p-6 lg:p-10 max-w-[1600px] mx-auto space-y-4 sm:space-y-8 lg:space-y-12">

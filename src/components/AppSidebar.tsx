@@ -36,7 +36,7 @@ const menuItems: { key: AppTab; label: string; icon: any }[] = [
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
-  const registros = useAppStore(s => s.registros);
+  const registroCount = useAppStore(s => s.registros.length);
   const { theme, setTheme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -108,7 +108,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
                 const isTableTab = item.key === 'table';
-                const hasRecords = isTableTab && registros.length > 0;
+                const hasRecords = isTableTab && registroCount > 0;
 
                 return (
                 <SidebarMenuItem key={item.key}>
@@ -138,7 +138,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                         <Icon className="h-[18px] w-[18px]" />
                         {hasRecords && collapsed && (
                           <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
-                            {registros.length}
+                            {registroCount}
                           </span>
                         )}
                       </div>
@@ -157,7 +157,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                               : 'bg-primary/10 text-primary'
                           }`}
                         >
-                          {registros.length}
+                          {registroCount}
                         </span>
                       )}
                     </SidebarMenuButton>
