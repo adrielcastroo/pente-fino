@@ -169,7 +169,10 @@ export default function EstoquePage() {
   const selectedCellItems = selectedCell ? (cellMap[`${selectedCell.col}-${selectedCell.nivel}`] || []) : [];
   const occupiedCount = selectedCellItems.length;
 
-  const getTooltipSide = (_pos: number): 'top' | 'bottom' | 'left' | 'right' => {
+  const getTooltipSide = (pos: number): 'top' | 'bottom' | 'left' | 'right' => {
+    const colIndex = (pos - 1) % 6;
+    if (colIndex <= 1) return 'right';
+    if (colIndex >= 4) return 'left';
     return 'top';
   };
 
