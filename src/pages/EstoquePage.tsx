@@ -418,30 +418,28 @@ export default function EstoquePage() {
             return (
               <>
                 {/* Detail Header */}
-                <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0 mt-0.5">
-                        <Package className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <DialogTitle className="text-base sm:text-lg font-black tracking-tight break-words leading-snug">
-                          {detailPos.item || 'Item sem nome'}
-                        </DialogTitle>
-                        <DialogDescription className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
-                          Posição {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
-                        </DialogDescription>
-                      </div>
+                <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/20 bg-muted/20">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <Badge className={`text-[10px] font-black px-3 py-1.5 rounded-lg border shrink-0 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                    <div className="min-w-0 flex-1">
+                      <DialogTitle className="text-sm sm:text-lg font-black tracking-tight truncate leading-snug">
+                        {detailPos.item || 'Item sem nome'}
+                      </DialogTitle>
+                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
+                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                      </DialogDescription>
+                    </div>
+                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
                       {statusCfg.label}
                     </Badge>
                   </div>
                 </div>
 
                 {/* Info Grid */}
-                <div className="px-5 sm:px-8 py-5 sm:py-6 space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {[
                       { label: 'Lote', value: detailPos.lote || '—' },
                       { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
@@ -452,17 +450,17 @@ export default function EstoquePage() {
                       { label: 'M Linear', value: detailPos.m_linear ? `${detailPos.m_linear}` : '—' },
                       { label: 'Data Entrada', value: formatDateBR(detailPos.data_registro) },
                     ].map(f => (
-                      <div key={f.label} className="bg-muted/15 border border-border/20 rounded-xl p-3.5">
-                        <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
-                        <div className="text-sm sm:text-base font-bold text-foreground mt-1 break-words leading-snug">{f.value}</div>
+                      <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
+                        <div className="text-[8px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
+                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-words leading-snug truncate">{f.value}</div>
                       </div>
                     ))}
                   </div>
 
                   {/* Status Actions */}
-                  <div className="space-y-3">
-                    <div className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
-                    <div className="grid grid-cols-2 gap-2.5">
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                       {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
                         const cfg = STATUS_CONFIG[st];
                         const isActive = detailPos.status === st;
@@ -479,7 +477,7 @@ export default function EstoquePage() {
                             key={st} 
                             onClick={() => handleStatusChange(detailPos, st)} 
                             variant="outline"
-                            className={`h-11 text-xs sm:text-sm font-bold rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                            className={`h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
                               isActive 
                                 ? `${activeBg} ring-2 ${activeRing} ring-offset-1 ring-offset-card shadow-sm pointer-events-none` 
                                 : `border-border/20 text-muted-foreground ${hoverBg} active:scale-[0.97]`
@@ -496,7 +494,7 @@ export default function EstoquePage() {
                       <Button 
                         onClick={() => handleStatusChange(detailPos, 'saida')} 
                         variant="outline"
-                        className="h-11 text-xs sm:text-sm font-bold rounded-xl border-2 border-border/20 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-500 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-border/20 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-500 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0"
                       >
                         <LogOut className="w-3.5 h-3.5 mr-2" />
                         Dar Saída
@@ -509,7 +507,7 @@ export default function EstoquePage() {
                     <Button 
                       variant="ghost" 
                       onClick={() => handleDelete(detailPos)} 
-                      className="w-full h-11 text-xs sm:text-sm font-bold rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                      className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-2" />
                       Excluir Item
