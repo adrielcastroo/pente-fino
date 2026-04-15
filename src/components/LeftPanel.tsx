@@ -937,8 +937,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="endereco-input"
                   ref={enderecoRef}
-                  value={endereco}
+                  value={localEndereco}
                   onChange={e => handleEnderecoChange(e.target.value)}
+                  onBlur={handleEnderecoBlur}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
                     lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
