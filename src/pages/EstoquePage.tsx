@@ -139,9 +139,9 @@ export default function EstoquePage() {
     }
 
     const { error } = await supabase.from('estoque_posicoes').update({ status: newStatus } as any).eq('id', pos.id);
-    if (error) toast.error('Erro ao atualizar status');
+    if (error) toast.error('Erro ao atualizar status', { id: 'status-update' });
     else {
-      toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`);
+      toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`, { id: 'status-update' });
       setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
       loadPosicoes();
     }
