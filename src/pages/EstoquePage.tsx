@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
@@ -559,18 +560,56 @@ export default function EstoquePage() {
                     </div>
                   </DialogTitle>
                 </div>
-                <div className="p-5 sm:p-6 space-y-3">
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Por Estrutura</div>
-                  {tecBreakdown.map(t => (
-                    <div key={t.tec} className="flex items-center gap-3">
-                      <span className="text-xs font-black w-14 shrink-0">{t.tec}</span>
-                      <div className="flex-1 h-2 rounded-full bg-muted/40 overflow-hidden">
-                        <div className={`h-full rounded-full ${current.color.replace('text-', 'bg-')}`} style={{ width: `${t.percent}%` }} />
-                      </div>
-                      <span className="text-xs font-bold tabular-nums w-16 text-right text-muted-foreground">{t.value}/{t.total}</span>
-                      <span className="text-[10px] font-semibold tabular-nums w-10 text-right text-muted-foreground/70">{t.percent}%</span>
+                <div className="p-5 sm:p-6 space-y-5">
+                  {/* Bar Chart */}
+                  <div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Por Estrutura</div>
+                    <div className="h-[180px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={tecBreakdown} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                          <XAxis dataKey="tec" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <ChartTooltip
+                            contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 11 }}
+                            formatter={(value: number, _name: string, props: any) => [`${value}/${props.payload.total} (${props.payload.percent}%)`, current.label]}
+                          />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={current.color.replace('text-', '').replace('foreground', 'hsl(var(--foreground))').replace('emerald-500', 'hsl(160, 84%, 39%)').replace('amber-500', 'hsl(38, 92%, 50%)').replace('red-500', 'hsl(0, 84%, 60%)').replace('primary', 'hsl(var(--primary))')} />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-                  ))}
+                  </div>
+                  {/* Mini Pie */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-[80px] h-[80px] shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={tecBreakdown.filter(t => t.value > 0)}
+                            dataKey="value"
+                            nameKey="tec"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={20}
+                            outerRadius={36}
+                            strokeWidth={0}
+                          >
+                            {tecBreakdown.filter(t => t.value > 0).map((_, i) => (
+                              <Cell key={i} fill={`hsl(var(--primary) / ${1 - i * 0.15})`} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {tecBreakdown.map((t, i) => (
+                        <div key={t.tec} className="flex items-center gap-1.5 text-[10px]">
+                          <div className="w-2 h-2 rounded-full" style={{ background: `hsl(var(--primary) / ${1 - i * 0.15})` }} />
+                          <span className="font-bold">{t.tec}</span>
+                          <span className="text-muted-foreground">{t.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </>
             );
