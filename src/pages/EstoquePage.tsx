@@ -169,11 +169,8 @@ export default function EstoquePage() {
   const selectedCellItems = selectedCell ? (cellMap[`${selectedCell.col}-${selectedCell.nivel}`] || []) : [];
   const occupiedCount = selectedCellItems.length;
 
-  const getTooltipSide = (pos: number) => {
-    const desktopColumnIndex = (pos - 1) % 6;
-    const mobileColumnIndex = (pos - 1) % 5;
-
-    return desktopColumnIndex >= 4 || mobileColumnIndex >= 3 ? 'left' : 'top';
+  const getTooltipSide = (_pos: number): 'top' | 'bottom' | 'left' | 'right' => {
+    return 'top';
   };
 
   return (
@@ -378,7 +375,7 @@ export default function EstoquePage() {
                         <TooltipTrigger asChild>
                           {posButton}
                         </TooltipTrigger>
-                        <TooltipContent side={getTooltipSide(pos)} align="center" sideOffset={6} avoidCollisions collisionPadding={{ left: 16, right: 16, top: 8, bottom: 8 }} className="bg-card border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl w-[180px] max-w-[calc(100vw-2rem)] z-[100] text-left">
+                        <TooltipContent side={getTooltipSide(pos)} align="center" sideOffset={6} avoidCollisions collisionPadding={16} className="bg-card border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl w-[180px] max-w-[calc(100vw-2rem)] z-[100] text-left">
                           <div className="flex flex-col gap-0.5 text-[10px] font-bold leading-tight">
                             <span className="text-foreground break-words whitespace-normal">{item.item || '—'}</span>
                             <span className="text-muted-foreground break-words whitespace-normal">{item.lote_sistema || '—'}</span>
