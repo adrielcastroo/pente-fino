@@ -300,7 +300,8 @@ export default function MotorControlePage() {
                 <input
                   type="number" min="1" value={caixaNum}
                   onChange={e => setCaixaNum(e.target.value)}
-                  className="w-10 bg-transparent border-none text-primary font-bold text-sm outline-none p-0 focus:ring-0"
+                  className="w-12 bg-background border border-border/60 rounded-md text-center text-primary font-bold text-sm outline-none p-1 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:border-primary/50 transition-colors"
+                  title="Clique para alterar o número da caixa"
                 />
                 <Badge className="bg-primary text-primary-foreground font-bold text-[10px] rounded">CX{caixaNum.padStart(2, '0')}</Badge>
               </div>
