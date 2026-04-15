@@ -374,7 +374,7 @@ export default function EstoquePage() {
                         <TooltipContent side="top" align="center" avoidCollisions className="bg-[hsl(var(--card))] border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl max-w-[180px]">
                           <div className="flex flex-col gap-0.5 text-[10px] font-bold leading-tight">
                             <span className="text-foreground truncate">{item.item || '—'}</span>
-                            <span className="text-muted-foreground truncate">{(item.lote || '—').slice(-10)}</span>
+                            <span className="text-muted-foreground truncate">{(item.lote_sistema || '—').slice(-10)}</span>
                           </div>
                         </TooltipContent>
                       </Tooltip>
