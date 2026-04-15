@@ -255,17 +255,8 @@ export default function MotorControlePage() {
           ))}
         </div>
 
-        {/* Tip bar */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <ScanBarcode className="w-3.5 h-3.5 text-primary" />
-            <span className="font-medium text-foreground/80">
-              {subMode === 'motor'
-                ? <>Leitor com <kbd className="px-1 py-0.5 rounded bg-muted text-primary border border-border text-[10px] font-mono">Enter</kbd> automático</>
-                : <>Extração antes de "FF". Seq: <span className="text-primary font-bold">#{getSequencial()}</span></>
-              }
-            </span>
-          </div>
+        {/* Action buttons */}
+        <div className="flex items-center justify-end text-xs text-muted-foreground">
           {(modelo || nf || serie) && (
             <Button variant="ghost" size="sm" onClick={resetFields} className="h-7 rounded-md text-[10px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive px-2">
               Limpar campos
