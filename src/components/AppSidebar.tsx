@@ -127,14 +127,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                         group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
                         group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
                         ${isActive
-                          ? 'bg-primary text-primary-foreground font-bold shadow-sm group-data-[state=collapsed]:bg-primary/15 group-data-[state=collapsed]:text-primary group-data-[state=collapsed]:shadow-none'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground font-medium'}
+                          ? 'text-primary font-bold'
+                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
                         ${hasRecords && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
                       `}
                     >
-                      {/* Active indicator bar - only show when expanded */}
+                      {/* Active indicator bar */}
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40 group-data-[state=collapsed]:hidden" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
                       )}
 
                       {/* Icon */}
@@ -210,12 +210,12 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
                 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
                 ${activeTab === 'settings'
-                  ? 'bg-primary text-primary-foreground font-bold shadow-sm group-data-[state=collapsed]:bg-primary/15 group-data-[state=collapsed]:text-primary group-data-[state=collapsed]:shadow-none'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'}
+                  ? 'text-primary font-bold'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
               `}
             >
               {activeTab === 'settings' && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40 group-data-[state=collapsed]:hidden" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
               )}
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
