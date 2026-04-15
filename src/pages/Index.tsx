@@ -91,7 +91,7 @@ export default function Index() {
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
-            <div key={activeTab} className="min-h-full w-full max-w-[2000px] mx-auto">
+            <div className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 xl:p-8">
                   <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} />
