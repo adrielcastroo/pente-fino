@@ -18,14 +18,33 @@ export const conferenceService = {
   },
 
   async fetchHistory(): Promise<Conference[]> {
-    const { data: confs, error } = await supabase
-      .from('conferences')
-      .select('*, registros (*)')
-      .order('created_at', { ascending: false })
-      .order('created_at', { foreignTable: 'registros', ascending: true });
+    // Paginate to avoid Supabase's default 1000-row limit on conferences
+    const allConfs: any[] = [];
+    const PAGE_SIZE = 500;
+    let from = 0;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const { data: confs, error } = await supabase
+        .from('conferences')
+        .select('*, registros (*)')
+        .order('created_at', { ascending: false })
+        .order('created_at', { foreignTable: 'registros', ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+        
+      if (error) throw error;
       
-    if (error) throw error;
-    if (!confs) return [];
+      if (confs && confs.length > 0) {
+        allConfs.push(...confs);
+        from += PAGE_SIZE;
+        hasMore = confs.length === PAGE_SIZE;
+      } else {
+        hasMore = false;
+      }
+    }
+    
+    const confs = allConfs;
+    if (!confs.length) return [];
     
     // Pre-allocate result array
     const result: Conference[] = new Array(confs.length);

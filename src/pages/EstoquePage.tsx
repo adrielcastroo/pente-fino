@@ -72,11 +72,38 @@ export default function EstoquePage() {
 
   const loadPosicoes = async () => {
     setLoading(true);
-    const { data: allData, error } = await supabase
-      .from('estoque_posicoes')
-      .select('id,estrutura,coluna,nivel,posicao,status,item,proc,m2,largura,m_linear,lote,endereco,lote_sistema,conferente_entrada,conferente_saida,data_registro,data_saida,registro_id');
-    if (!error && allData) {
-      setAllPosicoes(allData as Posicao[]);
+    try {
+      // Fetch all pages to avoid Supabase's default 1000-row limit
+      const allData: Posicao[] = [];
+      const PAGE_SIZE = 1000;
+      let from = 0;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('estoque_posicoes')
+          .select('id,estrutura,coluna,nivel,posicao,status,item,proc,m2,largura,m_linear,lote,endereco,lote_sistema,conferente_entrada,conferente_saida,data_registro,data_saida,registro_id')
+          .range(from, from + PAGE_SIZE - 1);
+        
+        if (error) {
+          console.error('Erro ao carregar posições:', error);
+          toast.error('Erro ao carregar dados do estoque');
+          break;
+        }
+        
+        if (data && data.length > 0) {
+          allData.push(...(data as Posicao[]));
+          from += PAGE_SIZE;
+          hasMore = data.length === PAGE_SIZE;
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      setAllPosicoes(allData);
+    } catch (e) {
+      console.error('Erro ao carregar estoque:', e);
+      toast.error('Erro inesperado ao carregar estoque');
     }
     setLoading(false);
   };
@@ -445,9 +472,9 @@ export default function EstoquePage() {
                       { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
                       { label: 'Endereço', value: detailPos.endereco || '—' },
                       { label: 'Conferente', value: detailPos.conferente_entrada || '—' },
-                      { label: 'M²', value: detailPos.m2 ? `${detailPos.m2}` : '—' },
-                      { label: 'Largura', value: detailPos.largura ? `${detailPos.largura}` : '—' },
-                      { label: 'M Linear', value: detailPos.m_linear ? `${detailPos.m_linear}` : '—' },
+                      { label: 'M²', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
+                      { label: 'Largura', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
+                      { label: 'M Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
                       { label: 'Data Entrada', value: formatDateBR(detailPos.data_registro) },
                     ].map(f => (
                       <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
