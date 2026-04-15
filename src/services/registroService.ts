@@ -19,7 +19,7 @@ export const registroService = {
       was_edited: r.wasEdited || false,
       edited_by: r.editedBy || '',
       edited_at: r.editedAt || null,
-      quantidade: r.quantidade || null,
+      quantidade: r.quantidade ?? null,
     }));
 
     const { data, error } = await supabase
