@@ -282,9 +282,11 @@ export default function MotorControlePage() {
               }
             </span>
           </div>
-          <Button variant="ghost" size="icon" onClick={resetFields} className="h-7 w-7 rounded-md hover:bg-destructive/10 hover:text-destructive">
-            <X className="w-3.5 h-3.5" />
-          </Button>
+          {(modelo || nf || serie) && (
+            <Button variant="ghost" size="sm" onClick={resetFields} className="h-7 rounded-md text-[10px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive px-2">
+              Limpar campos
+            </Button>
+          )}
         </div>
 
         {/* Motor: caixa toggle */}
