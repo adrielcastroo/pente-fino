@@ -84,7 +84,11 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
     >
       {/* ── Header / Logo ── */}
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
-        <div className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto">
+        <button
+          onClick={() => handleTabClick('inicio')}
+          className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
+          aria-label="Ir para Início"
+        >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Logo className="h-5 w-5" />
           </div>
@@ -96,7 +100,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               ESTOQUE
             </span>
           </div>
-        </div>
+        </button>
       </SidebarHeader>
 
       {/* ── Nav Items ── */}
