@@ -142,11 +142,11 @@ const LeftPanel = memo(function LeftPanel() {
   const largura = useMemo(() => 
     isAI ? aiLarguraNum
     : isMadeira ? 0
-    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(localItem))
     : isCelular ? celularDivisor
-    : usesLarguraFromItem ? extractLarguraFromItem(item)
+    : usesLarguraFromItem ? extractLarguraFromItem(localItem)
     : 0,
-    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, item, isCelular, celularDivisor, usesLarguraFromItem]
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCelular, celularDivisor, usesLarguraFromItem]
   );
 
   const mLinear = useMemo(() => 
@@ -159,16 +159,16 @@ const LeftPanel = memo(function LeftPanel() {
   );
   
   const isDuplicate = useMemo(() => {
-    if (isMadeira || !item || !lote) return false;
-    const lowerItem = item.toLowerCase();
+    if (isMadeira || !localItem || !lote) return false;
+    const lowerItem = localItem.toLowerCase();
     const lowerLote = lote.toLowerCase();
     
     return registros.some(r => 
       (r.item || '').toLowerCase() === lowerItem && 
       (r.lote || '').toLowerCase() === lowerLote &&
-      (r.nf || '').trim() === nf.trim()
+      (r.nf || '').trim() === localNf.trim()
     );
-  }, [isMadeira, item, lote, registros, nf]);
+  }, [isMadeira, localItem, lote, registros, localNf]);
 
   
 
