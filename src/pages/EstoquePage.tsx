@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
+import ImportDialog from '@/components/estoque/ImportDialog';
 
 interface Posicao {
   id: string;
@@ -66,6 +67,7 @@ export default function EstoquePage() {
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
@@ -204,13 +206,19 @@ export default function EstoquePage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
       {/* Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
-          <Layers className="w-3.5 h-3.5" />
-          <span>Gestão de Armazém</span>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
+            <Layers className="w-3.5 h-3.5" />
+            <span>Gestão de Armazém</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
+          <p className="text-muted-foreground text-sm font-medium">Controle de posições e níveis das estruturas TEC.</p>
         </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
-        <p className="text-muted-foreground text-sm font-medium">Controle de posições e níveis das estruturas TEC.</p>
+        <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
+          <Upload className="w-4 h-4" />
+          <span className="hidden sm:inline">Importar</span>
+        </Button>
       </div>
       
       {/* Stats */}
@@ -674,6 +682,9 @@ export default function EstoquePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Dialog */}
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
     </div>
   );
 }
