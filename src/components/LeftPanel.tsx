@@ -555,7 +555,7 @@ const LeftPanel = memo(function LeftPanel() {
         
         {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 rounded-lg p-1 gap-1 border border-border/50">
+          <div className="flex gap-2">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -563,10 +563,10 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-2.5 rounded-md text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${
+                  className={`flex-1 py-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border ${
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm border-primary'
-                      : 'text-muted-foreground border-border/50 bg-background/50 hover:text-foreground hover:border-primary/40'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                   }`}
                   aria-pressed={isActive}
                 >
@@ -608,15 +608,15 @@ const LeftPanel = memo(function LeftPanel() {
 
         {/* Diversos categories */}
         {isDiversos && (
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-4 gap-2">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`rounded-lg border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
                   diversosTipo === tipo
                     ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border/40 text-muted-foreground hover:border-primary/40 hover:text-primary'
+                    : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
                 }`}
               >
                 {tipo}
@@ -627,15 +627,15 @@ const LeftPanel = memo(function LeftPanel() {
 
         {/* Madeira subtypes */}
         {isMadeira && (
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-3 gap-2">
             {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setMadeiraTipo(tipo)}
-                className={`rounded-lg border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
                   madeiraTipo === tipo
                     ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border/40 text-muted-foreground hover:border-primary/40 hover:text-primary'
+                    : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
                 }`}
               >
                 {tipo}
