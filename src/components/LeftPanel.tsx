@@ -524,7 +524,7 @@ const LeftPanel = memo(function LeftPanel() {
   };
 
   // For computed card preview
-  const previewLoteSistema = (() => {
+  const previewLoteSistema = useMemo(() => {
     const proc = processo.trim();
     if (isMadeira) {
       if (proc && item) return generateLoteSistemaCaixa(proc, item, 0, registros);
@@ -540,7 +540,7 @@ const LeftPanel = memo(function LeftPanel() {
       return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
-  })();
+  }, [processo, item, nf, endereco, mLinear, isMadeira, isDiversos, isCelular, requiresEndereco, registros]);
 
   // Set default quantidade when madeiraTipo changes
   useEffect(() => {

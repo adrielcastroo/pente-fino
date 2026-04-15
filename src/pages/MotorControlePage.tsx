@@ -91,45 +91,29 @@ export default function MotorControlePage() {
     const currentModelo = subMode === 'controle' ? mapModelo(modelo) : null;
     const currentNf = nf.trim();
     
-    // 1. Process current session
-    for (let i = 0, len = registros.length; i < len; i++) {
-      const r = registros[i];
+    // Helper to process a registro
+    const processReg = (r: { modoOrigem?: string; lote?: string; loteSistema?: string; item?: string; nf?: string }) => {
       if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
-        // Broaden the duplicate check to across all NFs for serial numbers
         set.add(r.lote.trim().toLowerCase());
       }
       if (r.modoOrigem === 'controle' && r.loteSistema) {
-        if (currentModelo && r.item !== currentModelo) continue;
-        if (currentNf && r.nf !== currentNf) continue;
-
+        if (currentModelo && r.item !== currentModelo) return;
+        if (currentNf && r.nf !== currentNf) return;
         const lastPart = r.loteSistema.split('*').pop();
         if (lastPart) {
           const num = parseInt(lastPart, 10);
           if (!isNaN(num) && num > max) max = num;
         }
       }
-    }
-
-    // 2. Process history (now using the reactive history from store)
+    };
+    
+    // Process current session
+    for (let i = 0, len = registros.length; i < len; i++) processReg(registros[i]);
+    
+    // Process history - only scan motor/controle conferences
     for (let i = 0, len = history.length; i < len; i++) {
-      const conf = history[i];
-      const regs = conf.registros;
-      for (let j = 0, rLen = regs.length; j < rLen; j++) {
-        const r = regs[j];
-        if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) {
-          set.add(r.lote.trim().toLowerCase());
-        }
-        if (r.modoOrigem === 'controle' && r.loteSistema) {
-          if (currentModelo && r.item !== currentModelo) continue;
-          if (currentNf && r.nf !== currentNf) continue;
-
-          const lastPart = r.loteSistema.split('*').pop();
-          if (lastPart) {
-            const num = parseInt(lastPart, 10);
-            if (!isNaN(num) && num > max) max = num;
-          }
-        }
-      }
+      const regs = history[i].registros;
+      for (let j = 0, rLen = regs.length; j < rLen; j++) processReg(regs[j]);
     }
     
     return { allSeriesSet: set, maxSequencial: max };
