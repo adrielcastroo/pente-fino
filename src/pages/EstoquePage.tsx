@@ -431,7 +431,7 @@ export default function EstoquePage() {
                         Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
                       </DialogDescription>
                     </div>
-                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-8 sm:mr-10 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
                       {statusCfg.label}
                     </Badge>
                   </div>
