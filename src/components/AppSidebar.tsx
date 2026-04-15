@@ -1,6 +1,6 @@
 import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { Logo } from './Logo';
+import logoComb from '@/assets/logo-comb.png';
 import { useTheme } from 'next-themes';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
@@ -89,8 +89,8 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
           aria-label="Ir para Início"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Logo className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+            <img src={logoComb} alt="Pente Fino" className="h-7 w-7 object-contain" />
           </div>
           <div className="flex flex-col overflow-hidden transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
             <span className="text-sm font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
