@@ -555,7 +555,7 @@ const LeftPanel = memo(function LeftPanel() {
         
         {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="flex bg-muted/40 rounded-lg p-0.5 gap-0.5">
+          <div className="flex bg-muted/40 rounded-lg p-1 gap-1 border border-border/50">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -563,10 +563,10 @@ const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-2 rounded-md text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-2.5 rounded-md text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-sm border-primary'
+                      : 'text-muted-foreground border-border/50 bg-background/50 hover:text-foreground hover:border-primary/40'
                   }`}
                   aria-pressed={isActive}
                 >
