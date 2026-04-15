@@ -65,6 +65,11 @@ const LeftPanel = memo(function LeftPanel() {
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
   } = formData;
 
+  const [localItem, setLocalItem] = useState(item);
+  const [localNf, setLocalNf] = useState(nf);
+  const [localProcesso, setLocalProcesso] = useState(processo);
+  const [localEndereco, setLocalEndereco] = useState(endereco);
+
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
   const [preview, setPreview] = useState<string | null>(null);
@@ -137,11 +142,11 @@ const LeftPanel = memo(function LeftPanel() {
   const largura = useMemo(() => 
     isAI ? aiLarguraNum
     : isMadeira ? 0
-    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(localItem))
     : isCelular ? celularDivisor
-    : usesLarguraFromItem ? extractLarguraFromItem(item)
+    : usesLarguraFromItem ? extractLarguraFromItem(localItem)
     : 0,
-    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, item, isCelular, celularDivisor, usesLarguraFromItem]
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCelular, celularDivisor, usesLarguraFromItem]
   );
 
   const mLinear = useMemo(() => 
@@ -154,16 +159,16 @@ const LeftPanel = memo(function LeftPanel() {
   );
   
   const isDuplicate = useMemo(() => {
-    if (isMadeira || !item || !lote) return false;
-    const lowerItem = item.toLowerCase();
+    if (isMadeira || !localItem || !lote) return false;
+    const lowerItem = localItem.toLowerCase();
     const lowerLote = lote.toLowerCase();
     
     return registros.some(r => 
       (r.item || '').toLowerCase() === lowerItem && 
       (r.lote || '').toLowerCase() === lowerLote &&
-      (r.nf || '').trim() === nf.trim()
+      (r.nf || '').trim() === localNf.trim()
     );
-  }, [isMadeira, item, lote, registros, nf]);
+  }, [isMadeira, localItem, lote, registros, localNf]);
 
   
 
@@ -179,21 +184,30 @@ const LeftPanel = memo(function LeftPanel() {
     setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
   };
 
-  // Sync locked endereco
+  // Sync local state with store values when they change externally
+  useEffect(() => { setLocalItem(item); }, [item]);
+  useEffect(() => { setLocalNf(nf); }, [nf]);
+  useEffect(() => { setLocalProcesso(processo); }, [processo]);
+  useEffect(() => { setLocalEndereco(endereco); }, [endereco]);
+
+  // Sync locked values
   useEffect(() => {
-    if (lockEndereco && lockedEndereco) {
+    if (lockEndereco && lockedEndereco && lockedEndereco !== localEndereco) {
+      setLocalEndereco(lockedEndereco);
       setEndereco(lockedEndereco);
     }
   }, [lockEndereco, lockedEndereco]);
 
   useEffect(() => {
     if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
+      setLocalProcesso(lockedProcesso);
       setProcesso(lockedProcesso);
     }
-  }, [lockProcesso, lockedProcesso, processo, setProcesso]);
+  }, [lockProcesso, lockedProcesso]);
 
   useEffect(() => {
-    if (lockNf && lockedNf) {
+    if (lockNf && lockedNf && nf !== lockedNf) {
+      setLocalNf(lockedNf);
       setNf(lockedNf);
     }
   }, [lockNf, lockedNf]);
@@ -298,8 +312,10 @@ const LeftPanel = memo(function LeftPanel() {
   }, [loadFile]);
 
   useEffect(() => {
-    document.addEventListener('paste', handlePaste as any);
-    return () => document.removeEventListener('paste', handlePaste as any);
+    return () => {
+      document.removeEventListener('paste', handlePaste as any);
+      stopCamera();
+    };
   }, [handlePaste]);
 
   const handleFieldKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
@@ -317,37 +333,53 @@ const LeftPanel = memo(function LeftPanel() {
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
-    setEndereco(formatted);
+    setLocalEndereco(formatted);
     validateEndereco(formatted);
-    if (lockEndereco) setLockedEndereco(formatted);
-  }, [lockEndereco, setEndereco, setLockedEndereco]);
+  }, []);
+
+  const handleEnderecoBlur = () => {
+    setEndereco(localEndereco);
+    if (lockEndereco) setLockedEndereco(localEndereco);
+  };
 
   const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
-      setLockedEndereco(endereco);
+      setLockedEndereco(localEndereco);
       setLockEndereco(true);
       toast.success('Endereço travado');
     } else {
       setLockEndereco(false);
       toast.success('Endereço destravado');
     }
-  }, [lockEndereco, endereco, setLockedEndereco, setLockEndereco]);
+  }, [lockEndereco, localEndereco, setLockedEndereco, setLockEndereco]);
 
   const handleProcessoChange = useCallback((val: string) => {
-    const normalized = val.replace(/[''`]/g, '-');
-    setProcesso(normalized);
-    if (lockProcesso) setLockedProcesso(normalized);
-  }, [lockProcesso, setProcesso, setLockedProcesso]);
+    setLocalProcesso(val.replace(/[''`]/g, '-'));
+  }, []);
+
+  const handleProcessoBlur = () => {
+    const trimmed = localProcesso.trim();
+    setProcesso(trimmed);
+    if (lockProcesso) setLockedProcesso(trimmed);
+  };
 
   const handleNfChange = useCallback((val: string) => {
-    const normalized = val.replace(/[''`]/g, '-');
-    setNf(normalized);
-    if (lockNf) setLockedNf(normalized);
-  }, [lockNf, setNf, setLockedNf]);
+    setLocalNf(val.replace(/[''`]/g, '-'));
+  }, []);
+
+  const handleNfBlur = () => {
+    const trimmed = localNf.trim();
+    setNf(trimmed);
+    if (lockNf) setLockedNf(trimmed);
+  };
 
   const handleItemChange = useCallback((val: string) => {
-    setItem(val.replace(/[''`]/g, '-'));
-  }, [setItem]);
+    setLocalItem(val.replace(/[''`]/g, '-'));
+  }, []);
+
+  const handleItemBlur = () => {
+    setItem(localItem);
+  };
 
   const toggleLockProcesso = useCallback(() => {
     if (!lockProcesso) {
@@ -728,8 +760,9 @@ const LeftPanel = memo(function LeftPanel() {
                 </div>
                 <input
                   id="proc-input"
-                  value={processo}
+                  value={localProcesso}
                   onChange={e => handleProcessoChange(e.target.value)}
+                  onBlur={handleProcessoBlur}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
                     lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -750,8 +783,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="item-input"
                   ref={itemRef}
-                  value={item}
+                  value={localItem}
                   onChange={e => handleItemChange(e.target.value)}
+                  onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
                   placeholder="Ex: SRC-3003-05-3"
@@ -793,8 +827,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="nf-input"
                   ref={nfRef}
-                  value={nf}
+                  value={localNf}
                   onChange={e => handleNfChange(e.target.value)}
+                  onBlur={handleNfBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
                     lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -904,8 +939,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="endereco-input"
                   ref={enderecoRef}
-                  value={endereco}
+                  value={localEndereco}
                   onChange={e => handleEnderecoChange(e.target.value)}
+                  onBlur={handleEnderecoBlur}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
                     lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')

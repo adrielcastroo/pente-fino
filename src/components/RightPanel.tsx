@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useCallback } from 'react';
+import { useState, useMemo, memo, useCallback, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/store/useAppStore';
@@ -192,8 +192,24 @@ export default function RightPanel() {
 
   const { isLow } = usePerformance();
   
+  const [localSearch, setLocalSearch] = useState(searchQuery);
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
+
+  // Sync local search with store if needed (e.g. on external reset)
+  useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
+
+  // Debounced store update for search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== searchQuery) {
+        setSearchQuery(localSearch);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, searchQuery, setSearchQuery]);
 
   const sortedRows = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -323,8 +339,8 @@ export default function RightPanel() {
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)}
+              value={localSearch} 
+              onChange={e => setLocalSearch(e.target.value)}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
               placeholder="Buscar material, lote ou endereço..." 
               autoComplete="off" 
