@@ -371,13 +371,10 @@ export default function EstoquePage() {
                         <TooltipTrigger asChild>
                           {posButton}
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="bg-[hsl(var(--card))] border border-border/40 rounded-xl px-3 py-2 shadow-xl max-w-[280px]">
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-foreground tracking-wide">
-                            <span className="truncate">{item.item || '—'}</span>
-                            <span className="text-muted-foreground/40">·</span>
-                            <span className="text-muted-foreground">{item.lote || '—'}</span>
-                            <span className="text-muted-foreground/40">·</span>
-                            <span className="text-primary whitespace-nowrap">{item.m_linear ?? 0}m</span>
+                        <TooltipContent side="top" align="center" avoidCollisions className="bg-[hsl(var(--card))] border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl max-w-[180px]">
+                          <div className="flex flex-col gap-0.5 text-[10px] font-bold leading-tight">
+                            <span className="text-foreground truncate">{item.item || '—'}</span>
+                            <span className="text-muted-foreground truncate">{(item.lote || '—').slice(-10)}</span>
                           </div>
                         </TooltipContent>
                       </Tooltip>
