@@ -554,6 +554,42 @@ export default function EstoquePage() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Confirmação Dar Saída */}
+      <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-black">Confirmar Saída</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Isso removerá o item do estoque e arquivará o registro. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700" onClick={() => { if (detailPos) executeSaida(detailPos); }}>
+              Confirmar Saída
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmação Excluir */}
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-black">Excluir Item</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Deseja excluir este item do espaço? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-xl bg-destructive hover:bg-destructive/90" onClick={() => { if (detailPos) executeDelete(detailPos); }}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
