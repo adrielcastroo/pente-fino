@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -64,6 +65,8 @@ export default function EstoquePage() {
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
+  const [confirmSaida, setConfirmSaida] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
@@ -118,23 +121,7 @@ export default function EstoquePage() {
 
   const handleStatusChange = async (pos: Posicao, newStatus: string) => {
     if (newStatus === 'saida') {
-      if (!confirm('Dar saída neste tecido? Isso removerá o item do estoque e arquivará o registro.')) return;
-      
-      const { error: saError } = await supabase.from('estoque_saidas').insert({
-        registro_id: pos.registro_id || pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
-        lote: pos.lote, endereco: pos.endereco, lote_sistema: pos.lote_sistema, estrutura: pos.estrutura,
-        coluna: pos.coluna, nivel: pos.nivel, posicao: pos.posicao, conferente_entrada: pos.conferente_entrada,
-        conferente_saida: useAppStore.getState().conferente || 'Sistema',
-        data_registro: pos.data_registro, data_saida: new Date().toISOString()
-      });
-      if (saError) return toast.error('Erro ao arquivar');
-
-      const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
-      if (delError) return toast.error('Erro ao remover do estoque');
-      
-      setDetailPos(null);
-      loadPosicoes();
-      toast.success('Saída realizada com sucesso');
+      setConfirmSaida(true);
       return;
     }
 
@@ -147,8 +134,29 @@ export default function EstoquePage() {
     }
   };
 
+  const executeSaida = async (pos: Posicao) => {
+    const { error: saError } = await supabase.from('estoque_saidas').insert({
+      registro_id: pos.registro_id || pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
+      lote: pos.lote, endereco: pos.endereco, lote_sistema: pos.lote_sistema, estrutura: pos.estrutura,
+      coluna: pos.coluna, nivel: pos.nivel, posicao: pos.posicao, conferente_entrada: pos.conferente_entrada,
+      conferente_saida: useAppStore.getState().conferente || 'Sistema',
+      data_registro: pos.data_registro, data_saida: new Date().toISOString()
+    });
+    if (saError) return toast.error('Erro ao arquivar');
+
+    const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+    if (delError) return toast.error('Erro ao remover do estoque');
+    
+    setDetailPos(null);
+    loadPosicoes();
+    toast.success('Saída realizada com sucesso');
+  };
+
   const handleDelete = async (pos: Posicao) => {
-    if (!confirm('Deseja excluir este item do espaço?')) return;
+    setConfirmDelete(true);
+  };
+
+  const executeDelete = async (pos: Posicao) => {
     const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
     if (error) toast.error('Erro ao excluir');
     else {

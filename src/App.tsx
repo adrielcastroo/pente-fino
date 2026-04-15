@@ -28,7 +28,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          <Toaster position="top-right" closeButton />
+          <Toaster position="top-right" closeButton duration={2000} />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
