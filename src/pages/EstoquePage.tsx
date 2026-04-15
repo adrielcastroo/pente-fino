@@ -371,10 +371,10 @@ export default function EstoquePage() {
                         <TooltipTrigger asChild>
                           {posButton}
                         </TooltipTrigger>
-                        <TooltipContent side="top" align="center" avoidCollisions collisionPadding={8} className="bg-[hsl(var(--card))] border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl max-w-[220px] z-[100]">
+                        <TooltipContent side="top" align="start" sideOffset={6} avoidCollisions collisionPadding={{ left: 16, right: 16, top: 8, bottom: 8 }} className="bg-[hsl(var(--card))] border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl w-[180px] max-w-[calc(100vw-2rem)] z-[100] text-left">
                           <div className="flex flex-col gap-0.5 text-[10px] font-bold leading-tight">
-                            <span className="text-foreground break-all">{item.item || '—'}</span>
-                            <span className="text-muted-foreground break-all">{item.lote_sistema || '—'}</span>
+                            <span className="text-foreground break-words whitespace-normal">{item.item || '—'}</span>
+                            <span className="text-muted-foreground break-words whitespace-normal">{item.lote_sistema || '—'}</span>
                           </div>
                         </TooltipContent>
                       </Tooltip>
