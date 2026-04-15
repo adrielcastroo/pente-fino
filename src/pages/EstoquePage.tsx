@@ -310,7 +310,7 @@ export default function EstoquePage() {
                       </DialogDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border mr-8 ${
+                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border mr-14 ${
                     occupiedCount === 0 ? 'border-primary/30 text-primary bg-primary/5' :
                     occupiedCount >= 25 ? 'border-red-500/30 text-red-400 bg-red-500/10' :
                     'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
