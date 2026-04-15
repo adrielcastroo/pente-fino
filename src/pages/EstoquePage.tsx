@@ -67,6 +67,7 @@ export default function EstoquePage() {
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
