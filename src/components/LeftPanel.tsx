@@ -184,21 +184,30 @@ const LeftPanel = memo(function LeftPanel() {
     setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
   };
 
-  // Sync locked endereco
+  // Sync local state with store values when they change externally
+  useEffect(() => { setLocalItem(item); }, [item]);
+  useEffect(() => { setLocalNf(nf); }, [nf]);
+  useEffect(() => { setLocalProcesso(processo); }, [processo]);
+  useEffect(() => { setLocalEndereco(endereco); }, [endereco]);
+
+  // Sync locked values
   useEffect(() => {
-    if (lockEndereco && lockedEndereco) {
+    if (lockEndereco && lockedEndereco && lockedEndereco !== localEndereco) {
+      setLocalEndereco(lockedEndereco);
       setEndereco(lockedEndereco);
     }
   }, [lockEndereco, lockedEndereco]);
 
   useEffect(() => {
     if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
+      setLocalProcesso(lockedProcesso);
       setProcesso(lockedProcesso);
     }
-  }, [lockProcesso, lockedProcesso, processo, setProcesso]);
+  }, [lockProcesso, lockedProcesso]);
 
   useEffect(() => {
-    if (lockNf && lockedNf) {
+    if (lockNf && lockedNf && nf !== lockedNf) {
+      setLocalNf(lockedNf);
       setNf(lockedNf);
     }
   }, [lockNf, lockedNf]);
