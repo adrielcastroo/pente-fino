@@ -732,7 +732,7 @@ const LeftPanel = memo(function LeftPanel() {
             {/* PROCESSO */}
             {requiresProcesso && (
               <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 h-4">
                   <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
                   <button onClick={toggleLockProcesso} className={`transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockProcesso ? 'Campo travado' : 'Travar campo'}>
                     {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -755,7 +755,9 @@ const LeftPanel = memo(function LeftPanel() {
 
             {/* Item */}
             <div className="space-y-1.5">
-              <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
+              <div className="flex items-center h-4">
+                <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
+              </div>
               <div className="relative">
                 <input
                   id="item-input"
