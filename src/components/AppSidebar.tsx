@@ -1,6 +1,6 @@
 import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { Logo } from './Logo';
+import logoComb from '@/assets/logo-comb.png';
 import { useTheme } from 'next-themes';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
