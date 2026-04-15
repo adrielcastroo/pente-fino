@@ -331,37 +331,53 @@ const LeftPanel = memo(function LeftPanel() {
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
-    setEndereco(formatted);
+    setLocalEndereco(formatted);
     validateEndereco(formatted);
-    if (lockEndereco) setLockedEndereco(formatted);
-  }, [lockEndereco, setEndereco, setLockedEndereco]);
+  }, []);
+
+  const handleEnderecoBlur = () => {
+    setEndereco(localEndereco);
+    if (lockEndereco) setLockedEndereco(localEndereco);
+  };
 
   const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
-      setLockedEndereco(endereco);
+      setLockedEndereco(localEndereco);
       setLockEndereco(true);
       toast.success('Endereço travado');
     } else {
       setLockEndereco(false);
       toast.success('Endereço destravado');
     }
-  }, [lockEndereco, endereco, setLockedEndereco, setLockEndereco]);
+  }, [lockEndereco, localEndereco, setLockedEndereco, setLockEndereco]);
 
   const handleProcessoChange = useCallback((val: string) => {
-    const normalized = val.replace(/[''`]/g, '-');
-    setProcesso(normalized);
-    if (lockProcesso) setLockedProcesso(normalized);
-  }, [lockProcesso, setProcesso, setLockedProcesso]);
+    setLocalProcesso(val.replace(/[''`]/g, '-'));
+  }, []);
+
+  const handleProcessoBlur = () => {
+    const trimmed = localProcesso.trim();
+    setProcesso(trimmed);
+    if (lockProcesso) setLockedProcesso(trimmed);
+  };
 
   const handleNfChange = useCallback((val: string) => {
-    const normalized = val.replace(/[''`]/g, '-');
-    setNf(normalized);
-    if (lockNf) setLockedNf(normalized);
-  }, [lockNf, setNf, setLockedNf]);
+    setLocalNf(val.replace(/[''`]/g, '-'));
+  }, []);
+
+  const handleNfBlur = () => {
+    const trimmed = localNf.trim();
+    setNf(trimmed);
+    if (lockNf) setLockedNf(trimmed);
+  };
 
   const handleItemChange = useCallback((val: string) => {
-    setItem(val.replace(/[''`]/g, '-'));
-  }, [setItem]);
+    setLocalItem(val.replace(/[''`]/g, '-'));
+  }, []);
+
+  const handleItemBlur = () => {
+    setItem(localItem);
+  };
 
   const toggleLockProcesso = useCallback(() => {
     if (!lockProcesso) {
