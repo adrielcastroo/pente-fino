@@ -83,8 +83,8 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       aria-label="Menu Principal"
     >
       {/* ── Header / Logo ── */}
-      <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-2 group-data-[state=collapsed]:py-3">
-        <div className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0">
+      <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
+        <div className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Logo className="h-5 w-5" />
           </div>
@@ -100,10 +100,10 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       </SidebarHeader>
 
       {/* ── Nav Items ── */}
-      <SidebarContent className="px-3 group-data-[state=collapsed]:px-2 custom-scrollbar">
+      <SidebarContent className="px-3 group-data-[state=collapsed]:px-0 custom-scrollbar">
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-0.5">
+            <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
               {menuItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
@@ -170,8 +170,8 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       </SidebarContent>
 
       {/* ── Footer ── */}
-      <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-2 border-t border-border/30">
-        <SidebarMenu className="gap-0.5">
+      <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-0 border-t border-border/30">
+        <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
           {/* Theme toggle */}
           <SidebarMenuItem>
             <SidebarMenuButton
