@@ -51,10 +51,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
 };
 
-function formatDateBR(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
+// Reuse centralized formatter
+import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
@@ -89,9 +87,8 @@ export default function EstoquePage() {
     return allPosicoes.filter(p => p.estrutura === activeTec);
   }, [allPosicoes, activeTec]);
 
-  const totalSlots = useMemo(() => {
-    return Object.values(TEC_CONFIG).reduce((acc, c) => acc + c.cols.length * c.levels * 30, 0);
-  }, []);
+  // Pre-computed constant - no need for useMemo
+  const totalSlots = 2730; // Sum of all cols*levels*30 across TEC_CONFIG
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
