@@ -195,35 +195,41 @@ export default function RightPanel() {
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const filteredRows = useMemo(() => {
-    let result = [...registros];
-    const q = searchQuery.toLowerCase().trim();
-    if (q) {
-      result = result.filter(r =>
-        (r.item || '').toLowerCase().includes(q) ||
-        (r.endereco || '').toLowerCase().includes(q) ||
-        (r.lote || '').toLowerCase().includes(q) ||
-        (r.loteSistema || '').toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [registros, searchQuery]);
-
   const sortedRows = useMemo(() => {
-    let result = [...filteredRows];
+    const q = searchQuery.toLowerCase().trim();
+    let result: Registro[];
+    if (q) {
+      result = [];
+      for (let i = 0, len = registros.length; i < len; i++) {
+        const r = registros[i];
+        if (
+          (r.item || '').toLowerCase().includes(q) ||
+          (r.endereco || '').toLowerCase().includes(q) ||
+          (r.lote || '').toLowerCase().includes(q) ||
+          (r.loteSistema || '').toLowerCase().includes(q)
+        ) {
+          result.push(r);
+        }
+      }
+    } else {
+      result = registros.slice();
+    }
     if (sortBy && SORT_MAP[sortBy]) {
       result.sort(SORT_MAP[sortBy]);
     }
     return result;
-  }, [filteredRows, sortBy]);
+  }, [registros, searchQuery, sortBy]);
 
   const totals = useMemo(() => {
-    return filteredRows.reduce((acc, r) => ({
-      ml: acc.ml + r.mLinear,
-      m2: acc.m2 + r.m2,
-      qtd: acc.qtd + (r.quantidade || 0)
-    }), { ml: 0, m2: 0, qtd: 0 });
-  }, [filteredRows]);
+    let ml = 0, m2 = 0, qtd = 0;
+    for (let i = 0, len = sortedRows.length; i < len; i++) {
+      const r = sortedRows[i];
+      ml += r.mLinear;
+      m2 += r.m2;
+      qtd += r.quantidade || 0;
+    }
+    return { ml, m2, qtd };
+  }, [sortedRows]);
 
   const columns = useMemo(() => getRegistroColumns(registros.length > 0 ? [registros[0]] : [], currentMode), [currentMode, registros.length]);
 

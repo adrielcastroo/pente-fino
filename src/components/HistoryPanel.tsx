@@ -221,8 +221,12 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { isLow } = usePerformance();
-  const totalML = useMemo(() => conf.registros.reduce((a, r) => a + r.mLinear, 0), [conf.registros]);
-  const columns = useMemo(() => getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual'), [conf.registros]);
+  const totalML = useMemo(() => {
+    let sum = 0;
+    for (let i = 0, len = conf.registros.length; i < len; i++) sum += conf.registros[i].mLinear;
+    return sum;
+  }, [conf.registros]);
+  const columns = useMemo(() => open ? getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual') : [], [conf.registros, open]);
   const folderName = useMemo(() => getConferenceFolderName(conf), [conf]);
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
