@@ -600,6 +600,7 @@ export default function EstoquePage() {
                           <XAxis dataKey="tec" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                           <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                           <ChartTooltip
+                            cursor={false}
                             contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 11 }}
                             formatter={(value: number, _name: string, props: any) => [`${value}/${props.payload.total} (${props.payload.percent}%)`, current.label]}
                           />
