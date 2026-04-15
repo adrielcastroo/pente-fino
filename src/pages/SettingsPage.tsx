@@ -115,7 +115,7 @@ export default function SettingsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               placeholder="Buscar configurações..." 
-              className="pl-9 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+              className="pl-9 bg-background/50 border-border/50 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 transition-colors"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
