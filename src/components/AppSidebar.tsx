@@ -206,7 +206,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
                 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
                 ${activeTab === 'settings'
-                  ? 'bg-primary text-primary-foreground font-bold shadow-sm group-data-[state=collapsed]:ring-2 group-data-[state=collapsed]:ring-primary/30 group-data-[state=collapsed]:ring-offset-2 group-data-[state=collapsed]:ring-offset-sidebar'
+                  ? 'bg-primary text-primary-foreground font-bold shadow-sm group-data-[state=collapsed]:bg-primary/15 group-data-[state=collapsed]:text-primary group-data-[state=collapsed]:shadow-none'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'}
               `}
             >
