@@ -45,7 +45,6 @@ export const conferenceService = {
     
     const confs = allConfs;
     if (!confs.length) return [];
-    if (!confs) return [];
     
     // Pre-allocate result array
     const result: Conference[] = new Array(confs.length);
