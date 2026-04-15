@@ -437,6 +437,10 @@ export default function EstoquePage() {
                         const cfg = STATUS_CONFIG[st];
                         const isActive = detailPos.status === st;
                         const dotColor = st === 'ocupado' ? 'bg-emerald-400' : st === 'bloqueado' ? 'bg-red-400' : 'bg-amber-400';
+                        const activeRing = st === 'ocupado' ? 'ring-emerald-500/30' : st === 'bloqueado' ? 'ring-red-500/30' : 'ring-amber-500/30';
+                        const activeBg = st === 'ocupado' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500' 
+                          : st === 'bloqueado' ? 'bg-red-500/15 border-red-500/50 text-red-500' 
+                          : 'bg-amber-500/15 border-amber-500/50 text-amber-500';
                         const hoverBg = st === 'ocupado' ? 'hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-500' 
                           : st === 'bloqueado' ? 'hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-500' 
                           : 'hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-500';
@@ -447,16 +451,15 @@ export default function EstoquePage() {
                             variant="outline"
                             className={`h-11 text-xs sm:text-sm font-bold rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
                               isActive 
-                                ? `${cfg.bg} ${cfg.border} ${cfg.color} border-2 shadow-sm cursor-default` 
+                                ? `${activeBg} ring-2 ${activeRing} ring-offset-1 ring-offset-card shadow-sm pointer-events-none` 
                                 : `border-border/20 text-muted-foreground ${hoverBg} active:scale-[0.97]`
                             }`}
-                            disabled={isActive}
                           >
-                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} ${isActive ? 'ring-2 ring-offset-1 ring-offset-card' : ''}`} 
-                              style={isActive ? { boxShadow: `0 0 6px ${st === 'ocupado' ? '#34d399' : st === 'bloqueado' ? '#f87171' : '#fbbf24'}` } : {}}
+                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} ${isActive ? 'animate-pulse' : ''}`} 
+                              style={isActive ? { boxShadow: `0 0 8px ${st === 'ocupado' ? '#34d399' : st === 'bloqueado' ? '#f87171' : '#fbbf24'}` } : {}}
                             />
                             {cfg.label}
-                            {isActive && <span className="ml-1.5 text-[9px] opacity-60">✓</span>}
+                            {isActive && <span className="ml-1.5 text-[10px] font-bold opacity-80">✓</span>}
                           </Button>
                         );
                       })}
