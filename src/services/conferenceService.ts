@@ -25,21 +25,24 @@ export const conferenceService = {
       .order('created_at', { foreignTable: 'registros', ascending: true });
       
     if (error) throw error;
+    if (!confs) return [];
     
-    return (confs || []).map(c => ({
-      id: c.id,
-      name: c.processo,
-      processo: c.processo,
-      conferente: c.conferente,
-      date: c.created_at,
-      startedAt: (c as any).started_at || null,
-      finishedAt: (c as any).finished_at || null,
-      registros: ((c as any).registros || [])
-        .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        .map((r: any) => ({
+    // Pre-allocate result array
+    const result: Conference[] = new Array(confs.length);
+    
+    for (let ci = 0, cLen = confs.length; ci < cLen; ci++) {
+      const c = confs[ci];
+      const rawRegs = (c as any).registros || [];
+      const processo = c.processo;
+      // Registros already sorted by Supabase ORDER BY - skip redundant JS sort
+      const regs = new Array(rawRegs.length);
+      
+      for (let ri = 0, rLen = rawRegs.length; ri < rLen; ri++) {
+        const r = rawRegs[ri];
+        regs[ri] = {
           id: r.id,
           item: r.item,
-          processo: (r.modo_origem === 'diversos' && r.tipo_tecido !== 'Celular') ? '' : c.processo,
+          processo: (r.modo_origem === 'diversos' && r.tipo_tecido !== 'Celular') ? '' : processo,
           nf: r.nf || '',
           endereco: r.endereco,
           m2: Number(r.m2),
@@ -54,8 +57,22 @@ export const conferenceService = {
           editedBy: r.edited_by,
           editedAt: r.edited_at,
           quantidade: r.quantidade ?? undefined,
-        })),
-    }));
+        };
+      }
+      
+      result[ci] = {
+        id: c.id,
+        name: processo,
+        processo,
+        conferente: c.conferente,
+        date: c.created_at,
+        startedAt: (c as any).started_at || null,
+        finishedAt: (c as any).finished_at || null,
+        registros: regs,
+      };
+    }
+    
+    return result;
   },
 
   async deleteConference(id: string) {
