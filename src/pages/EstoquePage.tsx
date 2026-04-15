@@ -88,7 +88,7 @@ export default function EstoquePage() {
   }, [allPosicoes, activeTec]);
 
   // Pre-computed constant - no need for useMemo
-  const totalSlots = 2730; // Sum of all cols*levels*30 across TEC_CONFIG
+  const totalSlots = 3120; // Pre-computed: sum of cols*levels*30 across TEC_CONFIG
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
