@@ -312,8 +312,10 @@ const LeftPanel = memo(function LeftPanel() {
   }, [loadFile]);
 
   useEffect(() => {
-    document.addEventListener('paste', handlePaste as any);
-    return () => document.removeEventListener('paste', handlePaste as any);
+    return () => {
+      document.removeEventListener('paste', handlePaste as any);
+      stopCamera();
+    };
   }, [handlePaste]);
 
   const handleFieldKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
