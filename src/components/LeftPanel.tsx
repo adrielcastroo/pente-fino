@@ -758,8 +758,9 @@ const LeftPanel = memo(function LeftPanel() {
                 </div>
                 <input
                   id="proc-input"
-                  value={processo}
+                  value={localProcesso}
                   onChange={e => handleProcessoChange(e.target.value)}
+                  onBlur={handleProcessoBlur}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
                     lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -780,8 +781,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="item-input"
                   ref={itemRef}
-                  value={item}
+                  value={localItem}
                   onChange={e => handleItemChange(e.target.value)}
+                  onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
                   placeholder="Ex: SRC-3003-05-3"
@@ -823,8 +825,9 @@ const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="nf-input"
                   ref={nfRef}
-                  value={nf}
+                  value={localNf}
                   onChange={e => handleNfChange(e.target.value)}
+                  onBlur={handleNfBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
                     lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
