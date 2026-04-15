@@ -111,7 +111,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 const hasRecords = isTableTab && registros.length > 0;
 
                 return (
-                  <SidebarMenuItem key={item.key}>
+                <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       size="lg"
                       onClick={() => handleTabClick(item.key)}
@@ -121,16 +121,16 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                       className={`
                         relative h-10 rounded-lg transition-all duration-150 active:scale-[0.97]
                         group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
-                        group-data-[state=collapsed]:justify-center
+                        group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
                         ${isActive
-                          ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                          ? 'bg-primary text-primary-foreground font-bold shadow-sm group-data-[state=collapsed]:ring-2 group-data-[state=collapsed]:ring-primary/30 group-data-[state=collapsed]:ring-offset-2 group-data-[state=collapsed]:ring-offset-sidebar'
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground font-medium'}
                         ${hasRecords && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
                       `}
                     >
-                      {/* Active indicator bar */}
+                      {/* Active indicator bar - only show when expanded */}
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40 group-data-[state=collapsed]:hidden" />
                       )}
 
                       {/* Icon */}
@@ -179,7 +179,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               onClick={toggleTheme}
               tooltip={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               aria-label="Alternar Tema"
-              className="h-10 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center"
+              className="h-10 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto"
             >
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 {theme === 'dark'
@@ -202,16 +202,16 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               tooltip="Configurações"
               aria-label="Abrir Configurações"
               className={`
-                h-10 rounded-lg transition-colors duration-150
+                relative h-10 rounded-lg transition-colors duration-150
                 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
-                group-data-[state=collapsed]:justify-center
+                group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
                 ${activeTab === 'settings'
-                  ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                  ? 'bg-primary text-primary-foreground font-bold shadow-sm group-data-[state=collapsed]:ring-2 group-data-[state=collapsed]:ring-primary/30 group-data-[state=collapsed]:ring-offset-2 group-data-[state=collapsed]:ring-offset-sidebar'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'}
               `}
             >
               {activeTab === 'settings' && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-foreground/40 group-data-[state=collapsed]:hidden" />
               )}
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
