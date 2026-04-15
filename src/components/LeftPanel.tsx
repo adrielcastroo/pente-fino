@@ -537,6 +537,7 @@ const LeftPanel = memo(function LeftPanel() {
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
+    { key: 'openrouter' as const, label: 'IA', icon: Sparkles },
   ];
 
   const showDropzone = currentMode === 'openrouter';
