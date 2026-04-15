@@ -732,11 +732,10 @@ const LeftPanel = memo(function LeftPanel() {
             {/* PROCESSO */}
             {requiresProcesso && (
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
                   <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
-                  <button onClick={toggleLockProcesso} className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+                  <button onClick={toggleLockProcesso} className={`transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockProcesso ? 'Campo travado' : 'Travar campo'}>
                     {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    {lockProcesso ? 'Travado' : 'Travar'}
                   </button>
                 </div>
                 <input
@@ -795,11 +794,10 @@ const LeftPanel = memo(function LeftPanel() {
             {/* NF */}
             {requiresNF && (
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
                   <label htmlFor="nf-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NF)</label>
-                  <button onClick={toggleLockNf} className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${lockNf ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+                  <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
                     {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    {lockNf ? 'Travado' : 'Travar'}
                   </button>
                 </div>
                 <input
@@ -907,11 +905,10 @@ const LeftPanel = memo(function LeftPanel() {
             {/* Endereço */}
             {requiresEndereco && (
               <div className="space-y-1.5 sm:col-span-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
                   <label htmlFor="endereco-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Endereço de Armazenagem</label>
-                  <button onClick={toggleLockEndereco} className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${lockEndereco ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+                  <button onClick={toggleLockEndereco} className={`transition-colors ${lockEndereco ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockEndereco ? 'Campo travado' : 'Travar campo'}>
                     {lockEndereco ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    {lockEndereco ? 'Travado' : 'Travar'}
                   </button>
                 </div>
                 <input
