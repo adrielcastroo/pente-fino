@@ -125,8 +125,9 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
       {columns.map((column: any) => (
         <TableCell
           key={column.key}
-          r={r}
-          column={column}
+          id={r.id}
+          columnKey={column.key}
+          value={(r as any)[column.key]}
           searchQuery={searchQuery}
           isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
           editValue={editValue}
@@ -135,6 +136,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
           onCancelEdit={onCancelEdit}
           onStartEdit={onStartEdit}
           onCopy={onCopy}
+          loteSistema={r.loteSistema}
         />
       ))}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
