@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Registro } from '@/types';
+import { useAuth } from '@/hooks/use-auth';
+
 
 const HighlightedText = memo(({ text, q }: { text: string; q: string }) => {
   if (!q) return <>{text}</>;
@@ -115,9 +117,11 @@ interface TableRowProps {
   onEditValueChange: (val: string) => void;
   onCommitEdit: () => void;
   onCancelEdit: () => void;
+  isGuest?: boolean;
 }
 
-const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit }: TableRowProps) => {
+const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit, isGuest }: TableRowProps) => {
+
   return (
     <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
@@ -176,10 +180,12 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 TableRow.displayName = 'TableRow';
 
 export default function RightPanel() {
+  const { isGuest } = useAuth();
   const {
     registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
     deleteRegistro, undo, undoStack, updateRegistro
   } = useAppStore(useShallow(s => ({
+
     registros: s.registros,
     currentMode: s.currentMode,
     searchQuery: s.searchQuery,
@@ -367,20 +373,22 @@ export default function RightPanel() {
               </select>
             </div>
             
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleClearAll} 
-                  className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
-                  disabled={registros.length === 0}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Limpar Tabela</TooltipContent>
-            </Tooltip>
+            {registros.length > 0 && !isGuest && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handleClearAll} 
+                    className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Limpar Tabela</TooltipContent>
+              </Tooltip>
+            )}
+
           </div>
         </div>
       </div>
@@ -530,6 +538,7 @@ export default function RightPanel() {
               )}
             </table>
           )}
+                    isGuest={isGuest}
 
           {sortedRows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-center px-6">
