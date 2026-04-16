@@ -298,25 +298,21 @@ export const useAppStore = create<AppState>()(
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          return JSON.parse(str);
+          try {
+            return JSON.parse(str);
+          } catch {
+            return null;
+          }
         },
         setItem: (name, value) => {
-          // Throttled persistence to avoid frequent disk I/O
-          const throttledSet = (window as any)._throttledSetItem || (() => {
-            let timeout: any = null;
-            let lastValue: any = null;
-            return (val: any) => {
-              lastValue = val;
-              if (!timeout) {
-                timeout = setTimeout(() => {
-                  localStorage.setItem(name, JSON.stringify(lastValue));
-                  timeout = null;
-                }, 1000); // 1s throttle
-              }
-            };
-          })();
-          if (!(window as any)._throttledSetItem) (window as any)._throttledSetItem = throttledSet;
-          throttledSet(value);
+          // Throttled persistence (1s) to improve performance and avoid disk I/O on every stroke
+          if (!(window as any)._persisterTimer) {
+            (window as any)._persisterTimer = setTimeout(() => {
+              localStorage.setItem(name, JSON.stringify((window as any)._persisterValue));
+              (window as any)._persisterTimer = null;
+            }, 1000);
+          }
+          (window as any)._persisterValue = value;
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
@@ -326,10 +322,10 @@ export const useAppStore = create<AppState>()(
         currentMode: state.currentMode,
         processo: state.processo,
         conferente: state.conferente,
-        searchQuery: '', // Never persist search query
+        searchQuery: '', 
         formData: {
           ...state.formData,
-          estoqueSearch: '', // Don't persist temporary searches
+          estoqueSearch: '',
           estoqueHighlightStatus: null
         },
         sortBy: state.sortBy,
@@ -340,7 +336,7 @@ export const useAppStore = create<AppState>()(
         lockedNf: state.lockedNf,
         lockEndereco: state.lockEndereco,
         lockedEndereco: state.lockedEndereco,
-      }),
+      } as any),
     }
   )
 );
