@@ -15,32 +15,44 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const { loginAsGuest } = useAuth();
   const [guestName, setGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(error.message);
+    
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: email.split('@')[0],
+          }
+        }
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Cadastro realizado! Verifique seu e-mail ou faça login.');
+        setIsSignUp(false);
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Login realizado com sucesso!');
+      }
     }
     setLoading(false);
   };
+...
 
-  const handleGuestLogin = () => {
-    if (!showGuestInput) {
-      setShowGuestInput(true);
-      return;
-    }
-    if (!guestName.trim()) {
-      toast.error('Por favor, insira seu nome para entrar como visitante.');
-      return;
-    }
-    loginAsGuest(guestName);
-    toast.success('Entrou como visitante!');
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
