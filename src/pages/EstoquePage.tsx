@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
 import ImportDialog from '@/components/estoque/ImportDialog';
+import { useAuth } from '@/hooks/use-auth';
+
 
 interface Posicao {
   id: string;
@@ -56,7 +58,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
+  const { isGuest } = useAuth();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
+
   const setFormData = useAppStore(s => s.setFormData);
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
