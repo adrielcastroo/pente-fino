@@ -148,6 +148,7 @@ export default function EstoquePage() {
       toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`, { id: 'status-update' });
       setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
       loadPosicoes();
+      loadStats();
     }
   };
 
@@ -166,6 +167,7 @@ export default function EstoquePage() {
     
     setDetailPos(null);
     loadPosicoes();
+    loadStats();
     toast.success('Saída realizada com sucesso');
   };
 
@@ -179,6 +181,7 @@ export default function EstoquePage() {
     else {
       setDetailPos(null);
       loadPosicoes();
+      loadStats();
       toast.success('Item excluído');
     }
   };
