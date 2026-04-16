@@ -70,35 +70,35 @@ export default function LoginPage() {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => handleSocialLogin('google')}
-                className="h-11 font-semibold hover:bg-muted/50 transition-all active:scale-95"
-              >
-                <Chrome className="mr-2 h-4 w-4" />
-                Google
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleSocialLogin('apple')}
-                className="h-11 font-semibold hover:bg-muted/50 transition-all active:scale-95"
-              >
-                <Apple className="mr-2 h-4 w-4" />
-                Apple
-              </Button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Ou continue com email</span>
-              </div>
-            </div>
-
             <form onSubmit={handleEmailLogin} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="exemplo@empresa.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-11 bg-muted/30 focus-visible:ring-primary/30"
+                  required 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider opacity-70">Senha</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-11 bg-muted/30 focus-visible:ring-primary/30"
+                  required 
+                />
+              </div>
+              <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                Entrar com Email
+              </Button>
+            </form>
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
                 <Input 
