@@ -18,7 +18,8 @@ import {
   Laptop,
   Mail,
   Lock,
-  Smartphone
+  Smartphone,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,6 @@ import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
-
 const categories = [
   { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
   { id: 'preferences', name: 'Preferências do Sistema', icon: Settings, description: 'Ajuste o comportamento do sistema para suas necessidades.' },
@@ -55,7 +55,6 @@ export default function SettingsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
-
 
   // Existing settings from ConfigModal
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
@@ -177,103 +176,105 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <Card className="md:col-span-2 border-border/40 shadow-sm overflow-hidden">
                         <CardHeader className="pb-4">
-                          <CardTitle className="text-base">Informações Pessoais</CardTitle>
-                          <CardDescription>Estes dados serão visíveis para outros membros da equipe.</CardDescription>
+                          <CardTitle className="text-base">Informações do Perfil</CardTitle>
+                          <CardDescription>
+                            {isGuest 
+                              ? "Você está acessando como visitante. Algumas permissões são restritas." 
+                              : "Gerencie as informações da sua conta sincronizada."}
+                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center pb-2">
                              <div className="relative group">
                                 <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-dashed border-primary/30 group-hover:border-primary transition-colors overflow-hidden">
-                                   <User className="w-8 h-8 text-primary/40 group-hover:text-primary transition-colors" />
+                                   {profile?.avatar_url ? (
+                                     <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                   ) : (
+                                     <User className="w-8 h-8 text-primary/40 group-hover:text-primary transition-colors" />
+                                   )}
                                 </div>
-                                <button className="absolute -bottom-2 -right-2 p-1.5 rounded-lg bg-background border border-border shadow-sm hover:bg-muted transition-colors">
-                                   <Palette className="w-3.5 h-3.5" />
-                                </button>
                              </div>
                              <div className="space-y-1">
-                                <h3 className="font-semibold text-sm">Foto de Perfil</h3>
-                                <p className="text-xs text-muted-foreground">JPG, GIF ou PNG. Tamanho máximo de 2MB.</p>
+                                <h3 className="font-semibold text-sm">
+                                  {isGuest ? "Sessão de Visitante" : profile?.display_name || "Usuário"}
+                                </h3>
+                                <p className="text-xs text-muted-foreground">
+                                  {isGuest ? "Identificado no sistema por seu nome de conferente." : user?.email}
+                                </p>
                                 <div className="flex gap-2 mt-2">
-                                   <Button variant="outline" size="sm" className="text-[10px] h-7 px-2">Upload</Button>
-                                   <Button variant="ghost" size="sm" className="text-[10px] h-7 px-2 text-destructive">Remover</Button>
+                                   <Button onClick={() => signOut()} variant="outline" size="sm" className="text-[10px] h-7 px-3 text-destructive hover:bg-destructive/10 border-destructive/20">
+                                     <LogOut className="w-3.5 h-3.5 mr-2" />
+                                     Sair da Conta
+                                   </Button>
                                 </div>
                              </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome Completo</Label>
-                              <Input id="name" defaultValue="Usuário Administrador" onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
-                              <Input id="email" type="email" defaultValue="admin@pentefino.com.br" onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="bio" className="text-xs font-bold uppercase tracking-wider opacity-70">Bio</Label>
-                            <Input id="bio" placeholder="Uma breve descrição sobre você..." onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
-                          </div>
+                          {!isGuest && (
+                            <>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome de Exibição</Label>
+                                  <Input id="name" defaultValue={profile?.display_name || ''} onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
+                                  <Input id="email" type="email" defaultValue={user?.email || ''} readOnly className="bg-muted/10 opacity-70 cursor-not-allowed" />
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </CardContent>
                       </Card>
 
                       <Card className="border-border/40 shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Uso do Plano</CardTitle>
+                            <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Status de Acesso</CardTitle>
                          </CardHeader>
                          <CardContent className="space-y-6">
-                            <div className="space-y-2">
+                            <div className="space-y-4">
                                <div className="flex items-center justify-between text-xs">
-                                  <span className="font-medium">Registros este mês</span>
-                                  <span className="text-muted-foreground font-bold">1.240 / 5.000</span>
+                                  <span className="font-medium">Nível de Acesso</span>
+                                  <Badge variant={isGuest ? "secondary" : "default"} className="font-bold">
+                                    {isGuest ? "Visitante" : "Administrador"}
+                                  </Badge>
                                </div>
-                               <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
-                                  <motion.div 
-                                     initial={{ width: 0 }}
-                                     animate={{ width: '24.8%' }}
-                                     transition={{ duration: 1, ease: "easeOut" }}
-                                     className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" 
-                                  />
-                               </div>
-                            </div>
-
-                            <div className="space-y-2">
-                               <div className="flex items-center justify-between text-xs">
-                                  <span className="font-medium">Armazenamento</span>
-                                  <span className="text-muted-foreground font-bold">450 MB / 2 GB</span>
-                               </div>
-                               <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
-                                  <motion.div 
-                                     initial={{ width: 0 }}
-                                     animate={{ width: '22.5%' }}
-                                     transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                                     className="h-full bg-gradient-to-r from-primary to-blue-500" 
-                                  />
+                               
+                               <div className="p-3 rounded-xl bg-background/50 border border-border/30 space-y-2">
+                                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Permissões:</p>
+                                 <ul className="space-y-1.5">
+                                   <li className="flex items-center gap-2 text-xs">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                     <span>Adicionar registros</span>
+                                   </li>
+                                   <li className="flex items-center gap-2 text-xs">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                     <span>Visualizar estoque</span>
+                                   </li>
+                                   <li className="flex items-center gap-2 text-xs">
+                                     <div className={`w-1.5 h-1.5 rounded-full ${isGuest ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                                     <span className={isGuest ? 'text-muted-foreground line-through' : ''}>Excluir registros históricos</span>
+                                   </li>
+                                   <li className="flex items-center gap-2 text-xs">
+                                     <div className={`w-1.5 h-1.5 rounded-full ${isGuest ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                                     <span className={isGuest ? 'text-muted-foreground line-through' : ''}>Remover itens do estoque</span>
+                                   </li>
+                                 </ul>
                                </div>
                             </div>
 
                             <Separator className="bg-primary/10" />
 
                             <div className="pt-2 text-center">
-                               <p className="text-[10px] text-muted-foreground leading-relaxed">Você está no plano <b>Pro Mensal</b>.<br/>Próxima renovação em 12 de Outubro.</p>
-                               <Button variant="link" size="sm" className="text-primary text-[11px] h-auto p-0 mt-2">Ver faturas</Button>
+                               <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                 {isGuest 
+                                   ? "Entre com uma conta oficial para ter acesso total ao sistema." 
+                                   : "Sua conta está ativa e com todas as permissões concedidas."}
+                               </p>
                             </div>
                          </CardContent>
                       </Card>
                     </div>
-
-                    <Card className="border-border/40 shadow-sm border-destructive/20 bg-destructive/5">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base text-destructive flex items-center gap-2">
-                           <Shield className="w-4 h-4" />
-                           Zona de Perigo
-                        </CardTitle>
-                        <CardDescription>Ações irreversíveis que afetam permanentemente sua conta e dados.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button variant="destructive" size="sm" className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-all border border-destructive/20">Excluir minha conta</Button>
-                      </CardContent>
-                    </Card>
                   </>
                 )}
 
@@ -338,150 +339,37 @@ export default function SettingsPage() {
                 )}
 
                 {activeCategory === 'appearance' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="border-border/40 shadow-sm">
-                      <CardHeader>
-                        <CardTitle className="text-base">Tema do Aplicativo</CardTitle>
-                        <CardDescription>Escolha entre os temas claro, escuro ou seguir o sistema.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="grid grid-cols-3 gap-3">
-                        <Button 
-                          variant={theme === 'light' ? 'default' : 'outline'} 
-                          className="flex flex-col gap-2 h-auto py-4"
-                          onClick={() => setTheme('light')}
-                        >
-                          <Sun className="w-5 h-5" />
-                          <span className="text-xs">Claro</span>
-                        </Button>
-                        <Button 
-                          variant={theme === 'dark' ? 'default' : 'outline'} 
-                          className="flex flex-col gap-2 h-auto py-4"
-                          onClick={() => setTheme('dark')}
-                        >
-                          <Moon className="w-5 h-5" />
-                          <span className="text-xs">Escuro</span>
-                        </Button>
-                        <Button 
-                          variant={theme === 'system' ? 'default' : 'outline'} 
-                          className="flex flex-col gap-2 h-auto py-4"
-                          onClick={() => setTheme('system')}
-                        >
-                          <Laptop className="w-5 h-5" />
-                          <span className="text-xs">Sistema</span>
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-border/40 shadow-sm">
-                      <CardHeader>
-                        <CardTitle className="text-base">Layout e Densidade</CardTitle>
-                        <CardDescription>Ajuste o espaçamento e visualização das tabelas.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                         <div className="flex items-center justify-between">
-                            <Label htmlFor="dense-mode">Modo Compacto</Label>
-                            <Switch id="dense-mode" onCheckedChange={() => setHasUnsavedChanges(true)} />
-                         </div>
-                         <div className="flex items-center justify-between">
-                            <Label htmlFor="animations">Animações de Transição</Label>
-                            <Switch id="animations" defaultChecked onCheckedChange={() => setHasUnsavedChanges(true)} />
-                         </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {activeCategory === 'notifications' && (
                   <Card className="border-border/40 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-base">Notificações por Email</CardTitle>
-                      <CardDescription>Escolha quais alertas você deseja receber no seu email.</CardDescription>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Palette className="w-4 h-4" /> Temas e Cores
+                      </CardTitle>
+                      <CardDescription>Personalize o visual para seu conforto.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                       <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1">
-                             <Label className="text-sm font-semibold">Resumo Semanal</Label>
-                             <p className="text-xs text-muted-foreground">Receba um relatório consolidado da movimentação de estoque toda segunda-feira.</p>
-                          </div>
-                          <Switch defaultChecked onCheckedChange={() => setHasUnsavedChanges(true)} />
-                       </div>
-                       <Separator />
-                       <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1">
-                             <Label className="text-sm font-semibold">Alertas de Estoque Baixo</Label>
-                             <p className="text-xs text-muted-foreground">Notificar quando um item atingir o estoque mínimo configurado.</p>
-                          </div>
-                          <Switch defaultChecked onCheckedChange={() => setHasUnsavedChanges(true)} />
-                       </div>
+                      <div className="space-y-3">
+                        <Label className="text-xs font-bold uppercase tracking-wider opacity-60">Modo de Exibição</Label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { id: 'light', label: 'Claro', icon: Sun },
+                            { id: 'dark', label: 'Escuro', icon: Moon },
+                            { id: 'system', label: 'Sistema', icon: Laptop },
+                          ].map(t => (
+                            <button
+                              key={t.id}
+                              onClick={() => setTheme(t.id)}
+                              className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                                theme === t.id ? 'bg-primary/10 border-primary text-primary' : 'bg-muted/20 border-border/50 text-muted-foreground hover:bg-muted/40'
+                              }`}
+                            >
+                              <t.icon className="w-5 h-5" />
+                              <span className="text-[10px] font-bold uppercase tracking-tight">{t.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
-                )}
-
-                {activeCategory === 'security' && (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className="border-border/40 shadow-sm">
-                        <CardHeader>
-                          <CardTitle className="text-base">Alterar Senha</CardTitle>
-                          <CardDescription>Recomendamos uma senha forte com pelo menos 12 caracteres.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2">
-                             <Label htmlFor="current-password">Senha Atual</Label>
-                             <Input id="current-password" type="password" />
-                          </div>
-                          <div className="space-y-2">
-                             <Label htmlFor="new-password">Nova Senha</Label>
-                             <Input id="new-password" type="password" />
-                          </div>
-                          <div className="space-y-2">
-                             <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-                             <Input id="confirm-password" type="password" />
-                          </div>
-                          <Button size="sm" className="w-full">Atualizar Senha</Button>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-border/40 shadow-sm">
-                        <CardHeader>
-                          <CardTitle className="text-base">Autenticação de Dois Fatores (2FA)</CardTitle>
-                          <CardDescription>Adicione uma camada extra de segurança à sua conta.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                              <div className="flex items-center gap-3">
-                                 <div className="p-2 rounded-md bg-primary/10">
-                                    <Shield className="w-4 h-4 text-primary" />
-                                 </div>
-                                 <div className="text-xs">
-                                    <p className="font-bold">App de Autenticação</p>
-                                    <p className="text-muted-foreground">Google Authenticator, Authy, etc.</p>
-                                 </div>
-                              </div>
-                              <Switch />
-                           </div>
-                           <p className="text-[10px] text-muted-foreground italic">* O 2FA via SMS está disponível apenas para planos Enterprise.</p>
-                        </CardContent>
-                      </Card>
-                   </div>
-                )}
-
-                {/* Categories with placeholder content */}
-                {['preferences', 'advanced', 'users'].includes(activeCategory) && (
-                  <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-muted/20 rounded-2xl border border-dashed border-border/60">
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                       {categories.find(c => c.id === activeCategory)?.icon && (
-                         (() => {
-                           const Icon = categories.find(c => c.id === activeCategory)!.icon;
-                           return <Icon className="w-8 h-8 text-muted-foreground" />;
-                         })()
-                       )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Módulo em Desenvolvimento</h3>
-                      <p className="text-sm text-muted-foreground max-w-xs">Esta seção de configurações será habilitada na próxima atualização do sistema.</p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => setActiveCategory('profile')}>Voltar para Perfil</Button>
-                  </div>
                 )}
 
               </div>
