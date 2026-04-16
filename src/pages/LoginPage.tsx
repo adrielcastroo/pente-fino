@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -26,34 +25,50 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            display_name: email.split('@')[0],
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name: email.split('@')[0],
+            }
           }
+        });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Cadastro realizado! Verifique seu e-mail ou faça login.');
+          setIsSignUp(false);
         }
-      });
-      if (error) {
-        toast.error(error.message);
       } else {
-        toast.success('Cadastro realizado! Verifique seu e-mail ou faça login.');
-        setIsSignUp(false);
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Login realizado com sucesso!');
+        }
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success('Login realizado com sucesso!');
-      }
+    } catch (error: any) {
+      toast.error('Ocorreu um erro inesperado. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-...
 
+  const handleGuestLogin = () => {
+    if (!showGuestInput) {
+      setShowGuestInput(true);
+      return;
+    }
+    if (!guestName.trim()) {
+      toast.error('Por favor, insira seu nome para entrar como visitante.');
+      return;
+    }
+    loginAsGuest(guestName);
+    toast.success('Entrou como visitante!');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -71,11 +86,13 @@ export default function LoginPage() {
               <span className="text-2xl font-black text-primary italic">PF</span>
             </div>
             <CardTitle className="text-2xl font-bold tracking-tight">Sistema Pente Fino</CardTitle>
-            <CardDescription>Faça login para gerenciar sua conferência</CardDescription>
+            <CardDescription>
+              {isSignUp ? 'Crie sua conta para começar' : 'Faça login para gerenciar sua conferência'}
+            </CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <form onSubmit={handleEmailLogin} className="space-y-3">
+            <form onSubmit={handleAuth} className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
                 <Input 
@@ -99,9 +116,41 @@ export default function LoginPage() {
                   required 
                 />
               </div>
+
+              {!isSignUp && (
+                <div className="flex items-center space-x-2 py-1">
+                  <Checkbox 
+                    id="remember" 
+                    checked={rememberMe} 
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <label
+                    htmlFor="remember"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Lembrar-me e entrar automaticamente
+                  </label>
+                </div>
+              )}
+
               <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-                Entrar com Email
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : isSignUp ? (
+                  <UserPlus className="mr-2 h-4 w-4" />
+                ) : (
+                  <Mail className="mr-2 h-4 w-4" />
+                )}
+                {isSignUp ? 'Criar Conta' : 'Entrar com Email'}
+              </Button>
+
+              <Button 
+                type="button" 
+                variant="link" 
+                className="w-full text-xs text-muted-foreground hover:text-primary"
+                onClick={() => setIsSignUp(!isSignUp)}
+              >
+                {isSignUp ? 'Já tem uma conta? Faça login' : 'Não tem uma conta? Cadastre-se'}
               </Button>
             </form>
 
