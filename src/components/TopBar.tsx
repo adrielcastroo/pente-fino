@@ -3,16 +3,19 @@ import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
-import { Download, User, Archive, CheckCircle2 } from 'lucide-react';
+import { Download, User, Archive, CheckCircle2, LogOut } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/use-auth';
+
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
+  const { user, isGuest, signOut, profile } = useAuth();
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     processo: s.processo,
@@ -22,6 +25,7 @@ const TopBar = memo(function TopBar() {
     archiveAndClear: s.archiveAndClear,
     isArchiving: s.isArchiving,
   })));
+
   
   const exportExcel = async () => {
     if (isArchiving) return;
@@ -100,22 +104,36 @@ const TopBar = memo(function TopBar() {
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
-          <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
-            <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
-            <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
-              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          {isGuest && (
+            <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
+              <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
+              <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </div>
+              <input
+                id="conferente-input"
+                className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[10px] xs:text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                value={conferente}
+                onChange={e => setConferente(e.target.value)}
+                placeholder={isMobile ? "Conf..." : "Conferente..."}
+                autoComplete="name"
+                required
+                aria-required="true"
+              />
             </div>
-            <input
-              id="conferente-input"
-              className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[10px] xs:text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
-              value={conferente}
-              onChange={e => setConferente(e.target.value)}
-              placeholder={isMobile ? "Conf..." : "Conferente..."}
-              autoComplete="name"
-              required
-              aria-required="true"
-            />
-          </div>
+          )}
+
+          {!isGuest && user && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-xl border border-primary/10">
+              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <span className="text-xs font-bold text-foreground truncate max-w-[100px]">
+                {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
+              </span>
+            </div>
+          )}
+
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 

@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
 import ImportDialog from '@/components/estoque/ImportDialog';
+import { useAuth } from '@/hooks/use-auth';
+
 
 interface Posicao {
   id: string;
@@ -56,7 +58,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
+  const { isGuest } = useAuth();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
+
   const setFormData = useAppStore(s => s.setFormData);
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
@@ -509,28 +513,32 @@ export default function EstoquePage() {
                           </Button>
                         );
                       })}
-                      <Button 
-                        onClick={() => handleStatusChange(detailPos, 'saida')} 
-                        variant="outline"
-                        className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-border/20 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-500 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0"
-                      >
-                        <LogOut className="w-3.5 h-3.5 mr-2" />
-                        Dar Saída
-                      </Button>
+                      {!isGuest && (
+                        <Button 
+                          onClick={() => handleStatusChange(detailPos, 'saida')} 
+                          variant="outline"
+                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-border/20 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-500 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0"
+                        >
+                          <LogOut className="w-3.5 h-3.5 mr-2" />
+                          Dar Saída
+                        </Button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Danger Zone */}
-                  <div className="pt-3 border-t border-border/15">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => handleDelete(detailPos)} 
-                      className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-2" />
-                      Excluir Item
-                    </Button>
-                  </div>
+                  {!isGuest && (
+                    <div className="pt-3 border-t border-border/15">
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleDelete(detailPos)} 
+                        className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-2" />
+                        Excluir Item
+                      </Button>
+                    </div>
+                  )}
+
                 </div>
               </>
             );
