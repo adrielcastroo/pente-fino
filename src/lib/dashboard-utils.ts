@@ -12,11 +12,12 @@ export function computeStats(history: Conference[]) {
   const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  // Use a single pass over the history
+  // Faster loop with local references
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || 'Desconhecido';
     
+    // Reuse date formatting results
     let dateStr = dateCache.get(conference.id);
     if (!dateStr) {
       try {
@@ -41,29 +42,22 @@ export function computeStats(history: Conference[]) {
       const r = regs[j];
       totalRegistros++;
       
-      if (r.nf) confSet.add(`NF:${r.nf}`);
-      if (r.processo) confSet.add(`PROC:${r.processo}`);
+      const nf = r.nf;
+      const proc = r.processo;
+      if (nf) confSet.add(`NF:${nf}`);
+      if (proc) confSet.add(`PROC:${proc}`);
       
       const modo = r.modoOrigem || 'manual';
       let cat = 'Tecido';
       let sub = 'Coulisse';
 
+      // Use object map for faster lookups than switch if possible, but switch is okay here
       switch (modo) {
-        case 'madeira':
-          cat = 'Madeira';
-          sub = 'Madeira';
-          break;
+        case 'madeira': cat = 'Madeira'; sub = 'Madeira'; break;
         case 'motor':
-        case 'controle':
-          cat = 'Motor/Controle';
-          sub = 'Motor/Controle';
-          break;
-        case 'openrouter':
-          sub = 'IA';
-          break;
-        case 'diversos':
-          sub = 'Diversos';
-          break;
+        case 'controle': cat = 'Motor/Controle'; sub = 'Motor/Controle'; break;
+        case 'openrouter': sub = 'IA'; break;
+        case 'diversos': sub = 'Diversos'; break;
       }
       
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
@@ -74,18 +68,29 @@ export function computeStats(history: Conference[]) {
     }
   }
 
+  // Pre-allocate arrays with known sizes for performance
+  const topConferentes = Array.from(confMap, ([name, set]) => ({ name, count: set.size }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  const categorias = Array.from(catMap, ([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  const ferramentas = Array.from(subMap, ([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const tipos = Array.from(tipoMap, ([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  const timeline = Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7);
+
   return {
-    topConferentes: Array.from(confMap, ([name, set]) => ({ name, count: set.size }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5),
-    categorias: Array.from(catMap, ([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value),
-    ferramentas: Array.from(subMap, ([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count),
-    tipos: Array.from(tipoMap, ([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6),
-    timeline: Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7),
+    topConferentes,
+    categorias,
+    ferramentas,
+    tipos,
+    timeline,
     totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,

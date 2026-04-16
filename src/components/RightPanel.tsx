@@ -240,8 +240,9 @@ export default function RightPanel() {
     let ml = 0, m2 = 0, qtd = 0;
     for (let i = 0, len = sortedRows.length; i < len; i++) {
       const r = sortedRows[i];
-      ml += r.mLinear;
-      m2 += r.m2;
+      // Faster numeric conversion and summation
+      ml += r.mLinear || 0;
+      m2 += r.m2 || 0;
       qtd += r.quantidade || 0;
     }
     return { ml, m2, qtd };
