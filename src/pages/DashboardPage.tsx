@@ -24,10 +24,6 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-border/40">
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
-            <Zap className="w-3.5 h-3.5" />
-            <span>Painel de Controle</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
             Dashboard
           </h1>
