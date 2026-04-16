@@ -300,7 +300,12 @@ export const useAppStore = create<AppState>()(
         currentMode: state.currentMode,
         processo: state.processo,
         conferente: state.conferente,
-        // searchQuery: state.searchQuery, // Removed from persistence to avoid frequent localStorage writes on keystroke
+        searchQuery: '', // Never persist search query to avoid frequent localStorage writes
+        formData: {
+          ...state.formData,
+          estoqueSearch: '', // Don't persist temporary searches
+          estoqueHighlightStatus: null
+        },
         sortBy: state.sortBy,
         sessionStartedAt: state.sessionStartedAt,
         lockProcesso: state.lockProcesso,
@@ -309,7 +314,7 @@ export const useAppStore = create<AppState>()(
         lockedNf: state.lockedNf,
         lockEndereco: state.lockEndereco,
         lockedEndereco: state.lockedEndereco,
-        formData: state.formData,
+        
       }),
     }
   )

@@ -385,7 +385,8 @@ export default function HistoryPanel() {
     clearHistory: s.clearHistory,
     loadHistory: s.loadHistory,
   })));
-  const [search, setSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { isLow } = usePerformance();
 
@@ -393,15 +394,41 @@ export default function HistoryPanel() {
     loadHistory();
   }, [loadHistory]);
 
+  // Debounce search to improve performance with large history
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(localSearch);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
+
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
+    const q = debouncedSearch.toLowerCase().trim();
     if (!q) return history;
-    return history.filter(c => 
-      c.processo.toLowerCase().includes(q) || 
-      c.conferente.toLowerCase().includes(q) ||
-      c.registros.some(r => r.item.toLowerCase().includes(q) || (r.nf || '').toLowerCase().includes(q))
-    );
-  }, [history, search]);
+    
+    // Performance optimized filter
+    const result: Conference[] = [];
+    for (let i = 0, len = history.length; i < len; i++) {
+      const c = history[i];
+      if (
+        (c.processo || '').toLowerCase().includes(q) || 
+        (c.conferente || '').toLowerCase().includes(q)
+      ) {
+        result.push(c);
+        continue;
+      }
+      
+      const regs = c.registros;
+      for (let j = 0, rLen = regs.length; j < rLen; j++) {
+        const r = regs[j];
+        if ((r.item || '').toLowerCase().includes(q) || (r.nf || '').toLowerCase().includes(q)) {
+          result.push(c);
+          break;
+        }
+      }
+    }
+    return result;
+  }, [history, debouncedSearch]);
 
   const handleClear = async () => {
     try {
@@ -440,9 +467,9 @@ export default function HistoryPanel() {
              <div className="relative group flex-1 sm:w-64 lg:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
                 <Input 
-                  value={search} 
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Buscar no histórico..." 
+                  value={localSearch} 
+                  onChange={e => setLocalSearch(e.target.value)}
+                  placeholder="Buscar no histórico..."
                   className="pl-10 h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold"
                 />
              </div>
@@ -486,7 +513,7 @@ export default function HistoryPanel() {
               <FolderOpen className="w-12 h-12 text-muted-foreground/20" />
             </div>
             <h3 className="text-xl font-black text-foreground mb-2">Histórico Vazio</h3>
-            <p className="text-muted-foreground text-sm font-medium max-w-xs">Nenhuma conferência encontrada {search ? 'para sua busca' : 'no banco de dados'}.</p>
+            <p className="text-muted-foreground text-sm font-medium max-w-xs">Nenhuma conferência encontrada {localSearch ? 'para sua busca' : 'no banco de dados'}.</p>
           </div>
         )}
       </div>
