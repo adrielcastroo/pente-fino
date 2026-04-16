@@ -6,19 +6,27 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { Mail, ShieldCheck, Moon, BellOff } from "lucide-react";
+import { useState } from "react";
+import { Mail, Moon } from "lucide-react";
+
+type ProfileFields = {
+  email_notifications?: boolean;
+  opt_out_reports?: boolean;
+  display_mode?: string;
+  ai_customization_rules?: string;
+};
 
 const Profile = () => {
   const { user, profile, setProfile } = useAuthStore();
   const [loading, setLoading] = useState(false);
 
-  const updateSetting = async (field: string, value: any) => {
+  const updateSetting = async (field: keyof ProfileFields, value: any) => {
+    if (!user?.id) return;
     setLoading(true);
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ [field]: value })
+        .update({ [field]: value } as any)
         .eq("id", user.id);
       
       if (error) throw error;
@@ -96,7 +104,6 @@ const Profile = () => {
               <Label>Modo Escuro</Label>
               <p className="text-sm text-muted-foreground">Alternar entre o tema claro e escuro.</p>
             </div>
-            {/* The theme is managed by next-themes via button toggle elsewhere or here */}
             <Switch checked={false} disabled />
           </div>
         </CardContent>

@@ -33,12 +33,22 @@ const History = () => {
     fetchLogs();
   }, []);
 
-  const getBadge = (type: string) => {
-    switch (type) {
-      case 'entry': return <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200"><ArrowDownLeft className="h-3 w-3 mr-1"/> Entrada</Badge>;
-      case 'exit': return <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200"><ArrowUpRight className="h-3 w-3 mr-1"/> Saída</Badge>;
-      default: return <Badge variant="outline">{type}</Badge>;
+  const renderBadge = (type: string) => {
+    if (type === 'entry') {
+      return (
+        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+          <ArrowDownLeft className="h-3 w-3 mr-1"/> Entrada
+        </Badge>
+      );
     }
+    if (type === 'exit') {
+      return (
+        <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/20">
+          <ArrowUpRight className="h-3 w-3 mr-1"/> Saída
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">{type}</Badge>;
   };
 
   return (
@@ -67,7 +77,7 @@ const History = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.length === 0 ? (
+              {logs.length === 0 && !loading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                     Nenhum registro encontrado.
@@ -85,7 +95,7 @@ const History = () => {
                         {log.conferente_name}
                       </div>
                     </TableCell>
-                    <TableCell>{getBadge(log.type)}</TableCell>
+                    <TableCell>{renderBadge(log.type)}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{log.description}</TableCell>
                     <TableCell className="text-right font-medium">{log.quantity}</TableCell>
                   </TableRow>

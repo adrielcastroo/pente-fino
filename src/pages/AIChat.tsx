@@ -23,17 +23,25 @@ const AIChat = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Load chat history
   useEffect(() => {
     const fetchHistory = async () => {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("ai_chat_history")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: true });
-      if (data) setMessages(data);
+      
+      if (data) {
+        const typedData = data.map(m => ({
+          ...m,
+          role: m.role as 'user' | 'assistant'
+        }));
+        setMessages(typedData);
+      }
     };
     fetchHistory();
-  }, [user.id]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -43,14 +51,13 @@ const AIChat = () => {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !user?.id) return;
 
     const userMessage = input.trim();
     setInput("");
     setLoading(true);
 
     try {
-      // Save user message
       const { data: userData, error: userError } = await supabase
         .from("ai_chat_history")
         .insert({ user_id: user.id, message: userMessage, role: "user" })
@@ -58,10 +65,8 @@ const AIChat = () => {
         .single();
       
       if (userError) throw userError;
-      setMessages((prev) => [...prev, userData]);
+      setMessages((prev) => [...prev, { ...userData, role: userData.role as 'user' | 'assistant' }]);
 
-      // Simulate AI processing and saving rule
-      // (In a real app, this would call an Edge Function with OpenAI/Anthropic)
       setTimeout(async () => {
         const aiResponse = `Entendido! Configurei sua regra: "${userMessage}". Esta preferência foi salva nas suas Configurações Pessoais.`;
         
@@ -72,9 +77,8 @@ const AIChat = () => {
           .single();
         
         if (aiError) throw aiError;
-        setMessages((prev) => [...prev, aiData]);
+        setMessages((prev) => [...prev, { ...aiData, role: aiData.role as 'user' | 'assistant' }]);
 
-        // Update profile rules
         const newRules = profile?.ai_customization_rules 
           ? `${profile.ai_customization_rules}; ${userMessage}` 
           : userMessage;
