@@ -54,6 +54,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
 };
 
+// Constant: total physical slots across all TECs (computed once)
+const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
+
 // Reuse centralized formatter
 import { formatDateBR } from '@/lib/app-utils';
 
