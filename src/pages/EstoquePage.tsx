@@ -196,7 +196,7 @@ export default function EstoquePage() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
-          <p className="text-muted-foreground text-sm font-medium">Controle de posições e níveis das estruturas TEC.</p>
+          
         </div>
         <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
           <Upload className="w-4 h-4" />
