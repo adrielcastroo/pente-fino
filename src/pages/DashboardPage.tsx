@@ -33,10 +33,6 @@ export default function DashboardPage() {
         </div>
         
         <div className="flex items-center gap-3 shrink-0">
-          <Badge variant="outline" className="px-3 py-1.5 rounded-lg border-border/50 text-muted-foreground text-[10px] font-semibold flex gap-2 whitespace-nowrap">
-            <Activity className="w-3 h-3 text-primary" />
-            <span>Ativo</span>
-          </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
