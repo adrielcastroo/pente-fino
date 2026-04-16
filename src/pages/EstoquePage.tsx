@@ -277,13 +277,23 @@ export default function EstoquePage() {
                 </div>
                 {config.cols.map(col => {
                   const items = cellMap[`${col}-${nivel}`] || [];
+                  const filteredItems = selectedStat && selectedStat !== 'total' && selectedStat !== 'livre' 
+                    ? items.filter(i => i.status === selectedStat)
+                    : items;
+                  
                   const fillPercent = Math.round((items.length / 30) * 100);
                   const hasItems = items.length > 0;
+                  const matchesFilter = !selectedStat || selectedStat === 'total' || 
+                                      (selectedStat === 'livre' && items.length < 30) ||
+                                      items.some(i => i.status === selectedStat);
+                  
                   return (
                     <div 
                       key={col} 
                       onClick={() => setSelectedCell({ col, nivel })} 
                       className={`flex-1 min-w-0 h-12 sm:h-16 md:h-[4.5rem] rounded-lg sm:rounded-xl cursor-pointer p-1.5 sm:p-2 md:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
+                        !matchesFilter ? 'opacity-30' : ''
+                      } ${
                         hasItems
                           ? 'bg-accent/60 dark:bg-accent/20 border-border/50 dark:border-border/40 hover:border-primary/60 hover:bg-primary/10'
                           : 'bg-muted/30 dark:bg-muted/10 border-border/40 dark:border-border/25 hover:border-primary/40 hover:bg-primary/5'
