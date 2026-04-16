@@ -76,26 +76,22 @@ export default function EstoquePage() {
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
 
+  const loadStats = async () => {
+    try {
+      const { data, error } = await supabase.from('estoque_posicoes').select('status');
+      if (error) throw error;
+      setAllPosicoes((data as any[]) || []);
+    } catch (e) {
+      console.error('Erro ao carregar estatísticas:', e);
+    }
+  };
+
   const loadPosicoes = async () => {
     setLoading(true);
     try {
-      // 1. Get global stats efficiently (just counts)
-      const { data: statsData, error: statsError } = await supabase
-        .from('estoque_posicoes')
-        .select('status');
-      
-      if (statsError) throw statsError;
-      
-      // 2. Fetch full records ONLY for the active structure to save RAM and bandwidth
-      const { data: activeData, error: activeError } = await supabase
-        .from('estoque_posicoes')
-        .select('*')
-        .eq('estrutura', activeTec);
-        
-      if (activeError) throw activeError;
-      
-      setAllPosicoes(statsData as any[]); // We store only statuses for stats
-      setPosicoesForActiveTec(activeData as Posicao[]);
+      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
+      if (error) throw error;
+      setPosicoesForActiveTec(data as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
       toast.error('Erro ao carregar dados do estoque');
@@ -105,6 +101,7 @@ export default function EstoquePage() {
 
   const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
 
+  useEffect(() => { loadStats(); }, []);
   useEffect(() => { loadPosicoes(); }, [activeTec]);
 
   const posicoes = posicoesForActiveTec;
@@ -221,8 +218,10 @@ export default function EstoquePage() {
         ].map(s => (
           <Card 
             key={s.label} 
-            onClick={() => setSelectedStat(s.key)}
-            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md`}
+            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
+              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+            }`}
           >
             <CardContent className="p-4 text-center space-y-1">
               <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
