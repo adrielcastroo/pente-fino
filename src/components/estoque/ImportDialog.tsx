@@ -36,6 +36,7 @@ const COLUMN_MAP: Record<string, string> = {
   'lote': 'lote', 'lot': 'lote', 'batch': 'lote',
   'endereço': 'endereco', 'endereco': 'endereco', 'address': 'endereco', 'end': 'endereco',
   'lote sistema': 'lote_sistema', 'lote_sistema': 'lote_sistema', 'lote final': 'lote_sistema', 'lotefinal': 'lote_sistema',
+  'proc': 'proc', 'processo': 'proc', 'projeto': 'proc',
 };
 
 function normalizeHeader(h: string): string | null {
@@ -70,16 +71,17 @@ function parseFileRows(rawRows: any[][], headers: string[]): ImportRow[] {
     const lote = get('lote');
     const endereco = get('endereco').toUpperCase();
     const loteSistema = get('lote_sistema');
+    const proc = get('proc');
 
     let error: string | undefined;
     if (!item) error = 'Item obrigatório';
-    else if (!endereco && !loteSistema) error = 'Endereço ou Lote Final obrigatório';
+    else if (!endereco) error = 'Endereço obrigatório (ex: TEC01.A.N03)';
     else if (endereco && !ENDERECO_REGEX.test(endereco)) error = `Endereço inválido: ${endereco}`;
 
     return {
-      item, m2, largura, m_linear: mLinear, lote, endereco, lote_sistema: loteSistema,
-      valid: !error, error,
-    };
+      item, m2, largura, m_linear: mLinear, lote, endereco, lote_sistema: loteSistema || endereco,
+      valid: !error, error, proc,
+    } as any;
   }).filter(r => r.item || r.lote); // filter truly empty rows
 }
 
@@ -234,8 +236,8 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
         const occupied = occupiedMap.get(cellKey)!;
 
         let pos = 1;
-        while (pos <= 100 && occupied.has(pos)) pos++;
-        if (pos > 100) {
+        while (pos <= 30 && occupied.has(pos)) pos++;
+        if (pos > 30) {
           skipped.push(row.item);
           continue;
         }
@@ -245,7 +247,7 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
           estrutura, coluna, nivel, posicao: pos,
           status: 'ocupado',
           item: row.item,
-          proc: '',
+          proc: (row as any).proc || '',
           m2: row.m2,
           largura: row.largura,
           m_linear: row.m_linear,

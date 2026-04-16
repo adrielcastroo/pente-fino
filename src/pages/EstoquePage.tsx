@@ -76,26 +76,22 @@ export default function EstoquePage() {
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
 
+  const loadStats = async () => {
+    try {
+      const { data, error } = await supabase.from('estoque_posicoes').select('status');
+      if (error) throw error;
+      setAllPosicoes((data as any[]) || []);
+    } catch (e) {
+      console.error('Erro ao carregar estatísticas:', e);
+    }
+  };
+
   const loadPosicoes = async () => {
     setLoading(true);
     try {
-      // 1. Get global stats efficiently (just counts)
-      const { data: statsData, error: statsError } = await supabase
-        .from('estoque_posicoes')
-        .select('status');
-      
-      if (statsError) throw statsError;
-      
-      // 2. Fetch full records ONLY for the active structure to save RAM and bandwidth
-      const { data: activeData, error: activeError } = await supabase
-        .from('estoque_posicoes')
-        .select('*')
-        .eq('estrutura', activeTec);
-        
-      if (activeError) throw activeError;
-      
-      setAllPosicoes(statsData as any[]); // We store only statuses for stats
-      setPosicoesForActiveTec(activeData as Posicao[]);
+      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
+      if (error) throw error;
+      setPosicoesForActiveTec(data as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
       toast.error('Erro ao carregar dados do estoque');
@@ -105,10 +101,13 @@ export default function EstoquePage() {
 
   const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
 
+  useEffect(() => { loadStats(); }, []);
   useEffect(() => { loadPosicoes(); }, [activeTec]);
 
   const posicoes = posicoesForActiveTec;
-  const totalSlots = 3120; // Pre-computed sum across TEC_CONFIG
+  const totalSlots = useMemo(() => {
+    return Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
+  }, []);
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
@@ -121,7 +120,7 @@ export default function EstoquePage() {
       else if (s === 'saida') exited++;
     }
     
-    const free = totalSlots - occupied - blocked - reserved - exited;
+    const free = totalSlots - occupied - blocked - reserved; // Exited items are removed from DB, so they don't count against capacity
     return { totalSlots, occupied, blocked, reserved, exited, free };
   }, [allPosicoes, totalSlots]);
 
@@ -149,6 +148,7 @@ export default function EstoquePage() {
       toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`, { id: 'status-update' });
       setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
       loadPosicoes();
+      loadStats();
     }
   };
 
@@ -167,6 +167,7 @@ export default function EstoquePage() {
     
     setDetailPos(null);
     loadPosicoes();
+    loadStats();
     toast.success('Saída realizada com sucesso');
   };
 
@@ -180,6 +181,7 @@ export default function EstoquePage() {
     else {
       setDetailPos(null);
       loadPosicoes();
+      loadStats();
       toast.success('Item excluído');
     }
   };
@@ -219,8 +221,10 @@ export default function EstoquePage() {
         ].map(s => (
           <Card 
             key={s.label} 
-            onClick={() => setSelectedStat(s.key)}
-            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md`}
+            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
+              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+            }`}
           >
             <CardContent className="p-4 text-center space-y-1">
               <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
@@ -275,13 +279,23 @@ export default function EstoquePage() {
                 </div>
                 {config.cols.map(col => {
                   const items = cellMap[`${col}-${nivel}`] || [];
+                  const filteredItems = selectedStat && selectedStat !== 'total' && selectedStat !== 'livre' 
+                    ? items.filter(i => i.status === selectedStat)
+                    : items;
+                  
                   const fillPercent = Math.round((items.length / 30) * 100);
                   const hasItems = items.length > 0;
+                  const matchesFilter = !selectedStat || selectedStat === 'total' || 
+                                      (selectedStat === 'livre' && items.length < 30) ||
+                                      items.some(i => i.status === selectedStat);
+                  
                   return (
                     <div 
                       key={col} 
                       onClick={() => setSelectedCell({ col, nivel })} 
                       className={`flex-1 min-w-0 h-12 sm:h-16 md:h-[4.5rem] rounded-lg sm:rounded-xl cursor-pointer p-1.5 sm:p-2 md:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
+                        !matchesFilter ? 'opacity-30' : ''
+                      } ${
                         hasItems
                           ? 'bg-accent/60 dark:bg-accent/20 border-border/50 dark:border-border/40 hover:border-primary/60 hover:bg-primary/10'
                           : 'bg-muted/30 dark:bg-muted/10 border-border/40 dark:border-border/25 hover:border-primary/40 hover:bg-primary/5'
