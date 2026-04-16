@@ -543,7 +543,6 @@ export default function RightPanel() {
               )}
             </table>
           )}
-                    isGuest={isGuest}
 
           {sortedRows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-center px-6">
