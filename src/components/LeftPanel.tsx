@@ -576,8 +576,8 @@ const LeftPanel = memo(function LeftPanel() {
   }, [madeiraTipo, isMadeira]);
 
   return (
-    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
+      <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar">
         
         {/* Mode Toggle */}
         {!isMadeira && (
@@ -985,12 +985,12 @@ const LeftPanel = memo(function LeftPanel() {
         </div>
 
         {/* Actions */}
-        <div className="space-y-2 pb-4">
+        <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30">
           <Button
             onClick={handleAdd}
-            className="w-full h-12 rounded-xl font-semibold text-sm"
+            className="w-full h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-5 h-5 mr-2" />
             Adicionar Registro
           </Button>
 
@@ -998,7 +998,7 @@ const LeftPanel = memo(function LeftPanel() {
             <Button
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className="w-full h-10 rounded-xl text-xs font-medium"
+              className="w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40"
             >
               {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
               {showPreview ? 'Ocultar' : `Ver Tabela (${registros.length})`}

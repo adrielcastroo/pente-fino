@@ -9,8 +9,10 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TopBar = memo(function TopBar() {
+  const isMobile = useIsMobile();
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     processo: s.processo,
@@ -98,17 +100,17 @@ const TopBar = memo(function TopBar() {
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
-          <div className="relative group w-full max-w-[140px] xs:max-w-[200px] sm:max-w-[280px] lg:max-w-[340px]">
+          <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
             <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
             <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
               <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
             <input
               id="conferente-input"
-              className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+              className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[10px] xs:text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
               value={conferente}
               onChange={e => setConferente(e.target.value)}
-              placeholder="Conferente..."
+              placeholder={isMobile ? "Conf..." : "Conferente..."}
               autoComplete="name"
               required
               aria-required="true"
