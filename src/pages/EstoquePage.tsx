@@ -104,11 +104,11 @@ export default function EstoquePage() {
   useEffect(() => { loadPosicoes(); }, [activeTec]);
 
   const posicoes = posicoesForActiveTec;
+  const totalSlots = 3120; // Pre-computed sum across TEC_CONFIG
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
     
-    // allPosicoes now contains only the 'status' property to save RAM/Bandwidth
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
       const s = (allPosicoes[i] as any).status;
       if (s === 'ocupado') occupied++;
