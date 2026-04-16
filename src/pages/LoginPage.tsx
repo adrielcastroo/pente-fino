@@ -99,34 +99,6 @@ export default function LoginPage() {
                 Entrar com Email
               </Button>
             </form>
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="exemplo@empresa.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                  required 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider opacity-70">Senha</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                  required 
-                />
-              </div>
-              <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-                Entrar com Email
-              </Button>
-            </form>
 
             <div className="pt-2">
               <Separator className="bg-border/50 mb-4" />
