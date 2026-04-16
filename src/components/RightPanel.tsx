@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/store/useAppStore';
