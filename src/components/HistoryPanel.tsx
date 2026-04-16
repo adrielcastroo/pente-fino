@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/hooks/use-auth';
+
 
 function EditRegistroDialog({
   open,
@@ -219,7 +221,9 @@ function getSmartCount(conf: Conference): string {
 const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: () => void }) => {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
+  const { isGuest } = useAuth();
   const [confirmDelete, setConfirmDelete] = useState(false);
+
   const { isLow } = usePerformance();
   const totalML = useMemo(() => {
     let sum = 0;
