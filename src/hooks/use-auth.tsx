@@ -50,16 +50,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
+    const { data, error } = await (supabase
+      .from('profiles' as any)
       .select('*')
       .eq('id', userId)
-      .single();
+      .single() as any);
     
     if (!error && data) {
       setProfile(data);
-      setConferente(data.display_name || '');
+      setConferente((data as any).display_name || '');
     }
+
   };
 
   const loginAsGuest = (name?: string) => {
