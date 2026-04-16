@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Chrome, Apple, Mail, UserCircle2, ArrowRight, Loader2 } from 'lucide-react';
-import { lovable } from '@/integrations/lovable';
+import { Mail, UserCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
@@ -28,14 +27,6 @@ export default function LoginPage() {
       toast.error(error.message);
     }
     setLoading(false);
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'apple') => {
-    try {
-      await lovable.auth.signInWithOAuth(provider);
-    } catch (error: any) {
-      toast.error(error.message);
-    }
   };
 
   const handleGuestLogin = () => {
@@ -71,34 +62,6 @@ export default function LoginPage() {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => handleSocialLogin('google')}
-                className="h-11 font-semibold hover:bg-muted/50 transition-all active:scale-95"
-              >
-                <Chrome className="mr-2 h-4 w-4" />
-                Google
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleSocialLogin('apple')}
-                className="h-11 font-semibold hover:bg-muted/50 transition-all active:scale-95"
-              >
-                <Apple className="mr-2 h-4 w-4" />
-                Apple
-              </Button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Ou continue com email</span>
-              </div>
-            </div>
-
             <form onSubmit={handleEmailLogin} className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
