@@ -5,7 +5,7 @@ import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
-import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet } from 'lucide-react';
+import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet, Clock } from 'lucide-react';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,7 @@ function EditRegistroDialog({
 
   const isPVT = form?.tipoTecido === 'PVT';
   const isDiversos = form?.modoOrigem === 'diversos';
+  const isMotor = form?.modoOrigem === 'motor';
 
   const updateField = <K extends keyof Registro>(key: K, value: Registro[K]) => {
     setForm(current => current ? { ...current, [key]: value } : current);
@@ -57,9 +58,12 @@ function EditRegistroDialog({
         mLinear: Number(form.mLinear) || 0,
         largura: Number(form.largura) || 0,
         lote: form.lote || '',
+        nf: form.nf || '',
         endereco: isPVT ? '' : (form.endereco || '').toUpperCase(),
         tipoTecido: form.tipoTecido || '',
         modoOrigem: form.modoOrigem || '',
+        quantidade: form.quantidade,
+        loteSistema: form.loteSistema || '',
       });
       toast.success('Registro histórico atualizado com sucesso.');
       onOpenChange(false);
@@ -79,7 +83,7 @@ function EditRegistroDialog({
              Editar Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-medium mt-1">
-            {form?.tipoTecido ? `${form.tipoTecido} • ` : ''}Ajuste as especificações deste item no histórico.
+            {form?.modoOrigem ? `${form.modoOrigem === 'motor' ? 'Motor' : form.modoOrigem === 'controle' ? 'Controle' : form.tipoTecido || ''} • ` : ''}Ajuste as especificações deste item no histórico.
           </DialogDescription>
         </DialogHeader>
 
@@ -90,14 +94,34 @@ function EditRegistroDialog({
               <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.item} onChange={e => updateField('item', e.target.value)} />
             </div>
 
-            {isDiversos && (
+            {(isDiversos || isMotor) && (
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Nota Fiscal</label>
                 <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
               </div>
             )}
 
-            {!isPVT && (
+            {isMotor && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
+                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">QTD</label>
+                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
+                </div>
+              </div>
+            )}
+
+            {isMotor && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final</label>
+                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
+              </div>
+            )}
+
+            {!isPVT && !isMotor && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
@@ -110,18 +134,20 @@ function EditRegistroDialog({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metro Linear</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
+            {!isMotor && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metro Linear</label>
+                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
+                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
-              </div>
-            </div>
+            )}
 
-            {!isPVT && (
+            {!isPVT && !isMotor && (
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Endereço de Armazenagem</label>
                 <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all uppercase" value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
@@ -218,6 +244,21 @@ function getSmartCount(conf: Conference): string {
   return `${regs.length} rolos`;
 }
 
+function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
+  if (!start || !end) return '—';
+  try {
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    if (isNaN(s) || isNaN(e)) return '—';
+    const diff = Math.abs(e - s);
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(mins / 60);
+    const remainMins = mins % 60;
+    if (hours > 0) return `${hours}h ${remainMins}min`;
+    return `${mins}min`;
+  } catch { return '—'; }
+}
+
 const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: () => void }) => {
   const [open, setOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
@@ -307,6 +348,21 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
           </div>
           <div className="text-[9px] sm:text-xs text-muted-foreground font-bold flex items-center gap-1.5 sm:gap-2.5 mt-1 flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDateBR(conf.date)}</span>
+            
+            {/* Start/End timestamps */}
+            {conf.startedAt && (
+              <span className="flex items-center gap-1 text-emerald-500/80">
+                <Clock className="w-3 h-3 shrink-0" /> {formatTimeBR(conf.startedAt)}
+              </span>
+            )}
+            {conf.finishedAt && (
+              <span className="text-muted-foreground/60">→ {formatTimeBR(conf.finishedAt)}</span>
+            )}
+            {conf.startedAt && conf.finishedAt && (
+              <Badge variant="outline" className="text-[7px] sm:text-[8px] font-black px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">
+                {formatDuration(conf.startedAt, conf.finishedAt)}
+              </Badge>
+            )}
 
             <span className="hidden xs:block h-3 w-[1px] bg-border" />
             <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
@@ -403,7 +459,6 @@ export default function HistoryPanel() {
     loadHistory();
   }, [loadHistory]);
 
-  // Debounce search to improve performance with large history
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(localSearch);
@@ -415,7 +470,6 @@ export default function HistoryPanel() {
     const q = debouncedSearch.toLowerCase().trim();
     if (!q) return history;
     
-    // Performance optimized filter
     const result: Conference[] = [];
     for (let i = 0, len = history.length; i < len; i++) {
       const c = history[i];
