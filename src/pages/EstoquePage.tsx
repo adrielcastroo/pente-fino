@@ -195,10 +195,6 @@ export default function EstoquePage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-[0.2em] text-[10px]">
-            <Layers className="w-3.5 h-3.5" />
-            <span>Gestão de Armazém</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
           <p className="text-muted-foreground text-sm font-medium">Controle de posições e níveis das estruturas TEC.</p>
         </div>

@@ -454,10 +454,6 @@ export default function HistoryPanel() {
       <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-shrink-0">
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-2">
-             <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
-                <FolderOpen className="w-3.5 h-3.5" />
-                <span>Arquivo Digital</span>
-             </div>
              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
                Histórico de <span className="text-primary italic">Conferências</span>
              </h1>
