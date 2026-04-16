@@ -2,7 +2,23 @@ import { Conference } from '@/types';
 
 // Memoized date formatter to avoid recreation
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
+// Bounded LRU-ish cache to avoid unbounded memory growth on long sessions
 const dateCache = new Map<string, string>();
+const DATE_CACHE_MAX = 500;
+
+function getCachedDate(id: string, raw: string): string {
+  const cached = dateCache.get(id);
+  if (cached) return cached;
+  const d = new Date(raw);
+  const value = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
+  if (dateCache.size >= DATE_CACHE_MAX) {
+    // Drop oldest entry (Map preserves insertion order)
+    const firstKey = dateCache.keys().next().value;
+    if (firstKey !== undefined) dateCache.delete(firstKey);
+  }
+  dateCache.set(id, value);
+  return value;
+}
 
 export function computeStats(history: Conference[]) {
   const confMap = new Map<string, Set<string>>();
@@ -22,13 +38,7 @@ export function computeStats(history: Conference[]) {
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || DESC_STR;
-    
-    let dateStr = dateCache.get(conference.id);
-    if (!dateStr) {
-      const d = new Date(conference.date);
-      dateStr = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
-      dateCache.set(conference.id, dateStr);
-    }
+    const dateStr = getCachedDate(conference.id, conference.date);
 
     timelineMap.set(dateStr, (timelineMap.get(dateStr) || 0) + 1);
 

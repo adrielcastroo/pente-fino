@@ -54,6 +54,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
 };
 
+// Constant: total physical slots across all TECs (computed once)
+const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
+
 // Reuse centralized formatter
 import { formatDateBR } from '@/lib/app-utils';
 
@@ -76,17 +79,20 @@ export default function EstoquePage() {
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
 
-  const loadStats = async () => {
+  const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
+
+  const loadStats = useCallback(async () => {
     try {
+      // Only fetch the status column to keep payload tiny
       const { data, error } = await supabase.from('estoque_posicoes').select('status');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
     } catch (e) {
       console.error('Erro ao carregar estatísticas:', e);
     }
-  };
+  }, []);
 
-  const loadPosicoes = async () => {
+  const loadPosicoes = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
@@ -97,17 +103,14 @@ export default function EstoquePage() {
       toast.error('Erro ao carregar dados do estoque');
     }
     setLoading(false);
-  };
+  }, [activeTec]);
 
-  const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
-
-  useEffect(() => { loadStats(); }, []);
-  useEffect(() => { loadPosicoes(); }, [activeTec]);
+  useEffect(() => { loadStats(); }, [loadStats]);
+  useEffect(() => { loadPosicoes(); }, [loadPosicoes]);
 
   const posicoes = posicoesForActiveTec;
-  const totalSlots = useMemo(() => {
-    return Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
-  }, []);
+  // totalSlots is constant — compute once at module scope below
+  const totalSlots = TOTAL_SLOTS;
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;

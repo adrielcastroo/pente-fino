@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/store/useAppStore';
@@ -227,19 +227,22 @@ export default function RightPanel() {
       result = [];
       for (let i = 0, len = registros.length; i < len; i++) {
         const r = registros[i];
-        if (
-          (r.item || '').toLowerCase().includes(q) ||
-          (r.endereco || '').toLowerCase().includes(q) ||
-          (r.lote || '').toLowerCase().includes(q) ||
-          (r.loteSistema || '').toLowerCase().includes(q)
-        ) {
-          result.push(r);
-        }
+        // Lowercase once per field per row (cheaper than 4 lowercases + 4 includes when miss is early)
+        const item = r.item ? r.item.toLowerCase() : '';
+        if (item.includes(q)) { result.push(r); continue; }
+        const end = r.endereco ? r.endereco.toLowerCase() : '';
+        if (end.includes(q)) { result.push(r); continue; }
+        const lote = r.lote ? r.lote.toLowerCase() : '';
+        if (lote.includes(q)) { result.push(r); continue; }
+        const ls = r.loteSistema ? r.loteSistema.toLowerCase() : '';
+        if (ls.includes(q)) { result.push(r); continue; }
       }
     } else {
-      result = registros.slice();
+      result = sortBy && SORT_MAP[sortBy] ? registros.slice() : registros;
     }
     if (sortBy && SORT_MAP[sortBy]) {
+      // Avoid mutating the store's array reference
+      if (result === registros) result = registros.slice();
       result.sort(SORT_MAP[sortBy]);
     }
     return result;
@@ -413,16 +416,16 @@ export default function RightPanel() {
               </thead>
               <tbody>
                 {motorGroups.map((group, gi) => (
-                  <>
+                  <React.Fragment key={`grp-${gi}-${group.cxLabel}-${group.item}`}>
                     {/* Spacer between groups */}
                     {gi > 0 && (
                       <>
-                        <tr key={`spacer1-${gi}`}><td colSpan={3} className="h-4 bg-background"></td></tr>
-                        <tr key={`spacer2-${gi}`}><td colSpan={3} className="h-4 bg-background"></td></tr>
+                        <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
+                        <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
                       </>
                     )}
                     {/* Group header */}
-                    <tr key={`header-${gi}`} className="bg-primary/10">
+                    <tr className="bg-primary/10">
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-foreground">
                         {group.cxLabel} {group.item}
                       </td>
@@ -473,7 +476,7 @@ export default function RightPanel() {
                         </td>
                       </tr>
                     ))}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
               {sortedRows.length > 0 && (
