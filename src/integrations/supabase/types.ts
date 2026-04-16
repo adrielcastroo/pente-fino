@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_history: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conferences: {
         Row: {
           conferente: string
@@ -181,6 +205,105 @@ export type Database = {
           posicao?: number | null
           proc?: string | null
           registro_id?: string | null
+        }
+        Relationships: []
+      }
+      inventory: {
+        Row: {
+          created_at: string
+          id: string
+          location: string | null
+          name: string
+          quantity: number | null
+          sku: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          name: string
+          quantity?: number | null
+          sku: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          name?: string
+          quantity?: number | null
+          sku?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      operation_logs: {
+        Row: {
+          conferente_name: string
+          created_at: string
+          description: string | null
+          id: string
+          item_id: string | null
+          quantity: number | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          conferente_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string | null
+          quantity?: number | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          conferente_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string | null
+          quantity?: number | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          ai_customization_rules: string | null
+          avatar_url: string | null
+          created_at: string
+          display_mode: string | null
+          display_name: string | null
+          email_notifications: boolean | null
+          id: string
+          opt_out_reports: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          ai_customization_rules?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          display_mode?: string | null
+          display_name?: string | null
+          email_notifications?: boolean | null
+          id: string
+          opt_out_reports?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          ai_customization_rules?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          display_mode?: string | null
+          display_name?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          opt_out_reports?: boolean | null
+          updated_at?: string
         }
         Relationships: []
       }
