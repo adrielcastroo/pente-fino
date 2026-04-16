@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -6,27 +5,62 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, UserCircle2, ArrowRight, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Mail, UserCircle2, ArrowRight, Loader2, UserPlus, LogIn } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const { loginAsGuest } = useAuth();
   const [guestName, setGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(error.message);
+    
+    try {
+      if (isSignUp) {
+        if (!name.trim()) {
+          toast.error('Por favor, informe seu nome para o cadastro.');
+          setLoading(false);
+          return;
+        }
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name: name,
+            }
+          }
+        });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Cadastro realizado com sucesso! Verifique seu e-mail se necessário.');
+          setIsSignUp(false);
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Bem-vindo de volta!');
+        }
+      }
+    } catch (error: any) {
+      toast.error('Ocorreu um erro inesperado. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGuestLogin = () => {
@@ -58,11 +92,34 @@ export default function LoginPage() {
               <span className="text-2xl font-black text-primary italic">PF</span>
             </div>
             <CardTitle className="text-2xl font-bold tracking-tight">Sistema Pente Fino</CardTitle>
-            <CardDescription>Faça login para gerenciar sua conferência</CardDescription>
+            <CardDescription>
+              {isSignUp ? 'Crie sua conta para começar' : 'Faça login para gerenciar sua conferência'}
+            </CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <form onSubmit={handleEmailLogin} className="space-y-3">
+            <form onSubmit={handleAuth} className="space-y-3">
+              <AnimatePresence mode="wait">
+                {isSignUp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-1.5"
+                  >
+                    <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome Completo</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="Seu nome" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="h-11 bg-muted/30 focus-visible:ring-primary/30"
+                      required={isSignUp}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
                 <Input 
@@ -80,15 +137,48 @@ export default function LoginPage() {
                 <Input 
                   id="password" 
                   type="password" 
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11 bg-muted/30 focus-visible:ring-primary/30"
                   required 
                 />
               </div>
+
+              {!isSignUp && (
+                <div className="flex items-center space-x-2 py-1">
+                  <Checkbox 
+                    id="remember" 
+                    checked={rememberMe} 
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <label
+                    htmlFor="remember"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Lembrar-me e entrar automaticamente
+                  </label>
+                </div>
+              )}
+
               <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-                Entrar com Email
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : isSignUp ? (
+                  <UserPlus className="mr-2 h-4 w-4" />
+                ) : (
+                  <LogIn className="mr-2 h-4 w-4" />
+                )}
+                {isSignUp ? 'Criar Conta' : 'Entrar no Sistema'}
+              </Button>
+
+              <Button 
+                type="button" 
+                variant="link" 
+                className="w-full text-xs text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => setIsSignUp(!isSignUp)}
+              >
+                {isSignUp ? 'Já tem uma conta? Faça login' : 'Não tem uma conta? Cadastre-se agora'}
               </Button>
             </form>
 
@@ -111,10 +201,10 @@ export default function LoginPage() {
                   className="space-y-3 overflow-hidden"
                 >
                   <div className="space-y-1.5">
-                    <Label htmlFor="guestName" className="text-xs font-bold uppercase tracking-wider opacity-70">Seu Nome (Conferente)</Label>
+                    <Label htmlFor="guestName" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome do Conferente</Label>
                     <Input 
                       id="guestName" 
-                      placeholder="Como você quer ser identificado?" 
+                      placeholder="Digite seu nome para identificar suas conferências" 
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       className="h-11 bg-muted/30 focus-visible:ring-primary/30"
@@ -143,7 +233,7 @@ export default function LoginPage() {
           
           <CardFooter className="bg-muted/20 border-t border-border/10 py-4 justify-center">
             <p className="text-xs text-muted-foreground">
-              © 2024 Pente Fino • Todos os direitos reservados
+              © 2024 Pente Fino • Versão 1.0.0
             </p>
           </CardFooter>
         </Card>
