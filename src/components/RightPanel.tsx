@@ -458,14 +458,17 @@ export default function RightPanel() {
                               </TooltipTrigger>
                               <TooltipContent>Copiar</TooltipContent>
                             </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                                  <X className="w-3.5 h-3.5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Remover</TooltipContent>
-                            </Tooltip>
+                            {!isGuest && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                                    <X className="w-3.5 h-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Remover</TooltipContent>
+                              </Tooltip>
+                            )}
+
                           </div>
                         </td>
                       </tr>
@@ -517,7 +520,9 @@ export default function RightPanel() {
                     onEditValueChange={setEditValue}
                     onCommitEdit={commitEdit}
                     onCancelEdit={cancelEdit}
+                    isGuest={isGuest}
                   />
+
                 ))}
               </tbody>
               {sortedRows.length > 0 && (
