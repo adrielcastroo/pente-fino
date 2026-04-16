@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, UserCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, UserCircle2, ArrowRight, Loader2, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
