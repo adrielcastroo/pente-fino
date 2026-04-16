@@ -35,6 +35,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
+import { useAuth } from '@/hooks/use-auth';
+
 
 const categories = [
   { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
@@ -48,10 +50,12 @@ const categories = [
 ];
 
 export default function SettingsPage() {
+  const { user, profile, isGuest, signOut } = useAuth();
   const [activeCategory, setActiveCategory] = useState('profile');
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
+
 
   // Existing settings from ConfigModal
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
