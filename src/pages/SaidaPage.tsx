@@ -73,10 +73,6 @@ export default function SaidaPage() {
     <div className="p-3 sm:p-6 lg:p-10 max-w-[1600px] mx-auto space-y-4 sm:space-y-8 lg:space-y-12">
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
         <div className="text-left space-y-3">
-          <div className="flex items-center gap-2.5 text-primary font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
-            <Archive className="w-4 h-4 text-primary" />
-            <span>Repositório Logístico</span>
-          </div>
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-foreground leading-[0.9]">
             Arquivos de <br className="hidden sm:block" />
             <span className="text-primary relative">
