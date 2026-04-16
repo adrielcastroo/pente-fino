@@ -8,12 +8,13 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, UserCircle2, ArrowRight, Loader2, UserPlus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Mail, UserCircle2, ArrowRight, Loader2, UserPlus, LogIn } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -27,19 +28,24 @@ export default function LoginPage() {
     
     try {
       if (isSignUp) {
+        if (!name.trim()) {
+          toast.error('Por favor, informe seu nome para o cadastro.');
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
-              display_name: email.split('@')[0],
+              display_name: name,
             }
           }
         });
         if (error) {
           toast.error(error.message);
         } else {
-          toast.success('Cadastro realizado! Verifique seu e-mail ou faça login.');
+          toast.success('Cadastro realizado com sucesso! Verifique seu e-mail se necessário.');
           setIsSignUp(false);
         }
       } else {
@@ -47,7 +53,7 @@ export default function LoginPage() {
         if (error) {
           toast.error(error.message);
         } else {
-          toast.success('Login realizado com sucesso!');
+          toast.success('Bem-vindo de volta!');
         }
       }
     } catch (error: any) {
@@ -93,6 +99,27 @@ export default function LoginPage() {
           
           <CardContent className="space-y-4">
             <form onSubmit={handleAuth} className="space-y-3">
+              <AnimatePresence mode="wait">
+                {isSignUp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-1.5"
+                  >
+                    <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome Completo</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="Seu nome" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="h-11 bg-muted/30 focus-visible:ring-primary/30"
+                      required={isSignUp}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
                 <Input 
@@ -110,6 +137,7 @@ export default function LoginPage() {
                 <Input 
                   id="password" 
                   type="password" 
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11 bg-muted/30 focus-visible:ring-primary/30"
@@ -139,18 +167,18 @@ export default function LoginPage() {
                 ) : isSignUp ? (
                   <UserPlus className="mr-2 h-4 w-4" />
                 ) : (
-                  <Mail className="mr-2 h-4 w-4" />
+                  <LogIn className="mr-2 h-4 w-4" />
                 )}
-                {isSignUp ? 'Criar Conta' : 'Entrar com Email'}
+                {isSignUp ? 'Criar Conta' : 'Entrar no Sistema'}
               </Button>
 
               <Button 
                 type="button" 
                 variant="link" 
-                className="w-full text-xs text-muted-foreground hover:text-primary"
+                className="w-full text-xs text-muted-foreground hover:text-primary transition-colors"
                 onClick={() => setIsSignUp(!isSignUp)}
               >
-                {isSignUp ? 'Já tem uma conta? Faça login' : 'Não tem uma conta? Cadastre-se'}
+                {isSignUp ? 'Já tem uma conta? Faça login' : 'Não tem uma conta? Cadastre-se agora'}
               </Button>
             </form>
 
@@ -173,10 +201,10 @@ export default function LoginPage() {
                   className="space-y-3 overflow-hidden"
                 >
                   <div className="space-y-1.5">
-                    <Label htmlFor="guestName" className="text-xs font-bold uppercase tracking-wider opacity-70">Seu Nome (Conferente)</Label>
+                    <Label htmlFor="guestName" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome do Conferente</Label>
                     <Input 
                       id="guestName" 
-                      placeholder="Como você quer ser identificado?" 
+                      placeholder="Digite seu nome para identificar suas conferências" 
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       className="h-11 bg-muted/30 focus-visible:ring-primary/30"
@@ -205,7 +233,7 @@ export default function LoginPage() {
           
           <CardFooter className="bg-muted/20 border-t border-border/10 py-4 justify-center">
             <p className="text-xs text-muted-foreground">
-              © 2024 Pente Fino • Todos os direitos reservados
+              © 2024 Pente Fino • Versão 1.0.0
             </p>
           </CardFooter>
         </Card>
