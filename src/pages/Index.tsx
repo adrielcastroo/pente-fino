@@ -82,7 +82,7 @@ export default function Index() {
 
   return (
     <SidebarProvider defaultOpen={!isMobile && !isTablet}>
-      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative">
+      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative app-bg-pattern">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 

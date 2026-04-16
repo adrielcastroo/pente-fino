@@ -408,7 +408,7 @@ export default function EstoquePage() {
                     if (!item) return posButton;
 
                     return (
-                      <Tooltip key={pos} delayDuration={200}>
+                      <Tooltip key={pos} delayDuration={80}>
                         <TooltipTrigger asChild>
                           {posButton}
                         </TooltipTrigger>
