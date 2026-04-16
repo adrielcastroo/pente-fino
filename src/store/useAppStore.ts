@@ -314,7 +314,7 @@ export const useAppStore = create<AppState>()(
         lockedNf: state.lockedNf,
         lockEndereco: state.lockEndereco,
         lockedEndereco: state.lockedEndereco,
-        formData: state.formData,
+        
       }),
     }
   )
