@@ -294,13 +294,39 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'cft4-registros',
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          return JSON.parse(str);
+        },
+        setItem: (name, value) => {
+          // Throttled persistence to avoid frequent disk I/O
+          const throttledSet = (window as any)._throttledSetItem || (() => {
+            let timeout: any = null;
+            let lastValue: any = null;
+            return (val: any) => {
+              lastValue = val;
+              if (!timeout) {
+                timeout = setTimeout(() => {
+                  localStorage.setItem(name, JSON.stringify(lastValue));
+                  timeout = null;
+                }, 1000); // 1s throttle
+              }
+            };
+          })();
+          if (!(window as any)._throttledSetItem) (window as any)._throttledSetItem = throttledSet;
+          throttledSet(value);
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
       partialize: (state) => ({
         registros: state.registros,
         undoStack: state.undoStack,
         currentMode: state.currentMode,
         processo: state.processo,
         conferente: state.conferente,
-        searchQuery: '', // Never persist search query to avoid frequent localStorage writes
+        searchQuery: '', // Never persist search query
         formData: {
           ...state.formData,
           estoqueSearch: '', // Don't persist temporary searches
@@ -314,7 +340,6 @@ export const useAppStore = create<AppState>()(
         lockedNf: state.lockedNf,
         lockEndereco: state.lockEndereco,
         lockedEndereco: state.lockedEndereco,
-        
       }),
     }
   )
