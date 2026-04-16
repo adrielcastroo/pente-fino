@@ -35,8 +35,9 @@ const SORT_MAP: Record<string, (a: any, b: any) => number> = {
 };
 
 interface TableCellProps {
-  r: any;
-  column: any;
+  id: string;
+  columnKey: string;
+  value: any;
   searchQuery: string;
   isEditing: boolean;
   editValue: string;
@@ -45,9 +46,10 @@ interface TableCellProps {
   onCancelEdit: () => void;
   onStartEdit: (rowId: string, key: string, val: string) => void;
   onCopy: (t: string) => void;
+  loteSistema?: string;
 }
 
-const TableCell = memo(({ r, column, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy }: TableCellProps) => {
+const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema }: TableCellProps) => {
   if (isEditing) {
     return (
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
