@@ -57,6 +57,14 @@ export default function SettingsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
+  const [displayName, setDisplayName] = useState('');
+
+  // Sync displayName when profile loads
+  useEffect(() => {
+    if (profile?.display_name) {
+      setDisplayName(profile.display_name);
+    }
+  }, [profile]);
 
   // Existing settings from ConfigModal
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
@@ -73,9 +81,30 @@ export default function SettingsPage() {
     setHasUnsavedChanges(false);
   };
 
+  const saveProfile = async () => {
+    if (!user) return;
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      toast.error('O nome não pode estar vazio.');
+      return;
+    }
+    const { error } = await (supabase as any)
+      .from('profiles')
+      .update({ display_name: trimmed, updated_at: new Date().toISOString() })
+      .eq('id', user.id);
+    if (error) {
+      toast.error('Erro ao salvar perfil.');
+    } else {
+      toast.success('Perfil atualizado com sucesso!');
+      setHasUnsavedChanges(false);
+    }
+  };
+
   const handleSave = () => {
     if (activeCategory === 'integrations') {
       saveIntegrations();
+    } else if (activeCategory === 'profile') {
+      saveProfile();
     } else {
       toast.success('Alterações salvas com sucesso!');
       setHasUnsavedChanges(false);
@@ -217,7 +246,7 @@ export default function SettingsPage() {
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome de Exibição</Label>
-                                  <Input id="name" defaultValue={profile?.display_name || ''} onChange={() => setHasUnsavedChanges(true)} className="bg-muted/30" />
+                                  <Input id="name" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }} className="bg-muted/30" />
                                 </div>
                                 <div className="space-y-2">
                                   <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
