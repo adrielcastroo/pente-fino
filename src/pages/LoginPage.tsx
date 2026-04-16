@@ -1,6 +1,5 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,16 +15,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { loginAsGuest, user, isGuest } = useAuth();
+  const { loginAsGuest } = useAuth();
   const [guestName, setGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user || isGuest) {
-      navigate('/', { replace: true });
-    }
-  }, [user, isGuest, navigate]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
