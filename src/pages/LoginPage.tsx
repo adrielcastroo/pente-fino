@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,17 +9,23 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Chrome, Apple, Mail, UserCircle2, ArrowRight, Loader2 } from 'lucide-react';
-import { lovable } from '@/integrations/lovable';
+import { Mail, UserCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { loginAsGuest } = useAuth();
+  const { loginAsGuest, user, isGuest } = useAuth();
   const [guestName, setGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user || isGuest) {
+      navigate('/', { replace: true });
+    }
+  }, [user, isGuest, navigate]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,14 +35,6 @@ export default function LoginPage() {
       toast.error(error.message);
     }
     setLoading(false);
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'apple') => {
-    try {
-      await lovable.auth.signInWithOAuth(provider);
-    } catch (error: any) {
-      toast.error(error.message);
-    }
   };
 
   const handleGuestLogin = () => {
