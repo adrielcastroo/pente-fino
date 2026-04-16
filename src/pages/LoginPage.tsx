@@ -33,7 +33,7 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -44,6 +44,8 @@ export default function LoginPage() {
         });
         if (error) {
           toast.error(error.message);
+        } else if (data.session) {
+          toast.success('Cadastro realizado com sucesso! Bem-vindo.');
         } else {
           toast.success('Cadastro realizado com sucesso! Verifique seu e-mail se necessário.');
           setIsSignUp(false);
