@@ -1,9 +1,11 @@
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, Sun, Moon } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, Sun, Moon, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
 import { useTheme } from 'next-themes';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+
 import {
   Sidebar,
   SidebarContent,
@@ -36,8 +38,10 @@ const menuItems: { key: AppTab; label: string; icon: any }[] = [
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
+  const { signOut } = useAuth();
   const registroCount = useAppStore(s => s.registros.length);
   const { theme, setTheme } = useTheme();
+
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -225,6 +229,25 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
+          {/* Logout */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              onClick={() => signOut()}
+              tooltip="Sair"
+              aria-label="Sair da conta"
+              className="h-10 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto"
+            >
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center">
+                <LogOut className="h-[18px] w-[18px]" />
+              </div>
+              <span className="text-xs font-medium transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+                Sair
+              </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
