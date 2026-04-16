@@ -108,7 +108,9 @@ export default function EstoquePage() {
   useEffect(() => { loadPosicoes(); }, [activeTec]);
 
   const posicoes = posicoesForActiveTec;
-  const totalSlots = 3120; // Pre-computed sum across TEC_CONFIG
+  const totalSlots = useMemo(() => {
+    return Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
+  }, []);
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
@@ -121,7 +123,7 @@ export default function EstoquePage() {
       else if (s === 'saida') exited++;
     }
     
-    const free = totalSlots - occupied - blocked - reserved - exited;
+    const free = totalSlots - occupied - blocked - reserved; // Exited items are removed from DB, so they don't count against capacity
     return { totalSlots, occupied, blocked, reserved, exited, free };
   }, [allPosicoes, totalSlots]);
 

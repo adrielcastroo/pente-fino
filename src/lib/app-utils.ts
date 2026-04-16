@@ -35,8 +35,10 @@ export const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
 
 export function parseEndereco(addr: string) {
   if (!addr || !ENDERECO_REGEX.test(addr)) return null;
-  const [est, col, nivStr] = addr.split('.');
-  const rawNivel = nivStr.replace('N', '');
+  const parts = addr.split('.');
+  if (parts.length < 3) return null;
+  const [est, col, nivStr] = parts;
+  const rawNivel = nivStr.toUpperCase().replace('N', '');
   const nivel = parseInt(rawNivel, 10);
   if (isNaN(nivel)) return null;
   return { estrutura: est, coluna: col, nivel };
