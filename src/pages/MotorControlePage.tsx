@@ -157,7 +157,7 @@ export default function MotorControlePage() {
       largura: 0,
       lote: cleaned,
       loteSistema,
-      quantidade: 1,
+      quantidade: temCaixa ? parseInt(caixaNum, 10) || 0 : null,
       tipoTecido: 'Motor',
       modoOrigem: 'motor',
       isNew: true,
@@ -195,7 +195,7 @@ export default function MotorControlePage() {
       largura: 0,
       lote: cleaned,
       loteSistema,
-      quantidade: 1,
+      quantidade: seq,
       tipoTecido: 'Controle',
       modoOrigem: 'controle',
       isNew: true,
@@ -275,7 +275,7 @@ export default function MotorControlePage() {
                   <span className="text-[10px] font-semibold text-primary uppercase">Nº Caixa:</span>
                   <input
                     type="text" inputMode="numeric" value={caixaNum}
-                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v) setCaixaNum(v); }}
+                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); setCaixaNum(v); }}
                     className="w-10 bg-background border border-border/60 rounded-md text-center text-primary font-bold text-sm outline-none py-1 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:border-primary/50 transition-colors"
                     title="Clique para alterar o número da caixa"
                   />
