@@ -416,16 +416,16 @@ export default function RightPanel() {
               </thead>
               <tbody>
                 {motorGroups.map((group, gi) => (
-                  <>
+                  <React.Fragment key={`grp-${gi}-${group.cxLabel}-${group.item}`}>
                     {/* Spacer between groups */}
                     {gi > 0 && (
                       <>
-                        <tr key={`spacer1-${gi}`}><td colSpan={3} className="h-4 bg-background"></td></tr>
-                        <tr key={`spacer2-${gi}`}><td colSpan={3} className="h-4 bg-background"></td></tr>
+                        <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
+                        <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
                       </>
                     )}
                     {/* Group header */}
-                    <tr key={`header-${gi}`} className="bg-primary/10">
+                    <tr className="bg-primary/10">
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-foreground">
                         {group.cxLabel} {group.item}
                       </td>
@@ -476,7 +476,7 @@ export default function RightPanel() {
                         </td>
                       </tr>
                     ))}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
               {sortedRows.length > 0 && (
