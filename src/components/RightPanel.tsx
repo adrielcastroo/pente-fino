@@ -227,19 +227,22 @@ export default function RightPanel() {
       result = [];
       for (let i = 0, len = registros.length; i < len; i++) {
         const r = registros[i];
-        if (
-          (r.item || '').toLowerCase().includes(q) ||
-          (r.endereco || '').toLowerCase().includes(q) ||
-          (r.lote || '').toLowerCase().includes(q) ||
-          (r.loteSistema || '').toLowerCase().includes(q)
-        ) {
-          result.push(r);
-        }
+        // Lowercase once per field per row (cheaper than 4 lowercases + 4 includes when miss is early)
+        const item = r.item ? r.item.toLowerCase() : '';
+        if (item.includes(q)) { result.push(r); continue; }
+        const end = r.endereco ? r.endereco.toLowerCase() : '';
+        if (end.includes(q)) { result.push(r); continue; }
+        const lote = r.lote ? r.lote.toLowerCase() : '';
+        if (lote.includes(q)) { result.push(r); continue; }
+        const ls = r.loteSistema ? r.loteSistema.toLowerCase() : '';
+        if (ls.includes(q)) { result.push(r); continue; }
       }
     } else {
-      result = registros.slice();
+      result = sortBy && SORT_MAP[sortBy] ? registros.slice() : registros;
     }
     if (sortBy && SORT_MAP[sortBy]) {
+      // Avoid mutating the store's array reference
+      if (result === registros) result = registros.slice();
       result.sort(SORT_MAP[sortBy]);
     }
     return result;
