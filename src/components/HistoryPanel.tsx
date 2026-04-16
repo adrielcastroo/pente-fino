@@ -325,14 +325,17 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
           >
             <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-            className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-destructive/10 text-destructive transition-all"
-          >
-            <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Button>
+          {!isGuest && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-destructive/10 text-destructive transition-all"
+            >
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
+          )}
+
           <div className={`p-1.5 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
           </div>
@@ -473,7 +476,7 @@ export default function HistoryPanel() {
                   className="pl-10 h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold"
                 />
              </div>
-             {history.length > 0 && (
+             {history.length > 0 && !isGuest && (
                <Button 
                  variant="outline" 
                  size="icon" 
@@ -483,6 +486,7 @@ export default function HistoryPanel() {
                  <Trash2 className="w-5 h-5" />
                </Button>
              )}
+
           </div>
         </header>
 
