@@ -1,118 +1,110 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useAuthStore } from "@/store/useAuthStore";
-import { BarChart, Activity, Package, AlertTriangle } from "lucide-react";
-import {
-  Bar,
-  BarChart as ReChartsBarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
+import { useEffect, useState, lazy, Suspense, useMemo, memo } from 'react';
+import { useAppStore } from '@/store/useAppStore';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useAppNavigation } from '@/hooks/useAppNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
+import TopBar from '@/components/TopBar';
+import AppSidebar from '@/components/AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import DashboardPage from '@/pages/DashboardPage';
 
-const data = [
-  { name: "Seg", total: 40 },
-  { name: "Ter", total: 30 },
-  { name: "Qua", total: 50 },
-  { name: "Qui", total: 20 },
-  { name: "Sex", total: 60 },
-  { name: "Sab", total: 35 },
-  { name: "Dom", total: 10 },
-];
+const LeftPanel = lazy(() => import('@/components/LeftPanel'));
+const RightPanel = lazy(() => import('@/components/RightPanel'));
+const HistoryPanel = lazy(() => import('@/components/HistoryPanel'));
+const MotorControlePage = lazy(() => import('@/pages/MotorControlePage'));
+const EstoquePage = lazy(() => import('@/pages/EstoquePage'));
+const SaidaPage = lazy(() => import('@/pages/SaidaPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
-const Index = () => {
-  const { isGuest, guestName, profile } = useAuthStore();
+const PageSkeleton = memo(() => (
+  <div className="p-8 space-y-4">
+    <div className="h-8 bg-muted rounded w-1/4" />
+    <div className="h-32 bg-muted rounded w-full" />
+    <div className="grid grid-cols-3 gap-4">
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
+    </div>
+  </div>
+));
+
+const TabRenderer = memo(({ activeTab, isWide, isMobile }: { activeTab: string; isWide?: boolean; isMobile: boolean }) => {
+  const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
+  
+  if (isWide && isFormTab && !isMobile) {
+    return (
+      <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-6">
+        <div className="w-full xl:w-[480px] 2xl:w-[560px] shrink-0 h-full">
+          {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
+        </div>
+        <div className="flex-1 min-w-0 h-full hidden xl:block">
+          <RightPanel />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard de Operações</h1>
-        <p className="text-muted-foreground">
-          {isGuest 
-            ? `Olá, Visitante ${guestName || ""}. Você tem acesso aos dados públicos da operação.` 
-            : `Bem-vindo, ${profile?.display_name || "Operador"}.`}
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">+20.1% em relação ao mês anterior</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Saídas</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">845</div>
-            <p className="text-xs text-muted-foreground">+10.5% em relação ao mês anterior</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Produtividade</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+12%</div>
-            <p className="text-xs text-muted-foreground">Insight IA: "A equipe aumentou a produtividade em 10% hoje"</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alertas de Erros</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4</div>
-            <p className="text-xs text-muted-foreground">-2 em relação a ontem</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="col-span-4">
-        <CardHeader>
-          <CardTitle>Visão Semanal de Registros</CardTitle>
-        </CardHeader>
-        <CardContent className="pl-2">
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ReChartsBarChart data={data}>
-                <XAxis
-                  dataKey="name"
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}`}
-                />
-                <Tooltip />
-                <Bar
-                  dataKey="total"
-                  fill="currentColor"
-                  radius={[4, 4, 0, 0]}
-                  className="fill-primary"
-                />
-              </ReChartsBarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="h-full w-full max-w-full overflow-x-hidden">
+      {activeTab === 'inicio' && <DashboardPage />}
+      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
+      {activeTab === 'motor' && <MotorControlePage />}
+      {activeTab === 'estoque' && <EstoquePage />}
+      {activeTab === 'saida' && <SaidaPage />}
+      {activeTab === 'table' && <RightPanel />}
+      {activeTab === 'history' && <HistoryPanel />}
+      {activeTab === 'settings' && <SettingsPage />}
+      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
     </div>
   );
-};
+});
 
-export default Index;
+TabRenderer.displayName = 'TabRenderer';
+
+export default function Index() {
+  const loadHistory = useAppStore(s => s.loadHistory);
+  const { activeTab, handleTabChange } = useAppNavigation();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  useKeyboardShortcuts({
+    shortcutsOpen,
+    setShortcutsOpen,
+    configOpen: activeTab === 'settings',
+    setConfigOpen: () => handleTabChange('settings'),
+  });
+
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative">
+        <AppSidebar 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange} 
+        />
+
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+          <TopBar />
+
+          <main className="flex-1 overflow-y-auto bg-background custom-scrollbar relative">
+            <div className="min-h-full w-full max-w-[2000px] mx-auto">
+              <Suspense fallback={<PageSkeleton />}>
+                <div className="p-2 sm:p-4 xl:p-8">
+                  <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} />
+                </div>
+              </Suspense>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <Suspense fallback={null}>
+        <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      </Suspense>
+    </SidebarProvider>
+  );
+}
