@@ -103,22 +103,18 @@ export default function EstoquePage() {
 
   useEffect(() => { loadPosicoes(); }, [activeTec]);
 
-  const posicoes = useMemo(() => {
-    return allPosicoes.filter(p => p.estrutura === activeTec);
-  }, [allPosicoes, activeTec]);
-
-  // Pre-computed constant - no need for useMemo
-  const totalSlots = 3120; // Pre-computed: sum of cols*levels*30 across TEC_CONFIG
+  const posicoes = posicoesForActiveTec;
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
     
+    // allPosicoes now contains only the 'status' property to save RAM/Bandwidth
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
-      const status = allPosicoes[i].status;
-      if (status === 'ocupado') occupied++;
-      else if (status === 'bloqueado') blocked++;
-      else if (status === 'reservado') reserved++;
-      else if (status === 'saida') exited++;
+      const s = (allPosicoes[i] as any).status;
+      if (s === 'ocupado') occupied++;
+      else if (s === 'bloqueado') blocked++;
+      else if (s === 'reservado') reserved++;
+      else if (s === 'saida') exited++;
     }
     
     const free = totalSlots - occupied - blocked - reserved - exited;
