@@ -9,8 +9,10 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TopBar = memo(function TopBar() {
+  const isMobile = useIsMobile();
   const { currentMode, processo, conferente, setConferente, registros, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     processo: s.processo,
