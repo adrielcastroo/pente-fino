@@ -33,6 +33,11 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
+        if (password.length < 6) {
+          toast.error('A senha deve ter no mínimo 6 caracteres.');
+          setLoading(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -45,16 +50,30 @@ export default function LoginPage() {
         if (error) {
           toast.error(error.message);
         } else if (data.session) {
+          // Auto-confirmed: save remember preference and enter
+          if (rememberMe) {
+            localStorage.setItem('rememberMe', 'true');
+          }
           toast.success('Cadastro realizado com sucesso! Bem-vindo.');
         } else {
-          toast.success('Cadastro realizado com sucesso! Verifique seu e-mail se necessário.');
+          toast.success('Cadastro realizado! Verifique seu e-mail para confirmar.');
           setIsSignUp(false);
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-          toast.error(error.message);
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Email ou senha incorretos. Verifique e tente novamente.');
+          } else {
+            toast.error(error.message);
+          }
         } else {
+          // Save remember-me preference
+          if (rememberMe) {
+            localStorage.setItem('rememberMe', 'true');
+          } else {
+            localStorage.removeItem('rememberMe');
+          }
           toast.success('Bem-vindo de volta!');
         }
       }

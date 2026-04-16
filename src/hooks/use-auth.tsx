@@ -23,25 +23,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setConferente = useAppStore(s => s.setConferente);
 
   useEffect(() => {
-    // Check active sessions
+    // Set up auth listener FIRST (before getSession) to avoid race conditions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Use setTimeout to avoid Supabase auth deadlock
+        setTimeout(() => fetchProfile(session.user.id), 0);
+        setIsGuest(false);
+        localStorage.removeItem('isGuest');
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    // Then check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
         setIsGuest(false);
         localStorage.removeItem('isGuest');
-      }
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-        setIsGuest(false);
-        localStorage.removeItem('isGuest');
-      } else {
-        setProfile(null);
       }
       setLoading(false);
     });
@@ -60,7 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setProfile(data);
       setConferente((data as any).display_name || '');
     }
-
   };
 
   const loginAsGuest = (name?: string) => {
@@ -72,6 +73,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Clear remember-me preference
+    localStorage.removeItem('rememberMe');
     await supabase.auth.signOut();
     setIsGuest(false);
     localStorage.removeItem('isGuest');
