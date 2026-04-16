@@ -35,8 +35,9 @@ const SORT_MAP: Record<string, (a: any, b: any) => number> = {
 };
 
 interface TableCellProps {
-  r: any;
-  column: any;
+  id: string;
+  columnKey: string;
+  value: any;
   searchQuery: string;
   isEditing: boolean;
   editValue: string;
@@ -45,9 +46,10 @@ interface TableCellProps {
   onCancelEdit: () => void;
   onStartEdit: (rowId: string, key: string, val: string) => void;
   onCopy: (t: string) => void;
+  loteSistema?: string;
 }
 
-const TableCell = memo(({ r, column, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy }: TableCellProps) => {
+const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema }: TableCellProps) => {
   if (isEditing) {
     return (
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
@@ -63,35 +65,34 @@ const TableCell = memo(({ r, column, searchQuery, isEditing, editValue, onEditVa
     );
   }
 
-  const val = (r as any)[column.key];
-  const displayVal = column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
-    : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
-    : column.key === 'mLinear' ? formatML(r.mLinear)
-    : column.key === 'loteSistema' ? null
-    : column.key === 'item' ? null
-    : column.key === 'endereco' ? null
-    : (val || '—');
+  const displayVal = columnKey === 'm2' ? (Number(value) > 0 ? Number(value).toFixed(1) : '—')
+    : columnKey === 'largura' ? (Number(value) > 0 ? `${Number(value).toFixed(2)}m` : '—')
+    : columnKey === 'mLinear' ? formatML(Number(value))
+    : columnKey === 'loteSistema' ? null
+    : columnKey === 'item' ? null
+    : columnKey === 'endereco' ? null
+    : (value || '—');
 
   let content: React.ReactNode = displayVal;
 
-  if (column.key === 'loteSistema') {
+  if (columnKey === 'loteSistema') {
     content = (
       <Badge 
         variant="outline" 
         className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed" 
-        onClick={() => onCopy(r.loteSistema)}
+        onClick={() => onCopy(loteSistema || '')}
       >
-        {r.loteSistema || '—'}
+        {loteSistema || '—'}
       </Badge>
     );
-  } else if (column.key === 'item' || column.key === 'endereco') {
-    content = <HighlightedText text={String(val || '—')} q={searchQuery} />;
+  } else if (columnKey === 'item' || columnKey === 'endereco') {
+    content = <HighlightedText text={String(value || '—')} q={searchQuery} />;
   }
 
   return (
     <td 
-      onDoubleClick={() => column.key !== 'loteSistema' ? onStartEdit(r.id, column.key, String(val ?? '')) : undefined}
-      className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${column.key === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${column.key === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+      onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
+      className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${columnKey === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${columnKey === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
     >
       {content}
     </td>
@@ -123,8 +124,9 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
       {columns.map((column: any) => (
         <TableCell
           key={column.key}
-          r={r}
-          column={column}
+          id={r.id}
+          columnKey={column.key}
+          value={(r as any)[column.key]}
           searchQuery={searchQuery}
           isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
           editValue={editValue}
@@ -133,6 +135,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
           onCancelEdit={onCancelEdit}
           onStartEdit={onStartEdit}
           onCopy={onCopy}
+          loteSistema={r.loteSistema}
         />
       ))}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">

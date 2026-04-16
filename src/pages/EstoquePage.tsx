@@ -75,59 +75,46 @@ export default function EstoquePage() {
   const loadPosicoes = async () => {
     setLoading(true);
     try {
-      // Fetch all pages to avoid Supabase's default 1000-row limit
-      const allData: Posicao[] = [];
-      const PAGE_SIZE = 1000;
-      let from = 0;
-      let hasMore = true;
+      // 1. Get global stats efficiently (just counts)
+      const { data: statsData, error: statsError } = await supabase
+        .from('estoque_posicoes')
+        .select('status');
       
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('estoque_posicoes')
-          .select('id,estrutura,coluna,nivel,posicao,status,item,proc,m2,largura,m_linear,lote,endereco,lote_sistema,conferente_entrada,conferente_saida,data_registro,data_saida,registro_id')
-          .range(from, from + PAGE_SIZE - 1);
-        
-        if (error) {
-          console.error('Erro ao carregar posições:', error);
-          toast.error('Erro ao carregar dados do estoque');
-          break;
-        }
-        
-        if (data && data.length > 0) {
-          allData.push(...(data as Posicao[]));
-          from += PAGE_SIZE;
-          hasMore = data.length === PAGE_SIZE;
-        } else {
-          hasMore = false;
-        }
-      }
+      if (statsError) throw statsError;
       
-      setAllPosicoes(allData);
+      // 2. Fetch full records ONLY for the active structure to save RAM and bandwidth
+      const { data: activeData, error: activeError } = await supabase
+        .from('estoque_posicoes')
+        .select('*')
+        .eq('estrutura', activeTec);
+        
+      if (activeError) throw activeError;
+      
+      setAllPosicoes(statsData as any[]); // We store only statuses for stats
+      setPosicoesForActiveTec(activeData as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
-      toast.error('Erro inesperado ao carregar estoque');
+      toast.error('Erro ao carregar dados do estoque');
     }
     setLoading(false);
   };
 
-  useEffect(() => { loadPosicoes(); }, []);
+  const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
 
-  const posicoes = useMemo(() => {
-    return allPosicoes.filter(p => p.estrutura === activeTec);
-  }, [allPosicoes, activeTec]);
+  useEffect(() => { loadPosicoes(); }, [activeTec]);
 
-  // Pre-computed constant - no need for useMemo
-  const totalSlots = 3120; // Pre-computed: sum of cols*levels*30 across TEC_CONFIG
+  const posicoes = posicoesForActiveTec;
+  const totalSlots = 3120; // Pre-computed sum across TEC_CONFIG
 
   const stats = useMemo(() => {
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
     
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
-      const status = allPosicoes[i].status;
-      if (status === 'ocupado') occupied++;
-      else if (status === 'bloqueado') blocked++;
-      else if (status === 'reservado') reserved++;
-      else if (status === 'saida') exited++;
+      const s = (allPosicoes[i] as any).status;
+      if (s === 'ocupado') occupied++;
+      else if (s === 'bloqueado') blocked++;
+      else if (s === 'reservado') reserved++;
+      else if (s === 'saida') exited++;
     }
     
     const free = totalSlots - occupied - blocked - reserved - exited;

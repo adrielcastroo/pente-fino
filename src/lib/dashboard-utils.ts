@@ -12,21 +12,22 @@ export function computeStats(history: Conference[]) {
   const timelineMap = new Map<string, number>();
   let totalRegistros = 0;
 
-  // Faster loop with local references
+  // Cache some repeated strings to avoid allocations
+  const DESC_STR = 'Desconhecido';
+  const TEC_STR = 'Tecido';
+  const COU_STR = 'Coulisse';
+  const MAD_STR = 'Madeira';
+  const MOT_STR = 'Motor/Controle';
+
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
-    const name = conference.conferente || 'Desconhecido';
+    const name = conference.conferente || DESC_STR;
     
-    // Reuse date formatting results
     let dateStr = dateCache.get(conference.id);
     if (!dateStr) {
-      try {
-        const d = new Date(conference.date);
-        dateStr = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
-        dateCache.set(conference.id, dateStr);
-      } catch {
-        dateStr = '??/??';
-      }
+      const d = new Date(conference.date);
+      dateStr = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
+      dateCache.set(conference.id, dateStr);
     }
 
     timelineMap.set(dateStr, (timelineMap.get(dateStr) || 0) + 1);
@@ -42,22 +43,21 @@ export function computeStats(history: Conference[]) {
       const r = regs[j];
       totalRegistros++;
       
-      const nf = r.nf;
-      const proc = r.processo;
-      if (nf) confSet.add(`NF:${nf}`);
-      if (proc) confSet.add(`PROC:${proc}`);
+      if (r.nf) confSet.add(`NF:${r.nf}`);
+      if (r.processo) confSet.add(`PROC:${r.processo}`);
       
       const modo = r.modoOrigem || 'manual';
-      let cat = 'Tecido';
-      let sub = 'Coulisse';
+      let cat = TEC_STR;
+      let sub = COU_STR;
 
-      // Use object map for faster lookups than switch if possible, but switch is okay here
-      switch (modo) {
-        case 'madeira': cat = 'Madeira'; sub = 'Madeira'; break;
-        case 'motor':
-        case 'controle': cat = 'Motor/Controle'; sub = 'Motor/Controle'; break;
-        case 'openrouter': sub = 'IA'; break;
-        case 'diversos': sub = 'Diversos'; break;
+      if (modo === 'madeira') {
+        cat = MAD_STR; sub = MAD_STR;
+      } else if (modo === 'motor' || modo === 'controle') {
+        cat = MOT_STR; sub = MOT_STR;
+      } else if (modo === 'openrouter') {
+        sub = 'IA';
+      } else if (modo === 'diversos') {
+        sub = 'Diversos';
       }
       
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
@@ -68,29 +68,19 @@ export function computeStats(history: Conference[]) {
     }
   }
 
-  // Pre-allocate arrays with known sizes for performance
-  const topConferentes = Array.from(confMap, ([name, set]) => ({ name, count: set.size }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const categorias = Array.from(catMap, ([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-
-  const ferramentas = Array.from(subMap, ([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-
-  const tipos = Array.from(tipoMap, ([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6);
-
-  const timeline = Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7);
+  const sortByValueDesc = (a: any, b: any) => b.value - a.value;
+  const sortByCountDesc = (a: any, b: any) => b.count - a.count;
 
   return {
-    topConferentes,
-    categorias,
-    ferramentas,
-    tipos,
-    timeline,
+    topConferentes: Array.from(confMap, ([name, set]) => ({ name, count: set.size }))
+      .sort(sortByCountDesc).slice(0, 5),
+    categorias: Array.from(catMap, ([name, value]) => ({ name, value }))
+      .sort(sortByValueDesc),
+    ferramentas: Array.from(subMap, ([name, count]) => ({ name, count }))
+      .sort(sortByCountDesc),
+    tipos: Array.from(tipoMap, ([name, value]) => ({ name, value }))
+      .sort(sortByValueDesc).slice(0, 6),
+    timeline: Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7),
     totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,
