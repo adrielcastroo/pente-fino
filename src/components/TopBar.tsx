@@ -16,15 +16,18 @@ import { useAuth } from '@/hooks/use-auth';
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
   const { user, isGuest, signOut, profile } = useAuth();
-  const { currentMode, processo, conferente, setConferente, registros, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
+  const { currentMode, processo, conferente, setConferente, registroCount, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     processo: s.processo,
     conferente: s.conferente,
     setConferente: s.setConferente,
-    registros: s.registros,
+    registroCount: s.registros.length,
     archiveAndClear: s.archiveAndClear,
     isArchiving: s.isArchiving,
   })));
+
+  // Use a ref to access latest registros without re-rendering TopBar on every change
+  const registrosRef = useAppStore(s => s.registros);
 
   
   const exportExcel = async () => {
