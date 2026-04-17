@@ -220,6 +220,25 @@ const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockNf, lockedNf]);
 
+  useEffect(() => {
+    if (lockItem && lockedItem && localItem !== lockedItem) {
+      setLocalItem(lockedItem);
+      setItem(lockedItem);
+    }
+  }, [lockItem, lockedItem]);
+
+  useEffect(() => {
+    if (lockLote && lockedLote && lote !== lockedLote) {
+      setLote(lockedLote);
+    }
+  }, [lockLote, lockedLote]);
+
+  useEffect(() => {
+    if (lockMetragemGlobal && lockedMetragem && diversosMLinear !== lockedMetragem) {
+      setDiversosMLinear(lockedMetragem);
+    }
+  }, [lockMetragemGlobal, lockedMetragem]);
+
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
