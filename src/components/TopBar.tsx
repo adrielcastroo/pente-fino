@@ -16,26 +16,30 @@ import { useAuth } from '@/hooks/use-auth';
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
   const { user, isGuest, signOut, profile } = useAuth();
-  const { currentMode, processo, conferente, setConferente, registros, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
+  const { currentMode, processo, conferente, setConferente, registroCount, archiveAndClear, isArchiving } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     processo: s.processo,
     conferente: s.conferente,
     setConferente: s.setConferente,
-    registros: s.registros,
+    registroCount: s.registros.length,
     archiveAndClear: s.archiveAndClear,
     isArchiving: s.isArchiving,
   })));
 
+  // Use a ref to access latest registros without re-rendering TopBar on every change
+  const registrosRef = useAppStore(s => s.registros);
+
   
   const exportExcel = async () => {
     if (isArchiving) return;
-    if (!registros.length) { 
+    const currentRegistros = useAppStore.getState().registros;
+    if (!currentRegistros.length) { 
       toast.warning('Nenhum registro para exportar.'); 
       return; 
     }
 
-    const isMotorControle = registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
-    const requiresProcesso = !isMotorControle && (registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
+    const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+    const requiresProcesso = !isMotorControle && (currentRegistros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
     
     if (requiresProcesso && !processo.trim()) { 
       toast.warning('Preencha o campo PROCESSO para continuar.'); 
@@ -47,22 +51,22 @@ const TopBar = memo(function TopBar() {
       return; 
     }
 
-    const columns = getRegistroColumns(registros, currentMode);
+    const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
-    const data = registros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
+    const data = currentRegistros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
     const columnWidths = columns.map(column => column.width);
 
     let fileLabel: string;
     let archiveName: string;
 
     if (isMotorControle) {
-      const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+      const nfs = Array.from(new Set(currentRegistros.map(r => (r.nf || '').trim()).filter(Boolean)));
       fileLabel = nfs.length > 0 ? `Motores NF ${nfs.join(' ')}` : 'Motores';
       archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : 'Motor/Controle';
     } else {
-      const isDiversosOnly = registros.every(r => r.modoOrigem === 'diversos');
+      const isDiversosOnly = currentRegistros.every(r => r.modoOrigem === 'diversos');
       if (isDiversosOnly) {
-        const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+        const nfs = Array.from(new Set(currentRegistros.map(r => (r.nf || '').trim()).filter(Boolean)));
         fileLabel = nfs.length > 0 ? `NF_${nfs.join('_')}` : (processo.trim() || 'diversos');
         archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : (processo.trim() || 'Diversos');
       } else {
@@ -76,9 +80,9 @@ const TopBar = memo(function TopBar() {
       : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}`;
 
     try {
-      const count = registros.length;
+      const count = currentRegistros.length;
       if (isMotorControle) {
-        await exportMotorControleToExcel(registros, fileName);
+        await exportMotorControleToExcel(currentRegistros, fileName);
       } else {
         await exportConferenceToExcel(headers, data, fileName, columnWidths);
       }
@@ -137,7 +141,7 @@ const TopBar = memo(function TopBar() {
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
-          {registros.length > 0 && (
+          {registroCount > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -154,18 +158,18 @@ const TopBar = memo(function TopBar() {
                   <span className="hidden sm:inline font-bold">{isArchiving ? 'Aguarde...' : 'Exportar'}</span>
                   {!isArchiving && (
                     <Badge variant="secondary" className="bg-white/20 text-white border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
-                      {registros.length}
+                      {registroCount}
                     </Badge>
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="font-semibold">
-                <p>Exportar {registros.length} registros para Excel</p>
+                <p>Exportar {registroCount} registros para Excel</p>
               </TooltipContent>
             </Tooltip>
           )}
 
-          {registros.length === 0 && (
+          {registroCount === 0 && (
             <Badge variant="outline" className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-dashed border-border/40 bg-transparent text-muted-foreground/50 font-medium flex gap-1.5 shrink-0">
               <Archive className="w-3.5 h-3.5 opacity-50" />
               <span className="text-[10px] sm:text-xs whitespace-nowrap">Vazio</span>

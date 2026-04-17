@@ -26,45 +26,55 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 const LeftPanel = memo(function LeftPanel() {
-  const currentMode = useAppStore(s => s.currentMode);
-  const setMode = useAppStore(s => s.setMode);
-  const processo = useAppStore(s => s.processo);
-  const setProcesso = useAppStore(s => s.setProcesso);
-  const conferente = useAppStore(s => s.conferente);
-  const registros = useAppStore(s => s.registros);
-  const addRegistro = useAppStore(s => s.addRegistro);
-  const undoStack = useAppStore(s => s.undoStack);
-  const undoAction = useAppStore(s => s.undo);
-  const lockProcesso = useAppStore(s => s.lockProcesso);
-  const setLockProcesso = useAppStore(s => s.setLockProcesso);
-  const lockedProcesso = useAppStore(s => s.lockedProcesso);
-  const setLockedProcesso = useAppStore(s => s.setLockedProcesso);
-  const lockNf = useAppStore(s => s.lockNf);
-  const setLockNf = useAppStore(s => s.setLockNf);
-  const lockedNf = useAppStore(s => s.lockedNf);
-  const setLockedNf = useAppStore(s => s.setLockedNf);
-  const lockEndereco = useAppStore(s => s.lockEndereco);
-  const setLockEndereco = useAppStore(s => s.setLockEndereco);
-  const lockedEndereco = useAppStore(s => s.lockedEndereco);
-  const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
-  
-  // PVT locks
-  const lockItem = useAppStore(s => s.lockItem);
-  const setLockItem = useAppStore(s => s.setLockItem);
-  const lockedItem = useAppStore(s => s.lockedItem);
-  const setLockedItem = useAppStore(s => s.setLockedItem);
-  const lockLote = useAppStore(s => s.lockLote);
-  const setLockLote = useAppStore(s => s.setLockLote);
-  const lockedLote = useAppStore(s => s.lockedLote);
-  const setLockedLote = useAppStore(s => s.setLockedLote);
-  const lockMetragemGlobal = useAppStore(s => s.lockMetragem);
-  const setLockMetragemGlobal = useAppStore(s => s.setLockMetragem);
-  const lockedMetragem = useAppStore(s => s.lockedMetragem);
-  const setLockedMetragem = useAppStore(s => s.setLockedMetragem);
-
-  const formData = useAppStore(s => s.formData);
-  const setFormData = useAppStore(s => s.setFormData);
-  const resetFormData = useAppStore(s => s.resetFormData);
+  const {
+    currentMode, setMode, processo, setProcesso, conferente, registros,
+    addRegistro, undoStack, undo: undoAction,
+    lockProcesso, setLockProcesso, lockedProcesso, setLockedProcesso,
+    lockNf, setLockNf, lockedNf, setLockedNf,
+    lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco,
+    lockItem, setLockItem, lockedItem, setLockedItem,
+    lockLote, setLockLote, lockedLote, setLockedLote,
+    lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
+    lockedMetragem, setLockedMetragem,
+    formData, setFormData, resetFormData
+  } = useAppStore(useShallow(s => ({
+    currentMode: s.currentMode,
+    setMode: s.setMode,
+    processo: s.processo,
+    setProcesso: s.setProcesso,
+    conferente: s.conferente,
+    registros: s.registros,
+    addRegistro: s.addRegistro,
+    undoStack: s.undoStack,
+    undo: s.undo,
+    lockProcesso: s.lockProcesso,
+    setLockProcesso: s.setLockProcesso,
+    lockedProcesso: s.lockedProcesso,
+    setLockedProcesso: s.setLockedProcesso,
+    lockNf: s.lockNf,
+    setLockNf: s.setLockNf,
+    lockedNf: s.lockedNf,
+    setLockedNf: s.setLockedNf,
+    lockEndereco: s.lockEndereco,
+    setLockEndereco: s.setLockEndereco,
+    lockedEndereco: s.lockedEndereco,
+    setLockedEndereco: s.setLockedEndereco,
+    lockItem: s.lockItem,
+    setLockItem: s.setLockItem,
+    lockedItem: s.lockedItem,
+    setLockedItem: s.setLockedItem,
+    lockLote: s.lockLote,
+    setLockLote: s.setLockLote,
+    lockedLote: s.lockedLote,
+    setLockedLote: s.setLockedLote,
+    lockMetragem: s.lockMetragem,
+    setLockMetragem: s.setLockMetragem,
+    lockedMetragem: s.lockedMetragem,
+    setLockedMetragem: s.setLockedMetragem,
+    formData: s.formData,
+    setFormData: s.setFormData,
+    resetFormData: s.resetFormData
+  })));
 
 
   const { isLow } = usePerformance();
@@ -261,13 +271,13 @@ const LeftPanel = memo(function LeftPanel() {
     toast.success('Foto salva automaticamente');
   }, [downloadDataUrl, getPhotoFileName]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     resetFormData();
     setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
     setTimeout(() => itemRef.current?.focus(), 50);
-  };
+  }, [resetFormData]);
 
   const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
     setFotoMime(file.type || 'image/jpeg');
@@ -281,9 +291,9 @@ const LeftPanel = memo(function LeftPanel() {
     reader.readAsDataURL(file);
   }, [autoSaveCapturedPhoto]);
 
-  const openNativeCamera = () => { cameraInputRef.current?.click(); };
+  const openNativeCamera = useCallback(() => { cameraInputRef.current?.click(); }, []);
 
-  const openLiveCamera = async () => {
+  const openLiveCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
@@ -297,15 +307,15 @@ const LeftPanel = memo(function LeftPanel() {
     } catch {
       openNativeCamera();
     }
-  };
+  }, [openNativeCamera]);
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     setCameraActive(false);
-  };
+  }, []);
 
-  const snapPhoto = () => {
+  const snapPhoto = useCallback(() => {
     const v = videoRef.current;
     const c = canvasRef.current;
     if (!v || !c) return;
@@ -318,13 +328,13 @@ const LeftPanel = memo(function LeftPanel() {
     setPreview(url);
     autoSaveCapturedPhoto(url);
     stopCamera();
-  };
+  }, [autoSaveCapturedPhoto, stopCamera]);
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const f = e.dataTransfer.files[0];
     if (f?.type.startsWith('image/')) loadFile(f);
-  };
+  }, [loadFile]);
 
   const handlePaste = useCallback((e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
@@ -339,13 +349,14 @@ const LeftPanel = memo(function LeftPanel() {
   }, [loadFile]);
 
   useEffect(() => {
+    document.addEventListener('paste', handlePaste as any);
     return () => {
       document.removeEventListener('paste', handlePaste as any);
       stopCamera();
     };
-  }, [handlePaste]);
+  }, [handlePaste, stopCamera]);
 
-  const handleFieldKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
+  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (nextRef?.current) {
@@ -355,7 +366,7 @@ const LeftPanel = memo(function LeftPanel() {
         handleAdd();
       }
     }
-  };
+  }, []);
 
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
@@ -364,10 +375,10 @@ const LeftPanel = memo(function LeftPanel() {
     validateEndereco(formatted);
   }, []);
 
-  const handleEnderecoBlur = () => {
+  const handleEnderecoBlur = useCallback(() => {
     setEndereco(localEndereco);
     if (lockEndereco) setLockedEndereco(localEndereco);
-  };
+  }, [localEndereco, setEndereco, lockEndereco, setLockedEndereco]);
 
   const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
@@ -384,29 +395,29 @@ const LeftPanel = memo(function LeftPanel() {
     setLocalProcesso(val.replace(/[''`]/g, '-'));
   }, []);
 
-  const handleProcessoBlur = () => {
+  const handleProcessoBlur = useCallback(() => {
     const trimmed = localProcesso.trim();
     setProcesso(trimmed);
     if (lockProcesso) setLockedProcesso(trimmed);
-  };
+  }, [localProcesso, setProcesso, lockProcesso, setLockedProcesso]);
 
   const handleNfChange = useCallback((val: string) => {
     setLocalNf(val.replace(/[''`]/g, '-'));
   }, []);
 
-  const handleNfBlur = () => {
+  const handleNfBlur = useCallback(() => {
     const trimmed = localNf.trim();
     setNf(trimmed);
     if (lockNf) setLockedNf(trimmed);
-  };
+  }, [localNf, setNf, lockNf, setLockedNf]);
 
   const handleItemChange = useCallback((val: string) => {
     setLocalItem(val.replace(/[''`]/g, '-'));
   }, []);
 
-  const handleItemBlur = () => {
+  const handleItemBlur = useCallback(() => {
     setItem(localItem);
-  };
+  }, [localItem, setItem]);
 
   const toggleLockProcesso = useCallback(() => {
     if (!lockProcesso) {

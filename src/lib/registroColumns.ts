@@ -66,7 +66,27 @@ function layoutFromMode(mode: RegistroMode) {
 export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode = 'manual'): RegistroColumn[] {
   if (!rows.length) return layoutFromMode(fallbackMode).map(key => COLUMN_MAP[key]);
 
-  let firstMode: RegistroMode | undefined;
+  // Optimization: If all rows are from the same mode and it's not 'diversos', 
+  // we can just return the default layout for that mode.
+  // This is a common case and avoids the full pass over all rows.
+  const firstMode = normalizeMode(rows[0].modoOrigem, fallbackMode);
+  
+  // Quick check if all rows have the same mode
+  let allSameMode = true;
+  if (rows.length > 1) {
+    for (let i = 1; i < rows.length; i++) {
+      if (normalizeMode(rows[i].modoOrigem, fallbackMode) !== firstMode) {
+        allSameMode = false;
+        break;
+      }
+    }
+  }
+
+  if (allSameMode && firstMode !== 'diversos') {
+    return layoutFromMode(firstMode).map(key => COLUMN_MAP[key]);
+  }
+
+  // Full pass only if necessary
   let hasMultipleModes = false;
   let firstTipo: string | undefined;
   let hasMultipleTipos = false;
@@ -76,10 +96,10 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     mLinear: false, quantidade: false, lote: false, endereco: false, loteSistema: false
   };
 
-  for (const row of rows) {
+  for (let i = 0, len = rows.length; i < len; i++) {
+    const row = rows[i];
     const m = normalizeMode(row.modoOrigem, fallbackMode);
-    if (firstMode === undefined) firstMode = m;
-    else if (firstMode !== m) hasMultipleModes = true;
+    if (!hasMultipleModes && m !== firstMode) hasMultipleModes = true;
 
     if (m === 'diversos') {
       const t = normalizeTipo(row.tipoTecido);
@@ -101,7 +121,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     if (!visibility.loteSistema && row.loteSistema?.trim()) visibility.loteSistema = true;
   }
 
-  if (!hasMultipleModes && firstMode) {
+  if (!hasMultipleModes) {
     if (firstMode === 'diversos' && !hasMultipleTipos && firstTipo) {
       return layoutForDiversosTipo(firstTipo).map(key => COLUMN_MAP[key]);
     }

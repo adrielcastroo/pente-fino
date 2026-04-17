@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useAppStore } from '@/store/useAppStore';
@@ -81,8 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setConferente('');
   };
 
+  const value = useMemo(() => ({
+    user, profile, loading, isGuest, loginAsGuest, signOut
+  }), [user, profile, loading, isGuest]);
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isGuest, loginAsGuest, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
