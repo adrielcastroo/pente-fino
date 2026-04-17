@@ -418,7 +418,119 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {!['profile', 'appearance', 'performance', 'integrations'].includes(activeCategory) && (
+                  {activeCategory === 'security' && (
+                    <div className="space-y-8">
+                      {isGuest ? (
+                        <div className="py-12 text-center space-y-3">
+                          <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mx-auto">
+                            <Shield className="w-7 h-7 text-muted-foreground" />
+                          </div>
+                          <h4 className="font-bold">Indisponível no Modo Visitante</h4>
+                          <p className="text-sm text-muted-foreground">Faça login para gerenciar a segurança da sua conta.</p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Change Password */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <KeyRound className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Senha</h4>
+                            </div>
+                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nova Senha</Label>
+                                <div className="relative">
+                                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="pl-9 pr-10 bg-background/50 h-11"
+                                    placeholder="Mínimo 8 caracteres"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                  >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Confirmar Nova Senha</Label>
+                                <div className="relative">
+                                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="pl-9 bg-background/50 h-11"
+                                    placeholder="Repita a senha"
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                onClick={handleChangePassword}
+                                disabled={changingPassword || !newPassword || !confirmPassword}
+                                className="w-full font-bold"
+                              >
+                                {changingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyRound className="w-4 h-4 mr-2" />}
+                                Atualizar Senha
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Sign out all */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <LogOut className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Sessão</h4>
+                            </div>
+                            <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-0.5">
+                                <Label className="text-sm font-bold">Encerrar Sessão</Label>
+                                <p className="text-xs text-muted-foreground">Sair desta conta neste dispositivo.</p>
+                              </div>
+                              <Button variant="outline" onClick={() => signOut()} className="font-bold">
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Sair
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Danger Zone */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4 text-destructive" />
+                              <h4 className="text-sm font-black uppercase tracking-wider text-destructive">Zona de Perigo</h4>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-destructive/5 border border-destructive/20 space-y-4">
+                              <div className="flex items-start gap-3">
+                                <Trash2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                  <h5 className="text-sm font-bold text-foreground">Excluir Conta Permanentemente</h5>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Esta ação não pode ser desfeita. Todos os seus dados, conferências e configurações serão removidos permanentemente.
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                variant="destructive"
+                                onClick={() => setDeleteConfirmOpen(true)}
+                                className="w-full font-bold"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir Minha Conta
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {!['profile', 'appearance', 'performance', 'integrations', 'security'].includes(activeCategory) && (
                     <div className="py-20 text-center space-y-4">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-50">
                         <Settings className="w-8 h-8 text-muted-foreground" />
