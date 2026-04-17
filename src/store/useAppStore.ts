@@ -20,6 +20,14 @@ export interface AppState {
   lockedNf: string;
   lockEndereco: boolean;
   lockedEndereco: string;
+  // PVT locks
+  lockItem: boolean;
+  lockedItem: string;
+  lockLote: boolean;
+  lockedLote: string;
+  lockMetragem: boolean;
+  lockedMetragem: string;
+  
   formData: FormData;
   
   // Loading & Error States
@@ -40,6 +48,14 @@ export interface AppState {
   setLockedNf: (n: string) => void;
   setLockEndereco: (lock: boolean) => void;
   setLockedEndereco: (e: string) => void;
+  // PVT lock setters
+  setLockItem: (lock: boolean) => void;
+  setLockedItem: (i: string) => void;
+  setLockLote: (lock: boolean) => void;
+  setLockedLote: (l: string) => void;
+  setLockMetragem: (lock: boolean) => void;
+  setLockedMetragem: (m: string) => void;
+  
   setFormData: (updates: Partial<FormData>) => void;
   resetFormData: () => void;
   resetMotorFormData: () => void;
@@ -80,6 +96,14 @@ export const useAppStore = create<AppState>()(
       lockedNf: '',
       lockEndereco: false,
       lockedEndereco: '',
+      // PVT locks
+      lockItem: false,
+      lockedItem: '',
+      lockLote: false,
+      lockedLote: '',
+      lockMetragem: false,
+      lockedMetragem: '',
+      
       formData: INITIAL_FORM_DATA,
       
       isArchiving: false,
@@ -107,15 +131,31 @@ export const useAppStore = create<AppState>()(
       setLockedNf: (n) => set({ lockedNf: n }),
       setLockEndereco: (lock) => set({ lockEndereco: lock }),
       setLockedEndereco: (e) => set({ lockedEndereco: e }),
+      // PVT lock setters
+      setLockItem: (lock) => set({ lockItem: lock }),
+      setLockedItem: (i) => set({ lockedItem: i }),
+      setLockLote: (lock) => set({ lockLote: lock }),
+      setLockedLote: (l) => set({ lockedLote: l }),
+      setLockMetragem: (lock) => set({ lockMetragem: lock }),
+      setLockedMetragem: (m) => set({ lockedMetragem: m }),
+      
       setFormData: (updates) => set(state => ({ formData: { ...state.formData, ...updates } })),
       
       resetFormData: () => {
         const state = get();
-        const newData = { ...INITIAL_FORM_DATA };
-        newData.activeTab = state.formData.activeTab;
-        newData.estoqueActiveTec = state.formData.estoqueActiveTec;
+        const newData = { 
+          ...INITIAL_FORM_DATA,
+          activeTab: state.formData.activeTab,
+          estoqueActiveTec: state.formData.estoqueActiveTec,
+          diversosTipo: state.formData.diversosTipo // Preserve diversosTipo after reset
+        };
+        
         if (state.lockNf) newData.nf = state.lockedNf;
         if (state.lockEndereco) newData.endereco = state.lockedEndereco;
+        if (state.lockItem) newData.item = state.lockedItem;
+        if (state.lockLote) newData.lote = state.lockedLote;
+        if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
+        
         set({ formData: newData });
       },
       
@@ -305,7 +345,6 @@ export const useAppStore = create<AppState>()(
           }
         },
         setItem: (name, value) => {
-          // Throttled persistence (1s) to improve performance and avoid disk I/O on every stroke
           if (!(window as any)._persisterTimer) {
             (window as any)._persisterTimer = setTimeout(() => {
               localStorage.setItem(name, JSON.stringify((window as any)._persisterValue));
@@ -336,6 +375,12 @@ export const useAppStore = create<AppState>()(
         lockedNf: state.lockedNf,
         lockEndereco: state.lockEndereco,
         lockedEndereco: state.lockedEndereco,
+        lockItem: state.lockItem,
+        lockedItem: state.lockedItem,
+        lockLote: state.lockLote,
+        lockedLote: state.lockedLote,
+        lockMetragem: state.lockMetragem,
+        lockedMetragem: state.lockedMetragem,
       } as any),
     }
   )

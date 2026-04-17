@@ -137,14 +137,20 @@ export default function MotorControlePage() {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
-    const cleaned = cleanMotorSerie(serie, modelo);
+    // Remove trailing letter from motor model (e.g., 1246344B -> 1246344)
+    const cleanedModelo = modelo.trim().replace(/[a-zA-Z]$/, '').trim();
+    if (cleanedModelo !== modelo.trim()) {
+      setModelo(cleanedModelo);
+    }
+
+    const cleaned = cleanMotorSerie(serie, cleanedModelo);
     if (!cleaned) { toast.warning('Série inválida'); return; }
     if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
     const loteSistema = nf.trim()
-      ? `${cxLabel} NF ${nf.trim()} série ${cleaned}`
-      : `${cxLabel} série ${cleaned}`;
+      ? `${cxLabel} NF ${nf.trim()} ${cleaned}`
+      : `${cxLabel} ${cleaned}`;
 
     addRegistro({
       id: crypto.randomUUID(),

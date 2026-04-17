@@ -47,6 +47,21 @@ const LeftPanel = memo(function LeftPanel() {
   const setLockEndereco = useAppStore(s => s.setLockEndereco);
   const lockedEndereco = useAppStore(s => s.lockedEndereco);
   const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
+  
+  // PVT locks
+  const lockItem = useAppStore(s => s.lockItem);
+  const setLockItem = useAppStore(s => s.setLockItem);
+  const lockedItem = useAppStore(s => s.lockedItem);
+  const setLockedItem = useAppStore(s => s.setLockedItem);
+  const lockLote = useAppStore(s => s.lockLote);
+  const setLockLote = useAppStore(s => s.setLockLote);
+  const lockedLote = useAppStore(s => s.lockedLote);
+  const setLockedLote = useAppStore(s => s.setLockedLote);
+  const lockMetragemGlobal = useAppStore(s => s.lockMetragem);
+  const setLockMetragemGlobal = useAppStore(s => s.setLockMetragem);
+  const lockedMetragem = useAppStore(s => s.lockedMetragem);
+  const setLockedMetragem = useAppStore(s => s.setLockedMetragem);
+
   const formData = useAppStore(s => s.formData);
   const setFormData = useAppStore(s => s.setFormData);
   const resetFormData = useAppStore(s => s.resetFormData);
@@ -204,6 +219,25 @@ const LeftPanel = memo(function LeftPanel() {
       setNf(lockedNf);
     }
   }, [lockNf, lockedNf]);
+
+  useEffect(() => {
+    if (lockItem && lockedItem && localItem !== lockedItem) {
+      setLocalItem(lockedItem);
+      setItem(lockedItem);
+    }
+  }, [lockItem, lockedItem]);
+
+  useEffect(() => {
+    if (lockLote && lockedLote && lote !== lockedLote) {
+      setLote(lockedLote);
+    }
+  }, [lockLote, lockedLote]);
+
+  useEffect(() => {
+    if (lockMetragemGlobal && lockedMetragem && diversosMLinear !== lockedMetragem) {
+      setDiversosMLinear(lockedMetragem);
+    }
+  }, [lockMetragemGlobal, lockedMetragem]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -395,6 +429,39 @@ const LeftPanel = memo(function LeftPanel() {
       toast.success('NF destravada');
     }
   }, [lockNf, nf, setLockedNf, setLockNf]);
+
+  const toggleLockItem = useCallback(() => {
+    if (!lockItem) {
+      setLockedItem(localItem);
+      setLockItem(true);
+      toast.success('Item travado');
+    } else {
+      setLockItem(false);
+      toast.success('Item destravado');
+    }
+  }, [lockItem, localItem, setLockedItem, setLockItem]);
+
+  const toggleLockLote = useCallback(() => {
+    if (!lockLote) {
+      setLockedLote(lote);
+      setLockLote(true);
+      toast.success('Lote travado');
+    } else {
+      setLockLote(false);
+      toast.success('Lote destravado');
+    }
+  }, [lockLote, lote, setLockedLote, setLockLote]);
+
+  const toggleLockMetragem = useCallback(() => {
+    if (!lockMetragemGlobal) {
+      setLockedMetragem(diversosMLinear);
+      setLockMetragemGlobal(true);
+      toast.success('Metragem travada');
+    } else {
+      setLockMetragemGlobal(false);
+      toast.success('Metragem destravada');
+    }
+  }, [lockMetragemGlobal, diversosMLinear, setLockedMetragem, setLockMetragemGlobal]);
 
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
@@ -770,8 +837,13 @@ const LeftPanel = memo(function LeftPanel() {
 
             {/* Item */}
             <div className="space-y-1.5">
-              <div className="flex items-center h-4">
+              <div className="flex items-center gap-1.5 h-4">
                 <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
+                {isPVT && (
+                  <button onClick={toggleLockItem} className={`transition-colors ${lockItem ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockItem ? 'Campo travado' : 'Travar campo'}>
+                    {lockItem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
+                )}
               </div>
               <div className="relative">
                 <input
@@ -781,9 +853,12 @@ const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleItemChange(e.target.value)}
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
+                    (isPVT && lockItem) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
+                  readOnly={isPVT && lockItem && !!lockedItem}
                 />
                 {usesLarguraFromItem && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
@@ -869,9 +944,16 @@ const LeftPanel = memo(function LeftPanel() {
             {!isMadeira && (
               <>
                 <div className="space-y-1.5">
-                  <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
-                  </label>
+                  <div className="flex items-center gap-1.5 h-4">
+                    <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
+                    </label>
+                    {isPVT && (
+                      <button onClick={toggleLockMetragem} className={`transition-colors ${lockMetragemGlobal ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockMetragemGlobal ? 'Campo travado' : 'Travar campo'}>
+                        {lockMetragemGlobal ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <input
                       id="metragem-input"
@@ -880,8 +962,11 @@ const LeftPanel = memo(function LeftPanel() {
                       value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
                       onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
-                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+                      className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
+                        (isPVT && lockMetragemGlobal) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                      }`}
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
+                      readOnly={isPVT && lockMetragemGlobal && !!lockedMetragem}
                     />
                     {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary">
@@ -906,15 +991,25 @@ const LeftPanel = memo(function LeftPanel() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <label htmlFor="lote-material" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                    <div className="flex items-center gap-1.5 h-4">
+                      <label htmlFor="lote-material" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                      {isPVT && (
+                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
+                          {lockLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                        </button>
+                      )}
+                    </div>
                     <input
                       id="lote-material"
                       ref={loteRef}
                       value={lote}
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
-                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+                      className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
+                        (isPVT && lockLote) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                      }`}
                       placeholder="Lote..." autoComplete="off"
+                      readOnly={isPVT && lockLote && !!lockedLote}
                     />
                   </div>
                 )}
