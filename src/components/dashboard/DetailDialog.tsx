@@ -38,8 +38,8 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClo
                 </defs>
                 <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} fontSize={10} axisLine={false} tickLine={false} stroke="hsl(var(--muted-foreground))" />
                 <YAxis axisLine={false} tickLine={false} fontSize={10} stroke="hsl(var(--muted-foreground))" />
-                <ChartTooltip contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} formatter={(val: any) => [val, 'Quantidade']} />
-                <Bar dataKey="count" fill="url(#detailBarGradient)" radius={[6, 6, 2, 2]} barSize={28} />
+                <ChartTooltip cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} formatter={(val: any) => [val, 'Quantidade']} />
+                <Bar dataKey={detailChart.data?.[0]?.count !== undefined ? 'count' : 'value'} fill="url(#detailBarGradient)" radius={[6, 6, 2, 2]} maxBarSize={48} />
               </BarChart>
             ) : (
               <PieChart>
