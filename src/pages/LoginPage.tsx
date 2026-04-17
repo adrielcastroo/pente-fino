@@ -130,7 +130,6 @@ export default function LoginPage() {
     switch (mode) {
       case 'signup': return 'Criar Conta';
       case 'forgot': return 'Recuperar Senha';
-      case 'reset': return 'Nova Senha';
       default: return 'Sistema Pente Fino';
     }
   };
@@ -139,7 +138,6 @@ export default function LoginPage() {
     switch (mode) {
       case 'signup': return 'Crie sua conta para começar';
       case 'forgot': return 'Informe seu e-mail para receber o link de recuperação';
-      case 'reset': return 'Digite sua nova senha';
       default: return 'Faça login para gerenciar sua conferência';
     }
   };
