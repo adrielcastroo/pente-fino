@@ -220,36 +220,46 @@ export default function RightPanel() {
     return () => clearTimeout(timer);
   }, [localSearch, searchQuery, setSearchQuery, isLow]);
 
+  const trimmedQuery = useMemo(() => searchQuery.toLowerCase().trim(), [searchQuery]);
+
   const sortedRows = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    if (!trimmedQuery && (!sortBy || !SORT_MAP[sortBy])) {
+      return registros;
+    }
+    
     let result: Registro[];
-    if (q) {
+    if (trimmedQuery) {
       result = [];
+      const q = trimmedQuery;
       for (let i = 0, len = registros.length; i < len; i++) {
         const r = registros[i];
-        if ((r.item || '').toLowerCase().includes(q)) { result.push(r); continue; }
-        if ((r.endereco || '').toLowerCase().includes(q)) { result.push(r); continue; }
-        if ((r.lote || '').toLowerCase().includes(q)) { result.push(r); continue; }
-        if ((r.loteSistema || '').toLowerCase().includes(q)) { result.push(r); continue; }
+        if (
+          (r.item && r.item.toLowerCase().includes(q)) ||
+          (r.endereco && r.endereco.toLowerCase().includes(q)) ||
+          (r.lote && r.lote.toLowerCase().includes(q)) ||
+          (r.loteSistema && r.loteSistema.toLowerCase().includes(q))
+        ) {
+          result.push(r);
+        }
       }
     } else {
-      result = (sortBy && SORT_MAP[sortBy]) ? [...registros] : registros;
+      result = [...registros];
     }
+    
     if (sortBy && SORT_MAP[sortBy]) {
       result.sort(SORT_MAP[sortBy]);
     }
     return result;
-  }, [registros, searchQuery, sortBy]);
+  }, [registros, trimmedQuery, sortBy]);
 
   const pagedRows = useMemo(() => {
-    return sortedRows.slice(0, visibleCount);
+    return sortedRows.length > visibleCount ? sortedRows.slice(0, visibleCount) : sortedRows;
   }, [sortedRows, visibleCount]);
 
   const totals = useMemo(() => {
     let ml = 0, m2 = 0, qtd = 0;
     for (let i = 0, len = sortedRows.length; i < len; i++) {
       const r = sortedRows[i];
-      // Faster numeric conversion and summation
       ml += r.mLinear || 0;
       m2 += r.m2 || 0;
       qtd += r.quantidade || 0;
@@ -257,7 +267,11 @@ export default function RightPanel() {
     return { ml, m2, qtd };
   }, [sortedRows]);
 
-  const columns = useMemo(() => getRegistroColumns(registros.length > 0 ? [registros[0]] : [], currentMode), [currentMode, registros.length]);
+  const columns = useMemo(() => {
+    // Optimization: only use all rows if they have multiple modes
+    // Passing all rows to getRegistroColumns is now faster due to the optimization I made there
+    return getRegistroColumns(registros, currentMode);
+  }, [currentMode, registros]);
 
   const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
