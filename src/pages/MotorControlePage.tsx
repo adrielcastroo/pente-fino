@@ -128,7 +128,7 @@ export default function MotorControlePage() {
   }, [maxSequencial]);
 
   const handleModeloBlur = useCallback(() => {
-    if (subMode === 'controle') {
+    if (subMode === 'controle' && modelo.trim()) {
       setModelo(mapModelo(modelo));
     }
   }, [subMode, modelo, setModelo]);
@@ -148,13 +148,12 @@ export default function MotorControlePage() {
     if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
-    const loteSistema = nf.trim()
-      ? `${cxLabel} NF ${nf.trim()} ${cleaned}`
-      : `${cxLabel} ${cleaned}`;
+    const nfLabel = nf.trim() ? `NF ${nf.trim()}` : '';
+    const loteSistema = [cxLabel, nfLabel, cleaned].filter(Boolean).join(' ');
 
     addRegistro({
       id: crypto.randomUUID(),
-      item: modelo.trim(),
+      item: cleanedModelo,
       processo: '',
       nf: nf.trim(),
       endereco: '',

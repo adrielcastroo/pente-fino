@@ -80,11 +80,11 @@ export default function SaidaPage() {
 
     setScanning(true);
     try {
-      // Search for item in estoque_posicoes matching lote_sistema
+      // Search for item in estoque_posicoes matching lote_sistema (case-insensitive)
       const { data, error } = await supabase
         .from('estoque_posicoes')
         .select('*')
-        .eq('lote_sistema', loteFinal)
+        .ilike('lote_sistema', loteFinal)
         .eq('status', 'ocupado')
         .limit(1);
 
