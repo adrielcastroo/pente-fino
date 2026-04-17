@@ -57,10 +57,10 @@ serve(async (req) => {
       }
 
       // 4. Update Audit Log - Success
-      await supabaseClient.from("auth_audit_logs").insert({
-        event_type: "forgot_password_request_sent",
-        email,
-        status: "success",
+      await supabaseClient.rpc("log_auth_event", {
+        p_event_type: "forgot_password_request_sent",
+        p_email: email,
+        p_status: "success",
       });
 
       return new Response(
