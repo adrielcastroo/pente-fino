@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { UserCircle2, ArrowRight, Loader2, UserPlus, LogIn, KeyRound, ArrowLeft, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
+import logoComb from '@/assets/logo-comb.png';
 
 type PageMode = 'login' | 'signup' | 'forgot';
 
