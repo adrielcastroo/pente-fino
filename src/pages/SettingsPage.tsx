@@ -50,7 +50,6 @@ const categories = [
   { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
   { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
   { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
-  { id: 'performance', name: 'Performance', icon: Zap, description: 'Otimize o app para seu dispositivo.' },
   { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta.' },
   { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
 ];
