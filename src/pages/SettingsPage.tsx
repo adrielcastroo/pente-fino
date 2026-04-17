@@ -97,6 +97,120 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
 
+  // MFA state
+  const [mfaFactors, setMfaFactors] = useState<any[]>([]);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaEnrolling, setMfaEnrolling] = useState(false);
+  const [mfaQrCode, setMfaQrCode] = useState<string | null>(null);
+  const [mfaSecret, setMfaSecret] = useState<string | null>(null);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaVerifyCode, setMfaVerifyCode] = useState('');
+  const [mfaVerifying, setMfaVerifying] = useState(false);
+
+  const loadMfaFactors = async () => {
+    if (isGuest || !user) return;
+    setMfaLoading(true);
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      setMfaFactors(data?.totp || []);
+    } catch (e: any) {
+      console.error('MFA list error:', e);
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCategory === 'security' && !isGuest && user) {
+      loadMfaFactors();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, isGuest, user]);
+
+  const startMfaEnroll = async () => {
+    setMfaEnrolling(true);
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+      if (error) throw error;
+      setMfaQrCode(data.totp.qr_code);
+      setMfaSecret(data.totp.secret);
+      setMfaFactorId(data.id);
+    } catch (e: any) {
+      toast.error('Erro ao iniciar MFA: ' + e.message);
+      setMfaEnrolling(false);
+    }
+  };
+
+  const verifyMfaEnroll = async () => {
+    if (!mfaFactorId || mfaVerifyCode.length !== 6) {
+      toast.error('Digite o código de 6 dígitos.');
+      return;
+    }
+    setMfaVerifying(true);
+    try {
+      const { data: challenge, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+      if (challengeErr) throw challengeErr;
+      const { error: verifyErr } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.id,
+        code: mfaVerifyCode,
+      });
+      if (verifyErr) throw verifyErr;
+      toast.success('Autenticação de dois fatores ativada!');
+      setMfaQrCode(null);
+      setMfaSecret(null);
+      setMfaFactorId(null);
+      setMfaVerifyCode('');
+      setMfaEnrolling(false);
+      await loadMfaFactors();
+    } catch (e: any) {
+      toast.error('Código inválido: ' + e.message);
+    } finally {
+      setMfaVerifying(false);
+    }
+  };
+
+  const cancelMfaEnroll = async () => {
+    if (mfaFactorId) {
+      try { await supabase.auth.mfa.unenroll({ factorId: mfaFactorId }); } catch {}
+    }
+    setMfaQrCode(null);
+    setMfaSecret(null);
+    setMfaFactorId(null);
+    setMfaVerifyCode('');
+    setMfaEnrolling(false);
+  };
+
+  const removeMfaFactor = async (factorId: string) => {
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId });
+      if (error) throw error;
+      toast.success('MFA desativado.');
+      await loadMfaFactors();
+    } catch (e: any) {
+      toast.error('Erro ao remover MFA: ' + e.message);
+    }
+  };
+
+  const copySecret = () => {
+    if (mfaSecret) {
+      navigator.clipboard.writeText(mfaSecret);
+      toast.success('Segredo copiado!');
+    }
+  };
+
+  const handleSignOutAll = async () => {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' } as any);
+      if (error) throw error;
+      toast.success('Todas as sessões foram encerradas.');
+      navigate('/login');
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message);
+    }
+  };
+
   const handleChangePassword = async () => {
     if (newPassword.length < 8) {
       toast.error('A senha deve ter no mínimo 8 caracteres.');
