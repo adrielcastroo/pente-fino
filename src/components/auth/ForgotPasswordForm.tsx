@@ -43,7 +43,8 @@ export const ForgotPasswordForm = ({
         body: { 
           email: data.email, 
           type: data.method, 
-          action: "forgot-password" 
+          action: "forgot-password",
+          redirectTo: `${window.location.origin}/reset-password`
         },
       });
 
