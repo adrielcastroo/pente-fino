@@ -40,22 +40,8 @@ export default function DashboardPage() {
 
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
 
-  // Conferente details
-  const conferenteDetails = useMemo(() => {
-    const map = new Map<string, { name: string; total: number; conferences: number; lastDate: string }>();
-    for (const conf of history) {
-      const name = conf.conferente || 'Desconhecido';
-      const existing = map.get(name) || { name, total: 0, conferences: 0, lastDate: '' };
-      existing.conferences++;
-      existing.total += conf.registros.length;
-      if (!existing.lastDate || conf.date > existing.lastDate) existing.lastDate = conf.date;
-      map.set(name, existing);
-    }
-    return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [history]);
-
-  // Conference details
-  const conferenceDetails = useMemo(() => {
+  // Conference summary list (only 50 recent)
+  const conferenceSummary = useMemo(() => {
     return history.slice(0, 50).map(conf => ({
       id: conf.id,
       name: conf.processo || conf.name,
@@ -68,43 +54,12 @@ export default function DashboardPage() {
     }));
   }, [history]);
 
-  // Registros per conference
+  // Registros per conference (only top 30)
   const registrosPerConference = useMemo(() => {
     return history.slice(0, 30).map(conf => ({
       name: (conf.processo || conf.name || '').slice(0, 20),
       value: conf.registros.length,
     }));
-  }, [history]);
-
-  // Mode distribution over time
-  const modeTimeline = useMemo(() => {
-    const map = new Map<string, { tecido: number; motor: number; madeira: number }>();
-    for (const conf of history) {
-      const d = new Date(conf.date);
-      const key = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const existing = map.get(key) || { tecido: 0, motor: 0, madeira: 0 };
-      for (const r of conf.registros) {
-        if (r.modoOrigem === 'motor' || r.modoOrigem === 'controle') existing.motor++;
-        else if (r.modoOrigem === 'madeira') existing.madeira++;
-        else existing.tecido++;
-      }
-      map.set(key, existing);
-    }
-    return Array.from(map, ([name, v]) => ({ name, ...v })).slice(-10);
-  }, [history]);
-
-  // Average conference duration
-  const avgDuration = useMemo(() => {
-    let total = 0, count = 0;
-    for (const conf of history) {
-      if (conf.startedAt && conf.finishedAt) {
-        const diff = new Date(conf.finishedAt).getTime() - new Date(conf.startedAt).getTime();
-        if (diff > 0) { total += diff; count++; }
-      }
-    }
-    if (count === 0) return '—';
-    const avgMins = Math.round(total / count / 60000);
-    return avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}min` : `${avgMins}min`;
   }, [history]);
 
   return (
@@ -123,7 +78,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3 shrink-0">
           <Badge variant="outline" className="text-[10px] font-bold px-2.5 py-1 rounded-lg border-primary/20 text-primary bg-primary/5">
             <Clock className="w-3 h-3 mr-1" />
-            Tempo médio: {avgDuration}
+            Tempo médio: {stats.avgDuration}
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -266,7 +221,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
-                {conferenteDetails.map(c => (
+                {stats.conferenteDetails.map(c => (
                   <tr key={c.name} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
                     <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
@@ -305,7 +260,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
-                {conferenceDetails.map(c => (
+                {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-bold text-foreground truncate max-w-[150px]">{c.name}</td>
                     <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
