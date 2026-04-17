@@ -17,7 +17,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { email, type, action } = await req.json();
+    const { email, type, action, redirectTo } = await req.json();
 
     if (action === "forgot-password") {
       // 1. Rate Limit Check
@@ -52,7 +52,7 @@ serve(async (req) => {
         });
         // We don't throw error if user not found to avoid revealing existence
       } else {
-        await supabaseClient.auth.resetPasswordForEmail(email);
+        await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
         // We don't throw error if user not found to avoid revealing existence
       }
 
