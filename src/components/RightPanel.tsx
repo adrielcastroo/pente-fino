@@ -309,7 +309,7 @@ export default function RightPanel() {
       currentGroup.rows.push(r);
     }
     return groups;
-  }, [isMotorControle, sortedRows]);
+  }, [isMotorControle, pagedRows]);
 
   const handleClearAll = () => {
     if (!registros.length) return;
@@ -324,6 +324,10 @@ export default function RightPanel() {
       duration: 5000,
     });
   };
+
+  const loadMore = useCallback(() => {
+    setVisibleCount(prev => prev + (isLow ? 50 : 200));
+  }, [isLow]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
