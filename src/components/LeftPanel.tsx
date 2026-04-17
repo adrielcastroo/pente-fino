@@ -837,8 +837,13 @@ const LeftPanel = memo(function LeftPanel() {
 
             {/* Item */}
             <div className="space-y-1.5">
-              <div className="flex items-center h-4">
+              <div className="flex items-center gap-1.5 h-4">
                 <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
+                {isPVT && (
+                  <button onClick={toggleLockItem} className={`transition-colors ${lockItem ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockItem ? 'Campo travado' : 'Travar campo'}>
+                    {lockItem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
+                )}
               </div>
               <div className="relative">
                 <input
@@ -848,9 +853,12 @@ const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleItemChange(e.target.value)}
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
+                    (isPVT && lockItem) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
+                  readOnly={isPVT && lockItem && !!lockedItem}
                 />
                 {usesLarguraFromItem && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
