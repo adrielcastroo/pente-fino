@@ -62,7 +62,7 @@ const categories = [
   { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
   { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
   { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
-  { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta.' },
+  { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
   { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
 ];
 
