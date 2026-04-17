@@ -26,45 +26,55 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 const LeftPanel = memo(function LeftPanel() {
-  const currentMode = useAppStore(s => s.currentMode);
-  const setMode = useAppStore(s => s.setMode);
-  const processo = useAppStore(s => s.processo);
-  const setProcesso = useAppStore(s => s.setProcesso);
-  const conferente = useAppStore(s => s.conferente);
-  const registros = useAppStore(s => s.registros);
-  const addRegistro = useAppStore(s => s.addRegistro);
-  const undoStack = useAppStore(s => s.undoStack);
-  const undoAction = useAppStore(s => s.undo);
-  const lockProcesso = useAppStore(s => s.lockProcesso);
-  const setLockProcesso = useAppStore(s => s.setLockProcesso);
-  const lockedProcesso = useAppStore(s => s.lockedProcesso);
-  const setLockedProcesso = useAppStore(s => s.setLockedProcesso);
-  const lockNf = useAppStore(s => s.lockNf);
-  const setLockNf = useAppStore(s => s.setLockNf);
-  const lockedNf = useAppStore(s => s.lockedNf);
-  const setLockedNf = useAppStore(s => s.setLockedNf);
-  const lockEndereco = useAppStore(s => s.lockEndereco);
-  const setLockEndereco = useAppStore(s => s.setLockEndereco);
-  const lockedEndereco = useAppStore(s => s.lockedEndereco);
-  const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
-  
-  // PVT locks
-  const lockItem = useAppStore(s => s.lockItem);
-  const setLockItem = useAppStore(s => s.setLockItem);
-  const lockedItem = useAppStore(s => s.lockedItem);
-  const setLockedItem = useAppStore(s => s.setLockedItem);
-  const lockLote = useAppStore(s => s.lockLote);
-  const setLockLote = useAppStore(s => s.setLockLote);
-  const lockedLote = useAppStore(s => s.lockedLote);
-  const setLockedLote = useAppStore(s => s.setLockedLote);
-  const lockMetragemGlobal = useAppStore(s => s.lockMetragem);
-  const setLockMetragemGlobal = useAppStore(s => s.setLockMetragem);
-  const lockedMetragem = useAppStore(s => s.lockedMetragem);
-  const setLockedMetragem = useAppStore(s => s.setLockedMetragem);
-
-  const formData = useAppStore(s => s.formData);
-  const setFormData = useAppStore(s => s.setFormData);
-  const resetFormData = useAppStore(s => s.resetFormData);
+  const {
+    currentMode, setMode, processo, setProcesso, conferente, registros,
+    addRegistro, undoStack, undo: undoAction,
+    lockProcesso, setLockProcesso, lockedProcesso, setLockedProcesso,
+    lockNf, setLockNf, lockedNf, setLockedNf,
+    lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco,
+    lockItem, setLockItem, lockedItem, setLockedItem,
+    lockLote, setLockLote, lockedLote, setLockedLote,
+    lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
+    lockedMetragem, setLockedMetragem,
+    formData, setFormData, resetFormData
+  } = useAppStore(useShallow(s => ({
+    currentMode: s.currentMode,
+    setMode: s.setMode,
+    processo: s.processo,
+    setProcesso: s.setProcesso,
+    conferente: s.conferente,
+    registros: s.registros,
+    addRegistro: s.addRegistro,
+    undoStack: s.undoStack,
+    undo: s.undo,
+    lockProcesso: s.lockProcesso,
+    setLockProcesso: s.setLockProcesso,
+    lockedProcesso: s.lockedProcesso,
+    setLockedProcesso: s.setLockedProcesso,
+    lockNf: s.lockNf,
+    setLockNf: s.setLockNf,
+    lockedNf: s.lockedNf,
+    setLockedNf: s.setLockedNf,
+    lockEndereco: s.lockEndereco,
+    setLockEndereco: s.setLockEndereco,
+    lockedEndereco: s.lockedEndereco,
+    setLockedEndereco: s.setLockedEndereco,
+    lockItem: s.lockItem,
+    setLockItem: s.setLockItem,
+    lockedItem: s.lockedItem,
+    setLockedItem: s.setLockedItem,
+    lockLote: s.lockLote,
+    setLockLote: s.setLockLote,
+    lockedLote: s.lockedLote,
+    setLockedLote: s.setLockedLote,
+    lockMetragem: s.lockMetragem,
+    setLockMetragem: s.setLockMetragem,
+    lockedMetragem: s.lockedMetragem,
+    setLockedMetragem: s.setLockedMetragem,
+    formData: s.formData,
+    setFormData: s.setFormData,
+    resetFormData: s.resetFormData
+  })));
 
 
   const { isLow } = usePerformance();
