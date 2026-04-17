@@ -47,6 +47,21 @@ const LeftPanel = memo(function LeftPanel() {
   const setLockEndereco = useAppStore(s => s.setLockEndereco);
   const lockedEndereco = useAppStore(s => s.lockedEndereco);
   const setLockedEndereco = useAppStore(s => s.setLockedEndereco);
+  
+  // PVT locks
+  const lockItem = useAppStore(s => s.lockItem);
+  const setLockItem = useAppStore(s => s.setLockItem);
+  const lockedItem = useAppStore(s => s.lockedItem);
+  const setLockedItem = useAppStore(s => s.setLockedItem);
+  const lockLote = useAppStore(s => s.lockLote);
+  const setLockLote = useAppStore(s => s.setLockLote);
+  const lockedLote = useAppStore(s => s.lockedLote);
+  const setLockedLote = useAppStore(s => s.setLockedLote);
+  const lockMetragemGlobal = useAppStore(s => s.lockMetragem);
+  const setLockMetragemGlobal = useAppStore(s => s.setLockMetragem);
+  const lockedMetragem = useAppStore(s => s.lockedMetragem);
+  const setLockedMetragem = useAppStore(s => s.setLockedMetragem);
+
   const formData = useAppStore(s => s.formData);
   const setFormData = useAppStore(s => s.setFormData);
   const resetFormData = useAppStore(s => s.resetFormData);
