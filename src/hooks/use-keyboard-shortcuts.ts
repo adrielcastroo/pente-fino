@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 
@@ -16,9 +16,17 @@ export function useKeyboardShortcuts({
   setConfigOpen,
 }: KeyboardShortcutsOptions) {
   const undo = useAppStore(s => s.undo);
+  
+  // Use refs to avoid re-attaching the event listener on every state change
+  const refs = useRef({ shortcutsOpen, configOpen, setShortcutsOpen, setConfigOpen, undo });
+  
+  useEffect(() => {
+    refs.current = { shortcutsOpen, configOpen, setShortcutsOpen, setConfigOpen, undo };
+  }, [shortcutsOpen, configOpen, setShortcutsOpen, setConfigOpen, undo]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      const { shortcutsOpen, configOpen, setShortcutsOpen, setConfigOpen, undo } = refs.current;
       const activeElement = document.activeElement as HTMLElement;
       const isTyping = 
         activeElement?.tagName === 'INPUT' || 
@@ -36,13 +44,13 @@ export function useKeyboardShortcuts({
 
       if (shortcutsOpen || configOpen) return;
 
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isMac = navigator.userAgent.toUpperCase().indexOf('MAC') >= 0;
       const cmdKey = isMac ? e.metaKey : e.ctrlKey;
 
       if (cmdKey && e.key.toLowerCase() === 'z') { 
         e.preventDefault(); 
         const r = undo(); 
-        if (r) toast.success('Rolo restaurado'); 
+        if (r) toast.success('Ação desfeita'); 
       }
       
       if (cmdKey && e.key.toLowerCase() === 'f' && !isTyping) {
@@ -63,5 +71,5 @@ export function useKeyboardShortcuts({
 
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [undo, configOpen, shortcutsOpen, setShortcutsOpen, setConfigOpen]);
+  }, []); // Only attach once
 }
