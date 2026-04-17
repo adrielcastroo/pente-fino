@@ -107,13 +107,13 @@ export default function LoginPage() {
   };
 
   // Check if we're in a password reset flow (redirected from email)
-  useState(() => {
+  useEffect(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(window.location.search);
     if (hash.includes('type=recovery') || (params.get('reset') === 'true' && hash.includes('access_token'))) {
       window.location.href = `${window.location.origin}/reset-password${window.location.hash}`;
     }
-  });
+  }, []);
 
   const handleGuestLogin = () => {
     if (!showGuestInput) {
