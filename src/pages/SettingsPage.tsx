@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { KeyRound, AlertTriangle, Loader2 } from 'lucide-react';
+import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw } from 'lucide-react';
 import { 
   User, 
   Settings, 
@@ -96,6 +96,120 @@ export default function SettingsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+
+  // MFA state
+  const [mfaFactors, setMfaFactors] = useState<any[]>([]);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaEnrolling, setMfaEnrolling] = useState(false);
+  const [mfaQrCode, setMfaQrCode] = useState<string | null>(null);
+  const [mfaSecret, setMfaSecret] = useState<string | null>(null);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaVerifyCode, setMfaVerifyCode] = useState('');
+  const [mfaVerifying, setMfaVerifying] = useState(false);
+
+  const loadMfaFactors = async () => {
+    if (isGuest || !user) return;
+    setMfaLoading(true);
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      setMfaFactors(data?.totp || []);
+    } catch (e: any) {
+      console.error('MFA list error:', e);
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCategory === 'security' && !isGuest && user) {
+      loadMfaFactors();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, isGuest, user]);
+
+  const startMfaEnroll = async () => {
+    setMfaEnrolling(true);
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+      if (error) throw error;
+      setMfaQrCode(data.totp.qr_code);
+      setMfaSecret(data.totp.secret);
+      setMfaFactorId(data.id);
+    } catch (e: any) {
+      toast.error('Erro ao iniciar MFA: ' + e.message);
+      setMfaEnrolling(false);
+    }
+  };
+
+  const verifyMfaEnroll = async () => {
+    if (!mfaFactorId || mfaVerifyCode.length !== 6) {
+      toast.error('Digite o código de 6 dígitos.');
+      return;
+    }
+    setMfaVerifying(true);
+    try {
+      const { data: challenge, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+      if (challengeErr) throw challengeErr;
+      const { error: verifyErr } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.id,
+        code: mfaVerifyCode,
+      });
+      if (verifyErr) throw verifyErr;
+      toast.success('Autenticação de dois fatores ativada!');
+      setMfaQrCode(null);
+      setMfaSecret(null);
+      setMfaFactorId(null);
+      setMfaVerifyCode('');
+      setMfaEnrolling(false);
+      await loadMfaFactors();
+    } catch (e: any) {
+      toast.error('Código inválido: ' + e.message);
+    } finally {
+      setMfaVerifying(false);
+    }
+  };
+
+  const cancelMfaEnroll = async () => {
+    if (mfaFactorId) {
+      try { await supabase.auth.mfa.unenroll({ factorId: mfaFactorId }); } catch {}
+    }
+    setMfaQrCode(null);
+    setMfaSecret(null);
+    setMfaFactorId(null);
+    setMfaVerifyCode('');
+    setMfaEnrolling(false);
+  };
+
+  const removeMfaFactor = async (factorId: string) => {
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId });
+      if (error) throw error;
+      toast.success('MFA desativado.');
+      await loadMfaFactors();
+    } catch (e: any) {
+      toast.error('Erro ao remover MFA: ' + e.message);
+    }
+  };
+
+  const copySecret = () => {
+    if (mfaSecret) {
+      navigator.clipboard.writeText(mfaSecret);
+      toast.success('Segredo copiado!');
+    }
+  };
+
+  const handleSignOutAll = async () => {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' } as any);
+      if (error) throw error;
+      toast.success('Todas as sessões foram encerradas.');
+      navigate('/login');
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message);
+    }
+  };
 
   const handleChangePassword = async () => {
     if (newPassword.length < 8) {
@@ -481,21 +595,120 @@ export default function SettingsPage() {
                             </div>
                           </div>
 
+                          {/* MFA */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Autenticação em Dois Fatores (2FA)</h4>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-muted/20 border border-border/20 space-y-4">
+                              {mfaLoading ? (
+                                <div className="flex items-center justify-center py-4">
+                                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                                </div>
+                              ) : mfaFactors.filter(f => f.status === 'verified').length > 0 ? (
+                                <div className="space-y-3">
+                                  {mfaFactors.filter(f => f.status === 'verified').map(factor => (
+                                    <div key={factor.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                                      <div className="flex items-center gap-3">
+                                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                                        <div>
+                                          <p className="text-sm font-bold">App Autenticador</p>
+                                          <p className="text-xs text-muted-foreground">Ativado em {new Date(factor.created_at).toLocaleDateString('pt-BR')}</p>
+                                        </div>
+                                      </div>
+                                      <Button variant="ghost" size="sm" onClick={() => removeMfaFactor(factor.id)} className="text-destructive hover:text-destructive font-bold">
+                                        Remover
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : mfaQrCode ? (
+                                <div className="space-y-4">
+                                  <p className="text-xs text-muted-foreground">
+                                    Escaneie o QR Code com seu app autenticador (Google Authenticator, Authy, 1Password, etc.) e digite o código de 6 dígitos abaixo.
+                                  </p>
+                                  <div className="flex justify-center p-4 bg-white rounded-xl">
+                                    <div dangerouslySetInnerHTML={{ __html: mfaQrCode }} />
+                                  </div>
+                                  {mfaSecret && (
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Ou insira manualmente</Label>
+                                      <div className="flex gap-2">
+                                        <Input value={mfaSecret} readOnly className="font-mono text-xs bg-background/50" />
+                                        <Button variant="outline" size="icon" onClick={copySecret}>
+                                          <Copy className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Código de Verificação</Label>
+                                    <Input
+                                      value={mfaVerifyCode}
+                                      onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                      placeholder="000000"
+                                      className="font-mono text-center text-lg tracking-[0.5em] h-12"
+                                      maxLength={6}
+                                    />
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button onClick={cancelMfaEnroll} variant="outline" className="flex-1 font-bold" disabled={mfaVerifying}>
+                                      Cancelar
+                                    </Button>
+                                    <Button onClick={verifyMfaEnroll} disabled={mfaVerifying || mfaVerifyCode.length !== 6} className="flex-1 font-bold">
+                                      {mfaVerifying ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+                                      Ativar 2FA
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  <div className="flex items-start gap-3">
+                                    <QrCode className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                      <p className="text-sm font-bold">Proteja sua conta com 2FA</p>
+                                      <p className="text-xs text-muted-foreground leading-relaxed">
+                                        Adicione uma camada extra de segurança exigindo um código do seu app autenticador além da senha.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Button onClick={startMfaEnroll} disabled={mfaEnrolling} className="w-full font-bold">
+                                    {mfaEnrolling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+                                    Configurar 2FA
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
                           {/* Sign out all */}
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <LogOut className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Sessão</h4>
+                              <h4 className="text-sm font-black uppercase tracking-wider">Sessões</h4>
                             </div>
-                            <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
-                              <div className="space-y-0.5">
-                                <Label className="text-sm font-bold">Encerrar Sessão</Label>
-                                <p className="text-xs text-muted-foreground">Sair desta conta neste dispositivo.</p>
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
+                                <div className="space-y-0.5">
+                                  <Label className="text-sm font-bold">Encerrar Sessão Atual</Label>
+                                  <p className="text-xs text-muted-foreground">Sair desta conta neste dispositivo.</p>
+                                </div>
+                                <Button variant="outline" onClick={() => signOut()} className="font-bold">
+                                  <LogOut className="w-4 h-4 mr-2" />
+                                  Sair
+                                </Button>
                               </div>
-                              <Button variant="outline" onClick={() => signOut()} className="font-bold">
-                                <LogOut className="w-4 h-4 mr-2" />
-                                Sair
-                              </Button>
+                              <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
+                                <div className="space-y-0.5">
+                                  <Label className="text-sm font-bold">Encerrar Todas as Sessões</Label>
+                                  <p className="text-xs text-muted-foreground">Desconectar de todos os dispositivos.</p>
+                                </div>
+                                <Button variant="outline" onClick={handleSignOutAll} className="font-bold">
+                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                  Encerrar Tudo
+                                </Button>
+                              </div>
                             </div>
                           </div>
 
