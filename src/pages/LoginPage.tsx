@@ -24,6 +24,7 @@ export default function LoginPage() {
   const { loginAsGuest } = useAuth();
   const [guestName, setGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
