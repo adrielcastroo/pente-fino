@@ -34,8 +34,9 @@ const ResetPassword = () => {
   }, [navigate]);
 
   const handleSuccess = () => {
-    supabase.auth.signOut();
-    navigate("/login");
+    // Navigate directly to dashboard as the user is already authenticated
+    // after a successful password update in a recovery session.
+    navigate("/", { replace: true });
   };
 
   if (isChecking) {
