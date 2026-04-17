@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const LoginRoute = ({ children }: { children: React.ReactNode }) => {
