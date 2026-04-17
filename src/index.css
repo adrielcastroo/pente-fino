@@ -255,3 +255,25 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Performance Mode Optimizations */
+.low-perf *, 
+.low-perf {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+  animation-iteration-count: 1 !important;
+  box-shadow: none !important;
+}
+
+.low-perf .app-bg-pattern {
+  background-image: none !important;
+}
+
+.low-perf .animate-spin {
+  animation: spin 1s linear infinite !important; /* Keep essential animations */
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
