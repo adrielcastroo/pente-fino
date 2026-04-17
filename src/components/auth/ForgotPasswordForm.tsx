@@ -111,13 +111,13 @@ export const ForgotPasswordForm = ({
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full h-11 rounded-xl font-medium transition-all active:scale-[0.98]"
+        className="w-full h-12 rounded-xl font-semibold transition-all active:scale-[0.98] shadow-md hover:shadow-lg bg-primary text-primary-foreground"
       >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <>
-            Enviar instruções
+            Enviar recuperação de senha
             <ArrowRight className="ml-2 h-4 w-4" />
           </>
         )}
