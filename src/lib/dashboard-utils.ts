@@ -2,6 +2,8 @@ import { Conference } from '@/types';
 
 // Memoized date formatter to avoid recreation
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
+const fullDateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
 // Bounded LRU-ish cache to avoid unbounded memory growth on long sessions
 const dateCache = new Map<string, string>();
 const DATE_CACHE_MAX = 500;
@@ -12,7 +14,6 @@ function getCachedDate(id: string, raw: string): string {
   const d = new Date(raw);
   const value = !isNaN(d.getTime()) ? dateFormatter.format(d) : '??/??';
   if (dateCache.size >= DATE_CACHE_MAX) {
-    // Drop oldest entry (Map preserves insertion order)
     const firstKey = dateCache.keys().next().value;
     if (firstKey !== undefined) dateCache.delete(firstKey);
   }
@@ -21,40 +22,64 @@ function getCachedDate(id: string, raw: string): string {
 }
 
 export function computeStats(history: Conference[]) {
-  const confMap = new Map<string, Set<string>>();
+  const confMap = new Map<string, { name: string; total: number; conferences: number; lastDate: string; items: Set<string> }>();
   const catMap = new Map<string, number>();
   const subMap = new Map<string, number>();
   const tipoMap = new Map<string, number>();
-  const timelineMap = new Map<string, number>();
+  const timelineMap = new Map<string, { name: string; tecido: number; motor: number; madeira: number; total: number }>();
+  
   let totalRegistros = 0;
+  let totalDuration = 0;
+  let durationCount = 0;
 
-  // Cache some repeated strings to avoid allocations
   const DESC_STR = 'Desconhecido';
   const TEC_STR = 'Tecido';
   const COU_STR = 'Coulisse';
   const MAD_STR = 'Madeira';
   const MOT_STR = 'Motor/Controle';
 
+  // Process history in a single pass
   for (let i = 0, len = history.length; i < len; i++) {
     const conference = history[i];
     const name = conference.conferente || DESC_STR;
     const dateStr = getCachedDate(conference.id, conference.date);
 
-    timelineMap.set(dateStr, (timelineMap.get(dateStr) || 0) + 1);
+    // Timeline processing
+    let timelineEntry = timelineMap.get(dateStr);
+    if (!timelineEntry) {
+      timelineEntry = { name: dateStr, tecido: 0, motor: 0, madeira: 0, total: 0 };
+      timelineMap.set(dateStr, timelineEntry);
+    }
+    timelineEntry.total++;
 
-    let confSet = confMap.get(name);
-    if (!confSet) {
-      confSet = new Set();
-      confMap.set(name, confSet);
+    // Conferente processing
+    let conferenteEntry = confMap.get(name);
+    if (!conferenteEntry) {
+      conferenteEntry = { name, total: 0, conferences: 0, lastDate: '', items: new Set() };
+      confMap.set(name, conferenteEntry);
+    }
+    conferenteEntry.conferences++;
+    if (!conferenteEntry.lastDate || conference.date > conferenteEntry.lastDate) {
+      conferenteEntry.lastDate = conference.date;
+    }
+
+    // Duration processing
+    if (conference.startedAt && conference.finishedAt) {
+      const diff = new Date(conference.finishedAt).getTime() - new Date(conference.startedAt).getTime();
+      if (diff > 0) {
+        totalDuration += diff;
+        durationCount++;
+      }
     }
     
     const regs = conference.registros;
     for (let j = 0, regLen = regs.length; j < regLen; j++) {
       const r = regs[j];
       totalRegistros++;
+      conferenteEntry.total++;
       
-      if (r.nf) confSet.add(`NF:${r.nf}`);
-      if (r.processo) confSet.add(`PROC:${r.processo}`);
+      if (r.nf) conferenteEntry.items.add(`NF:${r.nf}`);
+      if (r.processo) conferenteEntry.items.add(`PROC:${r.processo}`);
       
       const modo = r.modoOrigem || 'manual';
       let cat = TEC_STR;
@@ -62,12 +87,14 @@ export function computeStats(history: Conference[]) {
 
       if (modo === 'madeira') {
         cat = MAD_STR; sub = MAD_STR;
+        timelineEntry.madeira++;
       } else if (modo === 'motor' || modo === 'controle') {
         cat = MOT_STR; sub = MOT_STR;
-      } else if (modo === 'openrouter') {
-        sub = 'IA';
-      } else if (modo === 'diversos') {
-        sub = 'Diversos';
+        timelineEntry.motor++;
+      } else {
+        timelineEntry.tecido++;
+        if (modo === 'openrouter') sub = 'IA';
+        else if (modo === 'diversos') sub = 'Diversos';
       }
       
       catMap.set(cat, (catMap.get(cat) || 0) + 1);
@@ -79,24 +106,26 @@ export function computeStats(history: Conference[]) {
   }
 
   const sortByValueDesc = (a: any, b: any) => b.value - a.value;
-  const sortByCountDesc = (a: any, b: any) => b.count - a.count;
+  const sortByTotalDesc = (a: any, b: any) => b.total - a.total;
+
+  const avgMins = durationCount > 0 ? Math.round(totalDuration / durationCount / 60000) : 0;
+  const avgDurationStr = avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}min` : `${avgMins}min`;
 
   return {
-    topConferentes: Array.from(confMap, ([name, set]) => ({ name, count: set.size }))
-      .sort(sortByCountDesc).slice(0, 5),
+    topConferentes: Array.from(confMap, ([name, data]) => ({ name, count: data.items.size, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
+      .sort((a, b) => b.count - a.count).slice(0, 10),
+    conferenteDetails: Array.from(confMap, ([name, data]) => ({ name, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
+      .sort(sortByTotalDesc),
     categorias: Array.from(catMap, ([name, value]) => ({ name, value }))
       .sort(sortByValueDesc),
     ferramentas: Array.from(subMap, ([name, count]) => ({ name, count }))
-      .sort(sortByCountDesc),
+      .sort((a, b) => b.count - a.count),
     tipos: Array.from(tipoMap, ([name, value]) => ({ name, value }))
-      .sort(sortByValueDesc).slice(0, 6),
-    timeline: Array.from(timelineMap, ([name, value]) => ({ name, value })).slice(-7),
+      .sort(sortByValueDesc).slice(0, 8),
+    timeline: Array.from(timelineMap.values()).slice(-10),
     totalRegistros,
     totalConferencias: history.length,
     totalConferentes: confMap.size,
+    avgDuration: avgDurationStr,
   };
 }
-
-
-// Note: exportToExcel was moved to @/lib/export-utils for performance (dynamic import)
-
