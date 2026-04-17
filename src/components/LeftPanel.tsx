@@ -944,9 +944,16 @@ const LeftPanel = memo(function LeftPanel() {
             {!isMadeira && (
               <>
                 <div className="space-y-1.5">
-                  <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
-                  </label>
+                  <div className="flex items-center gap-1.5 h-4">
+                    <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
+                    </label>
+                    {isPVT && (
+                      <button onClick={toggleLockMetragem} className={`transition-colors ${lockMetragemGlobal ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockMetragemGlobal ? 'Campo travado' : 'Travar campo'}>
+                        {lockMetragemGlobal ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <input
                       id="metragem-input"
@@ -955,8 +962,11 @@ const LeftPanel = memo(function LeftPanel() {
                       value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
                       onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
-                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+                      className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
+                        (isPVT && lockMetragemGlobal) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                      }`}
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
+                      readOnly={isPVT && lockMetragemGlobal && !!lockedMetragem}
                     />
                     {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary">
