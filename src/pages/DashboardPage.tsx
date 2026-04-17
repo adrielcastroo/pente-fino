@@ -78,7 +78,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3 shrink-0">
           <Badge variant="outline" className="text-[10px] font-bold px-2.5 py-1 rounded-lg border-primary/20 text-primary bg-primary/5">
             <Clock className="w-3 h-3 mr-1" />
-            Tempo médio: {avgDuration}
+            Tempo médio: {stats.avgDuration}
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
