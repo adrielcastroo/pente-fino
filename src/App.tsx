@@ -66,7 +66,7 @@ const App = () => (
               </Routes>
             </Suspense>
           </AuthProvider>
-          <Toaster position="top-right" closeButton duration={2000} />
+          <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
