@@ -301,7 +301,6 @@ export default function RightPanel() {
     setEditingCell(null);
   }, []);
 
-  const trimmedQuery = useMemo(() => searchQuery.toLowerCase().trim(), [searchQuery]);
 
   const isMotorControle = currentMode === 'motor' || currentMode === 'controle';
 
