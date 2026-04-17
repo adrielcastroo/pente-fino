@@ -141,7 +141,7 @@ const TopBar = memo(function TopBar() {
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
-          {registros.length > 0 && (
+          {registroCount > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -158,18 +158,18 @@ const TopBar = memo(function TopBar() {
                   <span className="hidden sm:inline font-bold">{isArchiving ? 'Aguarde...' : 'Exportar'}</span>
                   {!isArchiving && (
                     <Badge variant="secondary" className="bg-white/20 text-white border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
-                      {registros.length}
+                      {registroCount}
                     </Badge>
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="font-semibold">
-                <p>Exportar {registros.length} registros para Excel</p>
+                <p>Exportar {registroCount} registros para Excel</p>
               </TooltipContent>
             </Tooltip>
           )}
 
-          {registros.length === 0 && (
+          {registroCount === 0 && (
             <Badge variant="outline" className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-dashed border-border/40 bg-transparent text-muted-foreground/50 font-medium flex gap-1.5 shrink-0">
               <Archive className="w-3.5 h-3.5 opacity-50" />
               <span className="text-[10px] sm:text-xs whitespace-nowrap">Vazio</span>
