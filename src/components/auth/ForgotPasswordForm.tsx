@@ -30,7 +30,7 @@ export const ForgotPasswordForm = ({
     formState: { errors },
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { method: "link" },
+    defaultValues: { method: "otp" },
   });
 
   const selectedMethod = watch("method");
