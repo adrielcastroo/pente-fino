@@ -32,13 +32,14 @@ const TopBar = memo(function TopBar() {
   
   const exportExcel = async () => {
     if (isArchiving) return;
-    if (!registros.length) { 
+    const currentRegistros = useAppStore.getState().registros;
+    if (!currentRegistros.length) { 
       toast.warning('Nenhum registro para exportar.'); 
       return; 
     }
 
-    const isMotorControle = registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
-    const requiresProcesso = !isMotorControle && (registros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
+    const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+    const requiresProcesso = !isMotorControle && (currentRegistros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
     
     if (requiresProcesso && !processo.trim()) { 
       toast.warning('Preencha o campo PROCESSO para continuar.'); 
@@ -50,22 +51,22 @@ const TopBar = memo(function TopBar() {
       return; 
     }
 
-    const columns = getRegistroColumns(registros, currentMode);
+    const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
-    const data = registros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
+    const data = currentRegistros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
     const columnWidths = columns.map(column => column.width);
 
     let fileLabel: string;
     let archiveName: string;
 
     if (isMotorControle) {
-      const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+      const nfs = Array.from(new Set(currentRegistros.map(r => (r.nf || '').trim()).filter(Boolean)));
       fileLabel = nfs.length > 0 ? `Motores NF ${nfs.join(' ')}` : 'Motores';
       archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : 'Motor/Controle';
     } else {
-      const isDiversosOnly = registros.every(r => r.modoOrigem === 'diversos');
+      const isDiversosOnly = currentRegistros.every(r => r.modoOrigem === 'diversos');
       if (isDiversosOnly) {
-        const nfs = Array.from(new Set(registros.map(r => (r.nf || '').trim()).filter(Boolean)));
+        const nfs = Array.from(new Set(currentRegistros.map(r => (r.nf || '').trim()).filter(Boolean)));
         fileLabel = nfs.length > 0 ? `NF_${nfs.join('_')}` : (processo.trim() || 'diversos');
         archiveName = nfs.length > 0 ? `NF ${nfs.join(', ')}` : (processo.trim() || 'Diversos');
       } else {
@@ -79,9 +80,9 @@ const TopBar = memo(function TopBar() {
       : `conferencia_${fileLabel.replace(/[/\\,\s]+/g, '_')}`;
 
     try {
-      const count = registros.length;
+      const count = currentRegistros.length;
       if (isMotorControle) {
-        await exportMotorControleToExcel(registros, fileName);
+        await exportMotorControleToExcel(currentRegistros, fileName);
       } else {
         await exportConferenceToExcel(headers, data, fileName, columnWidths);
       }
