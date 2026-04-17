@@ -375,6 +375,66 @@ export type Database = {
           },
         ]
       }
+      report_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          recipient_count: number | null
+          report_type: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          recipient_count?: number | null
+          report_type: string
+          sent_at?: string | null
+          status: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          recipient_count?: number | null
+          report_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      report_settings: {
+        Row: {
+          created_at: string | null
+          daily_enabled: boolean | null
+          email_recipients: string[]
+          id: string
+          monthly_enabled: boolean | null
+          updated_at: string | null
+          user_id: string | null
+          weekly_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_enabled?: boolean | null
+          email_recipients: string[]
+          id?: string
+          monthly_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_enabled?: boolean | null
+          email_recipients?: string[]
+          id?: string
+          monthly_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_enabled?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
