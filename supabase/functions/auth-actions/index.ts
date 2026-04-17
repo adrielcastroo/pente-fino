@@ -34,33 +34,33 @@ serve(async (req) => {
       }
 
       // 2. Audit Log - Request Started
-      await supabaseClient.from("auth_audit_logs").insert({
-        event_type: "forgot_password_request",
-        email,
-        status: "pending",
-        ip_address: req.headers.get("x-forwarded-for") || "unknown",
+      await supabaseClient.rpc("log_auth_event", {
+        p_event_type: "forgot_password_request",
+        p_email: email,
+        p_status: "pending",
+        p_metadata: { ip_address: req.headers.get("x-forwarded-for") || "unknown" },
       });
 
       // 3. Send Recovery Link/OTP via Supabase Auth
       // We don't reveal if user exists (security best practice)
       if (type === "otp") {
-        const { error: otpError } = await supabaseClient.auth.signInWithOtp({
+        await supabaseClient.auth.signInWithOtp({
           email,
           options: {
             shouldCreateUser: false,
           },
         });
-        if (otpError) throw otpError;
+        // We don't throw error if user not found to avoid revealing existence
       } else {
-        const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(email);
-        if (resetError) throw resetError;
+        await supabaseClient.auth.resetPasswordForEmail(email);
+        // We don't throw error if user not found to avoid revealing existence
       }
 
       // 4. Update Audit Log - Success
-      await supabaseClient.from("auth_audit_logs").insert({
-        event_type: "forgot_password_request_sent",
-        email,
-        status: "success",
+      await supabaseClient.rpc("log_auth_event", {
+        p_event_type: "forgot_password_request_sent",
+        p_email: email,
+        p_status: "success",
       });
 
       return new Response(

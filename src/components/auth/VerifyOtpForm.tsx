@@ -50,7 +50,7 @@ export const VerifyOtpForm = ({
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: data.otp,
-        type: "recovery",
+        type: "email", // Use "email" type for OTP sent via signInWithOtp
       });
 
       if (error) throw error;
@@ -68,9 +68,12 @@ export const VerifyOtpForm = ({
     setCanResend(false);
     setCountdown(60);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      // Re-invoke the Edge Function to send OTP securely and generics-wise
+      const { error } = await supabase.functions.invoke("auth-actions", {
+        body: { email, type: "otp", action: "forgot-password" },
+      });
       if (error) throw error;
-      toast.success("Um novo código foi enviado.");
+      toast.success("Um novo código foi enviado se houver uma conta associada.");
     } catch (error: any) {
       toast.error(error.message || "Erro ao reenviar código.");
       setCanResend(true);

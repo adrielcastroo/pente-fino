@@ -472,11 +472,21 @@ export type Database = {
     Functions: {
       check_reset_rate_limit: {
         Args: {
-          max_attempts: number
+          max_attempts?: number
           target_email: string
-          window_minutes: number
+          window_minutes?: number
         }
         Returns: boolean
+      }
+      log_auth_event: {
+        Args: {
+          p_email?: string
+          p_event_type: string
+          p_metadata?: Json
+          p_status?: string
+          p_user_id?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

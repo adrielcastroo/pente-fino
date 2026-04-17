@@ -161,7 +161,7 @@ export const ResetPasswordForm = ({
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <>
-            Redefinir senha
+            Salvar nova senha
             <ArrowRight className="ml-2 h-4 w-4" />
           </>
         )}
