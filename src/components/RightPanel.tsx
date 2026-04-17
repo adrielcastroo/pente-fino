@@ -214,7 +214,7 @@ export default function RightPanel() {
     const timer = setTimeout(() => {
       if (localSearch !== searchQuery) {
         setSearchQuery(localSearch);
-        setVisibleCount(isLow ? 50 : 200); // Reset visibility on new search
+        setVisibleCount(isLow ? 50 : 200);
       }
     }, 300);
     return () => clearTimeout(timer);
@@ -233,7 +233,7 @@ export default function RightPanel() {
         if ((r.loteSistema || '').toLowerCase().includes(q)) { result.push(r); continue; }
       }
     } else {
-      result = sortBy && SORT_MAP[sortBy] ? [...registros] : registros;
+      result = (sortBy && SORT_MAP[sortBy]) ? [...registros] : registros;
     }
     if (sortBy && SORT_MAP[sortBy]) {
       result.sort(SORT_MAP[sortBy]);
@@ -297,8 +297,8 @@ export default function RightPanel() {
     const groups: { cxLabel: string; item: string; rows: Registro[] }[] = [];
     let currentGroup: { cxLabel: string; item: string; rows: Registro[] } | null = null;
 
-    for (const r of sortedRows) {
-      // Extract CX label from loteSistema (e.g. "CX01 NF ..." or "CX01 NFe ...")
+    for (const r of pagedRows) {
+      // Extract CX label from loteSistema
       const cxMatch = r.loteSistema?.match(/^(CX\d+|S\/CX)/i);
       const cxLabel = cxMatch ? cxMatch[1].toUpperCase() : 'S/CX';
 
@@ -400,7 +400,6 @@ export default function RightPanel() {
       <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
           {isMotorControle ? (
-            /* ===== MOTOR/CONTROLE GROUPED VIEW ===== */
             <table className="w-full border-separate border-spacing-0 table-auto">
               <thead>
                 <tr className="bg-muted/30">
@@ -418,14 +417,12 @@ export default function RightPanel() {
               <tbody>
                 {motorGroups.map((group, gi) => (
                   <React.Fragment key={`grp-${gi}-${group.cxLabel}-${group.item}`}>
-                    {/* Spacer between groups */}
                     {gi > 0 && (
                       <>
                         <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
                         <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
                       </>
                     )}
-                    {/* Group header */}
                     <tr className="bg-primary/10">
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-foreground">
                         {group.cxLabel} {group.item}
@@ -437,7 +434,6 @@ export default function RightPanel() {
                         {group.rows.length} itens
                       </td>
                     </tr>
-                    {/* Group rows */}
                     {group.rows.map((r) => (
                       <tr key={r.id} className={`group hover:bg-muted/40 border-b border-border/20 ${r.isNew ? 'bg-primary/5' : ''}`}>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-muted-foreground/90">
@@ -472,7 +468,6 @@ export default function RightPanel() {
                                 <TooltipContent>Remover</TooltipContent>
                               </Tooltip>
                             )}
-
                           </div>
                         </td>
                       </tr>
@@ -491,7 +486,6 @@ export default function RightPanel() {
               )}
             </table>
           ) : (
-            /* ===== DEFAULT TABLE VIEW ===== */
             <table className="w-full border-separate border-spacing-0 table-auto">
               <thead>
                 <tr className="bg-muted/30">
@@ -528,19 +522,9 @@ export default function RightPanel() {
                   />
                 ))}
               </tbody>
-            </table>
-          )}
-
-          {sortedRows.length > visibleCount && (
-            <div className="p-4 flex justify-center border-t border-border/10 bg-muted/5">
-              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6">
-                Carregar mais registros ({sortedRows.length - visibleCount} restantes)
-              </Button>
-            </div>
-          )}
               {sortedRows.length > 0 && (
                 <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px]  shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
                     <td className="px-4 py-4">FIM</td>
                     {columns.map(column => (
                       <td key={column.key} className="px-4 py-4">
@@ -555,6 +539,14 @@ export default function RightPanel() {
                 </tfoot>
               )}
             </table>
+          )}
+
+          {sortedRows.length > visibleCount && (
+            <div className="p-4 flex justify-center border-t border-border/10 bg-muted/5">
+              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6">
+                Carregar mais registros ({sortedRows.length - visibleCount} restantes)
+              </Button>
+            </div>
           )}
 
           {sortedRows.length === 0 && (
