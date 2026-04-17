@@ -508,7 +508,7 @@ export default function RightPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
-                {sortedRows.map((r, i) => (
+                {pagedRows.map((r, i) => (
                   <TableRow
                     key={r.id}
                     r={r}
@@ -526,9 +526,15 @@ export default function RightPanel() {
                     onCancelEdit={cancelEdit}
                     isGuest={isGuest}
                   />
-
                 ))}
               </tbody>
+              {sortedRows.length > visibleCount && (
+                <div className="p-4 flex justify-center">
+                  <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold">
+                    Carregar mais registros ({sortedRows.length - visibleCount} restantes)
+                  </Button>
+                </div>
+              )}
               {sortedRows.length > 0 && (
                 <tfoot className="sticky bottom-0 z-10">
                   <tr className="bg-primary/95 text-white font-black font-mono text-[11px]  shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
