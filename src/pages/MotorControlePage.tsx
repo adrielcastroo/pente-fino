@@ -128,7 +128,7 @@ export default function MotorControlePage() {
   }, [maxSequencial]);
 
   const handleModeloBlur = useCallback(() => {
-    if (subMode === 'controle') {
+    if (subMode === 'controle' && modelo.trim()) {
       setModelo(mapModelo(modelo));
     }
   }, [subMode, modelo, setModelo]);
