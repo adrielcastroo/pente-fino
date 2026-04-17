@@ -78,32 +78,48 @@ export const ForgotPasswordForm = ({
         )}
       </div>
 
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Método de recuperação</Label>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-1">
+          <Label className="text-sm font-semibold">Como você prefere recuperar?</Label>
+          <p className="text-[11px] text-muted-foreground leading-tight">
+            Você receberá um e-mail contendo tanto um link de acesso rápido quanto um código de 6 dígitos.
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => setValue("method", "link")}
-            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+            className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden group ${
               selectedMethod === "link"
-                ? "border-primary bg-primary/5 shadow-sm"
-                : "border-border/50 hover:border-border"
+                ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
+                : "border-border/40 hover:border-border/80 bg-muted/20"
             }`}
           >
-            <Mail className={`h-5 w-5 mb-2 ${selectedMethod === "link" ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-xs font-semibold">Link Seguro</span>
+            <div className={`p-2 rounded-full mb-2 transition-colors ${selectedMethod === "link" ? "bg-primary/10" : "bg-muted"}`}>
+              <Mail className={`h-5 w-5 ${selectedMethod === "link" ? "text-primary" : "text-muted-foreground"}`} />
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Link Seguro</span>
+            {selectedMethod === "link" && (
+              <motion.div layoutId="active-method" className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none" />
+            )}
           </button>
+          
           <button
             type="button"
             onClick={() => setValue("method", "otp")}
-            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+            className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden group ${
               selectedMethod === "otp"
-                ? "border-primary bg-primary/5 shadow-sm"
-                : "border-border/50 hover:border-border"
+                ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
+                : "border-border/40 hover:border-border/80 bg-muted/20"
             }`}
           >
-            <KeyRound className={`h-5 w-5 mb-2 ${selectedMethod === "otp" ? "text-primary" : "text-muted-foreground"}`} />
-            <span className="text-xs font-semibold">Código OTP</span>
+            <div className={`p-2 rounded-full mb-2 transition-colors ${selectedMethod === "otp" ? "bg-primary/10" : "bg-muted"}`}>
+              <KeyRound className={`h-5 w-5 ${selectedMethod === "otp" ? "text-primary" : "text-muted-foreground"}`} />
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Código OTP</span>
+            {selectedMethod === "otp" && (
+              <motion.div layoutId="active-method" className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none" />
+            )}
           </button>
         </div>
       </div>
@@ -111,13 +127,13 @@ export const ForgotPasswordForm = ({
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full h-11 rounded-xl font-medium transition-all active:scale-[0.98]"
+        className="w-full h-12 rounded-xl font-semibold transition-all active:scale-[0.98] shadow-md hover:shadow-lg bg-primary text-primary-foreground"
       >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <>
-            Enviar instruções
+            Enviar recuperação de senha
             <ArrowRight className="ml-2 h-4 w-4" />
           </>
         )}
