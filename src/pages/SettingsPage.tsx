@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -19,11 +19,15 @@ import {
   Mail,
   Lock,
   Smartphone,
-  LogOut
+  LogOut,
+  Zap,
+  Eye,
+  EyeOff,
+  Activity,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -43,13 +47,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 const categories = [
   { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
-  { id: 'preferences', name: 'Preferências do Sistema', icon: Settings, description: 'Ajuste o comportamento do sistema para suas necessidades.' },
-  { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas e gerencie chaves de API.' },
-  { id: 'notifications', name: 'Notificações', icon: Bell, description: 'Configure como e quando você quer ser notificado.' },
-  { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
-  { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores da interface.' },
-  { id: 'advanced', name: 'Configurações Avançadas', icon: Cpu, description: 'Opções técnicas e de performance para usuários experientes.' },
-  { id: 'users', name: 'Usuários e Permissões', icon: Users, description: 'Gerencie membros da equipe e níveis de acesso.' },
+  { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
+  { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
+  { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
+  { id: 'performance', name: 'Performance', icon: Zap, description: 'Otimize o app para seu dispositivo.' },
+  { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta.' },
+  { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
 ];
 
 export default function SettingsPage() {
@@ -60,354 +63,315 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
 
-  // Sync displayName when profile loads
+  // Performance settings
+  const [reduceAnimations, setReduceAnimations] = useState(localStorage.getItem('perf_reduce_animations') === 'true');
+  const [lowDataMode, setLowDataMode] = useState(localStorage.getItem('perf_low_data') === 'true');
+
   useEffect(() => {
     if (profile?.display_name) {
       setDisplayName(profile.display_name);
     }
   }, [profile]);
 
-  // Existing settings from ConfigModal
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
   const [orModel, setOrModel] = useState(localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku');
 
-  const saveIntegrations = () => {
-    if (!orKey.trim()) {
-      toast.error('Insira uma chave válida.');
-      return;
-    }
-    localStorage.setItem('cft4_or_key', orKey.trim());
-    localStorage.setItem('cft4_or_model', orModel);
-    toast.success('Configurações de integração salvas!');
-    setHasUnsavedChanges(false);
-  };
-
-  const saveProfile = async () => {
-    if (!user) return;
-    const trimmed = displayName.trim();
-    if (!trimmed) {
-      toast.error('O nome não pode estar vazio.');
-      return;
-    }
-    const { error } = await (supabase as any)
-      .from('profiles')
-      .update({ display_name: trimmed, updated_at: new Date().toISOString() })
-      .eq('id', user.id);
-    if (error) {
-      toast.error('Erro ao salvar perfil.');
-    } else {
-      toast.success('Perfil atualizado com sucesso!');
+  const saveSettings = async () => {
+    try {
+      if (activeCategory === 'integrations') {
+        localStorage.setItem('cft4_or_key', orKey.trim());
+        localStorage.setItem('cft4_or_model', orModel);
+      } else if (activeCategory === 'profile' && !isGuest && user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ display_name: displayName.trim(), updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        if (error) throw error;
+      } else if (activeCategory === 'performance') {
+        localStorage.setItem('perf_reduce_animations', String(reduceAnimations));
+        localStorage.setItem('perf_low_data', String(lowDataMode));
+      }
+      
+      toast.success('Configurações salvas com sucesso!');
       setHasUnsavedChanges(false);
+    } catch (error: any) {
+      toast.error('Erro ao salvar: ' + error.message);
     }
   };
 
-  const handleSave = () => {
-    if (activeCategory === 'integrations') {
-      saveIntegrations();
-    } else if (activeCategory === 'profile') {
-      saveProfile();
-    } else {
-      toast.success('Alterações salvas com sucesso!');
-      setHasUnsavedChanges(false);
-    }
-  };
-
-  const filteredCategories = categories.filter(cat => 
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    cat.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCategories = useMemo(() => 
+    categories.filter(cat => 
+      cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      cat.description.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [searchQuery]);
 
   return (
-    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="flex flex-col h-full space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/10 pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-          <p className="text-muted-foreground">Gerencie as preferências e ajustes do seu sistema.</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Configurações</h1>
+          <p className="text-muted-foreground text-sm">Personalize sua experiência no Sistema Pente Fino.</p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {hasUnsavedChanges && (
-            <motion.span 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-xs font-medium text-amber-500 flex items-center gap-1 mr-2 px-2 py-1 bg-amber-500/10 rounded-full border border-amber-500/20"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Alterações não salvas
-            </motion.span>
+            <Badge variant="outline" className="animate-pulse bg-amber-500/10 text-amber-500 border-amber-500/20 py-1">
+              Alterações pendentes
+            </Badge>
           )}
-          <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/20">
+          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="gap-2 shadow-lg shadow-primary/20 font-bold px-6">
             <Save className="w-4 h-4" />
-            Salvar Alterações
+            Salvar
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex flex-col lg:flex-row gap-8 flex-1 overflow-hidden">
-        {/* Sidebar Nav */}
-        <aside className="w-full lg:w-72 flex flex-col gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Navigation Sidebar */}
+        <aside className="w-full lg:w-64 space-y-4 shrink-0">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
-              placeholder="Buscar configurações..." 
-              className="pl-9 bg-background/50 border-border/50 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 transition-colors"
+              placeholder="Buscar..." 
+              className="pl-9 bg-background/50 border-border/50 focus-visible:ring-primary/30"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-y-auto pr-0 lg:pr-2 pb-2 lg:pb-0 custom-scrollbar -mx-2 px-2">
-            {filteredCategories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-2 sm:gap-3 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 group whitespace-nowrap ${
-                    activeCategory === cat.id 
-                      ? 'bg-primary text-primary-foreground shadow-md' 
-                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${activeCategory === cat.id ? 'text-white' : 'text-muted-foreground group-hover:text-primary'}`} />
-                  <span className="flex-1 text-left">{cat.name}</span>
-                  <ChevronRight className={`w-4 h-4 opacity-0 transition-opacity ${activeCategory === cat.id ? 'opacity-100' : 'group-hover:opacity-50'}`} />
-                </button>
-              );
-            })}
+          <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1.5">
+            {filteredCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 group ${
+                  activeCategory === cat.id 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
+                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <cat.icon className={`w-4 h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
+                <span className="truncate">{cat.name}</span>
+              </button>
+            ))}
           </nav>
+
+          {!isGuest && (
+            <div className="pt-4 mt-4 border-t border-border/10">
+              <Button 
+                variant="ghost" 
+                onClick={() => signOut()} 
+                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/5 font-bold gap-3 rounded-2xl"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair do Sistema
+              </Button>
+            </div>
+          )}
         </aside>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-10">
+        <div className="flex-1 min-w-0 w-full lg:max-w-3xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCategory}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="space-y-6"
             >
-              <header>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  {categories.find(c => c.id === activeCategory)?.name}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {categories.find(c => c.id === activeCategory)?.description}
-                </p>
-              </header>
-
-              <Separator className="bg-border/50" />
-
-              {/* Dynamic Content based on activeCategory */}
-              <div className="grid gap-6">
-                
-                {activeCategory === 'profile' && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card className="md:col-span-2 border-border/40 shadow-sm overflow-hidden">
-                        <CardHeader className="pb-4">
-                          <CardTitle className="text-base">Informações do Perfil</CardTitle>
-                          <CardDescription>
-                            {isGuest 
-                              ? "Você está acessando como visitante. Algumas permissões são restritas." 
-                              : "Gerencie as informações da sua conta sincronizada."}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center pb-2">
-                             <div className="relative group">
-                                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-dashed border-primary/30 group-hover:border-primary transition-colors overflow-hidden">
-                                   {profile?.avatar_url ? (
-                                     <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                                   ) : (
-                                     <User className="w-8 h-8 text-primary/40 group-hover:text-primary transition-colors" />
-                                   )}
-                                </div>
-                             </div>
-                             <div className="space-y-1">
-                                <h3 className="font-semibold text-sm">
-                                  {isGuest ? "Sessão de Visitante" : profile?.display_name || "Usuário"}
-                                </h3>
-                                <p className="text-xs text-muted-foreground">
-                                  {isGuest ? "Identificado no sistema por seu nome de conferente." : user?.email}
-                                </p>
-                                <div className="flex gap-2 mt-2">
-                                   <Button onClick={() => signOut()} variant="outline" size="sm" className="text-[10px] h-7 px-3 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                     <LogOut className="w-3.5 h-3.5 mr-2" />
-                                     Sair da Conta
-                                   </Button>
-                                </div>
-                             </div>
-                          </div>
-                          
-                          {!isGuest && (
-                            <>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome de Exibição</Label>
-                                  <Input id="name" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }} className="bg-muted/30" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
-                                  <Input id="email" type="email" defaultValue={user?.email || ''} readOnly className="bg-muted/10 opacity-70 cursor-not-allowed" />
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-border/40 shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
-                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Status de Acesso</CardTitle>
-                         </CardHeader>
-                         <CardContent className="space-y-6">
-                            <div className="space-y-4">
-                               <div className="flex items-center justify-between text-xs">
-                                  <span className="font-medium">Nível de Acesso</span>
-                                  <Badge variant={isGuest ? "secondary" : "default"} className="font-bold">
-                                    {isGuest ? "Visitante" : "Administrador"}
-                                  </Badge>
-                               </div>
-                               
-                               <div className="p-3 rounded-xl bg-background/50 border border-border/30 space-y-2">
-                                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Permissões:</p>
-                                 <ul className="space-y-1.5">
-                                   <li className="flex items-center gap-2 text-xs">
-                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                     <span>Adicionar registros</span>
-                                   </li>
-                                   <li className="flex items-center gap-2 text-xs">
-                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                     <span>Visualizar estoque</span>
-                                   </li>
-                                   <li className="flex items-center gap-2 text-xs">
-                                     <div className={`w-1.5 h-1.5 rounded-full ${isGuest ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                                     <span className={isGuest ? 'text-muted-foreground line-through' : ''}>Excluir registros históricos</span>
-                                   </li>
-                                   <li className="flex items-center gap-2 text-xs">
-                                     <div className={`w-1.5 h-1.5 rounded-full ${isGuest ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                                     <span className={isGuest ? 'text-muted-foreground line-through' : ''}>Remover itens do estoque</span>
-                                   </li>
-                                 </ul>
-                               </div>
-                            </div>
-
-                            <Separator className="bg-primary/10" />
-
-                            <div className="pt-2 text-center">
-                               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                 {isGuest 
-                                   ? "Entre com uma conta oficial para ter acesso total ao sistema." 
-                                   : "Sua conta está ativa e com todas as permissões concedidas."}
-                               </p>
-                            </div>
-                         </CardContent>
-                      </Card>
+              <Card className="border-border/40 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden rounded-3xl">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                      {categories.find(c => c.id === activeCategory)?.icon && 
+                       (() => {
+                         const Icon = categories.find(c => c.id === activeCategory)!.icon;
+                         return <Icon className="w-5 h-5" />;
+                       })()
+                      }
                     </div>
-                  </>
-                )}
-
-                {activeCategory === 'integrations' && (
-                  <Card className="border-border/40 shadow-sm">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-base flex items-center gap-2">
-                            ⚡ OpenRouter
-                            <span className={`text-[10px] font-normal px-2 py-0.5 rounded-full ${orKey ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                              {orKey ? 'Conectado' : 'Desconectado'}
-                            </span>
-                          </CardTitle>
-                          <CardDescription>Configure a inteligência artificial para leitura automática.</CardDescription>
+                    <CardTitle className="text-xl font-black">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                  </div>
+                  <CardDescription className="text-sm font-medium opacity-70">
+                    {categories.find(c => c.id === activeCategory)?.description}
+                  </CardDescription>
+                </CardHeader>
+                
+                <Separator className="bg-border/5" />
+                
+                <CardContent className="pt-6 space-y-6">
+                  {activeCategory === 'profile' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-5 p-4 rounded-2xl bg-muted/30 border border-border/20">
+                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
+                          {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-8 h-8 text-primary" />
+                          )}
                         </div>
-                        <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm">Obter Chave</Button>
-                        </a>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-foreground">
+                            {isGuest ? "Modo Visitante" : profile?.display_name || "Usuário"}
+                          </h4>
+                          <p className="text-xs text-muted-foreground truncate">{user?.email || "Sessão local"}</p>
+                          <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider">
+                            {isGuest ? "Guest" : "Member"}
+                          </Badge>
+                        </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="or-key">Chave de API (OpenRouter)</Label>
-                        <Input 
-                          id="or-key" 
-                          type="password" 
-                          value={orKey} 
-                          onChange={(e) => {
-                            setOrKey(e.target.value);
-                            setHasUnsavedChanges(true);
-                          }} 
-                          placeholder="sk-or-v1-..."
-                          className="font-mono"
+
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Nome de Exibição</Label>
+                          <Input 
+                            value={displayName} 
+                            onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
+                            className="bg-muted/20 border-border/40 h-11 focus-visible:ring-primary/20"
+                            placeholder="Seu nome no sistema"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">E-mail (Não alterável)</Label>
+                          <Input 
+                            value={user?.email || ''} 
+                            disabled
+                            className="bg-muted/10 border-border/20 opacity-50 cursor-not-allowed h-11"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeCategory === 'appearance' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-3 gap-3">
+                        {['light', 'dark', 'system'].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => { setTheme(t); setHasUnsavedChanges(true); }}
+                            className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-3 ${
+                              theme === t 
+                                ? 'bg-primary/5 border-primary shadow-sm shadow-primary/5' 
+                                : 'bg-muted/30 border-border/40 hover:border-border'
+                            }`}
+                          >
+                            <div className={`p-2 rounded-xl ${theme === t ? 'bg-primary text-white' : 'bg-background text-muted-foreground'}`}>
+                              {t === 'light' && <Sun className="w-5 h-5" />}
+                              {t === 'dark' && <Moon className="w-5 h-5" />}
+                              {t === 'system' && <Laptop className="w-5 h-5" />}
+                            </div>
+                            <span className={`text-xs font-bold uppercase tracking-wider ${theme === t ? 'text-primary' : 'text-muted-foreground'}`}>
+                              {t === 'light' ? 'Claro' : t === 'dark' ? 'Escuro' : 'Sistema'}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeCategory === 'performance' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Reduzir Animações</Label>
+                          <p className="text-xs text-muted-foreground">Melhora a fluidez em dispositivos lentos.</p>
+                        </div>
+                        <Switch 
+                          checked={reduceAnimations} 
+                          onCheckedChange={(val) => { setReduceAnimations(val); setHasUnsavedChanges(true); }}
                         />
-                        <p className="text-[11px] text-muted-foreground">Sua chave é armazenada localmente de forma segura.</p>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Modo de Baixo Consumo</Label>
+                          <p className="text-xs text-muted-foreground">Otimiza o carregamento de dados e gráficos.</p>
+                        </div>
+                        <Switch 
+                          checked={lowDataMode} 
+                          onCheckedChange={(val) => { setLowDataMode(val); setHasUnsavedChanges(true); }}
+                        />
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="or-model">Modelo de IA</Label>
-                        <Select value={orModel} onValueChange={(val) => {
-                          setOrModel(val);
-                          setHasUnsavedChanges(true);
-                        }}>
-                          <SelectTrigger id="or-model">
-                            <SelectValue placeholder="Selecione um modelo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="anthropic/claude-3-haiku">Claude 3 Haiku — rápido</SelectItem>
-                            <SelectItem value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet — preciso</SelectItem>
-                            <SelectItem value="openai/gpt-4o-mini">GPT-4o Mini — rápido</SelectItem>
-                            <SelectItem value="openai/gpt-4o">GPT-4o — máxima precisão</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-[11px] text-muted-foreground">Escolha o modelo que melhor se adapta à sua necessidade de velocidade vs. precisão.</p>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="bg-muted/30 border-t p-4">
-                       <p className="text-xs text-muted-foreground">💡 Leitura automática via OCR avançado disponível somente com OpenRouter.</p>
-                    </CardFooter>
-                  </Card>
-                )}
-
-                {activeCategory === 'appearance' && (
-                  <Card className="border-border/40 shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Palette className="w-4 h-4" /> Temas e Cores
-                      </CardTitle>
-                      <CardDescription>Personalize o visual para seu conforto.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-3">
-                        <Label className="text-xs font-bold uppercase tracking-wider opacity-60">Modo de Exibição</Label>
-                        <div className="grid grid-cols-3 gap-3">
-                          {[
-                            { id: 'light', label: 'Claro', icon: Sun },
-                            { id: 'dark', label: 'Escuro', icon: Moon },
-                            { id: 'system', label: 'Sistema', icon: Laptop },
-                          ].map(t => (
-                            <button
-                              key={t.id}
-                              onClick={() => setTheme(t.id)}
-                              className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
-                                theme === t.id ? 'bg-primary/10 border-primary text-primary' : 'bg-muted/20 border-border/50 text-muted-foreground hover:bg-muted/40'
-                              }`}
-                            >
-                              <t.icon className="w-5 h-5" />
-                              <span className="text-[10px] font-bold uppercase tracking-tight">{t.label}</span>
-                            </button>
-                          ))}
+                      <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex gap-4">
+                        <Activity className="w-5 h-5 text-amber-500 shrink-0" />
+                        <div className="space-y-1">
+                          <h5 className="text-xs font-bold text-amber-500 uppercase">Dica de Performance</h5>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Para dispositivos com pouca memória, ative a redução de animações para garantir uma navegação instantânea.
+                          </p>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    </div>
+                  )}
 
-              </div>
+                  {activeCategory === 'integrations' && (
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold flex items-center gap-2">
+                            OpenRouter AI
+                            <Badge variant="outline" className={orKey ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
+                              {orKey ? "Configurado" : "Pendente"}
+                            </Badge>
+                          </h4>
+                          <Button variant="ghost" size="sm" className="text-xs font-bold text-primary" asChild>
+                            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">Obter Chave</a>
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Chave de API</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input 
+                              type="password"
+                              value={orKey}
+                              onChange={(e) => { setOrKey(e.target.value); setHasUnsavedChanges(true); }}
+                              className="pl-9 font-mono text-sm bg-muted/20"
+                              placeholder="sk-or-v1-..."
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Modelo Preferencial</Label>
+                          <Select 
+                            value={orModel} 
+                            onValueChange={(val) => { setOrModel(val); setHasUnsavedChanges(true); }}
+                          >
+                            <SelectTrigger className="bg-muted/20 border-border/40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="anthropic/claude-3-haiku">Claude 3 Haiku (Rápido)</SelectItem>
+                              <SelectItem value="anthropic/claude-3-sonnet">Claude 3 Sonnet (Preciso)</SelectItem>
+                              <SelectItem value="google/gemini-pro-1.5">Gemini Pro 1.5</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!['profile', 'appearance', 'performance', 'integrations'].includes(activeCategory) && (
+                    <div className="py-20 text-center space-y-4">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-50">
+                        <Settings className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-bold">Em breve</h4>
+                        <p className="text-sm text-muted-foreground">Esta seção está sendo preparada para a próxima atualização.</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </motion.div>
           </AnimatePresence>
-        </main>
+        </div>
       </div>
     </div>
   );

@@ -12,12 +12,11 @@ import { UserCircle2, ArrowRight, Loader2, UserPlus, LogIn, KeyRound, ArrowLeft 
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
 
-type PageMode = 'login' | 'signup' | 'forgot' | 'reset';
+type PageMode = 'login' | 'signup' | 'forgot';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<PageMode>('login');
@@ -91,7 +90,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login?reset=true`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
         toast.error(error.message);
@@ -105,38 +104,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword.length < 6) {
-      toast.error('A nova senha deve ter no mínimo 6 caracteres.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success('Senha alterada com sucesso! Faça login.');
-        setMode('login');
-        setNewPassword('');
-      }
-    } catch {
-      toast.error('Erro ao alterar senha. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Check if we're in a password reset flow (redirected from email)
   useState(() => {
     const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setMode('reset');
-    }
     const params = new URLSearchParams(window.location.search);
-    if (params.get('reset') === 'true' && hash.includes('access_token')) {
-      setMode('reset');
+    if (hash.includes('type=recovery') || (params.get('reset') === 'true' && hash.includes('access_token'))) {
+      window.location.href = `${window.location.origin}/reset-password${window.location.hash}`;
     }
   });
 
@@ -157,7 +130,6 @@ export default function LoginPage() {
     switch (mode) {
       case 'signup': return 'Criar Conta';
       case 'forgot': return 'Recuperar Senha';
-      case 'reset': return 'Nova Senha';
       default: return 'Sistema Pente Fino';
     }
   };
@@ -166,7 +138,6 @@ export default function LoginPage() {
     switch (mode) {
       case 'signup': return 'Crie sua conta para começar';
       case 'forgot': return 'Informe seu e-mail para receber o link de recuperação';
-      case 'reset': return 'Digite sua nova senha';
       default: return 'Faça login para gerenciar sua conferência';
     }
   };
@@ -212,29 +183,6 @@ export default function LoginPage() {
                 </Button>
                 <Button type="button" variant="link" className="w-full text-xs text-muted-foreground hover:text-primary" onClick={() => setMode('login')}>
                   <ArrowLeft className="mr-1 h-3 w-3" /> Voltar ao login
-                </Button>
-              </form>
-            )}
-
-            {/* === RESET PASSWORD === */}
-            {mode === 'reset' && (
-              <form onSubmit={handleResetPassword} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-wider opacity-70">Nova Senha</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-                  Alterar Senha
                 </Button>
               </form>
             )}

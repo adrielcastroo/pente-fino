@@ -138,37 +138,55 @@ export default function DashboardPage() {
       
       {/* Stat Cards - now clickable to open detail dialogs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-        <button onClick={() => setDetailDialog('conferentes')} className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] relative text-left w-full">
-          <div className="p-5 sm:p-6 flex flex-row items-center gap-4 relative z-10">
-            <div className="p-3 rounded-xl bg-primary/8 text-primary"><Users className="w-5 h-5" /></div>
-            <div className="flex-1 min-w-0">
-              <div className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors">{stats.totalConferentes}</div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">Conferentes</p>
+        <button 
+          onClick={() => setDetailDialog('conferentes')} 
+          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
+        >
+          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
+            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
+              <Users className="w-6 h-6" />
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary/50 transition-colors" />
+            <div className="flex-1 min-w-0">
+              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferentes}</div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferentes</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
 
-        <button onClick={() => setDetailDialog('conferences')} className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] relative text-left w-full">
-          <div className="p-5 sm:p-6 flex flex-row items-center gap-4 relative z-10">
-            <div className="p-3 rounded-xl bg-primary/8 text-primary"><BarChart3 className="w-5 h-5" /></div>
-            <div className="flex-1 min-w-0">
-              <div className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors">{stats.totalConferencias}</div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">Conferências</p>
+        <button 
+          onClick={() => setDetailDialog('conferences')} 
+          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75"
+        >
+          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
+            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
+              <BarChart3 className="w-6 h-6" />
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary/50 transition-colors" />
+            <div className="flex-1 min-w-0">
+              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferencias}</div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferências</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
 
-        <button onClick={() => setDetailDialog('registros')} className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] relative text-left w-full">
-          <div className="p-5 sm:p-6 flex flex-row items-center gap-4 relative z-10">
-            <div className="p-3 rounded-xl bg-primary/8 text-primary"><Layers3 className="w-5 h-5" /></div>
-            <div className="flex-1 min-w-0">
-              <div className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors">{stats.totalRegistros}</div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">Registros</p>
+        <button 
+          onClick={() => setDetailDialog('registros')} 
+          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150"
+        >
+          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
+            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
+              <Layers3 className="w-6 h-6" />
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary/50 transition-colors" />
+            <div className="flex-1 min-w-0">
+              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalRegistros}</div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Registros</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       </div>
 

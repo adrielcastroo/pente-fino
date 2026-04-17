@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const LoginRoute = ({ children }: { children: React.ReactNode }) => {
@@ -61,6 +62,7 @@ const App = () => (
             <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
               <Routes>
                 <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
