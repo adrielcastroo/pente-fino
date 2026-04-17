@@ -81,7 +81,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
             />
             <Area 
               type={isLow ? "linear" : "monotone"} 
-              dataKey="value" 
+              dataKey="total" 
               stroke="hsl(var(--primary))" 
               strokeWidth={2}
               fillOpacity={isLow ? 0.05 : 1} 
