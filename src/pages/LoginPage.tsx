@@ -144,196 +144,325 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-[100dvh] flex items-center justify-center p-4 relative overflow-hidden bg-background app-bg-pattern select-none">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px] animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[100px] animate-pulse delay-700" />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
       >
-        <Card className="border-none shadow-2xl bg-background/80 backdrop-blur-sm overflow-hidden">
+        <Card className="border border-white/20 shadow-2xl bg-white/70 dark:bg-card/70 backdrop-blur-xl overflow-hidden rounded-[2rem]">
+          {/* Top accent bar */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-primary/50 to-primary" />
 
-          <CardHeader className="space-y-1 pb-6 pt-8 text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
-              <Logo className="w-9 h-9 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-bold tracking-tight">{getTitle()}</CardTitle>
-            <CardDescription>{getDescription()}</CardDescription>
+          <CardHeader className="space-y-2 pb-6 pt-10 text-center relative">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-20 h-20 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-inner group transition-colors hover:bg-primary/15"
+            >
+              <Logo className="w-11 h-11 text-primary drop-shadow-sm transition-transform group-hover:rotate-6" />
+            </motion.div>
+            
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CardTitle className="text-3xl font-extrabold tracking-tight text-foreground/90">
+                  {getTitle()}
+                </CardTitle>
+                <CardDescription className="text-base mt-2 font-medium text-muted-foreground/80">
+                  {getDescription()}
+                </CardDescription>
+              </motion.div>
+            </AnimatePresence>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            {/* === FORGOT PASSWORD === */}
-            {mode === 'forgot' && (
-              <form onSubmit={handleForgotPassword} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="exemplo@empresa.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-                  Enviar Link de Recuperação
-                </Button>
-                <Button type="button" variant="link" className="w-full text-xs text-muted-foreground hover:text-primary" onClick={() => setMode('login')}>
-                  <ArrowLeft className="mr-1 h-3 w-3" /> Voltar ao login
-                </Button>
-              </form>
-            )}
+          <CardContent className="space-y-6 px-6 sm:px-10 pb-8">
+            <AnimatePresence mode="wait">
+              {/* === FORGOT PASSWORD === */}
+              {mode === 'forgot' ? (
+                <motion.form 
+                  key="forgot"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleForgotPassword} 
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                      Email de Recuperação
+                    </Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="exemplo@empresa.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="h-12 pl-11 bg-muted/40 border-muted/60 rounded-xl focus:ring-primary/20 transition-all text-base"
+                        required
+                        aria-label="Email para recuperação"
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 font-bold rounded-xl primary-btn group" 
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <KeyRound className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                    )}
+                    Enviar Link
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="w-full h-10 text-sm font-semibold text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg" 
+                    onClick={() => setMode('login')}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Voltar ao login
+                  </Button>
+                </motion.form>
+              ) : (
+                <motion.div
+                  key="login-signup"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-5"
+                >
+                  <form onSubmit={handleAuth} className="space-y-4">
+                    <AnimatePresence mode="wait">
+                      {mode === 'signup' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2 overflow-hidden"
+                        >
+                          <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                            Nome Completo
+                          </Label>
+                          <div className="relative group">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+                            <Input
+                              id="name"
+                              placeholder="Seu nome"
+                              value={name}
+                              onChange={(e) => setName(e.target.value)}
+                              className="h-12 pl-11 bg-muted/40 border-muted/60 rounded-xl focus:ring-primary/20 transition-all text-base"
+                              required={mode === 'signup'}
+                              autoFocus
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-            {/* === LOGIN / SIGNUP === */}
-            {(mode === 'login' || mode === 'signup') && (
-              <>
-                <form onSubmit={handleAuth} className="space-y-3">
-                  <AnimatePresence mode="wait">
-                    {mode === 'signup' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-1.5"
-                      >
-                        <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome Completo</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                        Endereço de Email
+                      </Label>
+                      <div className="relative group">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
                         <Input
-                          id="name"
-                          placeholder="Seu nome"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                          required={mode === 'signup'}
+                          id="email"
+                          type="email"
+                          placeholder="exemplo@empresa.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="h-12 pl-11 bg-muted/40 border-muted/60 rounded-xl focus:ring-primary/20 transition-all text-base"
+                          required
                         />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between ml-1">
+                        <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                          Senha de Acesso
+                        </Label>
+                        {mode === 'login' && (
+                          <button
+                            type="button"
+                            onClick={() => setMode('forgot')}
+                            className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors hover:underline underline-offset-4"
+                          >
+                            Esqueceu?
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative group">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="h-12 pl-11 pr-11 bg-muted/40 border-muted/60 rounded-xl focus:ring-primary/20 transition-all text-base"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1">
+                      {mode === 'login' ? (
+                        <div className="flex items-center space-x-2.5 group cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+                          <Checkbox
+                            id="remember"
+                            checked={rememberMe}
+                            onCheckedChange={(checked) => setRememberMe(checked === true)}
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <label htmlFor="remember" className="text-sm font-semibold text-muted-foreground/80 group-hover:text-foreground transition-colors cursor-pointer">
+                            Lembrar conexão
+                          </label>
+                        </div>
+                      ) : <div />}
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 font-bold rounded-xl primary-btn group relative overflow-hidden" 
+                      disabled={loading}
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+                      />
+                      {loading ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : mode === 'signup' ? (
+                        <UserPlus className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                      ) : (
+                        <LogIn className="mr-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      )}
+                      <span className="relative z-10">
+                        {mode === 'signup' ? 'Cadastrar Agora' : 'Acessar Painel'}
+                      </span>
+                    </Button>
+
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-muted-foreground/70 hover:text-primary transition-colors py-1 px-4 rounded-lg hover:bg-primary/5"
+                        onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
+                      >
+                        {mode === 'signup' ? (
+                          <>Já tem uma conta? <span className="text-primary font-bold">Faça login</span></>
+                        ) : (
+                          <>Ainda não tem conta? <span className="text-primary font-bold">Crie uma agora</span></>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="relative pt-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full bg-border/40" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white/80 dark:bg-card px-3 text-muted-foreground/50 font-bold tracking-widest">OU</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {!showGuestInput ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowGuestInput(true)}
+                        className="w-full h-12 font-bold text-muted-foreground/80 hover:text-foreground hover:bg-muted/50 border-muted-foreground/20 rounded-xl transition-all group"
+                      >
+                        <UserCircle2 className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                        Acesso Visitante
+                      </Button>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="space-y-4 p-5 bg-muted/30 rounded-2xl border border-muted-foreground/10"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="guestName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                            Identificação do Visitante
+                          </Label>
+                          <Input
+                            id="guestName"
+                            placeholder="Seu nome"
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                            className="h-11 bg-background/50 border-muted/60 focus:ring-primary/20 rounded-xl text-base"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            onClick={() => setShowGuestInput(false)} 
+                            className="flex-1 h-11 font-bold text-muted-foreground rounded-xl"
+                          >
+                            Voltar
+                          </Button>
+                          <Button
+                            onClick={handleGuestLogin}
+                            className="flex-[2] h-11 font-extrabold secondary-btn group"
+                          >
+                            Entrar <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                          </Button>
+                        </div>
                       </motion.div>
                     )}
-                  </AnimatePresence>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider opacity-70">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="exemplo@empresa.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                      required
-                    />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider opacity-70">Senha</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between py-1">
-                    {mode === 'login' ? (
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="remember"
-                          checked={rememberMe}
-                          onCheckedChange={(checked) => setRememberMe(checked === true)}
-                        />
-                        <label htmlFor="remember" className="text-sm font-medium leading-none cursor-pointer">
-                          Lembrar-me
-                        </label>
-                      </div>
-                    ) : <div />}
-                    <Button
-                      type="button"
-                      variant="link"
-                      className="text-xs text-muted-foreground hover:text-primary p-0 h-auto"
-                      onClick={() => setMode('forgot')}
-                    >
-                      Esqueci a senha
-                    </Button>
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : mode === 'signup' ? (
-                      <UserPlus className="mr-2 h-4 w-4" />
-                    ) : (
-                      <LogIn className="mr-2 h-4 w-4" />
-                    )}
-                    {mode === 'signup' ? 'Criar Conta' : 'Entrar no Sistema'}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-xs text-muted-foreground hover:text-primary transition-colors"
-                    onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
-                  >
-                    {mode === 'signup' ? 'Já tem uma conta? Faça login' : 'Não tem uma conta? Cadastre-se agora'}
-                  </Button>
-                </form>
-
-                <div className="pt-2">
-                  <Separator className="bg-border/50 mb-4" />
-
-                  {!showGuestInput ? (
-                    <Button
-                      variant="ghost"
-                      onClick={() => setShowGuestInput(true)}
-                      className="w-full h-11 font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
-                    >
-                      <UserCircle2 className="mr-2 h-4 w-4" />
-                      Entrar como Visitante
-                    </Button>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="space-y-3 overflow-hidden"
-                    >
-                      <div className="space-y-1.5">
-                        <Label htmlFor="guestName" className="text-xs font-bold uppercase tracking-wider opacity-70">Nome do Conferente</Label>
-                        <Input
-                          id="guestName"
-                          placeholder="Digite seu nome para identificar suas conferências"
-                          value={guestName}
-                          onChange={(e) => setGuestName(e.target.value)}
-                          className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                          autoFocus
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setShowGuestInput(false)} className="flex-1 h-11 font-semibold">
-                          Voltar
-                        </Button>
-                        <Button
-                          onClick={handleGuestLogin}
-                          className="flex-[2] h-11 font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all active:scale-95"
-                        >
-                          Acessar <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              </>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
 
-          <CardFooter className="bg-muted/20 border-t border-border/10 py-4 justify-center">
-            <p className="text-xs text-muted-foreground">© 2024 Pente Fino • Versão 1.0.0</p>
+          <CardFooter className="bg-muted/30 border-t border-white/10 py-5 justify-center backdrop-blur-md">
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs font-bold text-muted-foreground/60 tracking-wider">
+                © 2024 PENTE FINO SISTEMAS
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-tighter">
+                  Servidor Online • Versão 1.2.4
+                </p>
+              </div>
+            </div>
           </CardFooter>
         </Card>
+        
+        {/* Footer links */}
+        <div className="mt-8 flex justify-center gap-6">
+          <button className="text-[11px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">Privacidade</button>
+          <button className="text-[11px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">Suporte</button>
+          <button className="text-[11px] font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors uppercase tracking-widest">Termos</button>
+        </div>
       </motion.div>
     </div>
   );
+}
 }
