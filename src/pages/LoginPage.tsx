@@ -164,9 +164,13 @@ export default function LoginPage() {
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-20 h-20 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-inner group transition-colors hover:bg-primary/15"
+              className="w-24 h-24 bg-white/50 dark:bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-xl group transition-all hover:bg-white/80 dark:hover:bg-primary/15 p-2"
             >
-              <Logo className="w-11 h-11 text-primary drop-shadow-sm transition-transform group-hover:rotate-6" />
+              <img 
+                src={logoComb} 
+                alt="Logo Pente Fino" 
+                className="w-16 h-16 object-contain drop-shadow-md transition-transform group-hover:rotate-3"
+              />
             </motion.div>
             
             <AnimatePresence mode="wait">
