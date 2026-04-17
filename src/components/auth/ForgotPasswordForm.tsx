@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Por favor, insira um e-mail válido"),
