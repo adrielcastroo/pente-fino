@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -302,13 +303,12 @@ export default function LoginPage() {
                           Senha de Acesso
                         </Label>
                         {mode === 'login' && (
-                          <button
-                            type="button"
-                            onClick={() => setMode('forgot')}
+                          <Link
+                            to="/forgot-password"
                             className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors hover:underline underline-offset-4"
                           >
                             Esqueceu?
-                          </button>
+                          </Link>
                         )}
                       </div>
                       <div className="relative group">

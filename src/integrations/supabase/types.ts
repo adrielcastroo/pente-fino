@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_audit_logs: {
+        Row: {
+          created_at: string
+          email: string
+          error_message: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       conferences: {
         Row: {
           conferente: string
@@ -440,7 +470,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_reset_rate_limit: {
+        Args: {
+          max_attempts: number
+          target_email: string
+          window_minutes: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
