@@ -81,8 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setConferente('');
   };
 
+  const value = useMemo(() => ({
+    user, profile, loading, isGuest, loginAsGuest, signOut
+  }), [user, profile, loading, isGuest]);
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isGuest, loginAsGuest, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
