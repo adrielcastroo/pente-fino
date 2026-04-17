@@ -237,30 +237,28 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  {mode === 'login' && (
-                    <>
-                      <div className="flex items-center justify-between py-1">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="remember"
-                            checked={rememberMe}
-                            onCheckedChange={(checked) => setRememberMe(checked === true)}
-                          />
-                          <label htmlFor="remember" className="text-sm font-medium leading-none cursor-pointer">
-                            Lembrar-me
-                          </label>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="link"
-                          className="text-xs text-muted-foreground hover:text-primary p-0 h-auto"
-                          onClick={() => setMode('forgot')}
-                        >
-                          Esqueci a senha
-                        </Button>
+                  <div className="flex items-center justify-between py-1">
+                    {mode === 'login' ? (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="remember"
+                          checked={rememberMe}
+                          onCheckedChange={(checked) => setRememberMe(checked === true)}
+                        />
+                        <label htmlFor="remember" className="text-sm font-medium leading-none cursor-pointer">
+                          Lembrar-me
+                        </label>
                       </div>
-                    </>
-                  )}
+                    ) : <div />}
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-xs text-muted-foreground hover:text-primary p-0 h-auto"
+                      onClick={() => setMode('forgot')}
+                    >
+                      Esqueci a senha
+                    </Button>
+                  </div>
 
                   <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
                     {loading ? (
