@@ -221,7 +221,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
-                {conferenteDetails.map(c => (
+                {stats.conferenteDetails.map(c => (
                   <tr key={c.name} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
                     <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
