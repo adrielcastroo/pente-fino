@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { UserCircle2, ArrowRight, Loader2, UserPlus, LogIn, KeyRound, ArrowLeft } from 'lucide-react';
+import { UserCircle2, ArrowRight, Loader2, UserPlus, LogIn, KeyRound, ArrowLeft, Mail, Lock, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
 
