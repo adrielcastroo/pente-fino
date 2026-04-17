@@ -260,7 +260,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
-                {conferenceDetails.map(c => (
+                {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-bold text-foreground truncate max-w-[150px]">{c.name}</td>
                     <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
