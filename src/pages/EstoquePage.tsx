@@ -139,21 +139,28 @@ export default function EstoquePage() {
   }, [posicoes]);
 
 
-  const handleStatusChange = async (pos: Posicao, newStatus: string) => {
+  const handleStatusChange = useCallback(async (pos: Posicao, newStatus: string) => {
     if (newStatus === 'saida') {
       setConfirmSaida(true);
       return;
     }
 
+    // Optimistic UI update — instant feedback, no waiting for network
+    const previousStatus = pos.status;
+    setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
+    setPosicoesForActiveTec(prev => prev.map(p => p.id === pos.id ? { ...p, status: newStatus } : p));
+    setAllPosicoes(prev => prev.map(p => p.id === pos.id ? { ...p, status: newStatus } as any : p));
+    toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`, { id: 'status-update' });
+
+    // Background sync — rollback on error
     const { error } = await supabase.from('estoque_posicoes').update({ status: newStatus } as any).eq('id', pos.id);
-    if (error) toast.error('Erro ao atualizar status', { id: 'status-update' });
-    else {
-      toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`, { id: 'status-update' });
-      setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
-      loadPosicoes();
-      loadStats();
+    if (error) {
+      toast.error('Erro ao atualizar status', { id: 'status-update' });
+      setDetailPos(prev => prev ? { ...prev, status: previousStatus } : null);
+      setPosicoesForActiveTec(prev => prev.map(p => p.id === pos.id ? { ...p, status: previousStatus } : p));
+      setAllPosicoes(prev => prev.map(p => p.id === pos.id ? { ...p, status: previousStatus } as any : p));
     }
-  };
+  }, []);
 
   const executeSaida = async (pos: Posicao) => {
     const { error: saError } = await supabase.from('estoque_saidas').insert({
