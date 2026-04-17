@@ -185,7 +185,6 @@ export default function RightPanel() {
     registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
     deleteRegistro, undo, undoStack, updateRegistro
   } = useAppStore(useShallow(s => ({
-
     registros: s.registros,
     currentMode: s.currentMode,
     searchQuery: s.searchQuery,
@@ -198,14 +197,14 @@ export default function RightPanel() {
     updateRegistro: s.updateRegistro
   })));
 
-
   const { isLow } = usePerformance();
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [visibleCount, setVisibleCount] = useState(isLow ? 50 : 200);
 
-  // Sync local search with store if needed (e.g. on external reset)
+  // Sync local search with store if needed
   useEffect(() => {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
@@ -215,10 +214,11 @@ export default function RightPanel() {
     const timer = setTimeout(() => {
       if (localSearch !== searchQuery) {
         setSearchQuery(localSearch);
+        setVisibleCount(isLow ? 50 : 200); // Reset visibility on new search
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [localSearch, searchQuery, setSearchQuery]);
+  }, [localSearch, searchQuery, setSearchQuery, isLow]);
 
   const sortedRows = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -227,26 +227,23 @@ export default function RightPanel() {
       result = [];
       for (let i = 0, len = registros.length; i < len; i++) {
         const r = registros[i];
-        // Lowercase once per field per row (cheaper than 4 lowercases + 4 includes when miss is early)
-        const item = r.item ? r.item.toLowerCase() : '';
-        if (item.includes(q)) { result.push(r); continue; }
-        const end = r.endereco ? r.endereco.toLowerCase() : '';
-        if (end.includes(q)) { result.push(r); continue; }
-        const lote = r.lote ? r.lote.toLowerCase() : '';
-        if (lote.includes(q)) { result.push(r); continue; }
-        const ls = r.loteSistema ? r.loteSistema.toLowerCase() : '';
-        if (ls.includes(q)) { result.push(r); continue; }
+        if ((r.item || '').toLowerCase().includes(q)) { result.push(r); continue; }
+        if ((r.endereco || '').toLowerCase().includes(q)) { result.push(r); continue; }
+        if ((r.lote || '').toLowerCase().includes(q)) { result.push(r); continue; }
+        if ((r.loteSistema || '').toLowerCase().includes(q)) { result.push(r); continue; }
       }
     } else {
-      result = sortBy && SORT_MAP[sortBy] ? registros.slice() : registros;
+      result = sortBy && SORT_MAP[sortBy] ? [...registros] : registros;
     }
     if (sortBy && SORT_MAP[sortBy]) {
-      // Avoid mutating the store's array reference
-      if (result === registros) result = registros.slice();
       result.sort(SORT_MAP[sortBy]);
     }
     return result;
   }, [registros, searchQuery, sortBy]);
+
+  const pagedRows = useMemo(() => {
+    return sortedRows.slice(0, visibleCount);
+  }, [sortedRows, visibleCount]);
 
   const totals = useMemo(() => {
     let ml = 0, m2 = 0, qtd = 0;
