@@ -12,12 +12,11 @@ import { UserCircle2, ArrowRight, Loader2, UserPlus, LogIn, KeyRound, ArrowLeft 
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '@/components/Logo';
 
-type PageMode = 'login' | 'signup' | 'forgot' | 'reset';
+type PageMode = 'login' | 'signup' | 'forgot';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<PageMode>('login');
