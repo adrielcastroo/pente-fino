@@ -104,38 +104,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword.length < 6) {
-      toast.error('A nova senha deve ter no mínimo 6 caracteres.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success('Senha alterada com sucesso! Faça login.');
-        setMode('login');
-        setNewPassword('');
-      }
-    } catch {
-      toast.error('Erro ao alterar senha. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Check if we're in a password reset flow (redirected from email)
   useState(() => {
     const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setMode('reset');
-    }
     const params = new URLSearchParams(window.location.search);
-    if (params.get('reset') === 'true' && hash.includes('access_token')) {
-      setMode('reset');
+    if (hash.includes('type=recovery') || (params.get('reset') === 'true' && hash.includes('access_token'))) {
+      window.location.href = `${window.location.origin}/reset-password${window.location.hash}`;
     }
   });
 
