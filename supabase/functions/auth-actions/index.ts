@@ -44,16 +44,16 @@ serve(async (req) => {
       // 3. Send Recovery Link/OTP via Supabase Auth
       // We don't reveal if user exists (security best practice)
       if (type === "otp") {
-        const { error: otpError } = await supabaseClient.auth.signInWithOtp({
+        await supabaseClient.auth.signInWithOtp({
           email,
           options: {
             shouldCreateUser: false,
           },
         });
-        if (otpError) throw otpError;
+        // We don't throw error if user not found to avoid revealing existence
       } else {
-        const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(email);
-        if (resetError) throw resetError;
+        await supabaseClient.auth.resetPasswordForEmail(email);
+        // We don't throw error if user not found to avoid revealing existence
       }
 
       // 4. Update Audit Log - Success
