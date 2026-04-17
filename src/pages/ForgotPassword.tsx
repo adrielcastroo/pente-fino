@@ -19,8 +19,8 @@ const ForgotPassword = () => {
 
   return (
     <AuthLayout
-      title="Esqueceu sua senha?"
-      subtitle="Não se preocupe, vamos te ajudar a recuperar o acesso à sua conta de forma segura."
+      title="Recuperação de senha"
+      subtitle="Insira seu e-mail abaixo e enviaremos as instruções para você redefinir sua senha de forma segura."
     >
       <div className="space-y-6">
         <ForgotPasswordForm onNext={handleNext} />
