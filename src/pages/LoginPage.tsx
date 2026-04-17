@@ -187,29 +187,6 @@ export default function LoginPage() {
               </form>
             )}
 
-            {/* === RESET PASSWORD === */}
-            {mode === 'reset' && (
-              <form onSubmit={handleResetPassword} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-wider opacity-70">Nova Senha</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-11 bg-muted/30 focus-visible:ring-primary/30"
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-                  Alterar Senha
-                </Button>
-              </form>
-            )}
-
             {/* === LOGIN / SIGNUP === */}
             {(mode === 'login' || mode === 'signup') && (
               <>
