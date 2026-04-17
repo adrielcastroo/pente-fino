@@ -112,15 +112,21 @@ export const useAppStore = create<AppState>()(
       historyError: null,
 
       setMode: (mode) => set({ currentMode: mode }),
-      updateRegistro: (id, updates) => set(state => ({
-        registros: state.registros.map(r => r.id === id ? { 
-          ...r, 
+      updateRegistro: (id, updates) => set(state => {
+        const index = state.registros.findIndex(r => r.id === id);
+        if (index === -1) return state;
+        
+        const newRegistros = [...state.registros];
+        newRegistros[index] = { 
+          ...newRegistros[index], 
           ...updates, 
           wasEdited: true, 
           editedBy: state.conferente || 'Sistema',
           editedAt: new Date().toISOString() 
-        } : r)
-      })),
+        };
+        
+        return { registros: newRegistros };
+      }),
       setProcesso: (p) => set({ processo: p }),
       setConferente: (c) => set({ conferente: c }),
       setSearchQuery: (q) => set({ searchQuery: q }),
