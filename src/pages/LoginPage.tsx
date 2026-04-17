@@ -250,13 +250,12 @@ export default function LoginPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <Label htmlFor="password" className="text-xs font-semibold">Senha</Label>
-                          <button
-                            type="button"
-                            onClick={() => toggleMode('forgot')}
+                          <Link
+                            to="/forgot-password"
                             className="text-[11px] text-primary hover:underline font-medium"
                           >
                             Esqueceu a senha?
-                          </button>
+                          </Link>
                         </div>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
