@@ -34,11 +34,11 @@ serve(async (req) => {
       }
 
       // 2. Audit Log - Request Started
-      await supabaseClient.from("auth_audit_logs").insert({
-        event_type: "forgot_password_request",
-        email,
-        status: "pending",
-        ip_address: req.headers.get("x-forwarded-for") || "unknown",
+      await supabaseClient.rpc("log_auth_event", {
+        p_event_type: "forgot_password_request",
+        p_email: email,
+        p_status: "pending",
+        p_metadata: { ip_address: req.headers.get("x-forwarded-for") || "unknown" },
       });
 
       // 3. Send Recovery Link/OTP via Supabase Auth
