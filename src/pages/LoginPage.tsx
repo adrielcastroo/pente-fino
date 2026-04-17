@@ -136,297 +136,336 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background app-bg-pattern relative overflow-hidden">
-      {/* Subtle Dot Grid */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-background overflow-hidden">
+      {/* Coluna Esquerda: Visual (Desktop/Tablet Horizontal) */}
+      <div className="hidden md:flex md:w-1/2 lg:w-[60%] relative flex-col items-center justify-center p-12 overflow-hidden bg-muted/30 border-r border-border/50">
+        {/* Subtle Dot Grid */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+             style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-      {/* Decorative background gradients */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-30">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px] animate-pulse delay-1000" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="w-full max-w-[400px] z-10"
-      >
-        <div className="flex flex-col items-center mb-8">
-          <motion.div
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            className="p-3 bg-white dark:bg-card border border-border/50 rounded-2xl shadow-sm mb-4"
-          >
-            <img src={logoComb} alt="Logo" className="w-12 h-12 object-contain" />
-          </motion.div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h1>
-          <p className="text-muted-foreground text-sm mt-1">Conferência inteligente de estoque</p>
+        {/* Decorative background gradients */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px] animate-pulse delay-1000" />
         </div>
 
-        <Card className="border-border/40 shadow-xl bg-card/80 backdrop-blur-md rounded-2xl overflow-hidden">
-          <div className="h-1 bg-primary w-full opacity-80" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative z-10 flex flex-col items-center text-center max-w-md"
+        >
+          <div className="p-4 bg-white dark:bg-card border border-border/50 rounded-3xl shadow-xl mb-8 transform hover:scale-105 transition-transform duration-300">
+            <img src={logoComb} alt="Logo" className="w-16 h-16 object-contain" />
+          </div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground mb-4 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
+            Sistema Pente Fino
+          </h1>
+          <p className="text-muted-foreground text-lg leading-relaxed">
+            Gestão inteligente e conferência de estoque em tempo real. 
+            Uma solução moderna para o controle total do seu negócio.
+          </p>
           
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl font-bold">
-              {mode === 'login' && 'Entrar'}
-              {mode === 'signup' && 'Criar Conta'}
-              {mode === 'forgot' && 'Recuperar Senha'}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {mode === 'login' && 'Acesse sua conta para continuar'}
-              {mode === 'signup' && 'Cadastre-se para começar a usar'}
-              {mode === 'forgot' && 'Enviaremos um link para seu email'}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <AnimatePresence mode="wait">
-              {mode === 'login' && (
-                <motion.form
-                  key="login"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  onSubmit={loginForm.handleSubmit(onLogin)}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        className="pl-10 h-11 bg-muted/30 focus:bg-background transition-all"
-                        {...loginForm.register('email')}
-                        autoFocus
-                      />
-                    </div>
-                    {loginForm.formState.errors.email && (
-                      <p className="text-[10px] text-destructive font-medium">{loginForm.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="password" className="text-xs font-semibold">Senha</Label>
-                      <button
-                        type="button"
-                        onClick={() => toggleMode('forgot')}
-                        className="text-[11px] text-primary hover:underline font-medium"
-                      >
-                        Esqueceu a senha?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="pl-10 pr-10 h-11 bg-muted/30 focus:bg-background transition-all"
-                        {...loginForm.register('password')}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {loginForm.formState.errors.password && (
-                      <p className="text-[10px] text-destructive font-medium">{loginForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={loginForm.watch('rememberMe')}
-                      onCheckedChange={(checked) => loginForm.setValue('rememberMe', checked === true)}
-                    />
-                    <Label htmlFor="remember" className="text-xs font-medium cursor-pointer select-none">
-                      Lembrar de mim
-                    </Label>
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 font-bold primary-btn" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
-                    Entrar
-                  </Button>
-                </motion.form>
-              )}
-
-              {mode === 'signup' && (
-                <motion.form
-                  key="signup"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  onSubmit={signupForm.handleSubmit(onSignup)}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-xs font-semibold">Nome Completo</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        placeholder="Seu nome"
-                        className="pl-10 h-11 bg-muted/30 focus:bg-background transition-all"
-                        {...signupForm.register('name')}
-                        autoFocus
-                      />
-                    </div>
-                    {signupForm.formState.errors.name && (
-                      <p className="text-[10px] text-destructive font-medium">{signupForm.formState.errors.name.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email-signup" className="text-xs font-semibold">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email-signup"
-                        type="email"
-                        placeholder="seu@email.com"
-                        className="pl-10 h-11 bg-muted/30 focus:bg-background transition-all"
-                        {...signupForm.register('email')}
-                      />
-                    </div>
-                    {signupForm.formState.errors.email && (
-                      <p className="text-[10px] text-destructive font-medium">{signupForm.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password-signup" className="text-xs font-semibold">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="password-signup"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="pl-10 pr-10 h-11 bg-muted/30 focus:bg-background transition-all"
-                        {...signupForm.register('password')}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {signupForm.formState.errors.password && (
-                      <p className="text-[10px] text-destructive font-medium">{signupForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 font-bold primary-btn" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
-                    Cadastrar
-                  </Button>
-                </motion.form>
-              )}
-
-              {mode === 'forgot' && (
-                <motion.form
-                  key="forgot"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  onSubmit={forgotForm.handleSubmit(onForgot)}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="email-forgot" className="text-xs font-semibold">Email de Recuperação</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email-forgot"
-                        type="email"
-                        placeholder="seu@email.com"
-                        className="pl-10 h-11 bg-muted/30 focus:bg-background transition-all"
-                        {...forgotForm.register('email')}
-                        autoFocus
-                      />
-                    </div>
-                    {forgotForm.formState.errors.email && (
-                      <p className="text-[10px] text-destructive font-medium">{forgotForm.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 font-bold primary-btn" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyRound className="w-4 h-4 mr-2" />}
-                    Enviar Link
-                  </Button>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleMode('login')}
-                    className="w-full text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-center pt-2"
-                  >
-                    <ChevronLeft className="w-3 h-3 mr-1" />
-                    Voltar ao login
-                  </button>
-                </motion.form>
-              )}
-            </AnimatePresence>
-          </CardContent>
-
-          <CardFooter className="flex flex-col space-y-4 border-t border-border/40 pt-6 pb-6 bg-muted/50">
-            {mode !== 'forgot' && (
-              <div className="text-xs text-center text-muted-foreground">
-                {mode === 'login' ? (
-                  <>
-                    Ainda não tem conta?{' '}
-                    <button onClick={() => toggleMode('signup')} className="text-primary font-bold hover:underline">
-                      Cadastre-se
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Já tem uma conta?{' '}
-                    <button onClick={() => toggleMode('login')} className="text-primary font-bold hover:underline">
-                      Fazer login
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-            
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/40" />
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase">
-                <span className="bg-transparent px-2 text-muted-foreground/60 font-medium">Ou continue como</span>
-              </div>
+          <div className="mt-12 grid grid-cols-2 gap-4 w-full opacity-60">
+            <div className="p-4 rounded-2xl bg-background/50 border border-border/40 backdrop-blur-sm">
+              <div className="font-bold text-primary mb-1 text-sm">Rápido</div>
+              <div className="text-[10px]">Processamento instantâneo</div>
             </div>
+            <div className="p-4 rounded-2xl bg-background/50 border border-border/40 backdrop-blur-sm">
+              <div className="font-bold text-primary mb-1 text-sm">Seguro</div>
+              <div className="text-[10px]">Dados protegidos em nuvem</div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
 
-            <Button
-              variant="outline"
-              className="w-full h-10 text-xs font-semibold bg-background hover:bg-muted border-border/60"
-              onClick={() => {
-                loginAsGuest('Visitante');
-                toast.success('Entrou como visitante!');
-              }}
+      {/* Coluna Direita: Formulário (Todos os dispositivos) */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-y-auto">
+        {/* Grid dots for mobile background consistency */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none md:hidden" 
+             style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+        <div className="w-full max-w-[420px] z-10 py-12">
+          <div className="flex flex-col items-center mb-8 md:hidden">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="p-3 bg-white dark:bg-card border border-border/50 rounded-2xl shadow-sm mb-4"
             >
-              Entrar como Visitante
-            </Button>
-          </CardFooter>
-        </Card>
+              <img src={logoComb} alt="Logo" className="w-10 h-10 object-contain" />
+            </motion.div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h1>
+          </div>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-8">
-          © {new Date().getFullYear()} Sistema Pente Fino. Todos os direitos reservados.
-        </p>
-      </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <Card className="border-border/40 shadow-2xl bg-card/80 backdrop-blur-md rounded-2xl overflow-hidden">
+              <div className="h-1 bg-primary w-full opacity-80" />
+              
+              <CardHeader className="space-y-1 pb-4">
+                <CardTitle className="text-2xl font-bold">
+                  {mode === 'login' && 'Entrar'}
+                  {mode === 'signup' && 'Criar Conta'}
+                  {mode === 'forgot' && 'Recuperar Senha'}
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  {mode === 'login' && 'Acesse sua conta para continuar'}
+                  {mode === 'signup' && 'Cadastre-se para começar a usar'}
+                  {mode === 'forgot' && 'Enviaremos um link para seu email'}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <AnimatePresence mode="wait">
+                  {mode === 'login' && (
+                    <motion.form
+                      key="login"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      onSubmit={loginForm.handleSubmit(onLogin)}
+                      className="space-y-4"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="seu@email.com"
+                            className="pl-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                            {...loginForm.register('email')}
+                            autoFocus
+                          />
+                        </div>
+                        {loginForm.formState.errors.email && (
+                          <p className="text-[10px] text-destructive font-medium">{loginForm.formState.errors.email.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label htmlFor="password" className="text-xs font-semibold">Senha</Label>
+                          <button
+                            type="button"
+                            onClick={() => toggleMode('forgot')}
+                            className="text-[11px] text-primary hover:underline font-medium"
+                          >
+                            Esqueceu a senha?
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                            {...loginForm.register('password')}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {loginForm.formState.errors.password && (
+                          <p className="text-[10px] text-destructive font-medium">{loginForm.formState.errors.password.message}</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="remember"
+                          checked={loginForm.watch('rememberMe')}
+                          onCheckedChange={(checked) => loginForm.setValue('rememberMe', checked === true)}
+                        />
+                        <Label htmlFor="remember" className="text-xs font-medium cursor-pointer select-none">
+                          Lembrar de mim
+                        </Label>
+                      </div>
+
+                      <Button type="submit" className="w-full h-12 font-bold primary-btn text-base mt-2" disabled={loading}>
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <LogIn className="w-5 h-5 mr-2" />}
+                        Entrar
+                      </Button>
+                    </motion.form>
+                  )}
+
+                  {mode === 'signup' && (
+                    <motion.form
+                      key="signup"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      onSubmit={signupForm.handleSubmit(onSignup)}
+                      className="space-y-4"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-xs font-semibold">Nome Completo</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="name"
+                            placeholder="Seu nome"
+                            className="pl-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                            {...signupForm.register('name')}
+                            autoFocus
+                          />
+                        </div>
+                        {signupForm.formState.errors.name && (
+                          <p className="text-[10px] text-destructive font-medium">{signupForm.formState.errors.name.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email-signup" className="text-xs font-semibold">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="email-signup"
+                            type="email"
+                            placeholder="seu@email.com"
+                            className="pl-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                            {...signupForm.register('email')}
+                          />
+                        </div>
+                        {signupForm.formState.errors.email && (
+                          <p className="text-[10px] text-destructive font-medium">{signupForm.formState.errors.email.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password-signup" className="text-xs font-semibold">Senha</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="password-signup"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                            {...signupForm.register('password')}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {signupForm.formState.errors.password && (
+                          <p className="text-[10px] text-destructive font-medium">{signupForm.formState.errors.password.message}</p>
+                        )}
+                      </div>
+
+                      <Button type="submit" className="w-full h-12 font-bold primary-btn text-base mt-2" disabled={loading}>
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <UserPlus className="w-5 h-5 mr-2" />}
+                        Cadastrar
+                      </Button>
+                    </motion.form>
+                  )}
+
+                  {mode === 'forgot' && (
+                    <motion.form
+                      key="forgot"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      onSubmit={forgotForm.handleSubmit(onForgot)}
+                      className="space-y-4"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="email-forgot" className="text-xs font-semibold">Email de Recuperação</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="email-forgot"
+                            type="email"
+                            placeholder="seu@email.com"
+                            className="pl-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                            {...forgotForm.register('email')}
+                            autoFocus
+                          />
+                        </div>
+                        {forgotForm.formState.errors.email && (
+                          <p className="text-[10px] text-destructive font-medium">{forgotForm.formState.errors.email.message}</p>
+                        )}
+                      </div>
+
+                      <Button type="submit" className="w-full h-12 font-bold primary-btn text-base mt-2" disabled={loading}>
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <KeyRound className="w-5 h-5 mr-2" />}
+                        Enviar Link
+                      </Button>
+
+                      <button
+                        type="button"
+                        onClick={() => toggleMode('login')}
+                        className="w-full text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-center pt-2"
+                      >
+                        <ChevronLeft className="w-3 h-3 mr-1" />
+                        Voltar ao login
+                      </button>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+
+              <CardFooter className="flex flex-col space-y-4 border-t border-border/40 pt-6 pb-6 bg-muted/50">
+                {mode !== 'forgot' && (
+                  <div className="text-xs text-center text-muted-foreground">
+                    {mode === 'login' ? (
+                      <>
+                        Ainda não tem conta?{' '}
+                        <button onClick={() => toggleMode('signup')} className="text-primary font-bold hover:underline">
+                          Cadastre-se
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        Já tem uma conta?{' '}
+                        <button onClick={() => toggleMode('login')} className="text-primary font-bold hover:underline">
+                          Fazer login
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                <div className="relative w-full">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border/40" />
+                  </div>
+                  <div className="relative flex justify-center text-[10px] uppercase">
+                    <span className="bg-muted/10 backdrop-blur-sm px-2 text-muted-foreground/60 font-medium">Ou continue como</span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full h-11 text-xs font-semibold bg-background hover:bg-muted border-border/60 transition-all"
+                  onClick={() => {
+                    loginAsGuest('Visitante');
+                    toast.success('Entrou como visitante!');
+                  }}
+                >
+                  Entrar como Visitante
+                </Button>
+              </CardFooter>
+            </Card>
+          </motion.div>
+
+          <p className="text-center text-[10px] text-muted-foreground mt-8">
+            © {new Date().getFullYear()} Sistema Pente Fino. Todos os direitos reservados.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
