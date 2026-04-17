@@ -18,7 +18,10 @@ const ResetPassword = () => {
         // Also check if we just verified OTP (which signs the user in)
         // Or if we have a recovery token in the URL
         const hash = window.location.hash;
-        if (hash.includes('type=recovery') || hash.includes('access_token')) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const hasToken = hash.includes('type=recovery') || hash.includes('access_token') || searchParams.has('token');
+        
+        if (hasToken) {
           setIsValidSession(true);
         } else {
           toast.error("Sessão inválida ou expirada.");
