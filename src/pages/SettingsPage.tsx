@@ -1,5 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { KeyRound, AlertTriangle, Loader2 } from 'lucide-react';
 import { 
   User, 
   Settings, 
@@ -74,6 +86,57 @@ export default function SettingsPage() {
 
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
   const [orModel, setOrModel] = useState(localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku');
+
+  // Security state
+  const navigate = useNavigate();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 8) {
+      toast.error('A senha deve ter no mínimo 8 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Senha alterada com sucesso!');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast.error('Erro ao alterar senha: ' + error.message);
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'EXCLUIR') {
+      toast.error('Digite EXCLUIR para confirmar.');
+      return;
+    }
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account');
+      if (error) throw error;
+      toast.success('Conta excluída com sucesso.');
+      await supabase.auth.signOut();
+      navigate('/login');
+    } catch (error: any) {
+      toast.error('Erro ao excluir conta: ' + error.message);
+      setDeletingAccount(false);
+    }
+  };
 
   const saveSettings = async () => {
     try {
@@ -355,7 +418,119 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {!['profile', 'appearance', 'performance', 'integrations'].includes(activeCategory) && (
+                  {activeCategory === 'security' && (
+                    <div className="space-y-8">
+                      {isGuest ? (
+                        <div className="py-12 text-center space-y-3">
+                          <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mx-auto">
+                            <Shield className="w-7 h-7 text-muted-foreground" />
+                          </div>
+                          <h4 className="font-bold">Indisponível no Modo Visitante</h4>
+                          <p className="text-sm text-muted-foreground">Faça login para gerenciar a segurança da sua conta.</p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Change Password */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <KeyRound className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Senha</h4>
+                            </div>
+                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nova Senha</Label>
+                                <div className="relative">
+                                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="pl-9 pr-10 bg-background/50 h-11"
+                                    placeholder="Mínimo 8 caracteres"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                  >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Confirmar Nova Senha</Label>
+                                <div className="relative">
+                                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="pl-9 bg-background/50 h-11"
+                                    placeholder="Repita a senha"
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                onClick={handleChangePassword}
+                                disabled={changingPassword || !newPassword || !confirmPassword}
+                                className="w-full font-bold"
+                              >
+                                {changingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyRound className="w-4 h-4 mr-2" />}
+                                Atualizar Senha
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Sign out all */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <LogOut className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Sessão</h4>
+                            </div>
+                            <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-0.5">
+                                <Label className="text-sm font-bold">Encerrar Sessão</Label>
+                                <p className="text-xs text-muted-foreground">Sair desta conta neste dispositivo.</p>
+                              </div>
+                              <Button variant="outline" onClick={() => signOut()} className="font-bold">
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Sair
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Danger Zone */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4 text-destructive" />
+                              <h4 className="text-sm font-black uppercase tracking-wider text-destructive">Zona de Perigo</h4>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-destructive/5 border border-destructive/20 space-y-4">
+                              <div className="flex items-start gap-3">
+                                <Trash2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                  <h5 className="text-sm font-bold text-foreground">Excluir Conta Permanentemente</h5>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Esta ação não pode ser desfeita. Todos os seus dados, conferências e configurações serão removidos permanentemente.
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                variant="destructive"
+                                onClick={() => setDeleteConfirmOpen(true)}
+                                className="w-full font-bold"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir Minha Conta
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {!['profile', 'appearance', 'performance', 'integrations', 'security'].includes(activeCategory) && (
                     <div className="py-20 text-center space-y-4">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-50">
                         <Settings className="w-8 h-8 text-muted-foreground" />
@@ -372,6 +547,46 @@ export default function SettingsPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Excluir conta permanentemente?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <span className="block">
+                Esta ação <strong className="text-destructive">não pode ser desfeita</strong>. Sua conta, perfil, histórico de conferências e todas as configurações serão removidos permanentemente.
+              </span>
+              <span className="block pt-2">
+                Para confirmar, digite <strong className="font-mono text-foreground">EXCLUIR</strong> abaixo:
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="Digite EXCLUIR"
+            className="font-mono"
+            autoFocus
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAccount} onClick={() => setDeleteConfirmText('')}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deletingAccount || deleteConfirmText !== 'EXCLUIR'}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAccount ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Excluir Definitivamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
