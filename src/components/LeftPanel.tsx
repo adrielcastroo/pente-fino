@@ -430,6 +430,39 @@ const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockNf, nf, setLockedNf, setLockNf]);
 
+  const toggleLockItem = useCallback(() => {
+    if (!lockItem) {
+      setLockedItem(localItem);
+      setLockItem(true);
+      toast.success('Item travado');
+    } else {
+      setLockItem(false);
+      toast.success('Item destravado');
+    }
+  }, [lockItem, localItem, setLockedItem, setLockItem]);
+
+  const toggleLockLote = useCallback(() => {
+    if (!lockLote) {
+      setLockedLote(lote);
+      setLockLote(true);
+      toast.success('Lote travado');
+    } else {
+      setLockLote(false);
+      toast.success('Lote destravado');
+    }
+  }, [lockLote, lote, setLockedLote, setLockLote]);
+
+  const toggleLockMetragem = useCallback(() => {
+    if (!lockMetragemGlobal) {
+      setLockedMetragem(diversosMLinear);
+      setLockMetragemGlobal(true);
+      toast.success('Metragem travada');
+    } else {
+      setLockMetragemGlobal(false);
+      toast.success('Metragem destravada');
+    }
+  }, [lockMetragemGlobal, diversosMLinear, setLockedMetragem, setLockMetragemGlobal]);
+
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
     if (parsed.width) {
