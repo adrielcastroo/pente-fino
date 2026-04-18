@@ -1,14 +1,15 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
 import ImportDialog from '@/components/estoque/ImportDialog';
@@ -75,6 +76,12 @@ export default function EstoquePage() {
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [scanMode, setScanMode] = useState(false);
+  const [scanInput, setScanInput] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
+  const [confirmScan, setConfirmScan] = useState<any>(null);
+  const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
@@ -196,6 +203,70 @@ export default function EstoquePage() {
     }
   };
 
+  useEffect(() => {
+    if (scanMode && scanRef.current) {
+      scanRef.current.focus();
+    }
+  }, [scanMode]);
+
+  const handleScanSubmit = async () => {
+    const loteFinal = scanInput.trim();
+    if (!loteFinal) return;
+
+    setScanning(true);
+    try {
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('*')
+        .ilike('lote_sistema', loteFinal)
+        .eq('status', 'ocupado')
+        .limit(1);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setScanResult({ item: null, success: false, message: `Nenhum tecido encontrado com lote final: "${loteFinal}"` });
+      } else {
+        setConfirmScan(data[0]);
+      }
+    } catch (e: any) {
+      toast.error('Erro ao buscar tecido: ' + (e.message || ''));
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const executeScanSaida = async () => {
+    if (!confirmScan) return;
+    const pos = confirmScan;
+
+    try {
+      const { error: saError } = await supabase.from('estoque_saidas').insert({
+        registro_id: pos.registro_id || pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
+        lote: pos.lote, endereco: pos.endereco, lote_sistema: pos.lote_sistema, estrutura: pos.estrutura,
+        coluna: pos.coluna, nivel: pos.nivel, posicao: pos.posicao, conferente_entrada: pos.conferente_entrada,
+        conferente_saida: useAppStore.getState().conferente || 'Sistema',
+        data_registro: pos.data_registro, data_saida: new Date().toISOString()
+      });
+      if (saError) throw saError;
+
+      const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+      if (delError) throw delError;
+
+      setScanResult({
+        item: pos,
+        success: true,
+        message: `Saída realizada! Item "${pos.item}" removido de ${pos.estrutura}.${pos.coluna}.N${String(pos.nivel).padStart(2, '0')}`
+      });
+      setConfirmScan(null);
+      setScanInput('');
+      loadPosicoes();
+      loadStats();
+    } catch (e: any) {
+      toast.error('Erro ao dar saída: ' + (e.message || ''));
+    }
+  };
+
   const selectedCellItems = selectedCell ? (cellMap[`${selectedCell.col}-${selectedCell.nivel}`] || []) : [];
   const occupiedCount = selectedCellItems.length;
 
@@ -214,10 +285,21 @@ export default function EstoquePage() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
           
         </div>
-        <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
-          <Upload className="w-4 h-4" />
-          <span className="hidden sm:inline">Importar</span>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => { setScanMode(true); setScanResult(null); setScanInput(''); }}
+            variant="outline"
+            className="h-10 sm:h-11 px-4 font-bold rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm"
+          >
+            <ScanBarcode className="w-4 h-4" />
+            <span className="hidden sm:inline">Saída Manual</span>
+            <span className="sm:hidden">Saída</span>
+          </Button>
+          <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">Importar</span>
+          </Button>
+        </div>
       </div>
       
       {/* Stats */}
@@ -694,6 +776,96 @@ export default function EstoquePage() {
             <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
             <AlertDialogAction className="rounded-xl bg-destructive hover:bg-destructive/90" onClick={() => { if (detailPos) executeDelete(detailPos); }}>
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Scan Mode Dialog */}
+      <Dialog open={scanMode} onOpenChange={setScanMode}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
+                <ScanBarcode className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-black tracking-tight">Saída por Bipagem</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
+                  Bipe ou digite o <strong>Lote Final</strong> do tecido para dar saída
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
+              <div className="flex gap-2">
+                <Input
+                  ref={scanRef}
+                  value={scanInput}
+                  onChange={e => setScanInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
+                  placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
+                  className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
+                  autoFocus
+                />
+                <Button
+                  onClick={handleScanSubmit}
+                  disabled={scanning || !scanInput.trim()}
+                  className="h-12 px-6 rounded-xl font-black bg-violet-600 hover:bg-violet-700 shrink-0"
+                >
+                  {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
+                </Button>
+              </div>
+            </div>
+
+            {scanResult && (
+              <div className={`p-4 rounded-xl border ${
+                scanResult.success 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+              }`}>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  {scanResult.success ? <CheckCircle2 className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                  {scanResult.message}
+                </div>
+                {scanResult.success && scanResult.item && (
+                  <div className="mt-2 text-xs font-mono text-muted-foreground">
+                    Lote Final: {scanResult.item.lote_sistema}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Scan Saida */}
+      <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-black">Confirmar Saída por Bipagem</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">
+              {confirmScan && (
+                <>
+                  <div>Tecido encontrado:</div>
+                  <div className="bg-muted/20 p-3 rounded-lg space-y-1 text-foreground text-xs font-bold">
+                    <div>Item: <span className="font-mono">{confirmScan.item}</span></div>
+                    <div>Lote Final: <span className="font-mono text-primary">{confirmScan.lote_sistema}</span></div>
+                    <div>Posição: {confirmScan.estrutura}.{confirmScan.coluna}.N{String(confirmScan.nivel).padStart(2, '0')} P{confirmScan.posicao}</div>
+                    <div>M Linear: {confirmScan.m_linear}m | Largura: {confirmScan.largura}m</div>
+                  </div>
+                  <div>Deseja confirmar a saída deste tecido?</div>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700" onClick={executeScanSaida}>
+              Confirmar Saída
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
