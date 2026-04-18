@@ -781,6 +781,96 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Scan Mode Dialog */}
+      <Dialog open={scanMode} onOpenChange={setScanMode}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
+                <ScanBarcode className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-black tracking-tight">Saída por Bipagem</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
+                  Bipe ou digite o <strong>Lote Final</strong> do tecido para dar saída
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
+              <div className="flex gap-2">
+                <Input
+                  ref={scanRef}
+                  value={scanInput}
+                  onChange={e => setScanInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
+                  placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
+                  className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
+                  autoFocus
+                />
+                <Button
+                  onClick={handleScanSubmit}
+                  disabled={scanning || !scanInput.trim()}
+                  className="h-12 px-6 rounded-xl font-black bg-violet-600 hover:bg-violet-700 shrink-0"
+                >
+                  {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
+                </Button>
+              </div>
+            </div>
+
+            {scanResult && (
+              <div className={`p-4 rounded-xl border ${
+                scanResult.success 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+              }`}>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  {scanResult.success ? <CheckCircle2 className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                  {scanResult.message}
+                </div>
+                {scanResult.success && scanResult.item && (
+                  <div className="mt-2 text-xs font-mono text-muted-foreground">
+                    Lote Final: {scanResult.item.lote_sistema}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Scan Saida */}
+      <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-black">Confirmar Saída por Bipagem</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">
+              {confirmScan && (
+                <>
+                  <div>Tecido encontrado:</div>
+                  <div className="bg-muted/20 p-3 rounded-lg space-y-1 text-foreground text-xs font-bold">
+                    <div>Item: <span className="font-mono">{confirmScan.item}</span></div>
+                    <div>Lote Final: <span className="font-mono text-primary">{confirmScan.lote_sistema}</span></div>
+                    <div>Posição: {confirmScan.estrutura}.{confirmScan.coluna}.N{String(confirmScan.nivel).padStart(2, '0')} P{confirmScan.posicao}</div>
+                    <div>M Linear: {confirmScan.m_linear}m | Largura: {confirmScan.largura}m</div>
+                  </div>
+                  <div>Deseja confirmar a saída deste tecido?</div>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700" onClick={executeScanSaida}>
+              Confirmar Saída
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Import Dialog */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
     </div>
