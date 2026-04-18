@@ -19,7 +19,7 @@ const LoginRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (loading) return (
     <div className="h-screen w-screen flex items-center justify-center bg-background">
-      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
     </div>
   );
   
@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (loading) return (
     <div className="h-screen w-screen flex items-center justify-center bg-background">
-      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
     </div>
   );
   
@@ -61,7 +61,7 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
-            <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+            <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
               <Routes>
                 <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
