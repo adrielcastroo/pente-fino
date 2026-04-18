@@ -449,79 +449,69 @@ export default function EstoquePage() {
                 </div>
               </div>
 
-              {/* Positions Grid */}
-              <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-2.5">
-                  {Array.from({ length: 30 }, (_, i) => i + 1).map(pos => {
-                    const item = selectedCellItems.find(p => p.posicao === pos);
-                    const statusCfg = item ? STATUS_CONFIG[item.status] || STATUS_CONFIG.livre : null;
-                    
-                    const posButton = (
-                      <button
-                        key={pos}
-                        onClick={() => item && setDetailPos(item)}
-                        disabled={!item}
-                        className={`relative h-14 sm:h-16 rounded-xl border transition-colors flex flex-col items-center justify-center gap-0.5 group ${
-                          item 
-                            ? `${statusCfg!.bg} ${statusCfg!.border} cursor-pointer hover:shadow-md active:scale-[0.97]` 
-                            : 'bg-muted/10 border-border/20 cursor-default opacity-50'
-                        }`}
-                      >
-                        <span className={`text-sm sm:text-base font-black tabular-nums ${item ? statusCfg!.color : 'text-muted-foreground/40'}`}>
-                          {String(pos).padStart(2, '0')}
-                        </span>
-                        {item && (
-                          <span className="text-[7px] sm:text-[8px] font-bold text-muted-foreground/60 truncate max-w-[90%] leading-none">
-                            {item.item?.slice(0, 10) || '—'}
-                          </span>
-                        )}
-                        {item && (
-                          <div className="absolute top-1 right-1">
-                            <div className={`w-1.5 h-1.5 rounded-full ${
-                              item.status === 'ocupado' ? 'bg-emerald-400' :
-                              item.status === 'bloqueado' ? 'bg-red-400' :
-                              item.status === 'reservado' ? 'bg-amber-400' :
-                              'bg-violet-400'
-                            }`} />
-                          </div>
-                        )}
-                      </button>
-                    );
-
-                    if (!item) return posButton;
-
-                    return (
-                      <Tooltip key={pos} delayDuration={80}>
-                        <TooltipTrigger asChild>
-                          {posButton}
-                        </TooltipTrigger>
-                        <TooltipContent side={getTooltipSide(pos)} align="center" sideOffset={6} avoidCollisions collisionPadding={16} className="bg-card border border-border/40 rounded-lg px-2.5 py-1.5 shadow-xl w-[180px] max-w-[calc(100vw-2rem)] z-[100] text-left">
-                          <div className="flex flex-col gap-0.5 text-[10px] font-bold leading-tight">
-                            <span className="text-foreground break-words whitespace-normal">{item.item || '—'}</span>
-                            <span className="text-muted-foreground break-words whitespace-normal">{item.lote_sistema || '—'}</span>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-
-                {/* Legend */}
-                <div className="mt-5 pt-4 border-t border-border/15 flex flex-wrap items-center gap-4 justify-center">
-                  {Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'livre').map(([key, cfg]) => (
-                    <div key={key} className="flex items-center gap-1.5">
-                      <div className={`w-2.5 h-2.5 rounded-full ${
-                        key === 'ocupado' ? 'bg-emerald-400' :
-                        key === 'bloqueado' ? 'bg-red-400' :
-                        key === 'reservado' ? 'bg-amber-400' : 'bg-violet-400'
-                      }`} />
-                      <span className="text-[10px] font-semibold text-muted-foreground">{cfg.label}</span>
-                    </div>
-                  ))}
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/20 border border-border/30" />
-                    <span className="text-[10px] font-semibold text-muted-foreground">Livre</span>
+              {/* Positions List/Grid */}
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                {occupiedCount === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-3 border-2 border-dashed border-border/20 rounded-2xl bg-muted/5">
+                    <Box className="w-10 h-10 text-muted-foreground/30" />
+                    <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Nenhum item nesta célula</p>
                   </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
+                      const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
+                      return (
+                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                              </Badge>
+                              <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                            </div>
+                            <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
+                              <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
+                              <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
+                              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              onClick={() => setDetailPos(item)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
+                            >
+                              Detalhes
+                            </Button>
+                            {!isGuest && (
+                              <Button
+                                onClick={() => {
+                                  setDetailPos(item);
+                                  handleStatusChange(item, 'saida');
+                                }}
+                                size="sm"
+                                className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                              >
+                                <LogOut className="w-3 h-3" />
+                                Dar Saída
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Grid View Toggle or Helper */}
+                <div className="mt-6 pt-4 border-t border-border/15 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{occupiedCount} Itens encontrados</span>
+                  </div>
+                  <p className="text-[9px] font-medium text-muted-foreground/40 italic">* Somente posições ocupadas são exibidas</p>
                 </div>
               </div>
             </>
