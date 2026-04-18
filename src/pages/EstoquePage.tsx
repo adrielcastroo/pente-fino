@@ -75,7 +75,12 @@ export default function EstoquePage() {
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
+  const [scanMode, setScanMode] = useState(false);
+  const [scanInput, setScanInput] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
+  const [confirmScan, setConfirmScan] = useState<any>(null);
+  const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
