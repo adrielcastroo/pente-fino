@@ -203,6 +203,70 @@ export default function EstoquePage() {
     }
   };
 
+  useEffect(() => {
+    if (scanMode && scanRef.current) {
+      scanRef.current.focus();
+    }
+  }, [scanMode]);
+
+  const handleScanSubmit = async () => {
+    const loteFinal = scanInput.trim();
+    if (!loteFinal) return;
+
+    setScanning(true);
+    try {
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('*')
+        .ilike('lote_sistema', loteFinal)
+        .eq('status', 'ocupado')
+        .limit(1);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setScanResult({ item: null, success: false, message: `Nenhum tecido encontrado com lote final: "${loteFinal}"` });
+      } else {
+        setConfirmScan(data[0]);
+      }
+    } catch (e: any) {
+      toast.error('Erro ao buscar tecido: ' + (e.message || ''));
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const executeScanSaida = async () => {
+    if (!confirmScan) return;
+    const pos = confirmScan;
+
+    try {
+      const { error: saError } = await supabase.from('estoque_saidas').insert({
+        registro_id: pos.registro_id || pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
+        lote: pos.lote, endereco: pos.endereco, lote_sistema: pos.lote_sistema, estrutura: pos.estrutura,
+        coluna: pos.coluna, nivel: pos.nivel, posicao: pos.posicao, conferente_entrada: pos.conferente_entrada,
+        conferente_saida: useAppStore.getState().conferente || 'Sistema',
+        data_registro: pos.data_registro, data_saida: new Date().toISOString()
+      });
+      if (saError) throw saError;
+
+      const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+      if (delError) throw delError;
+
+      setScanResult({
+        item: pos,
+        success: true,
+        message: `Saída realizada! Item "${pos.item}" removido de ${pos.estrutura}.${pos.coluna}.N${String(pos.nivel).padStart(2, '0')}`
+      });
+      setConfirmScan(null);
+      setScanInput('');
+      loadPosicoes();
+      loadStats();
+    } catch (e: any) {
+      toast.error('Erro ao dar saída: ' + (e.message || ''));
+    }
+  };
+
   const selectedCellItems = selectedCell ? (cellMap[`${selectedCell.col}-${selectedCell.nivel}`] || []) : [];
   const occupiedCount = selectedCellItems.length;
 
