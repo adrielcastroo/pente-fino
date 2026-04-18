@@ -15,8 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 
-
-
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
 ITEM (código do tecido): Item, Ref, Item No, Description, Artigo, Part No
@@ -25,7 +23,7 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
-const LeftPanel = memo(function LeftPanel() {
+export const LeftPanel = memo(function LeftPanel() {
   const {
     currentMode, setMode, processo, setProcesso, conferente, registros,
     addRegistro, undoStack, undo: undoAction,

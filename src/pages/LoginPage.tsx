@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, UserPlus, LogIn, KeyRound, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { usePerformance } from '@/hooks/use-performance';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -40,6 +41,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { loginAsGuest } = useAuth();
+  const { isLow } = usePerformance();
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -144,10 +146,12 @@ export default function LoginPage() {
              style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
         {/* Decorative background gradients */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px] animate-pulse delay-1000" />
-        </div>
+        {!isLow && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px] animate-pulse delay-1000" />
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -155,7 +159,7 @@ export default function LoginPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="relative z-10 flex flex-col items-center text-center max-w-md"
         >
-          <div className="p-4 bg-white dark:bg-card border border-border/50 rounded-3xl shadow-xl mb-8 transform hover:scale-105 transition-transform duration-300">
+          <div className={`p-4 bg-white dark:bg-card border border-border/50 rounded-3xl shadow-xl mb-8 ${!isLow ? 'transform hover:scale-105 transition-transform duration-300' : ''}`}>
             <img src={logoComb} alt="Logo" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground mb-4 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
@@ -202,7 +206,7 @@ export default function LoginPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <Card className="border-border/40 shadow-2xl bg-card/80 backdrop-blur-md rounded-2xl overflow-hidden">
+            <Card className={`border-border/40 shadow-2xl rounded-2xl overflow-hidden ${isLow ? 'bg-card' : 'bg-card/80 backdrop-blur-md'}`}>
               <div className="h-1 bg-primary w-full opacity-80" />
               
               <CardHeader className="space-y-1 pb-4">
