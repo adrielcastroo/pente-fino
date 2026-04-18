@@ -286,15 +286,6 @@ export default function EstoquePage() {
           
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            onClick={() => { setScanMode(true); setScanResult(null); setScanInput(''); }}
-            variant="outline"
-            className="h-10 sm:h-11 px-4 font-bold rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm"
-          >
-            <ScanBarcode className="w-4 h-4" />
-            <span className="hidden sm:inline">Saída Manual</span>
-            <span className="sm:hidden">Saída</span>
-          </Button>
           <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Importar</span>
