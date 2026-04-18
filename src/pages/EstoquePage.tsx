@@ -604,9 +604,10 @@ export default function EstoquePage() {
                         <Button 
                           onClick={() => handleStatusChange(detailPos, 'saida')} 
                           variant="outline"
-                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-border/20 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-500 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-500/15 hover:border-violet-500/50 hover:text-violet-400 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0 shadow-sm"
                         >
-                          <LogOut className="w-3.5 h-3.5 mr-2" />
+                          <div className="w-2.5 h-2.5 rounded-full mr-2 bg-violet-400" />
+                          <LogOut className="w-3 h-3 mr-1.5" />
                           Dar Saída
                         </Button>
                       )}
