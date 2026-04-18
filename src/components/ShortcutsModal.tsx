@@ -1,17 +1,44 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePerformance } from '@/hooks/use-performance';
 
 const shortcuts = [
-  { desc: 'Processar IA', keys: ['Enter'] },
-  { desc: 'Adicionar rolo', keys: ['Ctrl', 'Enter'] },
-  { desc: 'Colar imagem', keys: ['Ctrl', 'V'] },
-  { desc: 'Limpar formulário', keys: ['Esc'] },
-  { desc: 'Desfazer remoção', keys: ['Ctrl', 'Z'] },
-  { desc: 'Copiar Lote', keys: ['Ctrl', 'L'] },
-  { desc: 'Exportar Excel', keys: ['Ctrl', 'E'] },
-  { desc: 'Focar busca', keys: ['Ctrl', 'F'] },
+  { key: 'ALT + T', label: 'Modo Tecido' },
+  { key: 'ALT + M', label: 'Modo Madeira' },
+  { key: 'ALT + K', label: 'Modo Motor' },
+  { key: 'ALT + E', label: 'Estoque' },
+  { key: 'ALT + S', label: 'Saída' },
+  { key: 'ALT + H', label: 'Histórico' },
+  { key: 'ALT + I', label: 'Dashboard' },
+  { key: 'ALT + C', label: 'Configurações' },
+  { key: 'ALT + Z', label: 'Desfazer último registro' },
+  { key: 'ESC', label: 'Fechar Modais / Parar Câmera' },
 ];
 
 export default function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { isLow } = usePerformance();
+  
+  if (!open) return null;
+
+  if (isLow) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div className="bg-card w-full max-w-md rounded-2xl p-6 border border-border">
+          <h2 className="text-xl font-bold mb-4">Atalhos do Sistema</h2>
+          <div className="space-y-2">
+            {shortcuts.map(s => (
+              <div key={s.key} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+                <span className="text-sm font-medium text-muted-foreground">{s.label}</span>
+                <kbd className="px-2 py-1 bg-muted rounded text-[10px] font-mono font-bold border border-border shadow-sm">{s.key}</kbd>
+              </div>
+            ))}
+          </div>
+          <div className="h-px bg-border my-4" />
+          <button onClick={onClose} className="w-full border border-border rounded-lg py-2 text-sm hover:bg-surface-2">Fechar</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AnimatePresence>
       {open && (
@@ -19,23 +46,21 @@ export default function ShortcutsModal({ open, onClose }: { open: boolean; onClo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={e => e.target === e.currentTarget && onClose()}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="surface-bg rounded-2xl p-7 w-[480px] max-w-[92vw] shadow-2xl"
+            className="bg-card w-full max-w-md rounded-2xl p-6 border border-border shadow-2xl"
           >
-            <h2 className="text-base font-semibold mb-4">Atalhos de Teclado</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <h2 className="text-xl font-bold mb-4">Atalhos do Sistema</h2>
+            <div className="space-y-2">
               {shortcuts.map(s => (
-                <div key={s.desc} className="flex items-center justify-between px-3 py-2 surface-2-bg rounded-md">
-                  <span className="text-xs text-muted-foreground">{s.desc}</span>
-                  <div className="flex gap-1">
-                    {s.keys.map(k => <span key={k} className="kbd">{k}</span>)}
-                  </div>
+                <div key={s.key} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+                  <span className="text-sm font-medium text-muted-foreground">{s.label}</span>
+                  <kbd className="px-2 py-1 bg-muted rounded text-[10px] font-mono font-bold border border-border shadow-sm">{s.key}</kbd>
                 </div>
               ))}
             </div>
