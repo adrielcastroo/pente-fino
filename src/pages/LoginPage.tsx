@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, UserPlus, LogIn, KeyRound, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, UserPlus, LogIn, KeyRound, ChevronLeft, CheckCircle2, ShieldCheck, Zap, BarChart3, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { usePerformance } from '@/hooks/use-performance';
@@ -162,23 +162,33 @@ export default function LoginPage() {
           <div className={`p-4 bg-white dark:bg-card border border-border/50 rounded-3xl shadow-xl mb-8 ${!isLow ? 'transform hover:scale-105 transition-transform duration-300' : ''}`}>
             <img src={logoComb} alt="Logo" className="w-16 h-16 object-contain" />
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground mb-4 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground mb-6 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
             Sistema Pente Fino
           </h1>
-          <p className="text-muted-foreground text-lg leading-relaxed">
-            Gestão inteligente e conferência de estoque em tempo real. 
-            Uma solução moderna para o controle total do seu negócio.
-          </p>
           
-          <div className="mt-12 grid grid-cols-2 gap-4 w-full opacity-60">
-            <div className="p-4 rounded-2xl bg-background/50 border border-border/40 backdrop-blur-sm">
-              <div className="font-bold text-primary mb-1 text-sm">Rápido</div>
-              <div className="text-[10px]">Processamento instantâneo</div>
-            </div>
-            <div className="p-4 rounded-2xl bg-background/50 border border-border/40 backdrop-blur-sm">
-              <div className="font-bold text-primary mb-1 text-sm">Seguro</div>
-              <div className="text-[10px]">Dados protegidos em nuvem</div>
-            </div>
+          <div className="space-y-6 w-full mt-4">
+            {[
+              { icon: Search, title: "Conferência Ágil", desc: "Validação instantânea de estoque com precisão cirúrgica." },
+              { icon: BarChart3, title: "Insights em Tempo Real", desc: "Acompanhe cada movimentação no momento em que acontece." },
+              { icon: ShieldCheck, title: "Segurança de Dados", desc: "Arquitetura robusta para proteção total das suas informações." },
+              { icon: Zap, title: "Performance Elevada", desc: "Interface otimizada para máxima produtividade da sua equipe." }
+            ].map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + (i * 0.1) }}
+                className="flex items-start gap-4 p-4 rounded-2xl bg-white/50 dark:bg-card/50 border border-border/30 backdrop-blur-sm hover:shadow-md transition-all duration-300 group"
+              >
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-foreground text-sm">{item.title}</h3>
+                  <p className="text-muted-foreground text-xs mt-0.5 leading-relaxed">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </div>
