@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type PresenceStatus = 'online' | 'away' | 'offline';
 
@@ -15,25 +16,105 @@ export interface PresenceMeta {
 const PRESENCE_CHANNEL = 'team-presence';
 const AWAY_AFTER_MS = 5 * 60 * 1000; // 5 min idle => away
 
+// ---------------------------------------------------------------------------
+// Shared channel singleton
+// ---------------------------------------------------------------------------
+// Supabase Realtime allows only ONE channel instance per topic per client and
+// requires every `.on()` listener to be registered BEFORE `.subscribe()`.
+// We therefore keep a single shared channel, register listeners up-front, and
+// reference-count subscribers so the channel stays alive while either the
+// tracker or any team-presence listener is mounted.
+
+interface SharedPresence {
+  channel: RealtimeChannel;
+  refCount: number;
+  listeners: Set<(map: Record<string, PresenceMeta>) => void>;
+  presenceKey: string;
+}
+
+let shared: SharedPresence | null = null;
+
+function computeMap(channel: RealtimeChannel): Record<string, PresenceMeta> {
+  const map: Record<string, PresenceMeta> = {};
+  try {
+    const state = channel.presenceState<PresenceMeta>();
+    Object.values(state).forEach((metas) => {
+      if (!Array.isArray(metas) || metas.length === 0) return;
+      const latest = metas[metas.length - 1] as PresenceMeta | undefined;
+      if (latest && latest.user_id) {
+        map[latest.user_id] = latest;
+      }
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[presence] computeMap error', err);
+  }
+  return map;
+}
+
+function notify() {
+  if (!shared) return;
+  const map = computeMap(shared.channel);
+  shared.listeners.forEach((cb) => {
+    try { cb(map); } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[presence] listener error', err);
+    }
+  });
+}
+
+function ensureShared(presenceKey: string): SharedPresence {
+  if (shared) return shared;
+  const channel = supabase.channel(PRESENCE_CHANNEL, {
+    config: { presence: { key: presenceKey } },
+  });
+  // Register all presence listeners BEFORE subscribe — required by Supabase.
+  channel
+    .on('presence', { event: 'sync' }, notify)
+    .on('presence', { event: 'join' }, notify)
+    .on('presence', { event: 'leave' }, notify)
+    .subscribe();
+
+  shared = { channel, refCount: 0, listeners: new Set(), presenceKey };
+  return shared;
+}
+
+function releaseShared() {
+  if (!shared) return;
+  if (shared.refCount > 0) return;
+  if (shared.listeners.size > 0) return;
+  try {
+    shared.channel.untrack();
+  } catch { /* noop */ }
+  try {
+    supabase.removeChannel(shared.channel);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[presence] removeChannel error', err);
+  }
+  shared = null;
+}
+
+// ---------------------------------------------------------------------------
+// Public hooks
+// ---------------------------------------------------------------------------
+
 /**
- * Tracks the current user's presence in a shared Supabase Realtime channel.
+ * Tracks the current user's presence in the shared Supabase Realtime channel.
  * Detects idle (mouse/keyboard/touch) and tab visibility to switch between
- * 'online' and 'away'. On unmount/sign-out the channel automatically removes
- * the presence entry, which other clients will read as 'offline'.
+ * 'online' and 'away'. On unmount/sign-out the channel removes the presence
+ * entry, which other clients will read as 'offline'.
  */
 export function usePresenceTracker() {
   const { user, profile } = useAuth();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const idleTimerRef = useRef<number | null>(null);
   const currentStatusRef = useRef<PresenceStatus>('online');
 
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase.channel(PRESENCE_CHANNEL, {
-      config: { presence: { key: user.id } },
-    });
-    channelRef.current = channel;
+    const s = ensureShared(user.id);
+    s.refCount++;
 
     const track = (status: PresenceStatus) => {
       currentStatusRef.current = status;
@@ -44,7 +125,7 @@ export function usePresenceTracker() {
         status,
         online_at: new Date().toISOString(),
       };
-      channel.track(meta);
+      try { s.channel.track(meta); } catch { /* noop */ }
     };
 
     const resetIdle = () => {
@@ -66,12 +147,9 @@ export function usePresenceTracker() {
       }
     };
 
-    channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        track('online');
-        resetIdle();
-      }
-    });
+    // Initial track (channel may already be subscribed from a previous mount).
+    track('online');
+    resetIdle();
 
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll'] as const;
     events.forEach((e) => window.addEventListener(e, resetIdle, { passive: true }));
@@ -81,9 +159,9 @@ export function usePresenceTracker() {
       events.forEach((e) => window.removeEventListener(e, resetIdle));
       document.removeEventListener('visibilitychange', onVisibility);
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
-      channel.untrack();
-      supabase.removeChannel(channel);
-      channelRef.current = null;
+      try { s.channel.untrack(); } catch { /* noop */ }
+      s.refCount--;
+      releaseShared();
     };
   }, [user, profile?.display_name, profile?.avatar_url]);
 }
@@ -93,47 +171,23 @@ export function usePresenceTracker() {
  * Returns a map of user_id -> PresenceMeta for currently connected users.
  */
 export function useTeamPresence(onChange: (map: Record<string, PresenceMeta>) => void) {
+  const cbRef = useRef(onChange);
+  cbRef.current = onChange;
+
   useEffect(() => {
-    // Single read-only listener with a unique key to avoid colliding with the
-    // tracker channel (which also uses PRESENCE_CHANNEL but with the user id).
     const listenerKey = 'listener-' + Math.random().toString(36).slice(2);
-    const channel = supabase.channel(PRESENCE_CHANNEL, {
-      config: { presence: { key: listenerKey } },
-    });
+    const s = ensureShared(listenerKey);
+    const wrapper = (map: Record<string, PresenceMeta>) => cbRef.current(map);
+    s.listeners.add(wrapper);
 
-    const computeMap = () => {
-      try {
-        const state = channel.presenceState<PresenceMeta>();
-        const map: Record<string, PresenceMeta> = {};
-        Object.entries(state).forEach(([, metas]) => {
-          if (!Array.isArray(metas) || metas.length === 0) return;
-          const latest = metas[metas.length - 1];
-          if (!latest || !latest.user_id) return; // skip listeners / malformed
-          map[latest.user_id] = latest;
-        });
-        onChange(map);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[useTeamPresence] computeMap error', err);
-      }
-    };
-
-    channel
-      .on('presence', { event: 'sync' }, computeMap)
-      .on('presence', { event: 'join' }, computeMap)
-      .on('presence', { event: 'leave' }, computeMap)
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') computeMap();
-      });
+    // Emit current snapshot immediately.
+    try { wrapper(computeMap(s.channel)); } catch { /* noop */ }
 
     return () => {
-      try {
-        supabase.removeChannel(channel);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[useTeamPresence] removeChannel error', err);
+      if (shared) {
+        shared.listeners.delete(wrapper);
+        releaseShared();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
