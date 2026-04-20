@@ -11,6 +11,8 @@ import {
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
   Trash2, CheckCircle2, AlertTriangle, LayoutGrid, Sparkles
 } from 'lucide-react';
+import LoteMestreSelector from '@/components/madeira/LoteMestreSelector';
+import AvariaForm, { AvariaTipo } from '@/components/madeira/AvariaForm';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
@@ -151,7 +153,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   const usesLarguraFromItem = !isAI && (isRolo || isCortina);
-  const requiresEndereco = !isMadeira && !isPVT && !isCelular;
+  const requiresEndereco = !isPVT && !isCelular;
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
