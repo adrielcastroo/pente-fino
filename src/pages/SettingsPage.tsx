@@ -295,6 +295,13 @@ export default function SettingsPage() {
       } else if (activeCategory === 'performance') {
         localStorage.setItem('perf_reduce_animations', String(reduceAnimations));
         localStorage.setItem('perf_low_data', String(lowDataMode));
+      } else if (activeCategory === 'preferences') {
+        localStorage.setItem('pref_sidebar_collapsed', String(prefSidebarCollapsed));
+        localStorage.setItem('pref_default_tab', prefDefaultTab);
+        localStorage.setItem('pref_confirm_delete', String(prefConfirmDelete));
+        localStorage.setItem('pref_sound_feedback', String(prefSoundFeedback));
+        localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
+        localStorage.setItem('pref_compact_tables', String(prefCompactTables));
       }
       
       toast.success('Configurações salvas com sucesso!');
