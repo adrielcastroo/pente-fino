@@ -1,7 +1,6 @@
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, Sun, Moon, LogOut } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
-import { useTheme } from 'next-themes';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
@@ -40,16 +39,11 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const { signOut } = useAuth();
   const registroCount = useAppStore(s => s.registros.length);
-  const { theme, setTheme } = useTheme();
 
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const collapsed = state === 'collapsed';
-
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }, [theme, setTheme]);
 
   const handleMouseEnter = useCallback(() => {
     if (hoverTimeout) clearTimeout(hoverTimeout);
@@ -180,27 +174,6 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       {/* ── Footer ── */}
       <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-0 border-t border-border/30">
         <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
-          {/* Theme toggle */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              onClick={toggleTheme}
-              tooltip={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              aria-label="Alternar Tema"
-              className="h-10 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto"
-            >
-              <div className="flex h-5 w-5 shrink-0 items-center justify-center">
-                {theme === 'dark'
-                  ? <Sun className="h-[18px] w-[18px] text-amber-500" />
-                  : <Moon className="h-[18px] w-[18px] text-indigo-400" />
-                }
-              </div>
-              <span className="text-xs font-medium transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
-                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
           {/* Settings */}
           <SidebarMenuItem>
             <SidebarMenuButton

@@ -71,6 +71,13 @@ export default function Index() {
 
   useEffect(() => {
     loadHistory();
+    // Apply default tab preference once per session
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('pref_default_tab_applied')) {
+      const defaultTab = localStorage.getItem('pref_default_tab');
+      if (defaultTab) handleTabChange(defaultTab as any);
+      sessionStorage.setItem('pref_default_tab_applied', '1');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadHistory]);
 
   useKeyboardShortcuts({
@@ -80,8 +87,11 @@ export default function Index() {
     setConfigOpen: () => handleTabChange('settings'),
   });
 
+  const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
+  const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
+
   return (
-    <SidebarProvider defaultOpen={!isMobile && !isTablet}>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative app-bg-pattern">
         <AppSidebar 
           activeTab={activeTab} 

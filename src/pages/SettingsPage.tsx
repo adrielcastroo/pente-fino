@@ -96,6 +96,16 @@ export default function SettingsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [changingEmail, setChangingEmail] = useState(false);
+
+  // Preferences
+  const [prefSidebarCollapsed, setPrefSidebarCollapsed] = useState(localStorage.getItem('pref_sidebar_collapsed') === 'true');
+  const [prefDefaultTab, setPrefDefaultTab] = useState(localStorage.getItem('pref_default_tab') || 'inicio');
+  const [prefConfirmDelete, setPrefConfirmDelete] = useState(localStorage.getItem('pref_confirm_delete') !== 'false');
+  const [prefSoundFeedback, setPrefSoundFeedback] = useState(localStorage.getItem('pref_sound_feedback') === 'true');
+  const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
+  const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
 
   // MFA state
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
@@ -234,6 +244,25 @@ export default function SettingsPage() {
     }
   };
 
+  const handleChangeEmail = async () => {
+    const trimmed = newEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error('Digite um e-mail válido.');
+      return;
+    }
+    setChangingEmail(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: trimmed });
+      if (error) throw error;
+      toast.success('Confirmação enviada para o novo e-mail. Verifique sua caixa de entrada.');
+      setNewEmail('');
+    } catch (e: any) {
+      toast.error('Erro ao alterar e-mail: ' + e.message);
+    } finally {
+      setChangingEmail(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'EXCLUIR') {
       toast.error('Digite EXCLUIR para confirmar.');
@@ -266,6 +295,13 @@ export default function SettingsPage() {
       } else if (activeCategory === 'performance') {
         localStorage.setItem('perf_reduce_animations', String(reduceAnimations));
         localStorage.setItem('perf_low_data', String(lowDataMode));
+      } else if (activeCategory === 'preferences') {
+        localStorage.setItem('pref_sidebar_collapsed', String(prefSidebarCollapsed));
+        localStorage.setItem('pref_default_tab', prefDefaultTab);
+        localStorage.setItem('pref_confirm_delete', String(prefConfirmDelete));
+        localStorage.setItem('pref_sound_feedback', String(prefSoundFeedback));
+        localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
+        localStorage.setItem('pref_compact_tables', String(prefCompactTables));
       }
       
       toast.success('Configurações salvas com sucesso!');
@@ -420,6 +456,68 @@ export default function SettingsPage() {
                     </div>
                   )}
 
+                  {activeCategory === 'preferences' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Iniciar com Sidebar Recolhida</Label>
+                          <p className="text-xs text-muted-foreground">O menu lateral abrirá fechado por padrão. Maximiza a área de trabalho.</p>
+                        </div>
+                        <Switch checked={prefSidebarCollapsed} onCheckedChange={(v) => { setPrefSidebarCollapsed(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Tabelas Compactas</Label>
+                          <p className="text-xs text-muted-foreground">Reduz espaçamento das tabelas para exibir mais dados por tela.</p>
+                        </div>
+                        <Switch checked={prefCompactTables} onCheckedChange={(v) => { setPrefCompactTables(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Confirmar Exclusões</Label>
+                          <p className="text-xs text-muted-foreground">Exibe diálogo de confirmação antes de excluir registros.</p>
+                        </div>
+                        <Switch checked={prefConfirmDelete} onCheckedChange={(v) => { setPrefConfirmDelete(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Feedback Sonoro de Bipagem</Label>
+                          <p className="text-xs text-muted-foreground">Emite som ao bipar códigos com sucesso ou erro.</p>
+                        </div>
+                        <Switch checked={prefSoundFeedback} onCheckedChange={(v) => { setPrefSoundFeedback(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Arquivamento Automático</Label>
+                          <p className="text-xs text-muted-foreground">Arquiva conferências automaticamente ao trocar de processo/NF.</p>
+                        </div>
+                        <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-2">
+                        <Label className="text-sm font-bold">Tela Inicial</Label>
+                        <p className="text-xs text-muted-foreground">Aba aberta ao iniciar o aplicativo.</p>
+                        <Select value={prefDefaultTab} onValueChange={(v) => { setPrefDefaultTab(v); setHasUnsavedChanges(true); }}>
+                          <SelectTrigger className="bg-background/50 mt-2"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inicio">Início (Dashboard)</SelectItem>
+                            <SelectItem value="tecido">Tecido</SelectItem>
+                            <SelectItem value="madeira">Madeira</SelectItem>
+                            <SelectItem value="motor">Motor/Controle</SelectItem>
+                            <SelectItem value="estoque">Estoque</SelectItem>
+                            <SelectItem value="saida">Saída</SelectItem>
+                            <SelectItem value="table">Tabela</SelectItem>
+                            <SelectItem value="history">Histórico</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
                   {activeCategory === 'appearance' && (
                     <div className="space-y-6">
                       <div className="grid grid-cols-3 gap-3">
@@ -544,6 +642,73 @@ export default function SettingsPage() {
                         </div>
                       ) : (
                         <>
+                          {/* Change Email */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar E-mail</h4>
+                            </div>
+                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">E-mail Atual</Label>
+                                <Input value={user?.email || ''} disabled className="bg-muted/10 border-border/20 opacity-60 h-11" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Novo E-mail</Label>
+                                <div className="relative">
+                                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type="email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    placeholder="novo@email.com"
+                                    className="pl-9 bg-background/50 h-11"
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">Você receberá um link de confirmação no novo endereço.</p>
+                              </div>
+                              <Button onClick={handleChangeEmail} disabled={changingEmail || !newEmail} className="w-full font-bold">
+                                {changingEmail ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                                Atualizar E-mail
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Change Display Name */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Nome de Exibição</h4>
+                            </div>
+                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nome de Exibição</Label>
+                                <Input
+                                  value={displayName}
+                                  onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
+                                  className="bg-background/50 h-11"
+                                  placeholder="Seu nome no sistema"
+                                />
+                              </div>
+                              <Button
+                                onClick={async () => {
+                                  if (!user) return;
+                                  try {
+                                    const { error } = await supabase.from('profiles').update({ display_name: displayName.trim(), updated_at: new Date().toISOString() }).eq('id', user.id);
+                                    if (error) throw error;
+                                    toast.success('Nome atualizado com sucesso!');
+                                    setHasUnsavedChanges(false);
+                                  } catch (e: any) { toast.error('Erro: ' + e.message); }
+                                }}
+                                disabled={!displayName.trim()}
+                                className="w-full font-bold"
+                              >
+                                <User className="w-4 h-4 mr-2" />
+                                Atualizar Nome
+                              </Button>
+                            </div>
+                          </div>
+
                           {/* Change Password */}
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
