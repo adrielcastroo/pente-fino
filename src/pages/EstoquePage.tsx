@@ -70,6 +70,7 @@ export default function EstoquePage() {
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
+  const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
