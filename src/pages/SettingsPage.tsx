@@ -57,12 +57,14 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
+import LotesMestresPanel from '@/components/settings/LotesMestresPanel';
 
 const categories = [
   { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
   { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
   { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
   { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
+  { id: 'lotes-mestres', name: 'Lotes Mestres', icon: Palette, description: 'Tonalidades de referência para classificar lâminas de madeira.' },
   { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
   { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
 ];
@@ -911,6 +913,10 @@ export default function SettingsPage() {
 
                   {activeCategory === 'users' && (
                     <TeamPanel />
+                  )}
+
+                  {activeCategory === 'lotes-mestres' && (
+                    <LotesMestresPanel />
                   )}
 
                   {!['profile', 'appearance', 'performance', 'integrations', 'security', 'preferences', 'users'].includes(activeCategory) && (

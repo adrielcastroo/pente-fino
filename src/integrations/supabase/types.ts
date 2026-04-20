@@ -268,6 +268,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lotes_mestres: {
+        Row: {
+          cor_hex: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cor_hex?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cor_hex?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operation_logs: {
         Row: {
           conferente_name: string
@@ -339,6 +369,9 @@ export type Database = {
       }
       registros: {
         Row: {
+          avaria_descricao: string | null
+          avaria_foto_url: string | null
+          avaria_tipo: string | null
           conference_id: string | null
           created_at: string
           edited_at: string | null
@@ -348,6 +381,7 @@ export type Database = {
           item: string
           largura: number
           lote: string
+          lote_mestre_id: string | null
           lote_sistema: string
           m_linear: number
           m2: number
@@ -358,6 +392,9 @@ export type Database = {
           was_edited: boolean
         }
         Insert: {
+          avaria_descricao?: string | null
+          avaria_foto_url?: string | null
+          avaria_tipo?: string | null
           conference_id?: string | null
           created_at?: string
           edited_at?: string | null
@@ -367,6 +404,7 @@ export type Database = {
           item: string
           largura?: number
           lote?: string
+          lote_mestre_id?: string | null
           lote_sistema?: string
           m_linear?: number
           m2?: number
@@ -377,6 +415,9 @@ export type Database = {
           was_edited?: boolean
         }
         Update: {
+          avaria_descricao?: string | null
+          avaria_foto_url?: string | null
+          avaria_tipo?: string | null
           conference_id?: string | null
           created_at?: string
           edited_at?: string | null
@@ -386,6 +427,7 @@ export type Database = {
           item?: string
           largura?: number
           lote?: string
+          lote_mestre_id?: string | null
           lote_sistema?: string
           m_linear?: number
           m2?: number
@@ -401,6 +443,13 @@ export type Database = {
             columns: ["conference_id"]
             isOneToOne: false
             referencedRelation: "conferences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registros_lote_mestre_id_fkey"
+            columns: ["lote_mestre_id"]
+            isOneToOne: false
+            referencedRelation: "lotes_mestres"
             referencedColumns: ["id"]
           },
         ]

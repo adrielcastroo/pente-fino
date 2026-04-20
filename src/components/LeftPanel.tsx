@@ -11,6 +11,8 @@ import {
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
   Trash2, CheckCircle2, AlertTriangle, LayoutGrid, Sparkles
 } from 'lucide-react';
+import LoteMestreSelector from '@/components/madeira/LoteMestreSelector';
+import AvariaForm, { AvariaTipo } from '@/components/madeira/AvariaForm';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
@@ -94,6 +96,13 @@ export const LeftPanel = memo(function LeftPanel() {
   const [progress, setProgress] = useState(0);
   const [enderecoError, setEnderecoError] = useState('');
 
+  // Madeira-specific extras: lote mestre + avaria
+  const [loteMestreId, setLoteMestreId] = useState<string | null>(null);
+  const [avariaEnabled, setAvariaEnabled] = useState(false);
+  const [avariaTipo, setAvariaTipo] = useState<AvariaTipo | null>(null);
+  const [avariaDescricao, setAvariaDescricao] = useState('');
+  const [avariaFotoUrl, setAvariaFotoUrl] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -151,7 +160,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   const usesLarguraFromItem = !isAI && (isRolo || isCortina);
-  const requiresEndereco = !isMadeira && !isPVT && !isCelular;
+  const requiresEndereco = !isPVT && !isCelular;
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
@@ -539,7 +548,7 @@ export const LeftPanel = memo(function LeftPanel() {
         item,
         processo: proc,
         nf: '',
-        endereco: '',
+        endereco: localEndereco || endereco || '',
         m2: 0,
         mLinear: 0,
         largura: 0,
@@ -549,11 +558,20 @@ export const LeftPanel = memo(function LeftPanel() {
         tipoTecido: madeiraTipo,
         modoOrigem: 'madeira',
         isNew: true,
+        loteMestreId: loteMestreId,
+        avariaTipo: avariaEnabled ? avariaTipo : null,
+        avariaDescricao: avariaEnabled ? (avariaDescricao || null) : null,
+        avariaFotoUrl: avariaEnabled ? avariaFotoUrl : null,
       };
       addRegistro(reg);
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
       resetForm();
       setQuantidade(madeiraDefaults[madeiraTipo].toString());
+      // Reset avaria after submission, keep lote mestre as it is usually shared per box
+      setAvariaEnabled(false);
+      setAvariaTipo(null);
+      setAvariaDescricao('');
+      setAvariaFotoUrl(null);
       setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
       return;
     }
@@ -958,6 +976,24 @@ export const LeftPanel = memo(function LeftPanel() {
                     onKeyDown={e => handleFieldKeyDown(e, null)}
                     className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
                     placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <LoteMestreSelector
+                    value={loteMestreId}
+                    onChange={(id) => setLoteMestreId(id)}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <AvariaForm
+                    enabled={avariaEnabled}
+                    onEnabledChange={setAvariaEnabled}
+                    tipo={avariaTipo}
+                    onTipoChange={setAvariaTipo}
+                    descricao={avariaDescricao}
+                    onDescricaoChange={setAvariaDescricao}
+                    fotoUrl={avariaFotoUrl}
+                    onFotoUrlChange={setAvariaFotoUrl}
                   />
                 </div>
               </>
