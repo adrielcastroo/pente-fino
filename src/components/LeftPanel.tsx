@@ -629,7 +629,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const previewLoteSistema = useMemo(() => {
     const proc = processo.trim();
     if (isMadeira) {
-      if (proc && item) return generateLoteSistemaCaixa(proc, item, 0, registros);
+      if (proc) return generateLoteSistemaCaixa(proc, item || '-', 0, registros);
       return '—';
     }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
@@ -719,21 +719,35 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Madeira subtypes */}
         {isMadeira && (
-          <div className="grid grid-cols-3 gap-2">
-            {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
-              <button
-                key={tipo}
-                onClick={() => setMadeiraTipo(tipo)}
-                className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                  madeiraTipo === tipo
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                }`}
-              >
-                {tipo}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-3 gap-2">
+              {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
+                <button
+                  key={tipo}
+                  onClick={() => setMadeiraTipo(tipo)}
+                  className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                    madeiraTipo === tipo
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                  }`}
+                >
+                  {tipo}
+                </button>
+              ))}
+            </div>
+            {/* Próximo CX preview */}
+            <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <Package className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Próxima Caixa</span>
+              </div>
+              <span className="font-mono text-sm font-bold text-primary">
+                {processo.trim()
+                  ? (generateLoteSistemaCaixa(processo.trim(), '-', 0, registros).match(/^CX\d+/)?.[0] ?? 'CX01')
+                  : 'CX01'}
+              </span>
+            </div>
+          </>
         )}
 
         {/* AI Dropzone */}
