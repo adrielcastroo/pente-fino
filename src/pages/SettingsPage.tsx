@@ -913,7 +913,9 @@ export default function SettingsPage() {
                   )}
 
                   {activeCategory === 'users' && (
-                    <TeamPanel />
+                    <SettingsErrorBoundary panelName="Equipe">
+                      <TeamPanel />
+                    </SettingsErrorBoundary>
                   )}
 
                   {activeCategory === 'lotes-mestres' && (
