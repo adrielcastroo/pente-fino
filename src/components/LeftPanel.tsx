@@ -96,6 +96,13 @@ export const LeftPanel = memo(function LeftPanel() {
   const [progress, setProgress] = useState(0);
   const [enderecoError, setEnderecoError] = useState('');
 
+  // Madeira-specific extras: lote mestre + avaria
+  const [loteMestreId, setLoteMestreId] = useState<string | null>(null);
+  const [avariaEnabled, setAvariaEnabled] = useState(false);
+  const [avariaTipo, setAvariaTipo] = useState<AvariaTipo | null>(null);
+  const [avariaDescricao, setAvariaDescricao] = useState('');
+  const [avariaFotoUrl, setAvariaFotoUrl] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
