@@ -71,6 +71,13 @@ export default function Index() {
 
   useEffect(() => {
     loadHistory();
+    // Apply default tab preference once per session
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('pref_default_tab_applied')) {
+      const defaultTab = localStorage.getItem('pref_default_tab');
+      if (defaultTab) handleTabChange(defaultTab as any);
+      sessionStorage.setItem('pref_default_tab_applied', '1');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadHistory]);
 
   useKeyboardShortcuts({
