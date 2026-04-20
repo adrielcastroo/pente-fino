@@ -908,7 +908,11 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {!['profile', 'appearance', 'performance', 'integrations', 'security'].includes(activeCategory) && (
+                  {activeCategory === 'users' && (
+                    <TeamPanel />
+                  )}
+
+                  {!['profile', 'appearance', 'performance', 'integrations', 'security', 'preferences', 'users'].includes(activeCategory) && (
                     <div className="py-20 text-center space-y-4">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-50">
                         <Settings className="w-8 h-8 text-muted-foreground" />
