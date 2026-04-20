@@ -135,21 +135,22 @@ export function generateLoteSistemaCaixa(
   mLinear: number,
   existingRegistros: Registro[]
 ): string {
-  const itemNorm = (item || '').trim().toLowerCase();
+  const procNorm = (processo || '').trim().toLowerCase();
   let maxCx = 0;
-  
-  // Find the highest CX number already used for this item
+
+  // Box numbering scopes by PROC: count all scanned items within the same proc.
+  // Resets automatically when proc changes (different proc = different scope).
   for (let i = 0, len = existingRegistros.length; i < len; i++) {
     const r = existingRegistros[i];
-    if ((r.item || '').trim().toLowerCase() === itemNorm && r.loteSistema?.startsWith('CX')) {
-      const match = r.loteSistema.match(/^CX(\d+)/);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > maxCx) maxCx = num;
-      }
+    if ((r.processo || '').trim().toLowerCase() !== procNorm) continue;
+    if (!r.loteSistema?.startsWith('CX')) continue;
+    const match = r.loteSistema.match(/^CX(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > maxCx) maxCx = num;
     }
   }
-  
+
   const cxLabel = `CX${(maxCx + 1).toString().padStart(2, '0')}`;
   const procTrimmed = (processo || '').trim();
   const mlFormatted = fmtML(mLinear);
