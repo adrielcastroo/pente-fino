@@ -94,32 +94,45 @@ export function usePresenceTracker() {
  */
 export function useTeamPresence(onChange: (map: Record<string, PresenceMeta>) => void) {
   useEffect(() => {
-    const channel = supabase.channel(PRESENCE_CHANNEL + '-listener', {
-      config: { presence: { key: 'listener-' + Math.random().toString(36).slice(2) } },
+    // Single read-only listener with a unique key to avoid colliding with the
+    // tracker channel (which also uses PRESENCE_CHANNEL but with the user id).
+    const listenerKey = 'listener-' + Math.random().toString(36).slice(2);
+    const channel = supabase.channel(PRESENCE_CHANNEL, {
+      config: { presence: { key: listenerKey } },
     });
 
-    const sharedChannel = supabase.channel(PRESENCE_CHANNEL);
-
     const computeMap = () => {
-      const state = sharedChannel.presenceState<PresenceMeta>();
-      const map: Record<string, PresenceMeta> = {};
-      Object.entries(state).forEach(([key, metas]) => {
-        const latest = metas[metas.length - 1];
-        if (latest?.user_id) map[latest.user_id] = latest;
-        else if (key) map[key] = latest as PresenceMeta;
-      });
-      onChange(map);
+      try {
+        const state = channel.presenceState<PresenceMeta>();
+        const map: Record<string, PresenceMeta> = {};
+        Object.entries(state).forEach(([, metas]) => {
+          if (!Array.isArray(metas) || metas.length === 0) return;
+          const latest = metas[metas.length - 1];
+          if (!latest || !latest.user_id) return; // skip listeners / malformed
+          map[latest.user_id] = latest;
+        });
+        onChange(map);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[useTeamPresence] computeMap error', err);
+      }
     };
 
-    sharedChannel
+    channel
       .on('presence', { event: 'sync' }, computeMap)
       .on('presence', { event: 'join' }, computeMap)
       .on('presence', { event: 'leave' }, computeMap)
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') computeMap();
+      });
 
     return () => {
-      supabase.removeChannel(sharedChannel);
-      supabase.removeChannel(channel);
+      try {
+        supabase.removeChannel(channel);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[useTeamPresence] removeChannel error', err);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

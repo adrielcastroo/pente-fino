@@ -58,6 +58,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LotesMestresPanel from '@/components/settings/LotesMestresPanel';
+import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
 const categories = [
   { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
@@ -912,7 +913,9 @@ export default function SettingsPage() {
                   )}
 
                   {activeCategory === 'users' && (
-                    <TeamPanel />
+                    <SettingsErrorBoundary panelName="Equipe">
+                      <TeamPanel />
+                    </SettingsErrorBoundary>
                   )}
 
                   {activeCategory === 'lotes-mestres' && (

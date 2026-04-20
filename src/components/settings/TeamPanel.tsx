@@ -32,6 +32,7 @@ const STATUS_BADGE: Record<PresenceStatus, string> = {
 export default function TeamPanel() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [presence, setPresence] = useState<Record<string, PresenceMeta>>({});
   const [query, setQuery] = useState('');
 
@@ -41,13 +42,23 @@ export default function TeamPanel() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, display_name, avatar_url')
-        .order('display_name', { ascending: true });
-      if (!cancelled) {
-        if (!error && data) setProfiles(data as ProfileRow[]);
-        setLoading(false);
+      setLoadError(null);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, display_name, avatar_url')
+          .order('display_name', { ascending: true });
+        if (cancelled) return;
+        if (error) {
+          setLoadError(error.message);
+          setProfiles([]);
+        } else {
+          setProfiles((data ?? []) as ProfileRow[]);
+        }
+      } catch (err: any) {
+        if (!cancelled) setLoadError(err?.message || 'Erro ao carregar membros.');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -113,6 +124,11 @@ export default function TeamPanel() {
           Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-2xl" />
           ))
+        ) : loadError ? (
+          <div className="text-center py-10 rounded-2xl border border-destructive/20 bg-destructive/5 text-destructive">
+            <p className="text-sm font-bold">Não foi possível carregar os membros.</p>
+            <p className="text-xs opacity-70 mt-1">{loadError}</p>
+          </div>
         ) : members.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
