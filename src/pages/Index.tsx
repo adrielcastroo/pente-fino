@@ -80,8 +80,11 @@ export default function Index() {
     setConfigOpen: () => handleTabChange('settings'),
   });
 
+  const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
+  const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
+
   return (
-    <SidebarProvider defaultOpen={!isMobile && !isTablet}>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative app-bg-pattern">
         <AppSidebar 
           activeTab={activeTab} 

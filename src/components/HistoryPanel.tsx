@@ -232,13 +232,29 @@ function getSmartCount(conf: Conference): string {
   const regs = conf.registros;
   const allMadeira = regs.every(r => r.modoOrigem === 'madeira');
   const allCelular = regs.every(r => r.modoOrigem === 'diversos' && r.tipoTecido === 'Celular');
-  
+  const allMotor = regs.every(r => r.modoOrigem === 'motor');
+  const allControle = regs.every(r => r.modoOrigem === 'controle');
+  const allMotorControle = regs.every(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+
   if (allMadeira) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
     return `${regs.length} caixas${totalQtd > 0 ? ` (${totalQtd} und)` : ''}`;
   }
+  if (allMotor) {
+    const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
+    return totalQtd > 0 ? `${totalQtd} motores` : `${regs.length} motores`;
+  }
+  if (allControle) {
+    const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
+    return totalQtd > 0 ? `${totalQtd} controles` : `${regs.length} controles`;
+  }
+  if (allMotorControle) {
+    const motors = regs.filter(r => r.modoOrigem === 'motor').reduce((s, r) => s + (r.quantidade || 1), 0);
+    const ctrls = regs.filter(r => r.modoOrigem === 'controle').reduce((s, r) => s + (r.quantidade || 1), 0);
+    return `${motors} motores · ${ctrls} controles`;
+  }
   if (allCelular) return `${regs.length} rolos (Celular)`;
-  
+
   const hasMixed = new Set(regs.map(r => r.modoOrigem)).size > 1;
   if (hasMixed) return `${regs.length} itens`;
   return `${regs.length} rolos`;
