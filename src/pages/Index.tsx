@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useAppNavigation } from '@/hooks/useAppNavigation';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
+import { usePresenceTracker } from '@/hooks/use-presence';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -68,6 +69,7 @@ export default function Index() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
+  usePresenceTracker();
 
   useEffect(() => {
     loadHistory();
