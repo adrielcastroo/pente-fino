@@ -294,7 +294,32 @@ export default function EstoquePage() {
           </Button>
         </div>
       </div>
-      
+
+      {/* Categoria Tabs: Tecido / Madeira */}
+      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-md">
+        {([
+          { key: 'tecido', label: 'Tecido', Icon: Shirt },
+          { key: 'madeira', label: 'Madeira', Icon: TreePine },
+        ] as const).map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            onClick={() => setCategory(key)}
+            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 ${
+              category === key
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {category === 'madeira' ? (
+        <MadeiraEstoque />
+      ) : (
+        <>
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
