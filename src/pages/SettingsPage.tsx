@@ -244,6 +244,25 @@ export default function SettingsPage() {
     }
   };
 
+  const handleChangeEmail = async () => {
+    const trimmed = newEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error('Digite um e-mail válido.');
+      return;
+    }
+    setChangingEmail(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: trimmed });
+      if (error) throw error;
+      toast.success('Confirmação enviada para o novo e-mail. Verifique sua caixa de entrada.');
+      setNewEmail('');
+    } catch (e: any) {
+      toast.error('Erro ao alterar e-mail: ' + e.message);
+    } finally {
+      setChangingEmail(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'EXCLUIR') {
       toast.error('Digite EXCLUIR para confirmar.');
