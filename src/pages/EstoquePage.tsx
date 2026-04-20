@@ -435,6 +435,8 @@ export default function EstoquePage() {
           </div>
         </div>
       )}
+        </>
+      )}
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
