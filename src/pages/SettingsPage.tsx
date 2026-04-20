@@ -456,6 +456,68 @@ export default function SettingsPage() {
                     </div>
                   )}
 
+                  {activeCategory === 'preferences' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Iniciar com Sidebar Recolhida</Label>
+                          <p className="text-xs text-muted-foreground">O menu lateral abrirá fechado por padrão. Maximiza a área de trabalho.</p>
+                        </div>
+                        <Switch checked={prefSidebarCollapsed} onCheckedChange={(v) => { setPrefSidebarCollapsed(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Tabelas Compactas</Label>
+                          <p className="text-xs text-muted-foreground">Reduz espaçamento das tabelas para exibir mais dados por tela.</p>
+                        </div>
+                        <Switch checked={prefCompactTables} onCheckedChange={(v) => { setPrefCompactTables(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Confirmar Exclusões</Label>
+                          <p className="text-xs text-muted-foreground">Exibe diálogo de confirmação antes de excluir registros.</p>
+                        </div>
+                        <Switch checked={prefConfirmDelete} onCheckedChange={(v) => { setPrefConfirmDelete(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Feedback Sonoro de Bipagem</Label>
+                          <p className="text-xs text-muted-foreground">Emite som ao bipar códigos com sucesso ou erro.</p>
+                        </div>
+                        <Switch checked={prefSoundFeedback} onCheckedChange={(v) => { setPrefSoundFeedback(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Arquivamento Automático</Label>
+                          <p className="text-xs text-muted-foreground">Arquiva conferências automaticamente ao trocar de processo/NF.</p>
+                        </div>
+                        <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-2">
+                        <Label className="text-sm font-bold">Tela Inicial</Label>
+                        <p className="text-xs text-muted-foreground">Aba aberta ao iniciar o aplicativo.</p>
+                        <Select value={prefDefaultTab} onValueChange={(v) => { setPrefDefaultTab(v); setHasUnsavedChanges(true); }}>
+                          <SelectTrigger className="bg-background/50 mt-2"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inicio">Início (Dashboard)</SelectItem>
+                            <SelectItem value="tecido">Tecido</SelectItem>
+                            <SelectItem value="madeira">Madeira</SelectItem>
+                            <SelectItem value="motor">Motor/Controle</SelectItem>
+                            <SelectItem value="estoque">Estoque</SelectItem>
+                            <SelectItem value="saida">Saída</SelectItem>
+                            <SelectItem value="table">Tabela</SelectItem>
+                            <SelectItem value="history">Histórico</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
                   {activeCategory === 'appearance' && (
                     <div className="space-y-6">
                       <div className="grid grid-cols-3 gap-3">
