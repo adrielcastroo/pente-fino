@@ -642,6 +642,73 @@ export default function SettingsPage() {
                         </div>
                       ) : (
                         <>
+                          {/* Change Email */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar E-mail</h4>
+                            </div>
+                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">E-mail Atual</Label>
+                                <Input value={user?.email || ''} disabled className="bg-muted/10 border-border/20 opacity-60 h-11" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Novo E-mail</Label>
+                                <div className="relative">
+                                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                  <Input
+                                    type="email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    placeholder="novo@email.com"
+                                    className="pl-9 bg-background/50 h-11"
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">Você receberá um link de confirmação no novo endereço.</p>
+                              </div>
+                              <Button onClick={handleChangeEmail} disabled={changingEmail || !newEmail} className="w-full font-bold">
+                                {changingEmail ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                                Atualizar E-mail
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Change Display Name */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Nome de Exibição</h4>
+                            </div>
+                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nome de Exibição</Label>
+                                <Input
+                                  value={displayName}
+                                  onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
+                                  className="bg-background/50 h-11"
+                                  placeholder="Seu nome no sistema"
+                                />
+                              </div>
+                              <Button
+                                onClick={async () => {
+                                  if (!user) return;
+                                  try {
+                                    const { error } = await supabase.from('profiles').update({ display_name: displayName.trim(), updated_at: new Date().toISOString() }).eq('id', user.id);
+                                    if (error) throw error;
+                                    toast.success('Nome atualizado com sucesso!');
+                                    setHasUnsavedChanges(false);
+                                  } catch (e: any) { toast.error('Erro: ' + e.message); }
+                                }}
+                                disabled={!displayName.trim()}
+                                className="w-full font-bold"
+                              >
+                                <User className="w-4 h-4 mr-2" />
+                                Atualizar Nome
+                              </Button>
+                            </div>
+                          </div>
+
                           {/* Change Password */}
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
