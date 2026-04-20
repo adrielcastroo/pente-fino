@@ -978,6 +978,24 @@ export const LeftPanel = memo(function LeftPanel() {
                     placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <LoteMestreSelector
+                    value={loteMestreId}
+                    onChange={(id) => setLoteMestreId(id)}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <AvariaForm
+                    enabled={avariaEnabled}
+                    onEnabledChange={setAvariaEnabled}
+                    tipo={avariaTipo}
+                    onTipoChange={setAvariaTipo}
+                    descricao={avariaDescricao}
+                    onDescricaoChange={setAvariaDescricao}
+                    fotoUrl={avariaFotoUrl}
+                    onFotoUrlChange={setAvariaFotoUrl}
+                  />
+                </div>
               </>
             )}
 
