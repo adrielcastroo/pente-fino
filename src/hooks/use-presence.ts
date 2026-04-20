@@ -21,15 +21,17 @@ const AWAY_AFTER_MS = 5 * 60 * 1000; // 5 min idle => away
 // ---------------------------------------------------------------------------
 // Supabase Realtime allows only ONE channel instance per topic per client and
 // requires every `.on()` listener to be registered BEFORE `.subscribe()`.
-// We therefore keep a single shared channel, register listeners up-front, and
-// reference-count subscribers so the channel stays alive while either the
-// tracker or any team-presence listener is mounted.
+// We keep a single shared channel, register listeners up-front, and reference-
+// count subscribers so the channel stays alive while any tracker or listener
+// is mounted.
 
 interface SharedPresence {
   channel: RealtimeChannel;
   refCount: number;
   listeners: Set<(map: Record<string, PresenceMeta>) => void>;
   presenceKey: string;
+  isSubscribed: boolean;
+  trackerCount: number; // how many active trackers — only the LAST one untracks
 }
 
 let shared: SharedPresence | null = null;
@@ -68,14 +70,34 @@ function ensureShared(presenceKey: string): SharedPresence {
   const channel = supabase.channel(PRESENCE_CHANNEL, {
     config: { presence: { key: presenceKey } },
   });
+
+  const local: SharedPresence = {
+    channel,
+    refCount: 0,
+    listeners: new Set(),
+    presenceKey,
+    isSubscribed: false,
+    trackerCount: 0,
+  };
+
   // Register all presence listeners BEFORE subscribe — required by Supabase.
   channel
     .on('presence', { event: 'sync' }, notify)
     .on('presence', { event: 'join' }, notify)
     .on('presence', { event: 'leave' }, notify)
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        local.isSubscribed = true;
+        // Emit initial snapshot to any already-mounted listeners.
+        notify();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        // eslint-disable-next-line no-console
+        console.warn('[presence] channel status:', status);
+        local.isSubscribed = false;
+      }
+    });
 
-  shared = { channel, refCount: 0, listeners: new Set(), presenceKey };
+  shared = local;
   return shared;
 }
 
@@ -83,16 +105,19 @@ function releaseShared() {
   if (!shared) return;
   if (shared.refCount > 0) return;
   if (shared.listeners.size > 0) return;
-  try {
-    shared.channel.untrack();
-  } catch { /* noop */ }
-  try {
-    supabase.removeChannel(shared.channel);
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.warn('[presence] removeChannel error', err);
-  }
-  shared = null;
+  // Defer removal slightly to survive React StrictMode double-invoke / fast remounts.
+  const target = shared;
+  setTimeout(() => {
+    if (shared !== target) return; // a new mount took over
+    if (target.refCount > 0 || target.listeners.size > 0) return;
+    try {
+      supabase.removeChannel(target.channel);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[presence] removeChannel error', err);
+    }
+    if (shared === target) shared = null;
+  }, 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -109,24 +134,43 @@ export function usePresenceTracker() {
   const { user, profile } = useAuth();
   const idleTimerRef = useRef<number | null>(null);
   const currentStatusRef = useRef<PresenceStatus>('online');
+  // Keep latest profile in a ref so metadata updates don't tear down the channel.
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
 
   useEffect(() => {
     if (!user) return;
 
     const s = ensureShared(user.id);
     s.refCount++;
+    s.trackerCount++;
+
+    const buildMeta = (status: PresenceStatus): PresenceMeta => ({
+      user_id: user.id,
+      display_name: profileRef.current?.display_name ?? user.email?.split('@')[0] ?? null,
+      avatar_url: profileRef.current?.avatar_url ?? null,
+      status,
+      online_at: new Date().toISOString(),
+    });
 
     const track = (status: PresenceStatus) => {
       currentStatusRef.current = status;
-      const meta: PresenceMeta = {
-        user_id: user.id,
-        display_name: profile?.display_name ?? user.email?.split('@')[0] ?? null,
-        avatar_url: profile?.avatar_url ?? null,
-        status,
-        online_at: new Date().toISOString(),
-      };
-      try { s.channel.track(meta); } catch { /* noop */ }
+      if (!s.isSubscribed) return; // track() before SUBSCRIBED is a no-op / error
+      try { s.channel.track(buildMeta(status)); } catch { /* noop */ }
     };
+
+    // Track once subscribed. If not yet subscribed, retry shortly.
+    let initTries = 0;
+    const initTrack = () => {
+      if (s.isSubscribed) {
+        track('online');
+        return;
+      }
+      if (initTries++ < 20) {
+        window.setTimeout(initTrack, 150);
+      }
+    };
+    initTrack();
 
     const resetIdle = () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
@@ -147,8 +191,6 @@ export function usePresenceTracker() {
       }
     };
 
-    // Initial track (channel may already be subscribed from a previous mount).
-    track('online');
     resetIdle();
 
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll'] as const;
@@ -158,12 +200,20 @@ export function usePresenceTracker() {
     return () => {
       events.forEach((e) => window.removeEventListener(e, resetIdle));
       document.removeEventListener('visibilitychange', onVisibility);
-      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
-      try { s.channel.untrack(); } catch { /* noop */ }
+      if (idleTimerRef.current) {
+        window.clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+      s.trackerCount--;
       s.refCount--;
+      // Only the LAST tracker untracks the user from the channel.
+      if (s.trackerCount <= 0) {
+        try { s.channel.untrack(); } catch { /* noop */ }
+      }
       releaseShared();
     };
-  }, [user, profile?.display_name, profile?.avatar_url]);
+    // user.id is the only stable dep; profile updates flow via profileRef.
+  }, [user?.id]);
 }
 
 /**
@@ -175,17 +225,23 @@ export function useTeamPresence(onChange: (map: Record<string, PresenceMeta>) =>
   cbRef.current = onChange;
 
   useEffect(() => {
+    // Use a stable, unique key per listener mount so it never collides with
+    // a tracker's user.id (which would corrupt the presence bucket).
     const listenerKey = 'listener-' + Math.random().toString(36).slice(2);
     const s = ensureShared(listenerKey);
+    s.refCount++;
     const wrapper = (map: Record<string, PresenceMeta>) => cbRef.current(map);
     s.listeners.add(wrapper);
 
-    // Emit current snapshot immediately.
-    try { wrapper(computeMap(s.channel)); } catch { /* noop */ }
+    // Emit current snapshot immediately if channel is ready.
+    if (s.isSubscribed) {
+      try { wrapper(computeMap(s.channel)); } catch { /* noop */ }
+    }
 
     return () => {
       if (shared) {
         shared.listeners.delete(wrapper);
+        shared.refCount--;
         releaseShared();
       }
     };
