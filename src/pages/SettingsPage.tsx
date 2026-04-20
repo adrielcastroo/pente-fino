@@ -96,6 +96,16 @@ export default function SettingsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [changingEmail, setChangingEmail] = useState(false);
+
+  // Preferences
+  const [prefSidebarCollapsed, setPrefSidebarCollapsed] = useState(localStorage.getItem('pref_sidebar_collapsed') === 'true');
+  const [prefDefaultTab, setPrefDefaultTab] = useState(localStorage.getItem('pref_default_tab') || 'inicio');
+  const [prefConfirmDelete, setPrefConfirmDelete] = useState(localStorage.getItem('pref_confirm_delete') !== 'false');
+  const [prefSoundFeedback, setPrefSoundFeedback] = useState(localStorage.getItem('pref_sound_feedback') === 'true');
+  const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
+  const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
 
   // MFA state
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
