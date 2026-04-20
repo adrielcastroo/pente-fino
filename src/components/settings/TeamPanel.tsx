@@ -124,6 +124,11 @@ export default function TeamPanel() {
           Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-2xl" />
           ))
+        ) : loadError ? (
+          <div className="text-center py-10 rounded-2xl border border-destructive/20 bg-destructive/5 text-destructive">
+            <p className="text-sm font-bold">Não foi possível carregar os membros.</p>
+            <p className="text-xs opacity-70 mt-1">{loadError}</p>
+          </div>
         ) : members.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
