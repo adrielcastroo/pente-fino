@@ -39,16 +39,11 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const { signOut } = useAuth();
   const registroCount = useAppStore(s => s.registros.length);
-  const { theme, setTheme } = useTheme();
 
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const collapsed = state === 'collapsed';
-
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }, [theme, setTheme]);
 
   const handleMouseEnter = useCallback(() => {
     if (hoverTimeout) clearTimeout(hoverTimeout);
