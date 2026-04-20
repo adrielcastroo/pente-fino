@@ -17,6 +17,17 @@ export interface Registro {
   wasEdited?: boolean;
   editedBy?: string;
   editedAt?: string | null;
+  loteMestreId?: string | null;
+  avariaTipo?: 'riscado' | 'manchado' | 'quebrado' | 'outro' | null;
+  avariaDescricao?: string | null;
+  avariaFotoUrl?: string | null;
+}
+
+export interface LoteMestre {
+  id: string;
+  nome: string;
+  corHex: string;
+  descricao?: string | null;
 }
 
 export interface Conference {

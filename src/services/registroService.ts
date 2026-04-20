@@ -20,6 +20,10 @@ export const registroService = {
       edited_by: r.editedBy || '',
       edited_at: r.editedAt || null,
       quantidade: r.quantidade ?? null,
+      lote_mestre_id: r.loteMestreId ?? null,
+      avaria_tipo: r.avariaTipo ?? null,
+      avaria_descricao: r.avariaDescricao ?? null,
+      avaria_foto_url: r.avariaFotoUrl ?? null,
     }));
 
     const { data, error } = await supabase
