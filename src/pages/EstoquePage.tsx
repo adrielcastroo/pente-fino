@@ -3,7 +3,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine } from 'lucide-react';
+import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -69,6 +70,7 @@ export default function EstoquePage() {
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
+  const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
@@ -292,7 +294,32 @@ export default function EstoquePage() {
           </Button>
         </div>
       </div>
-      
+
+      {/* Categoria Tabs: Tecido / Madeira */}
+      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-md">
+        {([
+          { key: 'tecido', label: 'Tecido', Icon: Shirt },
+          { key: 'madeira', label: 'Madeira', Icon: TreePine },
+        ] as const).map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            onClick={() => setCategory(key)}
+            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 ${
+              category === key
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {category === 'madeira' ? (
+        <MadeiraEstoque />
+      ) : (
+        <>
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
@@ -407,6 +434,8 @@ export default function EstoquePage() {
             ))}
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
