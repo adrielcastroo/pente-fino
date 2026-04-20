@@ -548,7 +548,7 @@ export const LeftPanel = memo(function LeftPanel() {
         item,
         processo: proc,
         nf: '',
-        endereco: '',
+        endereco: localEndereco || endereco || '',
         m2: 0,
         mLinear: 0,
         largura: 0,
@@ -558,11 +558,20 @@ export const LeftPanel = memo(function LeftPanel() {
         tipoTecido: madeiraTipo,
         modoOrigem: 'madeira',
         isNew: true,
+        loteMestreId: loteMestreId,
+        avariaTipo: avariaEnabled ? avariaTipo : null,
+        avariaDescricao: avariaEnabled ? (avariaDescricao || null) : null,
+        avariaFotoUrl: avariaEnabled ? avariaFotoUrl : null,
       };
       addRegistro(reg);
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
       resetForm();
       setQuantidade(madeiraDefaults[madeiraTipo].toString());
+      // Reset avaria after submission, keep lote mestre as it is usually shared per box
+      setAvariaEnabled(false);
+      setAvariaTipo(null);
+      setAvariaDescricao('');
+      setAvariaFotoUrl(null);
       setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
       return;
     }
