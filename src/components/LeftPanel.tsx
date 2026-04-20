@@ -629,7 +629,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const previewLoteSistema = useMemo(() => {
     const proc = processo.trim();
     if (isMadeira) {
-      if (proc && item) return generateLoteSistemaCaixa(proc, item, 0, registros);
+      if (proc) return generateLoteSistemaCaixa(proc, item || '-', 0, registros);
       return '—';
     }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
