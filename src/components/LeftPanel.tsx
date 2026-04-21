@@ -270,6 +270,12 @@ export const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockMetragemGlobal, lockedMetragem]);
 
+  useEffect(() => {
+    if (lockCortinaLargura && lockedCortinaLargura && cortinaLargura !== lockedCortinaLargura) {
+      setCortinaLargura(lockedCortinaLargura);
+    }
+  }, [lockCortinaLargura, lockedCortinaLargura]);
+
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
