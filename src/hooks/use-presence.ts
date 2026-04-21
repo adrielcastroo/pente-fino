@@ -232,7 +232,11 @@ export function usePresenceTracker() {
       }
     };
 
-    resetIdle();
+    if (document.visibilityState === 'visible') {
+      resetIdle();
+    } else {
+      track('away');
+    }
 
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll'] as const;
     events.forEach((e) => window.addEventListener(e, resetIdle, { passive: true }));
