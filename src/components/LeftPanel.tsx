@@ -36,6 +36,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockLote, setLockLote, lockedLote, setLockedLote,
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
+    lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
     formData, setFormData, resetFormData
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
@@ -71,6 +72,10 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockMetragem: s.setLockMetragem,
     lockedMetragem: s.lockedMetragem,
     setLockedMetragem: s.setLockedMetragem,
+    lockCortinaLargura: s.lockCortinaLargura,
+    setLockCortinaLargura: s.setLockCortinaLargura,
+    lockedCortinaLargura: s.lockedCortinaLargura,
+    setLockedCortinaLargura: s.setLockedCortinaLargura,
     formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData
