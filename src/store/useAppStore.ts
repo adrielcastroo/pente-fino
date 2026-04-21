@@ -350,15 +350,22 @@ export const useAppStore = create<AppState>()(
             return null;
           }
         },
-        setItem: (name, value) => {
-          if (!(window as any)._persisterTimer) {
-            (window as any)._persisterTimer = setTimeout(() => {
-              localStorage.setItem(name, JSON.stringify((window as any)._persisterValue));
-              (window as any)._persisterTimer = null;
-            }, 1000);
-          }
-          (window as any)._persisterValue = value;
-        },
+         setItem: (name, value) => {
+           // More robust debounce for storage persistence
+           const global = window as any;
+           if (global._persisterTimer) {
+             clearTimeout(global._persisterTimer);
+           }
+           global._persisterValue = value;
+           global._persisterTimer = setTimeout(() => {
+             try {
+               localStorage.setItem(name, JSON.stringify(global._persisterValue));
+             } catch (e) {
+               console.error('Error persisting state:', e);
+             }
+             global._persisterTimer = null;
+           }, 1000);
+         },
         removeItem: (name) => localStorage.removeItem(name),
       },
       partialize: (state) => ({
