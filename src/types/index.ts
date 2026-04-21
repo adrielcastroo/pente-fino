@@ -57,6 +57,8 @@ export interface FormData {
   manualLargura: string;
   coulisseMetragem: 'm2' | 'mlinear';
   lockMetragem: boolean;
+  cortinaLargura: string;
+  cortinaMetragem: 'm2' | 'mlinear';
   madeiraTipo: 'Lâmina' | 'Base' | 'Bandô';
   quantidade: string;
   motorSubMode: 'motor' | 'controle';
