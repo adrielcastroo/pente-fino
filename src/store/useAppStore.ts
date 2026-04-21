@@ -109,6 +109,8 @@ export const useAppStore = create<AppState>()(
       lockedLote: '',
       lockMetragem: false,
       lockedMetragem: '',
+      lockCortinaLargura: false,
+      lockedCortinaLargura: '',
       
       formData: INITIAL_FORM_DATA,
       
