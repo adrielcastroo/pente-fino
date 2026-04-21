@@ -166,29 +166,35 @@ export const LeftPanel = memo(function LeftPanel() {
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
-  const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
-  const usesLarguraFromItem = !isAI && (isRolo || isCortina);
+  const cortinaUsesM2 = isCortina && cortinaMetragem === 'm2';
+  const cortinaUsesMLinear = isCortina && cortinaMetragem === 'mlinear';
+  const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
+  // Cortina now uses manual largura (cortinaLargura), not extracted from item
+  const usesLarguraFromItem = !isAI && isRolo;
   const requiresEndereco = !isPVT && !isCelular;
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
+
+  const cortinaLarguraNum = useMemo(() => parseFloat(cortinaLargura) || 0, [cortinaLargura]);
 
   const largura = useMemo(() => 
     isAI ? aiLarguraNum
     : isMadeira ? 0
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(localItem))
+    : isCortina ? cortinaLarguraNum
     : isCelular ? celularDivisor
     : usesLarguraFromItem ? extractLarguraFromItem(localItem)
     : 0,
-    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCelular, celularDivisor, usesLarguraFromItem]
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCortina, cortinaLarguraNum, isCelular, celularDivisor, usesLarguraFromItem]
   );
 
   const mLinear = useMemo(() => 
     isAI ? aiMLinearNum
     : isMadeira ? 0
-    : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
+    : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinearNum
     : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
     : (largura > 0 ? m2Num / largura : 0),
-    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
+    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, cortinaUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
   );
   
   const isDuplicate = useMemo(() => {
