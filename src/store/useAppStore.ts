@@ -73,7 +73,8 @@ export interface AppState {
 const INITIAL_FORM_DATA: FormData = {
   item: '', nf: '', m2: '', lote: '', endereco: '', aiLargura: '', aiMLinear: '',
   diversosTipo: 'Rolo', diversosMLinear: '', manualLargura: '', coulisseMetragem: 'm2',
-  lockMetragem: false, madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
+  lockMetragem: false, cortinaLargura: '', cortinaMetragem: 'm2',
+  madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
   motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1',
   estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
 };
