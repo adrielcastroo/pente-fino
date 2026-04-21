@@ -31,13 +31,16 @@ export function usePerformance() {
       setLevel('low');
     }
     
-    // Auto-apply class to body for CSS optimizations
-    if (level === 'low') {
-      document.body.classList.add('low-perf');
-    } else {
-      document.body.classList.remove('low-perf');
-    }
-  }, [level]);
+   }, []);
+ 
+   useEffect(() => {
+     // Auto-apply class to body for CSS optimizations
+     if (level === 'low') {
+       document.body.classList.add('low-perf');
+     } else {
+       document.body.classList.remove('low-perf');
+     }
+   }, [level]);
 
   return { level, isLow: level === 'low', setLevel };
 }
