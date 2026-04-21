@@ -1092,7 +1092,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
                     <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
+                      {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
                     </label>
                     {isPVT && (
                       <button onClick={toggleLockMetragem} className={`transition-colors ${lockMetragemGlobal ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockMetragemGlobal ? 'Campo travado' : 'Travar campo'}>
@@ -1105,8 +1105,8 @@ export const LeftPanel = memo(function LeftPanel() {
                       id="metragem-input"
                       ref={m2Ref}
                       type="number" step="0.1"
-                      value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
-                      onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
+                      value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinear : m2}
+                      onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
                       className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
                         (isPVT && lockMetragemGlobal) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -1114,7 +1114,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
                       readOnly={isPVT && lockMetragemGlobal && !!lockedMetragem}
                     />
-                    {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
+                    {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary">
                         Linear: {formatML(mLinear)}
                       </span>
