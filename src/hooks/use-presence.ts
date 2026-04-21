@@ -65,6 +65,25 @@ function notify() {
   });
 }
 
+async function safeTrack(channel: RealtimeChannel, meta: PresenceMeta) {
+  try {
+    await channel.track(meta);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[presence] track error', err);
+    throw err;
+  }
+}
+
+async function safeUntrack(channel: RealtimeChannel) {
+  try {
+    await channel.untrack();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[presence] untrack error', err);
+  }
+}
+
 function ensureShared(presenceKey: string): SharedPresence {
   if (shared) return shared;
   const channel = supabase.channel(PRESENCE_CHANNEL, {
@@ -133,7 +152,9 @@ function releaseShared() {
 export function usePresenceTracker() {
   const { user, profile } = useAuth();
   const idleTimerRef = useRef<number | null>(null);
-  const currentStatusRef = useRef<PresenceStatus>('online');
+  const initTimerRef = useRef<number | null>(null);
+  const desiredStatusRef = useRef<PresenceStatus>('online');
+  const currentStatusRef = useRef<PresenceStatus | null>(null);
   // Keep latest profile in a ref so metadata updates don't tear down the channel.
   const profileRef = useRef(profile);
   profileRef.current = profile;
@@ -141,9 +162,17 @@ export function usePresenceTracker() {
   useEffect(() => {
     if (!user) return;
 
+    let active = true;
     const s = ensureShared(user.id);
     s.refCount++;
     s.trackerCount++;
+
+    const getVisibleStatus = (): PresenceStatus => (
+      document.visibilityState === 'visible' ? 'online' : 'away'
+    );
+
+    desiredStatusRef.current = getVisibleStatus();
+    currentStatusRef.current = null;
 
     const buildMeta = (status: PresenceStatus): PresenceMeta => ({
       user_id: user.id,
@@ -154,27 +183,35 @@ export function usePresenceTracker() {
     });
 
     const track = (status: PresenceStatus) => {
-      currentStatusRef.current = status;
+      desiredStatusRef.current = status;
       if (!s.isSubscribed) return; // track() before SUBSCRIBED is a no-op / error
-      try { s.channel.track(buildMeta(status)); } catch { /* noop */ }
+      if (currentStatusRef.current === status) return;
+      currentStatusRef.current = status;
+      void safeTrack(s.channel, buildMeta(status)).catch(() => {
+        if (currentStatusRef.current === status) {
+          currentStatusRef.current = null;
+        }
+      });
     };
 
     // Track once subscribed. If not yet subscribed, retry shortly.
     let initTries = 0;
     const initTrack = () => {
+      if (!active) return;
       if (s.isSubscribed) {
-        track('online');
+        track(desiredStatusRef.current);
         return;
       }
       if (initTries++ < 20) {
-        window.setTimeout(initTrack, 150);
+        initTimerRef.current = window.setTimeout(initTrack, 150);
       }
     };
     initTrack();
 
     const resetIdle = () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
-      if (currentStatusRef.current !== 'online' && document.visibilityState === 'visible') {
+      if (document.visibilityState !== 'visible') return;
+      if (desiredStatusRef.current !== 'online') {
         track('online');
       }
       idleTimerRef.current = window.setTimeout(() => {
@@ -184,6 +221,10 @@ export function usePresenceTracker() {
 
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
+        if (idleTimerRef.current) {
+          window.clearTimeout(idleTimerRef.current);
+          idleTimerRef.current = null;
+        }
         track('away');
       } else {
         track('online');
@@ -191,15 +232,24 @@ export function usePresenceTracker() {
       }
     };
 
-    resetIdle();
+    if (document.visibilityState === 'visible') {
+      resetIdle();
+    } else {
+      track('away');
+    }
 
     const events = ['mousemove', 'keydown', 'touchstart', 'scroll'] as const;
     events.forEach((e) => window.addEventListener(e, resetIdle, { passive: true }));
     document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
+      active = false;
       events.forEach((e) => window.removeEventListener(e, resetIdle));
       document.removeEventListener('visibilitychange', onVisibility);
+      if (initTimerRef.current) {
+        window.clearTimeout(initTimerRef.current);
+        initTimerRef.current = null;
+      }
       if (idleTimerRef.current) {
         window.clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
@@ -208,7 +258,8 @@ export function usePresenceTracker() {
       s.refCount--;
       // Only the LAST tracker untracks the user from the channel.
       if (s.trackerCount <= 0) {
-        try { s.channel.untrack(); } catch { /* noop */ }
+        currentStatusRef.current = null;
+        void safeUntrack(s.channel);
       }
       releaseShared();
     };
