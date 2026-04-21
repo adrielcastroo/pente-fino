@@ -142,6 +142,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const setLockMetragem = useCallback((val: boolean) => setFormData({ lockMetragem: val }), [setFormData]);
   const setMadeiraTipo = useCallback((val: FormData['madeiraTipo']) => setFormData({ madeiraTipo: val }), [setFormData]);
   const setQuantidade = useCallback((val: string) => setFormData({ quantidade: val }), [setFormData]);
+  const setCortinaLargura = useCallback((val: string) => setFormData({ cortinaLargura: val }), [setFormData]);
+  const setCortinaMetragem = useCallback((val: 'm2' | 'mlinear') => setFormData({ cortinaMetragem: val }), [setFormData]);
 
   const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
   const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
