@@ -501,6 +501,17 @@ export const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockMetragemGlobal, diversosMLinear, setLockedMetragem, setLockMetragemGlobal]);
 
+  const toggleLockCortinaLargura = useCallback(() => {
+    if (!lockCortinaLargura) {
+      setLockedCortinaLargura(cortinaLargura);
+      setLockCortinaLargura(true);
+      toast.success('Largura travada');
+    } else {
+      setLockCortinaLargura(false);
+      toast.success('Largura destravada');
+    }
+  }, [lockCortinaLargura, cortinaLargura, setLockedCortinaLargura, setLockCortinaLargura]);
+
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
     if (parsed.width) {
