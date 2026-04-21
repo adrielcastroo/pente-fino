@@ -36,6 +36,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockLote, setLockLote, lockedLote, setLockedLote,
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
+    lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
     formData, setFormData, resetFormData
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
@@ -71,6 +72,10 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockMetragem: s.setLockMetragem,
     lockedMetragem: s.lockedMetragem,
     setLockedMetragem: s.setLockedMetragem,
+    lockCortinaLargura: s.lockCortinaLargura,
+    setLockCortinaLargura: s.setLockCortinaLargura,
+    lockedCortinaLargura: s.lockedCortinaLargura,
+    setLockedCortinaLargura: s.setLockedCortinaLargura,
     formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData
@@ -80,7 +85,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const { isLow } = usePerformance();
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
-    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
+    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
+    cortinaLargura, cortinaMetragem
   } = formData;
 
   const [localItem, setLocalItem] = useState(item);
@@ -136,6 +142,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const setLockMetragem = useCallback((val: boolean) => setFormData({ lockMetragem: val }), [setFormData]);
   const setMadeiraTipo = useCallback((val: FormData['madeiraTipo']) => setFormData({ madeiraTipo: val }), [setFormData]);
   const setQuantidade = useCallback((val: string) => setFormData({ quantidade: val }), [setFormData]);
+  const setCortinaLargura = useCallback((val: string) => setFormData({ cortinaLargura: val }), [setFormData]);
+  const setCortinaMetragem = useCallback((val: 'm2' | 'mlinear') => setFormData({ cortinaMetragem: val }), [setFormData]);
 
   const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
   const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
@@ -158,29 +166,35 @@ export const LeftPanel = memo(function LeftPanel() {
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
   const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
-  const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
-  const usesLarguraFromItem = !isAI && (isRolo || isCortina);
+  const cortinaUsesM2 = isCortina && cortinaMetragem === 'm2';
+  const cortinaUsesMLinear = isCortina && cortinaMetragem === 'mlinear';
+  const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
+  // Cortina now uses manual largura (cortinaLargura), not extracted from item
+  const usesLarguraFromItem = !isAI && isRolo;
   const requiresEndereco = !isPVT && !isCelular;
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
+
+  const cortinaLarguraNum = useMemo(() => parseFloat(cortinaLargura) || 0, [cortinaLargura]);
 
   const largura = useMemo(() => 
     isAI ? aiLarguraNum
     : isMadeira ? 0
     : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(localItem))
+    : isCortina ? cortinaLarguraNum
     : isCelular ? celularDivisor
     : usesLarguraFromItem ? extractLarguraFromItem(localItem)
     : 0,
-    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCelular, celularDivisor, usesLarguraFromItem]
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCortina, cortinaLarguraNum, isCelular, celularDivisor, usesLarguraFromItem]
   );
 
   const mLinear = useMemo(() => 
     isAI ? aiMLinearNum
     : isMadeira ? 0
-    : (isPVT || coulisseUsesMLinear) ? diversosMLinearNum
+    : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinearNum
     : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
     : (largura > 0 ? m2Num / largura : 0),
-    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
+    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, cortinaUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
   );
   
   const isDuplicate = useMemo(() => {
@@ -255,6 +269,12 @@ export const LeftPanel = memo(function LeftPanel() {
       setDiversosMLinear(lockedMetragem);
     }
   }, [lockMetragemGlobal, lockedMetragem]);
+
+  useEffect(() => {
+    if (lockCortinaLargura && lockedCortinaLargura && cortinaLargura !== lockedCortinaLargura) {
+      setCortinaLargura(lockedCortinaLargura);
+    }
+  }, [lockCortinaLargura, lockedCortinaLargura]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -481,6 +501,17 @@ export const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockMetragemGlobal, diversosMLinear, setLockedMetragem, setLockMetragemGlobal]);
 
+  const toggleLockCortinaLargura = useCallback(() => {
+    if (!lockCortinaLargura) {
+      setLockedCortinaLargura(cortinaLargura);
+      setLockCortinaLargura(true);
+      toast.success('Largura travada');
+    } else {
+      setLockCortinaLargura(false);
+      toast.success('Largura destravada');
+    }
+  }, [lockCortinaLargura, cortinaLargura, setLockedCortinaLargura, setLockCortinaLargura]);
+
   const applyResult = (parsed: any, provider: string) => {
     if (parsed.item) setItem(parsed.item);
     if (parsed.width) {
@@ -578,12 +609,13 @@ export const LeftPanel = memo(function LeftPanel() {
 
     if (isAI && aiLarguraNum <= 0) { toast.warning('Preencha a Largura.'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
-    if (mLinear <= 0) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
+    if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
+    if (mLinear <= 0) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
     const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear) ? 0 : m2Num;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
     // Celular uses processo, other Diversos use NF
@@ -925,6 +957,61 @@ export const LeftPanel = memo(function LeftPanel() {
               </div>
             )}
 
+            {/* Cortina largura (manual com lock) */}
+            {isCortina && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 h-4">
+                  <label htmlFor="largura-cortina" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label>
+                  <button
+                    onClick={toggleLockCortinaLargura}
+                    className={`transition-colors ${lockCortinaLargura ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={lockCortinaLargura ? 'Largura travada' : 'Travar largura'}
+                  >
+                    {lockCortinaLargura ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
+                </div>
+                <input
+                  id="largura-cortina"
+                  type="number" step="0.01" value={cortinaLargura}
+                  onChange={e => setCortinaLargura(e.target.value)}
+                  onBlur={() => { if (lockCortinaLargura) setLockedCortinaLargura(cortinaLargura); }}
+                  onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                  className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
+                    lockCortinaLargura ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  }`}
+                  placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
+                  readOnly={lockCortinaLargura && !!lockedCortinaLargura}
+                />
+              </div>
+            )}
+
+            {/* Cortina: chave seletora M² / M Linear */}
+            {isCortina && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { key: 'm2' as const, label: 'M²' },
+                    { key: 'mlinear' as const, label: 'M Linear' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setCortinaMetragem(opt.key)}
+                      className={`rounded-lg border py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                        cortinaMetragem === opt.key
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                      aria-pressed={cortinaMetragem === opt.key}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
             {/* NF */}
             {requiresNF && (
               <div className="space-y-1.5">
@@ -1005,7 +1092,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
                     <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isAI || isPVT || coulisseUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
+                      {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
                     </label>
                     {isPVT && (
                       <button onClick={toggleLockMetragem} className={`transition-colors ${lockMetragemGlobal ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockMetragemGlobal ? 'Campo travado' : 'Travar campo'}>
@@ -1018,8 +1105,8 @@ export const LeftPanel = memo(function LeftPanel() {
                       id="metragem-input"
                       ref={m2Ref}
                       type="number" step="0.1"
-                      value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear) ? diversosMLinear : m2}
-                      onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
+                      value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinear : m2}
+                      onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
                       className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
                         (isPVT && lockMetragemGlobal) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -1027,7 +1114,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
                       readOnly={isPVT && lockMetragemGlobal && !!lockedMetragem}
                     />
-                    {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && (
+                    {mLinear > 0 && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary">
                         Linear: {formatML(mLinear)}
                       </span>

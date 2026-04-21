@@ -27,6 +27,9 @@ export interface AppState {
   lockedLote: string;
   lockMetragem: boolean;
   lockedMetragem: string;
+  // Cortina locks
+  lockCortinaLargura: boolean;
+  lockedCortinaLargura: string;
   
   formData: FormData;
   
@@ -55,6 +58,8 @@ export interface AppState {
   setLockedLote: (l: string) => void;
   setLockMetragem: (lock: boolean) => void;
   setLockedMetragem: (m: string) => void;
+  setLockCortinaLargura: (lock: boolean) => void;
+  setLockedCortinaLargura: (l: string) => void;
   
   setFormData: (updates: Partial<FormData>) => void;
   resetFormData: () => void;
@@ -73,7 +78,8 @@ export interface AppState {
 const INITIAL_FORM_DATA: FormData = {
   item: '', nf: '', m2: '', lote: '', endereco: '', aiLargura: '', aiMLinear: '',
   diversosTipo: 'Rolo', diversosMLinear: '', manualLargura: '', coulisseMetragem: 'm2',
-  lockMetragem: false, madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
+  lockMetragem: false, cortinaLargura: '', cortinaMetragem: 'm2',
+  madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
   motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1',
   estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
 };
@@ -103,6 +109,8 @@ export const useAppStore = create<AppState>()(
       lockedLote: '',
       lockMetragem: false,
       lockedMetragem: '',
+      lockCortinaLargura: false,
+      lockedCortinaLargura: '',
       
       formData: INITIAL_FORM_DATA,
       
@@ -144,6 +152,8 @@ export const useAppStore = create<AppState>()(
       setLockedLote: (l) => set({ lockedLote: l }),
       setLockMetragem: (lock) => set({ lockMetragem: lock }),
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
+      setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
+      setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
       
       setFormData: (updates) => set(state => ({ formData: { ...state.formData, ...updates } })),
       
@@ -161,6 +171,7 @@ export const useAppStore = create<AppState>()(
         if (state.lockItem) newData.item = state.lockedItem;
         if (state.lockLote) newData.lote = state.lockedLote;
         if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
+        if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
         
         set({ formData: newData });
       },
@@ -394,6 +405,8 @@ export const useAppStore = create<AppState>()(
         lockedLote: state.lockedLote,
         lockMetragem: state.lockMetragem,
         lockedMetragem: state.lockedMetragem,
+        lockCortinaLargura: state.lockCortinaLargura,
+        lockedCortinaLargura: state.lockedCortinaLargura,
       } as any),
     }
   )
