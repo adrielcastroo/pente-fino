@@ -58,6 +58,8 @@ export interface AppState {
   setLockedLote: (l: string) => void;
   setLockMetragem: (lock: boolean) => void;
   setLockedMetragem: (m: string) => void;
+  setLockCortinaLargura: (lock: boolean) => void;
+  setLockedCortinaLargura: (l: string) => void;
   
   setFormData: (updates: Partial<FormData>) => void;
   resetFormData: () => void;
