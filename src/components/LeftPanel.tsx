@@ -85,7 +85,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const { isLow } = usePerformance();
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
-    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade
+    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
+    cortinaLargura, cortinaMetragem
   } = formData;
 
   const [localItem, setLocalItem] = useState(item);
