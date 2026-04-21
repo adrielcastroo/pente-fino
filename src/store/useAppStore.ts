@@ -27,6 +27,9 @@ export interface AppState {
   lockedLote: string;
   lockMetragem: boolean;
   lockedMetragem: string;
+  // Cortina locks
+  lockCortinaLargura: boolean;
+  lockedCortinaLargura: string;
   
   formData: FormData;
   
