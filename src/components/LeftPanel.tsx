@@ -957,6 +957,61 @@ export const LeftPanel = memo(function LeftPanel() {
               </div>
             )}
 
+            {/* Cortina largura (manual com lock) */}
+            {isCortina && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 h-4">
+                  <label htmlFor="largura-cortina" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label>
+                  <button
+                    onClick={toggleLockCortinaLargura}
+                    className={`transition-colors ${lockCortinaLargura ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={lockCortinaLargura ? 'Largura travada' : 'Travar largura'}
+                  >
+                    {lockCortinaLargura ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
+                </div>
+                <input
+                  id="largura-cortina"
+                  type="number" step="0.01" value={cortinaLargura}
+                  onChange={e => setCortinaLargura(e.target.value)}
+                  onBlur={() => { if (lockCortinaLargura) setLockedCortinaLargura(cortinaLargura); }}
+                  onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
+                  className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
+                    lockCortinaLargura ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  }`}
+                  placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
+                  readOnly={lockCortinaLargura && !!lockedCortinaLargura}
+                />
+              </div>
+            )}
+
+            {/* Cortina: chave seletora M² / M Linear */}
+            {isCortina && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { key: 'm2' as const, label: 'M²' },
+                    { key: 'mlinear' as const, label: 'M Linear' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setCortinaMetragem(opt.key)}
+                      className={`rounded-lg border py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                        cortinaMetragem === opt.key
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                      aria-pressed={cortinaMetragem === opt.key}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
             {/* NF */}
             {requiresNF && (
               <div className="space-y-1.5">
