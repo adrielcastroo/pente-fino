@@ -93,9 +93,17 @@ export default function MotorControlePage() {
   }, []);
 
   const cleanControleSerie = useCallback((raw: string): string => {
-    const idx = raw.toUpperCase().indexOf('FF');
-    if (idx !== -1) return raw.slice(0, idx).trim();
-    return raw.trim();
+    let cleaned = raw.trim();
+    // Drop everything before (and including) the last hyphen.
+    // Handles cases like "4;10;2025 12Ç17Ç38 PM - 020858*1" -> "020858*1"
+    const dashIdx = cleaned.lastIndexOf('-');
+    if (dashIdx !== -1) {
+      cleaned = cleaned.slice(dashIdx + 1).trim();
+    }
+    // Fallback: legacy 'FF' marker handling
+    const ffIdx = cleaned.toUpperCase().indexOf('FF');
+    if (ffIdx !== -1) cleaned = cleaned.slice(0, ffIdx).trim();
+    return cleaned;
   }, []);
 
   const { allSeriesSet, maxSequencial } = useMemo(() => {
