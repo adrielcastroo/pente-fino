@@ -298,6 +298,42 @@ export type Database = {
         }
         Relationships: []
       }
+      madeira_quadrantes: {
+        Row: {
+          capacidade: number
+          coluna: string
+          created_at: string
+          estrutura: string
+          id: string
+          nivel: number
+          tipo_ocupacao: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          capacidade?: number
+          coluna: string
+          created_at?: string
+          estrutura?: string
+          id?: string
+          nivel: number
+          tipo_ocupacao?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          capacidade?: number
+          coluna?: string
+          created_at?: string
+          estrutura?: string
+          id?: string
+          nivel?: number
+          tipo_ocupacao?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       operation_logs: {
         Row: {
           conferente_name: string
