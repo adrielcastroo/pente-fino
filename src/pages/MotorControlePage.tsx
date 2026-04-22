@@ -72,9 +72,22 @@ export default function MotorControlePage() {
   }, [resetMotorFormData]);
 
   const cleanMotorSerie = useCallback((raw: string, mod: string): string => {
-    let cleaned = raw.trim();
-    if (mod && cleaned.toLowerCase().startsWith(mod.toLowerCase())) {
-      cleaned = cleaned.slice(mod.length).trim();
+    let cleaned = raw.trim().replace(/\s+/g, ' ');
+    if (mod) {
+      const modLower = mod.toLowerCase();
+      const lower = cleaned.toLowerCase();
+      // Find the model anywhere in the string and take everything after it.
+      // Handles cases like "1037549 5010594C B0Z25259200512" -> "B0Z25259200512"
+      const idx = lower.lastIndexOf(modLower);
+      if (idx !== -1) {
+        cleaned = cleaned.slice(idx + mod.length).trim();
+      }
+    }
+    // The series itself should be a single token (no spaces). Take the last token
+    // to drop any leftover prefixes like internal codes preceding the actual serial.
+    const tokens = cleaned.split(/\s+/).filter(Boolean);
+    if (tokens.length > 0) {
+      cleaned = tokens[tokens.length - 1];
     }
     return cleaned.trim();
   }, []);
