@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { lotesMestresService } from '@/services/lotesMestresService';
 import { toast } from 'sonner';
 
-export type AvariaTipo = 'riscado' | 'manchado' | 'quebrado' | 'outro';
+export type AvariaTipo = 'riscado' | 'manchado' | 'quebrado' | 'tonalidade' | 'outro';
 
 interface Props {
   enabled: boolean;
@@ -22,10 +22,11 @@ interface Props {
 }
 
 const TIPO_OPTIONS: { value: AvariaTipo; label: string }[] = [
-  { value: 'riscado', label: 'Riscado' },
   { value: 'manchado', label: 'Manchado' },
   { value: 'quebrado', label: 'Quebrado' },
-  { value: 'outro', label: 'Outro' },
+  { value: 'tonalidade', label: 'Tonalidade' },
+  { value: 'riscado', label: 'Riscado' },
+  { value: 'outro', label: 'Outro (descreva)' },
 ];
 
 export function AvariaForm({
