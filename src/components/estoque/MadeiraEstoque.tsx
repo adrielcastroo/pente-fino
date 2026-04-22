@@ -79,6 +79,26 @@ export default function MadeiraEstoque() {
   const [detail, setDetail] = useState<MadeiraRow | null>(null);
   const [configCell, setConfigCell] = useState<{ col: string; nivel: number } | null>(null);
   const [confirmChange, setConfirmChange] = useState<{ col: string; nivel: number; newTipo: 'lamina' | 'base' } | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    item: string;
+    endereco: string;
+    lote: string;
+    lote_sistema: string;
+    largura: string;
+    m_linear: string;
+    nf: string;
+    lote_mestre_id: string | null;
+    avaria_enabled: boolean;
+    avaria_tipo: string | null;
+    avaria_descricao: string;
+    avaria_foto_url: string | null;
+  }>({
+    item: '', endereco: '', lote: '', lote_sistema: '', largura: '', m_linear: '', nf: '',
+    lote_mestre_id: null, avaria_enabled: false, avaria_tipo: null, avaria_descricao: '', avaria_foto_url: null,
+  });
+  const [savingDetail, setSavingDetail] = useState(false);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
