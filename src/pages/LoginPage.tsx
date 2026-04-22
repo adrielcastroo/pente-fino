@@ -467,8 +467,8 @@ export default function LoginPage() {
                   variant="outline"
                   className="w-full h-11 text-xs font-semibold bg-background hover:bg-muted border-border/60 transition-all"
                   onClick={() => {
-                    loginAsGuest('Visitante');
-                    toast.success('Entrou como visitante!');
+                    setGuestName('');
+                    setGuestDialogOpen(true);
                   }}
                 >
                   Entrar como Visitante
