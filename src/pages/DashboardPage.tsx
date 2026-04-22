@@ -9,6 +9,7 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart } from '@/components/dashboard/DashboardCharts';
+import MadeiraDashboard from '@/components/dashboard/MadeiraDashboard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 
