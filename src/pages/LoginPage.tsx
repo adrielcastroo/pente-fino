@@ -482,6 +482,65 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      <Dialog open={guestDialogOpen} onOpenChange={setGuestDialogOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Entrar como Visitante</DialogTitle>
+            <DialogDescription>
+              Informe seu nome para continuar. Este nome será usado como identificação do conferente.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const trimmed = guestName.trim();
+              if (trimmed.length < 2) {
+                toast.warning('Digite um nome com pelo menos 2 caracteres.');
+                return;
+              }
+              loginAsGuest(trimmed);
+              setGuestDialogOpen(false);
+              toast.success(`Bem-vindo, ${trimmed}!`);
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="guest-name" className="text-xs font-semibold">Nome do Conferente</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="guest-name"
+                  placeholder="Seu nome"
+                  className="pl-10 h-12 bg-muted/30 focus:bg-background transition-all border-border/60"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  maxLength={60}
+                  autoFocus
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setGuestDialogOpen(false)}
+                className="h-11"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="h-11 font-bold primary-btn"
+                disabled={guestName.trim().length < 2}
+              >
+                Entrar
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
