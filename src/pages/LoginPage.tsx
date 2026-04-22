@@ -41,6 +41,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<PageMode>('login');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [guestDialogOpen, setGuestDialogOpen] = useState(false);
+  const [guestName, setGuestName] = useState('');
   const { loginAsGuest } = useAuth();
   const { isLow } = usePerformance();
 
