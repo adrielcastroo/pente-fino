@@ -989,24 +989,18 @@ export const LeftPanel = memo(function LeftPanel() {
             {isCortina && (
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { key: 'm2' as const, label: 'M²' },
-                    { key: 'mlinear' as const, label: 'M Linear' },
-                  ]).map(opt => (
-                    <button
-                      key={opt.key}
-                      onClick={() => setCortinaMetragem(opt.key)}
-                      className={`rounded-lg border py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-                        cortinaMetragem === opt.key
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
-                      aria-pressed={cortinaMetragem === opt.key}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${cortinaMetragem === 'm2' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    M²
+                  </span>
+                  <Switch
+                    checked={cortinaMetragem === 'mlinear'}
+                    onCheckedChange={(checked) => setCortinaMetragem(checked ? 'mlinear' : 'm2')}
+                    aria-label="Alternar tipo de metragem"
+                  />
+                  <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${cortinaMetragem === 'mlinear' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    M Linear
+                  </span>
                 </div>
               </div>
             )}
