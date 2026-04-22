@@ -5,8 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft } from 'lucide-react';
+import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera } from 'lucide-react';
 import { lotesMestresService, type LoteMestre } from '@/services/lotesMestresService';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDateBR } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store/useAppStore';
@@ -43,8 +47,17 @@ const AVARIA_LABELS: Record<string, string> = {
   riscado: 'Riscado',
   manchado: 'Manchado',
   quebrado: 'Quebrado',
+  tonalidade: 'Tonalidade',
   outro: 'Outro',
 };
+
+const AVARIA_OPTIONS: { value: string; label: string }[] = [
+  { value: 'manchado', label: 'Manchado' },
+  { value: 'quebrado', label: 'Quebrado' },
+  { value: 'tonalidade', label: 'Tonalidade' },
+  { value: 'riscado', label: 'Riscado' },
+  { value: 'outro', label: 'Outro (descreva)' },
+];
 
 const ESTRUTURA = 'MAD01';
 const COLUNAS = ['A', 'B', 'C'];
