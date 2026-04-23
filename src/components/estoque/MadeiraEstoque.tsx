@@ -947,6 +947,18 @@ export default function MadeiraEstoque() {
           )}
         </DialogContent>
       </Dialog>
+      
+      {statModal && (
+        <StatDetailModal
+          isOpen={statModal.isOpen}
+          onClose={() => setStatModal(null)}
+          title={statModal.title}
+          value={statModal.value}
+          type={statModal.type}
+          stats={statModal.stats}
+          complementaryInfo={`Análise detalhada do estoque na estrutura ${ESTRUTURA}. As estatísticas refletem o estado atual dos quadrantes de madeira.`}
+        />
+      )}
     </div>
   );
 }
