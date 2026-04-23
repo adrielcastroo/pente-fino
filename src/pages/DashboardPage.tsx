@@ -28,6 +28,18 @@ function formatDuration(start: string | null | undefined, end: string | null | u
   } catch { return '—'; }
 }
 
+function SummaryStatCard({ label, value, percent, color, bg, border }: { label: string; value: string | number; percent?: number; color: string; bg: string; border: string }) {
+  return (
+    <div className={`p-4 text-center space-y-1 rounded-xl border ${border} ${bg} transition-all duration-200`}>
+      <div className={`text-xl sm:text-2xl font-black tabular-nums ${color}`}>{value}</div>
+      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{label}</div>
+      {percent !== undefined && (
+        <div className="text-[10px] font-semibold text-muted-foreground/70">{percent}%</div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const isMobile = useIsMobile();
   const {
@@ -219,7 +231,32 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="p-4 grid grid-cols-3 gap-3 bg-muted/5 border-b border-border/10">
+            <SummaryStatCard label="Total" value={stats.totalConferentes} color="text-foreground" bg="bg-card" border="border-border/30" />
+            <SummaryStatCard 
+              label="Engajados" 
+              value={stats.topConferentes.length} 
+              percent={stats.totalConferentes ? Math.round((stats.topConferentes.length / stats.totalConferentes) * 100) : 0} 
+              color="text-emerald-500" bg="bg-emerald-500/5" border="border-emerald-500/20" 
+            />
+            <SummaryStatCard 
+              label="Recentes" 
+              value={stats.conferenteDetails.filter(c => {
+                const lastDate = new Date(c.lastDate);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return lastDate >= weekAgo;
+              }).length} 
+              percent={stats.totalConferentes ? Math.round((stats.conferenteDetails.filter(c => {
+                const lastDate = new Date(c.lastDate);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return lastDate >= weekAgo;
+              }).length / stats.totalConferentes) * 100) : 0} 
+              color="text-primary" bg="bg-primary/5" border="border-primary/20" 
+            />
+          </div>
+          <div className="overflow-y-auto max-h-[50vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
@@ -256,7 +293,21 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="p-4 grid grid-cols-3 gap-3 bg-muted/5 border-b border-border/10">
+            <SummaryStatCard label="Total" value={stats.totalConferencias} color="text-foreground" bg="bg-card" border="border-border/30" />
+            <SummaryStatCard 
+              label="Concluídas" 
+              value={history.filter(h => h.finishedAt).length} 
+              percent={stats.totalConferencias ? Math.round((history.filter(h => h.finishedAt).length / stats.totalConferencias) * 100) : 0} 
+              color="text-emerald-500" bg="bg-emerald-500/5" border="border-emerald-500/20" 
+            />
+            <SummaryStatCard 
+              label="Tempo Médio" 
+              value={stats.avgDuration} 
+              color="text-primary" bg="bg-primary/5" border="border-primary/20" 
+            />
+          </div>
+          <div className="overflow-y-auto max-h-[50vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
@@ -299,7 +350,21 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2 bg-muted/5 border-b border-border/10">
+            <SummaryStatCard label="Total" value={stats.totalRegistros} color="text-foreground" bg="bg-card" border="border-border/30" />
+            {stats.categorias.map(cat => (
+              <SummaryStatCard 
+                key={cat.name}
+                label={cat.name} 
+                value={cat.value} 
+                percent={stats.totalRegistros ? Math.round((cat.value / stats.totalRegistros) * 100) : 0} 
+                color={cat.name === 'Tecido' ? 'text-primary' : cat.name === 'Madeira' ? 'text-emerald-500' : 'text-amber-500'} 
+                bg={cat.name === 'Tecido' ? 'bg-primary/5' : cat.name === 'Madeira' ? 'bg-emerald-500/5' : 'bg-amber-500/5'} 
+                border={cat.name === 'Tecido' ? 'border-primary/20' : cat.name === 'Madeira' ? 'border-emerald-500/20' : 'border-amber-500/20'} 
+              />
+            ))}
+          </div>
+          <div className="overflow-y-auto max-h-[50vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
