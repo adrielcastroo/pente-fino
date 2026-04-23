@@ -221,7 +221,16 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const validateEndereco = (val: string) => {
     if (!val) { setEnderecoError(''); return; }
-    setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
+    const pattern = isMadeira ? 'Padrão: MAD01.A.N01' : 'Padrão: TEC01.A.N03';
+    if (!ENDERECO_REGEX.test(val)) {
+      setEnderecoError(pattern);
+      return;
+    }
+    if (isMadeira && !val.startsWith('MAD')) {
+      setEnderecoError('Deve iniciar com MAD');
+      return;
+    }
+    setEnderecoError('');
   };
 
   // Sync local state with store values when they change externally
