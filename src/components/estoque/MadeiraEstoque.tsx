@@ -88,6 +88,7 @@ export default function MadeiraEstoque() {
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
+  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[] } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const [editForm, setEditForm] = useState<{
