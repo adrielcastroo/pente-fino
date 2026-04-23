@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
 import ImportDialog from '@/components/estoque/ImportDialog';
+import MadeiraImportDialog from '@/components/estoque/MadeiraImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 
 
