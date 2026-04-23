@@ -351,21 +351,44 @@ export default function EstoquePage() {
           { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
           { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
           { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
-        ].map(s => (
-          <Card 
-            key={s.label} 
-            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-            }`}
-          >
-            <CardContent className="p-4 text-center space-y-1">
-              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
-              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
-              <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-            </CardContent>
-          </Card>
-        ))}
+        ].map(s => {
+          const isSelected = selectedStat === s.key;
+          
+          // Calculate breakdown if selected
+          const tecBreakdown = isSelected ? Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
+            const count = allPosicoes.filter((p: any) => p.estrutura === tec && (s.key === 'total' || p.status === s.key || (s.key === 'livre' && p.status === 'livre'))).length;
+            const totalForTec = cfg.cols.length * cfg.levels * 30;
+            return { name: tec, count, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0 };
+          }) : [];
+
+          return (
+            <Card 
+              key={s.label} 
+              onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+              className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:shadow-md h-fit ${
+                isSelected ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+              }`}
+            >
+              <CardContent className="p-3 text-center space-y-1">
+                <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
+                <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
+                
+                {isSelected && tecBreakdown.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border/20 grid grid-cols-2 gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {tecBreakdown.map(b => (
+                      <div key={b.name} className="flex flex-col items-center bg-background/40 rounded-lg p-1.5 border border-border/10">
+                        <span className="text-[7px] font-black text-muted-foreground uppercase">{b.name}</span>
+                        <span className="text-xs font-black">{b.count}</span>
+                        <span className="text-[7px] font-bold text-muted-foreground/60">{b.percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* TEC Tabs */}
