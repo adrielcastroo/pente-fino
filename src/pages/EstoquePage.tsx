@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, TreePine, Waves } from 'lucide-react';
 import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
 import { Card, CardContent } from '@/components/ui/card';
+import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -82,6 +83,7 @@ export default function EstoquePage() {
   const [importOpen, setImportOpen] = useState(false);
   const [madeiraImportOpen, setMadeiraImportOpen] = useState(false);
   const [madeiraVersion, setMadeiraVersion] = useState(0);
+  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[] } | null>(null);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -300,7 +302,8 @@ export default function EstoquePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 min-w-0">
+    <>
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -378,7 +381,30 @@ export default function EstoquePage() {
           return (
             <Card 
               key={s.label} 
-              onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+              onClick={() => {
+                const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
+                  const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === tec);
+                  const totalForTec = cfg.cols.length * cfg.levels * 30;
+                  let count = 0;
+                  if (s.key === 'total') count = totalForTec;
+                  else if (s.key === 'livre') {
+                    const occupied = currentStructureItems.filter((p: any) => p.status === 'ocupado').length;
+                    const blocked = currentStructureItems.filter((p: any) => p.status === 'bloqueado').length;
+                    const reserved = currentStructureItems.filter((p: any) => p.status === 'reservado').length;
+                    const exited = currentStructureItems.filter((p: any) => p.status === 'saida').length;
+                    count = Math.max(0, totalForTec - occupied - blocked - reserved - exited);
+                  } else count = currentStructureItems.filter((p: any) => p.status === s.key).length;
+                  return { label: tec, value: count, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0, trend: 'up' as const };
+                });
+
+                setStatModal({
+                  isOpen: true,
+                  title: s.label,
+                  value: s.value,
+                  type: s.key,
+                  stats: tecBreakdown.slice(0, 3)
+                });
+              }}
               className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:shadow-md h-fit ${
                 isSelected ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
               }`}
@@ -887,5 +913,18 @@ export default function EstoquePage() {
         onImportComplete={() => setMadeiraVersion(v => v + 1)} 
       />
     </div>
+    
+      {statModal && (
+        <StatDetailModal 
+          isOpen={statModal.isOpen}
+          onClose={() => setStatModal(null)}
+          title={statModal.title}
+          value={statModal.value}
+          type={statModal.type}
+          stats={statModal.stats}
+          complementaryInfo={`Análise detalhada do estoque na estrutura ${activeTec}. As estatísticas refletem o estado atual das posições físicas.`}
+        />
+      )}
+    </>
   );
 }
