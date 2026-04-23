@@ -80,6 +80,7 @@ export default function MadeiraEstoque() {
   const [configCell, setConfigCell] = useState<{ col: string; nivel: number } | null>(null);
   const [confirmChange, setConfirmChange] = useState<{ col: string; nivel: number; newTipo: 'lamina' | 'base' } | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
     item: string;
     endereco: string;
@@ -164,6 +165,8 @@ export default function MadeiraEstoque() {
     let totalOcc = 0;
     let laminasCells = 0;
     let basesCells = 0;
+    const totalCells = COLUNAS.length * NIVEIS;
+
     for (const col of COLUNAS) {
       for (let nivel = 1; nivel <= NIVEIS; nivel++) {
         const q = getQuadrante(col, nivel);
@@ -173,13 +176,21 @@ export default function MadeiraEstoque() {
         else basesCells++;
       }
     }
+    
+    const avariasCount = rows.filter(r => r.avaria_tipo).length;
+
     return {
       totalItens: rows.length,
-      avarias: rows.filter(r => r.avaria_tipo).length,
+      avarias: avariasCount,
       capacidade: totalCap,
       ocupacao: totalOcc,
       laminasCells,
       basesCells,
+      totalCells,
+      percentOcupacao: totalCap ? Math.round((totalOcc / totalCap) * 100) : 0,
+      percentLaminas: totalCells ? Math.round((laminasCells / totalCells) * 100) : 0,
+      percentBases: totalCells ? Math.round((basesCells / totalCells) * 100) : 0,
+      percentAvarias: rows.length ? Math.round((avariasCount / rows.length) * 100) : 0,
     };
   }, [cellMap, quadrantes, rows]);
 
@@ -239,17 +250,24 @@ export default function MadeiraEstoque() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Itens', value: stats.totalItens, color: 'text-foreground' },
-          { label: 'Capacidade', value: stats.capacidade, color: 'text-primary' },
-          { label: 'Ocupação', value: `${stats.capacidade ? Math.round((stats.ocupacao / stats.capacidade) * 100) : 0}%`, color: 'text-cyan-400' },
-          { label: 'Lâmina', value: stats.laminasCells, color: 'text-emerald-400' },
-          { label: 'Base', value: stats.basesCells, color: 'text-violet-400' },
-          { label: 'Avarias', value: stats.avarias, color: 'text-red-400' },
+          { key: 'total', label: 'Itens', value: stats.totalItens, percent: 100, color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' },
+          { key: 'capacidade', label: 'Capacidade', value: stats.capacidade, percent: 100, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
+          { key: 'ocupacao', label: 'Ocupação', value: stats.ocupacao, percent: stats.percentOcupacao, color: 'text-cyan-400', bg: 'bg-cyan-500/5', border: 'border-cyan-500/20' },
+          { key: 'lamina', label: 'Lâmina', value: stats.laminasCells, percent: stats.percentLaminas, color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
+          { key: 'base', label: 'Base', value: stats.basesCells, percent: stats.percentBases, color: 'text-violet-400', bg: 'bg-violet-500/5', border: 'border-violet-500/20' },
+          { key: 'avarias', label: 'Avarias', value: stats.avarias, percent: stats.percentAvarias, color: 'text-red-400', bg: 'bg-red-500/5', border: 'border-red-500/20' },
         ].map(s => (
-          <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none">
+          <Card 
+            key={s.label} 
+            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            className={`border ${s.border} ${s.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
+              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+            }`}
+          >
             <CardContent className="p-4 text-center space-y-1">
-              <div className={`text-xl sm:text-2xl font-black tabular-nums ${s.color}`}>{s.value}</div>
+              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
               <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
             </CardContent>
           </Card>
         ))}
@@ -302,8 +320,17 @@ export default function MadeiraEstoque() {
                 {COLUNAS.map(col => {
                   const q = getQuadrante(col, nivel);
                   const items = cellMap[`${col}-${nivel}`] || [];
-                  const fillPercent = Math.min(100, Math.round((items.length / q.capacidade) * 100));
+                  const filteredItems = selectedStat === 'avarias' 
+                    ? items.filter(r => r.avaria_tipo)
+                    : items;
+                  
                   const isLamina = q.tipo_ocupacao === 'lamina';
+                  const isBase = q.tipo_ocupacao === 'base';
+                  
+                  // Dim non-selected types
+                  const isDimmed = (selectedStat === 'lamina' && !isLamina) || (selectedStat === 'base' && !isBase);
+
+                  const fillPercent = Math.min(100, Math.round((filteredItems.length / q.capacidade) * 100));
                   const colorBase = isLamina
                     ? 'bg-emerald-500/8 border-emerald-500/30 hover:border-emerald-500/60 hover:bg-emerald-500/15'
                     : 'bg-violet-500/8 border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/15';
@@ -312,7 +339,7 @@ export default function MadeiraEstoque() {
                   return (
                     <div
                       key={col}
-                      className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${colorBase}`}
+                      className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-all duration-150 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''}`}
                       onClick={() => setSelectedCell({ col, nivel })}
                     >
                       {/* Fill bar */}
@@ -333,7 +360,7 @@ export default function MadeiraEstoque() {
                           {col}-N{nivel}
                         </div>
                         <div className="text-sm sm:text-base font-black text-foreground mt-0.5 tabular-nums">
-                          {items.length}
+                          {selectedStat === 'avarias' ? filteredItems.length : items.length}
                           <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-semibold ml-0.5">/{q.capacidade}</span>
                         </div>
                         <div className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider mt-0.5 ${isLamina ? 'text-emerald-500' : 'text-violet-500'}`}>
