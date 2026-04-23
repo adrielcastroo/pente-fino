@@ -42,7 +42,21 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClo
           <DialogTitle className="text-xl font-black tracking-tight">{detailChart?.title}</DialogTitle>
         </div>
       </DialogHeader>
-      <div className="p-6 h-[400px]">
+      <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 bg-muted/5 border-b border-border/10">
+        <SummaryStatCard label="Total Geral" value={totalValue} color="text-foreground" bg="bg-card" border="border-border/30" />
+        {topItems.map((item: any, i: number) => (
+          <SummaryStatCard 
+            key={item.name}
+            label={item.name} 
+            value={item.value || item.count} 
+            percent={totalValue ? Math.round(((item.value || item.count) / totalValue) * 100) : 0} 
+            color={i === 0 ? 'text-primary' : i === 1 ? 'text-emerald-500' : 'text-amber-500'} 
+            bg={i === 0 ? 'bg-primary/5' : i === 1 ? 'bg-emerald-500/5' : i === 2 ? 'bg-amber-500/5' : 'bg-card'} 
+            border={i === 0 ? 'border-primary/20' : i === 1 ? 'border-emerald-500/20' : i === 2 ? 'border-amber-500/20' : 'border-border/30'} 
+          />
+        ))}
+      </div>
+      <div className="p-6 h-[350px]">
         {detailChart && (
           <ResponsiveContainer width="100%" height="100%">
             {detailChart.type === 'bar' ? (
