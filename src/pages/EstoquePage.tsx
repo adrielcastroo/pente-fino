@@ -65,10 +65,10 @@ import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
   const { isGuest } = useAuth();
-  const activeTec = useAppStore(s => s.formData.estoqueActiveMad);
+  const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
 
   const setFormData = useAppStore(s => s.setFormData);
-  const setActiveTec = (val: string) => setFormData({ estoqueActiveMad: val });
+  const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
   const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');

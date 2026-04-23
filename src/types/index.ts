@@ -67,7 +67,7 @@ export interface FormData {
   motorSerie: string;
   motorTemCaixa: boolean;
   motorCaixaNum: string;
-  estoqueActiveMad: string;
+  estoqueActiveTec: string;
   estoqueSearch: string;
   estoqueHighlightStatus: string | null;
   activeTab: AppTab;
