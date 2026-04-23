@@ -32,8 +32,8 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick }: any)
     >
       <div className="flex flex-row items-center justify-between px-5 sm:px-6 py-4">
         <div>
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Activity className="w-4 h-4 text-primary" />
+          <div className="text-base font-bold flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             <span>Volume de Operações</span>
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">Histórico recente de conferências</p>
