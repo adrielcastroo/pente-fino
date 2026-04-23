@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
 import { TreePine, AlertTriangle, BarChart3, Eye, Loader2, Layers3 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
