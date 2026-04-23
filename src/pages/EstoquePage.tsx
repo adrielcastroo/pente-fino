@@ -95,8 +95,8 @@ export default function EstoquePage() {
 
   const loadStats = useCallback(async () => {
     try {
-      // Only fetch the status column to keep payload tiny
-      const { data, error } = await supabase.from('estoque_posicoes').select('status');
+      // Fetch id, status and estrutura to allow filtering and optimistic updates
+      const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
     } catch (e) {
@@ -121,23 +121,28 @@ export default function EstoquePage() {
   useEffect(() => { loadPosicoes(); }, [loadPosicoes]);
 
   const posicoes = posicoesForActiveTec;
-  // totalSlots is constant — compute once at module scope below
-  const totalSlots = TOTAL_SLOTS;
-
+  
   const stats = useMemo(() => {
+    // Filter stats to reflect ONLY the currently active TEC structure
+    const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === activeTec);
+    const currentConfig = TEC_CONFIG[activeTec];
+    const structureSlots = currentConfig ? currentConfig.cols.length * currentConfig.levels * 30 : 0;
+
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
     
-    for (let i = 0, len = allPosicoes.length; i < len; i++) {
-      const s = (allPosicoes[i] as any).status;
+    for (let i = 0, len = currentStructureItems.length; i < len; i++) {
+      const s = (currentStructureItems[i] as any).status;
       if (s === 'ocupado') occupied++;
       else if (s === 'bloqueado') blocked++;
       else if (s === 'reservado') reserved++;
       else if (s === 'saida') exited++;
     }
     
-    const free = totalSlots - occupied - blocked - reserved; // Exited items are removed from DB, so they don't count against capacity
-    return { totalSlots, occupied, blocked, reserved, exited, free };
-  }, [allPosicoes, totalSlots]);
+    // Items with status 'saida' still occupy a physical slot until they are deleted from DB
+    const free = Math.max(0, structureSlots - occupied - blocked - reserved - exited);
+    
+    return { totalSlots: structureSlots, occupied, blocked, reserved, exited, free };
+  }, [allPosicoes, activeTec]);
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
