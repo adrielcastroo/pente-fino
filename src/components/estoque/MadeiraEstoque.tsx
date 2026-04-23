@@ -360,7 +360,7 @@ export default function MadeiraEstoque() {
                           {col}-N{nivel}
                         </div>
                         <div className="text-sm sm:text-base font-black text-foreground mt-0.5 tabular-nums">
-                          {items.length}
+                          {selectedStat === 'avarias' ? filteredItems.length : items.length}
                           <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-semibold ml-0.5">/{q.capacidade}</span>
                         </div>
                         <div className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider mt-0.5 ${isLamina ? 'text-emerald-500' : 'text-violet-500'}`}>
