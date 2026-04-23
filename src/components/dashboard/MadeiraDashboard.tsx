@@ -299,7 +299,7 @@ export default function MadeiraDashboard() {
           <div className="px-5 pb-4 h-[180px] flex flex-col">
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={colunasData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={colunasData} margin={{ top: 5, right: 10, left: 0, bottom: 15 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                   <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />

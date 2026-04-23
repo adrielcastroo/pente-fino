@@ -60,7 +60,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClo
         {detailChart && (
           <ResponsiveContainer width="100%" height="100%">
             {detailChart.type === 'bar' ? (
-              <BarChart data={detailChart.data} margin={{ bottom: 60, top: 10 }}>
+              <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
                 <defs>
                   <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
@@ -74,7 +74,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClo
               </BarChart>
             ) : (
               <PieChart>
-                <Pie data={detailChart.data} dataKey="value" nameKey="name" outerRadius={130} innerRadius={75} label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`} paddingAngle={3} stroke="hsl(var(--border))" strokeWidth={1}>
+                <Pie data={detailChart.data} dataKey="value" nameKey="name" outerRadius={100} innerRadius={60} label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`} paddingAngle={3} stroke="hsl(var(--border))" strokeWidth={1}>
                   {detailChart.data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Pie>
                 <ChartTooltip contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} formatter={(val: any) => [val, 'Quantidade']} />
