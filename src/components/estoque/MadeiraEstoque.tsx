@@ -320,8 +320,17 @@ export default function MadeiraEstoque() {
                 {COLUNAS.map(col => {
                   const q = getQuadrante(col, nivel);
                   const items = cellMap[`${col}-${nivel}`] || [];
-                  const fillPercent = Math.min(100, Math.round((items.length / q.capacidade) * 100));
+                  const filteredItems = selectedStat === 'avarias' 
+                    ? items.filter(r => r.avaria_tipo)
+                    : items;
+                  
                   const isLamina = q.tipo_ocupacao === 'lamina';
+                  const isBase = q.tipo_ocupacao === 'base';
+                  
+                  // Dim non-selected types
+                  const isDimmed = (selectedStat === 'lamina' && !isLamina) || (selectedStat === 'base' && !isBase);
+
+                  const fillPercent = Math.min(100, Math.round((filteredItems.length / q.capacidade) * 100));
                   const colorBase = isLamina
                     ? 'bg-emerald-500/8 border-emerald-500/30 hover:border-emerald-500/60 hover:bg-emerald-500/15'
                     : 'bg-violet-500/8 border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/15';
@@ -330,7 +339,7 @@ export default function MadeiraEstoque() {
                   return (
                     <div
                       key={col}
-                      className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${colorBase}`}
+                      className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-all duration-150 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''}`}
                       onClick={() => setSelectedCell({ col, nivel })}
                     >
                       {/* Fill bar */}
