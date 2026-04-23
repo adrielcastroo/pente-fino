@@ -212,23 +212,23 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="overflow-y-auto max-h-[40vh]">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-muted/30">
+          <div className="overflow-x-auto overflow-y-auto max-h-[40vh] custom-scrollbar">
+            <table className="w-full text-[10px] sm:text-xs">
+              <thead className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Nome</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferências</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Registros</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Último</th>
+                  <th className="px-3 sm:px-4 py-3 text-left font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Nome</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Conf.</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Regs</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Último</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
                 {stats.conferenteDetails.map(c => (
-                  <tr key={c.name} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
-                    <td className="px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px]">{formatDateBR(c.lastDate)}</td>
+                  <tr key={c.name} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-bold text-foreground">{c.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono text-muted-foreground/60">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
