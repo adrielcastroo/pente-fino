@@ -52,6 +52,7 @@ export default function MadeiraDashboard() {
   const [quadrantes, setQuadrantes] = useState<Quadrante[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<'avarias' | 'ocupacao' | 'colunas' | null>(null);
+  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[] } | null>(null);
 
   useEffect(() => {
     let mounted = true;
