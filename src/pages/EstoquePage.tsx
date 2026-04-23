@@ -288,21 +288,20 @@ export default function EstoquePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 min-w-0">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
-          
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">Estoque</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button 
             onClick={() => category === 'madeira' ? setMadeiraImportOpen(true) : setImportOpen(true)} 
             variant="outline" 
-            className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2"
+            className="flex-1 sm:flex-none h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2"
           >
             <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Importar</span>
+            <span className="text-xs sm:text-sm">Importar</span>
           </Button>
         </div>
       </div>
