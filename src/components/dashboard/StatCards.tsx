@@ -12,18 +12,26 @@ interface StatCardProps {
 export const StatCard = memo(({ label, value, icon: Icon, tab, onClick }: StatCardProps) => (
   <button 
     onClick={() => onClick(tab)} 
-    className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] relative text-left w-full"
+    className="group cursor-pointer rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 active:scale-[0.98] relative text-left w-full"
     role="button"
   >
-    <div className="p-5 sm:p-6 flex flex-row items-center gap-4 relative z-10">
-      <div className="p-3 rounded-xl bg-primary/8 text-primary">
-        <Icon className="w-5 h-5" />
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
+      <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-inner group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+        <Icon className="w-6 h-6" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors">{value}</div>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">{label}</p>
+        <div className="text-3xl sm:text-4xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors">
+          {value}
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 mt-1 flex items-center gap-2">
+          {label}
+          <span className="w-1 h-1 rounded-full bg-primary/30" />
+        </p>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary/50 transition-colors" />
+      <div className="h-8 w-8 rounded-full border border-border/50 flex items-center justify-center opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+        <ChevronRight className="w-4 h-4 text-primary" />
+      </div>
     </div>
   </button>
 ));
