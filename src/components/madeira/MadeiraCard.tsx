@@ -74,7 +74,7 @@ export function MadeiraCard({ item, loteMestre, onClick }: MadeiraCardProps) {
               </div>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">NF</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Processo</span>
               <div className="flex items-center gap-1.5 text-xs font-semibold">
                 <Hash className="w-3 h-3 text-muted-foreground" />
                 {item.nf || '—'}

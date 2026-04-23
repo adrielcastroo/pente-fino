@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
 import ImportDialog from '@/components/estoque/ImportDialog';
+import MadeiraImportDialog from '@/components/estoque/MadeiraImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 
 
@@ -78,6 +79,8 @@ export default function EstoquePage() {
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [madeiraImportOpen, setMadeiraImportOpen] = useState(false);
+  const [madeiraVersion, setMadeiraVersion] = useState(0);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -288,7 +291,11 @@ export default function EstoquePage() {
           
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
+          <Button 
+            onClick={() => category === 'madeira' ? setMadeiraImportOpen(true) : setImportOpen(true)} 
+            variant="outline" 
+            className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2"
+          >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
@@ -317,7 +324,7 @@ export default function EstoquePage() {
       </div>
 
       {category === 'madeira' ? (
-        <MadeiraEstoque />
+        <MadeiraEstoque key={madeiraVersion} />
       ) : (
         <>
       {/* Stats */}
@@ -882,8 +889,13 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Import Dialog */}
+      {/* Import Dialogs */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
+      <MadeiraImportDialog 
+        open={madeiraImportOpen} 
+        onOpenChange={setMadeiraImportOpen} 
+        onImportComplete={() => setMadeiraVersion(v => v + 1)} 
+      />
     </div>
   );
 }
