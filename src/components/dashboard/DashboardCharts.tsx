@@ -10,10 +10,12 @@ import {
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  'hsl(var(--primary) / 0.75)',
+  'hsl(var(--primary) / 0.85)',
+  'hsl(var(--primary) / 0.7)',
   'hsl(var(--primary) / 0.55)',
-  'hsl(var(--primary) / 0.35)',
-  'hsl(var(--primary) / 0.2)',
+  'hsl(var(--primary) / 0.4)',
+  'hsl(var(--primary) / 0.25)',
+  'hsl(var(--primary) / 0.1)',
 ];
 
 interface TimelineChartProps {
