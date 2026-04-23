@@ -40,35 +40,29 @@ interface Posicao {
   registro_id: string | null;
 }
 
-const MAD_CONFIG: Record<string, { cols: string[]; levels: number }> = {
-  MAD00: { cols: ['A', 'B'], levels: 9 },
-  MAD01: { cols: ['A', 'B', 'C', 'D', 'E', 'F'], levels: 5 },
-  MAD02: { cols: ['A', 'B'], levels: 4 },
-  MAD03: { cols: ['A', 'B'], levels: 9 },
-  MAD04: { cols: ['A', 'B', 'C'], levels: 5 },
-  MAD05: { cols: ['A', 'B', 'C'], levels: 5 },
+const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
+  TEC00: { cols: ['A', 'B'], levels: 9 },
+  TEC01: { cols: ['A', 'B', 'C', 'D', 'E', 'F'], levels: 5 },
+  TEC02: { cols: ['A', 'B'], levels: 4 },
+  TEC03: { cols: ['A', 'B'], levels: 9 },
+  TEC04: { cols: ['A', 'B', 'C'], levels: 5 },
+  TEC05: { cols: ['A', 'B', 'C'], levels: 5 },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  ocupado: { label: 'Ocupado', color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
-  bloqueado: { label: 'Bloqueado', color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30' },
-  reservado: { label: 'Reservado', color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30' },
-  saida: { label: 'Saída', color: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30' },
-  livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
-};
-
-// Constant: total physical slots across all MADs (computed once)
-const TOTAL_SLOTS = Object.values(MAD_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
+...
+// Constant: total physical slots across all TECs (computed once)
+const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
 
 // Reuse centralized formatter
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
   const { isGuest } = useAuth();
-  const activeMad = useAppStore(s => s.formData.estoqueActiveMad);
+  const activeTec = useAppStore(s => s.formData.estoqueActiveMad);
 
   const setFormData = useAppStore(s => s.setFormData);
-  const setActiveMad = (val: string) => setFormData({ estoqueActiveMad: val });
+  const setActiveTec = (val: string) => setFormData({ estoqueActiveMad: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
   const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
@@ -89,7 +83,7 @@ export default function EstoquePage() {
   const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
-  const config = MAD_CONFIG[activeMad] || { cols: [], levels: 0 };
+  const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
 
   const [posicoesForActiveMad, setPosicoesForActiveMad] = useState<Posicao[]>([]);
 
@@ -107,7 +101,7 @@ export default function EstoquePage() {
   const loadPosicoes = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeMad);
+      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
       if (error) throw error;
       setPosicoesForActiveMad(data as Posicao[]);
     } catch (e) {
@@ -115,7 +109,7 @@ export default function EstoquePage() {
       toast.error('Erro ao carregar dados do estoque');
     }
     setLoading(false);
-  }, [activeMad]);
+  }, [activeTec]);
 
   useEffect(() => { loadStats(); }, [loadStats]);
   useEffect(() => { loadPosicoes(); }, [loadPosicoes]);
@@ -352,19 +346,19 @@ export default function EstoquePage() {
         ))}
       </div>
 
-      {/* MAD Tabs */}
+      {/* TEC Tabs */}
       <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 overflow-x-auto custom-scrollbar">
-        {Object.keys(MAD_CONFIG).map(mad => (
+        {Object.keys(TEC_CONFIG).map(tec => (
           <button 
-            key={mad} 
-            onClick={() => setActiveMad(mad)} 
+            key={tec} 
+            onClick={() => setActiveTec(tec)} 
             className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 ${
-              activeMad === mad 
+              activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            {mad}
+            {tec}
           </button>
         ))}
       </div>

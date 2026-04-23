@@ -81,7 +81,7 @@ const INITIAL_FORM_DATA: FormData = {
   lockMetragem: false, cortinaLargura: '', cortinaMetragem: 'm2',
   madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
   motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1',
-  estoqueActiveMad: 'MAD01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
+  estoqueActiveMad: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
 };
 
 export const useAppStore = create<AppState>()(
