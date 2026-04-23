@@ -277,13 +277,41 @@ export default function MadeiraEstoque() {
         ))}
       </div>
 
-      {/* Estrutura tab (single MAD01) */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-xs">
-        <button className="flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide bg-primary text-primary-foreground shadow-md shadow-primary/20 flex items-center justify-center gap-2">
-          <TreePine className="w-4 h-4" />
-          {ESTRUTURA}
-        </button>
+      {/* Estrutura tab & View Toggle */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 w-full sm:w-auto">
+          <button className="flex-1 px-6 py-2.5 rounded-lg text-xs font-black tracking-wide bg-primary text-primary-foreground shadow-md shadow-primary/20 flex items-center justify-center gap-2 min-w-[120px]">
+            <TreePine className="w-4 h-4" />
+            {ESTRUTURA}
+          </button>
+        </div>
+
+        <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 w-full sm:w-auto">
+          <button 
+            onClick={() => setViewMode('map')}
+            className={`flex-1 px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+              viewMode === 'map' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Mapa
+          </button>
+          <button 
+            onClick={() => setViewMode('cards')}
+            className={`flex-1 px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+              viewMode === 'cards' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <List className="w-4 h-4" />
+            Cards
+          </button>
+        </div>
       </div>
+
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-border/30 bg-muted/20 text-[11px]">
