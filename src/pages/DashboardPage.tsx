@@ -80,7 +80,7 @@ export default function DashboardPage() {
   }, [history]);
 
   return (
-    <div className="space-y-8 sm:space-y-10 lg:space-y-12 max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 overflow-x-hidden">
+    <div className="space-y-8 sm:space-y-10 lg:space-y-12 max-w-[1800px] mx-auto pb-12 overflow-x-hidden">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-6 sm:pt-8 pb-6 border-b border-border/40 relative">
         <div className="absolute -left-8 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-primary rounded-full blur-[1px]" />
