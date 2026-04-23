@@ -16,6 +16,7 @@ import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart } from '@/components/dashboard/DashboardCharts';
 import MadeiraDashboard from '@/components/dashboard/MadeiraDashboard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
+import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
