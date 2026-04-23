@@ -265,7 +265,7 @@ export default function MadeiraEstoque() {
             }`}
           >
             <CardContent className="p-4 text-center space-y-1">
-              <div className={`text-xl sm:text-2xl font-black tabular-nums ${s.color}`}>{s.value}</div>
+              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
               <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
               <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
             </CardContent>
