@@ -237,8 +237,9 @@ export const useAppStore = create<AppState>()(
           console.error('Error archiving:', e);
           set({ 
             isArchiving: false, 
-            archiveError: e.message || 'Falha ao arquivar conferência' 
+            archiveError: e.message || 'Falha crítica ao arquivar conferência' 
           });
+          // Still throw to let the caller (UI) catch it if needed
           throw e;
         }
       },
