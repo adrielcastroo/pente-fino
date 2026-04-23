@@ -330,9 +330,9 @@ export default function MadeiraEstoque() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground gap-3">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm font-semibold">Carregando MAD01...</span>
+          <span className="text-sm font-semibold">Carregando madeira...</span>
         </div>
-      ) : (
+      ) : viewMode === 'map' ? (
         <div className="overflow-x-auto pb-4 custom-scrollbar">
           <div className="min-w-full space-y-1.5">
             {/* Column headers */}
@@ -359,7 +359,6 @@ export default function MadeiraEstoque() {
                   const isLamina = q.tipo_ocupacao === 'lamina';
                   const isBase = q.tipo_ocupacao === 'base';
                   
-                  // Dim non-selected types
                   const isDimmed = (selectedStat === 'lamina' && !isLamina) || (selectedStat === 'base' && !isBase);
 
                   const fillPercent = Math.min(100, Math.round((filteredItems.length / q.capacidade) * 100));
@@ -374,12 +373,10 @@ export default function MadeiraEstoque() {
                       className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-all duration-150 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''}`}
                       onClick={() => setSelectedCell({ col, nivel })}
                     >
-                      {/* Fill bar */}
                       <div
                         className={`absolute bottom-0 left-0 right-0 ${fillBar}`}
                         style={{ height: `${fillPercent}%` }}
                       />
-                      {/* Config button */}
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfigCell({ col, nivel }); }}
                         className="absolute top-1 right-1 z-20 p-1 rounded-md bg-background/60 border border-border/40 opacity-60 hover:opacity-100 hover:bg-background transition"
@@ -406,7 +403,28 @@ export default function MadeiraEstoque() {
             ))}
           </div>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {rows.filter(r => {
+            if (selectedStat === 'avarias') return !!r.avaria_tipo;
+            return true;
+          }).map(r => (
+            <MadeiraCard
+              key={r.id}
+              item={r}
+              loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
+              onClick={() => setDetail(r)}
+            />
+          ))}
+          {rows.length === 0 && (
+            <div className="col-span-full py-20 text-center border-2 border-dashed border-border/30 rounded-2xl bg-muted/10">
+              <Package className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Nenhum item encontrado</p>
+            </div>
+          )}
+        </div>
       )}
+
 
       {/* ===== CELL ITEMS DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
