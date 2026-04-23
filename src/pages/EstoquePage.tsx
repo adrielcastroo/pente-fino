@@ -912,5 +912,18 @@ export default function EstoquePage() {
         onImportComplete={() => setMadeiraVersion(v => v + 1)} 
       />
     </div>
+    
+      {statModal && (
+        <StatDetailModal 
+          isOpen={statModal.isOpen}
+          onClose={() => setStatModal(null)}
+          title={statModal.title}
+          value={statModal.value}
+          type={statModal.type}
+          stats={statModal.stats}
+          complementaryInfo={`Análise detalhada do estoque na estrutura ${activeTec}. As estatísticas refletem o estado atual das posições físicas.`}
+        />
+      )}
+    </>
   );
 }
