@@ -324,7 +324,7 @@ export default function EstoquePage() {
       </div>
 
       {category === 'madeira' ? (
-        <MadeiraEstoque />
+        <MadeiraEstoque key={madeiraVersion} />
       ) : (
         <>
       {/* Stats */}
