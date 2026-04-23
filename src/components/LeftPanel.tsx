@@ -221,7 +221,16 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const validateEndereco = (val: string) => {
     if (!val) { setEnderecoError(''); return; }
-    setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
+    const pattern = isMadeira ? 'Padrão: MAD01.A.N01' : 'Padrão: TEC01.A.N03';
+    if (!ENDERECO_REGEX.test(val)) {
+      setEnderecoError(pattern);
+      return;
+    }
+    if (isMadeira && !val.startsWith('MAD')) {
+      setEnderecoError('Deve iniciar com MAD');
+      return;
+    }
+    setEnderecoError('');
   };
 
   // Sync local state with store values when they change externally
@@ -573,6 +582,11 @@ export const LeftPanel = memo(function LeftPanel() {
     const proc = processo.trim();
 
     if (isMadeira) {
+      const finalAddr = (localEndereco || endereco || '').toUpperCase();
+      if (!finalAddr) { toast.warning('Preencha o Endereço.'); return; }
+      if (!ENDERECO_REGEX.test(finalAddr)) { toast.warning('Endereço inválido. Use: MAD01.A.N01'); return; }
+      if (!finalAddr.startsWith('MAD')) { toast.warning('Endereço de madeira deve iniciar com MAD.'); return; }
+
       const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
       const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
       const reg: Registro = {
@@ -1176,7 +1190,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
                     lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
-                  placeholder="TEC01.A.N03" autoComplete="off"
+                  placeholder={isMadeira ? "MAD01.A.N01" : "TEC01.A.N03"} autoComplete="off"
                   readOnly={lockEndereco && !!lockedEndereco}
                 />
                 {enderecoError && <p className="text-[10px] text-destructive font-medium ml-1">{enderecoError}</p>}

@@ -769,7 +769,7 @@ export default function EstoquePage() {
                   value={scanInput}
                   onChange={e => setScanInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
-                  placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
+                  placeholder={category === 'madeira' ? "Ex: MAD01.A.N01 PROC 12345" : "Ex: TEC01.A.N03 PROC 12345 18,2M"}
                   className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
                   autoFocus
                 />
