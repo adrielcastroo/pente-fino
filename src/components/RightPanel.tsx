@@ -536,17 +536,17 @@ export default function RightPanel() {
               </tbody>
               {sortedRows.length > 0 && (
                 <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
-                    <td className="px-4 py-4">FIM</td>
+                  <tr className="bg-primary/95 text-white font-black font-mono text-[9px] sm:text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest backdrop-blur-sm">
+                    <td className="px-2 sm:px-4 py-3 sm:py-4">TOTAL</td>
                     {columns.map(column => (
-                      <td key={column.key} className="px-4 py-4">
-                        {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
+                      <td key={column.key} className="px-2 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                        {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITS' : 'IT'}` : ''}
                         {column.key === 'mLinear' ? formatML(totals.ml) : ''}
-                        {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
-                        {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
+                        {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + 'm²' : '') : ''}
+                        {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} U` : '') : ''}
                       </td>
                     ))}
-                    <td className="px-4 py-4"></td>
+                    <td className="px-2 sm:px-4 py-3 sm:py-4"></td>
                   </tr>
                 </tfoot>
               )}
