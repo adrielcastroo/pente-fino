@@ -21,25 +21,28 @@ interface TimelineChartProps {
   onExport: (data: any[], fileName: string) => void;
 }
 
-export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps) => {
+export const TimelineChart = React.memo(({ data, onExport, onDetailClick }: any) => {
   const { isLow } = usePerformance();
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 border border-border/50 bg-card shadow-sm overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between px-5 sm:px-6 py-4">
+    <button 
+      onClick={() => onDetailClick && onDetailClick({ title: 'Volume de Operações', data, type: 'area' })}
+      className="md:col-span-3 text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.99] group"
+    >
+      <div className="flex flex-row items-center justify-between px-5 sm:px-6 py-4">
         <div>
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Activity className="w-4 h-4 text-primary" />
+          <div className="text-base font-bold flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             <span>Volume de Operações</span>
-          </CardTitle>
+          </div>
           <p className="text-xs text-muted-foreground mt-0.5">Histórico recente de conferências</p>
         </div>
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary" onClick={() => onExport(data, 'Timeline_Operacoes')}>
           <Download className="w-4 h-4" />
         </Button>
-      </CardHeader>
-      <CardContent className="px-2 pb-6 pt-2 h-[280px]">
+      </div>
+      <div className="px-2 pb-6 pt-2 h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
             {!isLow && (
@@ -91,8 +94,8 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
             />
           </AreaChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    </div>
+    </button>
   );
 });
 
