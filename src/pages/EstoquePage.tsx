@@ -889,8 +889,13 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Import Dialog */}
+      {/* Import Dialogs */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
+      <MadeiraImportDialog 
+        open={madeiraImportOpen} 
+        onOpenChange={setMadeiraImportOpen} 
+        onImportComplete={() => setMadeiraVersion(v => v + 1)} 
+      />
     </div>
   );
 }
