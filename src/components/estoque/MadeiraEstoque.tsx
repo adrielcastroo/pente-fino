@@ -453,45 +453,17 @@ export default function MadeiraEstoque() {
                     <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Quadrante vazio</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {selectedCellItems.map(r => {
-                      const lote = r.lote_mestre_id ? lotesById[r.lote_mestre_id] : null;
-                      return (
-                        <Card
-                          key={r.id}
-                          onClick={() => { setSelectedCell(null); setDetail(r); }}
-                          className="border border-border/40 bg-card/40 hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer"
-                        >
-                          <CardContent className="p-3.5 space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="text-sm font-bold truncate">{r.item || '—'}</span>
-                              {r.avaria_tipo && (
-                                <Badge variant="destructive" className="text-[9px] gap-1 shrink-0">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  {AVARIA_LABELS[r.avaria_tipo] || r.avaria_tipo}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                              <MapPin className="w-3 h-3" />
-                              <span className="font-mono">{r.endereco || '—'}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-2">
-                              {lote ? (
-                                <span className="flex items-center gap-1.5 text-[11px] font-semibold">
-                                  <span className="w-3 h-3 rounded-full border border-border/50" style={{ background: lote.cor_hex }} />
-                                  {lote.nome}
-                                </span>
-                              ) : (
-                                <span className="text-[11px] text-muted-foreground/60">Sem tonalidade</span>
-                              )}
-                              {r.tipo_tecido && <Badge variant="outline" className="text-[9px]">{r.tipo_tecido}</Badge>}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedCellItems.map(r => (
+                      <MadeiraCard
+                        key={r.id}
+                        item={r}
+                        loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
+                        onClick={() => { setSelectedCell(null); setDetail(r); }}
+                      />
+                    ))}
                   </div>
+
                 )}
               </div>
             </>
