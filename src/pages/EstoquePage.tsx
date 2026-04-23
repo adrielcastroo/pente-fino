@@ -356,8 +356,22 @@ export default function EstoquePage() {
           
           // Calculate breakdown if selected
           const tecBreakdown = isSelected ? Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-            const count = allPosicoes.filter((p: any) => p.estrutura === tec && (s.key === 'total' || p.status === s.key || (s.key === 'livre' && p.status === 'livre'))).length;
+            const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === tec);
             const totalForTec = cfg.cols.length * cfg.levels * 30;
+            
+            let count = 0;
+            if (s.key === 'total') {
+              count = totalForTec;
+            } else if (s.key === 'livre') {
+              const occupied = currentStructureItems.filter((p: any) => p.status === 'ocupado').length;
+              const blocked = currentStructureItems.filter((p: any) => p.status === 'bloqueado').length;
+              const reserved = currentStructureItems.filter((p: any) => p.status === 'reservado').length;
+              const exited = currentStructureItems.filter((p: any) => p.status === 'saida').length;
+              count = Math.max(0, totalForTec - occupied - blocked - reserved - exited);
+            } else {
+              count = currentStructureItems.filter((p: any) => p.status === s.key).length;
+            }
+            
             return { name: tec, count, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0 };
           }) : [];
 
