@@ -90,3 +90,4 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClo
     </DialogContent>
   </Dialog>
 );
+}
