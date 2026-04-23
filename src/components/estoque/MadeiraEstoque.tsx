@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera } from 'lucide-react';
+import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera, LayoutGrid, List } from 'lucide-react';
 import { lotesMestresService, type LoteMestre } from '@/services/lotesMestresService';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDateBR } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store/useAppStore';
+import { MadeiraCard } from '../madeira/MadeiraCard';
+
 
 interface MadeiraRow {
   id: string;
