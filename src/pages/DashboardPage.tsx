@@ -277,29 +277,27 @@ export default function DashboardPage() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="overflow-y-auto max-h-[40vh]">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-muted/30">
+          <div className="overflow-x-auto overflow-y-auto max-h-[40vh] custom-scrollbar">
+            <table className="w-full text-[10px] sm:text-xs">
+              <thead className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Processo</th>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferente</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Duração</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Itens</th>
+                  <th className="px-3 sm:px-4 py-3 text-left font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Processo</th>
+                  <th className="px-3 sm:px-4 py-3 text-left font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Conferente</th>
+                  <th className="px-3 sm:px-4 py-3 text-center font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Início</th>
+                  <th className="px-3 sm:px-4 py-3 text-center font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Duração</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Itens</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
                 {conferenceSummary.map(c => (
-                  <tr key={c.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-bold text-foreground truncate max-w-[150px]">{c.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
-                    <td className="px-4 py-3 text-center font-mono text-emerald-500/80 text-[10px]">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-4 py-3 text-center font-mono text-muted-foreground/60 text-[10px]">{formatTimeBR(c.finishedAt)}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant="outline" className="text-[8px] font-bold px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">{c.duration}</Badge>
+                  <tr key={c.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-bold text-foreground truncate max-w-[120px]">{c.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
+                    <td className="px-3 sm:px-4 py-3 text-center font-mono text-emerald-600/80">{formatTimeBR(c.startedAt)}</td>
+                    <td className="px-3 sm:px-4 py-3 text-center">
+                      <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">{c.duration}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-primary">{c.registros}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono font-bold text-primary">{c.registros}</td>
                   </tr>
                 ))}
               </tbody>
