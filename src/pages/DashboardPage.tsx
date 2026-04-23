@@ -190,7 +190,8 @@ export default function DashboardPage() {
               <button
                 key={item.tab}
                 onClick={() => handleStatClick(item.tab)}
-                className={`group flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border border-border/50 bg-card hover:shadow-lg transition-all active:scale-[0.95] animate-in fade-in slide-in-from-bottom-2 duration-300 delay-[${idx * 50}ms] ${item.border}`}
+                className={`group flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border border-border/50 bg-card hover:shadow-lg transition-all active:scale-[0.95] animate-in fade-in slide-in-from-bottom-2 duration-300 ${item.border}`}
+                style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <div className={`p-3 sm:p-4 rounded-xl mb-3 transition-transform group-hover:scale-110 duration-300 ${item.color}`}>
                   <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
