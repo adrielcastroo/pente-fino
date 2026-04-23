@@ -575,11 +575,19 @@ export const LeftPanel = memo(function LeftPanel() {
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
     if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
-    if (!item) { toast.warning('Preencha o campo Item.'); return; }
-    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+    
+    // Ensure store is updated with current local values before validation
+    const currentItem = localItem.trim();
+    const currentProc = localProcesso.trim();
+    const currentNf = localNf.trim();
 
-    const proc = processo.trim();
+    if (!currentItem) { toast.warning('Preencha o campo Item.'); return; }
+    if (requiresProcesso && !currentProc) { toast.warning('Preencha o campo PROCESSO.'); return; }
+    if (requiresNF && !currentNf) { toast.warning('Preencha o campo NF.'); return; }
+
+    const proc = currentProc;
+    const item = currentItem;
+    const nf = currentNf;
 
     if (isMadeira) {
       const finalAddr = (localEndereco || endereco || '').toUpperCase();
