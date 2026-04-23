@@ -738,42 +738,6 @@ export default function EstoquePage() {
         </DialogContent>
       </Dialog>
 
-      {/* ===== STAT DETAIL DIALOG ===== */}
-      <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
-          {selectedStat && (() => {
-            const statItems: { label: string; value: number; percent: number; color: string }[] = [
-              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground' },
-              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500' },
-              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500' },
-              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-red-500' },
-              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary' },
-            ];
-            const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
-
-            // Per-TEC breakdown
-            const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-              const count = allPosicoes.filter((p: any) => p.estrutura === tec && p.status === selectedStat).length;
-              const totalForTec = cfg.cols.length * cfg.levels * 30;
-              return { name: tec, count, total: totalForTec, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0 };
-            });
-
-            return (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {tecBreakdown.map(b => (
-                    <div key={b.name} className="p-3 rounded-xl border border-border/40 bg-muted/20 flex flex-col items-center">
-                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">{b.name}</div>
-                      <div className="text-xl font-black text-foreground">{b.count}</div>
-                      <div className="text-[10px] font-bold text-muted-foreground/60">{b.percent}%</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
