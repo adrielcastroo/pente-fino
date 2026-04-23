@@ -35,7 +35,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick }: any)
           <div className="text-base font-bold flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             <span>Volume de Operações</span>
-          </CardTitle>
+          </div>
           <p className="text-xs text-muted-foreground mt-0.5">Histórico recente de conferências</p>
         </div>
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary" onClick={() => onExport(data, 'Timeline_Operacoes')}>
