@@ -351,7 +351,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
     <div className="group/header">
       <button onClick={() => setOpen(!open)} className="w-full px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
         <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
-          <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+          <History className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
@@ -586,7 +586,7 @@ export default function HistoryPanel() {
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="w-24 h-24 rounded-[2.5rem] bg-muted/10 flex items-center justify-center mb-6 rotate-6 transition-all duration-500">
-              <FolderOpen className="w-12 h-12 text-muted-foreground/20" />
+              <History className="w-12 h-12 text-muted-foreground/20" />
             </div>
             <h3 className="text-xl font-black text-foreground mb-2">Histórico Vazio</h3>
             <p className="text-muted-foreground text-sm font-medium max-w-xs">Nenhuma conferência encontrada {localSearch ? 'para sua busca' : 'no banco de dados'}.</p>
