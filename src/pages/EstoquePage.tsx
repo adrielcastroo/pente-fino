@@ -288,14 +288,7 @@ export default function EstoquePage() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
           
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button 
-            onClick={() => setScanMode(true)} 
-            className="shrink-0 h-10 sm:h-11 px-4 font-black rounded-xl bg-violet-600 hover:bg-violet-700 shadow-md shadow-violet-500/20 gap-2"
-          >
-            <ScanBarcode className="w-4 h-4" />
-            <span className="hidden sm:inline">Bipagem</span>
-          </Button>
+        <div className="flex items-center gap-3">
           <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Importar</span>

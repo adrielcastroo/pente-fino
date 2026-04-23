@@ -169,16 +169,9 @@ export default function SaidaPage() {
             </h1>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button 
-              onClick={() => setScanMode(true)} 
-              className="shrink-0 h-11 px-5 font-black rounded-xl bg-violet-600 hover:bg-violet-700 shadow-md shadow-violet-500/20 gap-2"
-            >
-              <ScanBarcode className="w-4 h-4" />
-              <span className="hidden sm:inline">Bipagem</span>
-            </Button>
+          <div className="flex items-center gap-3">
 
-            <div className="relative group flex-1 sm:w-64 lg:w-80 ml-1">
+            <div className="relative group flex-1 sm:w-64 lg:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
               <Input 
                 value={search} 
