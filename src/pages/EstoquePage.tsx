@@ -459,7 +459,7 @@ export default function EstoquePage() {
                     </div>
                     <div>
                       <DialogTitle className="text-lg sm:text-xl font-black tracking-tight">
-                        {activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
+                        {activeMad} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
                       <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
                         {occupiedCount} de 30 posições ocupadas
@@ -683,15 +683,15 @@ export default function EstoquePage() {
             ];
             const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
 
-            // Per-TEC breakdown
-            const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-              const tecPosicoes = allPosicoes.filter(p => (p as any).estrutura === tec);
-              const totalForTec = cfg.cols.length * cfg.levels * 30;
+            // Per-MAD breakdown
+            const madBreakdown = Object.entries(MAD_CONFIG).map(([mad, cfg]) => {
+              const madPosicoes = allPosicoes.filter(p => (p as any).estrutura === mad);
+              const totalForMad = cfg.cols.length * cfg.levels * 30;
               let val = 0;
-              if (selectedStat === 'total') val = totalForTec;
-              else if (selectedStat === 'livre') val = totalForTec - tecPosicoes.length;
-              else val = tecPosicoes.filter(p => p.status === selectedStat).length;
-              return { tec, value: val, total: totalForTec, percent: totalForTec ? Math.round((val / totalForTec) * 100) : 0 };
+              if (selectedStat === 'total') val = totalForMad;
+              else if (selectedStat === 'livre') val = totalForMad - madPosicoes.length;
+              else val = madPosicoes.filter(p => p.status === selectedStat).length;
+              return { mad, value: val, total: totalForMad, percent: totalForMad ? Math.round((val / totalForMad) * 100) : 0 };
             });
 
             return (
@@ -711,8 +711,8 @@ export default function EstoquePage() {
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Por Estrutura</div>
                     <div className="h-[180px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={tecBreakdown} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
-                          <XAxis dataKey="tec" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <BarChart data={madBreakdown} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                          <XAxis dataKey="mad" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                           <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                           <ChartTooltip
                             cursor={false}
@@ -730,16 +730,16 @@ export default function EstoquePage() {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={tecBreakdown.filter(t => t.value > 0)}
+                            data={madBreakdown.filter(t => t.value > 0)}
                             dataKey="value"
-                            nameKey="tec"
+                            nameKey="mad"
                             cx="50%"
                             cy="50%"
                             innerRadius={20}
                             outerRadius={36}
                             strokeWidth={0}
                           >
-                            {tecBreakdown.filter(t => t.value > 0).map((_, i) => (
+                            {madBreakdown.filter(t => t.value > 0).map((_, i) => (
                               <Cell key={i} fill={`hsl(var(--primary) / ${1 - i * 0.15})`} />
                             ))}
                           </Pie>
@@ -747,10 +747,10 @@ export default function EstoquePage() {
                       </ResponsiveContainer>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {tecBreakdown.map((t, i) => (
-                        <div key={t.tec} className="flex items-center gap-1.5 text-[10px]">
+                      {madBreakdown.map((t, i) => (
+                        <div key={t.mad} className="flex items-center gap-1.5 text-[10px]">
                           <div className="w-2 h-2 rounded-full" style={{ background: `hsl(var(--primary) / ${1 - i * 0.15})` }} />
-                          <span className="font-bold">{t.tec}</span>
+                          <span className="font-bold">{t.mad}</span>
                           <span className="text-muted-foreground">{t.value}</span>
                         </div>
                       ))}
@@ -825,7 +825,7 @@ export default function EstoquePage() {
                   value={scanInput}
                   onChange={e => setScanInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
-                  placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
+                  placeholder="Ex: MAD01.A.N03 PROC 12345 18,2M"
                   className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
                   autoFocus
                 />
