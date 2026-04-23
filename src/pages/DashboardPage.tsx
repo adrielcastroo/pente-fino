@@ -58,6 +58,7 @@ export default function DashboardPage() {
   } = useDashboard();
 
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
+  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[] } | null>(null);
 
   // Conference summary list (only 50 recent)
   const conferenceSummary = useMemo(() => {
