@@ -454,7 +454,14 @@ export default function MadeiraEstoque() {
             )}
           </div>
 
-          <div className="p-4 border-t border-border/10 bg-muted/30 flex justify-end">
+          <div className="p-4 border-t border-border/10 bg-muted/30 flex justify-between gap-3">
+            <Button 
+              onClick={() => { setSelectedStat(showStatDetail === 'total' || showStatDetail === 'capacidade' ? null : showStatDetail); setShowStatDetail(null); setViewMode('map'); }} 
+              variant="ghost" 
+              className="rounded-xl font-bold px-4 text-cyan-500 hover:bg-cyan-500/10"
+            >
+              Ver no Mapa
+            </Button>
             <Button onClick={() => setShowStatDetail(null)} variant="outline" className="rounded-xl font-bold px-8">
               Fechar
             </Button>
