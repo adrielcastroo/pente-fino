@@ -293,7 +293,21 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="p-4 grid grid-cols-3 gap-3 bg-muted/5 border-b border-border/10">
+            <SummaryStatCard label="Total" value={stats.totalConferencias} color="text-foreground" bg="bg-card" border="border-border/30" />
+            <SummaryStatCard 
+              label="Concluídas" 
+              value={history.filter(h => h.finishedAt).length} 
+              percent={stats.totalConferencias ? Math.round((history.filter(h => h.finishedAt).length / stats.totalConferencias) * 100) : 0} 
+              color="text-emerald-500" bg="bg-emerald-500/5" border="border-emerald-500/20" 
+            />
+            <SummaryStatCard 
+              label="Tempo Médio" 
+              value={stats.avgDuration} 
+              color="text-primary" bg="bg-primary/5" border="border-primary/20" 
+            />
+          </div>
+          <div className="overflow-y-auto max-h-[50vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
