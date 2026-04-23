@@ -79,6 +79,8 @@ export default function EstoquePage() {
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [madeiraImportOpen, setMadeiraImportOpen] = useState(false);
+  const [madeiraVersion, setMadeiraVersion] = useState(0);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
