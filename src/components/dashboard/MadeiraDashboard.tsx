@@ -187,39 +187,57 @@ export default function MadeiraDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         {/* AVARIAS */}
-        <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/20 transition-colors">
-          <CardHeader className="px-5 py-4 flex flex-row items-center justify-between">
+        <button 
+          onClick={() => setDetail('avarias')}
+          className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
+        >
+          <div className="px-5 py-4 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <div className="text-sm font-bold flex items-center gap-2">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                 <span>Avarias</span>
-              </CardTitle>
+              </div>
               <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                 {avariasData.totalAvarias} avarias · {avariasData.totalMetros}m
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary" onClick={() => setDetail('avarias')}>
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
               <Eye className="w-3.5 h-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent className="px-5 pb-5 h-[180px]">
-            {avariasData.data.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Sem avarias registradas</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={avariasData.data} dataKey="value" innerRadius="55%" outerRadius="85%" stroke="transparent" paddingAngle={isLow ? 0 : 3} isAnimationActive={!isLow}>
-                    {avariasData.data.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <ChartTooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(val: any, _name: any, p: any) => [`${val} (${p.payload.percent}%) · ${p.payload.metros}m`, p.payload.name]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="px-5 pb-4 h-[180px] flex flex-col">
+            <div className="flex-1 min-h-0">
+              {avariasData.data.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground italic">Sem avarias registradas</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={avariasData.data} dataKey="value" innerRadius="55%" outerRadius="85%" stroke="transparent" paddingAngle={isLow ? 0 : 3} isAnimationActive={!isLow}>
+                      {avariasData.data.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Pie>
+                    <ChartTooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(val: any, _name: any, p: any) => [`${val} (${p.payload.percent}%) · ${p.payload.metros}m`, p.payload.name]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            {avariasData.data.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {avariasData.data.slice(0, 2).map(d => (
+                  <div key={d.key} className="flex items-center justify-between text-[10px]">
+                    <span className="flex items-center gap-1.5 font-medium truncate max-w-[120px]">
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: d.color }} />
+                      {d.name}
+                    </span>
+                    <span className="font-bold text-muted-foreground">{d.value} un</span>
+                  </div>
+                ))}
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </button>
 
         {/* OCUPAÇÃO */}
         <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/20 transition-colors">
