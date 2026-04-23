@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TreePine, AlertTriangle, MapPin, Hash, Package, Ruler, Calendar, User } from "lucide-react";
+import { TreePine, AlertTriangle, MapPin, Hash, Package, Ruler, Calendar, User, ChevronRight, BarChart3 } from "lucide-react";
 import { formatDateBR } from "@/lib/app-utils";
 import { LoteMestre } from "@/services/lotesMestresService";
 
