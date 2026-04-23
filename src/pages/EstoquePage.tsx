@@ -40,13 +40,13 @@ interface Posicao {
   registro_id: string | null;
 }
 
-const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
-  TEC00: { cols: ['A', 'B'], levels: 9 },
-  TEC01: { cols: ['A', 'B', 'C', 'D', 'E', 'F'], levels: 5 },
-  TEC02: { cols: ['A', 'B'], levels: 4 },
-  TEC03: { cols: ['A', 'B'], levels: 9 },
-  TEC04: { cols: ['A', 'B', 'C'], levels: 5 },
-  TEC05: { cols: ['A', 'B', 'C'], levels: 5 },
+const MAD_CONFIG: Record<string, { cols: string[]; levels: number }> = {
+  MAD00: { cols: ['A', 'B'], levels: 9 },
+  MAD01: { cols: ['A', 'B', 'C', 'D', 'E', 'F'], levels: 5 },
+  MAD02: { cols: ['A', 'B'], levels: 4 },
+  MAD03: { cols: ['A', 'B'], levels: 9 },
+  MAD04: { cols: ['A', 'B', 'C'], levels: 5 },
+  MAD05: { cols: ['A', 'B', 'C'], levels: 5 },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -57,18 +57,18 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
 };
 
-// Constant: total physical slots across all TECs (computed once)
-const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
+// Constant: total physical slots across all MADs (computed once)
+const TOTAL_SLOTS = Object.values(MAD_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
 
 // Reuse centralized formatter
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
   const { isGuest } = useAuth();
-  const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
+  const activeMad = useAppStore(s => s.formData.estoqueActiveMad);
 
   const setFormData = useAppStore(s => s.setFormData);
-  const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
+  const setActiveMad = (val: string) => setFormData({ estoqueActiveMad: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
   const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
@@ -89,9 +89,9 @@ export default function EstoquePage() {
   const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
-  const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
+  const config = MAD_CONFIG[activeMad] || { cols: [], levels: 0 };
 
-  const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
+  const [posicoesForActiveMad, setPosicoesForActiveMad] = useState<Posicao[]>([]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -107,20 +107,20 @@ export default function EstoquePage() {
   const loadPosicoes = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
+      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeMad);
       if (error) throw error;
-      setPosicoesForActiveTec(data as Posicao[]);
+      setPosicoesForActiveMad(data as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
       toast.error('Erro ao carregar dados do estoque');
     }
     setLoading(false);
-  }, [activeTec]);
+  }, [activeMad]);
 
   useEffect(() => { loadStats(); }, [loadStats]);
   useEffect(() => { loadPosicoes(); }, [loadPosicoes]);
 
-  const posicoes = posicoesForActiveTec;
+  const posicoes = posicoesForActiveMad;
   // totalSlots is constant — compute once at module scope below
   const totalSlots = TOTAL_SLOTS;
 
@@ -160,7 +160,7 @@ export default function EstoquePage() {
     // Optimistic UI update — instant feedback, no waiting for network
     const previousStatus = pos.status;
     setDetailPos(prev => prev ? { ...prev, status: newStatus } : null);
-    setPosicoesForActiveTec(prev => prev.map(p => p.id === pos.id ? { ...p, status: newStatus } : p));
+    setPosicoesForActiveMad(prev => prev.map(p => p.id === pos.id ? { ...p, status: newStatus } : p));
     setAllPosicoes(prev => prev.map(p => p.id === pos.id ? { ...p, status: newStatus } as any : p));
     toast.success(`Status → ${STATUS_CONFIG[newStatus]?.label}`, { id: 'status-update' });
 
@@ -169,7 +169,7 @@ export default function EstoquePage() {
     if (error) {
       toast.error('Erro ao atualizar status', { id: 'status-update' });
       setDetailPos(prev => prev ? { ...prev, status: previousStatus } : null);
-      setPosicoesForActiveTec(prev => prev.map(p => p.id === pos.id ? { ...p, status: previousStatus } : p));
+      setPosicoesForActiveMad(prev => prev.map(p => p.id === pos.id ? { ...p, status: previousStatus } : p));
       setAllPosicoes(prev => prev.map(p => p.id === pos.id ? { ...p, status: previousStatus } as any : p));
     }
   }, []);
@@ -352,19 +352,19 @@ export default function EstoquePage() {
         ))}
       </div>
 
-      {/* TEC Tabs */}
+      {/* MAD Tabs */}
       <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 overflow-x-auto custom-scrollbar">
-        {Object.keys(TEC_CONFIG).map(tec => (
+        {Object.keys(MAD_CONFIG).map(mad => (
           <button 
-            key={tec} 
-            onClick={() => setActiveTec(tec)} 
+            key={mad} 
+            onClick={() => setActiveMad(mad)} 
             className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 ${
-              activeTec === tec 
+              activeMad === mad 
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            {tec}
+            {mad}
           </button>
         ))}
       </div>

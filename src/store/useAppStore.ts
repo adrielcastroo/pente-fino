@@ -81,7 +81,7 @@ const INITIAL_FORM_DATA: FormData = {
   lockMetragem: false, cortinaLargura: '', cortinaMetragem: 'm2',
   madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
   motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1',
-  estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
+  estoqueActiveMad: 'MAD01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
 };
 
 export const useAppStore = create<AppState>()(
@@ -162,7 +162,7 @@ export const useAppStore = create<AppState>()(
         const newData = { 
           ...INITIAL_FORM_DATA,
           activeTab: state.formData.activeTab,
-          estoqueActiveTec: state.formData.estoqueActiveTec,
+          estoqueActiveMad: state.formData.estoqueActiveMad,
           diversosTipo: state.formData.diversosTipo // Preserve diversosTipo after reset
         };
         
