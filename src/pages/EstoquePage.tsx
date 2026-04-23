@@ -1031,7 +1031,14 @@ export default function EstoquePage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-border/10 bg-muted/30 flex justify-end">
+          <div className="p-4 border-t border-border/10 bg-muted/30 flex justify-between gap-3">
+            <Button 
+              onClick={() => { setSelectedStat(showStatDetail === 'total' ? null : showStatDetail); setShowStatDetail(null); }} 
+              variant="ghost" 
+              className="rounded-xl font-bold px-4 text-primary hover:bg-primary/10"
+            >
+              Ver no Mapa
+            </Button>
             <Button onClick={() => setShowStatDetail(null)} variant="outline" className="rounded-xl font-bold px-8">
               Fechar
             </Button>
