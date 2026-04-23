@@ -84,11 +84,11 @@ export function generateLoteSistema(
   const baseParts = [addrTrimmed, labelPrefix, mlFormatted].filter(Boolean);
   const base = baseParts.join(' ');
   
-  if (len === 0) return base;
+  if (!existingRegistros || existingRegistros.length === 0) return base;
 
   const usedSuffixes: number[] = [];
   
-  for (let i = 0; i < len; i++) {
+  for (let i = 0, len = existingRegistros.length; i < len; i++) {
     const r = existingRegistros[i];
     
     // Quick, non-string checks first
@@ -111,9 +111,9 @@ export function generateLoteSistema(
       continue;
     }
     
-    const lastDashIndex = ls.lastIndexOf('-');
-    if (lastDashIndex !== -1 && lastDashIndex > base.length - 1) {
-      const suffixStr = ls.slice(lastDashIndex + 1);
+    // Robust suffix extraction: check if it starts with base + '-'
+    if (ls.startsWith(`${base}-`)) {
+      const suffixStr = ls.slice(base.length + 1);
       const num = parseInt(suffixStr, 10);
       if (!isNaN(num)) usedSuffixes.push(num);
     }
