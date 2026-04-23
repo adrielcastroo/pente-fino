@@ -1190,7 +1190,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
                     lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
-                  placeholder="TEC01.A.N03" autoComplete="off"
+                  placeholder={isMadeira ? "MAD01.A.N01" : "TEC01.A.N03"} autoComplete="off"
                   readOnly={lockEndereco && !!lockedEndereco}
                 />
                 {enderecoError && <p className="text-[10px] text-destructive font-medium ml-1">{enderecoError}</p>}
