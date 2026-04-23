@@ -108,67 +108,7 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-        <button 
-          onClick={() => setDetailDialog('conferentes')} 
-          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
-        >
-          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
-            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <Users className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferentes}</div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferentes</p>
-              {stats.topConferentes.length > 0 && (
-                <p className="text-[10px] text-muted-foreground/40 mt-1 truncate">Destaque: <span className="text-primary/60 font-bold">{stats.topConferentes[0].name}</span></p>
-              )}
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-
-        <button 
-          onClick={() => setDetailDialog('conferences')} 
-          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75"
-        >
-          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
-            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <BarChart3 className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferencias}</div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferências</p>
-              {history.length > 0 && (
-                <p className="text-[10px] text-muted-foreground/40 mt-1 truncate">Último: <span className="text-primary/60 font-bold">{history[0].processo || history[0].name || '—'}</span></p>
-              )}
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-
-        <button 
-          onClick={() => setDetailDialog('registros')} 
-          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150"
-        >
-          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
-            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <Layers3 className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalRegistros}</div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Registros</p>
-              {stats.categorias.length > 0 && (
-                <p className="text-[10px] text-muted-foreground/40 mt-1 truncate">Principal: <span className="text-primary/60 font-bold">{stats.categorias[0].name}</span></p>
-              )}
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-      </div>
+      {/* Stats cards removed */}
 
       {/* Quick Access Grid */}
       <div className="space-y-4">
