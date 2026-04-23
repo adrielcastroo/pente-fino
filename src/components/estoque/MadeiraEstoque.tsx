@@ -485,7 +485,7 @@ export default function MadeiraEstoque() {
                       <div className="h-32 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={selectedCellItems.map(r => ({ name: r.item.slice(0, 10), m_linear: r.m_linear || 0 }))}>
-                            <CartGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                             <XAxis dataKey="name" hide />
                             <YAxis hide />
                             <ChartTooltip 
