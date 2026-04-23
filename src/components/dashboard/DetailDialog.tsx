@@ -14,8 +14,25 @@ const CHART_COLORS = [
   'hsl(var(--primary) / 0.2)',
 ];
 
-export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClose: () => void }) => (
-  <Dialog open={!!detailChart} onOpenChange={onClose}>
+function SummaryStatCard({ label, value, percent, color, bg, border }: { label: string; value: string | number; percent?: number; color: string; bg: string; border: string }) {
+  return (
+    <div className={`p-4 text-center space-y-1 rounded-xl border ${border} ${bg} transition-all duration-200`}>
+      <div className={`text-xl sm:text-2xl font-black tabular-nums ${color}`}>{value}</div>
+      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{label}</div>
+      {percent !== undefined && (
+        <div className="text-[10px] font-semibold text-muted-foreground/70">{percent}%</div>
+      )}
+    </div>
+  );
+}
+
+export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClose: () => void }) => {
+  const totalValue = detailChart?.data?.reduce((acc: number, item: any) => acc + (item.value || item.count || 0), 0) || 0;
+  const topItems = detailChart?.data?.slice(0, 3) || [];
+
+  return (
+    <Dialog open={!!detailChart} onOpenChange={onClose}>
+
     <DialogContent className="max-w-3xl rounded-2xl border border-border/30 shadow-2xl shadow-primary/10 p-0 overflow-hidden bg-background/95 backdrop-blur-xl">
       <DialogHeader className="p-6 pb-3 border-b border-border/20">
         <div className="flex items-center gap-3">
