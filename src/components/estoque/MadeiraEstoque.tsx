@@ -83,6 +83,7 @@ export default function MadeiraEstoque() {
   const [confirmChange, setConfirmChange] = useState<{ col: string; nivel: number; newTipo: 'lamina' | 'base' } | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
+  const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [showStatDetail, setShowStatDetail] = useState<string | null>(null);
 
   const [editForm, setEditForm] = useState<{
