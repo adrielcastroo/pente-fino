@@ -361,26 +361,26 @@ export default function RightPanel() {
         </div>
       )}
 
-      <div className="px-3 sm:px-5 py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+      <div className="px-3 sm:px-5 py-3 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input 
               value={localSearch} 
               onChange={e => setLocalSearch(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
-              placeholder="Buscar material, lote ou endereço..." 
+              className="w-full h-10 sm:h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
+              placeholder="Material, lote ou endereço..." 
               autoComplete="off" 
             />
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex-1 sm:flex-none h-11 px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-2 transition-all hover:bg-muted/50 group">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex-1 lg:flex-none h-10 sm:h-11 px-3 sm:px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-2 transition-all hover:bg-muted/50 group">
               <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-primary" />
               <select 
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
-                className="flex-1 sm:flex-none bg-transparent border-none outline-none text-[10px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground"
+                className="flex-1 lg:flex-none bg-transparent border-none outline-none text-[10px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground"
               >
                 <option value="">Ordenar</option>
                 <option value="item">A-Z</option>
@@ -397,15 +397,14 @@ export default function RightPanel() {
                     variant="outline" 
                     size="icon" 
                     onClick={handleClearAll} 
-                    className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
+                    className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Limpar Tabela</TooltipContent>
               </Tooltip>
             )}
-
           </div>
         </div>
       </div>
@@ -537,17 +536,17 @@ export default function RightPanel() {
               </tbody>
               {sortedRows.length > 0 && (
                 <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
-                    <td className="px-4 py-4">FIM</td>
+                  <tr className="bg-primary/95 text-white font-black font-mono text-[9px] sm:text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest backdrop-blur-sm">
+                    <td className="px-2 sm:px-4 py-3 sm:py-4">TOTAL</td>
                     {columns.map(column => (
-                      <td key={column.key} className="px-4 py-4">
-                        {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
+                      <td key={column.key} className="px-2 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                        {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITS' : 'IT'}` : ''}
                         {column.key === 'mLinear' ? formatML(totals.ml) : ''}
-                        {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
-                        {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
+                        {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + 'm²' : '') : ''}
+                        {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} U` : '') : ''}
                       </td>
                     ))}
-                    <td className="px-4 py-4"></td>
+                    <td className="px-2 sm:px-4 py-3 sm:py-4"></td>
                   </tr>
                 </tfoot>
               )}

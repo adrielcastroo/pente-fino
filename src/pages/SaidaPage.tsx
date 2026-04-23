@@ -161,23 +161,22 @@ export default function SaidaPage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 flex-shrink-0">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground">
               Arquivos de <span className="text-primary italic">Saída</span>
             </h1>
           </div>
           
-          <div className="flex items-center gap-3">
-
-            <div className="relative group flex-1 sm:w-64 lg:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3">
+            <div className="relative group flex-1 xs:w-64 sm:w-72 lg:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Filtrar por item, PROC, conferente..."
-                className="pl-10 h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold"
+                placeholder="Item, PROC, conferente..."
+                className="pl-9 h-10 sm:h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm"
               />
             </div>
           </div>

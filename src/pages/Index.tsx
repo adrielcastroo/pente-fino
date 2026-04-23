@@ -33,30 +33,34 @@ const PageSkeleton = memo(() => (
 const TabRenderer = memo(({ activeTab, isWide, isMobile, isTablet }: { activeTab: string; isWide?: boolean; isMobile: boolean; isTablet: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
   
+  // Show dual panel only on wide screens (xl and up) when it's a form tab
   if (isWide && isFormTab && !isMobile && !isTablet) {
     return (
       <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-6 2xl:gap-8">
-        <div className="w-full xl:w-[460px] 2xl:w-[540px] shrink-0 h-full">
+        <div className="w-full xl:w-[460px] 2xl:w-[540px] shrink-0 h-full overflow-y-auto custom-scrollbar pr-1">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full hidden xl:block animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex-1 min-w-0 h-full hidden xl:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
           <RightPanel />
         </div>
       </div>
     );
   }
 
+  // Mobile/Tablet or non-form tabs
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden animate-in fade-in duration-300">
-      {activeTab === 'inicio' && <DashboardPage />}
-      {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
-      {activeTab === 'motor' && <MotorControlePage />}
-      {activeTab === 'estoque' && <EstoquePage />}
-      {activeTab === 'saida' && <SaidaPage />}
-      {activeTab === 'table' && <RightPanel />}
-      {activeTab === 'history' && <HistoryPanel />}
-      {activeTab === 'settings' && <SettingsPage />}
-      {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
+      <div className="space-y-4">
+        {activeTab === 'inicio' && <DashboardPage />}
+        {(activeTab === 'tecido' || activeTab === 'madeira') && <LeftPanel />}
+        {activeTab === 'motor' && <MotorControlePage />}
+        {activeTab === 'estoque' && <EstoquePage />}
+        {activeTab === 'saida' && <SaidaPage />}
+        {activeTab === 'table' && <RightPanel />}
+        {activeTab === 'history' && <HistoryPanel />}
+        {activeTab === 'settings' && <SettingsPage />}
+        {!['inicio', 'tecido', 'madeira', 'motor', 'estoque', 'saida', 'table', 'history', 'settings'].includes(activeTab) && <DashboardPage />}
+      </div>
     </div>
   );
 });
@@ -104,9 +108,9 @@ export default function Index() {
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative">
-            <div className="min-h-full w-full max-w-[2400px] mx-auto">
+            <div className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-3 sm:p-5 lg:p-6 xl:p-8 2xl:p-10">
+                <div className="p-4 sm:p-6 lg:p-8 xl:p-10">
                   <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} isTablet={isTablet} />
                 </div>
               </Suspense>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useAppStore } from '@/store/useAppStore';
 import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FolderOpen, Calendar, Waves, TreePine, Settings2, Warehouse, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -108,12 +109,32 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      {/* Stats cards removed */}
+      <StatCards stats={stats} onStatClick={handleStatClick} />
 
-      {/* System modules cards removed */}
+      {/* System Modules (Shortcut cards) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+        {[
+          { id: 'tecido', label: 'Tecido', icon: Waves, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
+          { id: 'madeira', label: 'Madeira', icon: TreePine, color: 'text-emerald-500', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
+          { id: 'motor', label: 'Motores', icon: Settings2, color: 'text-amber-500', bg: 'bg-amber-500/5', border: 'border-amber-500/20' },
+          { id: 'estoque', label: 'Estoque', icon: Warehouse, color: 'text-blue-500', bg: 'bg-blue-500/5', border: 'border-blue-500/20' },
+          { id: 'saida', label: 'Saída', icon: Archive, color: 'text-purple-500', bg: 'bg-purple-500/5', border: 'border-purple-500/20' },
+        ].map(mod => (
+          <button
+            key={mod.id}
+            onClick={() => useAppStore.getState().setFormData({ activeTab: mod.id as any })}
+            className={`p-3 sm:p-4 rounded-2xl border ${mod.border} ${mod.bg} hover:shadow-lg transition-all active:scale-95 text-center flex flex-col items-center justify-center gap-2 group`}
+          >
+            <div className={`p-2 sm:p-3 rounded-xl bg-background ${mod.color} shadow-sm group-hover:scale-110 transition-transform`}>
+              <mod.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="text-[10px] sm:text-xs font-bold text-foreground tracking-tight">{mod.label}</span>
+          </button>
+        ))}
+      </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="md:col-span-2 xl:col-span-2">
           <TimelineChart data={stats.timeline} onExport={handleExport} />
         </div>
@@ -128,39 +149,35 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart} 
         />
         
-        {!isMobile && (
-          <>
-            <SummaryChart 
-              title="Distribuição" 
-              desc="Setores Operacionais" 
-              data={stats.categorias} 
-              type="pie" 
-              icon={Layers3} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Distribuição" 
+          desc="Setores" 
+          data={stats.categorias} 
+          type="pie" 
+          icon={Layers3} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart 
-              title="Especificações" 
-              desc="Materiais / Tipos" 
-              data={stats.tipos} 
-              type="pie" 
-              icon={TrendingUp} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Materiais" 
+          desc="Tipos" 
+          data={stats.tipos} 
+          type="pie" 
+          icon={TrendingUp} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart
-              title="Registros por Conferência"
-              desc="Volume por Sessão"
-              data={registrosPerConference.slice(0, 10)}
-              type="bar"
-              icon={Package}
-              chartKey="value"
-              onDetailClick={setDetailChart}
-            />
-          </>
-        )}
+        <SummaryChart
+          title="Volume"
+          desc="Por Conferência"
+          data={registrosPerConference.slice(0, 10)}
+          type="bar"
+          icon={Package}
+          chartKey="value"
+          onDetailClick={setDetailChart}
+        />
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
@@ -216,23 +233,23 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="overflow-y-auto max-h-[40vh]">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-muted/30">
+          <div className="overflow-x-auto overflow-y-auto max-h-[40vh] custom-scrollbar">
+            <table className="w-full text-[10px] sm:text-xs">
+              <thead className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Nome</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferências</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Registros</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Último</th>
+                  <th className="px-3 sm:px-4 py-3 text-left font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Nome</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Conf.</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Regs</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Último</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
                 {stats.conferenteDetails.map(c => (
-                  <tr key={c.name} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
-                    <td className="px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px]">{formatDateBR(c.lastDate)}</td>
+                  <tr key={c.name} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-bold text-foreground">{c.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono text-muted-foreground/60">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -281,29 +298,27 @@ export default function DashboardPage() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="overflow-y-auto max-h-[40vh]">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-muted/30">
+          <div className="overflow-x-auto overflow-y-auto max-h-[40vh] custom-scrollbar">
+            <table className="w-full text-[10px] sm:text-xs">
+              <thead className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Processo</th>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferente</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Duração</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Itens</th>
+                  <th className="px-3 sm:px-4 py-3 text-left font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Processo</th>
+                  <th className="px-3 sm:px-4 py-3 text-left font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Conferente</th>
+                  <th className="px-3 sm:px-4 py-3 text-center font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Início</th>
+                  <th className="px-3 sm:px-4 py-3 text-center font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Duração</th>
+                  <th className="px-3 sm:px-4 py-3 text-right font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">Itens</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
                 {conferenceSummary.map(c => (
-                  <tr key={c.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-bold text-foreground truncate max-w-[150px]">{c.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
-                    <td className="px-4 py-3 text-center font-mono text-emerald-500/80 text-[10px]">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-4 py-3 text-center font-mono text-muted-foreground/60 text-[10px]">{formatTimeBR(c.finishedAt)}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant="outline" className="text-[8px] font-bold px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">{c.duration}</Badge>
+                  <tr key={c.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-bold text-foreground truncate max-w-[120px]">{c.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
+                    <td className="px-3 sm:px-4 py-3 text-center font-mono text-emerald-600/80">{formatTimeBR(c.startedAt)}</td>
+                    <td className="px-3 sm:px-4 py-3 text-center">
+                      <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">{c.duration}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-primary">{c.registros}</td>
+                    <td className="px-3 sm:px-4 py-3 text-right font-mono font-bold text-primary">{c.registros}</td>
                   </tr>
                 ))}
               </tbody>
