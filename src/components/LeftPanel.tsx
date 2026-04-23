@@ -664,6 +664,27 @@ export const LeftPanel = memo(function LeftPanel() {
     if (restored) toast.success('Rolo restaurado');
   };
 
+  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Update store with current local values before moving/adding
+      if (localItem !== item) setItem(localItem);
+      if (localNf !== nf) setNf(localNf);
+      if (localProcesso !== processo) setProcesso(localProcesso);
+      if (localEndereco !== endereco) setEndereco(localEndereco);
+
+      // If we have a next field and it's not read-only, go to it
+      if (nextRef?.current && !nextRef.current.readOnly) {
+        nextRef.current.focus();
+        nextRef.current.select();
+      } else {
+        // If next field is read-only or doesn't exist, try to add
+        handleAdd();
+      }
+    }
+  }, [localItem, item, setItem, localNf, nf, setNf, localProcesso, processo, setProcesso, localEndereco, endereco, setEndereco, handleAdd]);
+
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
