@@ -41,7 +41,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
       </CardHeader>
       <CardContent className="px-2 pb-6 pt-2 h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
             {!isLow && (
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
