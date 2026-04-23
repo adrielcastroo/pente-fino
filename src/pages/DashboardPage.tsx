@@ -205,6 +205,18 @@ export default function DashboardPage() {
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
+      {statModal && (
+        <StatDetailModal 
+          isOpen={statModal.isOpen}
+          onClose={() => setStatModal(null)}
+          title={statModal.title}
+          value={statModal.value}
+          type={statModal.type}
+          stats={statModal.stats}
+          complementaryInfo="Dados sincronizados com o banco de dados em tempo real. As métricas consideram os últimos 30 dias de operação."
+        />
+      )}
+
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[80vh]">
