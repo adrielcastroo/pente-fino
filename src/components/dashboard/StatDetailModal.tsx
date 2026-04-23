@@ -57,6 +57,10 @@ export const StatDetailModal = ({
   const getTypeColors = () => {
     switch (type.toLowerCase()) {
       case 'ocupado': return { primary: 'text-primary', bg: 'bg-primary/10', chart: 'hsl(var(--primary))' };
+      case 'ocupacao': return { primary: 'text-cyan-400', bg: 'bg-cyan-500/10', chart: '#22d3ee' };
+      case 'lamina': return { primary: 'text-emerald-400', bg: 'bg-emerald-500/10', chart: '#34d399' };
+      case 'base': return { primary: 'text-violet-400', bg: 'bg-violet-500/10', chart: '#a78bfa' };
+      case 'avarias': return { primary: 'text-red-400', bg: 'bg-red-500/10', chart: '#f87171' };
       case 'reservado': return { primary: 'text-amber-500', bg: 'bg-amber-500/10', chart: '#f59e0b' };
       case 'bloqueado': return { primary: 'text-destructive', bg: 'bg-destructive/10', chart: 'hsl(var(--destructive))' };
       case 'livre': return { primary: 'text-emerald-500', bg: 'bg-emerald-500/10', chart: '#10b981' };
