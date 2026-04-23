@@ -656,6 +656,20 @@ export default function EstoquePage() {
                     ))}
                   </div>
 
+                  {detailPos.avaria_foto_url && (
+                    <div className="space-y-2.5">
+                      <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Foto do Item</div>
+                      <div className="rounded-2xl overflow-hidden border border-border/30 bg-muted/5">
+                        <img 
+                          src={detailPos.avaria_foto_url} 
+                          alt={detailPos.item} 
+                          className="w-full h-auto max-h-64 object-contain cursor-zoom-in"
+                          onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Status Actions */}
                   <div className="space-y-2.5 sm:space-y-3">
                     <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
