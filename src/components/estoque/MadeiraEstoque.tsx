@@ -475,17 +475,40 @@ export default function MadeiraEstoque() {
                     <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Quadrante vazio</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {selectedCellItems.map(r => (
-                      <MadeiraCard
-                        key={r.id}
-                        item={r}
-                        loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
-                        onClick={() => { setSelectedCell(null); setDetail(r); }}
-                      />
-                    ))}
-                  </div>
+                  <div className="space-y-6">
+                    {/* Distribution Summary Chart */}
+                    <div className="p-4 rounded-xl border border-border/30 bg-muted/5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <BarChart3 className="w-4 h-4 text-primary" />
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Distribuição de M Linear</h4>
+                      </div>
+                      <div className="h-32 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={selectedCellItems.map(r => ({ name: r.item.slice(0, 10), m_linear: r.m_linear || 0 }))}>
+                            <CartGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="name" hide />
+                            <YAxis hide />
+                            <ChartTooltip 
+                              contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                              labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                            />
+                            <Bar dataKey="m_linear" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {selectedCellItems.map(r => (
+                        <MadeiraCard
+                          key={r.id}
+                          item={r}
+                          loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
+                          onClick={() => { setSelectedCell(null); setDetail(r); }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </>
