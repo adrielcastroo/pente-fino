@@ -114,9 +114,40 @@ export default function DashboardPage() {
       <StatCards 
         stats={stats} 
         onStatClick={(tab) => {
-          if (tab === 'history') setDetailDialog('conferences');
-          else if (tab === 'table') setDetailDialog('registros');
-          else if (tab === 'inicio') setDetailDialog('conferentes');
+          if (tab === 'history') {
+            setStatModal({
+              isOpen: true,
+              title: 'Conferências',
+              value: stats.totalConferencias,
+              type: 'total',
+              stats: [
+                { label: 'Concluídas', value: history.filter(h => h.finishedAt).length, percent: 85, trend: 'up' },
+                { label: 'Em Andamento', value: history.filter(h => !h.finishedAt).length, percent: 15, trend: 'down' }
+              ]
+            });
+          } else if (tab === 'table') {
+            setStatModal({
+              isOpen: true,
+              title: 'Registros',
+              value: stats.totalRegistros,
+              type: 'ocupado',
+              stats: [
+                { label: 'Tecido', value: stats.categorias.find(c => c.name === 'Tecido')?.value || 0, percent: 42, trend: 'up' },
+                { label: 'Madeira', value: stats.categorias.find(c => c.name === 'Madeira')?.value || 0, percent: 38, trend: 'up' }
+              ]
+            });
+          } else if (tab === 'inicio') {
+            setStatModal({
+              isOpen: true,
+              title: 'Conferentes',
+              value: stats.totalConferentes,
+              type: 'livre',
+              stats: [
+                { label: 'Ativos Hoje', value: stats.topConferentes.length, percent: 92, trend: 'up' },
+                { label: 'Média/Dia', value: Math.round(stats.totalRegistros / 30), percent: 5, trend: 'down' }
+              ]
+            });
+          }
         }} 
       />
 
