@@ -5,7 +5,7 @@ import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
-import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet, Clock } from 'lucide-react';
+import { History, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet, Clock } from 'lucide-react';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -79,7 +79,7 @@ function EditRegistroDialog({
       <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none">
         <DialogHeader className="p-8 bg-muted/30">
           <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
+             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><History className="w-5 h-5" /></div>
              Editar Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-medium mt-1">
