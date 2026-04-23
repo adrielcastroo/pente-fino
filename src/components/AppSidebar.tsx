@@ -1,4 +1,4 @@
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ScanBarcode } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
 import { AppTab } from '@/types';
@@ -29,8 +29,8 @@ const menuItems: { key: AppTab; label: string; icon: any }[] = [
   { key: 'tecido', label: 'Tecido', icon: Waves },
   { key: 'madeira', label: 'Madeira', icon: TreePine },
   { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
-  { key: 'estoque', label: 'Estoque', icon: Warehouse },
-  { key: 'saida', label: 'Saída', icon: Archive },
+  { key: 'estoque', label: 'Estoque', icon: ScanBarcode },
+  { key: 'saida', label: 'Saída', icon: ScanBarcode },
   { key: 'table', label: 'Tabela', icon: Table },
   { key: 'history', label: 'Histórico', icon: FolderOpen },
 ];
