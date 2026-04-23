@@ -165,6 +165,8 @@ export default function MadeiraEstoque() {
     let totalOcc = 0;
     let laminasCells = 0;
     let basesCells = 0;
+    const totalCells = COLUNAS.length * NIVEIS;
+
     for (const col of COLUNAS) {
       for (let nivel = 1; nivel <= NIVEIS; nivel++) {
         const q = getQuadrante(col, nivel);
@@ -174,13 +176,21 @@ export default function MadeiraEstoque() {
         else basesCells++;
       }
     }
+    
+    const avariasCount = rows.filter(r => r.avaria_tipo).length;
+
     return {
       totalItens: rows.length,
-      avarias: rows.filter(r => r.avaria_tipo).length,
+      avarias: avariasCount,
       capacidade: totalCap,
       ocupacao: totalOcc,
       laminasCells,
       basesCells,
+      totalCells,
+      percentOcupacao: totalCap ? Math.round((totalOcc / totalCap) * 100) : 0,
+      percentLaminas: totalCells ? Math.round((laminasCells / totalCells) * 100) : 0,
+      percentBases: totalCells ? Math.round((basesCells / totalCells) * 100) : 0,
+      percentAvarias: rows.length ? Math.round((avariasCount / rows.length) * 100) : 0,
     };
   }, [cellMap, quadrantes, rows]);
 
