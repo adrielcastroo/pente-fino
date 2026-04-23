@@ -108,9 +108,20 @@ export default function EstoquePage() {
   const loadPosicoes = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('*, registros(avaria_foto_url)')
+        .eq('estrutura', activeTec);
+      
       if (error) throw error;
-      setPosicoesForActiveTec(data as Posicao[]);
+      
+      // Flatten the join result
+      const flattened = (data as any[]).map(p => ({
+        ...p,
+        avaria_foto_url: p.registros?.avaria_foto_url
+      }));
+      
+      setPosicoesForActiveTec(flattened as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
       toast.error('Erro ao carregar dados do estoque');
