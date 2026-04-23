@@ -84,7 +84,6 @@ export default function MadeiraEstoque() {
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
-  const [showStatDetail, setShowStatDetail] = useState<string | null>(null);
 
   const [editForm, setEditForm] = useState<{
     item: string;
@@ -264,9 +263,9 @@ export default function MadeiraEstoque() {
         ].map(s => (
           <Card 
             key={s.label} 
-            onClick={() => setShowStatDetail(s.key)}
+            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
             className={`border ${s.border} ${s.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              showStatDetail === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
             }`}
           >
             <CardContent className="p-4 text-center space-y-1">
@@ -278,196 +277,7 @@ export default function MadeiraEstoque() {
         ))}
       </div>
 
-      {/* Stat Detail Dialog */}
-      <Dialog open={!!showStatDetail} onOpenChange={(open) => !open && setShowStatDetail(null)}>
-        <DialogContent className="sm:max-w-[600px] border-border/40 bg-card/95 backdrop-blur-xl rounded-3xl p-0 overflow-hidden shadow-2xl">
-          <DialogHeader className="p-6 pb-4 border-b border-border/10 bg-muted/20">
-            <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl border ${
-                showStatDetail === 'total' ? 'bg-card/40 border-border/30' :
-                showStatDetail === 'capacidade' ? 'bg-primary/5 border-primary/20' :
-                showStatDetail === 'ocupacao' ? 'bg-cyan-500/5 border-cyan-500/20' :
-                showStatDetail === 'lamina' ? 'bg-emerald-500/5 border-emerald-500/20' :
-                showStatDetail === 'base' ? 'bg-violet-500/5 border-violet-500/20' :
-                'bg-red-500/5 border-red-500/20'
-              }`}>
-                {showStatDetail === 'total' ? <Package className="w-5 h-5 text-foreground" /> :
-                 showStatDetail === 'capacidade' ? <Box className="w-5 h-5 text-primary" /> :
-                 showStatDetail === 'ocupacao' ? <LayoutGrid className="w-5 h-5 text-cyan-400" /> :
-                 showStatDetail === 'lamina' ? <Layers className="w-5 h-5 text-emerald-400" /> :
-                 showStatDetail === 'base' ? <Layers className="w-5 h-5 text-violet-400" /> :
-                 <AlertTriangle className="w-5 h-5 text-red-400" />}
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-black tracking-tight">
-                  {showStatDetail === 'total' ? 'Inventário de Madeira' :
-                   showStatDetail === 'capacidade' ? 'Capacidade de Armazenagem' :
-                   showStatDetail === 'ocupacao' ? 'Taxa de Ocupação' :
-                   showStatDetail === 'lamina' ? 'Estoque de Lâminas' :
-                   showStatDetail === 'base' ? 'Estoque de Bases' :
-                   'Relatório de Avarias'}
-                </DialogTitle>
-                <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5">
-                  Informações detalhadas sobre o estoque de madeira
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-6">
-            {showStatDetail === 'total' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/40">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total de Itens</div>
-                    <div className="text-2xl font-black text-foreground">{stats.totalItens}</div>
-                    <div className="text-[10px] font-bold text-muted-foreground/60 mt-1">Registros ativos</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Média por Quadrante</div>
-                    <div className="text-2xl font-black text-primary">{(stats.totalItens / stats.totalCells).toFixed(1)}</div>
-                    <div className="text-[10px] font-bold text-primary/60 mt-1">Itens / posição</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Breakdown por Tipo de Estrutura</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="text-xs font-bold">Lâminas (24 pos.)</span>
-                      </div>
-                      <span className="text-xs font-black text-emerald-500">{stats.laminasCells} quadrantes</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-violet-500" />
-                        <span className="text-xs font-bold">Bases (18 pos.)</span>
-                      </div>
-                      <span className="text-xs font-black text-violet-500">{stats.basesCells} quadrantes</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showStatDetail === 'ocupacao' && (
-              <div className="space-y-4">
-                <div className="p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 text-center">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-cyan-500 mb-2">Ocupação Global</div>
-                  <div className="text-4xl font-black text-cyan-500 tabular-nums">{stats.percentOcupacao}%</div>
-                  <div className="text-xs font-bold text-cyan-500/60 mt-1">{stats.ocupacao} de {stats.capacidade} posições utilizadas</div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Ocupação por Coluna</h4>
-                  <div className="space-y-2">
-                    {COLUNAS.map(col => {
-                      let colCap = 0;
-                      let colOcc = 0;
-                      for(let n=1; n<=NIVEIS; n++) {
-                        const q = getQuadrante(col, n);
-                        colCap += q.capacidade;
-                        colOcc += (cellMap[`${col}-${n}`] || []).length;
-                      }
-                      const percent = Math.round((colOcc / colCap) * 100);
-                      return (
-                        <div key={col} className="flex items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/30">
-                          <div className="w-8 font-black text-xs text-primary">COL {col}</div>
-                          <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
-                            <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${percent}%` }} />
-                          </div>
-                          <div className="text-[10px] font-bold text-muted-foreground w-16 text-right">{colOcc}/{colCap}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showStatDetail === 'avarias' && (
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Itens com Avaria ({stats.avarias})</h4>
-                <div className="space-y-2">
-                  {rows.filter(r => r.avaria_tipo).map(r => (
-                    <div key={r.id} className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black font-mono">{r.item}</span>
-                        <Badge variant="outline" className="text-[9px] font-bold uppercase bg-red-500/10 text-red-400 border-red-500/20">
-                          {AVARIA_LABELS[r.avaria_tipo || ''] || r.avaria_tipo}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3 h-3" />
-                          {r.endereco}
-                        </div>
-                        {r.lote && <span>Lote: {r.lote}</span>}
-                      </div>
-                      {r.avaria_descricao && (
-                        <p className="text-[11px] text-muted-foreground italic leading-relaxed">
-                          "{r.avaria_descricao}"
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                  {rows.filter(r => r.avaria_tipo).length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground text-xs font-medium italic">
-                      Nenhuma avaria registrada.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {(showStatDetail === 'lamina' || showStatDetail === 'base') && (
-              <div className="space-y-4">
-                <div className="p-5 rounded-2xl bg-muted/30 border border-border/40 text-center">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Total de Quadrantes ({showStatDetail === 'lamina' ? 'Lâmina' : 'Base'})</div>
-                  <div className={`text-4xl font-black tabular-nums ${showStatDetail === 'lamina' ? 'text-emerald-500' : 'text-violet-500'}`}>
-                    {showStatDetail === 'lamina' ? stats.laminasCells : stats.basesCells}
-                  </div>
-                  <div className="text-xs font-bold text-muted-foreground/60 mt-1">Capacidade total de {showStatDetail === 'lamina' ? stats.laminasCells * CAPACIDADE_LAMINA : stats.basesCells * CAPACIDADE_BASE} unidades</div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Resumo por Coluna</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    {COLUNAS.map(col => {
-                      let count = 0;
-                      for(let n=1; n<=NIVEIS; n++) {
-                        if (getQuadrante(col, n).tipo_ocupacao === showStatDetail) count++;
-                      }
-                      return (
-                        <div key={col} className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
-                          <div className="text-[9px] font-black text-muted-foreground uppercase mb-1">COL {col}</div>
-                          <div className={`text-xl font-black ${showStatDetail === 'lamina' ? 'text-emerald-500' : 'text-violet-500'}`}>{count}</div>
-                          <div className="text-[9px] font-bold text-muted-foreground/60 uppercase">quadrantes</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 border-t border-border/10 bg-muted/30 flex justify-between gap-3">
-            <Button 
-              onClick={() => { setSelectedStat(showStatDetail === 'total' || showStatDetail === 'capacidade' ? null : showStatDetail); setShowStatDetail(null); setViewMode('map'); }} 
-              variant="ghost" 
-              className="rounded-xl font-bold px-4 text-cyan-500 hover:bg-cyan-500/10"
-            >
-              Ver no Mapa
-            </Button>
-            <Button onClick={() => setShowStatDetail(null)} variant="outline" className="rounded-xl font-bold px-8">
-              Fechar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Estrutura tab & View Toggle */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 w-full sm:w-auto">
           <button className="flex-1 px-6 py-2.5 rounded-lg text-xs font-black tracking-wide bg-primary text-primary-foreground shadow-md shadow-primary/20 flex items-center justify-center gap-2 min-w-[120px]">
