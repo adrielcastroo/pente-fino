@@ -104,30 +104,28 @@ const TopBar = memo(function TopBar() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
           {isGuest && (
-            <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
-              <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
-              <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
+            <div className="relative group w-full max-w-[100px] xs:max-w-[140px] sm:max-w-[200px] md:max-w-[280px]">
+              <label htmlFor="conferente-input" className="sr-only">Conferente</label>
+              <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
                 <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <input
                 id="conferente-input"
-                className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[10px] xs:text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                className="h-9 sm:h-10 w-full rounded-xl border border-border/50 bg-muted/30 pl-8 sm:pl-10 pr-2 text-[10px] sm:text-xs font-bold tracking-tight focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all"
                 value={conferente}
                 onChange={e => setConferente(e.target.value)}
-                placeholder={isMobile ? "Conf..." : "Conferente..."}
+                placeholder={isMobile ? "Nome..." : "Identifique-se..."}
                 autoComplete="name"
-                required
-                aria-required="true"
               />
             </div>
           )}
 
           {!isGuest && user && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-xl border border-primary/10">
-              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-primary" />
+            <div className="hidden xs:flex items-center gap-2 px-2.5 py-1.5 bg-primary/5 rounded-xl border border-primary/10">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-primary" />
               </div>
-              <span className="text-xs font-bold text-foreground truncate max-w-[100px]">
+              <span className="text-[10px] sm:text-xs font-bold text-foreground truncate max-w-[60px] sm:max-w-[100px]">
                 {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
               </span>
             </div>
