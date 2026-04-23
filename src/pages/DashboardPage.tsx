@@ -80,39 +80,49 @@ export default function DashboardPage() {
   }, [history]);
 
   return (
-    <div className="space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
+    <div className="space-y-8 sm:space-y-10 lg:space-y-12 max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-12 overflow-x-hidden">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-border/40">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm max-w-lg">
-            Acompanhe a produtividade, gerencie fluxos e exporte relatórios.
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-6 sm:pt-8 pb-6 border-b border-border/40 relative">
+        <div className="absolute -left-8 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-primary rounded-full blur-[1px]" />
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-foreground">
+              Dashboard
+            </h1>
+            <Badge variant="secondary" className="h-6 px-2 text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none">
+              Real-time
+            </Badge>
+          </div>
+          <p className="text-muted-foreground/70 text-sm sm:text-base font-medium max-w-xl">
+            Acompanhe a produtividade, gerencie fluxos e exporte relatórios consolidados.
           </p>
         </div>
         
-        <div className="flex items-center gap-3 shrink-0">
-          <Badge variant="outline" className="text-[10px] font-bold px-2.5 py-1 rounded-lg border-primary/20 text-primary bg-primary/5">
-            <Clock className="w-3 h-3 mr-1" />
-            Tempo médio: {stats.avgDuration}
-          </Badge>
+        <div className="flex items-center gap-4 shrink-0 bg-muted/30 p-1.5 rounded-2xl border border-border/50">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-xl shadow-sm border border-border/40">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Média: {stats.avgDuration}</span>
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
-                <Download className="w-4 h-4" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300" 
+                onClick={() => handleExport(history, 'Historico_Geral')}
+              >
+                <Download className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="font-semibold">Exportar Banco de Dados</TooltipContent>
+            <TooltipContent className="font-bold">Exportar Base de Dados</TooltipContent>
           </Tooltip>
         </div>
       </header>
       
-      {/* Stats cards removed */}
-
-      {/* System modules cards removed */}
-
-      {/* Charts Grid */}
+      {/* Stats Section */}
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <StatCards stats={stats} onStatClick={handleStatClick} />
+      </section>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
         <div className="md:col-span-2 xl:col-span-2">
           <TimelineChart data={stats.timeline} onExport={handleExport} />
