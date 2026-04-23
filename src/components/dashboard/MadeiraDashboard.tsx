@@ -366,6 +366,15 @@ export default function MadeiraDashboard() {
                     )}
                   </tbody>
                 </table>
+                <div className="h-[200px] mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={avariasData.data}>
+                      <XAxis dataKey="name" fontSize={10} hide />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <ChartTooltip contentStyle={tooltipStyle} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </>
             )}
             {detail === 'ocupacao' && (
@@ -379,6 +388,16 @@ export default function MadeiraDashboard() {
                   <div className="h-full bg-primary transition-all" style={{ width: `${ocupacaoPercent}%` }} />
                 </div>
                 <p className="text-center text-sm font-bold">Taxa de ocupação: <span className="text-primary">{ocupacaoPercent}%</span></p>
+                <div className="h-[200px] mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={ocupacaoData} dataKey="value" innerRadius={60} outerRadius={80} paddingAngle={5}>
+                        {ocupacaoData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                      </Pie>
+                      <ChartTooltip contentStyle={tooltipStyle} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             )}
             {detail === 'colunas' && (
