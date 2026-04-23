@@ -645,42 +645,103 @@ export default function MadeiraEstoque() {
             </div>
           </DialogHeader>
           {detail && !editMode && (
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Endereço" value={detail.endereco || '—'} mono />
-                <Field label="Tipo" value={detail.tipo_tecido || '—'} />
-                <Field label="NF" value={detail.nf || '—'} />
-                <Field label="Lote" value={detail.lote || '—'} />
-                <Field label="Largura" value={detail.largura ? `${detail.largura} m` : '—'} />
-                <Field label="M Linear" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
-                <Field label="Conferente" value={detail.edited_by || '—'} />
-                <Field label="Data" value={formatDateBR(detail.created_at)} />
-              </div>
-              {detail.lote_mestre_id && lotesById[detail.lote_mestre_id] && (
-                <div className="p-3 rounded-lg border border-border/40 bg-muted/20 flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full border border-border/50" style={{ background: lotesById[detail.lote_mestre_id].cor_hex }} />
-                  <span className="text-sm font-semibold">{lotesById[detail.lote_mestre_id].nome}</span>
-                </div>
-              )}
-              {detail.avaria_tipo && (
-                <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-destructive" />
-                    <span className="text-sm font-bold text-destructive">
-                      Avaria: {AVARIA_LABELS[detail.avaria_tipo] || detail.avaria_tipo}
-                    </span>
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="info" className="flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  Informações
+                </TabsTrigger>
+                <TabsTrigger value="charts" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Gráficos
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="info" className="space-y-4">
+                <div className="space-y-3 text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Endereço" value={detail.endereco || '—'} mono />
+                    <Field label="Tipo" value={detail.tipo_tecido || '—'} />
+                    <Field label="NF" value={detail.nf || '—'} />
+                    <Field label="Lote" value={detail.lote || '—'} />
+                    <Field label="Largura" value={detail.largura ? `${detail.largura} m` : '—'} />
+                    <Field label="M Linear" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
+                    <Field label="Conferente" value={detail.edited_by || '—'} />
+                    <Field label="Data" value={formatDateBR(detail.created_at)} />
                   </div>
-                  {detail.avaria_descricao && (
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{detail.avaria_descricao}</p>
+                  {detail.lote_mestre_id && lotesById[detail.lote_mestre_id] && (
+                    <div className="p-3 rounded-lg border border-border/40 bg-muted/20 flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border border-border/50" style={{ background: lotesById[detail.lote_mestre_id].cor_hex }} />
+                      <span className="text-sm font-semibold">{lotesById[detail.lote_mestre_id].nome}</span>
+                    </div>
                   )}
-                  {detail.avaria_foto_url && (
-                    <a href={detail.avaria_foto_url} target="_blank" rel="noreferrer" className="block">
-                      <img src={detail.avaria_foto_url} alt="Avaria" className="w-full h-40 object-cover rounded-md border border-border/40" />
-                    </a>
+                  {detail.avaria_tipo && (
+                    <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                        <span className="text-sm font-bold text-destructive">
+                          Avaria: {AVARIA_LABELS[detail.avaria_tipo] || detail.avaria_tipo}
+                        </span>
+                      </div>
+                      {detail.avaria_descricao && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{detail.avaria_descricao}</p>
+                      )}
+                      {detail.avaria_foto_url && (
+                        <a href={detail.avaria_foto_url} target="_blank" rel="noreferrer" className="block">
+                          <img src={detail.avaria_foto_url} alt="Avaria" className="w-full h-40 object-cover rounded-md border border-border/40" />
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="charts" className="space-y-4">
+                <div className="p-4 rounded-xl border border-border/30 bg-muted/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Dimensões do Item</h4>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Largura', value: detail.largura || 0, color: 'hsl(var(--primary))' },
+                        { name: 'M Linear', value: detail.m_linear || 0, color: 'hsl(var(--cyan-400))' },
+                        { name: 'M²', value: detail.m2 || 0, color: 'hsl(var(--emerald-400))' },
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="name" fontSize={10} fontWeight="bold" />
+                        <YAxis fontSize={10} fontWeight="bold" />
+                        <ChartTooltip 
+                          contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                          labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                        />
+                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                          {[
+                            { color: 'hsl(var(--primary))' },
+                            { color: '#22d3ee' }, // cyan-400
+                            { color: '#34d399' }, // emerald-400
+                          ].map((entry, index) => (
+                            <RechartsCell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    <div className="text-center p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <div className="text-[8px] font-bold text-muted-foreground uppercase">Largura</div>
+                      <div className="text-xs font-black">{detail.largura || 0}m</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                      <div className="text-[8px] font-bold text-muted-foreground uppercase">M Linear</div>
+                      <div className="text-xs font-black">{detail.m_linear || 0}m</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <div className="text-[8px] font-bold text-muted-foreground uppercase">M²</div>
+                      <div className="text-xs font-black">{detail.m2 || 0}m²</div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
           {detail && editMode && (
             <div className="space-y-3 text-sm">
