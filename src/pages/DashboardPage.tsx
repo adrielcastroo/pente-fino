@@ -170,6 +170,38 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {/* Quick Access Grid */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Activity className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Módulos do Sistema</h2>
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          {[
+            { label: 'Tecido', icon: Waves, tab: 'tecido', color: 'bg-blue-500/10 text-blue-500', border: 'hover:border-blue-500/40' },
+            { label: 'Madeira', icon: TreePine, tab: 'madeira', color: 'bg-emerald-500/10 text-emerald-500', border: 'hover:border-emerald-500/40' },
+            { label: 'Motor', icon: Settings2, tab: 'motor', color: 'bg-orange-500/10 text-orange-500', border: 'hover:border-orange-500/40' },
+            { label: 'Estoque', icon: Warehouse, tab: 'estoque', color: 'bg-purple-500/10 text-purple-500', border: 'hover:border-purple-500/40' },
+            { label: 'Saída', icon: Archive, tab: 'saida', color: 'bg-rose-500/10 text-rose-500', border: 'hover:border-rose-500/40' },
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.tab}
+                onClick={() => handleStatClick(item.tab)}
+                className={`group flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border border-border/50 bg-card hover:shadow-lg transition-all active:scale-[0.95] animate-in fade-in slide-in-from-bottom-2 duration-300 delay-[${idx * 50}ms] ${item.border}`}
+              >
+                <div className={`p-3 sm:p-4 rounded-xl mb-3 transition-transform group-hover:scale-110 duration-300 ${item.color}`}>
+                  <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold tracking-tight text-foreground/80 group-hover:text-primary transition-colors">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Charts Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
         <div className="md:col-span-2 xl:col-span-2">
