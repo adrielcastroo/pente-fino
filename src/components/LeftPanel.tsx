@@ -393,18 +393,6 @@ export const LeftPanel = memo(function LeftPanel() {
     };
   }, [handlePaste, stopCamera]);
 
-  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (nextRef?.current) {
-        nextRef.current.focus();
-        nextRef.current.select();
-      } else {
-        handleAdd();
-      }
-    }
-  }, []);
-
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
@@ -575,11 +563,19 @@ export const LeftPanel = memo(function LeftPanel() {
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
     if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
-    if (!item) { toast.warning('Preencha o campo Item.'); return; }
-    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+    
+    // Ensure store is updated with current local values before validation
+    const currentItem = localItem.trim();
+    const currentProc = localProcesso.trim();
+    const currentNf = localNf.trim();
 
-    const proc = processo.trim();
+    if (!currentItem) { toast.warning('Preencha o campo Item.'); return; }
+    if (requiresProcesso && !currentProc) { toast.warning('Preencha o campo PROCESSO.'); return; }
+    if (requiresNF && !currentNf) { toast.warning('Preencha o campo NF.'); return; }
+
+    const proc = currentProc;
+    const item = currentItem;
+    const nf = currentNf;
 
     if (isMadeira) {
       const finalAddr = (localEndereco || endereco || '').toUpperCase();
@@ -667,6 +663,27 @@ export const LeftPanel = memo(function LeftPanel() {
     const restored = undoAction();
     if (restored) toast.success('Rolo restaurado');
   };
+
+  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Update store with current local values before moving/adding
+      if (localItem !== item) setItem(localItem);
+      if (localNf !== nf) setNf(localNf);
+      if (localProcesso !== processo) setProcesso(localProcesso);
+      if (localEndereco !== endereco) setEndereco(localEndereco);
+
+      // If we have a next field and it's not read-only, go to it
+      if (nextRef?.current && !nextRef.current.readOnly) {
+        nextRef.current.focus();
+        nextRef.current.select();
+      } else {
+        // If next field is read-only or doesn't exist, try to add
+        handleAdd();
+      }
+    }
+  }, [localItem, item, setItem, localNf, nf, setNf, localProcesso, processo, setProcesso, localEndereco, endereco, setEndereco, handleAdd]);
 
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
