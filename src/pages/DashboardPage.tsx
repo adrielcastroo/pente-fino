@@ -113,7 +113,7 @@ export default function DashboardPage() {
       {/* System modules cards removed */}
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="md:col-span-2 xl:col-span-2">
           <TimelineChart data={stats.timeline} onExport={handleExport} />
         </div>
@@ -128,39 +128,35 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart} 
         />
         
-        {!isMobile && (
-          <>
-            <SummaryChart 
-              title="Distribuição" 
-              desc="Setores Operacionais" 
-              data={stats.categorias} 
-              type="pie" 
-              icon={Layers3} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Distribuição" 
+          desc="Setores" 
+          data={stats.categorias} 
+          type="pie" 
+          icon={Layers3} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart 
-              title="Especificações" 
-              desc="Materiais / Tipos" 
-              data={stats.tipos} 
-              type="pie" 
-              icon={TrendingUp} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Materiais" 
+          desc="Tipos" 
+          data={stats.tipos} 
+          type="pie" 
+          icon={TrendingUp} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart
-              title="Registros por Conferência"
-              desc="Volume por Sessão"
-              data={registrosPerConference.slice(0, 10)}
-              type="bar"
-              icon={Package}
-              chartKey="value"
-              onDetailClick={setDetailChart}
-            />
-          </>
-        )}
+        <SummaryChart
+          title="Volume"
+          desc="Por Conferência"
+          data={registrosPerConference.slice(0, 10)}
+          type="bar"
+          icon={Package}
+          chartKey="value"
+          onDetailClick={setDetailChart}
+        />
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
