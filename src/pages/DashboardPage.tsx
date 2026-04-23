@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useAppStore } from '@/store/useAppStore';
 import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FolderOpen, Calendar, Waves, TreePine, Settings2, Warehouse, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
