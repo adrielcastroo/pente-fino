@@ -291,7 +291,11 @@ export default function EstoquePage() {
           
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
+          <Button 
+            onClick={() => category === 'madeira' ? setMadeiraImportOpen(true) : setImportOpen(true)} 
+            variant="outline" 
+            className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2"
+          >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
