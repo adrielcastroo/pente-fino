@@ -123,54 +123,59 @@ export default function DashboardPage() {
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         <StatCards stats={stats} onStatClick={handleStatClick} />
       </section>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-        <div className="md:col-span-2 xl:col-span-2">
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 lg:gap-8">
+        <div className="md:col-span-6 lg:col-span-8">
           <TimelineChart data={stats.timeline} onExport={handleExport} />
         </div>
 
-        <SummaryChart 
-          title="Top Conferentes" 
-          desc="Produção Individual" 
-          data={stats.topConferentes} 
-          type="bar" 
-          icon={Users} 
-          chartKey="count"
-          onDetailClick={setDetailChart} 
-        />
+        <div className="md:col-span-6 lg:col-span-4">
+          <SummaryChart 
+            title="Produção de Conferentes" 
+            desc="Top Performance" 
+            data={stats.topConferentes} 
+            type="bar" 
+            icon={Users} 
+            chartKey="count"
+            onDetailClick={setDetailChart} 
+          />
+        </div>
         
-        {!isMobile && (
-          <>
-            <SummaryChart 
-              title="Distribuição" 
-              desc="Setores Operacionais" 
-              data={stats.categorias} 
-              type="pie" 
-              icon={Layers3} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <div className="md:col-span-3 lg:col-span-3">
+          <SummaryChart 
+            title="Fluxo por Setor" 
+            desc="Distribuição Operacional" 
+            data={stats.categorias} 
+            type="pie" 
+            icon={Layers3} 
+            chartKey="value"
+            onDetailClick={setDetailChart} 
+          />
+        </div>
 
-            <SummaryChart 
-              title="Especificações" 
-              desc="Materiais / Tipos" 
-              data={stats.tipos} 
-              type="pie" 
-              icon={TrendingUp} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <div className="md:col-span-3 lg:col-span-3">
+          <SummaryChart 
+            title="Especificações" 
+            desc="Tipo de Materiais" 
+            data={stats.tipos} 
+            type="pie" 
+            icon={TrendingUp} 
+            chartKey="value"
+            onDetailClick={setDetailChart} 
+          />
+        </div>
 
-            <SummaryChart
-              title="Registros por Conferência"
-              desc="Volume por Sessão"
-              data={registrosPerConference.slice(0, 10)}
-              type="bar"
-              icon={Package}
-              chartKey="value"
-              onDetailClick={setDetailChart}
-            />
-          </>
-        )}
+        <div className="md:col-span-6 lg:col-span-6">
+          <SummaryChart 
+            title="Eficiência por Ferramenta" 
+            desc="Uso de IA vs Manual" 
+            data={stats.ferramentas} 
+            type="bar" 
+            icon={Activity} 
+            chartKey="count"
+            onDetailClick={setDetailChart} 
+          />
+        </div>
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
