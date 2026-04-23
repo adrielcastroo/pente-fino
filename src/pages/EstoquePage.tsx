@@ -536,43 +536,58 @@ export default function EstoquePage() {
                     {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
                       const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
                       return (
-                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
-                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
-                              </Badge>
-                              <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
-                            </div>
-                            <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
-                              <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
-                              <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
-                              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                              onClick={() => setDetailPos(item)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                            >
-                              Detalhes
-                            </Button>
-                            {!isGuest && (
-                              <Button
-                                onClick={() => {
-                                  setDetailPos(item);
-                                  handleStatusChange(item, 'saida');
+                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl overflow-hidden flex flex-col sm:flex-row gap-0 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
+                          {item.avaria_foto_url && (
+                            <div className="w-full sm:w-24 h-24 sm:h-auto shrink-0 border-b sm:border-b-0 sm:border-r border-border/20">
+                              <img 
+                                src={item.avaria_foto_url} 
+                                alt={item.item} 
+                                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(item.avaria_foto_url!, '_blank');
                                 }}
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                                  Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                                </Badge>
+                                <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                              </div>
+                              <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
+                                <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
+                                <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
+                                <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Button
+                                onClick={() => setDetailPos(item)}
+                                variant="ghost"
                                 size="sm"
-                                className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                                className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                               >
-                                <LogOut className="w-3 h-3" />
-                                Dar Saída
+                                Detalhes
                               </Button>
-                            )}
+                              {!isGuest && (
+                                <Button
+                                  onClick={() => {
+                                    setDetailPos(item);
+                                    handleStatusChange(item, 'saida');
+                                  }}
+                                  size="sm"
+                                  className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                                >
+                                  <LogOut className="w-3 h-3" />
+                                  Dar Saída
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
