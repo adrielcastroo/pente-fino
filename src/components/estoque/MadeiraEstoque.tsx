@@ -250,17 +250,24 @@ export default function MadeiraEstoque() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Itens', value: stats.totalItens, color: 'text-foreground' },
-          { label: 'Capacidade', value: stats.capacidade, color: 'text-primary' },
-          { label: 'Ocupação', value: `${stats.capacidade ? Math.round((stats.ocupacao / stats.capacidade) * 100) : 0}%`, color: 'text-cyan-400' },
-          { label: 'Lâmina', value: stats.laminasCells, color: 'text-emerald-400' },
-          { label: 'Base', value: stats.basesCells, color: 'text-violet-400' },
-          { label: 'Avarias', value: stats.avarias, color: 'text-red-400' },
+          { key: 'total', label: 'Itens', value: stats.totalItens, percent: 100, color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' },
+          { key: 'capacidade', label: 'Capacidade', value: stats.capacidade, percent: 100, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
+          { key: 'ocupacao', label: 'Ocupação', value: stats.ocupacao, percent: stats.percentOcupacao, color: 'text-cyan-400', bg: 'bg-cyan-500/5', border: 'border-cyan-500/20' },
+          { key: 'lamina', label: 'Lâmina', value: stats.laminasCells, percent: stats.percentLaminas, color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
+          { key: 'base', label: 'Base', value: stats.basesCells, percent: stats.percentBases, color: 'text-violet-400', bg: 'bg-violet-500/5', border: 'border-violet-500/20' },
+          { key: 'avarias', label: 'Avarias', value: stats.avarias, percent: stats.percentAvarias, color: 'text-red-400', bg: 'bg-red-500/5', border: 'border-red-500/20' },
         ].map(s => (
-          <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none">
+          <Card 
+            key={s.label} 
+            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            className={`border ${s.border} ${s.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
+              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+            }`}
+          >
             <CardContent className="p-4 text-center space-y-1">
               <div className={`text-xl sm:text-2xl font-black tabular-nums ${s.color}`}>{s.value}</div>
               <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
             </CardContent>
           </Card>
         ))}
