@@ -38,6 +38,7 @@ interface Posicao {
   data_registro: string | null;
   data_saida: string | null;
   registro_id: string | null;
+  avaria_foto_url?: string | null;
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
@@ -107,9 +108,20 @@ export default function EstoquePage() {
   const loadPosicoes = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('*, registros(avaria_foto_url)')
+        .eq('estrutura', activeTec);
+      
       if (error) throw error;
-      setPosicoesForActiveTec(data as Posicao[]);
+      
+      // Flatten the join result
+      const flattened = (data as any[]).map(p => ({
+        ...p,
+        avaria_foto_url: p.registros?.avaria_foto_url
+      }));
+      
+      setPosicoesForActiveTec(flattened as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
       toast.error('Erro ao carregar dados do estoque');
@@ -339,21 +351,58 @@ export default function EstoquePage() {
           { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
           { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
           { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
-        ].map(s => (
-          <Card 
-            key={s.label} 
-            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-            }`}
-          >
-            <CardContent className="p-4 text-center space-y-1">
-              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
-              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
-              <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-            </CardContent>
-          </Card>
-        ))}
+        ].map(s => {
+          const isSelected = selectedStat === s.key;
+          
+          // Calculate breakdown if selected
+          const tecBreakdown = isSelected ? Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
+            const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === tec);
+            const totalForTec = cfg.cols.length * cfg.levels * 30;
+            
+            let count = 0;
+            if (s.key === 'total') {
+              count = totalForTec;
+            } else if (s.key === 'livre') {
+              const occupied = currentStructureItems.filter((p: any) => p.status === 'ocupado').length;
+              const blocked = currentStructureItems.filter((p: any) => p.status === 'bloqueado').length;
+              const reserved = currentStructureItems.filter((p: any) => p.status === 'reservado').length;
+              const exited = currentStructureItems.filter((p: any) => p.status === 'saida').length;
+              count = Math.max(0, totalForTec - occupied - blocked - reserved - exited);
+            } else {
+              count = currentStructureItems.filter((p: any) => p.status === s.key).length;
+            }
+            
+            return { name: tec, count, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0 };
+          }) : [];
+
+          return (
+            <Card 
+              key={s.label} 
+              onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+              className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:shadow-md h-fit ${
+                isSelected ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+              }`}
+            >
+              <CardContent className="p-3 text-center space-y-1">
+                <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
+                <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
+                
+                {isSelected && tecBreakdown.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border/20 grid grid-cols-2 gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {tecBreakdown.map(b => (
+                      <div key={b.name} className="flex flex-col items-center bg-background/40 rounded-lg p-1.5 border border-border/10">
+                        <span className="text-[7px] font-black text-muted-foreground uppercase">{b.name}</span>
+                        <span className="text-xs font-black">{b.count}</span>
+                        <span className="text-[7px] font-bold text-muted-foreground/60">{b.percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* TEC Tabs */}
@@ -470,7 +519,7 @@ export default function EstoquePage() {
                       </DialogDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border mr-14 ${
+                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${
                     occupiedCount === 0 ? 'border-primary/30 text-primary bg-primary/5' :
                     occupiedCount >= 25 ? 'border-red-500/30 text-red-400 bg-red-500/10' :
                     'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
@@ -501,43 +550,58 @@ export default function EstoquePage() {
                     {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
                       const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
                       return (
-                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
-                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
-                              </Badge>
-                              <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
-                            </div>
-                            <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
-                              <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
-                              <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
-                              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                              onClick={() => setDetailPos(item)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                            >
-                              Detalhes
-                            </Button>
-                            {!isGuest && (
-                              <Button
-                                onClick={() => {
-                                  setDetailPos(item);
-                                  handleStatusChange(item, 'saida');
+                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl overflow-hidden flex flex-col sm:flex-row gap-0 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
+                          {item.avaria_foto_url && (
+                            <div className="w-full sm:w-24 h-24 sm:h-auto shrink-0 border-b sm:border-b-0 sm:border-r border-border/20">
+                              <img 
+                                src={item.avaria_foto_url} 
+                                alt={item.item} 
+                                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(item.avaria_foto_url!, '_blank');
                                 }}
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                                  Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                                </Badge>
+                                <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                              </div>
+                              <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
+                                <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
+                                <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
+                                <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Button
+                                onClick={() => setDetailPos(item)}
+                                variant="ghost"
                                 size="sm"
-                                className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                                className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                               >
-                                <LogOut className="w-3 h-3" />
-                                Dar Saída
+                                Detalhes
                               </Button>
-                            )}
+                              {!isGuest && (
+                                <Button
+                                  onClick={() => {
+                                    setDetailPos(item);
+                                    handleStatusChange(item, 'saida');
+                                  }}
+                                  size="sm"
+                                  className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                                >
+                                  <LogOut className="w-3 h-3" />
+                                  Dar Saída
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -580,7 +644,7 @@ export default function EstoquePage() {
                         Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
                       </DialogDescription>
                     </div>
-                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-14 sm:mr-12 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
                       {statusCfg.label}
                     </Badge>
                   </div>
@@ -605,6 +669,20 @@ export default function EstoquePage() {
                       </div>
                     ))}
                   </div>
+
+                  {detailPos.avaria_foto_url && (
+                    <div className="space-y-2.5">
+                      <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Foto do Item</div>
+                      <div className="rounded-2xl overflow-hidden border border-border/30 bg-muted/5">
+                        <img 
+                          src={detailPos.avaria_foto_url} 
+                          alt={detailPos.item} 
+                          className="w-full h-auto max-h-64 object-contain cursor-zoom-in"
+                          onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Status Actions */}
                   <div className="space-y-2.5 sm:space-y-3">
@@ -674,42 +752,6 @@ export default function EstoquePage() {
         </DialogContent>
       </Dialog>
 
-      {/* ===== STAT DETAIL DIALOG ===== */}
-      <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
-          {selectedStat && (() => {
-            const statItems: { label: string; value: number; percent: number; color: string }[] = [
-              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground' },
-              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500' },
-              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500' },
-              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-red-500' },
-              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary' },
-            ];
-            const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
-
-            // Per-TEC breakdown
-            const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-              const count = allPosicoes.filter((p: any) => p.estrutura === tec && p.status === selectedStat).length;
-              const totalForTec = cfg.cols.length * cfg.levels * 30;
-              return { name: tec, count, total: totalForTec, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0 };
-            });
-
-            return (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {tecBreakdown.map(b => (
-                    <div key={b.name} className="p-3 rounded-xl border border-border/40 bg-muted/20 flex flex-col items-center">
-                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">{b.name}</div>
-                      <div className="text-xl font-black text-foreground">{b.count}</div>
-                      <div className="text-[10px] font-bold text-muted-foreground/60">{b.percent}%</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
