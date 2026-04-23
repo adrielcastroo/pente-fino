@@ -109,7 +109,14 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      <StatCards stats={stats} onStatClick={handleStatClick} />
+      <StatCards 
+        stats={stats} 
+        onStatClick={(tab) => {
+          if (tab === 'history') setDetailDialog('conferences');
+          else if (tab === 'table') setDetailDialog('registros');
+          else if (tab === 'inicio') setDetailDialog('conferentes');
+        }} 
+      />
 
 
       {/* Charts Grid */}
