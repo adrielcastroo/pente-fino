@@ -374,30 +374,45 @@ export default function MadeiraEstoque() {
                   return (
                     <div
                       key={col}
-                      className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-all duration-150 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''}`}
+                      className={`flex-1 min-w-0 h-16 sm:h-24 rounded-xl cursor-pointer p-2 sm:p-3 transition-all duration-300 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''} hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97]`}
                       onClick={() => setSelectedCell({ col, nivel })}
                     >
                       <div
-                        className={`absolute bottom-0 left-0 right-0 ${fillBar}`}
+                        className={`absolute bottom-0 left-0 right-0 ${fillBar} transition-all duration-500`}
                         style={{ height: `${fillPercent}%` }}
                       />
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfigCell({ col, nivel }); }}
-                        className="absolute top-1 right-1 z-20 p-1 rounded-md bg-background/60 border border-border/40 opacity-60 hover:opacity-100 hover:bg-background transition"
+                        className="absolute top-2 right-2 z-20 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/40 opacity-0 group-hover:opacity-100 hover:bg-background transition-all duration-200"
                         title="Configurar quadrante"
                       >
-                        <Settings2 className="w-3 h-3" />
+                        <Settings2 className="w-3.5 h-3.5" />
                       </button>
-                      <div className="relative z-10">
-                        <div className="text-[8px] sm:text-[9px] font-bold uppercase tracking-tight text-muted-foreground/80">
-                          {col}-N{nivel}
+
+                      <div className="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="p-1 rounded-md bg-primary/20 text-primary">
+                          <Info className="w-3 h-3" />
                         </div>
-                        <div className="text-sm sm:text-base font-black text-foreground mt-0.5 tabular-nums">
-                          {selectedStat === 'avarias' ? filteredItems.length : items.length}
-                          <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-semibold ml-0.5">/{q.capacidade}</span>
+                      </div>
+
+                      <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                          <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary transition-colors">
+                            {col}-N{nivel}
+                          </div>
+                          <div className="text-sm sm:text-xl font-black text-foreground mt-0.5 tabular-nums flex items-baseline gap-1">
+                            {selectedStat === 'avarias' ? filteredItems.length : items.length}
+                            <span className="text-[10px] sm:text-xs text-muted-foreground/50 font-bold">/{q.capacidade}</span>
+                          </div>
                         </div>
-                        <div className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider mt-0.5 ${isLamina ? 'text-emerald-500' : 'text-violet-500'}`}>
-                          {isLamina ? 'Lâmina' : 'Base'}
+                        
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 py-0 h-5 ${isLamina ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-violet-500/10 border-violet-500/30 text-violet-500'}`}>
+                            {isLamina ? 'Lâmina' : 'Base'}
+                          </Badge>
+                          <span className="text-[8px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 hidden sm:inline">
+                            DETALHES →
+                          </span>
                         </div>
                       </div>
                     </div>
