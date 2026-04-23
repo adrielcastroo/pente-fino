@@ -1,4 +1,4 @@
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, History, Warehouse, Archive, Settings, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
 import { AppTab } from '@/types';
@@ -32,7 +32,7 @@ const menuItems: { key: AppTab; label: string; icon: any }[] = [
   { key: 'estoque', label: 'Estoque', icon: Warehouse },
   { key: 'saida', label: 'Saída', icon: Archive },
   { key: 'table', label: 'Tabela', icon: Table },
-  { key: 'history', label: 'Histórico', icon: FolderOpen },
+  { key: 'history', label: 'Histórico', icon: History },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
