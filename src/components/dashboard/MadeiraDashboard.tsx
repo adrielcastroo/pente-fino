@@ -347,6 +347,18 @@ export default function MadeiraDashboard() {
         </button>
       </div>
 
+      {statModal && (
+        <StatDetailModal 
+          isOpen={statModal.isOpen}
+          onClose={() => setStatModal(null)}
+          title={statModal.title}
+          value={statModal.value}
+          type={statModal.type}
+          stats={statModal.stats}
+          complementaryInfo="Análise detalhada do estoque de lâminas no setor MAD01. Dados atualizados conforme movimentação."
+        />
+      )}
+
       {/* DETAIL DIALOG */}
       <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[80vh]">
