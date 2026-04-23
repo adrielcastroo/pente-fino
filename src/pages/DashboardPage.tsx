@@ -108,9 +108,29 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      {/* Stats cards removed */}
+      <StatCards stats={stats} onStatClick={handleStatClick} />
 
-      {/* System modules cards removed */}
+      {/* System Modules (Shortcut cards) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+        {[
+          { id: 'tecido', label: 'Tecido', icon: Waves, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
+          { id: 'madeira', label: 'Madeira', icon: TreePine, color: 'text-emerald-500', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
+          { id: 'motor', label: 'Motores', icon: Settings2, color: 'text-amber-500', bg: 'bg-amber-500/5', border: 'border-amber-500/20' },
+          { id: 'estoque', label: 'Estoque', icon: Warehouse, color: 'text-blue-500', bg: 'bg-blue-500/5', border: 'border-blue-500/20' },
+          { id: 'saida', label: 'Saída', icon: Archive, color: 'text-purple-500', bg: 'bg-purple-500/5', border: 'border-purple-500/20' },
+        ].map(mod => (
+          <button
+            key={mod.id}
+            onClick={() => useAppStore.getState().setFormData({ activeTab: mod.id as any })}
+            className={`p-3 sm:p-4 rounded-2xl border ${mod.border} ${mod.bg} hover:shadow-lg transition-all active:scale-95 text-center flex flex-col items-center justify-center gap-2 group`}
+          >
+            <div className={`p-2 sm:p-3 rounded-xl bg-background ${mod.color} shadow-sm group-hover:scale-110 transition-transform`}>
+              <mod.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="text-[10px] sm:text-xs font-bold text-foreground tracking-tight">{mod.label}</span>
+          </button>
+        ))}
+      </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
