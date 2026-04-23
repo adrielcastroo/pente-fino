@@ -582,6 +582,11 @@ export const LeftPanel = memo(function LeftPanel() {
     const proc = processo.trim();
 
     if (isMadeira) {
+      const finalAddr = (localEndereco || endereco || '').toUpperCase();
+      if (!finalAddr) { toast.warning('Preencha o Endereço.'); return; }
+      if (!ENDERECO_REGEX.test(finalAddr)) { toast.warning('Endereço inválido. Use: MAD01.A.N01'); return; }
+      if (!finalAddr.startsWith('MAD')) { toast.warning('Endereço de madeira deve iniciar com MAD.'); return; }
+
       const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
       const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
       const reg: Registro = {
