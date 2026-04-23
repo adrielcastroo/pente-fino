@@ -350,7 +350,21 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2 bg-muted/5 border-b border-border/10">
+            <SummaryStatCard label="Total" value={stats.totalRegistros} color="text-foreground" bg="bg-card" border="border-border/30" />
+            {stats.categorias.map(cat => (
+              <SummaryStatCard 
+                key={cat.name}
+                label={cat.name} 
+                value={cat.value} 
+                percent={stats.totalRegistros ? Math.round((cat.value / stats.totalRegistros) * 100) : 0} 
+                color={cat.name === 'Tecido' ? 'text-primary' : cat.name === 'Madeira' ? 'text-emerald-500' : 'text-amber-500'} 
+                bg={cat.name === 'Tecido' ? 'bg-primary/5' : cat.name === 'Madeira' ? 'bg-emerald-500/5' : 'bg-amber-500/5'} 
+                border={cat.name === 'Tecido' ? 'border-primary/20' : cat.name === 'Madeira' ? 'border-emerald-500/20' : 'border-amber-500/20'} 
+              />
+            ))}
+          </div>
+          <div className="overflow-y-auto max-h-[50vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
