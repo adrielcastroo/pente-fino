@@ -28,6 +28,18 @@ function formatDuration(start: string | null | undefined, end: string | null | u
   } catch { return '—'; }
 }
 
+function SummaryStatCard({ label, value, percent, color, bg, border }: { label: string; value: string | number; percent?: number; color: string; bg: string; border: string }) {
+  return (
+    <div className={`p-4 text-center space-y-1 rounded-xl border ${border} ${bg} transition-all duration-200`}>
+      <div className={`text-xl sm:text-2xl font-black tabular-nums ${color}`}>{value}</div>
+      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{label}</div>
+      {percent !== undefined && (
+        <div className="text-[10px] font-semibold text-muted-foreground/70">{percent}%</div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const isMobile = useIsMobile();
   const {
