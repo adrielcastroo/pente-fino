@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend
+} from 'recharts';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
@@ -76,7 +80,7 @@ export default function DashboardPage() {
   }, [history]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-border/40">
         <div className="space-y-1.5">
@@ -256,7 +260,21 @@ export default function DashboardPage() {
               color="text-primary" bg="bg-primary/5" border="border-primary/20" 
             />
           </div>
-          <div className="overflow-y-auto max-h-[50vh]">
+          <div className="p-6 h-[250px] border-b border-border/10">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.topConferentes.slice(0, 10)} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <ChartTooltip 
+                  contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} 
+                  formatter={(val: any) => [val, 'Registros']}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="overflow-y-auto max-h-[40vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
@@ -307,7 +325,21 @@ export default function DashboardPage() {
               color="text-primary" bg="bg-primary/5" border="border-primary/20" 
             />
           </div>
-          <div className="overflow-y-auto max-h-[50vh]">
+          <div className="p-6 h-[250px] border-b border-border/10">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.timeline} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <ChartTooltip 
+                  contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} 
+                  formatter={(val: any) => [val, 'Volume']}
+                />
+                <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.1)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="overflow-y-auto max-h-[40vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
@@ -364,7 +396,32 @@ export default function DashboardPage() {
               />
             ))}
           </div>
-          <div className="overflow-y-auto max-h-[50vh]">
+          <div className="p-6 h-[250px] border-b border-border/10">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie 
+                  data={stats.categorias} 
+                  dataKey="value" 
+                  nameKey="name" 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={60} 
+                  outerRadius={80} 
+                  paddingAngle={5}
+                >
+                  {stats.categorias.map((_: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={['hsl(var(--primary))', 'hsl(var(--primary) / 0.7)', 'hsl(var(--primary) / 0.4)'][index % 3]} />
+                  ))}
+                </Pie>
+                <ChartTooltip 
+                  contentStyle={{ borderRadius: '10px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', fontWeight: 'bold' }} 
+                  formatter={(val: any) => [val, 'Itens']}
+                />
+                <Legend verticalAlign="bottom" height={36}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="overflow-y-auto max-h-[40vh]">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
