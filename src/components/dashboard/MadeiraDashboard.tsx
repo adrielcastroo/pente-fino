@@ -187,95 +187,138 @@ export default function MadeiraDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         {/* AVARIAS */}
-        <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/20 transition-colors">
-          <CardHeader className="px-5 py-4 flex flex-row items-center justify-between">
+        <button 
+          onClick={() => setDetail('avarias')}
+          className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
+        >
+          <div className="px-5 py-4 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <div className="text-sm font-bold flex items-center gap-2">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                 <span>Avarias</span>
-              </CardTitle>
+              </div>
               <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                 {avariasData.totalAvarias} avarias · {avariasData.totalMetros}m
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary" onClick={() => setDetail('avarias')}>
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
               <Eye className="w-3.5 h-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent className="px-5 pb-5 h-[180px]">
-            {avariasData.data.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Sem avarias registradas</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={avariasData.data} dataKey="value" innerRadius="55%" outerRadius="85%" stroke="transparent" paddingAngle={isLow ? 0 : 3} isAnimationActive={!isLow}>
-                    {avariasData.data.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <ChartTooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(val: any, _name: any, p: any) => [`${val} (${p.payload.percent}%) · ${p.payload.metros}m`, p.payload.name]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="px-5 pb-4 h-[180px] flex flex-col">
+            <div className="flex-1 min-h-0">
+              {avariasData.data.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground italic">Sem avarias registradas</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={avariasData.data} dataKey="value" innerRadius="55%" outerRadius="85%" stroke="transparent" paddingAngle={isLow ? 0 : 3} isAnimationActive={!isLow}>
+                      {avariasData.data.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Pie>
+                    <ChartTooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(val: any, _name: any, p: any) => [`${val} (${p.payload.percent}%) · ${p.payload.metros}m`, p.payload.name]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            {avariasData.data.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {avariasData.data.slice(0, 2).map(d => (
+                  <div key={d.key} className="flex items-center justify-between text-[10px]">
+                    <span className="flex items-center gap-1.5 font-medium truncate max-w-[120px]">
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: d.color }} />
+                      {d.name}
+                    </span>
+                    <span className="font-bold text-muted-foreground">{d.value} un</span>
+                  </div>
+                ))}
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </button>
 
-        {/* OCUPAÇÃO */}
-        <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/20 transition-colors">
-          <CardHeader className="px-5 py-4 flex flex-row items-center justify-between">
+        <button 
+          onClick={() => setDetail('ocupacao')}
+          className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
+        >
+          <div className="px-5 py-4 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <div className="text-sm font-bold flex items-center gap-2">
                 <Layers3 className="w-3.5 h-3.5 text-primary" />
                 <span>Ocupação Geral</span>
-              </CardTitle>
+              </div>
               <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                 {ocupacaoData[0].value}/{totalCapacidade} ({ocupacaoPercent}%)
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary" onClick={() => setDetail('ocupacao')}>
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
               <Eye className="w-3.5 h-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent className="px-5 pb-5 h-[180px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={ocupacaoData} dataKey="value" innerRadius="55%" outerRadius="85%" stroke="transparent" paddingAngle={isLow ? 0 : 3} isAnimationActive={!isLow}>
-                  {ocupacaoData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Pie>
-                <ChartTooltip contentStyle={tooltipStyle} formatter={(v: any) => [v, 'Espaços']} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
+          <div className="px-5 pb-4 h-[180px] flex flex-col">
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={ocupacaoData} dataKey="value" innerRadius="55%" outerRadius="85%" stroke="transparent" paddingAngle={isLow ? 0 : 3} isAnimationActive={!isLow}>
+                    {ocupacaoData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <ChartTooltip contentStyle={tooltipStyle} formatter={(v: any) => [v, 'Espaços']} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 space-y-1.5">
+              <div className="h-1.5 w-full rounded-full bg-muted/40 overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${ocupacaoPercent}%` }} />
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
+                <span>OCUPADO</span>
+                <span className="text-primary">{ocupacaoPercent}%</span>
+              </div>
+            </div>
+          </div>
+        </button>
 
-        {/* OCUPAÇÃO POR COLUNAS */}
-        <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/20 transition-colors">
-          <CardHeader className="px-5 py-4 flex flex-row items-center justify-between">
+        <button 
+          onClick={() => setDetail('colunas')}
+          className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
+        >
+          <div className="px-5 py-4 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <div className="text-sm font-bold flex items-center gap-2">
                 <BarChart3 className="w-3.5 h-3.5 text-primary" />
                 <span>Ocupação por Coluna</span>
-              </CardTitle>
-              <p className="text-[10px] text-muted-foreground font-medium mt-0.5">A · B · C</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Distribuição A · B · C</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary" onClick={() => setDetail('colunas')}>
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
               <Eye className="w-3.5 h-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent className="px-3 pb-5 h-[180px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={colunasData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <ChartTooltip contentStyle={tooltipStyle} cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.05)' } : false} />
-                <Bar dataKey="Ocupado" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 4, 4]} barSize={36} isAnimationActive={!isLow} />
-                <Bar dataKey="Livre" stackId="a" fill="hsl(var(--muted-foreground) / 0.2)" radius={[4, 4, 0, 0]} barSize={36} isAnimationActive={!isLow} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
+          <div className="px-5 pb-4 h-[180px] flex flex-col">
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={colunasData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip contentStyle={tooltipStyle} cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.05)' } : false} />
+                  <Bar dataKey="Ocupado" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 4, 4]} barSize={32} isAnimationActive={!isLow} />
+                  <Bar dataKey="Livre" stackId="a" fill="hsl(var(--muted-foreground) / 0.2)" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={!isLow} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 flex justify-between gap-2">
+              {colunasData.map(c => (
+                <div key={c.name} className="flex-1 text-center">
+                  <div className="text-[10px] font-black text-foreground">{c.percent}%</div>
+                  <div className="text-[8px] font-bold text-muted-foreground/60 uppercase">{c.name.split(' ')[1] || c.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* DETAIL DIALOG */}

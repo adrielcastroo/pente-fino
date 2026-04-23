@@ -92,7 +92,6 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      {/* Stat Cards - now clickable to open detail dialogs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
         <button 
           onClick={() => setDetailDialog('conferentes')} 
@@ -105,6 +104,9 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferentes}</div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferentes</p>
+              {stats.topConferentes.length > 0 && (
+                <p className="text-[10px] text-muted-foreground/40 mt-1 truncate">Destaque: <span className="text-primary/60 font-bold">{stats.topConferentes[0].name}</span></p>
+              )}
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
@@ -122,6 +124,9 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferencias}</div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferências</p>
+              {history.length > 0 && (
+                <p className="text-[10px] text-muted-foreground/40 mt-1 truncate">Último: <span className="text-primary/60 font-bold">{history[0].processo || history[0].name || '—'}</span></p>
+              )}
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
@@ -139,6 +144,9 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalRegistros}</div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Registros</p>
+              {stats.categorias.length > 0 && (
+                <p className="text-[10px] text-muted-foreground/40 mt-1 truncate">Principal: <span className="text-primary/60 font-bold">{stats.categorias[0].name}</span></p>
+              )}
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
