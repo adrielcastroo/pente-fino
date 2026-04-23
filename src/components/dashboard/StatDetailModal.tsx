@@ -79,6 +79,10 @@ export const StatDetailModal = ({
     switch (type.toLowerCase()) {
       case 'total': return <BarChart3 className="w-5 h-5" />;
       case 'ocupado': return <Layers3 className="w-5 h-5" />;
+      case 'ocupacao': return <Activity className="w-5 h-5" />;
+      case 'lamina': return <Layers3 className="w-5 h-5" />;
+      case 'base': return <Layers3 className="w-5 h-5" />;
+      case 'avarias': return <AlertTriangle className="w-5 h-5" />;
       case 'reservado': return <Clock className="w-5 h-5" />;
       case 'bloqueado': return <AlertTriangle className="w-5 h-5" />;
       case 'livre': return <CheckCircle2 className="w-5 h-5" />;
