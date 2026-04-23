@@ -190,7 +190,16 @@ export default function MadeiraDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         {/* AVARIAS */}
         <button 
-          onClick={() => setDetail('avarias')}
+          onClick={() => setStatModal({
+            isOpen: true,
+            title: 'Avarias',
+            value: avariasData.totalAvarias,
+            type: 'bloqueado',
+            stats: [
+              { label: 'Total Metros', value: `${avariasData.totalMetros}m`, percent: 12, trend: 'up' },
+              { label: 'Total Lâminas', value: avariasData.totalLaminas, percent: 5, trend: 'down' }
+            ]
+          })}
           className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
         >
           <div className="px-5 py-4 flex flex-row items-center justify-between">
@@ -242,7 +251,16 @@ export default function MadeiraDashboard() {
         </button>
 
         <button 
-          onClick={() => setDetail('ocupacao')}
+          onClick={() => setStatModal({
+            isOpen: true,
+            title: 'Ocupação Geral',
+            value: `${ocupacaoPercent}%`,
+            type: 'ocupado',
+            stats: [
+              { label: 'Espaços Ocupados', value: ocupacaoData[0].value, percent: ocupacaoPercent, trend: 'up' },
+              { label: 'Espaços Livres', value: ocupacaoData[1].value, percent: 100 - ocupacaoPercent, trend: 'down' }
+            ]
+          })}
           className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
         >
           <div className="px-5 py-4 flex flex-row items-center justify-between">
@@ -283,7 +301,13 @@ export default function MadeiraDashboard() {
         </button>
 
         <button 
-          onClick={() => setDetail('colunas')}
+          onClick={() => setStatModal({
+            isOpen: true,
+            title: 'Ocupação por Coluna',
+            value: COLUNAS.length,
+            type: 'total',
+            stats: colunasData.map(c => ({ label: c.name, value: `${c.percent}%`, percent: c.percent, trend: 'up' as const }))
+          })}
           className="group text-left w-full cursor-pointer rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98]"
         >
           <div className="px-5 py-4 flex flex-row items-center justify-between">
