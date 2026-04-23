@@ -264,9 +264,9 @@ export default function MadeiraEstoque() {
         ].map(s => (
           <Card 
             key={s.label} 
-            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            onClick={() => setShowStatDetail(s.key)}
             className={`border ${s.border} ${s.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+              showStatDetail === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
             }`}
           >
             <CardContent className="p-4 text-center space-y-1">
