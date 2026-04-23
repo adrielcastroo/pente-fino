@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera, LayoutGrid, List, Upload, BarChart3, Info } from 'lucide-react';
+import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera, LayoutGrid, List, Upload, BarChart3, Info, TrendingUp, TrendingDown } from 'lucide-react';
 import MadeiraImportDialog from './MadeiraImportDialog';
+import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
 import { lotesMestresService, type LoteMestre } from '@/services/lotesMestresService';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,6 +88,7 @@ export default function MadeiraEstoque() {
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
+  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[] } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const [editForm, setEditForm] = useState<{
@@ -267,7 +269,57 @@ export default function MadeiraEstoque() {
         ].map(s => (
           <Card 
             key={s.label} 
-            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            onClick={() => {
+              const breakdown = COLUNAS.map(col => {
+                let count = 0;
+                let totalForCol = 0;
+                
+                for (let n = 1; n <= NIVEIS; n++) {
+                  const q = getQuadrante(col, n);
+                  const cellItems = cellMap[`${col}-${n}`] || [];
+                  
+                  if (s.key === 'total') {
+                    count += cellItems.length;
+                  } else if (s.key === 'capacidade') {
+                    count += q.capacidade;
+                  } else if (s.key === 'ocupacao') {
+                    count += cellItems.length;
+                    totalForCol += q.capacidade;
+                  } else if (s.key === 'lamina') {
+                    if (q.tipo_ocupacao === 'lamina') count++;
+                  } else if (s.key === 'base') {
+                    if (q.tipo_ocupacao === 'base') count++;
+                  } else if (s.key === 'avarias') {
+                    count += cellItems.filter(r => r.avaria_tipo).length;
+                  }
+                }
+                
+                let percent = 0;
+                if (s.key === 'ocupacao') {
+                  percent = totalForCol ? Math.round((count / totalForCol) * 100) : 0;
+                } else if (s.key === 'lamina' || s.key === 'base') {
+                  percent = Math.round((count / NIVEIS) * 100);
+                } else {
+                  percent = stats.totalItens ? Math.round((count / stats.totalItens) * 100) : 0;
+                }
+
+                return {
+                  label: `Coluna ${col}`,
+                  value: count,
+                  percent,
+                  trend: percent > 50 ? 'up' : 'down'
+                };
+              });
+
+              setStatModal({
+                isOpen: true,
+                title: s.label,
+                value: s.value,
+                type: s.key,
+                stats: breakdown
+              });
+              setSelectedStat(prev => prev === s.key ? null : s.key);
+            }}
             className={`border ${s.border} ${s.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
               selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
             }`}
@@ -895,6 +947,18 @@ export default function MadeiraEstoque() {
           )}
         </DialogContent>
       </Dialog>
+      
+      {statModal && (
+        <StatDetailModal
+          isOpen={statModal.isOpen}
+          onClose={() => setStatModal(null)}
+          title={statModal.title}
+          value={statModal.value}
+          type={statModal.type}
+          stats={statModal.stats}
+          complementaryInfo={`Análise detalhada do estoque na estrutura ${ESTRUTURA}. As estatísticas refletem o estado atual dos quadrantes de madeira.`}
+        />
+      )}
     </div>
   );
 }
