@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TreePine, AlertTriangle, MapPin, Hash, Package, Ruler, Calendar, User } from "lucide-react";
+import { TreePine, AlertTriangle, MapPin, Hash, Package, Ruler, Calendar, User, ChevronRight, BarChart3 } from "lucide-react";
 import { formatDateBR } from "@/lib/app-utils";
 import { LoteMestre } from "@/services/lotesMestresService";
 
@@ -125,14 +125,26 @@ export function MadeiraCard({ item, loteMestre, onClick }: MadeiraCardProps) {
         </div>
 
         {/* Footer Info */}
-        <div className="px-4 py-2 border-t border-border/10 flex items-center justify-between bg-muted/5">
-          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-            <User className="w-2.5 h-2.5" />
-            <span className="truncate max-w-[80px] font-medium">{item.edited_by || 'Sistema'}</span>
+        <div className="px-4 py-3 border-t border-border/10 flex items-center justify-between bg-muted/5 group-hover:bg-primary/5 transition-colors">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-medium">
+              <User className="w-2.5 h-2.5" />
+              <span className="truncate max-w-[80px]">{item.edited_by || 'Sistema'}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-medium">
+              <Calendar className="w-2.5 h-2.5" />
+              <span>{formatDateBR(item.created_at)}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-            <Calendar className="w-2.5 h-2.5" />
-            <span className="font-medium">{formatDateBR(item.created_at)}</span>
+          
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-all transform scale-90 group-hover:scale-100">
+              <BarChart3 className="w-3 h-3" />
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-black text-primary opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+              DETALHES
+              <ChevronRight className="w-3 h-3" />
+            </div>
           </div>
         </div>
       </CardContent>

@@ -5,13 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera, LayoutGrid, List, Upload } from 'lucide-react';
+import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera, LayoutGrid, List, Upload, BarChart3, Info } from 'lucide-react';
 import MadeiraImportDialog from './MadeiraImportDialog';
 import { lotesMestresService, type LoteMestre } from '@/services/lotesMestresService';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, Cell as RechartsCell } from 'recharts';
 import { formatDateBR } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store/useAppStore';
@@ -372,30 +374,45 @@ export default function MadeiraEstoque() {
                   return (
                     <div
                       key={col}
-                      className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-all duration-150 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''}`}
+                      className={`flex-1 min-w-0 h-16 sm:h-24 rounded-xl cursor-pointer p-2 sm:p-3 transition-all duration-300 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''} hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97]`}
                       onClick={() => setSelectedCell({ col, nivel })}
                     >
                       <div
-                        className={`absolute bottom-0 left-0 right-0 ${fillBar}`}
+                        className={`absolute bottom-0 left-0 right-0 ${fillBar} transition-all duration-500`}
                         style={{ height: `${fillPercent}%` }}
                       />
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfigCell({ col, nivel }); }}
-                        className="absolute top-1 right-1 z-20 p-1 rounded-md bg-background/60 border border-border/40 opacity-60 hover:opacity-100 hover:bg-background transition"
+                        className="absolute top-2 right-2 z-20 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/40 opacity-0 group-hover:opacity-100 hover:bg-background transition-all duration-200"
                         title="Configurar quadrante"
                       >
-                        <Settings2 className="w-3 h-3" />
+                        <Settings2 className="w-3.5 h-3.5" />
                       </button>
-                      <div className="relative z-10">
-                        <div className="text-[8px] sm:text-[9px] font-bold uppercase tracking-tight text-muted-foreground/80">
-                          {col}-N{nivel}
+
+                      <div className="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="p-1 rounded-md bg-primary/20 text-primary">
+                          <Info className="w-3 h-3" />
                         </div>
-                        <div className="text-sm sm:text-base font-black text-foreground mt-0.5 tabular-nums">
-                          {selectedStat === 'avarias' ? filteredItems.length : items.length}
-                          <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-semibold ml-0.5">/{q.capacidade}</span>
+                      </div>
+
+                      <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                          <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary transition-colors">
+                            {col}-N{nivel}
+                          </div>
+                          <div className="text-sm sm:text-xl font-black text-foreground mt-0.5 tabular-nums flex items-baseline gap-1">
+                            {selectedStat === 'avarias' ? filteredItems.length : items.length}
+                            <span className="text-[10px] sm:text-xs text-muted-foreground/50 font-bold">/{q.capacidade}</span>
+                          </div>
                         </div>
-                        <div className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider mt-0.5 ${isLamina ? 'text-emerald-500' : 'text-violet-500'}`}>
-                          {isLamina ? 'Lâmina' : 'Base'}
+                        
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 py-0 h-5 ${isLamina ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-violet-500/10 border-violet-500/30 text-violet-500'}`}>
+                            {isLamina ? 'Lâmina' : 'Base'}
+                          </Badge>
+                          <span className="text-[8px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 hidden sm:inline">
+                            DETALHES →
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -473,17 +490,40 @@ export default function MadeiraEstoque() {
                     <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Quadrante vazio</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {selectedCellItems.map(r => (
-                      <MadeiraCard
-                        key={r.id}
-                        item={r}
-                        loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
-                        onClick={() => { setSelectedCell(null); setDetail(r); }}
-                      />
-                    ))}
-                  </div>
+                  <div className="space-y-6">
+                    {/* Distribution Summary Chart */}
+                    <div className="p-4 rounded-xl border border-border/30 bg-muted/5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <BarChart3 className="w-4 h-4 text-primary" />
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Distribuição de M Linear</h4>
+                      </div>
+                      <div className="h-32 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={selectedCellItems.map(r => ({ name: r.item.slice(0, 10), m_linear: r.m_linear || 0 }))}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="name" hide />
+                            <YAxis hide />
+                            <ChartTooltip 
+                              contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                              labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                            />
+                            <Bar dataKey="m_linear" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {selectedCellItems.map(r => (
+                        <MadeiraCard
+                          key={r.id}
+                          item={r}
+                          loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
+                          onClick={() => { setSelectedCell(null); setDetail(r); }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </>
@@ -620,42 +660,103 @@ export default function MadeiraEstoque() {
             </div>
           </DialogHeader>
           {detail && !editMode && (
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Endereço" value={detail.endereco || '—'} mono />
-                <Field label="Tipo" value={detail.tipo_tecido || '—'} />
-                <Field label="NF" value={detail.nf || '—'} />
-                <Field label="Lote" value={detail.lote || '—'} />
-                <Field label="Largura" value={detail.largura ? `${detail.largura} m` : '—'} />
-                <Field label="M Linear" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
-                <Field label="Conferente" value={detail.edited_by || '—'} />
-                <Field label="Data" value={formatDateBR(detail.created_at)} />
-              </div>
-              {detail.lote_mestre_id && lotesById[detail.lote_mestre_id] && (
-                <div className="p-3 rounded-lg border border-border/40 bg-muted/20 flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full border border-border/50" style={{ background: lotesById[detail.lote_mestre_id].cor_hex }} />
-                  <span className="text-sm font-semibold">{lotesById[detail.lote_mestre_id].nome}</span>
-                </div>
-              )}
-              {detail.avaria_tipo && (
-                <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-destructive" />
-                    <span className="text-sm font-bold text-destructive">
-                      Avaria: {AVARIA_LABELS[detail.avaria_tipo] || detail.avaria_tipo}
-                    </span>
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="info" className="flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  Informações
+                </TabsTrigger>
+                <TabsTrigger value="charts" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Gráficos
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="info" className="space-y-4">
+                <div className="space-y-3 text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Endereço" value={detail.endereco || '—'} mono />
+                    <Field label="Tipo" value={detail.tipo_tecido || '—'} />
+                    <Field label="NF" value={detail.nf || '—'} />
+                    <Field label="Lote" value={detail.lote || '—'} />
+                    <Field label="Largura" value={detail.largura ? `${detail.largura} m` : '—'} />
+                    <Field label="M Linear" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
+                    <Field label="Conferente" value={detail.edited_by || '—'} />
+                    <Field label="Data" value={formatDateBR(detail.created_at)} />
                   </div>
-                  {detail.avaria_descricao && (
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{detail.avaria_descricao}</p>
+                  {detail.lote_mestre_id && lotesById[detail.lote_mestre_id] && (
+                    <div className="p-3 rounded-lg border border-border/40 bg-muted/20 flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border border-border/50" style={{ background: lotesById[detail.lote_mestre_id].cor_hex }} />
+                      <span className="text-sm font-semibold">{lotesById[detail.lote_mestre_id].nome}</span>
+                    </div>
                   )}
-                  {detail.avaria_foto_url && (
-                    <a href={detail.avaria_foto_url} target="_blank" rel="noreferrer" className="block">
-                      <img src={detail.avaria_foto_url} alt="Avaria" className="w-full h-40 object-cover rounded-md border border-border/40" />
-                    </a>
+                  {detail.avaria_tipo && (
+                    <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                        <span className="text-sm font-bold text-destructive">
+                          Avaria: {AVARIA_LABELS[detail.avaria_tipo] || detail.avaria_tipo}
+                        </span>
+                      </div>
+                      {detail.avaria_descricao && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap">{detail.avaria_descricao}</p>
+                      )}
+                      {detail.avaria_foto_url && (
+                        <a href={detail.avaria_foto_url} target="_blank" rel="noreferrer" className="block">
+                          <img src={detail.avaria_foto_url} alt="Avaria" className="w-full h-40 object-cover rounded-md border border-border/40" />
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="charts" className="space-y-4">
+                <div className="p-4 rounded-xl border border-border/30 bg-muted/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Dimensões do Item</h4>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Largura', value: detail.largura || 0, color: 'hsl(var(--primary))' },
+                        { name: 'M Linear', value: detail.m_linear || 0, color: 'hsl(var(--cyan-400))' },
+                        { name: 'M²', value: detail.m2 || 0, color: 'hsl(var(--emerald-400))' },
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="name" fontSize={10} fontWeight="bold" />
+                        <YAxis fontSize={10} fontWeight="bold" />
+                        <ChartTooltip 
+                          contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                          labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                        />
+                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                          {[
+                            { color: 'hsl(var(--primary))' },
+                            { color: '#22d3ee' }, // cyan-400
+                            { color: '#34d399' }, // emerald-400
+                          ].map((entry, index) => (
+                            <RechartsCell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    <div className="text-center p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <div className="text-[8px] font-bold text-muted-foreground uppercase">Largura</div>
+                      <div className="text-xs font-black">{detail.largura || 0}m</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                      <div className="text-[8px] font-bold text-muted-foreground uppercase">M Linear</div>
+                      <div className="text-xs font-black">{detail.m_linear || 0}m</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <div className="text-[8px] font-bold text-muted-foreground uppercase">M²</div>
+                      <div className="text-xs font-black">{detail.m2 || 0}m²</div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
           {detail && editMode && (
             <div className="space-y-3 text-sm">
