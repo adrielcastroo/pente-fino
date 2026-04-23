@@ -84,6 +84,7 @@ export default function EstoquePage() {
   const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<any>(null);
   const scanRef = useRef<HTMLInputElement>(null);
+  const [showStatDetail, setShowStatDetail] = useState<string | null>(null);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
@@ -331,9 +332,9 @@ export default function EstoquePage() {
         ].map(s => (
           <Card 
             key={s.label} 
-            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            onClick={() => setShowStatDetail(s.key)}
             className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+              showStatDetail === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
             }`}
           >
             <CardContent className="p-4 text-center space-y-1">
@@ -881,6 +882,169 @@ export default function EstoquePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Stat Details Dialog */}
+      <Dialog open={!!showStatDetail} onOpenChange={(open) => !open && setShowStatDetail(null)}>
+        <DialogContent className="sm:max-w-[600px] border-border/40 bg-card/95 backdrop-blur-xl rounded-3xl p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="p-6 pb-4 border-b border-border/10 bg-muted/20">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl border ${showStatDetail ? STATUS_CONFIG[showStatDetail]?.bg || 'bg-primary/10' : ''} ${showStatDetail ? STATUS_CONFIG[showStatDetail]?.border || 'border-primary/20' : ''}`}>
+                {showStatDetail === 'ocupado' ? <Box className="w-5 h-5 text-emerald-400" /> : 
+                 showStatDetail === 'reservado' ? <Layers className="w-5 h-5 text-amber-400" /> :
+                 showStatDetail === 'bloqueado' ? <Archive className="w-5 h-5 text-red-400" /> :
+                 showStatDetail === 'livre' ? <CheckCircle2 className="w-5 h-5 text-primary" /> :
+                 <Info className="w-5 h-5 text-foreground" />}
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black tracking-tight">
+                  {showStatDetail === 'total' ? 'Visão Geral do Estoque' : 
+                   showStatDetail === 'ocupado' ? 'Detalhes de Ocupação' :
+                   showStatDetail === 'reservado' ? 'Itens Reservados' :
+                   showStatDetail === 'bloqueado' ? 'Posições Bloqueadas' :
+                   showStatDetail === 'livre' ? 'Espaço Disponível' : ''}
+                </DialogTitle>
+                <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5">
+                  Informações detalhadas sobre o status selecionado
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-6">
+            {showStatDetail === 'total' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/40">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Capacidade Total</div>
+                    <div className="text-2xl font-black text-foreground">{stats.totalSlots}</div>
+                    <div className="text-[10px] font-bold text-muted-foreground/60 mt-1">Posições físicas</div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Ocupação Real</div>
+                    <div className="text-2xl font-black text-primary">{Math.round((stats.occupied / stats.totalSlots) * 100)}%</div>
+                    <div className="text-[10px] font-bold text-primary/60 mt-1">{stats.occupied} posições ocupadas</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Breakdown por Estrutura</h4>
+                  <div className="space-y-2">
+                    {Object.keys(TEC_CONFIG).map(tec => {
+                      const tecCap = TEC_CONFIG[tec].cols.length * TEC_CONFIG[tec].levels * 30;
+                      const tecOcc = allPosicoes.filter((p: any) => p.estrutura === tec && p.status === 'ocupado').length;
+                      const percent = Math.round((tecOcc / tecCap) * 100);
+                      return (
+                        <div key={tec} className="flex items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/30">
+                          <div className="w-12 font-black text-xs text-primary">{tec}</div>
+                          <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary/40 rounded-full" style={{ width: `${percent}%` }} />
+                          </div>
+                          <div className="text-[10px] font-bold text-muted-foreground w-16 text-right">{tecOcc}/{tecCap}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showStatDetail === 'ocupado' && (
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Top 10 Itens por Volume (m²)</h4>
+                <div className="space-y-2">
+                  {Object.entries(
+                    allPosicoes.reduce((acc: any, p: any) => {
+                      if (p.status === 'ocupado') {
+                        acc[p.item] = (acc[p.item] || 0) + (p.m2 || 0);
+                      }
+                      return acc;
+                    }, {})
+                  )
+                  .sort((a: any, b: any) => b[1] - a[1])
+                  .slice(0, 10)
+                  .map(([item, m2]: any, i) => (
+                    <div key={item} className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-emerald-500/40 w-4">#{i+1}</span>
+                        <span className="text-xs font-bold font-mono">{item}</span>
+                      </div>
+                      <div className="text-xs font-black text-emerald-500">{m2.toFixed(1)} m²</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(showStatDetail === 'reservado' || showStatDetail === 'bloqueado') && (
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Localizações {showStatDetail === 'reservado' ? 'Reservadas' : 'Bloqueadas'}</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {allPosicoes
+                    .filter((p: any) => p.status === showStatDetail)
+                    .map((p: any) => (
+                      <div key={p.id} className={`p-3 rounded-xl border text-[11px] font-bold ${showStatDetail === 'reservado' ? 'bg-amber-500/5 border-amber-500/20 text-amber-500' : 'bg-red-500/5 border-red-500/20 text-red-500'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span>{p.estrutura}.{p.coluna}.N{String(p.nivel).padStart(2, '0')}</span>
+                          <span className="text-[9px] opacity-70">P{p.posicao}</span>
+                        </div>
+                        <div className="text-[10px] font-mono truncate">{p.item || 'Sem item'}</div>
+                      </div>
+                    ))}
+                  {allPosicoes.filter((p: any) => p.status === showStatDetail).length === 0 && (
+                    <div className="col-span-2 text-center py-8 text-muted-foreground text-xs font-medium italic">
+                      Nenhuma posição {showStatDetail} no momento.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {showStatDetail === 'livre' && (
+              <div className="space-y-4">
+                <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 text-center">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Total Disponível</div>
+                  <div className="text-4xl font-black text-primary tabular-nums">{stats.free}</div>
+                  <div className="text-xs font-bold text-primary/60 mt-1">Vagas prontas para uso</div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vagas por Estrutura</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.keys(TEC_CONFIG).map(tec => {
+                      const tecCap = TEC_CONFIG[tec].cols.length * TEC_CONFIG[tec].levels * 30;
+                      const tecUsed = allPosicoes.filter((p: any) => p.estrutura === tec && p.status !== 'saida').length;
+                      const tecFree = tecCap - tecUsed;
+                      return (
+                        <div key={tec} className="p-3 rounded-xl bg-muted/20 border border-border/30">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-black text-primary">{tec}</span>
+                            <span className="text-[10px] font-black text-muted-foreground">{Math.round((tecFree/tecCap)*100)}%</span>
+                          </div>
+                          <div className="text-lg font-black text-foreground">{tecFree}</div>
+                          <div className="text-[9px] font-bold text-muted-foreground/60 uppercase">livres</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-border/10 bg-muted/30 flex justify-between gap-3">
+            <Button 
+              onClick={() => { setSelectedStat(showStatDetail === 'total' ? null : showStatDetail); setShowStatDetail(null); }} 
+              variant="ghost" 
+              className="rounded-xl font-bold px-4 text-primary hover:bg-primary/10"
+            >
+              Ver no Mapa
+            </Button>
+            <Button onClick={() => setShowStatDetail(null)} variant="outline" className="rounded-xl font-bold px-8">
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Import Dialog */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
