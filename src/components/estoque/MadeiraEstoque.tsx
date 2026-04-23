@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera } from 'lucide-react';
+import { TreePine, AlertTriangle, MapPin, Loader2, Package, Layers, Settings2, Box, ArrowRightLeft, Pencil, Save, X, Camera, LayoutGrid, List } from 'lucide-react';
 import { lotesMestresService, type LoteMestre } from '@/services/lotesMestresService';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDateBR } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store/useAppStore';
+import { MadeiraCard } from '../madeira/MadeiraCard';
+
 
 interface MadeiraRow {
   id: string;
@@ -80,7 +82,9 @@ export default function MadeiraEstoque() {
   const [configCell, setConfigCell] = useState<{ col: string; nivel: number } | null>(null);
   const [confirmChange, setConfirmChange] = useState<{ col: string; nivel: number; newTipo: 'lamina' | 'base' } | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
+
   const [editForm, setEditForm] = useState<{
     item: string;
     endereco: string;
@@ -273,13 +277,41 @@ export default function MadeiraEstoque() {
         ))}
       </div>
 
-      {/* Estrutura tab (single MAD01) */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-xs">
-        <button className="flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide bg-primary text-primary-foreground shadow-md shadow-primary/20 flex items-center justify-center gap-2">
-          <TreePine className="w-4 h-4" />
-          {ESTRUTURA}
-        </button>
+      {/* Estrutura tab & View Toggle */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 w-full sm:w-auto">
+          <button className="flex-1 px-6 py-2.5 rounded-lg text-xs font-black tracking-wide bg-primary text-primary-foreground shadow-md shadow-primary/20 flex items-center justify-center gap-2 min-w-[120px]">
+            <TreePine className="w-4 h-4" />
+            {ESTRUTURA}
+          </button>
+        </div>
+
+        <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 w-full sm:w-auto">
+          <button 
+            onClick={() => setViewMode('map')}
+            className={`flex-1 px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+              viewMode === 'map' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Mapa
+          </button>
+          <button 
+            onClick={() => setViewMode('cards')}
+            className={`flex-1 px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+              viewMode === 'cards' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <List className="w-4 h-4" />
+            Cards
+          </button>
+        </div>
       </div>
+
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-border/30 bg-muted/20 text-[11px]">
@@ -298,9 +330,9 @@ export default function MadeiraEstoque() {
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground gap-3">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm font-semibold">Carregando MAD01...</span>
+          <span className="text-sm font-semibold">Carregando madeira...</span>
         </div>
-      ) : (
+      ) : viewMode === 'map' ? (
         <div className="overflow-x-auto pb-4 custom-scrollbar">
           <div className="min-w-full space-y-1.5">
             {/* Column headers */}
@@ -327,7 +359,6 @@ export default function MadeiraEstoque() {
                   const isLamina = q.tipo_ocupacao === 'lamina';
                   const isBase = q.tipo_ocupacao === 'base';
                   
-                  // Dim non-selected types
                   const isDimmed = (selectedStat === 'lamina' && !isLamina) || (selectedStat === 'base' && !isBase);
 
                   const fillPercent = Math.min(100, Math.round((filteredItems.length / q.capacidade) * 100));
@@ -342,12 +373,10 @@ export default function MadeiraEstoque() {
                       className={`flex-1 min-w-0 h-16 sm:h-20 rounded-xl cursor-pointer p-2 sm:p-2.5 transition-all duration-150 group relative overflow-hidden border ${colorBase} ${isDimmed ? 'opacity-20 grayscale scale-[0.98]' : ''} ${selectedStat === 'avarias' && filteredItems.length > 0 ? 'ring-2 ring-red-500/50' : ''}`}
                       onClick={() => setSelectedCell({ col, nivel })}
                     >
-                      {/* Fill bar */}
                       <div
                         className={`absolute bottom-0 left-0 right-0 ${fillBar}`}
                         style={{ height: `${fillPercent}%` }}
                       />
-                      {/* Config button */}
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfigCell({ col, nivel }); }}
                         className="absolute top-1 right-1 z-20 p-1 rounded-md bg-background/60 border border-border/40 opacity-60 hover:opacity-100 hover:bg-background transition"
@@ -374,7 +403,28 @@ export default function MadeiraEstoque() {
             ))}
           </div>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {rows.filter(r => {
+            if (selectedStat === 'avarias') return !!r.avaria_tipo;
+            return true;
+          }).map(r => (
+            <MadeiraCard
+              key={r.id}
+              item={r}
+              loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
+              onClick={() => setDetail(r)}
+            />
+          ))}
+          {rows.length === 0 && (
+            <div className="col-span-full py-20 text-center border-2 border-dashed border-border/30 rounded-2xl bg-muted/10">
+              <Package className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Nenhum item encontrado</p>
+            </div>
+          )}
+        </div>
       )}
+
 
       {/* ===== CELL ITEMS DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
@@ -421,45 +471,17 @@ export default function MadeiraEstoque() {
                     <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Quadrante vazio</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {selectedCellItems.map(r => {
-                      const lote = r.lote_mestre_id ? lotesById[r.lote_mestre_id] : null;
-                      return (
-                        <Card
-                          key={r.id}
-                          onClick={() => { setSelectedCell(null); setDetail(r); }}
-                          className="border border-border/40 bg-card/40 hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer"
-                        >
-                          <CardContent className="p-3.5 space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="text-sm font-bold truncate">{r.item || '—'}</span>
-                              {r.avaria_tipo && (
-                                <Badge variant="destructive" className="text-[9px] gap-1 shrink-0">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  {AVARIA_LABELS[r.avaria_tipo] || r.avaria_tipo}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                              <MapPin className="w-3 h-3" />
-                              <span className="font-mono">{r.endereco || '—'}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-2">
-                              {lote ? (
-                                <span className="flex items-center gap-1.5 text-[11px] font-semibold">
-                                  <span className="w-3 h-3 rounded-full border border-border/50" style={{ background: lote.cor_hex }} />
-                                  {lote.nome}
-                                </span>
-                              ) : (
-                                <span className="text-[11px] text-muted-foreground/60">Sem tonalidade</span>
-                              )}
-                              {r.tipo_tecido && <Badge variant="outline" className="text-[9px]">{r.tipo_tecido}</Badge>}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedCellItems.map(r => (
+                      <MadeiraCard
+                        key={r.id}
+                        item={r}
+                        loteMestre={r.lote_mestre_id ? lotesById[r.lote_mestre_id] : undefined}
+                        onClick={() => { setSelectedCell(null); setDetail(r); }}
+                      />
+                    ))}
                   </div>
+
                 )}
               </div>
             </>
