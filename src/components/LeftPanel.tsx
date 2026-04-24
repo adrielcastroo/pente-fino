@@ -121,6 +121,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const [avariaTipo, setAvariaTipo] = useState<AvariaTipo | null>(null);
   const [avariaDescricao, setAvariaDescricao] = useState('');
   const [avariaFotoUrl, setAvariaFotoUrl] = useState<string | null>(null);
+  const [showVisitorModal, setShowVisitorModal] = useState(false);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
