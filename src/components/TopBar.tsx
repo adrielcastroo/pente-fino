@@ -45,9 +45,10 @@ const TopBar = memo(function TopBar() {
     }
     
     if (!conferente.trim()) { 
-      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.'); 
+      setShowVisitorModal(true);
       return; 
     }
+
 
     const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
