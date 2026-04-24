@@ -30,8 +30,11 @@ function EditRegistroDialog({
   conferenceId: string;
 }) {
   const updateHistoryRegistro = useAppStore(s => s.updateHistoryRegistro);
+  const conferente = useAppStore(s => s.conferente);
   const [form, setForm] = useState<Registro | null>(registro);
   const [saving, setSaving] = useState(false);
+  const [showVisitorModal, setShowVisitorModal] = useState(false);
+
 
   useEffect(() => {
     setForm(registro);
