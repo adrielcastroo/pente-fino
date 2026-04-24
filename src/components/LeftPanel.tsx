@@ -576,7 +576,11 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
-    if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!conferente) { 
+      setShowVisitorModal(true);
+      return; 
+    }
+
     
     // Ensure store is updated with current local values before validation
     const currentItem = localItem.trim();
