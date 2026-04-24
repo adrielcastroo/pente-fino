@@ -174,8 +174,10 @@ const TopBar = memo(function TopBar() {
           )}
         </div>
       </div>
+      <VisitorIdentificationDialog open={showVisitorModal} onOpenChange={setShowVisitorModal} onConfirmed={() => setTimeout(exportExcel, 100)} />
     </header>
   );
 });
+
 
 export default TopBar;
