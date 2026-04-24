@@ -186,4 +186,4 @@ export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onCh
   );
 }
 
-export default LoteMestreSelector;
+});
