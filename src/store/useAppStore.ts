@@ -124,14 +124,27 @@ export const useAppStore = create<AppState>()(
         const index = state.registros.findIndex(r => r.id === id);
         if (index === -1) return state;
         
-        const newRegistros = [...state.registros];
-        newRegistros[index] = { 
-          ...newRegistros[index], 
+        const current = state.registros[index];
+        const updated = { 
+          ...current, 
           ...updates, 
           wasEdited: true, 
           editedBy: state.conferente || 'Sistema',
           editedAt: new Date().toISOString() 
         };
+        
+        // Fast shallow check - if no actual change, don't trigger state update
+        let hasChanges = false;
+        for (const key in updates) {
+          if ((updates as any)[key] !== (current as any)[key]) {
+            hasChanges = true;
+            break;
+          }
+        }
+        if (!hasChanges) return state;
+
+        const newRegistros = [...state.registros];
+        newRegistros[index] = updated;
         
         return { registros: newRegistros };
       }),
