@@ -510,7 +510,11 @@ export default function HistoryPanel() {
     return result;
   }, [history, debouncedSearch]);
 
-  const handleClear = async () => {
+  const paged = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  const loadMore = () => setVisibleCount(p => p + (isLow ? 10 : 25));
     try {
       await clearHistory();
       toast.success('Todo o histórico foi removido.');
