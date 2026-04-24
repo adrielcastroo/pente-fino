@@ -14,6 +14,8 @@ import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/use-auth';
+import { VisitorIdentificationDialog } from './VisitorIdentificationDialog';
+
 
 
 function EditRegistroDialog({
