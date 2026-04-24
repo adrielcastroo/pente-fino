@@ -515,7 +515,8 @@ export default function HistoryPanel() {
   }, [filtered, visibleCount]);
 
   const loadMore = () => setVisibleCount(p => p + (isLow ? 10 : 25));
-    try {
+
+  const handleClear = async () => {
       await clearHistory();
       toast.success('Todo o histórico foi removido.');
       setShowClearConfirm(false);
