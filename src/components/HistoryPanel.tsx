@@ -168,9 +168,11 @@ function EditRegistroDialog({
           <Button className="rounded-xl font-black px-8 h-11 bg-primary shadow-lg shadow-primary/20" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
         </DialogFooter>
       </DialogContent>
+      <VisitorIdentificationDialog open={showVisitorModal} onOpenChange={setShowVisitorModal} onConfirmed={() => setTimeout(handleSave, 100)} />
     </Dialog>
   );
 }
+
 
 function getConferenceFolderName(conf: Conference): string {
   const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
