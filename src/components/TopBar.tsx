@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
+import { VisitorIdentificationDialog } from './VisitorIdentificationDialog';
 
 
 const TopBar = memo(function TopBar() {
@@ -23,6 +24,8 @@ const TopBar = memo(function TopBar() {
    const registroCount = useAppStore(s => s.registros.length);
    const archiveAndClear = useAppStore(s => s.archiveAndClear);
    const isArchiving = useAppStore(s => s.isArchiving);
+   const [showVisitorModal, setShowVisitorModal] = useState(false);
+
 
   
   const exportExcel = async () => {
