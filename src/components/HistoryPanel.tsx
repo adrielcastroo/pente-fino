@@ -55,9 +55,12 @@ function EditRegistroDialog({
       return;
     }
     if (!form.item.trim()) {
-
+      toast.warning('Informe o Item/Referência.');
+      return;
+    }
 
     setSaving(true);
+
     try {
       await updateHistoryRegistro(conferenceId, form.id, {
         item: form.item.trim(),
