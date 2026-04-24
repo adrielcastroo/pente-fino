@@ -38,7 +38,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
-    formData, setFormData, resetFormData
+    setFormData, resetFormData
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     setMode: s.setMode,
@@ -77,19 +77,29 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockCortinaLargura: s.setLockCortinaLargura,
     lockedCortinaLargura: s.lockedCortinaLargura,
     setLockedCortinaLargura: s.setLockedCortinaLargura,
-    formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData
   })));
 
+  // Surgical subscription to formData to avoid re-renders on irrelevant changes
+  const item = useAppStore(s => s.formData.item);
+  const nf = useAppStore(s => s.formData.nf);
+  const m2 = useAppStore(s => s.formData.m2);
+  const lote = useAppStore(s => s.formData.lote);
+  const endereco = useAppStore(s => s.formData.endereco);
+  const aiLargura = useAppStore(s => s.formData.aiLargura);
+  const aiMLinear = useAppStore(s => s.formData.aiMLinear);
+  const diversosTipo = useAppStore(s => s.formData.diversosTipo);
+  const diversosMLinear = useAppStore(s => s.formData.diversosMLinear);
+  const manualLargura = useAppStore(s => s.formData.manualLargura);
+  const coulisseMetragem = useAppStore(s => s.formData.coulisseMetragem);
+  const lockMetragem = useAppStore(s => s.formData.lockMetragem);
+  const madeiraTipo = useAppStore(s => s.formData.madeiraTipo);
+  const quantidade = useAppStore(s => s.formData.quantidade);
+  const cortinaLargura = useAppStore(s => s.formData.cortinaLargura);
+  const cortinaMetragem = useAppStore(s => s.formData.cortinaMetragem);
 
   const { isLow } = usePerformance();
-  const {
-    item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
-    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
-    cortinaLargura, cortinaMetragem
-  } = formData;
-
   const [localItem, setLocalItem] = useState(item);
   const [localNf, setLocalNf] = useState(nf);
   const [localProcesso, setLocalProcesso] = useState(processo);

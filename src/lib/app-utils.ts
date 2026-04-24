@@ -87,19 +87,19 @@ export function generateLoteSistema(
   if (!existingRegistros || existingRegistros.length === 0) return base;
 
   const usedSuffixes: number[] = [];
+  const baseDash = `${base}-`;
   
   for (let i = 0, len = existingRegistros.length; i < len; i++) {
     const r = existingRegistros[i];
     
-    // Quick, non-string checks first
+    // Performance: Quick numeric/primitive checks first to avoid string operations
     if (r.mLinear !== mLinear) continue;
     if (r.endereco !== endereco) continue;
     
-    // Check item
-    const rItemNorm = (r.item || '').trim().toLowerCase();
-    if (rItemNorm !== itemNorm) continue;
+    // Item check
+    if ((r.item || '').trim().toLowerCase() !== itemNorm) continue;
     
-    // Check proc/nf label
+    // Proc/NF check
     const rProc = (r.processo || '').trim();
     const rNf = (r.nf || '').trim();
     const rLabel = rProc ? `PROC ${rProc}` : (rNf ? `NF ${rNf}` : '');
@@ -108,13 +108,8 @@ export function generateLoteSistema(
     const ls = r.loteSistema || '';
     if (ls === base) {
       usedSuffixes.push(0);
-      continue;
-    }
-    
-    // Robust suffix extraction: check if it starts with base + '-'
-    if (ls.startsWith(`${base}-`)) {
-      const suffixStr = ls.slice(base.length + 1);
-      const num = parseInt(suffixStr, 10);
+    } else if (ls.startsWith(baseDash)) {
+      const num = parseInt(ls.slice(baseDash.length), 10);
       if (!isNaN(num)) usedSuffixes.push(num);
     }
   }

@@ -470,6 +470,7 @@ export default function HistoryPanel() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { isLow } = usePerformance();
+  const [visibleCount, setVisibleCount] = useState(isLow ? 10 : 25);
 
   useEffect(() => {
     loadHistory();
@@ -508,6 +509,12 @@ export default function HistoryPanel() {
     }
     return result;
   }, [history, debouncedSearch]);
+
+  const paged = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  const loadMore = () => setVisibleCount(p => p + (isLow ? 10 : 25));
 
   const handleClear = async () => {
     try {
@@ -573,15 +580,27 @@ export default function HistoryPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
-        {filtered.length > 0 ? (
+        {paged.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 max-w-[1400px] mx-auto">
-            {filtered.map(conf => (
+            {paged.map(conf => (
               <ConferenceCard 
                 key={conf.id} 
                 conf={conf} 
                 onDelete={() => deleteConference(conf.id)} 
               />
             ))}
+            
+            {filtered.length > paged.length && (
+              <div className="flex justify-center py-8">
+                <Button 
+                  variant="outline" 
+                  onClick={loadMore} 
+                  className="rounded-xl px-8 font-bold"
+                >
+                  Carregar mais...
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-center">
