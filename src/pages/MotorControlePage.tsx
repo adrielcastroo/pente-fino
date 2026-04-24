@@ -260,7 +260,7 @@ export default function MotorControlePage() {
   const currentCount = subMode === 'motor' ? motorCount : controleCount;
 
   return (
-    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
+    <div className="bg-background lg:border-r border-border/40 overflow-hidden flex flex-col h-full">
       <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
 
         {/* Subtoggle */}
