@@ -297,12 +297,26 @@ export const useAppStore = create<AppState>()(
       updateHistoryRegistro: async (conferenceId, registroId, updates) => {
         try {
           const state = get();
-          const conference = state.history.find(c => c.id === conferenceId);
-          if (!conference) return;
-          const current = conference.registros.find(r => r.id === registroId);
-          if (!current) return;
+          const conferenceIndex = state.history.findIndex(c => c.id === conferenceId);
+          if (conferenceIndex === -1) return;
           
+          const conference = state.history[conferenceIndex];
+          const registroIndex = conference.registros.findIndex(r => r.id === registroId);
+          if (registroIndex === -1) return;
+          
+          const current = conference.registros[registroIndex];
           const merged = { ...current, ...updates };
+          
+          // Optimization: Check for actual changes before proceeding
+          let hasChanges = false;
+          for (const key in updates) {
+            if ((updates as any)[key] !== (current as any)[key]) {
+              hasChanges = true;
+              break;
+            }
+          }
+          if (!hasChanges) return;
+
           const normalizedML = Number(merged.mLinear) || 0;
           const normalizedM2 = Number(merged.m2) || 0;
           const normalizedLargura = Number(merged.largura) || 0;
@@ -344,18 +358,25 @@ export const useAppStore = create<AppState>()(
           
           await apiService.updateRegistro(conferenceId, registroId, payload);
           
-          const newHistory = state.history.map(conf => conf.id !== conferenceId ? conf : {
-            ...conf,
-            registros: conf.registros.map(r => r.id !== registroId ? r : {
-              ...r, 
-              ...merged,
-              processo: normalizedProcesso,
-              loteSistema,
-              wasEdited: true,
-              editedBy,
-              editedAt,
-            }),
-          });
+          const updatedRegistro = {
+            ...current, 
+            ...merged,
+            processo: normalizedProcesso,
+            loteSistema,
+            wasEdited: true,
+            editedBy,
+            editedAt,
+          };
+
+          const newRegistros = [...conference.registros];
+          newRegistros[registroIndex] = updatedRegistro;
+
+          const newHistory = [...state.history];
+          newHistory[conferenceIndex] = {
+            ...conference,
+            registros: newRegistros
+          };
+          
           set({ history: newHistory });
         } catch (e: any) {
           console.error('Error updating history registro:', e);
