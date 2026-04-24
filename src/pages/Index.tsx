@@ -33,19 +33,20 @@ const PageSkeleton = memo(() => (
 const TabRenderer = memo(({ activeTab, isWide, isMobile, isTablet }: { activeTab: string; isWide?: boolean; isMobile: boolean; isTablet: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
   
-  // Show dual panel only on wide screens (xl and up) when it's a form tab
-  if (isWide && isFormTab && !isMobile && !isTablet) {
+  // Show dual panel on lg screens and up when it's a form tab
+  if (isWide && isFormTab && !isMobile) {
     return (
-      <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-6 2xl:gap-8">
-        <div className="w-full xl:w-[460px] 2xl:w-[540px] shrink-0 h-full overflow-y-auto custom-scrollbar pr-1">
+      <div className="flex flex-col lg:flex-row h-full gap-4 lg:gap-6 xl:gap-8 2xl:gap-10">
+        <div className="w-full lg:w-[380px] xl:w-[460px] 2xl:w-[540px] shrink-0 h-full overflow-y-auto custom-scrollbar pr-1">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full hidden xl:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
+        <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
           <RightPanel />
         </div>
       </div>
     );
   }
+
 
   // Mobile/Tablet or non-form tabs
   return (
