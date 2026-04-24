@@ -37,7 +37,7 @@ export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onCh
 
   useEffect(() => { load(); }, [load]);
 
-  const selected = lotes.find(l => l.id === value) || null;
+  const selected = useMemo(() => lotes.find(l => l.id === value) || null, [lotes, value]);
 
   const handleCreate = async () => {
     if (!newName.trim()) {
@@ -184,6 +184,6 @@ export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onCh
       </Dialog>
     </div>
   );
-}
-
 });
+
+export default LoteMestreSelector;
