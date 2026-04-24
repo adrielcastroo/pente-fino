@@ -50,10 +50,12 @@ function EditRegistroDialog({
 
   const handleSave = async () => {
     if (!form) return;
-    if (!form.item.trim()) {
-      toast.warning('Informe o Item/Referência.');
+    if (!conferente) {
+      setShowVisitorModal(true);
       return;
     }
+    if (!form.item.trim()) {
+
 
     setSaving(true);
     try {
