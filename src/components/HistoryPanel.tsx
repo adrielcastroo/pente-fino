@@ -470,6 +470,7 @@ export default function HistoryPanel() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { isLow } = usePerformance();
+  const [visibleCount, setVisibleCount] = useState(isLow ? 10 : 25);
 
   useEffect(() => {
     loadHistory();
