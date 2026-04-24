@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
+import { VisitorIdentificationDialog } from './VisitorIdentificationDialog';
 
 
 const TopBar = memo(function TopBar() {
@@ -23,6 +24,8 @@ const TopBar = memo(function TopBar() {
    const registroCount = useAppStore(s => s.registros.length);
    const archiveAndClear = useAppStore(s => s.archiveAndClear);
    const isArchiving = useAppStore(s => s.isArchiving);
+   const [showVisitorModal, setShowVisitorModal] = useState(false);
+
 
   
   const exportExcel = async () => {
@@ -42,9 +45,10 @@ const TopBar = memo(function TopBar() {
     }
     
     if (!conferente.trim()) { 
-      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.'); 
+      setShowVisitorModal(true);
       return; 
     }
+
 
     const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
@@ -170,8 +174,10 @@ const TopBar = memo(function TopBar() {
           )}
         </div>
       </div>
+      <VisitorIdentificationDialog open={showVisitorModal} onOpenChange={setShowVisitorModal} onConfirmed={() => setTimeout(exportExcel, 100)} />
     </header>
   );
 });
+
 
 export default TopBar;

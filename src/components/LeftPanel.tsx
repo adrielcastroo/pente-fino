@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { VisitorIdentificationDialog } from './VisitorIdentificationDialog';
+
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
@@ -119,6 +121,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const [avariaTipo, setAvariaTipo] = useState<AvariaTipo | null>(null);
   const [avariaDescricao, setAvariaDescricao] = useState('');
   const [avariaFotoUrl, setAvariaFotoUrl] = useState<string | null>(null);
+  const [showVisitorModal, setShowVisitorModal] = useState(false);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -572,7 +576,11 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
-    if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!conferente) { 
+      setShowVisitorModal(true);
+      return; 
+    }
+
     
     // Ensure store is updated with current local values before validation
     const currentItem = localItem.trim();
@@ -1315,8 +1323,18 @@ export const LeftPanel = memo(function LeftPanel() {
           )}
         </div>
       </div>
+      
+      <VisitorIdentificationDialog 
+        open={showVisitorModal} 
+        onOpenChange={setShowVisitorModal} 
+        onConfirmed={() => {
+          // Use setTimeout to allow state to settle before re-calling handleAdd
+          setTimeout(handleAdd, 100);
+        }}
+      />
     </div>
   );
 });
+
 
 export default LeftPanel;
