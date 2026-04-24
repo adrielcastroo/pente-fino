@@ -13,7 +13,7 @@ interface Props {
   onChange: (id: string | null, lote: DbLoteMestre | null) => void;
 }
 
-export function LoteMestreSelector({ value, onChange }: Props) {
+export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onChange }: Props) {
   const [lotes, setLotes] = useState<DbLoteMestre[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
