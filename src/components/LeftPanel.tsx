@@ -1323,8 +1323,18 @@ export const LeftPanel = memo(function LeftPanel() {
           )}
         </div>
       </div>
+      
+      <VisitorIdentificationDialog 
+        open={showVisitorModal} 
+        onOpenChange={setShowVisitorModal} 
+        onConfirmed={() => {
+          // Use setTimeout to allow state to settle before re-calling handleAdd
+          setTimeout(handleAdd, 100);
+        }}
+      />
     </div>
   );
 });
+
 
 export default LeftPanel;
