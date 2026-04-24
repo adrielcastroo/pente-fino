@@ -99,6 +99,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const cortinaLargura = useAppStore(s => s.formData.cortinaLargura);
   const cortinaMetragem = useAppStore(s => s.formData.cortinaMetragem);
 
+  const { isLow } = usePerformance();
   const [localItem, setLocalItem] = useState(item);
   const [localNf, setLocalNf] = useState(nf);
   const [localProcesso, setLocalProcesso] = useState(processo);
