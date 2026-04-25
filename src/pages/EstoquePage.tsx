@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, TreePine, Waves, FileText, Scale, Ruler, Truck, Palette, DollarSign, History, Tag, Edit, AlertTriangle } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, TreePine, Waves, FileText, Scale, Ruler, Truck, Palette, DollarSign, History, Tag, Edit, AlertTriangle, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
@@ -464,69 +464,105 @@ export default function EstoquePage() {
           </CardContent>
         </Card>
 
-        {/* Volume & Peso */}
+        {/* Volume & Peso - Reformulado */}
         <Card className="border-border/30 bg-card/40 shadow-none group hover:border-primary/30 transition-all duration-300">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
                 <Box className="w-4 h-4" />
               </div>
-              <Badge variant="outline" className="text-[10px] font-black border-blue-500/30 text-blue-500 bg-blue-500/5">
-                Volumetria
-              </Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-0.5">
-                <div className="text-xl font-black tabular-nums">{stats.totalM2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</div>
-                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Total m²</div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-xl font-black tabular-nums">{Math.round(stats.totalWeight).toLocaleString('pt-BR')}</div>
-                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Peso Est. (kg)</div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-[10px] font-black text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  <TrendingUp className="w-3 h-3" />
+                  2.4%
+                </div>
+                <Badge variant="outline" className="text-[10px] font-black border-blue-500/30 text-blue-500 bg-blue-500/5">
+                  Volumetria
+                </Badge>
               </div>
             </div>
-            <div className="pt-2 border-t border-border/10 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Ruler className="w-3.5 h-3.5 text-blue-500/70" />
-                <span className="text-[10px] font-black text-foreground/80">{stats.totalMLinear.toLocaleString('pt-BR')} <span className="text-muted-foreground font-bold">M LINEAR</span></span>
+            
+            <div className="space-y-1">
+              <div className="text-3xl font-black tabular-nums tracking-tight">
+                {stats.totalM2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}<span className="text-sm font-bold text-muted-foreground ml-0.5">m²</span>
               </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent>Cálculo baseado em m² e gramatura cadastrada</TooltipContent>
-              </Tooltip>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Densidade de Volume Total</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="p-2 rounded-lg bg-muted/20 border border-border/10 space-y-0.5">
+                <div className="text-sm font-black tabular-nums">{Math.round(stats.totalWeight).toLocaleString('pt-BR')} kg</div>
+                <div className="text-[8px] font-bold text-muted-foreground uppercase">Peso Estimado</div>
+              </div>
+              <div className="p-2 rounded-lg bg-muted/20 border border-border/10 space-y-0.5">
+                <div className="text-sm font-black tabular-nums">{stats.totalMLinear.toLocaleString('pt-BR')} m</div>
+                <div className="text-[8px] font-bold text-muted-foreground uppercase">M Lineares</div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between text-[9px] font-bold uppercase tracking-tighter">
+                <span className="text-muted-foreground">Distribuição</span>
+                <span className="text-blue-500">Ocupado vs Livre</span>
+              </div>
+              <div className="h-1.5 w-full bg-muted/30 rounded-full flex overflow-hidden">
+                <div className="h-full bg-blue-500" style={{ width: `${stats.globalOccupancyRate}%` }} />
+                <div className="h-full bg-blue-500/20" style={{ width: `${100 - stats.globalOccupancyRate}%` }} />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Métricas de Desempenho */}
+        {/* Métricas de Performance - Substituto Analítico */}
         <Card className="border-border/30 bg-card/40 shadow-none group hover:border-primary/30 transition-all duration-300">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
-                <ArrowRightLeft className="w-4 h-4" />
+                <Activity className="w-4 h-4" />
               </div>
               <Badge variant="outline" className="text-[10px] font-black border-amber-500/30 text-amber-500 bg-amber-500/5">
                 Performance
               </Badge>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Giro de Estoque</span>
-                <div className="flex items-center gap-1">
+
+            <div className="flex items-center gap-4">
+              <div className="relative w-16 h-16 shrink-0">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="16" fill="none" className="stroke-muted/20" strokeWidth="3" />
+                  <circle cx="18" cy="18" r="16" fill="none" className="stroke-amber-500" strokeWidth="3" strokeDasharray="100" strokeDashoffset="25" strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center flex-col">
                   <span className="text-xs font-black">2.4x</span>
-                  <span className="text-[8px] font-bold text-emerald-500">+12%</span>
+                  <span className="text-[6px] font-bold text-muted-foreground uppercase">Giro</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat(selectedStat === 'critico' ? null : 'critico')}>
-                <span className={`text-[10px] font-bold uppercase transition-colors ${selectedStat === 'critico' ? 'text-red-500' : 'text-muted-foreground group-hover/item:text-red-500'}`}>Itens Críticos</span>
-                <Badge className={`h-5 px-1.5 border-red-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-red-500/50 transition-all ${selectedStat === 'critico' ? 'bg-red-500 text-white' : 'bg-red-500/10 text-red-500'}`}>{stats.criticalItems}</Badge>
+              <div className="flex-1 space-y-1">
+                <div className="text-lg font-black tracking-tight leading-tight">Meta: 3.0x</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Desempenho vs Objetivo</div>
+                <div className="flex items-center gap-1.5 pt-1">
+                  <div className="h-1.5 flex-1 bg-muted/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-500" style={{ width: '80%' }} />
+                  </div>
+                  <span className="text-[10px] font-black">80%</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat(selectedStat === 'parado' ? null : 'parado')}>
-                <span className={`text-[10px] font-bold uppercase transition-colors ${selectedStat === 'parado' ? 'text-slate-400' : 'text-muted-foreground group-hover/item:text-slate-400'}`}>Estoque Parado (+90d)</span>
-                <Badge className={`h-5 px-1.5 border-slate-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-slate-500/50 transition-all ${selectedStat === 'parado' ? 'bg-slate-500 text-white' : 'bg-slate-500/10 text-slate-500'}`}>{stats.stagnantItems}</Badge>
-              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button 
+                onClick={() => setSelectedStat(selectedStat === 'critico' ? null : 'critico')}
+                className={`flex flex-col p-2 rounded-lg border transition-all text-left ${selectedStat === 'critico' ? 'bg-red-500/10 border-red-500/30' : 'bg-muted/10 border-border/10 hover:border-red-500/20'}`}
+              >
+                <span className="text-[10px] font-black tabular-nums text-red-500">{stats.criticalItems}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase truncate">Itens Críticos</span>
+              </button>
+              <button 
+                onClick={() => setSelectedStat(selectedStat === 'parado' ? null : 'parado')}
+                className={`flex flex-col p-2 rounded-lg border transition-all text-left ${selectedStat === 'parado' ? 'bg-slate-500/10 border-slate-500/30' : 'bg-muted/10 border-border/10 hover:border-slate-500/20'}`}
+              >
+                <span className="text-[10px] font-black tabular-nums text-slate-400">{stats.stagnantItems}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase truncate">Estoque Parado</span>
+              </button>
             </div>
           </CardContent>
         </Card>
