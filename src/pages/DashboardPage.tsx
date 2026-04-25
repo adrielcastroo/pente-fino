@@ -279,9 +279,9 @@ export default function DashboardPage() {
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
                   <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Processo</th>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferente</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
+                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Conferente</th>
+                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden xs:table-cell">Início</th>
+                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Fim</th>
                   <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Duração</th>
                   <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Itens</th>
                 </tr>
