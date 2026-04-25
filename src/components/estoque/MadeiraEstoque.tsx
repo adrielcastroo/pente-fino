@@ -198,12 +198,19 @@ export default function MadeiraEstoque() {
                       <TreePine className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span className="text-sm font-bold truncate">{r.item || '—'}</span>
                     </div>
-                    {r.avaria_tipo && (
-                      <Badge variant="destructive" className="text-[9px] gap-1 shrink-0">
-                        <AlertTriangle className="w-3 h-3" />
-                        {AVARIA_LABELS[r.avaria_tipo] || r.avaria_tipo}
-                      </Badge>
-                    )}
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      {r.avaria_tipo && (
+                        <Badge variant="destructive" className="text-[9px] gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {AVARIA_LABELS[r.avaria_tipo] || r.avaria_tipo}
+                        </Badge>
+                      )}
+                      {r.estoque_minimo && (r.m_linear || 0) < r.estoque_minimo && (
+                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[9px] animate-pulse">
+                          Reposição
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <MapPin className="w-3 h-3" />
