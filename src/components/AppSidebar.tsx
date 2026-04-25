@@ -1,4 +1,5 @@
 import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
 import { AppTab } from '@/types';
@@ -24,20 +25,21 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-const menuItems: { key: AppTab; label: string; icon: any }[] = [
-  { key: 'inicio', label: 'Início', icon: Home },
-  { key: 'tecido', label: 'Tecido', icon: Waves },
-  { key: 'madeira', label: 'Madeira', icon: TreePine },
-  { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
-  { key: 'estoque', label: 'Estoque', icon: Warehouse },
-  { key: 'saida', label: 'Saída', icon: Archive },
-  { key: 'table', label: 'Tabela', icon: Table },
-  { key: 'history', label: 'Histórico', icon: FolderOpen },
+const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
+  { key: 'inicio', label: 'Início', icon: Home, path: '/dashboard' },
+  { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
+  { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
+  { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
+  { key: 'estoque', label: 'Estoque', icon: Warehouse, path: '/estoque' },
+  { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
+  { key: 'table', label: 'Tabela', icon: Table, path: '/tabela' },
+  { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const registroCount = useAppStore(s => s.registros.length);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -63,14 +65,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
     }
   }, [isMobile, isHovered, setOpen]);
 
-  const handleTabClick = useCallback((tab: AppTab) => {
-    onTabChange(tab);
+  const handleTabClick = useCallback((tab: AppTab, path: string) => {
+    navigate(path);
     if (isMobile) {
       setOpenMobile(false);
     } else if (window.innerWidth < 1024) {
       setOpen(false);
     }
-  }, [onTabChange, isMobile, setOpenMobile, setOpen]);
+  }, [navigate, isMobile, setOpenMobile, setOpen]);
 
   return (
     <Sidebar
@@ -83,7 +85,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       {/* ── Header / Logo ── */}
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
         <button
-          onClick={() => handleTabClick('inicio')}
+          onClick={() => handleTabClick('inicio', '/dashboard')}
           className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
           aria-label="Ir para Início"
         >
@@ -116,7 +118,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       size="lg"
-                      onClick={() => handleTabClick(item.key)}
+                      onClick={() => handleTabClick(item.key, item.path)}
                       tooltip={item.label}
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
@@ -178,7 +180,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              onClick={() => handleTabClick('settings')}
+              onClick={() => handleTabClick('settings', '/configuracoes')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"

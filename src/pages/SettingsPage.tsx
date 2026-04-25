@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAppStore } from '@/store/useAppStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertDialog,
@@ -77,6 +78,12 @@ export default function SettingsPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
+  const setFormData = useAppStore(s => s.setFormData);
+
+  useEffect(() => {
+    setFormData({ activeTab: 'settings' });
+  }, [setFormData]);
+
 
   // Performance settings
   const [reduceAnimations, setReduceAnimations] = useState(localStorage.getItem('perf_reduce_animations') === 'true');

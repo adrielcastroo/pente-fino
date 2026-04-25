@@ -64,9 +64,12 @@ export default function SaidaPage() {
     }
   };
 
+  const setFormData = useAppStore(s => s.setFormData);
+
   useEffect(() => {
     loadSaidas();
-  }, []);
+    setFormData({ activeTab: 'saida' });
+  }, [setFormData]);
 
   useEffect(() => {
     if (scanMode && scanRef.current) {

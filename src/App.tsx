@@ -7,7 +7,17 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Suspense, lazy } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
-const Index = lazy(() => import("./pages/Index.tsx"));
+const MainLayout = lazy(() => import("./components/MainLayout.tsx"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage.tsx"));
+const TecidoPage = lazy(() => import("./pages/TecidoPage.tsx"));
+const MadeiraPage = lazy(() => import("./pages/MadeiraPage.tsx"));
+const MotorControlePage = lazy(() => import("./pages/MotorControlePage.tsx"));
+const EstoquePage = lazy(() => import("./pages/EstoquePage.tsx"));
+const SaidaPage = lazy(() => import("./pages/SaidaPage.tsx"));
+const TabelaPage = lazy(() => import("./pages/TabelaPage.tsx"));
+const HistoricoPage = lazy(() => import("./pages/HistoricoPage.tsx"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
+
 const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.tsx"));
 const VerifyOtp = lazy(() => import("./pages/VerifyOtp.tsx"));
@@ -24,7 +34,7 @@ const LoginRoute = ({ children }: { children: React.ReactNode }) => {
   );
   
   if (user || isGuest) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -67,7 +77,20 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                
+                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/tecido" element={<TecidoPage />} />
+                  <Route path="/madeira" element={<MadeiraPage />} />
+                  <Route path="/motor" element={<MotorControlePage />} />
+                  <Route path="/estoque" element={<EstoquePage />} />
+                  <Route path="/saida" element={<SaidaPage />} />
+                  <Route path="/tabela" element={<TabelaPage />} />
+                  <Route path="/historico" element={<HistoricoPage />} />
+                  <Route path="/configuracoes" element={<SettingsPage />} />
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
