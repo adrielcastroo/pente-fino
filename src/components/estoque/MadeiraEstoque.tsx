@@ -253,8 +253,12 @@ export default function MadeiraEstoque() {
                 <Field label="Tipo" value={detail.tipo_tecido || '—'} />
                 <Field label="NF" value={detail.nf || '—'} />
                 <Field label="Lote" value={detail.lote || '—'} />
+                <Field label="Espessura" value={detail.espessura ? `${detail.espessura} mm` : '—'} />
                 <Field label="Largura" value={detail.largura ? `${detail.largura} m` : '—'} />
-                <Field label="M Linear" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
+                <Field label="Comprimento" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
+                <Field label="Acabamento" value={detail.acabamento || '—'} />
+                <Field label="Estoque Mínimo" value={detail.estoque_minimo ? `${detail.estoque_minimo} m` : '—'} />
+                <Field label="Status" value={detail.status || 'Disponível'} />
                 <Field label="Conferente" value={detail.edited_by || '—'} />
                 <Field label="Data" value={formatDateBR(detail.created_at)} />
               </div>
