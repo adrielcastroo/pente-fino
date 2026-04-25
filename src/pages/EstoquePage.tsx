@@ -116,6 +116,9 @@ export default function EstoquePage() {
 
   useEffect(() => { loadStats(); }, [loadStats]);
   useEffect(() => { loadPosicoes(); }, [loadPosicoes]);
+  useEffect(() => {
+    setFormData({ activeTab: 'estoque' });
+  }, [setFormData]);
 
   const posicoes = posicoesForActiveTec;
   // totalSlots is constant — compute once at module scope below
