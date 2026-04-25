@@ -123,7 +123,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Stat Cards - now clickable to open detail dialogs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <button 
           onClick={() => setDetailDialog('conferentes')} 
           className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
