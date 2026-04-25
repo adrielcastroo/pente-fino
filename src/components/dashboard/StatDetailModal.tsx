@@ -180,45 +180,88 @@ export const StatDetailModal = ({
               </div>
 
               {/* Complementary Charts/Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Capacidade</h4>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/30" />
+              <div className="space-y-6">
+                {type === 'capacidade' && (
+                  <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-4">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Ocupação por Estrutura</h4>
+                    <div className="space-y-3">
+                      {stats.map((s, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex justify-between text-[10px] font-bold uppercase">
+                            <span>{s.label}</span>
+                            <span>{s.value}</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary" style={{ width: `${s.percent}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-end gap-2">
-                    <span className="text-2xl font-black">1.2k</span>
-                    <span className="text-[10px] font-bold text-muted-foreground mb-1">UNIDADES</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: '65%' }}
-                      className={`h-full ${colors.bg} ${colors.primary} bg-current`}
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Crescimento</h4>
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                {type === 'ocupacao' && (
+                  <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-4">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Mix de Materiais</h4>
+                    <div className="h-40 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.map(s => ({ name: s.label, value: s.percent }))} layout="vertical">
+                          <XAxis type="number" hide domain={[0, 100]} />
+                          <YAxis dataKey="name" type="category" hide />
+                          <ChartTooltip 
+                            cursor={{ fill: 'transparent' }}
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-background/90 backdrop-blur-md border border-border/40 p-2 rounded-lg shadow-xl text-[10px] font-bold uppercase">
+                                    {payload[0].payload.name}: {payload[0].value}%
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                            {stats.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={index === 0 ? '#22d3ee' : index === 1 ? '#a78bfa' : '#f472b6'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                  <div className="flex items-end gap-2">
-                    <span className="text-2xl font-black text-emerald-500">+12%</span>
-                    <span className="text-[10px] font-bold text-muted-foreground mb-1">ESTE MÊS</span>
+                )}
+
+                {type === 'avarias' && (
+                  <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-4">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Top 5 Modelos com Avaria</h4>
+                    <div className="space-y-3">
+                      {stats.slice(0, 5).map((s, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-red-500/5 rounded-xl border border-red-500/10">
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-red-500 w-4">#{i+1}</span>
+                            <span className="text-xs font-bold truncate max-w-[150px]">{s.label}</span>
+                          </div>
+                          <span className="text-xs font-black text-red-400">{s.value}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex gap-1 items-end h-8">
-                    {[40, 70, 45, 90, 65, 85].map((h, i) => (
-                      <motion.div 
-                        key={i}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${h}%` }}
-                        className="flex-1 bg-emerald-500/20 rounded-t-sm"
-                      />
-                    ))}
+                )}
+
+                {type === 'lote' && (
+                  <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-4">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Resumo Analítico</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {stats.map((s, i) => (
+                        <div key={i} className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">{s.label}</p>
+                          <p className="text-lg font-black">{s.value}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Footer Info */}
