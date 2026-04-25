@@ -31,12 +31,19 @@ export default function DashboardPage() {
   const isMobile = useIsMobile();
   const {
     history,
+    isHistoryLoading,
+    historyError,
+    loadHistory,
     stats,
     detailChart,
     setDetailChart,
     handleStatClick,
     handleExport,
   } = useDashboard();
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
 
