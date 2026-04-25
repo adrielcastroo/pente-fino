@@ -495,10 +495,19 @@ export default function EstoquePage() {
         <MadeiraEstoque key={madeiraVersion} />
       ) : (
         <>
-      {/* Redesigned Dashboard Stats - New UI/UX Pattern */}
+      {/* Redesigned Dashboard Stats - Redesign by UI/UX Specialist */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Saldo Total */}
-        <Card className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-primary/30 group">
+        {/* Card 1: Capacidade Total */}
+        <Card 
+          onClick={() => setStatModal({ 
+            isOpen: true, 
+            title: 'Capacidade Total', 
+            value: stats.globalOccupied, 
+            type: 'capacidade',
+            stats: stats.tecBreakdown.map(t => ({ label: `Estrutura ${t.name}`, value: `${t.occupied}/${t.total}`, percent: t.percent, trend: 'up' as const }))
+          })}
+          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-primary/30 group cursor-pointer"
+        >
           <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
             <Package className="w-24 h-24 text-primary" />
           </div>
@@ -507,109 +516,50 @@ export default function EstoquePage() {
               <div className="p-2 rounded-xl bg-primary/10 text-primary">
                 <Box className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Saldo Total</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Capacidade Total</span>
             </div>
             
             <div className="space-y-1">
               <div className="text-4xl font-black tracking-tight flex items-baseline gap-1">
-                {stats.totalM2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
-                <span className="text-sm font-bold text-muted-foreground">m²</span>
+                {stats.globalOccupied}
+                <span className="text-sm font-bold text-muted-foreground">/ {stats.globalTotalSlots}</span>
               </div>
-              <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground/70 uppercase">
-                <span className="flex items-center gap-1"><Ruler className="w-3 h-3" /> {stats.totalMLinear.toLocaleString('pt-BR')}m</span>
-                <span className="flex items-center gap-1"><Scale className="w-3 h-3" /> {Math.round(stats.totalWeight).toLocaleString('pt-BR')}kg</span>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)] transition-all duration-1000" style={{ width: '100%' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Entradas */}
-        <Card className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-emerald-500/30 group">
-          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <TrendingUp className="w-24 h-24 text-emerald-500" />
-          </div>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-                <ArrowRightLeft className="w-5 h-5 rotate-90" />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Entradas (Hoje)</span>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1">
-                {stats.entriesToday}
-                <span className="text-sm font-bold text-muted-foreground">itens</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase">
-                <TrendingUp className="w-3 h-3" />
-                Novos registros
+              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/70 uppercase">
+                <Grid3X3 className="w-3 h-3" /> Slots físicos ocupados
               </div>
             </div>
 
             <div className="pt-2">
               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" 
-                  style={{ width: stats.entriesToday > 0 ? '100%' : '0%' }} 
+                  className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)] transition-all duration-1000" 
+                  style={{ width: `${(stats.globalOccupied / stats.globalTotalSlots) * 100}%` }} 
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Saídas */}
-        <Card className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-orange-500/30 group">
+        {/* Card 2: Taxa de Ocupação */}
+        <Card 
+          onClick={() => setStatModal({ 
+            isOpen: true, 
+            title: 'Taxa de Ocupação', 
+            value: `${Math.round(stats.globalOccupancyRate)}%`, 
+            type: 'ocupacao',
+            stats: Object.entries(stats.materialBreakdown).map(([label, value]) => ({ label, value: `${value} itens`, percent: Math.round((value / stats.globalOccupied) * 100) }))
+          })}
+          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-violet-500/30 group cursor-pointer"
+        >
           <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <TrendingDown className="w-24 h-24 text-orange-500" />
-          </div>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500">
-                <LogOut className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Saídas (Hoje)</span>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1 text-orange-400">
-                {stats.exitsToday}
-                <span className="text-sm font-bold text-muted-foreground">itens</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-orange-500 uppercase">
-                <TrendingDown className="w-3 h-3" />
-                Baixas realizadas
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)] transition-all duration-1000" 
-                  style={{ width: stats.exitsToday > 0 ? '100%' : '0%' }} 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Ocupação */}
-        <Card className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-violet-500/30 group">
-          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <Layers className="w-24 h-24 text-violet-500" />
+            <Activity className="w-24 h-24 text-violet-500" />
           </div>
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
-                <Grid3X3 className="w-5 h-5" />
+                <Layers className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Capacidade Ocupada</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Taxa de Ocupação</span>
             </div>
             
             <div className="space-y-1">
@@ -617,8 +567,8 @@ export default function EstoquePage() {
                 {Math.round(stats.globalOccupancyRate)}
                 <span className="text-sm font-bold text-muted-foreground">%</span>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase">
-                <span className="text-violet-500">{stats.occupied}</span> / {TOTAL_SLOTS} slots totais
+              <div className="flex items-center gap-1 text-[10px] font-bold text-violet-500 uppercase">
+                <TrendingUp className="w-3 h-3" /> Utilização em tempo real
               </div>
             </div>
 
@@ -627,6 +577,95 @@ export default function EstoquePage() {
                 <div 
                   className="h-full bg-gradient-to-r from-violet-600 to-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.5)] transition-all duration-1000" 
                   style={{ width: `${stats.globalOccupancyRate}%` }} 
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Índice de Avarias */}
+        <Card 
+          onClick={() => setStatModal({ 
+            isOpen: true, 
+            title: 'Índice de Avarias', 
+            value: stats.damagedCount, 
+            type: 'avarias',
+            stats: stats.modelDamages.map(([label, value]) => ({ label, value: `${value} avarias`, percent: Math.round((value / stats.damagedCount) * 100) || 0 }))
+          })}
+          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-red-500/30 group cursor-pointer"
+        >
+          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
+            <AlertTriangle className="w-24 h-24 text-red-500" />
+          </div>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-red-500/10 text-red-500">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Índice de Avarias</span>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1 text-red-400">
+                {stats.damagedCount}
+                <span className="text-sm font-bold text-muted-foreground">itens</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase">
+                <TrendingDown className="w-3 h-3" /> Itens com dano identificado
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-1000" 
+                  style={{ width: stats.damagedCount > 0 ? `${(stats.damagedCount / stats.globalOccupied) * 100}%` : '0%' }} 
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Lote Mestre */}
+        <Card 
+          onClick={() => setStatModal({ 
+            isOpen: true, 
+            title: 'Lote Mestre', 
+            value: stats.activeLotsCount, 
+            type: 'lote',
+            stats: [
+              { label: 'Metragem Total', value: `${Math.round(stats.totalMLinear)}m` },
+              { label: 'Lotes Ativos', value: stats.activeLotsCount }
+            ]
+          })}
+          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-emerald-500/30 group cursor-pointer"
+        >
+          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
+            <Tag className="w-24 h-24 text-emerald-500" />
+          </div>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                <Tag className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Lote Mestre</span>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1 text-emerald-400">
+                {Math.round(stats.totalMLinear)}
+                <span className="text-sm font-bold text-muted-foreground">M</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase">
+                <CheckCircle2 className="w-3 h-3" /> {stats.activeLotsCount} lotes ativos
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" 
+                  style={{ width: '100%' }} 
                 />
               </div>
             </div>
