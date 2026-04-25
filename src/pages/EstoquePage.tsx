@@ -225,15 +225,44 @@ export default function EstoquePage() {
     setConfirmDelete(true);
   };
 
-  const executeDelete = async (pos: Posicao) => {
-    const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
-    if (error) toast.error('Erro ao excluir');
-    else {
-      setDetailPos(null);
+  const handleSaveDetails = async () => {
+    if (!detailPos) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('estoque_posicoes')
+        .update(editForm as any)
+        .eq('id', detailPos.id);
+
+      if (error) throw error;
+
+      toast.success('Informações atualizadas com sucesso');
+      setIsEditing(false);
       loadPosicoes();
-      loadStats();
-      toast.success('Item excluído');
+      setDetailPos(prev => prev ? { ...prev, ...editForm } : null);
+    } catch (e: any) {
+      console.error('Erro ao salvar detalhes:', e);
+      toast.error('Erro ao salvar: ' + (e.message || ''));
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const startEditing = () => {
+    if (!detailPos) return;
+    setEditForm({
+      item: detailPos.item,
+      composicao: detailPos.composicao || '',
+      gramatura: detailPos.gramatura || 0,
+      largura_util: detailPos.largura_util || 0,
+      fornecedor: detailPos.fornecedor || '',
+      codigo_cor: detailPos.codigo_cor || '',
+      preco_metro: detailPos.preco_metro || 0,
+      m_linear: detailPos.m_linear || 0,
+      estoque_minimo: detailPos.estoque_minimo || 5,
+    });
+    setIsEditing(true);
   };
 
   useEffect(() => {
