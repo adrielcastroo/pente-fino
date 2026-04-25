@@ -636,7 +636,8 @@ export default function EstoquePage() {
             stats: [
               { label: 'Metragem Total', value: `${Math.round(stats.totalMLinear)}m` },
               { label: 'Lotes Ativos', value: stats.activeLotsCount }
-            ]
+            ],
+            data: Object.entries(stats.lotMestreStats).map(([id, s]) => ({ id, ...s }))
           })}
           className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-emerald-500/30 group cursor-pointer"
         >
