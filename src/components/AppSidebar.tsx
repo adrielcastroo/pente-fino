@@ -39,6 +39,7 @@ const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const registroCount = useAppStore(s => s.registros.length);
 
   const [isHovered, setIsHovered] = useState(false);
