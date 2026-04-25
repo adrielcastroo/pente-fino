@@ -180,7 +180,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              onClick={() => handleTabClick('settings')}
+              onClick={() => handleTabClick('settings', '/configuracoes')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"
