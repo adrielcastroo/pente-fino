@@ -112,6 +112,15 @@ export default function EstoquePage() {
       const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura, m2, m_linear, data_registro, item, estoque_minimo, gramatura, largura_util');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count, error: countError } = await supabase
+        .from('estoque_saidas')
+        .select('*', { count: 'exact', head: true })
+        .gte('data_saida', today.toISOString());
+      
+      if (!countError) setExitsToday(count || 0);
     } catch (e) {
       console.error('Erro ao carregar estatísticas:', e);
     }
