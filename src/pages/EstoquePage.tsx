@@ -161,14 +161,19 @@ export default function EstoquePage() {
     let totalM2 = 0, totalMLinear = 0, totalWeight = 0;
     let criticalItems = 0;
     let stagnantItems = 0;
+    let entriesToday = 0;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
-    for (let i = 0, len = currentStructureItems.length; i < len; i++) {
-      const p = currentStructureItems[i] as any;
-      const s = p.status;
-      if (s === 'ocupado') {
-        occupied++;
+    for (let i = 0, len = allItems.length; i < len; i++) {
+      const p = allItems[i] as any;
+      
+      // Global stats for Saldo Total
+      if (p.status === 'ocupado') {
         totalM2 += p.m2 || 0;
         totalMLinear += p.m_linear || 0;
         if (p.gramatura && p.largura_util && p.m_linear) {
@@ -176,10 +181,21 @@ export default function EstoquePage() {
         }
         if (p.m_linear < (p.estoque_minimo || 5)) criticalItems++;
         if (p.data_registro && new Date(p.data_registro) < ninetyDaysAgo) stagnantItems++;
+        
+        // Entradas hoje
+        if (p.data_registro && new Date(p.data_registro) >= today) {
+          entriesToday++;
+        }
       }
-      else if (s === 'bloqueado') blocked++;
-      else if (s === 'reservado') reserved++;
-      else if (s === 'saida') exited++;
+
+      // Stats for active TEC
+      if (p.estrutura === activeTec) {
+        const s = p.status;
+        if (s === 'ocupado') occupied++;
+        else if (s === 'bloqueado') blocked++;
+        else if (s === 'reservado') reserved++;
+        else if (s === 'saida') exited++;
+      }
     }
     
     const free = Math.max(0, structureSlots - occupied - blocked - reserved - exited);
@@ -196,8 +212,9 @@ export default function EstoquePage() {
     return { 
       totalSlots: structureSlots, occupied, blocked, reserved, exited, free,
       totalM2, totalMLinear, totalWeight, criticalItems, stagnantItems,
-      globalOccupancyRate, tecBreakdown
+      globalOccupancyRate, tecBreakdown, entriesToday
     };
+  }, [allPosicoes, activeTec]);
   }, [allPosicoes, activeTec]);
 
   const cellMap = useMemo(() => {
