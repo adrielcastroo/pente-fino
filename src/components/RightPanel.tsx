@@ -49,12 +49,13 @@ interface TableCellProps {
   onStartEdit: (rowId: string, key: string, val: string) => void;
   onCopy: (t: string) => void;
   loteSistema?: string;
+  className?: string;
 }
 
-const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema }: TableCellProps) => {
+const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema, className }: TableCellProps) => {
   if (isEditing) {
     return (
-      <td className="px-2 sm:px-4 py-2 sm:py-3.5">
+      <td className={`px-2 sm:px-4 py-2 sm:py-3.5 ${className || ''}`}>
         <input
           autoFocus
           value={editValue}
@@ -94,7 +95,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${columnKey === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${columnKey === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''}`}
+      className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${columnKey === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${columnKey === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''} ${className || ''}`}
     >
       {content}
     </td>
@@ -125,23 +126,31 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
   return (
     <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
-      {columns.map((column: any) => (
-        <TableCell
-          key={column.key}
-          id={r.id}
-          columnKey={column.key}
-          value={(r as any)[column.key]}
-          searchQuery={searchQuery}
-          isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
-          editValue={editValue}
-          onEditValueChange={onEditValueChange}
-          onCommitEdit={onCommitEdit}
-          onCancelEdit={onCancelEdit}
-          onStartEdit={onStartEdit}
-          onCopy={onCopy}
-          loteSistema={r.loteSistema}
-        />
-      ))}
+      {columns.map((column: any) => {
+        // Critical columns that should always show: item, mLinear, quantidade, loteSistema
+        // Less critical: nf, processo, m2, largura, lote, endereco
+        const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
+        const responsiveClass = isCritical ? "" : "hidden md:table-cell";
+
+        return (
+          <TableCell
+            key={column.key}
+            id={r.id}
+            columnKey={column.key}
+            value={(r as any)[column.key]}
+            searchQuery={searchQuery}
+            isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
+            editValue={editValue}
+            onEditValueChange={onEditValueChange}
+            onCommitEdit={onCommitEdit}
+            onCancelEdit={onCancelEdit}
+            onStartEdit={onStartEdit}
+            onCopy={onCopy}
+            loteSistema={r.loteSistema}
+            className={responsiveClass}
+          />
+        );
+      })}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <Tooltip>
@@ -503,14 +512,18 @@ export default function RightPanel() {
               <thead>
                 <tr className="bg-muted/30">
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
-                  {columns.map(column => (
-                    <th 
-                      key={column.key} 
-                      className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
-                    >
-                      {column.shortLabel || column.label}
-                    </th>
-                  ))}
+                  {columns.map(column => {
+                    const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
+                    const responsiveClass = isCritical ? "" : "hidden md:table-cell";
+                    return (
+                      <th 
+                        key={column.key} 
+                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background ${responsiveClass}`}
+                      >
+                        {column.shortLabel || column.label}
+                      </th>
+                    );
+                  })}
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
                 </tr>
               </thead>

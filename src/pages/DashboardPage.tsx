@@ -123,7 +123,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Stat Cards - now clickable to open detail dialogs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <button 
           onClick={() => setDetailDialog('conferentes')} 
           className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
@@ -192,39 +192,35 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart} 
         />
         
-        {!isMobile && (
-          <>
-            <SummaryChart 
-              title="Distribuição" 
-              desc="Setores Operacionais" 
-              data={stats.categorias} 
-              type="pie" 
-              icon={Layers3} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Distribuição" 
+          desc="Setores Operacionais" 
+          data={stats.categorias} 
+          type="pie" 
+          icon={Layers3} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart 
-              title="Especificações" 
-              desc="Materiais / Tipos" 
-              data={stats.tipos} 
-              type="pie" 
-              icon={TrendingUp} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Especificações" 
+          desc="Materiais / Tipos" 
+          data={stats.tipos} 
+          type="pie" 
+          icon={TrendingUp} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart
-              title="Registros por Conferência"
-              desc="Volume por Sessão"
-              data={registrosPerConference.slice(0, 10)}
-              type="bar"
-              icon={Package}
-              chartKey="value"
-              onDetailClick={setDetailChart}
-            />
-          </>
-        )}
+        <SummaryChart
+          title="Registros por Conferência"
+          desc="Volume por Sessão"
+          data={registrosPerConference.slice(0, 10)}
+          type="bar"
+          icon={Package}
+          chartKey="value"
+          onDetailClick={setDetailChart}
+        />
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
@@ -248,7 +244,7 @@ export default function DashboardPage() {
                   <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Nome</th>
                   <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferências</th>
                   <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Registros</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Último</th>
+                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden xs:table-cell">Último</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
@@ -257,7 +253,7 @@ export default function DashboardPage() {
                     <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
                     <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
                     <td className="px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px]">{formatDateBR(c.lastDate)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px] hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -283,9 +279,9 @@ export default function DashboardPage() {
               <thead className="sticky top-0 bg-muted/30">
                 <tr>
                   <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Processo</th>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferente</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
-                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
+                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Conferente</th>
+                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden xs:table-cell">Início</th>
+                  <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Fim</th>
                   <th className="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider text-muted-foreground">Duração</th>
                   <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Itens</th>
                 </tr>
@@ -294,9 +290,9 @@ export default function DashboardPage() {
                 {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-bold text-foreground truncate max-w-[150px]">{c.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
-                    <td className="px-4 py-3 text-center font-mono text-emerald-500/80 text-[10px]">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-4 py-3 text-center font-mono text-muted-foreground/60 text-[10px]">{formatTimeBR(c.finishedAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px] hidden sm:table-cell">{c.conferente || '—'}</td>
+                    <td className="px-4 py-3 text-center font-mono text-emerald-500/80 text-[10px] hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
+                    <td className="px-4 py-3 text-center font-mono text-muted-foreground/60 text-[10px] hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
                     <td className="px-4 py-3 text-center">
                       <Badge variant="outline" className="text-[8px] font-bold px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">{c.duration}</Badge>
                     </td>

@@ -104,7 +104,7 @@ const TopBar = memo(function TopBar() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
           {isGuest && (
-            <div className="relative group w-full max-w-[140px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
+            <div className="relative group w-full max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
               <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
               <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
                 <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
