@@ -50,7 +50,7 @@ export const VerifyOtpForm = ({
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: data.otp,
-        type: "email", // Use "email" type for OTP sent via signInWithOtp
+        type: "recovery", // Correct type for password recovery
       });
 
       if (error) throw error;
