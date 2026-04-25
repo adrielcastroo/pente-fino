@@ -40,6 +40,13 @@ interface Posicao {
   data_saida: string | null;
   registro_id: string | null;
   avaria_foto_url?: string | null;
+  composicao?: string;
+  gramatura?: number;
+  largura_util?: number;
+  fornecedor?: string;
+  codigo_cor?: string;
+  preco_metro?: number;
+  estoque_minimo?: number;
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
