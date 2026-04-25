@@ -25,6 +25,10 @@ interface MadeiraRow {
   avaria_tipo: string | null;
   avaria_descricao: string | null;
   avaria_foto_url: string | null;
+  espessura: number | null;
+  acabamento: string | null;
+  estoque_minimo: number | null;
+  status: string;
   created_at: string;
   edited_by: string | null;
 }
