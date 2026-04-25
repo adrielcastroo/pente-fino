@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, TreePine, Waves, FileText, Scale, Ruler, Truck, Palette, DollarSign, History, Tag, Edit, AlertTriangle } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, TreePine, Waves, FileText, Scale, Ruler, Truck, Palette, DollarSign, History, Tag, Edit, AlertTriangle, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
