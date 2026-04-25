@@ -512,14 +512,18 @@ export default function RightPanel() {
               <thead>
                 <tr className="bg-muted/30">
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
-                  {columns.map(column => (
-                    <th 
-                      key={column.key} 
-                      className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
-                    >
-                      {column.shortLabel || column.label}
-                    </th>
-                  ))}
+                  {columns.map(column => {
+                    const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
+                    const responsiveClass = isCritical ? "" : "hidden md:table-cell";
+                    return (
+                      <th 
+                        key={column.key} 
+                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background ${responsiveClass}`}
+                      >
+                        {column.shortLabel || column.label}
+                      </th>
+                    );
+                  })}
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
                 </tr>
               </thead>
