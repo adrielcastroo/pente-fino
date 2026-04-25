@@ -752,8 +752,8 @@ export const LeftPanel = memo(function LeftPanel() {
   }, [madeiraTipo, isMadeira]);
 
   return (
-    <div className="bg-background lg:border-r border-border/40 overflow-hidden flex flex-col h-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
-      <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar">
+    <div className="bg-background lg:border-r border-border/40 overflow-hidden flex flex-col h-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none shadow-sm lg:shadow-none">
+      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-5 custom-scrollbar">
         
         {/* Mode Toggle */}
         {!isMadeira && (
