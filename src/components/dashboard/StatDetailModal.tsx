@@ -249,14 +249,16 @@ export const StatDetailModal = ({
                   </div>
                 )}
 
-                {type === 'lote' && (
+                {type === 'lote' && data && data.length > 0 && (
                   <div className="bg-muted/10 rounded-2xl p-5 border border-border/5 space-y-4">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Resumo Analítico</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {stats.map((s, i) => (
-                        <div key={i} className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">{s.label}</p>
-                          <p className="text-lg font-black">{s.value}</p>
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Detalhamento por Lote</h4>
+                    <div className="max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                      {data.map((lote: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-white/5 rounded-lg text-[10px] font-bold">
+                          <span className="truncate max-w-[80px]">ID: {lote.id.slice(0, 8)}</span>
+                          <span className="text-muted-foreground">{lote.type}</span>
+                          <span className="text-emerald-500">{Math.round(lote.meters)}m</span>
+                          {lote.damaged > 0 && <span className="text-red-500">({lote.damaged} avarias)</span>}
                         </div>
                       ))}
                     </div>
