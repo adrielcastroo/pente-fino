@@ -37,9 +37,8 @@ const ResetPassword = () => {
   }, [navigate]);
 
   const handleSuccess = () => {
-    // Navigate directly to dashboard as the user is already authenticated
-    // after a successful password update in a recovery session.
-    navigate("/", { replace: true });
+    // Navigate to login with success message
+    navigate("/login", { replace: true });
   };
 
   if (isChecking) {
