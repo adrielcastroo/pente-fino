@@ -111,97 +111,12 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      <StatCards 
-        stats={stats} 
-        onStatClick={(tab) => {
-          if (tab === 'history') {
-            setStatModal({
-              isOpen: true,
-              title: 'Conferências',
-              value: stats.totalConferencias,
-              type: 'total',
-              stats: [
-                { label: 'Concluídas', value: history.filter(h => h.finishedAt).length, percent: 85, trend: 'up' },
-                { label: 'Em Andamento', value: history.filter(h => !h.finishedAt).length, percent: 15, trend: 'down' }
-              ]
-            });
-          } else if (tab === 'table') {
-            setStatModal({
-              isOpen: true,
-              title: 'Registros',
-              value: stats.totalRegistros,
-              type: 'ocupado',
-              stats: [
-                { label: 'Tecido', value: stats.categorias.find(c => c.name === 'Tecido')?.value || 0, percent: 42, trend: 'up' },
-                { label: 'Madeira', value: stats.categorias.find(c => c.name === 'Madeira')?.value || 0, percent: 38, trend: 'up' }
-              ]
-            });
-          } else if (tab === 'inicio') {
-            setStatModal({
-              isOpen: true,
-              title: 'Conferentes',
-              value: stats.totalConferentes,
-              type: 'livre',
-              stats: [
-                { label: 'Ativos Hoje', value: stats.topConferentes.length, percent: 92, trend: 'up' },
-                { label: 'Média/Dia', value: Math.round(stats.totalRegistros / 30), percent: 5, trend: 'down' }
-              ]
-            });
-          }
-        }} 
-      />
+      {/* StatCards removidos conforme solicitação */}
 
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-        <div className="md:col-span-2 lg:col-span-2 xl:col-span-2">
-          <TimelineChart 
-            data={stats.timeline} 
-            onExport={handleExport} 
-            onDetailClick={() => setDetailDialog('conferences')} 
-          />
-        </div>
 
-        <SummaryChart 
-          title="Top Conferentes" 
-          desc="Produção Individual" 
-          data={stats.topConferentes} 
-          type="bar" 
-          icon={Users} 
-          chartKey="count"
-          onDetailClick={setDetailChart} 
-        />
-        
-        <SummaryChart 
-          title="Distribuição" 
-          desc="Setores" 
-          data={stats.categorias} 
-          type="pie" 
-          icon={Layers3} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
+      {/* Charts grid removido conforme solicitação */}
 
-        <SummaryChart 
-          title="Materiais" 
-          desc="Tipos" 
-          data={stats.tipos} 
-          type="pie" 
-          icon={TrendingUp} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
-
-        <SummaryChart
-          title="Volume"
-          desc="Por Conferência"
-          data={registrosPerConference.slice(0, 10)}
-          type="bar"
-          icon={Package}
-          chartKey="value"
-          onDetailClick={setDetailChart}
-        />
-      </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 

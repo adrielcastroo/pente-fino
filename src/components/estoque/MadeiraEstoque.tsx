@@ -258,80 +258,8 @@ export default function MadeiraEstoque() {
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {[
-          { key: 'total', label: 'Itens', value: stats.totalItens, percent: 100, color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' },
-          { key: 'capacidade', label: 'Capacidade', value: stats.capacidade, percent: 100, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
-          { key: 'ocupacao', label: 'Ocupação', value: stats.ocupacao, percent: stats.percentOcupacao, color: 'text-cyan-400', bg: 'bg-cyan-500/5', border: 'border-cyan-500/20' },
-          { key: 'lamina', label: 'Lâmina', value: stats.laminasCells, percent: stats.percentLaminas, color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
-          { key: 'base', label: 'Base', value: stats.basesCells, percent: stats.percentBases, color: 'text-violet-400', bg: 'bg-violet-500/5', border: 'border-violet-500/20' },
-          { key: 'avarias', label: 'Avarias', value: stats.avarias, percent: stats.percentAvarias, color: 'text-red-400', bg: 'bg-red-500/5', border: 'border-red-500/20' },
-        ].map(s => (
-          <Card 
-            key={s.label} 
-            onClick={() => {
-              const breakdown = COLUNAS.map(col => {
-                let count = 0;
-                let totalForCol = 0;
-                
-                for (let n = 1; n <= NIVEIS; n++) {
-                  const q = getQuadrante(col, n);
-                  const cellItems = cellMap[`${col}-${n}`] || [];
-                  
-                  if (s.key === 'total') {
-                    count += cellItems.length;
-                  } else if (s.key === 'capacidade') {
-                    count += q.capacidade;
-                  } else if (s.key === 'ocupacao') {
-                    count += cellItems.length;
-                    totalForCol += q.capacidade;
-                  } else if (s.key === 'lamina') {
-                    if (q.tipo_ocupacao === 'lamina') count++;
-                  } else if (s.key === 'base') {
-                    if (q.tipo_ocupacao === 'base') count++;
-                  } else if (s.key === 'avarias') {
-                    count += cellItems.filter(r => r.avaria_tipo).length;
-                  }
-                }
-                
-                let percent = 0;
-                if (s.key === 'ocupacao') {
-                  percent = totalForCol ? Math.round((count / totalForCol) * 100) : 0;
-                } else if (s.key === 'lamina' || s.key === 'base') {
-                  percent = Math.round((count / NIVEIS) * 100);
-                } else {
-                  percent = stats.totalItens ? Math.round((count / stats.totalItens) * 100) : 0;
-                }
+      {/* Stat cards removidos conforme solicitação */}
 
-                return {
-                  label: `Coluna ${col}`,
-                  value: count,
-                  percent,
-                  trend: percent > 50 ? 'up' : 'down'
-                };
-              });
-
-              setStatModal({
-                isOpen: true,
-                title: s.label,
-                value: s.value,
-                type: s.key,
-                stats: breakdown
-              });
-              setSelectedStat(prev => prev === s.key ? null : s.key);
-            }}
-            className={`border ${s.border} ${s.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-            }`}
-          >
-            <CardContent className="p-4 text-center space-y-1">
-              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
-              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
-              <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {/* Estrutura tab & View Toggle */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
