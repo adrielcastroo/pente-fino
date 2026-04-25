@@ -498,19 +498,19 @@ export default function RightPanel() {
               )}
             </table>
           ) : (
-            <table className="w-full border-separate border-spacing-0 table-auto">
+            <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
+                  <th className="sticky top-0 z-10 px-3 sm:px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm w-[40px] sm:w-[50px]">#</th>
                   {columns.map(column => (
                     <th 
                       key={column.key} 
-                      className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
+                      className="sticky top-0 z-10 px-3 sm:px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm"
                     >
                       {column.shortLabel || column.label}
                     </th>
                   ))}
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
+                  <th className="sticky top-0 z-10 px-3 sm:px-4 py-3.5 text-right border-b border-border/40 bg-background/95 backdrop-blur-sm w-[80px] sm:w-[100px] text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
