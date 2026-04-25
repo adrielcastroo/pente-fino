@@ -513,33 +513,56 @@ export default function EstoquePage() {
           </CardContent>
         </Card>
 
-        {/* Métricas de Desempenho */}
+        {/* Métricas de Performance - Substituto Analítico */}
         <Card className="border-border/30 bg-card/40 shadow-none group hover:border-primary/30 transition-all duration-300">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
-                <ArrowRightLeft className="w-4 h-4" />
+                <Activity className="w-4 h-4" />
               </div>
               <Badge variant="outline" className="text-[10px] font-black border-amber-500/30 text-amber-500 bg-amber-500/5">
                 Performance
               </Badge>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Giro de Estoque</span>
-                <div className="flex items-center gap-1">
+
+            <div className="flex items-center gap-4">
+              <div className="relative w-16 h-16 shrink-0">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="16" fill="none" className="stroke-muted/20" strokeWidth="3" />
+                  <circle cx="18" cy="18" r="16" fill="none" className="stroke-amber-500" strokeWidth="3" strokeDasharray="100" strokeDashoffset="25" strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center flex-col">
                   <span className="text-xs font-black">2.4x</span>
-                  <span className="text-[8px] font-bold text-emerald-500">+12%</span>
+                  <span className="text-[6px] font-bold text-muted-foreground uppercase">Giro</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat(selectedStat === 'critico' ? null : 'critico')}>
-                <span className={`text-[10px] font-bold uppercase transition-colors ${selectedStat === 'critico' ? 'text-red-500' : 'text-muted-foreground group-hover/item:text-red-500'}`}>Itens Críticos</span>
-                <Badge className={`h-5 px-1.5 border-red-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-red-500/50 transition-all ${selectedStat === 'critico' ? 'bg-red-500 text-white' : 'bg-red-500/10 text-red-500'}`}>{stats.criticalItems}</Badge>
+              <div className="flex-1 space-y-1">
+                <div className="text-lg font-black tracking-tight leading-tight">Meta: 3.0x</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Desempenho vs Objetivo</div>
+                <div className="flex items-center gap-1.5 pt-1">
+                  <div className="h-1.5 flex-1 bg-muted/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-500" style={{ width: '80%' }} />
+                  </div>
+                  <span className="text-[10px] font-black">80%</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat(selectedStat === 'parado' ? null : 'parado')}>
-                <span className={`text-[10px] font-bold uppercase transition-colors ${selectedStat === 'parado' ? 'text-slate-400' : 'text-muted-foreground group-hover/item:text-slate-400'}`}>Estoque Parado (+90d)</span>
-                <Badge className={`h-5 px-1.5 border-slate-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-slate-500/50 transition-all ${selectedStat === 'parado' ? 'bg-slate-500 text-white' : 'bg-slate-500/10 text-slate-500'}`}>{stats.stagnantItems}</Badge>
-              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button 
+                onClick={() => setSelectedStat(selectedStat === 'critico' ? null : 'critico')}
+                className={`flex flex-col p-2 rounded-lg border transition-all text-left ${selectedStat === 'critico' ? 'bg-red-500/10 border-red-500/30' : 'bg-muted/10 border-border/10 hover:border-red-500/20'}`}
+              >
+                <span className="text-[10px] font-black tabular-nums text-red-500">{stats.criticalItems}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase truncate">Itens Críticos</span>
+              </button>
+              <button 
+                onClick={() => setSelectedStat(selectedStat === 'parado' ? null : 'parado')}
+                className={`flex flex-col p-2 rounded-lg border transition-all text-left ${selectedStat === 'parado' ? 'bg-slate-500/10 border-slate-500/30' : 'bg-muted/10 border-border/10 hover:border-slate-500/20'}`}
+              >
+                <span className="text-[10px] font-black tabular-nums text-slate-400">{stats.stagnantItems}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase truncate">Estoque Parado</span>
+              </button>
             </div>
           </CardContent>
         </Card>
