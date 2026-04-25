@@ -290,9 +290,9 @@ export default function DashboardPage() {
                 {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-bold text-foreground truncate max-w-[150px]">{c.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{c.conferente || '—'}</td>
-                    <td className="px-4 py-3 text-center font-mono text-emerald-500/80 text-[10px]">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-4 py-3 text-center font-mono text-muted-foreground/60 text-[10px]">{formatTimeBR(c.finishedAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px] hidden sm:table-cell">{c.conferente || '—'}</td>
+                    <td className="px-4 py-3 text-center font-mono text-emerald-500/80 text-[10px] hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
+                    <td className="px-4 py-3 text-center font-mono text-muted-foreground/60 text-[10px] hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
                     <td className="px-4 py-3 text-center">
                       <Badge variant="outline" className="text-[8px] font-bold px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">{c.duration}</Badge>
                     </td>
