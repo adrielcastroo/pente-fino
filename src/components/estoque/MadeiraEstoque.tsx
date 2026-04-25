@@ -25,10 +25,6 @@ interface MadeiraRow {
   avaria_tipo: string | null;
   avaria_descricao: string | null;
   avaria_foto_url: string | null;
-  espessura: number | null;
-  acabamento: string | null;
-  estoque_minimo: number | null;
-  status: string;
   created_at: string;
   edited_by: string | null;
 }
@@ -57,7 +53,7 @@ export default function MadeiraEstoque() {
         const [{ data, error }, lotesData] = await Promise.all([
           supabase
             .from('registros')
-            .select('id, item, nf, endereco, lote, lote_sistema, largura, m_linear, m2, tipo_tecido, lote_mestre_id, avaria_tipo, avaria_descricao, avaria_foto_url, espessura, acabamento, estoque_minimo, status, created_at, edited_by')
+            .select('id, item, nf, endereco, lote, lote_sistema, largura, m_linear, m2, tipo_tecido, lote_mestre_id, avaria_tipo, avaria_descricao, avaria_foto_url, created_at, edited_by')
             .eq('modo_origem', 'madeira')
             .order('created_at', { ascending: false }),
           lotesMestresService.list().catch(() => []),
@@ -198,19 +194,12 @@ export default function MadeiraEstoque() {
                       <TreePine className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span className="text-sm font-bold truncate">{r.item || '—'}</span>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      {r.avaria_tipo && (
-                        <Badge variant="destructive" className="text-[9px] gap-1">
-                          <AlertTriangle className="w-3 h-3" />
-                          {AVARIA_LABELS[r.avaria_tipo] || r.avaria_tipo}
-                        </Badge>
-                      )}
-                      {r.estoque_minimo && (r.m_linear || 0) < r.estoque_minimo && (
-                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[9px] animate-pulse">
-                          Reposição
-                        </Badge>
-                      )}
-                    </div>
+                    {r.avaria_tipo && (
+                      <Badge variant="destructive" className="text-[9px] gap-1 shrink-0">
+                        <AlertTriangle className="w-3 h-3" />
+                        {AVARIA_LABELS[r.avaria_tipo] || r.avaria_tipo}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <MapPin className="w-3 h-3" />
@@ -253,12 +242,8 @@ export default function MadeiraEstoque() {
                 <Field label="Tipo" value={detail.tipo_tecido || '—'} />
                 <Field label="NF" value={detail.nf || '—'} />
                 <Field label="Lote" value={detail.lote || '—'} />
-                <Field label="Espessura" value={detail.espessura ? `${detail.espessura} mm` : '—'} />
                 <Field label="Largura" value={detail.largura ? `${detail.largura} m` : '—'} />
-                <Field label="Comprimento" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
-                <Field label="Acabamento" value={detail.acabamento || '—'} />
-                <Field label="Estoque Mínimo" value={detail.estoque_minimo ? `${detail.estoque_minimo} m` : '—'} />
-                <Field label="Status" value={detail.status || 'Disponível'} />
+                <Field label="M Linear" value={detail.m_linear ? `${detail.m_linear} m` : '—'} />
                 <Field label="Conferente" value={detail.edited_by || '—'} />
                 <Field label="Data" value={formatDateBR(detail.created_at)} />
               </div>
