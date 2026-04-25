@@ -55,7 +55,7 @@ interface TableCellProps {
 const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema, className }: TableCellProps) => {
   if (isEditing) {
     return (
-      <td className="px-2 sm:px-4 py-2 sm:py-3.5">
+      <td className={`px-2 sm:px-4 py-2 sm:py-3.5 ${className || ''}`}>
         <input
           autoFocus
           value={editValue}
