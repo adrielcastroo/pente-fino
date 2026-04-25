@@ -464,38 +464,51 @@ export default function EstoquePage() {
           </CardContent>
         </Card>
 
-        {/* Volume & Peso */}
+        {/* Volume & Peso - Reformulado */}
         <Card className="border-border/30 bg-card/40 shadow-none group hover:border-primary/30 transition-all duration-300">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
                 <Box className="w-4 h-4" />
               </div>
-              <Badge variant="outline" className="text-[10px] font-black border-blue-500/30 text-blue-500 bg-blue-500/5">
-                Volumetria
-              </Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-0.5">
-                <div className="text-xl font-black tabular-nums">{stats.totalM2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</div>
-                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Total m²</div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-xl font-black tabular-nums">{Math.round(stats.totalWeight).toLocaleString('pt-BR')}</div>
-                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Peso Est. (kg)</div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-[10px] font-black text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  <TrendingUp className="w-3 h-3" />
+                  2.4%
+                </div>
+                <Badge variant="outline" className="text-[10px] font-black border-blue-500/30 text-blue-500 bg-blue-500/5">
+                  Volumetria
+                </Badge>
               </div>
             </div>
-            <div className="pt-2 border-t border-border/10 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Ruler className="w-3.5 h-3.5 text-blue-500/70" />
-                <span className="text-[10px] font-black text-foreground/80">{stats.totalMLinear.toLocaleString('pt-BR')} <span className="text-muted-foreground font-bold">M LINEAR</span></span>
+            
+            <div className="space-y-1">
+              <div className="text-3xl font-black tabular-nums tracking-tight">
+                {stats.totalM2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}<span className="text-sm font-bold text-muted-foreground ml-0.5">m²</span>
               </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent>Cálculo baseado em m² e gramatura cadastrada</TooltipContent>
-              </Tooltip>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Densidade de Volume Total</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="p-2 rounded-lg bg-muted/20 border border-border/10 space-y-0.5">
+                <div className="text-sm font-black tabular-nums">{Math.round(stats.totalWeight).toLocaleString('pt-BR')} kg</div>
+                <div className="text-[8px] font-bold text-muted-foreground uppercase">Peso Estimado</div>
+              </div>
+              <div className="p-2 rounded-lg bg-muted/20 border border-border/10 space-y-0.5">
+                <div className="text-sm font-black tabular-nums">{stats.totalMLinear.toLocaleString('pt-BR')} m</div>
+                <div className="text-[8px] font-bold text-muted-foreground uppercase">M Lineares</div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between text-[9px] font-bold uppercase tracking-tighter">
+                <span className="text-muted-foreground">Distribuição</span>
+                <span className="text-blue-500">Ocupado vs Livre</span>
+              </div>
+              <div className="h-1.5 w-full bg-muted/30 rounded-full flex overflow-hidden">
+                <div className="h-full bg-blue-500" style={{ width: `${stats.globalOccupancyRate}%` }} />
+                <div className="h-full bg-blue-500/20" style={{ width: `${100 - stats.globalOccupancyRate}%` }} />
+              </div>
             </div>
           </CardContent>
         </Card>
