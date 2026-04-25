@@ -11,11 +11,16 @@ import ImportDialog from '@/components/estoque/ImportDialog';
 export default function EstoquePage() {
   const [importOpen, setImportOpen] = useState(false);
   const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
+  const [refreshKey, setRefreshKey] = useState(0);
   const setFormData = useAppStore(s => s.setFormData);
 
   useEffect(() => {
     setFormData({ activeTab: 'estoque' });
   }, [setFormData]);
+
+  const handleImportComplete = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0 pb-10">
@@ -73,16 +78,20 @@ export default function EstoquePage() {
 
         <div className="mt-2">
           <TabsContent value="tecido" className="focus-visible:outline-none data-[state=inactive]:hidden">
-            <TecidoEstoque />
+            <TecidoEstoque key={`tecido-${refreshKey}`} />
           </TabsContent>
           
           <TabsContent value="madeira" className="focus-visible:outline-none data-[state=inactive]:hidden">
-            <MadeiraEstoque />
+            <MadeiraEstoque key={`madeira-${refreshKey}`} />
           </TabsContent>
         </div>
       </Tabs>
 
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ImportDialog 
+        open={importOpen} 
+        onOpenChange={setImportOpen} 
+        onImportComplete={handleImportComplete}
+      />
     </div>
   );
 }
