@@ -104,7 +104,7 @@ export default function Index() {
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative">
-            <div className="min-h-full w-full max-w-[2400px] mx-auto">
+            <div className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-3 sm:p-5 lg:p-6 xl:p-8 2xl:p-10">
                   <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} isTablet={isTablet} />
