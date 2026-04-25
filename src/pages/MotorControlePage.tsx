@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles } from 'lucide-react';
