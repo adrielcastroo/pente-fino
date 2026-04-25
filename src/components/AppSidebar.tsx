@@ -65,14 +65,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
     }
   }, [isMobile, isHovered, setOpen]);
 
-  const handleTabClick = useCallback((tab: AppTab) => {
-    onTabChange(tab);
+  const handleTabClick = useCallback((tab: AppTab, path: string) => {
+    navigate(path);
     if (isMobile) {
       setOpenMobile(false);
     } else if (window.innerWidth < 1024) {
       setOpen(false);
     }
-  }, [onTabChange, isMobile, setOpenMobile, setOpen]);
+  }, [navigate, isMobile, setOpenMobile, setOpen]);
 
   return (
     <Sidebar
