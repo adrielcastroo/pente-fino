@@ -83,15 +83,15 @@ export default function DashboardPage() {
   }, [history]);
 
   return (
-    <div className="space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10 max-w-[1920px] mx-auto overflow-x-hidden animate-in fade-in duration-500">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-border/40">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 pb-6 border-b border-border/40">
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground leading-none">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm max-w-lg">
-            Acompanhe a produtividade, gerencie fluxos e exporte relatórios.
+          <p className="text-muted-foreground text-xs sm:text-sm max-w-lg font-medium">
+            Métricas de produtividade e análise operacional em tempo real.
           </p>
         </div>
         
