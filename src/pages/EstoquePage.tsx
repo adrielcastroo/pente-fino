@@ -215,7 +215,6 @@ export default function EstoquePage() {
       globalOccupancyRate, tecBreakdown, entriesToday
     };
   }, [allPosicoes, activeTec]);
-  }, [allPosicoes, activeTec]);
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
