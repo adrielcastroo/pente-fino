@@ -93,7 +93,7 @@ export default function EstoquePage() {
   const loadStats = useCallback(async () => {
     try {
       // Only fetch the status column to keep payload tiny
-      const { data, error } = await supabase.from('estoque_posicoes').select('status');
+      const { data, error } = await supabase.from('estoque_posicoes').select('id, status');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
     } catch (e) {
