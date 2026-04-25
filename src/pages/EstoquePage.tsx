@@ -96,7 +96,7 @@ export default function EstoquePage() {
   const [importOpen, setImportOpen] = useState(false);
   const [madeiraImportOpen, setMadeiraImportOpen] = useState(false);
   const [madeiraVersion, setMadeiraVersion] = useState(0);
-  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[] } | null>(null);
+  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[]; data?: any[] } | null>(null);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
