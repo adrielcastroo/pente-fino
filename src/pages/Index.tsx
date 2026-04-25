@@ -33,13 +33,13 @@ const PageSkeleton = memo(() => (
 const TabRenderer = memo(({ activeTab, isWide, isMobile, isTablet }: { activeTab: string; isWide?: boolean; isMobile: boolean; isTablet: boolean }) => {
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
   
-  if (isWide && isFormTab && !isMobile && !isTablet) {
+  if (isWide && isFormTab && !isMobile) {
     return (
-      <div className="flex flex-col xl:flex-row h-full gap-4 xl:gap-6 2xl:gap-8">
-        <div className="w-full xl:w-[460px] 2xl:w-[540px] shrink-0 h-full">
+      <div className="flex flex-col lg:flex-row h-full gap-4 lg:gap-6 2xl:gap-8">
+        <div className="w-full lg:w-[420px] xl:w-[460px] 2xl:w-[540px] shrink-0 h-full">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full hidden xl:block animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500">
           <RightPanel />
         </div>
       </div>
@@ -104,7 +104,7 @@ export default function Index() {
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative">
-            <div className="min-h-full w-full max-w-[2400px] mx-auto">
+            <div className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-3 sm:p-5 lg:p-6 xl:p-8 2xl:p-10">
                   <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} isTablet={isTablet} />

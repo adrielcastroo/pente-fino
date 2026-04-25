@@ -104,14 +104,14 @@ const TopBar = memo(function TopBar() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
           {isGuest && (
-            <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
+            <div className="relative group w-full max-w-[140px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
               <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
               <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
                 <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <input
                 id="conferente-input"
-                className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[10px] xs:text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[11px] sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
                 value={conferente}
                 onChange={e => setConferente(e.target.value)}
                 placeholder={isMobile ? "Conf..." : "Conferente..."}
@@ -127,7 +127,7 @@ const TopBar = memo(function TopBar() {
               <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                 <User className="w-3.5 h-3.5 text-primary" />
               </div>
-              <span className="text-xs font-bold text-foreground truncate max-w-[100px]">
+              <span className="text-xs font-bold text-foreground truncate max-w-[80px] md:max-w-[120px]">
                 {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
               </span>
             </div>
