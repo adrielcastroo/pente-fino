@@ -47,6 +47,12 @@ interface Posicao {
   codigo_cor?: string;
   preco_metro?: number;
   estoque_minimo?: number;
+  registros?: {
+    tipo_tecido?: string;
+    avaria_tipo?: string;
+    lote_mestre_id?: string;
+    item?: string;
+  };
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
