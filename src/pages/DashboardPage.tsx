@@ -253,7 +253,7 @@ export default function DashboardPage() {
                     <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
                     <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
                     <td className="px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px]">{formatDateBR(c.lastDate)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px] hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
