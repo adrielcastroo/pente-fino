@@ -44,6 +44,11 @@ export default function MotorControlePage() {
   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
   const { isLow } = usePerformance();
 
+  useEffect(() => {
+    setFormData({ activeTab: 'motor' });
+  }, [setFormData]);
+
+
   
   const subMode = formData.motorSubMode;
   const modelo = formData.motorModelo;
