@@ -108,7 +108,7 @@ export default function EstoquePage() {
   const loadStats = useCallback(async () => {
     try {
       // Fetch id, status and estrutura to allow filtering and optimistic updates
-      const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura');
+      const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura, m2, m_linear, data_registro, item, estoque_minimo, gramatura, largura_util');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
     } catch (e) {
