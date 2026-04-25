@@ -582,58 +582,163 @@ export default function EstoquePage() {
                   <div className="grid grid-cols-1 gap-3">
                     {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
                       const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
+                      const isOutOfStock = item.m_linear <= 0;
+                      const isLowStock = item.m_linear > 0 && item.m_linear < (item.estoque_minimo || 5);
+                      const isReserved = item.status === 'reservado';
+
                       return (
-                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl overflow-hidden flex flex-col sm:flex-row gap-0 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <div key={item.id} className="bg-card border border-border/40 rounded-2xl overflow-hidden flex flex-col sm:flex-row gap-0 group hover:border-primary/40 hover:shadow-lg transition-all duration-300 relative">
+                          {/* Left Accent Status Bar */}
+                          <div className={`w-1 shrink-0 ${
+                            isOutOfStock ? 'bg-destructive' :
+                            isLowStock ? 'bg-amber-500' :
+                            isReserved ? 'bg-amber-400' :
+                            'bg-emerald-500'
+                          }`} />
+
                           {item.avaria_foto_url && (
-                            <div className="w-full sm:w-24 h-24 sm:h-auto shrink-0 border-b sm:border-b-0 sm:border-r border-border/20">
+                            <div className="w-full sm:w-32 h-32 sm:h-auto shrink-0 border-b sm:border-b-0 sm:border-r border-border/10 relative overflow-hidden group/img">
                               <img 
                                 src={item.avaria_foto_url} 
                                 alt={item.item} 
-                                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   window.open(item.avaria_foto_url!, '_blank');
                                 }}
                               />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                <ScanBarcode className="w-6 h-6 text-white" />
+                              </div>
                             </div>
                           )}
-                          <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
-                                  Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+
+                          <div className="flex-1 p-5 flex flex-col gap-4">
+                            {/* Top row: Status & Lote */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-sm ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-white dark:bg-zinc-900`}>
+                                  POS {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
                                 </Badge>
-                                <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                                
+                                {isOutOfStock && (
+                                  <Badge variant="destructive" className="text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                                    <AlertTriangle className="w-3 h-3 mr-1" /> ESGOTADO
+                                  </Badge>
+                                )}
+                                
+                                {isLowStock && (
+                                  <Badge className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-white border-none">
+                                    <AlertTriangle className="w-3 h-3 mr-1" /> ESTOQUE BAIXO
+                                  </Badge>
+                                )}
+
+                                {isReserved && (
+                                  <Badge className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 border-none">
+                                    <Package className="w-3 h-3 mr-1" /> RESERVADO P/ PROD.
+                                  </Badge>
+                                )}
                               </div>
-                              <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
-                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
-                                <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
-                                <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
-                                <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
+                              <span className="text-[11px] font-bold text-muted-foreground/40 font-mono tracking-tighter bg-muted/30 px-2 py-0.5 rounded">
+                                {item.lote_sistema || 'S/ LOTE'}
+                              </span>
+                            </div>
+
+                            {/* Main Info Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                              <div className="md:col-span-8 space-y-1">
+                                <h3 className="font-black text-foreground text-lg sm:text-xl tracking-tight leading-tight group-hover:text-primary transition-colors">
+                                  {item.item || 'Tecido sem identificação'}
+                                </h3>
+                                <p className="text-sm font-semibold text-muted-foreground/80 flex items-center gap-2">
+                                  <Layers className="w-4 h-4 text-primary/60" />
+                                  {item.composicao || 'Composição não informada'}
+                                </p>
+                                
+                                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 pt-3 border-t border-border/5">
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Fornecedor</span>
+                                    <span className="text-xs font-black flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-primary/40" /> {item.fornecedor || '—'}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Cor/Lote</span>
+                                    <span className="text-xs font-black flex items-center gap-1.5"><Palette className="w-3.5 h-3.5 text-primary/40" /> {item.codigo_cor || '—'}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Gramatura</span>
+                                    <span className="text-xs font-black flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-primary/40" /> {item.gramatura ? `${item.gramatura} g/m²` : '—'}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Largura Útil</span>
+                                    <span className="text-xs font-black flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5 text-primary/40" /> {item.largura_util ? `${item.largura_util}m` : (item.largura ? `${item.largura}m` : '—')}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Available Yardage Spotlight */}
+                              <div className="md:col-span-4 flex flex-col items-center md:items-end justify-center bg-primary/5 dark:bg-primary/10 rounded-2xl p-4 border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Disponível</span>
+                                <div className="flex items-baseline gap-1">
+                                  <span className={`text-3xl font-black tabular-nums tracking-tighter ${isOutOfStock ? 'text-destructive' : isLowStock ? 'text-amber-500' : 'text-primary'}`}>
+                                    {item.m_linear}
+                                  </span>
+                                  <span className="text-sm font-black text-muted-foreground/60 uppercase">m</span>
+                                </div>
+                                <div className="text-[10px] font-bold text-muted-foreground/50 mt-1 flex items-center gap-1">
+                                  <DollarSign className="w-3 h-3" />
+                                  R$ {item.preco_metro || '0,00'}/m
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <Button
-                                onClick={() => setDetailPos(item)}
-                                variant="ghost"
-                                size="sm"
-                                className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                              >
-                                Detalhes
-                              </Button>
-                              {!isGuest && (
-                                <Button
-                                  onClick={() => {
-                                    setDetailPos(item);
-                                    handleStatusChange(item, 'saida');
-                                  }}
-                                  size="sm"
-                                  className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
-                                >
-                                  <LogOut className="w-3 h-3" />
-                                  Dar Saída
-                                </Button>
-                              )}
+
+                            {/* Footer Actions */}
+                            <div className="flex items-center justify-between mt-1 pt-4 border-t border-border/10">
+                              <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(item.data_registro)}</span>
+                                <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> {item.proc || 'Geral'}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                      <History className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Histórico</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                      <Tag className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Gerar Etiqueta</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => setDetailPos(item)}>
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Editar Saldo / Info</TooltipContent>
+                                </Tooltip>
+
+                                {!isGuest && (
+                                  <Button
+                                    onClick={() => {
+                                      setDetailPos(item);
+                                      handleStatusChange(item, 'saida');
+                                    }}
+                                    size="sm"
+                                    className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider bg-zinc-900 dark:bg-white dark:text-zinc-950 hover:opacity-90 text-white gap-2 shadow-lg shadow-black/10 ml-2"
+                                  >
+                                    <LogOut className="w-3.5 h-3.5" />
+                                    Saída
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
