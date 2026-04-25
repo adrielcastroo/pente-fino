@@ -412,16 +412,16 @@ export default function RightPanel() {
       <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
           {isMotorControle ? (
-            <table className="w-full border-separate border-spacing-0 table-auto">
+            <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm">
                     Séries Bipadas
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm">
                     Séries Sistema
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
+                  <th className="sticky top-0 z-10 px-4 py-3.5 text-right border-b border-border/40 bg-background/95 backdrop-blur-sm w-[80px] text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                     Ações
                   </th>
                 </tr>
