@@ -804,127 +804,268 @@ export default function EstoquePage() {
       </Dialog>
 
       {/* ===== DETAIL DIALOG ===== */}
-      <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={!!detailPos} onOpenChange={() => { setDetailPos(null); setIsEditing(false); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] flex flex-col">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
+            const isOutOfStock = detailPos.m_linear <= 0;
+            const isLowStock = detailPos.m_linear > 0 && detailPos.m_linear < (detailPos.estoque_minimo || 5);
+
             return (
               <>
                 {/* Detail Header */}
-                <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/20 bg-muted/20">
-                  <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
-                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <DialogTitle className="text-sm sm:text-lg font-black tracking-tight truncate leading-snug">
-                        {detailPos.item || 'Item sem nome'}
-                      </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
-                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
-                      </DialogDescription>
-                    </div>
-                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
-                      {statusCfg.label}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Info Grid */}
-                <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    {[
-                      { label: 'Lote', value: detailPos.lote || '—' },
-                      { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
-                      { label: 'Endereço', value: detailPos.endereco || '—' },
-                      { label: 'Conferente', value: detailPos.conferente_entrada || '—' },
-                      { label: 'M²', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
-                      { label: 'Largura', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
-                      { label: 'M Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
-                      { label: 'Data Entrada', value: formatDateBR(detailPos.data_registro) },
-                    ].map(f => (
-                      <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
-                        <div className="text-[8px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
-                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-all leading-snug">{f.value}</div>
+                <div className="px-5 sm:px-8 pt-6 pb-5 border-b border-border/20 bg-muted/20 shrink-0">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary shrink-0 shadow-sm">
+                        <Package className="w-6 h-6" />
                       </div>
-                    ))}
-                  </div>
-
-                  {detailPos.avaria_foto_url && (
-                    <div className="space-y-2.5">
-                      <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Foto do Item</div>
-                      <div className="rounded-2xl overflow-hidden border border-border/30 bg-muted/5">
-                        <img 
-                          src={detailPos.avaria_foto_url} 
-                          alt={detailPos.item} 
-                          className="w-full h-auto max-h-64 object-contain cursor-zoom-in"
-                          onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}
-                        />
+                      <div className="min-w-0">
+                        <DialogTitle className="text-lg sm:text-2xl font-black tracking-tight leading-tight group-hover:text-primary transition-colors">
+                          {detailPos.item || 'Item sem identificação'}
+                        </DialogTitle>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-white dark:bg-zinc-900`}>
+                            POS {String(detailPos.posicao).padStart(2, '0')} · {statusCfg.label}
+                          </Badge>
+                          <span className="text-[10px] font-bold text-muted-foreground/60">
+                            {detailPos.estrutura} · {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  )}
-
-                  {/* Status Actions */}
-                  <div className="space-y-2.5 sm:space-y-3">
-                    <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
-                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-                      {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
-                        const cfg = STATUS_CONFIG[st];
-                        const isActive = detailPos.status === st;
-                        const dotColor = st === 'ocupado' ? 'bg-emerald-400' : st === 'bloqueado' ? 'bg-red-400' : 'bg-amber-400';
-                        const activeRing = st === 'ocupado' ? 'ring-emerald-500/30' : st === 'bloqueado' ? 'ring-red-500/30' : 'ring-amber-500/30';
-                        const activeBg = st === 'ocupado' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500' 
-                          : st === 'bloqueado' ? 'bg-red-500/15 border-red-500/50 text-red-500' 
-                          : 'bg-amber-500/15 border-amber-500/50 text-amber-500';
-                        const hoverBg = st === 'ocupado' ? 'hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-500' 
-                          : st === 'bloqueado' ? 'hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-500' 
-                          : 'hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-500';
-                        return (
-                          <Button 
-                            key={st} 
-                            onClick={() => handleStatusChange(detailPos, st)} 
-                            variant="outline"
-                            className={`h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                              isActive 
-                                ? `${activeBg} ring-2 ${activeRing} ring-offset-1 ring-offset-card shadow-sm pointer-events-none` 
-                                : `border-border/20 text-muted-foreground ${hoverBg} active:scale-[0.97]`
-                            }`}
-                          >
-                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} ${isActive ? 'animate-pulse' : ''}`} 
-                              style={isActive ? { boxShadow: `0 0 8px ${st === 'ocupado' ? '#34d399' : st === 'bloqueado' ? '#f87171' : '#fbbf24'}` } : {}}
-                            />
-                            {cfg.label}
-                            {isActive && <span className="ml-1.5 text-[10px] font-bold opacity-80">✓</span>}
-                          </Button>
-                        );
-                      })}
-                      {!isGuest && (
-                        <Button 
-                          onClick={() => handleStatusChange(detailPos, 'saida')} 
-                          variant="outline"
-                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-500/15 hover:border-violet-500/50 hover:text-violet-400 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0 shadow-sm"
-                        >
-                          <div className="w-2.5 h-2.5 rounded-full mr-2 bg-violet-400" />
-                          <LogOut className="w-3 h-3 mr-1.5" />
-                          Dar Saída
-                        </Button>
+                    
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <div className="flex items-baseline gap-1">
+                        <span className={`text-2xl sm:text-3xl font-black tracking-tighter tabular-nums ${isOutOfStock ? 'text-destructive' : isLowStock ? 'text-amber-500' : 'text-primary'}`}>
+                          {detailPos.m_linear}
+                        </span>
+                        <span className="text-[10px] font-black text-muted-foreground/50 uppercase">metros</span>
+                      </div>
+                      {isLowStock && (
+                        <Badge className="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-amber-500 text-white border-none animate-pulse">
+                          ESTOQUE BAIXO
+                        </Badge>
                       )}
                     </div>
                   </div>
+                </div>
 
-                  {!isGuest && (
-                    <div className="pt-3 border-t border-border/15">
-                      <Button 
-                        variant="ghost" 
-                        onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Excluir Item
-                      </Button>
-                    </div>
-                  )}
+                {/* Content Area */}
+                <div className="overflow-y-auto flex-1 custom-scrollbar">
+                  <div className="p-5 sm:p-8 space-y-8">
+                    {isEditing ? (
+                      /* EDITING FORM */
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nome do Tecido</label>
+                            <Input 
+                              value={editForm.item || ''} 
+                              onChange={e => setEditForm({ ...editForm, item: e.target.value })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Composição</label>
+                            <Input 
+                              value={editForm.composicao || ''} 
+                              onChange={e => setEditForm({ ...editForm, composicao: e.target.value })}
+                              placeholder="Ex: 100% Algodão"
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Gramatura (g/m²)</label>
+                            <Input 
+                              type="number"
+                              value={editForm.gramatura || ''} 
+                              onChange={e => setEditForm({ ...editForm, gramatura: Number(e.target.value) })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura Útil (m)</label>
+                            <Input 
+                              type="number"
+                              step="0.01"
+                              value={editForm.largura_util || ''} 
+                              onChange={e => setEditForm({ ...editForm, largura_util: Number(e.target.value) })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fornecedor</label>
+                            <Input 
+                              value={editForm.fornecedor || ''} 
+                              onChange={e => setEditForm({ ...editForm, fornecedor: e.target.value })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cor / Lote</label>
+                            <Input 
+                              value={editForm.codigo_cor || ''} 
+                              onChange={e => setEditForm({ ...editForm, codigo_cor: e.target.value })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Preço por Metro (R$)</label>
+                            <Input 
+                              type="number"
+                              step="0.01"
+                              value={editForm.preco_metro || ''} 
+                              onChange={e => setEditForm({ ...editForm, preco_metro: Number(e.target.value) })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Ponto de Pedido (Mínimo)</label>
+                            <Input 
+                              type="number"
+                              value={editForm.estoque_minimo || ''} 
+                              onChange={e => setEditForm({ ...editForm, estoque_minimo: Number(e.target.value) })}
+                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-3 pt-4">
+                          <Button 
+                            className="flex-1 h-12 rounded-xl font-black bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                            onClick={handleSaveDetails}
+                            disabled={loading}
+                          >
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
+                            Salvar Alterações
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="h-12 px-6 rounded-xl font-black border-border/50"
+                            onClick={() => setIsEditing(false)}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* VIEW MODE */
+                      <>
+                        {/* Technical Specs Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {[
+                            { label: 'Composição', value: detailPos.composicao || 'Não informada', icon: Layers },
+                            { label: 'Fornecedor', value: detailPos.fornecedor || 'Não informado', icon: Truck },
+                            { label: 'Lote / Cor', value: detailPos.codigo_cor || 'Não informado', icon: Palette },
+                            { label: 'Gramatura', value: detailPos.gramatura ? `${detailPos.gramatura} g/m²` : 'Não informada', icon: Scale },
+                            { label: 'Largura Útil', value: detailPos.largura_util ? `${detailPos.largura_util}m` : (detailPos.largura ? `${detailPos.largura}m` : 'Não informada'), icon: Ruler },
+                            { label: 'Preço/m', value: detailPos.preco_metro ? `R$ ${detailPos.preco_metro.toFixed(2)}` : 'Não informado', icon: DollarSign },
+                            { label: 'Lote Sistema', value: detailPos.lote_sistema || 'S/ Lote', icon: ScanBarcode },
+                            { label: 'Lote Origem', value: detailPos.lote || 'S/ Lote', icon: Tag },
+                            { label: 'Entrada', value: formatDateBR(detailPos.data_registro), icon: Calendar },
+                          ].map((f, idx) => (
+                            <div key={idx} className="bg-muted/10 border border-border/10 rounded-2xl p-4 flex flex-col gap-1.5 hover:bg-muted/15 transition-colors group/item">
+                              <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                                <f.icon className="w-3.5 h-3.5 text-primary/40 group-hover/item:text-primary transition-colors" />
+                                {f.label}
+                              </div>
+                              <div className="text-sm font-black text-foreground/90 truncate">{f.value}</div>
+                            </div>
+                          ))}
+                        </div>
 
+                        {/* Image & Photo Section */}
+                        {detailPos.avaria_foto_url && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Registro Fotográfico</label>
+                              <Button variant="ghost" size="sm" className="h-7 text-[9px] font-bold uppercase tracking-wider" onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}>
+                                Ver em Tela Cheia
+                              </Button>
+                            </div>
+                            <div className="rounded-2xl overflow-hidden border border-border/20 bg-muted/5 group/photo relative cursor-zoom-in">
+                              <img 
+                                src={detailPos.avaria_foto_url} 
+                                alt={detailPos.item} 
+                                className="w-full h-auto max-h-72 object-contain transition-transform duration-700 group-hover/photo:scale-105"
+                                onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Status Management */}
+                        <div className="space-y-4 pt-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-px flex-1 bg-border/20" />
+                            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">Gestão de Status</span>
+                            <div className="h-px flex-1 bg-border/20" />
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
+                              const cfg = STATUS_CONFIG[st];
+                              const isActive = detailPos.status === st;
+                              const theme = 
+                                st === 'ocupado' ? { border: 'border-emerald-500/20', active: 'bg-emerald-500 text-white border-emerald-500 shadow-emerald-500/20', hover: 'hover:border-emerald-500/40 text-emerald-600' } :
+                                st === 'bloqueado' ? { border: 'border-red-500/20', active: 'bg-red-500 text-white border-red-500 shadow-red-500/20', hover: 'hover:border-red-500/40 text-red-600' } :
+                                { border: 'border-amber-400/20', active: 'bg-amber-400 text-amber-950 border-amber-400 shadow-amber-400/20', hover: 'hover:border-amber-400/40 text-amber-600' };
+
+                              return (
+                                <Button 
+                                  key={st} 
+                                  onClick={() => handleStatusChange(detailPos, st)} 
+                                  variant="outline"
+                                  className={`h-11 text-[10px] font-black rounded-xl border-2 transition-all duration-300 uppercase tracking-wider ${
+                                    isActive 
+                                      ? `${theme.active} shadow-lg pointer-events-none` 
+                                      : `bg-transparent border-border/20 text-muted-foreground ${theme.hover}`
+                                  }`}
+                                >
+                                  {cfg.label}
+                                </Button>
+                              );
+                            })}
+                            {!isGuest && (
+                              <Button 
+                                onClick={() => handleStatusChange(detailPos, 'saida')} 
+                                variant="outline"
+                                className="h-11 text-[10px] font-black rounded-xl border-2 border-violet-500/20 bg-transparent text-violet-600 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-300 uppercase tracking-wider shadow-sm"
+                              >
+                                <LogOut className="w-3.5 h-3.5 mr-2" />
+                                Saída
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Footer Controls */}
+                        <div className="flex items-center gap-3 pt-6 border-t border-border/10">
+                          <Button 
+                            className="flex-1 h-12 rounded-xl font-black bg-zinc-900 dark:bg-white dark:text-zinc-950 text-white shadow-xl shadow-black/10 hover:scale-[1.02] transition-transform"
+                            onClick={startEditing}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Editar Informações
+                          </Button>
+                          {!isGuest && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  onClick={() => handleDelete(detailPos)} 
+                                  className="h-12 w-12 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir Registro</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </>
             );
