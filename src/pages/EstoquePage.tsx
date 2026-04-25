@@ -428,89 +428,145 @@ export default function EstoquePage() {
         <MadeiraEstoque key={madeiraVersion} />
       ) : (
         <>
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {[
-          { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
-          { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
-          { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
-          { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
-          { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
-        ].map(s => {
-          const isSelected = selectedStat === s.key;
-          
-          // Calculate breakdown if selected
-          const tecBreakdown = isSelected ? Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-            const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === tec);
-            const totalForTec = cfg.cols.length * cfg.levels * 30;
-            
-            let count = 0;
-            if (s.key === 'total') {
-              count = totalForTec;
-            } else if (s.key === 'livre') {
-              const occupied = currentStructureItems.filter((p: any) => p.status === 'ocupado').length;
-              const blocked = currentStructureItems.filter((p: any) => p.status === 'bloqueado').length;
-              const reserved = currentStructureItems.filter((p: any) => p.status === 'reservado').length;
-              const exited = currentStructureItems.filter((p: any) => p.status === 'saida').length;
-              count = Math.max(0, totalForTec - occupied - blocked - reserved - exited);
-            } else {
-              count = currentStructureItems.filter((p: any) => p.status === s.key).length;
-            }
-            
-            return { name: tec, count, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0 };
-          }) : [];
+      {/* Redesigned Dashboard Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Nível de Ocupação */}
+        <Card className="border-border/30 bg-card/40 shadow-none overflow-hidden group hover:border-primary/30 transition-all duration-300">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
+                <Layers className="w-4 h-4" />
+              </div>
+              <Badge variant="outline" className="text-[10px] font-black border-emerald-500/30 text-emerald-500 bg-emerald-500/5">
+                Capacidade
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl font-black tabular-nums tracking-tight">
+                {Math.round(stats.globalOccupancyRate)}<span className="text-sm font-bold text-muted-foreground ml-0.5">%</span>
+              </div>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ocupação do Armazém</div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]" 
+                  style={{ width: `${stats.globalOccupancyRate}%` }} 
+                />
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-muted-foreground/80">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" /> {activeTec}: {Math.round((stats.occupied / stats.totalSlots) * 100)}%
+                </span>
+                <span>{stats.occupied}/{stats.totalSlots} slots</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          return (
-            <Card 
-              key={s.label} 
-              onClick={() => {
-                const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-                  const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === tec);
-                  const totalForTec = cfg.cols.length * cfg.levels * 30;
-                  let count = 0;
-                  if (s.key === 'total') count = totalForTec;
-                  else if (s.key === 'livre') {
-                    const occupied = currentStructureItems.filter((p: any) => p.status === 'ocupado').length;
-                    const blocked = currentStructureItems.filter((p: any) => p.status === 'bloqueado').length;
-                    const reserved = currentStructureItems.filter((p: any) => p.status === 'reservado').length;
-                    const exited = currentStructureItems.filter((p: any) => p.status === 'saida').length;
-                    count = Math.max(0, totalForTec - occupied - blocked - reserved - exited);
-                  } else count = currentStructureItems.filter((p: any) => p.status === s.key).length;
-                  return { label: tec, value: count, percent: totalForTec ? Math.round((count / totalForTec) * 100) : 0, trend: 'up' as const };
-                });
+        {/* Volume & Peso */}
+        <Card className="border-border/30 bg-card/40 shadow-none group hover:border-primary/30 transition-all duration-300">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
+                <Box className="w-4 h-4" />
+              </div>
+              <Badge variant="outline" className="text-[10px] font-black border-blue-500/30 text-blue-500 bg-blue-500/5">
+                Volumetria
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-0.5">
+                <div className="text-xl font-black tabular-nums">{stats.totalM2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Total m²</div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-xl font-black tabular-nums">{Math.round(stats.totalWeight).toLocaleString('pt-BR')}</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Peso Est. (kg)</div>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-border/10 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Ruler className="w-3.5 h-3.5 text-blue-500/70" />
+                <span className="text-[10px] font-black text-foreground/80">{stats.totalMLinear.toLocaleString('pt-BR')} <span className="text-muted-foreground font-bold">M LINEAR</span></span>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>Cálculo baseado em m² e gramatura cadastrada</TooltipContent>
+              </Tooltip>
+            </div>
+          </CardContent>
+        </Card>
 
-                setStatModal({
-                  isOpen: true,
-                  title: s.label,
-                  value: s.value,
-                  type: s.key,
-                  stats: tecBreakdown.slice(0, 3)
-                });
-              }}
-              className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:shadow-md h-fit ${
-                isSelected ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-              }`}
-            >
-              <CardContent className="p-3 text-center space-y-1">
-                <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
-                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
-                <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-                
-                {isSelected && tecBreakdown.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border/20 grid grid-cols-2 gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                    {tecBreakdown.map(b => (
-                      <div key={b.name} className="flex flex-col items-center bg-background/40 rounded-lg p-1.5 border border-border/10">
-                        <span className="text-[7px] font-black text-muted-foreground uppercase">{b.name}</span>
-                        <span className="text-xs font-black">{b.count}</span>
-                        <span className="text-[7px] font-bold text-muted-foreground/60">{b.percent}%</span>
-                      </div>
-                    ))}
+        {/* Métricas de Desempenho */}
+        <Card className="border-border/30 bg-card/40 shadow-none group hover:border-primary/30 transition-all duration-300">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+                <ArrowRightLeft className="w-4 h-4" />
+              </div>
+              <Badge variant="outline" className="text-[10px] font-black border-amber-500/30 text-amber-500 bg-amber-500/5">
+                Performance
+              </Badge>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">Giro de Estoque</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-black">2.4x</span>
+                  <span className="text-[8px] font-bold text-emerald-500">+12%</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat('critico')}>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase group-hover/item:text-red-500 transition-colors">Itens Críticos</span>
+                <Badge className="h-5 px-1.5 bg-red-500/10 text-red-500 border-red-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-red-500/50">{stats.criticalItems}</Badge>
+              </div>
+              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat('parado')}>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase group-hover/item:text-slate-400 transition-colors">Estoque Parado (+90d)</span>
+                <Badge className="h-5 px-1.5 bg-slate-500/10 text-slate-500 border-slate-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-slate-500/50">{stats.stagnantItems}</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Resumo por Estrutura */}
+        <Card className="border-border/30 bg-card/40 shadow-none">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                <Grid3X3 className="w-3 h-3" /> Resumo Estrutura
+              </div>
+              <span className="text-[9px] font-bold text-muted-foreground/60">{stats.tecBreakdown.length} TECs</span>
+            </div>
+            <div className="space-y-2 max-h-[110px] overflow-y-auto custom-scrollbar pr-1.5">
+              {stats.tecBreakdown.map(tec => (
+                <div 
+                  key={tec.name} 
+                  className={`flex items-center justify-between p-1.5 rounded-lg border border-transparent hover:border-border/50 hover:bg-muted/30 transition-all cursor-pointer ${activeTec === tec.name ? 'bg-primary/5 border-primary/20' : ''}`}
+                  onClick={() => setActiveTec(tec.name)}
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-[10px] font-black w-9">{tec.name}</span>
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-500 ${
+                          tec.percent > 90 ? 'bg-red-500' : tec.percent > 70 ? 'bg-amber-500' : 'bg-primary/80'
+                        }`}
+                        style={{ width: `${tec.percent}%` }}
+                      />
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                  <div className="text-right ml-3">
+                    <div className="text-[10px] font-black tabular-nums">{tec.percent}%</div>
+                    <div className="text-[7px] font-bold text-muted-foreground uppercase">{tec.m2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} m²</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* TEC Tabs */}
@@ -557,7 +613,11 @@ export default function EstoquePage() {
                 </div>
                 {config.cols.map(col => {
                   const items = cellMap[`${col}-${nivel}`] || [];
-                  const filteredItems = selectedStat && selectedStat !== 'total' && selectedStat !== 'livre' 
+                  const filteredItems = selectedStat === 'critico' 
+                    ? items.filter(i => i.m_linear < (i.estoque_minimo || 5))
+                    : selectedStat === 'parado'
+                    ? items.filter(i => i.data_registro && new Date(i.data_registro) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))
+                    : selectedStat && selectedStat !== 'total' && selectedStat !== 'livre' 
                     ? items.filter(i => i.status === selectedStat)
                     : items;
                   
@@ -565,8 +625,10 @@ export default function EstoquePage() {
                   const hasItems = items.length > 0;
                   const matchesFilter = !selectedStat || selectedStat === 'total' || 
                                       (selectedStat === 'livre' && items.length < 30) ||
+                                      (selectedStat === 'critico' && items.some(i => i.m_linear < (i.estoque_minimo || 5))) ||
+                                      (selectedStat === 'parado' && items.some(i => i.data_registro && new Date(i.data_registro) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))) ||
                                       items.some(i => i.status === selectedStat);
-                  
+
                   return (
                     <div 
                       key={col} 
