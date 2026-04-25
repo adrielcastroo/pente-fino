@@ -24,6 +24,9 @@ export function useDashboard() {
 
   return {
     history,
+    isHistoryLoading,
+    historyError,
+    loadHistory,
     stats,
     detailChart,
     setDetailChart,
