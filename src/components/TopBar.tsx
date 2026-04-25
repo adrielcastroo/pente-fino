@@ -96,11 +96,11 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-2 sm:gap-4 px-3 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
+      <div className="flex h-14 sm:h-16 lg:h-18 items-center gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-xl shrink-0" />
-          <div className="hidden md:flex flex-col">
-            <p className="text-sm font-bold text-foreground tracking-tight">
+          <div className="hidden sm:flex flex-col">
+            <p className="text-sm font-bold text-foreground tracking-tight leading-none">
               Sistema <span className="text-primary">Pente Fino</span>
             </p>
           </div>
@@ -108,14 +108,14 @@ const TopBar = memo(function TopBar() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
           {isGuest && (
-            <div className="relative group w-full max-w-[100px] xs:max-w-[140px] sm:max-w-[200px] md:max-w-[280px]">
+            <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[240px]">
               <label htmlFor="conferente-input" className="sr-only">Conferente</label>
-              <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
                 <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <input
                 id="conferente-input"
-                className="h-9 sm:h-10 w-full rounded-xl border border-border/50 bg-muted/30 pl-8 sm:pl-10 pr-2 text-[10px] sm:text-xs font-bold tracking-tight focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all"
+                className="h-9 sm:h-10 w-full rounded-xl border border-border/50 bg-muted/30 pl-9 sm:pl-10 pr-2 text-xs font-bold tracking-tight focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all outline-none"
                 value={conferente}
                 onChange={e => setConferente(e.target.value)}
                 placeholder={isMobile ? "Nome..." : "Identifique-se..."}
