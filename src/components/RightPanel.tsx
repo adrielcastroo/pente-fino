@@ -49,9 +49,10 @@ interface TableCellProps {
   onStartEdit: (rowId: string, key: string, val: string) => void;
   onCopy: (t: string) => void;
   loteSistema?: string;
+  className?: string;
 }
 
-const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema }: TableCellProps) => {
+const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValue, onEditValueChange, onCommitEdit, onCancelEdit, onStartEdit, onCopy, loteSistema, className }: TableCellProps) => {
   if (isEditing) {
     return (
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
