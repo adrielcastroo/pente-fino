@@ -39,7 +39,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
           <Download className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-2 h-[280px]">
+      <CardContent className="px-2 pb-6 pt-2 h-[220px] sm:h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             {!isLow && (
