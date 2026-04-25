@@ -125,23 +125,31 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
   return (
     <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''}`}>
       <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
-      {columns.map((column: any) => (
-        <TableCell
-          key={column.key}
-          id={r.id}
-          columnKey={column.key}
-          value={(r as any)[column.key]}
-          searchQuery={searchQuery}
-          isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
-          editValue={editValue}
-          onEditValueChange={onEditValueChange}
-          onCommitEdit={onCommitEdit}
-          onCancelEdit={onCancelEdit}
-          onStartEdit={onStartEdit}
-          onCopy={onCopy}
-          loteSistema={r.loteSistema}
-        />
-      ))}
+      {columns.map((column: any) => {
+        // Critical columns that should always show: item, mLinear, quantidade, loteSistema
+        // Less critical: nf, processo, m2, largura, lote, endereco
+        const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
+        const responsiveClass = isCritical ? "" : "hidden md:table-cell";
+
+        return (
+          <TableCell
+            key={column.key}
+            id={r.id}
+            columnKey={column.key}
+            value={(r as any)[column.key]}
+            searchQuery={searchQuery}
+            isEditing={editingCell?.rowId === r.id && editingCell?.key === column.key}
+            editValue={editValue}
+            onEditValueChange={onEditValueChange}
+            onCommitEdit={onCommitEdit}
+            onCancelEdit={onCancelEdit}
+            onStartEdit={onStartEdit}
+            onCopy={onCopy}
+            loteSistema={r.loteSistema}
+            className={responsiveClass}
+          />
+        );
+      })}
       <td className="px-2 sm:px-4 py-2 sm:py-3.5">
         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <Tooltip>
