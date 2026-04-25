@@ -92,20 +92,20 @@ export default function DashboardPage() {
       </header>
       
       {/* Stat Cards - now clickable to open detail dialogs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
         <button 
           onClick={() => setDetailDialog('conferentes')} 
           className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
-          <div className="p-6 sm:p-7 flex flex-row items-center gap-5 relative z-10">
-            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <Users className="w-6 h-6" />
+          <div className="p-4 sm:p-6 lg:p-7 flex flex-row items-center gap-3 sm:gap-5 relative z-10">
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-4xl sm:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferentes}</div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-1 group-hover:text-primary/70 transition-colors">Conferentes</p>
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferentes}</div>
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5 sm:mt-1 group-hover:text-primary/70 transition-colors">Conferentes</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
