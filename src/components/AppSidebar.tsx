@@ -118,7 +118,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       size="lg"
-                      onClick={() => handleTabClick(item.key)}
+                      onClick={() => handleTabClick(item.key, item.path)}
                       tooltip={item.label}
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
