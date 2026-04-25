@@ -192,39 +192,35 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart} 
         />
         
-        {!isMobile && (
-          <>
-            <SummaryChart 
-              title="Distribuição" 
-              desc="Setores Operacionais" 
-              data={stats.categorias} 
-              type="pie" 
-              icon={Layers3} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Distribuição" 
+          desc="Setores Operacionais" 
+          data={stats.categorias} 
+          type="pie" 
+          icon={Layers3} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart 
-              title="Especificações" 
-              desc="Materiais / Tipos" 
-              data={stats.tipos} 
-              type="pie" 
-              icon={TrendingUp} 
-              chartKey="value"
-              onDetailClick={setDetailChart} 
-            />
+        <SummaryChart 
+          title="Especificações" 
+          desc="Materiais / Tipos" 
+          data={stats.tipos} 
+          type="pie" 
+          icon={TrendingUp} 
+          chartKey="value"
+          onDetailClick={setDetailChart} 
+        />
 
-            <SummaryChart
-              title="Registros por Conferência"
-              desc="Volume por Sessão"
-              data={registrosPerConference.slice(0, 10)}
-              type="bar"
-              icon={Package}
-              chartKey="value"
-              onDetailClick={setDetailChart}
-            />
-          </>
-        )}
+        <SummaryChart
+          title="Registros por Conferência"
+          desc="Volume por Sessão"
+          data={registrosPerConference.slice(0, 10)}
+          type="bar"
+          icon={Package}
+          chartKey="value"
+          onDetailClick={setDetailChart}
+        />
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
