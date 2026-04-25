@@ -1530,6 +1530,7 @@ export default function EstoquePage() {
           value={statModal.value}
           type={statModal.type}
           stats={statModal.stats}
+          data={statModal.data}
           complementaryInfo={`Análise detalhada do estoque na estrutura ${activeTec}. As estatísticas refletem o estado atual das posições físicas.`}
         />
       )}
