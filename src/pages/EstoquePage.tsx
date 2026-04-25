@@ -519,13 +519,13 @@ export default function EstoquePage() {
                   <span className="text-[8px] font-bold text-emerald-500">+12%</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat('critico')}>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase group-hover/item:text-red-500 transition-colors">Itens Críticos</span>
-                <Badge className="h-5 px-1.5 bg-red-500/10 text-red-500 border-red-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-red-500/50">{stats.criticalItems}</Badge>
+              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat(selectedStat === 'critico' ? null : 'critico')}>
+                <span className={`text-[10px] font-bold uppercase transition-colors ${selectedStat === 'critico' ? 'text-red-500' : 'text-muted-foreground group-hover/item:text-red-500'}`}>Itens Críticos</span>
+                <Badge className={`h-5 px-1.5 border-red-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-red-500/50 transition-all ${selectedStat === 'critico' ? 'bg-red-500 text-white' : 'bg-red-500/10 text-red-500'}`}>{stats.criticalItems}</Badge>
               </div>
-              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat('parado')}>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase group-hover/item:text-slate-400 transition-colors">Estoque Parado (+90d)</span>
-                <Badge className="h-5 px-1.5 bg-slate-500/10 text-slate-500 border-slate-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-slate-500/50">{stats.stagnantItems}</Badge>
+              <div className="flex items-center justify-between group/item cursor-pointer" onClick={() => setSelectedStat(selectedStat === 'parado' ? null : 'parado')}>
+                <span className={`text-[10px] font-bold uppercase transition-colors ${selectedStat === 'parado' ? 'text-slate-400' : 'text-muted-foreground group-hover/item:text-slate-400'}`}>Estoque Parado (+90d)</span>
+                <Badge className={`h-5 px-1.5 border-slate-500/20 text-[9px] font-black ring-offset-background group-hover/item:ring-1 ring-slate-500/50 transition-all ${selectedStat === 'parado' ? 'bg-slate-500 text-white' : 'bg-slate-500/10 text-slate-500'}`}>{stats.stagnantItems}</Badge>
               </div>
             </div>
           </CardContent>
