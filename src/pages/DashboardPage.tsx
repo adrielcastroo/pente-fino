@@ -244,7 +244,7 @@ export default function DashboardPage() {
                   <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Nome</th>
                   <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferências</th>
                   <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Registros</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Último</th>
+                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden xs:table-cell">Último</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
