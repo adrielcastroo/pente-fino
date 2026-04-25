@@ -930,14 +930,14 @@ export const LeftPanel = memo(function LeftPanel() {
         )}
 
         {/* Form Fields */}
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* PROCESSO */}
             {requiresProcesso && (
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5 h-4">
-                  <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
+              <div className="space-y-1.5 flex flex-col">
+                <div className="flex items-center gap-2 h-5">
+                  <label htmlFor="proc-input" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Processo (PROC)</label>
                   <button onClick={toggleLockProcesso} className={`transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockProcesso ? 'Campo travado' : 'Travar campo'}>
                     {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
