@@ -69,6 +69,30 @@ export default function DashboardPage() {
     }));
   }, [history]);
 
+  if (isHistoryLoading && history.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <p className="text-muted-foreground font-medium animate-pulse">Carregando dados do dashboard...</p>
+      </div>
+    );
+  }
+
+  if (historyError && history.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-6">
+        <div className="p-4 rounded-full bg-destructive/10 text-destructive mb-2">
+          <Activity className="w-10 h-10" />
+        </div>
+        <h3 className="text-xl font-bold">Erro ao carregar dados</h3>
+        <p className="text-muted-foreground max-w-md">{historyError}</p>
+        <Button onClick={() => loadHistory()} className="mt-4">
+          Tentar Novamente
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-3 sm:p-6 lg:p-8 xl:p-10 space-y-4 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
       {/* Header */}
