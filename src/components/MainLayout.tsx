@@ -32,7 +32,7 @@ export default function MainLayout() {
   // Map path to active tab
   const getActiveTab = (path: string): AppTab => {
     const p = path.replace('/', '');
-    if (!p) return 'inicio';
+    if (!p || p === 'dashboard') return 'inicio';
     if (p === 'tecido') return 'tecido';
     if (p === 'madeira') return 'madeira';
     if (p === 'motor') return 'motor';
