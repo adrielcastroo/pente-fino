@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, memo, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Plus, Palette, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ interface Props {
   onChange: (id: string | null, lote: DbLoteMestre | null) => void;
 }
 
-export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onChange }: Props) {
+export function LoteMestreSelector({ value, onChange }: Props) {
   const [lotes, setLotes] = useState<DbLoteMestre[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -37,7 +37,7 @@ export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onCh
 
   useEffect(() => { load(); }, [load]);
 
-  const selected = useMemo(() => lotes.find(l => l.id === value) || null, [lotes, value]);
+  const selected = lotes.find(l => l.id === value) || null;
 
   const handleCreate = async () => {
     if (!newName.trim()) {
@@ -184,6 +184,6 @@ export const LoteMestreSelector = memo(function LoteMestreSelector({ value, onCh
       </Dialog>
     </div>
   );
-});
+}
 
 export default LoteMestreSelector;

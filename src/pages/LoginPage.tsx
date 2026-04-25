@@ -169,7 +169,30 @@ export default function LoginPage() {
             Sistema Pente Fino
           </h1>
           
-          {/* Feature cards removed */}
+          <div className="space-y-6 w-full mt-4">
+            {[
+              { icon: Search, title: "Conferência Ágil", desc: "Validação instantânea de estoque com precisão cirúrgica." },
+              { icon: BarChart3, title: "Insights em Tempo Real", desc: "Acompanhe cada movimentação no momento em que acontece." },
+              { icon: ShieldCheck, title: "Segurança de Dados", desc: "Arquitetura robusta para proteção total das suas informações." },
+              { icon: Zap, title: "Performance Elevada", desc: "Interface otimizada para máxima produtividade da sua equipe." }
+            ].map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + (i * 0.1) }}
+                className="flex items-start gap-4 p-4 rounded-2xl bg-white/50 dark:bg-card/50 border border-border/30 backdrop-blur-sm hover:shadow-md transition-all duration-300 group"
+              >
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-foreground text-sm">{item.title}</h3>
+                  <p className="text-muted-foreground text-xs mt-0.5 leading-relaxed">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
 
@@ -444,8 +467,8 @@ export default function LoginPage() {
                   variant="outline"
                   className="w-full h-11 text-xs font-semibold bg-background hover:bg-muted border-border/60 transition-all"
                   onClick={() => {
-                    loginAsGuest('Visitante');
-                    toast.success('Bem-vindo!');
+                    setGuestName('');
+                    setGuestDialogOpen(true);
                   }}
                 >
                   Entrar como Visitante

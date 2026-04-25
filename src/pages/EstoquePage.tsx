@@ -3,10 +3,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, TreePine, Waves, FileText, Scale, Ruler, Truck, Palette, DollarSign, History, Tag, Edit, AlertTriangle, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine } from 'lucide-react';
 import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
 import { Card, CardContent } from '@/components/ui/card';
-import { StatDetailModal } from '@/components/dashboard/StatDetailModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
 import ImportDialog from '@/components/estoque/ImportDialog';
-import MadeiraImportDialog from '@/components/estoque/MadeiraImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 
 
@@ -39,20 +37,6 @@ interface Posicao {
   data_registro: string | null;
   data_saida: string | null;
   registro_id: string | null;
-  avaria_foto_url?: string | null;
-  composicao?: string;
-  gramatura?: number;
-  largura_util?: number;
-  fornecedor?: string;
-  codigo_cor?: string;
-  preco_metro?: number;
-  estoque_minimo?: number;
-  registros?: {
-    tipo_tecido?: string;
-    avaria_tipo?: string;
-    lote_mestre_id?: string;
-    item?: string;
-  };
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
@@ -94,17 +78,11 @@ export default function EstoquePage() {
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [madeiraImportOpen, setMadeiraImportOpen] = useState(false);
-  const [madeiraVersion, setMadeiraVersion] = useState(0);
-  const [statModal, setStatModal] = useState<{ isOpen: boolean; title: string; value: string | number; type: string; stats?: any[]; data?: any[] } | null>(null);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<Posicao>>({});
-  const [exitsToday, setExitsToday] = useState(0);
   const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
@@ -114,19 +92,10 @@ export default function EstoquePage() {
 
   const loadStats = useCallback(async () => {
     try {
-      // Fetch id, status and estrutura to allow filtering and optimistic updates
-      const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura, m2, m_linear, data_registro, item, estoque_minimo, gramatura, largura_util, registros(tipo_tecido, avaria_tipo, lote_mestre_id, item)');
+      // Only fetch the status column to keep payload tiny
+      const { data, error } = await supabase.from('estoque_posicoes').select('status');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count, error: countError } = await supabase
-        .from('estoque_saidas')
-        .select('*', { count: 'exact', head: true })
-        .gte('data_saida', today.toISOString());
-      
-      if (!countError) setExitsToday(count || 0);
     } catch (e) {
       console.error('Erro ao carregar estatísticas:', e);
     }
@@ -135,20 +104,9 @@ export default function EstoquePage() {
   const loadPosicoes = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('estoque_posicoes')
-        .select('*, registros(avaria_foto_url)')
-        .eq('estrutura', activeTec);
-      
+      const { data, error } = await supabase.from('estoque_posicoes').select('*').eq('estrutura', activeTec);
       if (error) throw error;
-      
-      // Flatten the join result
-      const flattened = (data as any[]).map(p => ({
-        ...p,
-        avaria_foto_url: p.registros?.avaria_foto_url
-      }));
-      
-      setPosicoesForActiveTec(flattened as Posicao[]);
+      setPosicoesForActiveTec(data as Posicao[]);
     } catch (e) {
       console.error('Erro ao carregar estoque:', e);
       toast.error('Erro ao carregar dados do estoque');
@@ -160,112 +118,23 @@ export default function EstoquePage() {
   useEffect(() => { loadPosicoes(); }, [loadPosicoes]);
 
   const posicoes = posicoesForActiveTec;
-  
+  // totalSlots is constant — compute once at module scope below
+  const totalSlots = TOTAL_SLOTS;
+
   const stats = useMemo(() => {
-    // Global stats across all structures
-    const allItems = allPosicoes;
-    const totalPhysicalSlotsAcrossAll = TOTAL_SLOTS;
-    const globalOccupied = allItems.filter((p: any) => p.status === 'ocupado').length;
-    const globalOccupancyRate = totalPhysicalSlotsAcrossAll ? (globalOccupied / totalPhysicalSlotsAcrossAll) * 100 : 0;
-
-    // Stats for active TEC
-    const currentConfig = TEC_CONFIG[activeTec];
-    const structureSlots = currentConfig ? currentConfig.cols.length * currentConfig.levels * 30 : 0;
-
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
-    let totalM2 = 0, totalMLinear = 0, totalWeight = 0;
-    let criticalItems = 0;
-    let stagnantItems = 0;
-    let entriesToday = 0;
     
-    // New metrics
-    let damagedCount = 0;
-    const materialBreakdown: Record<string, number> = { 'Lâmina': 0, 'Base': 0, 'Bandô': 0, 'Outros': 0 };
-    const damagedMaterialBreakdown: Record<string, number> = { 'Lâmina': 0, 'Base': 0, 'Bandô': 0, 'Outros': 0 };
-    const modelDamages: Record<string, number> = {};
-    const lotMestreStats: Record<string, { meters: number; count: number; type: string; damaged: number }> = {};
-    const activeLots = new Set();
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    
-    for (let i = 0, len = allItems.length; i < len; i++) {
-      const p = allItems[i] as any;
-      const reg = p.registros || {};
-      
-      if (p.status === 'ocupado') {
-        totalM2 += p.m2 || 0;
-        totalMLinear += p.m_linear || 0;
-        if (p.gramatura && p.largura_util && p.m_linear) {
-          totalWeight += (p.gramatura / 1000) * p.largura_util * p.m_linear;
-        }
-        if (p.m_linear < (p.estoque_minimo || 5)) criticalItems++;
-        if (p.data_registro && new Date(p.data_registro) < ninetyDaysAgo) stagnantItems++;
-        
-        // Entradas hoje
-        if (p.data_registro && new Date(p.data_registro) >= today) {
-          entriesToday++;
-        }
-
-        // Material Type inference (fallback to Lâmina if not specified, for demo)
-        const type = reg.tipo_tecido || (p.item?.includes('BAN') ? 'Bandô' : p.item?.includes('BAS') ? 'Base' : 'Lâmina');
-        materialBreakdown[type] = (materialBreakdown[type] || 0) + 1;
-
-        // Damaged items
-        if (reg.avaria_tipo) {
-          damagedCount++;
-          damagedMaterialBreakdown[type] = (damagedMaterialBreakdown[type] || 0) + 1;
-          const model = p.item || 'Desconhecido';
-          modelDamages[model] = (modelDamages[model] || 0) + 1;
-        }
-
-        // Lot Mestre
-        if (reg.lote_mestre_id) {
-          const lotId = reg.lote_mestre_id;
-          if (!lotMestreStats[lotId]) {
-            lotMestreStats[lotId] = { meters: 0, count: 0, type: type, damaged: 0 };
-          }
-          lotMestreStats[lotId].meters += p.m_linear || 0;
-          lotMestreStats[lotId].count += 1;
-          if (reg.avaria_tipo) lotMestreStats[lotId].damaged += 1;
-          activeLots.add(lotId);
-        }
-      }
-
-      // Stats for active TEC
-      if (p.estrutura === activeTec) {
-        const s = p.status;
-        if (s === 'ocupado') occupied++;
-        else if (s === 'bloqueado') blocked++;
-        else if (s === 'reservado') reserved++;
-        else if (s === 'saida') exited++;
-      }
+    for (let i = 0, len = allPosicoes.length; i < len; i++) {
+      const s = (allPosicoes[i] as any).status;
+      if (s === 'ocupado') occupied++;
+      else if (s === 'bloqueado') blocked++;
+      else if (s === 'reservado') reserved++;
+      else if (s === 'saida') exited++;
     }
     
-    const free = Math.max(0, structureSlots - occupied - blocked - reserved - exited);
-    
-    const tecBreakdown = Object.keys(TEC_CONFIG).map(tec => {
-      const tecItems = allItems.filter((p: any) => p.estrutura === tec);
-      const tecCfg = TEC_CONFIG[tec];
-      const tecSlots = tecCfg.cols.length * tecCfg.levels * 30;
-      const tecOccupied = tecItems.filter((p: any) => p.status === 'ocupado').length;
-      const tecM2 = tecItems.filter((p: any) => p.status === 'ocupado').reduce((acc, p: any) => acc + (p.m2 || 0), 0);
-      return { name: tec, occupied: tecOccupied, total: tecSlots, percent: tecSlots ? Math.round((tecOccupied / tecSlots) * 100) : 0, m2: tecM2 };
-    });
-
-    return { 
-      totalSlots: structureSlots, globalTotalSlots: totalPhysicalSlotsAcrossAll, 
-      occupied, globalOccupied, blocked, reserved, exited, free,
-      totalM2, totalMLinear, totalWeight, criticalItems, stagnantItems,
-      globalOccupancyRate, tecBreakdown, entriesToday, exitsToday,
-      damagedCount, materialBreakdown, damagedMaterialBreakdown,
-      modelDamages: Object.entries(modelDamages).sort((a, b) => b[1] - a[1]).slice(0, 5),
-      activeLotsCount: activeLots.size, lotMestreStats
-    };
-  }, [allPosicoes, activeTec]);
+    const free = totalSlots - occupied - blocked - reserved; // Exited items are removed from DB, so they don't count against capacity
+    return { totalSlots, occupied, blocked, reserved, exited, free };
+  }, [allPosicoes, totalSlots]);
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
@@ -334,46 +203,6 @@ export default function EstoquePage() {
       loadStats();
       toast.success('Item excluído');
     }
-  };
-
-  const handleSaveDetails = async () => {
-    if (!detailPos) return;
-    
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('estoque_posicoes')
-        .update(editForm as any)
-        .eq('id', detailPos.id);
-
-      if (error) throw error;
-
-      toast.success('Informações atualizadas com sucesso');
-      setIsEditing(false);
-      loadPosicoes();
-      setDetailPos(prev => prev ? { ...prev, ...editForm } : null);
-    } catch (e: any) {
-      console.error('Erro ao salvar detalhes:', e);
-      toast.error('Erro ao salvar: ' + (e.message || ''));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startEditing = () => {
-    if (!detailPos) return;
-    setEditForm({
-      item: detailPos.item,
-      composicao: detailPos.composicao || '',
-      gramatura: detailPos.gramatura || 0,
-      largura_util: detailPos.largura_util || 0,
-      fornecedor: detailPos.fornecedor || '',
-      codigo_cor: detailPos.codigo_cor || '',
-      preco_metro: detailPos.preco_metro || 0,
-      m_linear: detailPos.m_linear || 0,
-      estoque_minimo: detailPos.estoque_minimo || 5,
-    });
-    setIsEditing(true);
   };
 
   useEffect(() => {
@@ -451,21 +280,17 @@ export default function EstoquePage() {
   };
 
   return (
-    <>
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 min-w-0">
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">Estoque</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">Estoque</h1>
+          
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button 
-            onClick={() => category === 'madeira' ? setMadeiraImportOpen(true) : setImportOpen(true)} 
-            variant="outline" 
-            className="flex-1 sm:flex-none h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2"
-          >
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
             <Upload className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">Importar</span>
+            <span className="hidden sm:inline">Importar</span>
           </Button>
         </div>
       </div>
@@ -473,7 +298,7 @@ export default function EstoquePage() {
       {/* Categoria Tabs: Tecido / Madeira */}
       <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-md">
         {([
-          { key: 'tecido', label: 'Tecido', Icon: Waves },
+          { key: 'tecido', label: 'Tecido', Icon: Shirt },
           { key: 'madeira', label: 'Madeira', Icon: TreePine },
         ] as const).map(({ key, label, Icon }) => (
           <button
@@ -492,299 +317,32 @@ export default function EstoquePage() {
       </div>
 
       {category === 'madeira' ? (
-        <MadeiraEstoque key={madeiraVersion} />
+        <MadeiraEstoque />
       ) : (
         <>
-      {/* Redesigned Dashboard Stats - Redesign by UI/UX Specialist */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Card 1: Capacidade Total */}
-        <Card 
-          onClick={() => setStatModal({ 
-            isOpen: true, 
-            title: 'Capacidade Total', 
-            value: stats.globalOccupied, 
-            type: 'capacidade',
-            stats: stats.tecBreakdown.map(t => ({ label: `Estrutura ${t.name}`, value: `${t.occupied}/${t.total}`, percent: t.percent, trend: 'up' as const }))
-          })}
-          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-primary/30 group cursor-pointer"
-        >
-          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <Package className="w-24 h-24 text-primary" />
-          </div>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                <Box className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Capacidade Total</span>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1">
-                {stats.globalOccupied}
-                <span className="text-sm font-bold text-muted-foreground">/ {stats.globalTotalSlots}</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/70 uppercase">
-                <Grid3X3 className="w-3 h-3" /> Slots físicos ocupados
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)] transition-all duration-1000" 
-                  style={{ width: `${(stats.globalOccupied / stats.globalTotalSlots) * 100}%` }} 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Taxa de Ocupação */}
-        <Card 
-          onClick={() => setStatModal({ 
-            isOpen: true, 
-            title: 'Taxa de Ocupação', 
-            value: `${Math.round(stats.globalOccupancyRate)}%`, 
-            type: 'ocupacao',
-            stats: Object.entries(stats.materialBreakdown).map(([label, value]) => ({ label, value: `${value} itens`, percent: Math.round((value / stats.globalOccupied) * 100) }))
-          })}
-          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-violet-500/30 group cursor-pointer"
-        >
-          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <Activity className="w-24 h-24 text-violet-500" />
-          </div>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
-                <Layers className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Taxa de Ocupação</span>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1 text-violet-400">
-                {Math.round(stats.globalOccupancyRate)}
-                <span className="text-sm font-bold text-muted-foreground">%</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-violet-500 uppercase">
-                <TrendingUp className="w-3 h-3" /> Utilização em tempo real
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-violet-600 to-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.5)] transition-all duration-1000" 
-                  style={{ width: `${stats.globalOccupancyRate}%` }} 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Índice de Avarias */}
-        <Card 
-          onClick={() => setStatModal({ 
-            isOpen: true, 
-            title: 'Índice de Avarias', 
-            value: stats.damagedCount, 
-            type: 'avarias',
-            stats: stats.modelDamages.map(([label, value]) => ({ label, value: `${value} avarias`, percent: Math.round((value / stats.damagedCount) * 100) || 0 }))
-          })}
-          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-red-500/30 group cursor-pointer"
-        >
-          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <AlertTriangle className="w-24 h-24 text-red-500" />
-          </div>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-red-500/10 text-red-500">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Índice de Avarias</span>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1 text-red-400">
-                {stats.damagedCount}
-                <span className="text-sm font-bold text-muted-foreground">itens</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase">
-                <TrendingDown className="w-3 h-3" /> Itens com dano identificado
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-1000" 
-                  style={{ width: stats.damagedCount > 0 ? `${(stats.damagedCount / stats.globalOccupied) * 100}%` : '0%' }} 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Lote Mestre */}
-        <Card 
-          onClick={() => setStatModal({ 
-            isOpen: true, 
-            title: 'Lote Mestre', 
-            value: stats.activeLotsCount, 
-            type: 'lote',
-            stats: [
-              { label: 'Metragem Total', value: `${Math.round(stats.totalMLinear)}m` },
-              { label: 'Lotes Ativos', value: stats.activeLotsCount }
-            ],
-            data: Object.entries(stats.lotMestreStats).map(([id, s]) => ({ id, ...s }))
-          })}
-          className="relative overflow-hidden border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px] shadow-2xl transition-all duration-300 hover:bg-navy-3/30 hover:border-emerald-500/30 group cursor-pointer"
-        >
-          <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110">
-            <Tag className="w-24 h-24 text-emerald-500" />
-          </div>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-                <Tag className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Lote Mestre</span>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-4xl font-black tracking-tight flex items-baseline gap-1 text-emerald-400">
-                {Math.round(stats.totalMLinear)}
-                <span className="text-sm font-bold text-muted-foreground">M</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase">
-                <CheckCircle2 className="w-3 h-3" /> {stats.activeLotsCount} lotes ativos
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" 
-                  style={{ width: '100%' }} 
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Secondary Metrics & Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px]">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="space-y-1">
-                <h3 className="text-sm font-black uppercase tracking-wider">Resumo por Estrutura (TECs)</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Monitoramento de ocupação em tempo real</p>
-              </div>
-              <Badge variant="outline" className="rounded-full px-4 border-white/10 bg-white/5 font-black text-[10px]">
-                {stats.tecBreakdown.length} UNIDADES
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {stats.tecBreakdown.map(tec => (
-                <div 
-                  key={tec.name} 
-                  onClick={() => setActiveTec(tec.name)}
-                  className={`group relative p-4 rounded-2xl border transition-all cursor-pointer ${
-                    activeTec === tec.name 
-                      ? 'bg-primary/10 border-primary/30 shadow-lg shadow-primary/5' 
-                      : 'bg-white/[0.02] border-white/5 hover:border-white/20'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-black tracking-tighter text-lg">{tec.name}</span>
-                    <span className={`text-xs font-black ${tec.percent > 90 ? 'text-red-500' : tec.percent > 70 ? 'text-amber-500' : 'text-primary'}`}>
-                      {tec.percent}%
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden mb-2">
-                    <div 
-                      className={`h-full transition-all duration-700 ${
-                        tec.percent > 90 ? 'bg-red-500' : tec.percent > 70 ? 'bg-amber-500' : 'bg-primary'
-                      }`}
-                      style={{ width: `${tec.percent}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[9px] font-bold text-muted-foreground uppercase">
-                    <span>{tec.occupied} ocupados</span>
-                    <span>{tec.m2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} m²</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-white/[0.08] bg-navy-3/20 backdrop-blur-xl rounded-[24px]">
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-1">
-              <h3 className="text-sm font-black uppercase tracking-wider">Alertas & Alocação</h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pontos críticos de atenção</p>
-            </div>
-
-            <div className="space-y-3">
-              <button 
-                onClick={() => setSelectedStat(selectedStat === 'critico' ? null : 'critico')}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                  selectedStat === 'critico' ? 'bg-red-500/20 border-red-500/50' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-red-500/10 text-red-500">
-                    <AlertTriangle className="w-5 h-5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm font-black tracking-tight">Estoque Crítico</div>
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase">Abaixo do mínimo</div>
-                  </div>
-                </div>
-                <span className="text-xl font-black text-red-500">{stats.criticalItems}</span>
-              </button>
-
-              <button 
-                onClick={() => setSelectedStat(selectedStat === 'parado' ? null : 'parado')}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                  selectedStat === 'parado' ? 'bg-amber-500/20 border-amber-500/50' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm font-black tracking-tight">Estoque Parado</div>
-                    <div className="text-[9px] font-bold text-muted-foreground uppercase">+90 dias sem giro</div>
-                  </div>
-                </div>
-                <span className="text-xl font-black text-amber-500">{stats.stagnantItems}</span>
-              </button>
-            </div>
-
-            <div className="pt-2">
-              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-wider">Meta de Giro Semanal</span>
-                </div>
-                <div className="flex items-end justify-between mb-2">
-                  <span className="text-2xl font-black">2.4<span className="text-xs text-muted-foreground ml-1">/ 3.0x</span></span>
-                  <span className="text-xs font-black text-primary">80%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: '80%' }} />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {[
+          { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
+          { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
+          { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
+          { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
+          { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
+        ].map(s => (
+          <Card 
+            key={s.label} 
+            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
+              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+            }`}
+          >
+            <CardContent className="p-4 text-center space-y-1">
+              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
+              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* TEC Tabs */}
@@ -831,11 +389,7 @@ export default function EstoquePage() {
                 </div>
                 {config.cols.map(col => {
                   const items = cellMap[`${col}-${nivel}`] || [];
-                  const filteredItems = selectedStat === 'critico' 
-                    ? items.filter(i => i.m_linear < (i.estoque_minimo || 5))
-                    : selectedStat === 'parado'
-                    ? items.filter(i => i.data_registro && new Date(i.data_registro) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))
-                    : selectedStat && selectedStat !== 'total' && selectedStat !== 'livre' 
+                  const filteredItems = selectedStat && selectedStat !== 'total' && selectedStat !== 'livre' 
                     ? items.filter(i => i.status === selectedStat)
                     : items;
                   
@@ -843,10 +397,8 @@ export default function EstoquePage() {
                   const hasItems = items.length > 0;
                   const matchesFilter = !selectedStat || selectedStat === 'total' || 
                                       (selectedStat === 'livre' && items.length < 30) ||
-                                      (selectedStat === 'critico' && items.some(i => i.m_linear < (i.estoque_minimo || 5))) ||
-                                      (selectedStat === 'parado' && items.some(i => i.data_registro && new Date(i.data_registro) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))) ||
                                       items.some(i => i.status === selectedStat);
-
+                  
                   return (
                     <div 
                       key={col} 
@@ -907,7 +459,7 @@ export default function EstoquePage() {
                       </DialogDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${
+                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border mr-14 ${
                     occupiedCount === 0 ? 'border-primary/30 text-primary bg-primary/5' :
                     occupiedCount >= 25 ? 'border-red-500/30 text-red-400 bg-red-500/10' :
                     'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
@@ -937,164 +489,44 @@ export default function EstoquePage() {
                   <div className="grid grid-cols-1 gap-3">
                     {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
                       const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
-                      const isOutOfStock = item.m_linear <= 0;
-                      const isLowStock = item.m_linear > 0 && item.m_linear < (item.estoque_minimo || 5);
-                      const isReserved = item.status === 'reservado';
-
                       return (
-                        <div key={item.id} className="bg-card border border-border/40 rounded-2xl overflow-hidden flex flex-col sm:flex-row gap-0 group hover:border-primary/40 hover:shadow-lg transition-all duration-300 relative">
-                          {/* Left Accent Status Bar */}
-                          <div className={`w-1 shrink-0 ${
-                            isOutOfStock ? 'bg-destructive' :
-                            isLowStock ? 'bg-amber-500' :
-                            isReserved ? 'bg-amber-400' :
-                            'bg-emerald-500'
-                          }`} />
-
-                          {item.avaria_foto_url && (
-                            <div className="w-full sm:w-32 h-32 sm:h-auto shrink-0 border-b sm:border-b-0 sm:border-r border-border/10 relative overflow-hidden group/img">
-                              <img 
-                                src={item.avaria_foto_url} 
-                                alt={item.item} 
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(item.avaria_foto_url!, '_blank');
+                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                              </Badge>
+                              <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                            </div>
+                            <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
+                              <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
+                              <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
+                              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              onClick={() => setDetailPos(item)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
+                            >
+                              Detalhes
+                            </Button>
+                            {!isGuest && (
+                              <Button
+                                onClick={() => {
+                                  setDetailPos(item);
+                                  handleStatusChange(item, 'saida');
                                 }}
-                              />
-                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                <ScanBarcode className="w-6 h-6 text-white" />
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex-1 p-5 flex flex-col gap-4">
-                            {/* Top row: Status & Lote */}
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className={`text-[10px] font-black px-2 py-0.5 rounded-full border shadow-sm ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-white dark:bg-zinc-900`}>
-                                  POS {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
-                                </Badge>
-                                
-                                {isOutOfStock && (
-                                  <Badge variant="destructive" className="text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
-                                    <AlertTriangle className="w-3 h-3 mr-1" /> ESGOTADO
-                                  </Badge>
-                                )}
-                                
-                                {isLowStock && (
-                                  <Badge className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-white border-none">
-                                    <AlertTriangle className="w-3 h-3 mr-1" /> ESTOQUE BAIXO
-                                  </Badge>
-                                )}
-
-                                {isReserved && (
-                                  <Badge className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 border-none">
-                                    <Package className="w-3 h-3 mr-1" /> RESERVADO P/ PROD.
-                                  </Badge>
-                                )}
-                              </div>
-                              <span className="text-[11px] font-bold text-muted-foreground/40 font-mono tracking-tighter bg-muted/30 px-2 py-0.5 rounded">
-                                {item.lote_sistema || 'S/ LOTE'}
-                              </span>
-                            </div>
-
-                            {/* Main Info Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                              <div className="md:col-span-8 space-y-1">
-                                <h3 className="font-black text-foreground text-lg sm:text-xl tracking-tight leading-tight group-hover:text-primary transition-colors">
-                                  {item.item || 'Tecido sem identificação'}
-                                </h3>
-                                <p className="text-sm font-semibold text-muted-foreground/80 flex items-center gap-2">
-                                  <Layers className="w-4 h-4 text-primary/60" />
-                                  {item.composicao || 'Composição não informada'}
-                                </p>
-                                
-                                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 pt-3 border-t border-border/5">
-                                  <div className="flex flex-col">
-                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Fornecedor</span>
-                                    <span className="text-xs font-black flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-primary/40" /> {item.fornecedor || '—'}</span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Cor/Lote</span>
-                                    <span className="text-xs font-black flex items-center gap-1.5"><Palette className="w-3.5 h-3.5 text-primary/40" /> {item.codigo_cor || '—'}</span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Gramatura</span>
-                                    <span className="text-xs font-black flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-primary/40" /> {item.gramatura ? `${item.gramatura} g/m²` : '—'}</span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Largura Útil</span>
-                                    <span className="text-xs font-black flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5 text-primary/40" /> {item.largura_util ? `${item.largura_util}m` : (item.largura ? `${item.largura}m` : '—')}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Available Yardage Spotlight */}
-                              <div className="md:col-span-4 flex flex-col items-center md:items-end justify-center bg-primary/5 dark:bg-primary/10 rounded-2xl p-4 border border-primary/10 group-hover:bg-primary/10 transition-colors">
-                                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Disponível</span>
-                                <div className="flex items-baseline gap-1">
-                                  <span className={`text-3xl font-black tabular-nums tracking-tighter ${isOutOfStock ? 'text-destructive' : isLowStock ? 'text-amber-500' : 'text-primary'}`}>
-                                    {item.m_linear}
-                                  </span>
-                                  <span className="text-sm font-black text-muted-foreground/60 uppercase">m</span>
-                                </div>
-                                <div className="text-[10px] font-bold text-muted-foreground/50 mt-1 flex items-center gap-1">
-                                  <DollarSign className="w-3 h-3" />
-                                  R$ {item.preco_metro || '0,00'}/m
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Footer Actions */}
-                            <div className="flex items-center justify-between mt-1 pt-4 border-t border-border/10">
-                              <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
-                                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(item.data_registro)}</span>
-                                <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> {item.proc || 'Geral'}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
-                                      <History className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Histórico</TooltipContent>
-                                </Tooltip>
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
-                                      <Tag className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Gerar Etiqueta</TooltipContent>
-                                </Tooltip>
-
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => setDetailPos(item)}>
-                                      <Edit className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Editar Saldo / Info</TooltipContent>
-                                </Tooltip>
-
-                                {!isGuest && (
-                                  <Button
-                                    onClick={() => {
-                                      setDetailPos(item);
-                                      handleStatusChange(item, 'saida');
-                                    }}
-                                    size="sm"
-                                    className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-wider bg-zinc-900 dark:bg-white dark:text-zinc-950 hover:opacity-90 text-white gap-2 shadow-lg shadow-black/10 ml-2"
-                                  >
-                                    <LogOut className="w-3.5 h-3.5" />
-                                    Saída
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
+                                size="sm"
+                                className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                              >
+                                <LogOut className="w-3 h-3" />
+                                Dar Saída
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
@@ -1117,268 +549,113 @@ export default function EstoquePage() {
       </Dialog>
 
       {/* ===== DETAIL DIALOG ===== */}
-      <Dialog open={!!detailPos} onOpenChange={() => { setDetailPos(null); setIsEditing(false); }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] flex flex-col">
+      <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
-            const isOutOfStock = detailPos.m_linear <= 0;
-            const isLowStock = detailPos.m_linear > 0 && detailPos.m_linear < (detailPos.estoque_minimo || 5);
-
             return (
               <>
                 {/* Detail Header */}
-                <div className="px-5 sm:px-8 pt-6 pb-5 border-b border-border/20 bg-muted/20 shrink-0">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20 text-primary shrink-0 shadow-sm">
-                        <Package className="w-6 h-6" />
-                      </div>
-                      <div className="min-w-0">
-                        <DialogTitle className="text-lg sm:text-2xl font-black tracking-tight leading-tight group-hover:text-primary transition-colors">
-                          {detailPos.item || 'Item sem identificação'}
-                        </DialogTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-white dark:bg-zinc-900`}>
-                            POS {String(detailPos.posicao).padStart(2, '0')} · {statusCfg.label}
-                          </Badge>
-                          <span className="text-[10px] font-bold text-muted-foreground/60">
-                            {detailPos.estrutura} · {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
-                          </span>
-                        </div>
-                      </div>
+                <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/20 bg-muted/20">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <div className="flex items-baseline gap-1">
-                        <span className={`text-2xl sm:text-3xl font-black tracking-tighter tabular-nums ${isOutOfStock ? 'text-destructive' : isLowStock ? 'text-amber-500' : 'text-primary'}`}>
-                          {detailPos.m_linear}
-                        </span>
-                        <span className="text-[10px] font-black text-muted-foreground/50 uppercase">metros</span>
-                      </div>
-                      {isLowStock && (
-                        <Badge className="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-amber-500 text-white border-none animate-pulse">
-                          ESTOQUE BAIXO
-                        </Badge>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <DialogTitle className="text-sm sm:text-lg font-black tracking-tight truncate leading-snug">
+                        {detailPos.item || 'Item sem nome'}
+                      </DialogTitle>
+                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
+                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                      </DialogDescription>
                     </div>
+                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-14 sm:mr-12 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                      {statusCfg.label}
+                    </Badge>
                   </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="overflow-y-auto flex-1 custom-scrollbar">
-                  <div className="p-5 sm:p-8 space-y-8">
-                    {isEditing ? (
-                      /* EDITING FORM */
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nome do Tecido</label>
-                            <Input 
-                              value={editForm.item || ''} 
-                              onChange={e => setEditForm({ ...editForm, item: e.target.value })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Composição</label>
-                            <Input 
-                              value={editForm.composicao || ''} 
-                              onChange={e => setEditForm({ ...editForm, composicao: e.target.value })}
-                              placeholder="Ex: 100% Algodão"
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Gramatura (g/m²)</label>
-                            <Input 
-                              type="number"
-                              value={editForm.gramatura || ''} 
-                              onChange={e => setEditForm({ ...editForm, gramatura: Number(e.target.value) })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Largura Útil (m)</label>
-                            <Input 
-                              type="number"
-                              step="0.01"
-                              value={editForm.largura_util || ''} 
-                              onChange={e => setEditForm({ ...editForm, largura_util: Number(e.target.value) })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fornecedor</label>
-                            <Input 
-                              value={editForm.fornecedor || ''} 
-                              onChange={e => setEditForm({ ...editForm, fornecedor: e.target.value })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cor / Lote</label>
-                            <Input 
-                              value={editForm.codigo_cor || ''} 
-                              onChange={e => setEditForm({ ...editForm, codigo_cor: e.target.value })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Preço por Metro (R$)</label>
-                            <Input 
-                              type="number"
-                              step="0.01"
-                              value={editForm.preco_metro || ''} 
-                              onChange={e => setEditForm({ ...editForm, preco_metro: Number(e.target.value) })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Ponto de Pedido (Mínimo)</label>
-                            <Input 
-                              type="number"
-                              value={editForm.estoque_minimo || ''} 
-                              onChange={e => setEditForm({ ...editForm, estoque_minimo: Number(e.target.value) })}
-                              className="h-11 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-3 pt-4">
-                          <Button 
-                            className="flex-1 h-12 rounded-xl font-black bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                            onClick={handleSaveDetails}
-                            disabled={loading}
-                          >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
-                            Salvar Alterações
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            className="h-12 px-6 rounded-xl font-black border-border/50"
-                            onClick={() => setIsEditing(false)}
-                          >
-                            Cancelar
-                          </Button>
-                        </div>
+                {/* Info Grid */}
+                <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    {[
+                      { label: 'Lote', value: detailPos.lote || '—' },
+                      { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
+                      { label: 'Endereço', value: detailPos.endereco || '—' },
+                      { label: 'Conferente', value: detailPos.conferente_entrada || '—' },
+                      { label: 'M²', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
+                      { label: 'Largura', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
+                      { label: 'M Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
+                      { label: 'Data Entrada', value: formatDateBR(detailPos.data_registro) },
+                    ].map(f => (
+                      <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
+                        <div className="text-[8px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
+                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-all leading-snug">{f.value}</div>
                       </div>
-                    ) : (
-                      /* VIEW MODE */
-                      <>
-                        {/* Technical Specs Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {[
-                            { label: 'Composição', value: detailPos.composicao || 'Não informada', icon: Layers },
-                            { label: 'Fornecedor', value: detailPos.fornecedor || 'Não informado', icon: Truck },
-                            { label: 'Lote / Cor', value: detailPos.codigo_cor || 'Não informado', icon: Palette },
-                            { label: 'Gramatura', value: detailPos.gramatura ? `${detailPos.gramatura} g/m²` : 'Não informada', icon: Scale },
-                            { label: 'Largura Útil', value: detailPos.largura_util ? `${detailPos.largura_util}m` : (detailPos.largura ? `${detailPos.largura}m` : 'Não informada'), icon: Ruler },
-                            { label: 'Preço/m', value: detailPos.preco_metro ? `R$ ${detailPos.preco_metro.toFixed(2)}` : 'Não informado', icon: DollarSign },
-                            { label: 'Lote Sistema', value: detailPos.lote_sistema || 'S/ Lote', icon: ScanBarcode },
-                            { label: 'Lote Origem', value: detailPos.lote || 'S/ Lote', icon: Tag },
-                            { label: 'Entrada', value: formatDateBR(detailPos.data_registro), icon: Calendar },
-                          ].map((f, idx) => (
-                            <div key={idx} className="bg-muted/10 border border-border/10 rounded-2xl p-4 flex flex-col gap-1.5 hover:bg-muted/15 transition-colors group/item">
-                              <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">
-                                <f.icon className="w-3.5 h-3.5 text-primary/40 group-hover/item:text-primary transition-colors" />
-                                {f.label}
-                              </div>
-                              <div className="text-sm font-black text-foreground/90 truncate">{f.value}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Image & Photo Section */}
-                        {detailPos.avaria_foto_url && (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Registro Fotográfico</label>
-                              <Button variant="ghost" size="sm" className="h-7 text-[9px] font-bold uppercase tracking-wider" onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}>
-                                Ver em Tela Cheia
-                              </Button>
-                            </div>
-                            <div className="rounded-2xl overflow-hidden border border-border/20 bg-muted/5 group/photo relative cursor-zoom-in">
-                              <img 
-                                src={detailPos.avaria_foto_url} 
-                                alt={detailPos.item} 
-                                className="w-full h-auto max-h-72 object-contain transition-transform duration-700 group-hover/photo:scale-105"
-                                onClick={() => window.open(detailPos.avaria_foto_url!, '_blank')}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Status Management */}
-                        <div className="space-y-4 pt-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-px flex-1 bg-border/20" />
-                            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">Gestão de Status</span>
-                            <div className="h-px flex-1 bg-border/20" />
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
-                              const cfg = STATUS_CONFIG[st];
-                              const isActive = detailPos.status === st;
-                              const theme = 
-                                st === 'ocupado' ? { border: 'border-emerald-500/20', active: 'bg-emerald-500 text-white border-emerald-500 shadow-emerald-500/20', hover: 'hover:border-emerald-500/40 text-emerald-600' } :
-                                st === 'bloqueado' ? { border: 'border-red-500/20', active: 'bg-red-500 text-white border-red-500 shadow-red-500/20', hover: 'hover:border-red-500/40 text-red-600' } :
-                                { border: 'border-amber-400/20', active: 'bg-amber-400 text-amber-950 border-amber-400 shadow-amber-400/20', hover: 'hover:border-amber-400/40 text-amber-600' };
-
-                              return (
-                                <Button 
-                                  key={st} 
-                                  onClick={() => handleStatusChange(detailPos, st)} 
-                                  variant="outline"
-                                  className={`h-11 text-[10px] font-black rounded-xl border-2 transition-all duration-300 uppercase tracking-wider ${
-                                    isActive 
-                                      ? `${theme.active} shadow-lg pointer-events-none` 
-                                      : `bg-transparent border-border/20 text-muted-foreground ${theme.hover}`
-                                  }`}
-                                >
-                                  {cfg.label}
-                                </Button>
-                              );
-                            })}
-                            {!isGuest && (
-                              <Button 
-                                onClick={() => handleStatusChange(detailPos, 'saida')} 
-                                variant="outline"
-                                className="h-11 text-[10px] font-black rounded-xl border-2 border-violet-500/20 bg-transparent text-violet-600 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-300 uppercase tracking-wider shadow-sm"
-                              >
-                                <LogOut className="w-3.5 h-3.5 mr-2" />
-                                Saída
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Footer Controls */}
-                        <div className="flex items-center gap-3 pt-6 border-t border-border/10">
-                          <Button 
-                            className="flex-1 h-12 rounded-xl font-black bg-zinc-900 dark:bg-white dark:text-zinc-950 text-white shadow-xl shadow-black/10 hover:scale-[1.02] transition-transform"
-                            onClick={startEditing}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar Informações
-                          </Button>
-                          {!isGuest && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  onClick={() => handleDelete(detailPos)} 
-                                  className="h-12 w-12 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                                >
-                                  <Trash2 className="w-5 h-5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Excluir Registro</TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </>
-                    )}
+                    ))}
                   </div>
+
+                  {/* Status Actions */}
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                      {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
+                        const cfg = STATUS_CONFIG[st];
+                        const isActive = detailPos.status === st;
+                        const dotColor = st === 'ocupado' ? 'bg-emerald-400' : st === 'bloqueado' ? 'bg-red-400' : 'bg-amber-400';
+                        const activeRing = st === 'ocupado' ? 'ring-emerald-500/30' : st === 'bloqueado' ? 'ring-red-500/30' : 'ring-amber-500/30';
+                        const activeBg = st === 'ocupado' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500' 
+                          : st === 'bloqueado' ? 'bg-red-500/15 border-red-500/50 text-red-500' 
+                          : 'bg-amber-500/15 border-amber-500/50 text-amber-500';
+                        const hoverBg = st === 'ocupado' ? 'hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-500' 
+                          : st === 'bloqueado' ? 'hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-500' 
+                          : 'hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-500';
+                        return (
+                          <Button 
+                            key={st} 
+                            onClick={() => handleStatusChange(detailPos, st)} 
+                            variant="outline"
+                            className={`h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                              isActive 
+                                ? `${activeBg} ring-2 ${activeRing} ring-offset-1 ring-offset-card shadow-sm pointer-events-none` 
+                                : `border-border/20 text-muted-foreground ${hoverBg} active:scale-[0.97]`
+                            }`}
+                          >
+                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} ${isActive ? 'animate-pulse' : ''}`} 
+                              style={isActive ? { boxShadow: `0 0 8px ${st === 'ocupado' ? '#34d399' : st === 'bloqueado' ? '#f87171' : '#fbbf24'}` } : {}}
+                            />
+                            {cfg.label}
+                            {isActive && <span className="ml-1.5 text-[10px] font-bold opacity-80">✓</span>}
+                          </Button>
+                        );
+                      })}
+                      {!isGuest && (
+                        <Button 
+                          onClick={() => handleStatusChange(detailPos, 'saida')} 
+                          variant="outline"
+                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-500/15 hover:border-violet-500/50 hover:text-violet-400 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0 shadow-sm"
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full mr-2 bg-violet-400" />
+                          <LogOut className="w-3 h-3 mr-1.5" />
+                          Dar Saída
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isGuest && (
+                    <div className="pt-3 border-t border-border/15">
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleDelete(detailPos)} 
+                        className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-2" />
+                        Excluir Item
+                      </Button>
+                    </div>
+                  )}
+
                 </div>
               </>
             );
@@ -1386,6 +663,98 @@ export default function EstoquePage() {
         </DialogContent>
       </Dialog>
 
+      {/* ===== STAT DETAIL DIALOG ===== */}
+      <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+          {selectedStat && (() => {
+            const statItems: { label: string; value: number; percent: number; color: string }[] = [
+              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground' },
+              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500' },
+              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500' },
+              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-red-500' },
+              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary' },
+            ];
+            const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
+
+            // Per-TEC breakdown
+            const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
+              const tecPosicoes = allPosicoes.filter(p => (p as any).estrutura === tec);
+              const totalForTec = cfg.cols.length * cfg.levels * 30;
+              let val = 0;
+              if (selectedStat === 'total') val = totalForTec;
+              else if (selectedStat === 'livre') val = totalForTec - tecPosicoes.length;
+              else val = tecPosicoes.filter(p => p.status === selectedStat).length;
+              return { tec, value: val, total: totalForTec, percent: totalForTec ? Math.round((val / totalForTec) * 100) : 0 };
+            });
+
+            return (
+              <>
+                <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
+                  <DialogTitle className="text-lg font-black tracking-tight flex items-center gap-3">
+                    <div className={`text-3xl font-black tabular-nums ${current.color}`}>{current.value}</div>
+                    <div>
+                      <div className="text-base font-black">{current.label}</div>
+                      <DialogDescription className="text-xs text-muted-foreground font-medium">{current.percent}% do total de posições</DialogDescription>
+                    </div>
+                  </DialogTitle>
+                </div>
+                <div className="p-5 sm:p-6 space-y-5">
+                  {/* Bar Chart */}
+                  <div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Por Estrutura</div>
+                    <div className="h-[180px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={tecBreakdown} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                          <XAxis dataKey="tec" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <ChartTooltip
+                            cursor={false}
+                            contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 11 }}
+                            formatter={(value: number, _name: string, props: any) => [`${value}/${props.payload.total} (${props.payload.percent}%)`, current.label]}
+                          />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={current.color.replace('text-', '').replace('foreground', 'hsl(var(--foreground))').replace('emerald-500', 'hsl(160, 84%, 39%)').replace('amber-500', 'hsl(38, 92%, 50%)').replace('red-500', 'hsl(0, 84%, 60%)').replace('primary', 'hsl(var(--primary))')} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  {/* Mini Pie */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-[80px] h-[80px] shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={tecBreakdown.filter(t => t.value > 0)}
+                            dataKey="value"
+                            nameKey="tec"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={20}
+                            outerRadius={36}
+                            strokeWidth={0}
+                          >
+                            {tecBreakdown.filter(t => t.value > 0).map((_, i) => (
+                              <Cell key={i} fill={`hsl(var(--primary) / ${1 - i * 0.15})`} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {tecBreakdown.map((t, i) => (
+                        <div key={t.tec} className="flex items-center gap-1.5 text-[10px]">
+                          <div className="w-2 h-2 rounded-full" style={{ background: `hsl(var(--primary) / ${1 - i * 0.15})` }} />
+                          <span className="font-bold">{t.tec}</span>
+                          <span className="text-muted-foreground">{t.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
@@ -1449,7 +818,7 @@ export default function EstoquePage() {
                   value={scanInput}
                   onChange={e => setScanInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
-                  placeholder={category === 'madeira' ? "Ex: MAD01.A.N01 PROC 12345" : "Ex: TEC01.A.N03 PROC 12345 18,2M"}
+                  placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
                   className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
                   autoFocus
                 />
@@ -1513,27 +882,8 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Import Dialogs */}
+      {/* Import Dialog */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
-      <MadeiraImportDialog 
-        open={madeiraImportOpen} 
-        onOpenChange={setMadeiraImportOpen} 
-        onImportComplete={() => setMadeiraVersion(v => v + 1)} 
-      />
     </div>
-    
-      {statModal && (
-        <StatDetailModal 
-          isOpen={statModal.isOpen}
-          onClose={() => setStatModal(null)}
-          title={statModal.title}
-          value={statModal.value}
-          type={statModal.type}
-          stats={statModal.stats}
-          data={statModal.data}
-          complementaryInfo={`Análise detalhada do estoque na estrutura ${activeTec}. As estatísticas refletem o estado atual das posições físicas.`}
-        />
-      )}
-    </>
   );
 }

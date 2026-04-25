@@ -5,8 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { lotesMestresService, LoteMestre } from '@/services/lotesMestresService';
-import { RalColorPicker } from '@/components/madeira/RalColorPicker';
-import { findRalByHex } from '@/lib/ral-colors';
 import { toast } from 'sonner';
 
 interface DraftRow {
@@ -103,28 +101,24 @@ export default function LotesMestresPanel() {
         </h3>
         <p className="text-xs text-muted-foreground mt-1">
           Gerencie tonalidades de referência para classificar lâminas, bases e bandôs no módulo Madeira.
-          Use a paleta <strong>RAL Classic</strong> para padronizar a homologação de cores.
         </p>
       </div>
 
       {/* Create row */}
       <Card className="border-dashed">
         <CardContent className="pt-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.5fr_2fr_auto] gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto] gap-3 items-end">
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase">Nome</Label>
               <Input value={draft.nome} onChange={e => setDraft(d => ({ ...d, nome: e.target.value }))} placeholder="Ex: Branco Gelo" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold uppercase">Cor RAL</Label>
-              <RalColorPicker
+              <Label className="text-[11px] font-semibold uppercase">Cor</Label>
+              <input
+                type="color"
                 value={draft.cor_hex}
-                onChange={(hex, ral) => setDraft(d => ({
-                  ...d,
-                  cor_hex: hex,
-                  // Auto-fill name when empty and a RAL is picked
-                  nome: d.nome || (ral ? `${ral.code} — ${ral.name}` : d.nome),
-                }))}
+                onChange={e => setDraft(d => ({ ...d, cor_hex: e.target.value }))}
+                className="h-10 w-16 rounded-md border border-border/50 cursor-pointer bg-transparent"
               />
             </div>
             <div className="space-y-1.5">
@@ -157,11 +151,13 @@ export default function LotesMestresPanel() {
             <Card key={l.id} className="overflow-hidden">
               <CardContent className="py-3">
                 {isEditing ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_1.5fr_2fr_auto_auto] gap-3 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto_auto] gap-3 items-end">
                     <Input value={editDraft.nome} onChange={e => setEditDraft(d => ({ ...d, nome: e.target.value }))} />
-                    <RalColorPicker
+                    <input
+                      type="color"
                       value={editDraft.cor_hex}
-                      onChange={(hex) => setEditDraft(d => ({ ...d, cor_hex: hex }))}
+                      onChange={e => setEditDraft(d => ({ ...d, cor_hex: e.target.value }))}
+                      className="h-10 w-14 rounded-md border border-border/50 cursor-pointer bg-transparent"
                     />
                     <Input value={editDraft.descricao} onChange={e => setEditDraft(d => ({ ...d, descricao: e.target.value }))} placeholder="Descrição" />
                     <Button size="sm" onClick={saveEdit} disabled={savingId === l.id} className="h-10">
@@ -171,31 +167,25 @@ export default function LotesMestresPanel() {
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                ) : (() => {
-                  const ral = findRalByHex(l.cor_hex);
-                  return (
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-8 h-8 rounded-full border border-border/40 flex-shrink-0"
-                        style={{ backgroundColor: l.cor_hex }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">{l.nome}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {ral && <span className="font-mono font-bold text-primary mr-1.5">{ral.code}</span>}
-                          {l.descricao || (ral?.name ?? '')}
-                        </p>
-                      </div>
-                      <span className="text-[10px] font-mono text-muted-foreground hidden sm:inline">{l.cor_hex.toUpperCase()}</span>
-                      <Button size="sm" variant="ghost" onClick={() => startEdit(l)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleDelete(l.id)} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="w-8 h-8 rounded-full border border-border/40 flex-shrink-0"
+                      style={{ backgroundColor: l.cor_hex }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{l.nome}</p>
+                      {l.descricao && <p className="text-xs text-muted-foreground truncate">{l.descricao}</p>}
                     </div>
-                  );
-                })()}
+                    <span className="text-[10px] font-mono text-muted-foreground hidden sm:inline">{l.cor_hex.toUpperCase()}</span>
+                    <Button size="sm" variant="ghost" onClick={() => startEdit(l)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(l.id)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );

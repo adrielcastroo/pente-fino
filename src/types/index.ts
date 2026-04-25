@@ -18,7 +18,7 @@ export interface Registro {
   editedBy?: string;
   editedAt?: string | null;
   loteMestreId?: string | null;
-  avariaTipo?: 'riscado' | 'manchado' | 'quebrado' | 'tonalidade' | 'outro' | null;
+  avariaTipo?: 'riscado' | 'manchado' | 'quebrado' | 'outro' | null;
   avariaDescricao?: string | null;
   avariaFotoUrl?: string | null;
 }

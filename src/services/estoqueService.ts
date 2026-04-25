@@ -16,7 +16,7 @@ export const estoqueService = {
         .from('estoque_posicoes')
         .select('estrutura, coluna, nivel, posicao')
         .in('estrutura', structures)
-        .eq('status', 'ocupado');
+        .not('status', 'in', ['saida', 'livre']);
 
       if (fetchError) {
         console.error('Error fetching occupied positions:', fetchError);

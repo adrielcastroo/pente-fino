@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
-import { VisitorIdentificationDialog } from './VisitorIdentificationDialog';
 
 
 const TopBar = memo(function TopBar() {
@@ -24,8 +23,6 @@ const TopBar = memo(function TopBar() {
    const registroCount = useAppStore(s => s.registros.length);
    const archiveAndClear = useAppStore(s => s.archiveAndClear);
    const isArchiving = useAppStore(s => s.isArchiving);
-   const [showVisitorModal, setShowVisitorModal] = useState(false);
-
 
   
   const exportExcel = async () => {
@@ -45,10 +42,9 @@ const TopBar = memo(function TopBar() {
     }
     
     if (!conferente.trim()) { 
-      setShowVisitorModal(true);
+      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.'); 
       return; 
     }
-
 
     const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
@@ -96,11 +92,11 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="flex h-14 sm:h-16 lg:h-18 items-center gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
+      <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-2 sm:gap-4 px-3 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-xl shrink-0" />
-          <div className="hidden sm:flex flex-col">
-            <p className="text-sm font-bold text-foreground tracking-tight leading-none">
+          <div className="hidden md:flex flex-col">
+            <p className="text-sm font-bold text-foreground tracking-tight">
               Sistema <span className="text-primary">Pente Fino</span>
             </p>
           </div>
@@ -108,28 +104,30 @@ const TopBar = memo(function TopBar() {
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
           {isGuest && (
-            <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-[240px]">
-              <label htmlFor="conferente-input" className="sr-only">Conferente</label>
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
+            <div className="relative group w-full max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
+              <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
+              <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
                 <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <input
                 id="conferente-input"
-                className="h-9 sm:h-10 w-full rounded-xl border border-border/50 bg-muted/30 pl-9 sm:pl-10 pr-2 text-xs font-bold tracking-tight focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-8 sm:pl-10 pr-3 text-[10px] xs:text-xs sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
                 value={conferente}
                 onChange={e => setConferente(e.target.value)}
-                placeholder={isMobile ? "Nome..." : "Identifique-se..."}
+                placeholder={isMobile ? "Conf..." : "Conferente..."}
                 autoComplete="name"
+                required
+                aria-required="true"
               />
             </div>
           )}
 
           {!isGuest && user && (
-            <div className="hidden xs:flex items-center gap-2 px-2.5 py-1.5 bg-primary/5 rounded-xl border border-primary/10">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-primary" />
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-xl border border-primary/10">
+              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="w-3.5 h-3.5 text-primary" />
               </div>
-              <span className="text-[10px] sm:text-xs font-bold text-foreground truncate max-w-[60px] sm:max-w-[100px]">
+              <span className="text-xs font-bold text-foreground truncate max-w-[100px]">
                 {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
               </span>
             </div>
@@ -174,10 +172,8 @@ const TopBar = memo(function TopBar() {
           )}
         </div>
       </div>
-      <VisitorIdentificationDialog open={showVisitorModal} onOpenChange={setShowVisitorModal} onConfirmed={() => setTimeout(exportExcel, 100)} />
     </header>
   );
 });
-
 
 export default TopBar;

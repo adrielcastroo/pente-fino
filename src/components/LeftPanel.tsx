@@ -17,8 +17,6 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { VisitorIdentificationDialog } from './VisitorIdentificationDialog';
-
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
@@ -40,7 +38,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
-    setFormData, resetFormData
+    formData, setFormData, resetFormData
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     setMode: s.setMode,
@@ -79,29 +77,19 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockCortinaLargura: s.setLockCortinaLargura,
     lockedCortinaLargura: s.lockedCortinaLargura,
     setLockedCortinaLargura: s.setLockedCortinaLargura,
+    formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData
   })));
 
-  // Surgical subscription to formData to avoid re-renders on irrelevant changes
-  const item = useAppStore(s => s.formData.item);
-  const nf = useAppStore(s => s.formData.nf);
-  const m2 = useAppStore(s => s.formData.m2);
-  const lote = useAppStore(s => s.formData.lote);
-  const endereco = useAppStore(s => s.formData.endereco);
-  const aiLargura = useAppStore(s => s.formData.aiLargura);
-  const aiMLinear = useAppStore(s => s.formData.aiMLinear);
-  const diversosTipo = useAppStore(s => s.formData.diversosTipo);
-  const diversosMLinear = useAppStore(s => s.formData.diversosMLinear);
-  const manualLargura = useAppStore(s => s.formData.manualLargura);
-  const coulisseMetragem = useAppStore(s => s.formData.coulisseMetragem);
-  const lockMetragem = useAppStore(s => s.formData.lockMetragem);
-  const madeiraTipo = useAppStore(s => s.formData.madeiraTipo);
-  const quantidade = useAppStore(s => s.formData.quantidade);
-  const cortinaLargura = useAppStore(s => s.formData.cortinaLargura);
-  const cortinaMetragem = useAppStore(s => s.formData.cortinaMetragem);
 
   const { isLow } = usePerformance();
+  const {
+    item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
+    manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
+    cortinaLargura, cortinaMetragem
+  } = formData;
+
   const [localItem, setLocalItem] = useState(item);
   const [localNf, setLocalNf] = useState(nf);
   const [localProcesso, setLocalProcesso] = useState(processo);
@@ -121,8 +109,6 @@ export const LeftPanel = memo(function LeftPanel() {
   const [avariaTipo, setAvariaTipo] = useState<AvariaTipo | null>(null);
   const [avariaDescricao, setAvariaDescricao] = useState('');
   const [avariaFotoUrl, setAvariaFotoUrl] = useState<string | null>(null);
-  const [showVisitorModal, setShowVisitorModal] = useState(false);
-
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -235,16 +221,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const validateEndereco = (val: string) => {
     if (!val) { setEnderecoError(''); return; }
-    const pattern = isMadeira ? 'Padrão: MAD01.A.N01' : 'Padrão: TEC01.A.N03';
-    if (!ENDERECO_REGEX.test(val)) {
-      setEnderecoError(pattern);
-      return;
-    }
-    if (isMadeira && !val.startsWith('MAD')) {
-      setEnderecoError('Deve iniciar com MAD');
-      return;
-    }
-    setEnderecoError('');
+    setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
   };
 
   // Sync local state with store values when they change externally
@@ -406,6 +383,18 @@ export const LeftPanel = memo(function LeftPanel() {
       stopCamera();
     };
   }, [handlePaste, stopCamera]);
+
+  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef?.current) {
+        nextRef.current.focus();
+        nextRef.current.select();
+      } else {
+        handleAdd();
+      }
+    }
+  }, []);
 
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
@@ -576,31 +565,14 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
-    if (!conferente) { 
-      setShowVisitorModal(true);
-      return; 
-    }
+    if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!item) { toast.warning('Preencha o campo Item.'); return; }
+    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
+    if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
 
-    
-    // Ensure store is updated with current local values before validation
-    const currentItem = localItem.trim();
-    const currentProc = localProcesso.trim();
-    const currentNf = localNf.trim();
-
-    if (!currentItem) { toast.warning('Preencha o campo Item.'); return; }
-    if (requiresProcesso && !currentProc) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (requiresNF && !currentNf) { toast.warning('Preencha o campo NF.'); return; }
-
-    const proc = currentProc;
-    const item = currentItem;
-    const nf = currentNf;
+    const proc = processo.trim();
 
     if (isMadeira) {
-      const finalAddr = (localEndereco || endereco || '').toUpperCase();
-      if (!finalAddr) { toast.warning('Preencha o Endereço.'); return; }
-      if (!ENDERECO_REGEX.test(finalAddr)) { toast.warning('Endereço inválido. Use: MAD01.A.N01'); return; }
-      if (!finalAddr.startsWith('MAD')) { toast.warning('Endereço de madeira deve iniciar com MAD.'); return; }
-
       const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
       const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
       const reg: Registro = {
@@ -682,27 +654,6 @@ export const LeftPanel = memo(function LeftPanel() {
     if (restored) toast.success('Rolo restaurado');
   };
 
-  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      
-      // Update store with current local values before moving/adding
-      if (localItem !== item) setItem(localItem);
-      if (localNf !== nf) setNf(localNf);
-      if (localProcesso !== processo) setProcesso(localProcesso);
-      if (localEndereco !== endereco) setEndereco(localEndereco);
-
-      // If we have a next field and it's not read-only, go to it
-      if (nextRef?.current && !nextRef.current.readOnly) {
-        nextRef.current.focus();
-        nextRef.current.select();
-      } else {
-        // If next field is read-only or doesn't exist, try to add
-        handleAdd();
-      }
-    }
-  }, [localItem, item, setItem, localNf, nf, setNf, localProcesso, processo, setProcesso, localEndereco, endereco, setEndereco, handleAdd]);
-
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
@@ -752,8 +703,8 @@ export const LeftPanel = memo(function LeftPanel() {
   }, [madeiraTipo, isMadeira]);
 
   return (
-    <div className="bg-background lg:border-r border-border/40 overflow-hidden flex flex-col h-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none shadow-sm lg:shadow-none">
-      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-5 custom-scrollbar">
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
+      <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar">
         
         {/* Mode Toggle */}
         {!isMadeira && (
@@ -930,14 +881,14 @@ export const LeftPanel = memo(function LeftPanel() {
         )}
 
         {/* Form Fields */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
             {/* PROCESSO */}
             {requiresProcesso && (
-              <div className="space-y-1.5 flex flex-col">
-                <div className="flex items-center gap-2 h-5">
-                  <label htmlFor="proc-input" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Processo (PROC)</label>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 h-4">
+                  <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
                   <button onClick={toggleLockProcesso} className={`transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockProcesso ? 'Campo travado' : 'Travar campo'}>
                     {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
@@ -1225,7 +1176,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
                     lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
-                  placeholder={isMadeira ? "MAD01.A.N01" : "TEC01.A.N03"} autoComplete="off"
+                  placeholder="TEC01.A.N03" autoComplete="off"
                   readOnly={lockEndereco && !!lockedEndereco}
                 />
                 {enderecoError && <p className="text-[10px] text-destructive font-medium ml-1">{enderecoError}</p>}
@@ -1323,18 +1274,8 @@ export const LeftPanel = memo(function LeftPanel() {
           )}
         </div>
       </div>
-      
-      <VisitorIdentificationDialog 
-        open={showVisitorModal} 
-        onOpenChange={setShowVisitorModal} 
-        onConfirmed={() => {
-          // Use setTimeout to allow state to settle before re-calling handleAdd
-          setTimeout(handleAdd, 100);
-        }}
-      />
     </div>
   );
 });
-
 
 export default LeftPanel;
