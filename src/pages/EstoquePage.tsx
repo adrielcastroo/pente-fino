@@ -222,7 +222,7 @@ export default function EstoquePage() {
     return { 
       totalSlots: structureSlots, occupied, blocked, reserved, exited, free,
       totalM2, totalMLinear, totalWeight, criticalItems, stagnantItems,
-      globalOccupancyRate, tecBreakdown, entriesToday
+      globalOccupancyRate, tecBreakdown, entriesToday, exitsToday
     };
   }, [allPosicoes, activeTec]);
 
