@@ -115,56 +115,8 @@ export default function DashboardPage() {
 
 
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-        <div className="md:col-span-2 lg:col-span-2 xl:col-span-2">
-          <TimelineChart 
-            data={stats.timeline} 
-            onExport={handleExport} 
-            onDetailClick={() => setDetailDialog('conferences')} 
-          />
-        </div>
+      {/* Charts grid removido conforme solicitação */}
 
-        <SummaryChart 
-          title="Top Conferentes" 
-          desc="Produção Individual" 
-          data={stats.topConferentes} 
-          type="bar" 
-          icon={Users} 
-          chartKey="count"
-          onDetailClick={setDetailChart} 
-        />
-        
-        <SummaryChart 
-          title="Distribuição" 
-          desc="Setores" 
-          data={stats.categorias} 
-          type="pie" 
-          icon={Layers3} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
-
-        <SummaryChart 
-          title="Materiais" 
-          desc="Tipos" 
-          data={stats.tipos} 
-          type="pie" 
-          icon={TrendingUp} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
-
-        <SummaryChart
-          title="Volume"
-          desc="Por Conferência"
-          data={registrosPerConference.slice(0, 10)}
-          type="bar"
-          icon={Package}
-          chartKey="value"
-          onDetailClick={setDetailChart}
-        />
-      </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
