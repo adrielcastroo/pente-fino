@@ -96,6 +96,8 @@ export default function EstoquePage() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Posicao>>({});
   const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
