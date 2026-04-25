@@ -225,6 +225,17 @@ export default function EstoquePage() {
     setConfirmDelete(true);
   };
 
+  const executeDelete = async (pos: Posicao) => {
+    const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+    if (error) toast.error('Erro ao excluir');
+    else {
+      setDetailPos(null);
+      loadPosicoes();
+      loadStats();
+      toast.success('Item excluído');
+    }
+  };
+
   const handleSaveDetails = async () => {
     if (!detailPos) return;
     
