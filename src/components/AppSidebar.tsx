@@ -25,15 +25,15 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-const menuItems: { key: AppTab; label: string; icon: any }[] = [
-  { key: 'inicio', label: 'Início', icon: Home },
-  { key: 'tecido', label: 'Tecido', icon: Waves },
-  { key: 'madeira', label: 'Madeira', icon: TreePine },
-  { key: 'motor', label: 'Motor/Controle', icon: Settings2 },
-  { key: 'estoque', label: 'Estoque', icon: Warehouse },
-  { key: 'saida', label: 'Saída', icon: Archive },
-  { key: 'table', label: 'Tabela', icon: Table },
-  { key: 'history', label: 'Histórico', icon: FolderOpen },
+const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
+  { key: 'inicio', label: 'Início', icon: Home, path: '/' },
+  { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
+  { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
+  { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
+  { key: 'estoque', label: 'Estoque', icon: Warehouse, path: '/estoque' },
+  { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
+  { key: 'table', label: 'Tabela', icon: Table, path: '/tabela' },
+  { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
