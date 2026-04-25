@@ -34,7 +34,7 @@ const LoginRoute = ({ children }: { children: React.ReactNode }) => {
   );
   
   if (user || isGuest) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
