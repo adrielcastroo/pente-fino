@@ -63,27 +63,27 @@ export default function DashboardPage() {
   }, [history]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
+    <div className="p-3 sm:p-6 lg:p-8 xl:p-10 space-y-4 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-5 pb-5 border-b border-border/40">
-        <div className="space-y-1.5">
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-5 pb-5 border-b border-border/40">
+        <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm max-w-lg">
+          <p className="text-muted-foreground text-[10px] sm:text-xs md:text-sm max-w-lg">
             Acompanhe a produtividade, gerencie fluxos e exporte relatórios.
           </p>
         </div>
         
-        <div className="flex items-center gap-3 shrink-0">
-          <Badge variant="outline" className="text-[10px] font-bold px-2.5 py-1 rounded-lg border-primary/20 text-primary bg-primary/5">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-start sm:self-auto">
+          <Badge variant="outline" className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border-primary/20 text-primary bg-primary/5">
             <Clock className="w-3 h-3 mr-1" />
-            Tempo médio: {stats.avgDuration}
+            <span className="hidden xs:inline">Tempo médio: </span>{stats.avgDuration}
           </Badge>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
-                <Download className="w-4 h-4" />
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent className="font-semibold">Exportar Banco de Dados</TooltipContent>
