@@ -62,7 +62,7 @@ export const ResetPasswordForm = ({
 
       if (error) throw error;
 
-      toast.success("Senha redefinida com sucesso.");
+      toast.success("Senha redefinida com sucesso. Por favor, faça login com sua nova senha.");
       onSuccess();
     } catch (error: any) {
       toast.error(error.message || "Erro ao redefinir senha.");
