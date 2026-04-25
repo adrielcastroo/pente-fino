@@ -57,7 +57,7 @@ export default function MadeiraEstoque() {
         const [{ data, error }, lotesData] = await Promise.all([
           supabase
             .from('registros')
-            .select('id, item, nf, endereco, lote, lote_sistema, largura, m_linear, m2, tipo_tecido, lote_mestre_id, avaria_tipo, avaria_descricao, avaria_foto_url, created_at, edited_by')
+            .select('id, item, nf, endereco, lote, lote_sistema, largura, m_linear, m2, tipo_tecido, lote_mestre_id, avaria_tipo, avaria_descricao, avaria_foto_url, espessura, acabamento, estoque_minimo, status, created_at, edited_by')
             .eq('modo_origem', 'madeira')
             .order('created_at', { ascending: false }),
           lotesMestresService.list().catch(() => []),
