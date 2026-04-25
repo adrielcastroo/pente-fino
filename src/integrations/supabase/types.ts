@@ -97,67 +97,88 @@ export type Database = {
       }
       estoque_posicoes: {
         Row: {
+          codigo_cor: string | null
           coluna: string
+          composicao: string | null
           conferente_entrada: string | null
           conferente_saida: string | null
           created_at: string
           data_registro: string | null
           data_saida: string | null
           endereco: string | null
+          estoque_minimo: number | null
           estrutura: string
+          fornecedor: string | null
+          gramatura: number | null
           id: string
           item: string | null
           largura: number | null
+          largura_util: number | null
           lote: string | null
           lote_sistema: string | null
           m_linear: number | null
           m2: number | null
           nivel: number
           posicao: number
+          preco_metro: number | null
           proc: string | null
           registro_id: string | null
           status: string
         }
         Insert: {
+          codigo_cor?: string | null
           coluna: string
+          composicao?: string | null
           conferente_entrada?: string | null
           conferente_saida?: string | null
           created_at?: string
           data_registro?: string | null
           data_saida?: string | null
           endereco?: string | null
+          estoque_minimo?: number | null
           estrutura: string
+          fornecedor?: string | null
+          gramatura?: number | null
           id?: string
           item?: string | null
           largura?: number | null
+          largura_util?: number | null
           lote?: string | null
           lote_sistema?: string | null
           m_linear?: number | null
           m2?: number | null
           nivel: number
           posicao: number
+          preco_metro?: number | null
           proc?: string | null
           registro_id?: string | null
           status?: string
         }
         Update: {
+          codigo_cor?: string | null
           coluna?: string
+          composicao?: string | null
           conferente_entrada?: string | null
           conferente_saida?: string | null
           created_at?: string
           data_registro?: string | null
           data_saida?: string | null
           endereco?: string | null
+          estoque_minimo?: number | null
           estrutura?: string
+          fornecedor?: string | null
+          gramatura?: number | null
           id?: string
           item?: string | null
           largura?: number | null
+          largura_util?: number | null
           lote?: string | null
           lote_sistema?: string | null
           m_linear?: number | null
           m2?: number | null
           nivel?: number
           posicao?: number
+          preco_metro?: number | null
           proc?: string | null
           registro_id?: string | null
           status?: string
@@ -174,7 +195,9 @@ export type Database = {
       }
       estoque_saidas: {
         Row: {
+          codigo_cor: string | null
           coluna: string | null
+          composicao: string | null
           conferente_entrada: string | null
           conferente_saida: string | null
           created_at: string | null
@@ -182,20 +205,26 @@ export type Database = {
           data_saida: string | null
           endereco: string | null
           estrutura: string | null
+          fornecedor: string | null
+          gramatura: number | null
           id: string
           item: string | null
           largura: number | null
+          largura_util: number | null
           lote: string | null
           lote_sistema: string | null
           m_linear: number | null
           m2: number | null
           nivel: number | null
           posicao: number | null
+          preco_metro: number | null
           proc: string | null
           registro_id: string | null
         }
         Insert: {
+          codigo_cor?: string | null
           coluna?: string | null
+          composicao?: string | null
           conferente_entrada?: string | null
           conferente_saida?: string | null
           created_at?: string | null
@@ -203,20 +232,26 @@ export type Database = {
           data_saida?: string | null
           endereco?: string | null
           estrutura?: string | null
+          fornecedor?: string | null
+          gramatura?: number | null
           id?: string
           item?: string | null
           largura?: number | null
+          largura_util?: number | null
           lote?: string | null
           lote_sistema?: string | null
           m_linear?: number | null
           m2?: number | null
           nivel?: number | null
           posicao?: number | null
+          preco_metro?: number | null
           proc?: string | null
           registro_id?: string | null
         }
         Update: {
+          codigo_cor?: string | null
           coluna?: string | null
+          composicao?: string | null
           conferente_entrada?: string | null
           conferente_saida?: string | null
           created_at?: string | null
@@ -224,15 +259,19 @@ export type Database = {
           data_saida?: string | null
           endereco?: string | null
           estrutura?: string | null
+          fornecedor?: string | null
+          gramatura?: number | null
           id?: string
           item?: string | null
           largura?: number | null
+          largura_util?: number | null
           lote?: string | null
           lote_sistema?: string | null
           m_linear?: number | null
           m2?: number | null
           nivel?: number | null
           posicao?: number | null
+          preco_metro?: number | null
           proc?: string | null
           registro_id?: string | null
         }
@@ -295,6 +334,42 @@ export type Database = {
           id?: string
           nome?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      madeira_quadrantes: {
+        Row: {
+          capacidade: number
+          coluna: string
+          created_at: string
+          estrutura: string
+          id: string
+          nivel: number
+          tipo_ocupacao: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          capacidade?: number
+          coluna: string
+          created_at?: string
+          estrutura?: string
+          id?: string
+          nivel: number
+          tipo_ocupacao?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          capacidade?: number
+          coluna?: string
+          created_at?: string
+          estrutura?: string
+          id?: string
+          nivel?: number
+          tipo_ocupacao?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -369,14 +444,19 @@ export type Database = {
       }
       registros: {
         Row: {
+          acabamento: string | null
           avaria_descricao: string | null
           avaria_foto_url: string | null
           avaria_tipo: string | null
+          composicao: string | null
           conference_id: string | null
           created_at: string
           edited_at: string | null
           edited_by: string
           endereco: string
+          espessura: number | null
+          estoque_minimo: number | null
+          fornecedor: string | null
           id: string
           item: string
           largura: number
@@ -388,18 +468,24 @@ export type Database = {
           modo_origem: string
           nf: string
           quantidade: number | null
+          status: string | null
           tipo_tecido: string
           was_edited: boolean
         }
         Insert: {
+          acabamento?: string | null
           avaria_descricao?: string | null
           avaria_foto_url?: string | null
           avaria_tipo?: string | null
+          composicao?: string | null
           conference_id?: string | null
           created_at?: string
           edited_at?: string | null
           edited_by?: string
           endereco?: string
+          espessura?: number | null
+          estoque_minimo?: number | null
+          fornecedor?: string | null
           id?: string
           item: string
           largura?: number
@@ -411,18 +497,24 @@ export type Database = {
           modo_origem?: string
           nf?: string
           quantidade?: number | null
+          status?: string | null
           tipo_tecido?: string
           was_edited?: boolean
         }
         Update: {
+          acabamento?: string | null
           avaria_descricao?: string | null
           avaria_foto_url?: string | null
           avaria_tipo?: string | null
+          composicao?: string | null
           conference_id?: string | null
           created_at?: string
           edited_at?: string | null
           edited_by?: string
           endereco?: string
+          espessura?: number | null
+          estoque_minimo?: number | null
+          fornecedor?: string | null
           id?: string
           item?: string
           largura?: number
@@ -434,6 +526,7 @@ export type Database = {
           modo_origem?: string
           nf?: string
           quantidade?: number | null
+          status?: string | null
           tipo_tecido?: string
           was_edited?: boolean
         }
