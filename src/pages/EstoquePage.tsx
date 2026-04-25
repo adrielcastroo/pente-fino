@@ -169,7 +169,6 @@ export default function EstoquePage() {
     const globalOccupancyRate = totalPhysicalSlotsAcrossAll ? (globalOccupied / totalPhysicalSlotsAcrossAll) * 100 : 0;
 
     // Stats for active TEC
-    const currentStructureItems = allItems.filter((p: any) => p.estrutura === activeTec);
     const currentConfig = TEC_CONFIG[activeTec];
     const structureSlots = currentConfig ? currentConfig.cols.length * currentConfig.levels * 30 : 0;
 
@@ -179,6 +178,14 @@ export default function EstoquePage() {
     let stagnantItems = 0;
     let entriesToday = 0;
     
+    // New metrics
+    let damagedCount = 0;
+    const materialBreakdown: Record<string, number> = { 'Lâmina': 0, 'Base': 0, 'Bandô': 0, 'Outros': 0 };
+    const damagedMaterialBreakdown: Record<string, number> = { 'Lâmina': 0, 'Base': 0, 'Bandô': 0, 'Outros': 0 };
+    const modelDamages: Record<string, number> = {};
+    const lotMestreStats: Record<string, { meters: number; count: number; type: string; damaged: number }> = {};
+    const activeLots = new Set();
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -187,8 +194,8 @@ export default function EstoquePage() {
     
     for (let i = 0, len = allItems.length; i < len; i++) {
       const p = allItems[i] as any;
+      const reg = p.registros || {};
       
-      // Global stats for Saldo Total
       if (p.status === 'ocupado') {
         totalM2 += p.m2 || 0;
         totalMLinear += p.m_linear || 0;
@@ -201,6 +208,30 @@ export default function EstoquePage() {
         // Entradas hoje
         if (p.data_registro && new Date(p.data_registro) >= today) {
           entriesToday++;
+        }
+
+        // Material Type inference (fallback to Lâmina if not specified, for demo)
+        const type = reg.tipo_tecido || (p.item?.includes('BAN') ? 'Bandô' : p.item?.includes('BAS') ? 'Base' : 'Lâmina');
+        materialBreakdown[type] = (materialBreakdown[type] || 0) + 1;
+
+        // Damaged items
+        if (reg.avaria_tipo) {
+          damagedCount++;
+          damagedMaterialBreakdown[type] = (damagedMaterialBreakdown[type] || 0) + 1;
+          const model = p.item || 'Desconhecido';
+          modelDamages[model] = (modelDamages[model] || 0) + 1;
+        }
+
+        // Lot Mestre
+        if (reg.lote_mestre_id) {
+          const lotId = reg.lote_mestre_id;
+          if (!lotMestreStats[lotId]) {
+            lotMestreStats[lotId] = { meters: 0, count: 0, type: type, damaged: 0 };
+          }
+          lotMestreStats[lotId].meters += p.m_linear || 0;
+          lotMestreStats[lotId].count += 1;
+          if (reg.avaria_tipo) lotMestreStats[lotId].damaged += 1;
+          activeLots.add(lotId);
         }
       }
 
@@ -226,9 +257,13 @@ export default function EstoquePage() {
     });
 
     return { 
-      totalSlots: structureSlots, occupied, blocked, reserved, exited, free,
+      totalSlots: structureSlots, globalTotalSlots: totalPhysicalSlotsAcrossAll, 
+      occupied, globalOccupied, blocked, reserved, exited, free,
       totalM2, totalMLinear, totalWeight, criticalItems, stagnantItems,
-      globalOccupancyRate, tecBreakdown, entriesToday, exitsToday
+      globalOccupancyRate, tecBreakdown, entriesToday, exitsToday,
+      damagedCount, materialBreakdown, damagedMaterialBreakdown,
+      modelDamages: Object.entries(modelDamages).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      activeLotsCount: activeLots.size, lotMestreStats
     };
   }, [allPosicoes, activeTec]);
 
