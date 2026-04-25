@@ -34,13 +34,13 @@ const TabRenderer = memo(({ activeTab, isWide, isMobile, isTablet }: { activeTab
   const isFormTab = useMemo(() => ['tecido', 'madeira', 'motor'].includes(activeTab), [activeTab]);
   
   // Show dual panel on lg screens and up when it's a form tab
-  if (isWide && isFormTab && !isMobile) {
+  if (isWide && isFormTab && !isMobile && !isTablet) {
     return (
-      <div className="flex flex-col lg:flex-row h-full gap-4 lg:gap-6 xl:gap-8 2xl:gap-10">
-        <div className="w-full lg:w-[380px] xl:w-[460px] 2xl:w-[540px] shrink-0 h-full overflow-y-auto custom-scrollbar pr-1">
+      <div className="flex flex-col xl:flex-row h-full gap-6 xl:gap-8 2xl:gap-10">
+        <div className="w-full xl:w-[420px] 2xl:w-[480px] shrink-0 h-full overflow-y-auto custom-scrollbar pr-1">
           {activeTab === 'motor' ? <MotorControlePage /> : <LeftPanel />}
         </div>
-        <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
+        <div className="flex-1 min-w-0 h-full hidden xl:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
           <RightPanel />
         </div>
       </div>
@@ -109,9 +109,9 @@ export default function Index() {
           <TopBar />
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative">
-            <div className="min-h-full w-full max-w-[2000px] mx-auto">
+            <div className="min-h-full w-full max-w-[1920px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-4 sm:p-6 lg:p-8 xl:p-10">
+                <div className="p-3 sm:p-5 lg:p-6 xl:p-8 2xl:p-10">
                   <TabRenderer activeTab={activeTab} isWide={true} isMobile={isMobile} isTablet={isTablet} />
                 </div>
               </Suspense>

@@ -343,26 +343,26 @@ export default function RightPanel() {
   }, [isLow]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
+    <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50 shadow-sm">
       {undoStack.length > 0 && (
-        <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
-          <div className="flex items-center gap-3 text-white font-bold">
-            <Undo2 className="w-5 h-5" />
-            <span>Você removeu um registro. Deseja restaurar?</span>
+        <div className="bg-primary px-4 sm:px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 z-20 border-b border-white/10 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-2.5 text-white font-bold">
+            <Undo2 className="w-4 h-4" />
+            <span className="text-[11px] sm:text-xs">Registro removido. Deseja restaurar?</span>
           </div>
           <Button 
             size="sm"
             variant="secondary"
             onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
-            className="rounded-full px-6 font-black uppercase tracking-wider text-[10px] bg-white text-primary hover:bg-white/90"
+            className="h-8 rounded-full px-4 font-black uppercase tracking-wider text-[9px] bg-white text-primary hover:bg-white/90 shadow-sm"
           >
-            Desfazer Ação
+            Desfazer
           </Button>
         </div>
       )}
-
-      <div className="px-3 sm:px-5 py-3 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+  
+      <div className="px-4 sm:px-5 py-4 bg-muted/20 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input 
@@ -412,16 +412,16 @@ export default function RightPanel() {
       <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
           {isMotorControle ? (
-            <table className="w-full border-separate border-spacing-0 table-auto">
+            <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm">
                     Séries Bipadas
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm">
                     Séries Sistema
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
+                  <th className="sticky top-0 z-10 px-4 py-3.5 text-right border-b border-border/40 bg-background/95 backdrop-blur-sm w-[80px] text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                     Ações
                   </th>
                 </tr>
@@ -498,19 +498,19 @@ export default function RightPanel() {
               )}
             </table>
           ) : (
-            <table className="w-full border-separate border-spacing-0 table-auto">
+            <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
+                  <th className="sticky top-0 z-10 px-3 sm:px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm w-[40px] sm:w-[50px]">#</th>
                   {columns.map(column => (
                     <th 
                       key={column.key} 
-                      className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background"
+                      className="sticky top-0 z-10 px-3 sm:px-4 py-3.5 text-left text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40 bg-background/95 backdrop-blur-sm"
                     >
                       {column.shortLabel || column.label}
                     </th>
                   ))}
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
+                  <th className="sticky top-0 z-10 px-3 sm:px-4 py-3.5 text-right border-b border-border/40 bg-background/95 backdrop-blur-sm w-[80px] sm:w-[100px] text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
