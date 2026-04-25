@@ -146,25 +146,58 @@ export default function EstoquePage() {
   const posicoes = posicoesForActiveTec;
   
   const stats = useMemo(() => {
-    // Filter stats to reflect ONLY the currently active TEC structure
-    const currentStructureItems = allPosicoes.filter((p: any) => p.estrutura === activeTec);
+    // Global stats across all structures
+    const allItems = allPosicoes;
+    const totalPhysicalSlotsAcrossAll = TOTAL_SLOTS;
+    const globalOccupied = allItems.filter((p: any) => p.status === 'ocupado').length;
+    const globalOccupancyRate = totalPhysicalSlotsAcrossAll ? (globalOccupied / totalPhysicalSlotsAcrossAll) * 100 : 0;
+
+    // Stats for active TEC
+    const currentStructureItems = allItems.filter((p: any) => p.estrutura === activeTec);
     const currentConfig = TEC_CONFIG[activeTec];
     const structureSlots = currentConfig ? currentConfig.cols.length * currentConfig.levels * 30 : 0;
 
     let occupied = 0, blocked = 0, reserved = 0, exited = 0;
+    let totalM2 = 0, totalMLinear = 0, totalWeight = 0;
+    let criticalItems = 0;
+    let stagnantItems = 0;
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
     for (let i = 0, len = currentStructureItems.length; i < len; i++) {
-      const s = (currentStructureItems[i] as any).status;
-      if (s === 'ocupado') occupied++;
+      const p = currentStructureItems[i] as any;
+      const s = p.status;
+      if (s === 'ocupado') {
+        occupied++;
+        totalM2 += p.m2 || 0;
+        totalMLinear += p.m_linear || 0;
+        if (p.gramatura && p.largura_util && p.m_linear) {
+          totalWeight += (p.gramatura / 1000) * p.largura_util * p.m_linear;
+        }
+        if (p.m_linear < (p.estoque_minimo || 5)) criticalItems++;
+        if (p.data_registro && new Date(p.data_registro) < ninetyDaysAgo) stagnantItems++;
+      }
       else if (s === 'bloqueado') blocked++;
       else if (s === 'reservado') reserved++;
       else if (s === 'saida') exited++;
     }
     
-    // Items with status 'saida' still occupy a physical slot until they are deleted from DB
     const free = Math.max(0, structureSlots - occupied - blocked - reserved - exited);
     
-    return { totalSlots: structureSlots, occupied, blocked, reserved, exited, free };
+    const tecBreakdown = Object.keys(TEC_CONFIG).map(tec => {
+      const tecItems = allItems.filter((p: any) => p.estrutura === tec);
+      const tecCfg = TEC_CONFIG[tec];
+      const tecSlots = tecCfg.cols.length * tecCfg.levels * 30;
+      const tecOccupied = tecItems.filter((p: any) => p.status === 'ocupado').length;
+      const tecM2 = tecItems.filter((p: any) => p.status === 'ocupado').reduce((acc, p: any) => acc + (p.m2 || 0), 0);
+      return { name: tec, occupied: tecOccupied, total: tecSlots, percent: tecSlots ? Math.round((tecOccupied / tecSlots) * 100) : 0, m2: tecM2 };
+    });
+
+    return { 
+      totalSlots: structureSlots, occupied, blocked, reserved, exited, free,
+      totalM2, totalMLinear, totalWeight, criticalItems, stagnantItems,
+      globalOccupancyRate, tecBreakdown
+    };
   }, [allPosicoes, activeTec]);
 
   const cellMap = useMemo(() => {
