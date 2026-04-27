@@ -384,7 +384,7 @@ export const LeftPanel = memo(function LeftPanel() {
     };
   }, [handlePaste, stopCamera]);
 
-  const handleFieldKeyDown = useCallback((e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
+  const handleFieldKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement> | null) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (nextRef?.current) {
@@ -394,7 +394,7 @@ export const LeftPanel = memo(function LeftPanel() {
         handleAdd();
       }
     }
-  }, []);
+  };
 
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
