@@ -85,7 +85,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       {/* ── Header / Logo ── */}
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
         <button
-          onClick={() => handleTabClick('inicio', '/dashboard')}
+          onClick={() => handleTabClick('inicio')}
           className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
           aria-label="Ir para Início"
         >
@@ -118,7 +118,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       size="lg"
-                      onClick={() => handleTabClick(item.key, item.path)}
+                      onClick={() => handleTabClick(item.key)}
                       tooltip={item.label}
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
@@ -180,7 +180,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              onClick={() => handleTabClick('settings', '/configuracoes')}
+              onClick={() => handleTabClick('settings')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"
