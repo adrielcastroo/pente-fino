@@ -79,16 +79,8 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={null} />
-                  <Route path="/tecido" element={null} />
-                  <Route path="/madeira" element={null} />
-                  <Route path="/motor" element={null} />
-                  <Route path="/estoque" element={null} />
-                  <Route path="/saida" element={null} />
-                  <Route path="/tabela" element={null} />
-                  <Route path="/historico" element={null} />
-                  <Route path="/configuracoes" element={null} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="/" element={<div />} /> 
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
