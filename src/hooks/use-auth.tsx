@@ -77,6 +77,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsGuest(true);
     localStorage.setItem('isGuest', 'true');
     if (name) {
+      setGuestName(name);
+      localStorage.setItem('guestName', name);
       setConferente(name);
     }
   };
