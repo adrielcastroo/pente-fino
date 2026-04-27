@@ -105,7 +105,9 @@ const TopBar = memo(function TopBar() {
     <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-2 sm:gap-4 px-3 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-xl shrink-0" />
+          <div className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center bg-primary/10 text-primary rounded-xl shrink-0">
+             <ScanBarcode className="w-5 h-5" />
+          </div>
           <div className="hidden md:flex flex-col">
             <p className="text-sm font-bold text-foreground tracking-tight">
               Sistema <span className="text-primary">Pente Fino</span>
