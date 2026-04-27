@@ -83,14 +83,15 @@ export const LeftPanel = memo(function LeftPanel() {
     resetFormData: s.resetFormData
   })));
 
-  const { user, profile } = useAuth();
+  const { user, profile, isGuest, guestName } = useAuth();
   
   // Use store conferente but fallback to auth profile name if store is empty
   const effectiveConferente = useMemo(() => {
     if (conferente && conferente.trim()) return conferente;
-    if (user) return profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+    if (!isGuest && user) return profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+    if (isGuest && guestName) return guestName;
     return '';
-  }, [conferente, user, profile]);
+  }, [conferente, user, profile, isGuest, guestName]);
 
 
   const { isLow } = usePerformance();

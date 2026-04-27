@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: any | null;
   loading: boolean;
   isGuest: boolean;
+  guestName: string;
   loginAsGuest: (name?: string) => void;
   signOut: () => Promise<void>;
 }
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('isGuest') === 'true');
+  const [guestName, setGuestName] = useState(() => localStorage.getItem('guestName') || '');
   const setConferente = useAppStore(s => s.setConferente);
 
   useEffect(() => {
@@ -31,6 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => fetchProfile(session.user.id, session.user.email), 0);
         setIsGuest(false);
         localStorage.removeItem('isGuest');
+        localStorage.removeItem('guestName');
+        setGuestName('');
       } else {
         setProfile(null);
       }
@@ -44,6 +48,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id, session.user.email);
         setIsGuest(false);
         localStorage.removeItem('isGuest');
+        localStorage.removeItem('guestName');
+        setGuestName('');
       }
       setLoading(false);
     });
@@ -72,6 +78,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsGuest(true);
     localStorage.setItem('isGuest', 'true');
     if (name) {
+      setGuestName(name);
+      localStorage.setItem('guestName', name);
       setConferente(name);
     }
   };
@@ -82,12 +90,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setIsGuest(false);
     localStorage.removeItem('isGuest');
+    localStorage.removeItem('guestName');
+    setGuestName('');
     setConferente('');
   };
 
   const value = useMemo(() => ({
-    user, profile, loading, isGuest, loginAsGuest, signOut
-  }), [user, profile, loading, isGuest]);
+    user, profile, loading, isGuest, guestName, loginAsGuest, signOut
+  }), [user, profile, loading, isGuest, guestName]);
 
   return (
     <AuthContext.Provider value={value}>

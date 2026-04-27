@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
-  const { user, isGuest, signOut, profile } = useAuth();
+  const { user, isGuest, guestName, signOut, profile } = useAuth();
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
    const conferente = useAppStore(s => s.conferente);
@@ -25,13 +25,15 @@ const TopBar = memo(function TopBar() {
    const isArchiving = useAppStore(s => s.isArchiving);
    const { registros } = useAppStore(useShallow(s => ({ registros: s.registros })));
 
-   // Ensure conferente is synced with auth profile for logged-in users
-   useEffect(() => {
-     if (!isGuest && user && !conferente.trim()) {
-       const name = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
-       setConferente(name);
-     }
-   }, [isGuest, user, profile, conferente, setConferente]);
+    // Ensure conferente is synced with auth profile or guest name
+    useEffect(() => {
+      if (!isGuest && user && !conferente.trim()) {
+        const name = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+        setConferente(name);
+      } else if (isGuest && guestName && !conferente.trim()) {
+        setConferente(guestName);
+      }
+    }, [isGuest, guestName, user, profile, conferente, setConferente]);
 
   
   const exportExcel = async () => {
@@ -138,6 +140,17 @@ const TopBar = memo(function TopBar() {
               </div>
               <span className="text-xs font-bold text-foreground truncate max-w-[80px] md:max-w-[120px]">
                 {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
+              </span>
+            </div>
+          )}
+
+          {isGuest && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-muted/20 rounded-xl border border-border/10">
+              <div className="w-6 h-6 rounded-full bg-muted/40 flex items-center justify-center">
+                <User className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                Visitante
               </span>
             </div>
           )}
