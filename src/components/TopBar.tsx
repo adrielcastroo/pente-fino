@@ -23,6 +23,15 @@ const TopBar = memo(function TopBar() {
    const registroCount = useAppStore(s => s.registros.length);
    const archiveAndClear = useAppStore(s => s.archiveAndClear);
    const isArchiving = useAppStore(s => s.isArchiving);
+   const { registros } = useAppStore(useShallow(s => ({ registros: s.registros })));
+
+   // Ensure conferente is synced with auth profile for logged-in users
+   useEffect(() => {
+     if (!isGuest && user && !conferente) {
+       const name = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+       setConferente(name);
+     }
+   }, [isGuest, user, profile, conferente, setConferente]);
 
   
   const exportExcel = async () => {
