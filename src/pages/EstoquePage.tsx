@@ -81,8 +81,8 @@ export default function EstoquePage() {
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
-  const [confirmScan, setConfirmScan] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<{ item: Posicao | null; success: boolean; message: string } | null>(null);
+  const [confirmScan, setConfirmScan] = useState<Posicao | null>(null);
   const scanRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
@@ -175,36 +175,74 @@ export default function EstoquePage() {
   }, []);
 
   const executeSaida = async (pos: Posicao) => {
-    const { error: saError } = await supabase.from('estoque_saidas').insert({
-      registro_id: pos.registro_id || pos.id, item: pos.item, proc: pos.proc, m2: pos.m2, largura: pos.largura, m_linear: pos.m_linear,
-      lote: pos.lote, endereco: pos.endereco, lote_sistema: pos.lote_sistema, estrutura: pos.estrutura,
-      coluna: pos.coluna, nivel: pos.nivel, posicao: pos.posicao, conferente_entrada: pos.conferente_entrada,
-      conferente_saida: useAppStore.getState().conferente || 'Sistema',
-      data_registro: pos.data_registro, data_saida: new Date().toISOString()
-    });
-    if (saError) return toast.error('Erro ao arquivar');
-
-    const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
-    if (delError) return toast.error('Erro ao remover do estoque');
+    // Optimistic UI update
+    const previousPosicoes = [...posicoesForActiveTec];
+    const previousAll = [...allPosicoes];
     
+    setPosicoesForActiveTec(prev => prev.filter(p => p.id !== pos.id));
+    setAllPosicoes(prev => prev.filter(p => p.id !== pos.id));
     setDetailPos(null);
-    loadPosicoes();
-    loadStats();
-    toast.success('Saída realizada com sucesso');
+    
+    try {
+      const { error: saError } = await supabase.from('estoque_saidas').insert({
+        registro_id: pos.registro_id || pos.id, 
+        item: pos.item, 
+        proc: pos.proc, 
+        m2: pos.m2, 
+        largura: pos.largura, 
+        m_linear: pos.m_linear,
+        lote: pos.lote, 
+        endereco: pos.endereco, 
+        lote_sistema: pos.lote_sistema, 
+        estrutura: pos.estrutura,
+        coluna: pos.coluna, 
+        nivel: pos.nivel, 
+        posicao: pos.posicao, 
+        conferente_entrada: pos.conferente_entrada,
+        conferente_saida: useAppStore.getState().conferente || 'Sistema',
+        data_registro: pos.data_registro, 
+        data_saida: new Date().toISOString()
+      });
+      
+      if (saError) throw saError;
+
+      const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+      if (delError) throw delError;
+      
+      loadStats();
+      toast.success('Saída realizada com sucesso');
+    } catch (e: any) {
+      console.error('Erro na saída:', e);
+      toast.error('Erro ao processar saída: ' + (e.message || ''));
+      // Rollback
+      setPosicoesForActiveTec(previousPosicoes);
+      setAllPosicoes(previousAll);
+    }
   };
 
-  const handleDelete = async (pos: Posicao) => {
+  const handleDelete = (pos: Posicao) => {
     setConfirmDelete(true);
   };
 
   const executeDelete = async (pos: Posicao) => {
-    const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
-    if (error) toast.error('Erro ao excluir');
-    else {
-      setDetailPos(null);
-      loadPosicoes();
+    const previousPosicoes = [...posicoesForActiveTec];
+    const previousAll = [...allPosicoes];
+    
+    setPosicoesForActiveTec(prev => prev.filter(p => p.id !== pos.id));
+    setAllPosicoes(prev => prev.filter(p => p.id !== pos.id));
+    setDetailPos(null);
+    
+    try {
+      const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+      if (error) throw error;
+      
       loadStats();
       toast.success('Item excluído');
+    } catch (e: any) {
+      console.error('Erro na exclusão:', e);
+      toast.error('Erro ao excluir item');
+      setPosicoesForActiveTec(previousPosicoes);
+      setAllPosicoes(previousAll);
     }
   };
 
