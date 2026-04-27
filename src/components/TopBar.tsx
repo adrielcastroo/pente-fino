@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
-  const { user, isGuest, signOut, profile } = useAuth();
+  const { user, isGuest, guestName, signOut, profile } = useAuth();
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
    const conferente = useAppStore(s => s.conferente);
