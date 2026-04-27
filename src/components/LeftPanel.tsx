@@ -179,12 +179,12 @@ export const LeftPanel = memo(function LeftPanel() {
   const largura = useMemo(() => 
     isAI ? aiLarguraNum
     : isMadeira ? 0
-    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(localItem))
+    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
     : isCortina ? cortinaLarguraNum
     : isCelular ? celularDivisor
-    : usesLarguraFromItem ? extractLarguraFromItem(localItem)
+    : usesLarguraFromItem ? extractLarguraFromItem(item)
     : 0,
-    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, localItem, isCortina, cortinaLarguraNum, isCelular, celularDivisor, usesLarguraFromItem]
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, item, isCortina, cortinaLarguraNum, isCelular, celularDivisor, usesLarguraFromItem]
   );
 
   const mLinear = useMemo(() => 
@@ -197,16 +197,17 @@ export const LeftPanel = memo(function LeftPanel() {
   );
   
   const isDuplicate = useMemo(() => {
-    if (isMadeira || !localItem || !lote) return false;
-    const lowerItem = localItem.toLowerCase();
+    if (isMadeira || !item || !lote) return false;
+    const lowerItem = item.toLowerCase();
     const lowerLote = lote.toLowerCase();
+    const lowerNf = nf.trim().toLowerCase();
     
     return registros.some(r => 
       (r.item || '').toLowerCase() === lowerItem && 
       (r.lote || '').toLowerCase() === lowerLote &&
-      (r.nf || '').trim() === localNf.trim()
+      (r.nf || '').trim().toLowerCase() === lowerNf
     );
-  }, [isMadeira, localItem, lote, registros, localNf]);
+  }, [isMadeira, item, lote, registros, nf]);
 
   
 
@@ -448,14 +449,14 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const toggleLockItem = useCallback(() => {
     if (!lockItem) {
-      setLockedItem(localItem);
+      setLockedItem(item);
       setLockItem(true);
       toast.success('Item travado');
     } else {
       setLockItem(false);
       toast.success('Item destravado');
     }
-  }, [lockItem, localItem, setLockedItem, setLockItem]);
+  }, [lockItem, item, setLockedItem, setLockItem]);
 
   const toggleLockLote = useCallback(() => {
     if (!lockLote) {
@@ -557,7 +558,7 @@ export const LeftPanel = memo(function LeftPanel() {
         item,
         processo: proc,
         nf: '',
-        endereco: localEndereco || endereco || '',
+        endereco: endereco || '',
         m2: 0,
         mLinear: 0,
         largura: 0,
@@ -872,9 +873,8 @@ export const LeftPanel = memo(function LeftPanel() {
                 </div>
                 <input
                   id="proc-input"
-                  value={localProcesso}
+                  value={processo}
                   onChange={e => handleProcessoChange(e.target.value)}
-                  onBlur={handleProcessoBlur}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
                     lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -900,7 +900,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="item-input"
                   ref={itemRef}
-                  value={localItem}
+                  value={item}
                   onChange={e => handleItemChange(e.target.value)}
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
@@ -996,9 +996,8 @@ export const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="nf-input"
                   ref={nfRef}
-                  value={localNf}
+                  value={nf}
                   onChange={e => handleNfChange(e.target.value)}
-                  onBlur={handleNfBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
                     lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
@@ -1146,9 +1145,8 @@ export const LeftPanel = memo(function LeftPanel() {
                 <input
                   id="endereco-input"
                   ref={enderecoRef}
-                  value={localEndereco}
+                  value={endereco}
                   onChange={e => handleEnderecoChange(e.target.value)}
-                  onBlur={handleEnderecoBlur}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
                     lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
