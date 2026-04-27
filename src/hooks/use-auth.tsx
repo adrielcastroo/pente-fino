@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('isGuest') === 'true');
+  const [guestName, setGuestName] = useState(() => localStorage.getItem('guestName') || '');
   const setConferente = useAppStore(s => s.setConferente);
 
   useEffect(() => {
