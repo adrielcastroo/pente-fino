@@ -144,16 +144,6 @@ const TopBar = memo(function TopBar() {
             </div>
           )}
 
-          {isGuest && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-muted/20 rounded-xl border border-border/10">
-              <div className="w-6 h-6 rounded-full bg-muted/40 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
-                Visitante
-              </span>
-            </div>
-          )}
 
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
