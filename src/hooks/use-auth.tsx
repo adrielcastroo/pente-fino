@@ -89,6 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setIsGuest(false);
     localStorage.removeItem('isGuest');
+    localStorage.removeItem('guestName');
+    setGuestName('');
     setConferente('');
   };
 
