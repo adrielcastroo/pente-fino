@@ -94,6 +94,14 @@ export const LeftPanel = memo(function LeftPanel() {
 
 
   const { isLow } = usePerformance();
+  const setStoreConferente = useAppStore(s => s.setConferente);
+
+  // Sync effective conferente back to store if it's missing
+  useEffect(() => {
+    if (!conferente && effectiveConferente) {
+      setStoreConferente(effectiveConferente);
+    }
+  }, [conferente, effectiveConferente, setStoreConferente]);
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
