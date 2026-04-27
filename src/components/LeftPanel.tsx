@@ -87,7 +87,7 @@ export const LeftPanel = memo(function LeftPanel() {
   
   // Use store conferente but fallback to auth profile name if store is empty
   const effectiveConferente = useMemo(() => {
-    if (conferente) return conferente;
+    if (conferente && conferente.trim()) return conferente;
     if (user) return profile?.display_name || user.email?.split('@')[0] || 'Usuário';
     return '';
   }, [conferente, user, profile]);
