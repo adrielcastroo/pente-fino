@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: any | null;
   loading: boolean;
   isGuest: boolean;
+  guestName: string;
   loginAsGuest: (name?: string) => void;
   signOut: () => Promise<void>;
 }
