@@ -561,7 +561,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
-    if (!effectiveConferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
     if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
     if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
