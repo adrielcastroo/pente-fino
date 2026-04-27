@@ -80,15 +80,15 @@ const App = () => (
                 
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/tecido" element={<TecidoPage />} />
-                  <Route path="/madeira" element={<MadeiraPage />} />
-                  <Route path="/motor" element={<MotorControlePage />} />
-                  <Route path="/estoque" element={<EstoquePage />} />
-                  <Route path="/saida" element={<SaidaPage />} />
-                  <Route path="/tabela" element={<TabelaPage />} />
-                  <Route path="/historico" element={<HistoricoPage />} />
-                  <Route path="/configuracoes" element={<SettingsPage />} />
+                  <Route path="/dashboard" element={null} />
+                  <Route path="/tecido" element={null} />
+                  <Route path="/madeira" element={null} />
+                  <Route path="/motor" element={null} />
+                  <Route path="/estoque" element={null} />
+                  <Route path="/saida" element={null} />
+                  <Route path="/tabela" element={null} />
+                  <Route path="/historico" element={null} />
+                  <Route path="/configuracoes" element={null} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
