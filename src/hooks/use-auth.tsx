@@ -60,7 +60,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (!error && data) {
       setProfile(data);
-      setConferente((data as any).display_name || '');
+      const name = data.display_name || user?.email?.split('@')[0] || 'Usuário';
+      setConferente(name);
     }
   };
 
