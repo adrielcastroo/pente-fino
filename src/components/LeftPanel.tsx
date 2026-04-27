@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 // animations removed for lightweight mode
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
