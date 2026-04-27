@@ -648,7 +648,7 @@ export default function SettingsPage() {
                           <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mx-auto">
                             <Shield className="w-7 h-7 text-muted-foreground" />
                           </div>
-                          <h4 className="font-bold">Indisponível no Modo Visitante</h4>
+                          <h4 className="font-bold">Acesso Restrito</h4>
                           <p className="text-sm text-muted-foreground">Faça login para gerenciar a segurança da sua conta.</p>
                         </div>
                       ) : (
