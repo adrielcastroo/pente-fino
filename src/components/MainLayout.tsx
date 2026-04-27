@@ -1,12 +1,12 @@
 
 
 
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import TopBar from '@/components/TopBar';
-import { AppTab } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Home, ScanBarcode, History, Table, Settings, Waves, TreePine, Settings2, Warehouse, Archive } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
