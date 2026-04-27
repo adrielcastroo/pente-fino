@@ -65,14 +65,14 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
     }
   }, [isMobile, isHovered, setOpen]);
 
-  const handleTabClick = useCallback((tab: AppTab) => {
-    onTabChange(tab);
+  const handleTabClick = useCallback((tab: AppTab, path: string) => {
+    navigate(path);
     if (isMobile) {
       setOpenMobile(false);
     } else if (window.innerWidth < 1024) {
       setOpen(false);
     }
-  }, [onTabChange, isMobile, setOpenMobile, setOpen]);
+  }, [navigate, isMobile, setOpenMobile, setOpen]);
 
   return (
     <Sidebar
@@ -85,7 +85,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       {/* ── Header / Logo ── */}
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
         <button
-          onClick={() => handleTabClick('inicio')}
+          onClick={() => handleTabClick('inicio', '/dashboard')}
           className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
           aria-label="Ir para Início"
         >
@@ -118,7 +118,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                 <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       size="lg"
-                      onClick={() => handleTabClick(item.key)}
+                      onClick={() => handleTabClick(item.key, item.path)}
                       tooltip={item.label}
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
@@ -180,7 +180,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              onClick={() => handleTabClick('settings')}
+              onClick={() => handleTabClick('settings', '/configuracoes')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"
