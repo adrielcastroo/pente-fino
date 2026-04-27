@@ -90,10 +90,8 @@ export const LeftPanel = memo(function LeftPanel() {
     cortinaLargura, cortinaMetragem
   } = formData;
 
-  const [localItem, setLocalItem] = useState(item);
-  const [localNf, setLocalNf] = useState(nf);
-  const [localProcesso, setLocalProcesso] = useState(processo);
-  const [localEndereco, setLocalEndereco] = useState(endereco);
+  // Local state for non-store controlled values (if any)
+  // Removed localItem, localNf, localProcesso, localEndereco to avoid sync issues.
 
   const [fotoB64, setFotoB64] = useState<string | null>(null);
   const [fotoMime, setFotoMime] = useState('image/jpeg');
@@ -224,58 +222,48 @@ export const LeftPanel = memo(function LeftPanel() {
     setEnderecoError(ENDERECO_REGEX.test(val) ? '' : 'Padrão: TEC01.A.N03');
   };
 
-  // Sync local state with store values when they change externally
-  useEffect(() => { setLocalItem(item); }, [item]);
-  useEffect(() => { setLocalNf(nf); }, [nf]);
-  useEffect(() => { setLocalProcesso(processo); }, [processo]);
-  useEffect(() => { setLocalEndereco(endereco); }, [endereco]);
-
-  // Sync locked values
+  // Sync locked values directly from store logic
   useEffect(() => {
-    if (lockEndereco && lockedEndereco && lockedEndereco !== localEndereco) {
-      setLocalEndereco(lockedEndereco);
+    if (lockEndereco && lockedEndereco && lockedEndereco !== endereco) {
       setEndereco(lockedEndereco);
     }
-  }, [lockEndereco, lockedEndereco]);
+  }, [lockEndereco, lockedEndereco, endereco, setEndereco]);
 
   useEffect(() => {
     if (lockProcesso && lockedProcesso && processo !== lockedProcesso) {
-      setLocalProcesso(lockedProcesso);
       setProcesso(lockedProcesso);
     }
-  }, [lockProcesso, lockedProcesso]);
+  }, [lockProcesso, lockedProcesso, processo, setProcesso]);
 
   useEffect(() => {
     if (lockNf && lockedNf && nf !== lockedNf) {
-      setLocalNf(lockedNf);
       setNf(lockedNf);
     }
-  }, [lockNf, lockedNf]);
+  }, [lockNf, lockedNf, nf, setNf]);
 
   useEffect(() => {
-    if (lockItem && lockedItem && localItem !== lockedItem) {
-      setLocalItem(lockedItem);
+    if (lockItem && lockedItem && item !== lockedItem) {
       setItem(lockedItem);
     }
-  }, [lockItem, lockedItem]);
+  }, [lockItem, lockedItem, item, setItem]);
 
   useEffect(() => {
     if (lockLote && lockedLote && lote !== lockedLote) {
       setLote(lockedLote);
     }
-  }, [lockLote, lockedLote]);
+  }, [lockLote, lockedLote, lote, setLote]);
 
   useEffect(() => {
     if (lockMetragemGlobal && lockedMetragem && diversosMLinear !== lockedMetragem) {
       setDiversosMLinear(lockedMetragem);
     }
-  }, [lockMetragemGlobal, lockedMetragem]);
+  }, [lockMetragemGlobal, lockedMetragem, diversosMLinear, setDiversosMLinear]);
 
   useEffect(() => {
     if (lockCortinaLargura && lockedCortinaLargura && cortinaLargura !== lockedCortinaLargura) {
       setCortinaLargura(lockedCortinaLargura);
     }
-  }, [lockCortinaLargura, lockedCortinaLargura]);
+  }, [lockCortinaLargura, lockedCortinaLargura, cortinaLargura, setCortinaLargura]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -399,53 +387,42 @@ export const LeftPanel = memo(function LeftPanel() {
   const handleEnderecoChange = useCallback((val: string) => {
     const normalized = val.replace(/[''`]/g, '-');
     const formatted = formatEndereco(normalized);
-    setLocalEndereco(formatted);
+    setEndereco(formatted);
     validateEndereco(formatted);
-  }, []);
-
-  const handleEnderecoBlur = useCallback(() => {
-    setEndereco(localEndereco);
-    if (lockEndereco) setLockedEndereco(localEndereco);
-  }, [localEndereco, setEndereco, lockEndereco, setLockedEndereco]);
+    if (lockEndereco) setLockedEndereco(formatted);
+  }, [lockEndereco, setEndereco, setLockedEndereco]);
 
   const toggleLockEndereco = useCallback(() => {
     if (!lockEndereco) {
-      setLockedEndereco(localEndereco);
+      setLockedEndereco(endereco);
       setLockEndereco(true);
       toast.success('Endereço travado');
     } else {
       setLockEndereco(false);
       toast.success('Endereço destravado');
     }
-  }, [lockEndereco, localEndereco, setLockedEndereco, setLockEndereco]);
+  }, [lockEndereco, endereco, setLockedEndereco, setLockEndereco]);
 
   const handleProcessoChange = useCallback((val: string) => {
-    setLocalProcesso(val.replace(/[''`]/g, '-'));
-  }, []);
-
-  const handleProcessoBlur = useCallback(() => {
-    const trimmed = localProcesso.trim();
-    setProcesso(trimmed);
-    if (lockProcesso) setLockedProcesso(trimmed);
-  }, [localProcesso, setProcesso, lockProcesso, setLockedProcesso]);
+    const newVal = val.replace(/[''`]/g, '-');
+    setProcesso(newVal);
+    if (lockProcesso) setLockedProcesso(newVal);
+  }, [lockProcesso, setProcesso, setLockedProcesso]);
 
   const handleNfChange = useCallback((val: string) => {
-    setLocalNf(val.replace(/[''`]/g, '-'));
-  }, []);
-
-  const handleNfBlur = useCallback(() => {
-    const trimmed = localNf.trim();
-    setNf(trimmed);
-    if (lockNf) setLockedNf(trimmed);
-  }, [localNf, setNf, lockNf, setLockedNf]);
+    const newVal = val.replace(/[''`]/g, '-');
+    setNf(newVal);
+    if (lockNf) setLockedNf(newVal);
+  }, [lockNf, setNf, setLockedNf]);
 
   const handleItemChange = useCallback((val: string) => {
-    setLocalItem(val.replace(/[''`]/g, '-'));
-  }, []);
+    const newVal = val.replace(/[''`]/g, '-');
+    setItem(newVal);
+  }, [setItem]);
 
   const handleItemBlur = useCallback(() => {
-    setItem(localItem);
-  }, [localItem, setItem]);
+    // No-op now as we update on change
+  }, []);
 
   const toggleLockProcesso = useCallback(() => {
     if (!lockProcesso) {
