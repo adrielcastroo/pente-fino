@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 // animations removed for lightweight mode
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Camera, Image, Video, Download, X, Undo2, ScanBarcode,
   Plus, Zap, SquarePen, Layers3, Lock, Unlock, Package, Eye, EyeOff,
@@ -82,8 +83,25 @@ export const LeftPanel = memo(function LeftPanel() {
     resetFormData: s.resetFormData
   })));
 
+  const { user, profile } = useAuth();
+  
+  // Use store conferente but fallback to auth profile name if store is empty
+  const effectiveConferente = useMemo(() => {
+    if (conferente && conferente.trim()) return conferente;
+    if (user) return profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+    return '';
+  }, [conferente, user, profile]);
+
 
   const { isLow } = usePerformance();
+  const setStoreConferente = useAppStore(s => s.setConferente);
+
+  // Sync effective conferente back to store if it's missing
+  useEffect(() => {
+    if (!conferente && effectiveConferente) {
+      setStoreConferente(effectiveConferente);
+    }
+  }, [conferente, effectiveConferente, setStoreConferente]);
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
@@ -543,7 +561,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const handleAdd = () => {
     // Basic validations that apply to all tecido modes
-    if (!conferente) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
     if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
     if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
