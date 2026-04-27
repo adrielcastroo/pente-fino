@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         // Use setTimeout to avoid Supabase auth deadlock
-        setTimeout(() => fetchProfile(session.user.id), 0);
+        setTimeout(() => fetchProfile(session.user.id, session.user.email), 0);
         setIsGuest(false);
         localStorage.removeItem('isGuest');
       } else {
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id, session.user.email);
         setIsGuest(false);
         localStorage.removeItem('isGuest');
       }
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, email?: string) => {
     const { data, error } = await (supabase
       .from('profiles' as any)
       .select('*')
@@ -60,8 +60,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (!error && data) {
       setProfile(data);
-      const name = data.display_name || user?.email?.split('@')[0] || 'Usuário';
+      const name = data.display_name || email?.split('@')[0] || 'Usuário';
       setConferente(name);
+    } else if (email) {
+      // Even without a profile, set the conferente from email
+      setConferente(email.split('@')[0]);
     }
   };
 
