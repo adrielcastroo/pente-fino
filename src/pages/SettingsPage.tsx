@@ -436,7 +436,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-foreground">
-                            {isGuest ? "Modo Visitante" : profile?.display_name || "Usuário"}
+                            {profile?.display_name || "Usuário"}
                           </h4>
                           <p className="text-xs text-muted-foreground truncate">{user?.email || "Sessão local"}</p>
                           <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider">
