@@ -27,7 +27,7 @@ const TopBar = memo(function TopBar() {
 
    // Ensure conferente is synced with auth profile for logged-in users
    useEffect(() => {
-     if (!isGuest && user && !conferente) {
+     if (!isGuest && user && !conferente.trim()) {
        const name = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
        setConferente(name);
      }
