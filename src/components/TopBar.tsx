@@ -25,13 +25,15 @@ const TopBar = memo(function TopBar() {
    const isArchiving = useAppStore(s => s.isArchiving);
    const { registros } = useAppStore(useShallow(s => ({ registros: s.registros })));
 
-   // Ensure conferente is synced with auth profile for logged-in users
-   useEffect(() => {
-     if (!isGuest && user && !conferente.trim()) {
-       const name = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
-       setConferente(name);
-     }
-   }, [isGuest, user, profile, conferente, setConferente]);
+    // Ensure conferente is synced with auth profile or guest name
+    useEffect(() => {
+      if (!isGuest && user && !conferente.trim()) {
+        const name = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+        setConferente(name);
+      } else if (isGuest && guestName && !conferente.trim()) {
+        setConferente(guestName);
+      }
+    }, [isGuest, guestName, user, profile, conferente, setConferente]);
 
   
   const exportExcel = async () => {
