@@ -47,6 +47,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id, session.user.email);
         setIsGuest(false);
         localStorage.removeItem('isGuest');
+        localStorage.removeItem('guestName');
+        setGuestName('');
       }
       setLoading(false);
     });
