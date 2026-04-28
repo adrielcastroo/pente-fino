@@ -238,6 +238,8 @@ export default function MotorControlePage() {
 
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     setSerie('');
+    setModelo('');
+    setNf('');
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, setSerie]);
 
