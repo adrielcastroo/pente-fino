@@ -196,6 +196,10 @@ export default function MotorControlePage() {
 
     toast.success(`Motor adicionado: ${cleaned}`);
     setSerie('');
+    // Clear other fields if not using a "lock" (Note: MotorControlePage doesn't have UI locks yet, 
+    // so we implement standard clear or the user can add locks later)
+    setModelo('');
+    setNf('');
     serieRef.current?.focus();
   }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, setSerie]);
 
