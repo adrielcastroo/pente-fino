@@ -173,7 +173,13 @@ export const useAppStore = create<AppState>()(
         if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
         if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
         
-        set({ formData: newData });
+        // Clear non-locked base store fields
+        const updates: any = { formData: newData };
+        if (!state.lockProcesso) {
+          updates.processo = '';
+        }
+
+        set(updates);
       },
       
       resetMotorFormData: () => set(state => ({
