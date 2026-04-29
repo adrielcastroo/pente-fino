@@ -27,7 +27,6 @@ export async function exportDashboardToPDF(elementId: string, fileName: string) 
   try {
     const toastId = toast.loading('Gerando relatório PDF de alta qualidade...');
     
-    // Import libraries dynamically
     const [jsPDF, html2canvas] = await Promise.all([
       import('jspdf').then(m => m.default),
       import('html2canvas').then(m => m.default)
@@ -39,34 +38,6 @@ export async function exportDashboardToPDF(elementId: string, fileName: string) 
       return;
     }
 
-    // Capture the dashboard with high scale for better resolution
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
-      onclone: (clonedDoc) => {
-        const clonedElement = clonedDoc.getElementById(elementId);
-        if (clonedElement) {
-          // Hide elements that shouldn't be in the PDF (buttons, etc)
-          clonedElement.querySelectorAll('button, .no-print').forEach(el => {
-            (el as HTMLElement).style.display = 'none';
-          });
-          
-          // Ensure white background for charts
-          clonedElement.querySelectorAll('.recharts-surface').forEach(chart => {
-            (chart as HTMLElement).style.backgroundColor = '#ffffff';
-          });
-          
-          clonedElement.style.padding = '40px';
-          clonedElement.style.background = '#ffffff';
-        }
-      }
-    });
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -74,53 +45,105 @@ export async function exportDashboardToPDF(elementId: string, fileName: string) 
       compress: true
     });
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    
-    const finalWidth = imgWidth * ratio - 20; // 10mm margin each side
-    const finalHeight = imgHeight * ratio;
-    const marginX = (pdfWidth - finalWidth) / 2;
-    const marginY = 20;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - (margin * 2);
+    let currentY = 20;
 
-    // Header
+    // 1. Professional Header
+    pdf.setFillColor(249, 250, 251); // Light gray background for header
+    pdf.rect(0, 0, pageWidth, 45, 'F');
+    
     pdf.setFontSize(22);
-    pdf.setTextColor(40, 40, 40);
-    pdf.text('Relatório Executivo de Dashboard', marginX, 25);
+    pdf.setTextColor(17, 24, 39); // Slate 900
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Relatório Executivo de Performance', margin, 25);
     
     pdf.setFontSize(10);
-    pdf.setTextColor(100, 100, 100);
+    pdf.setTextColor(107, 114, 128); // Slate 500
+    pdf.setFont('helvetica', 'normal');
     const now = new Date().toLocaleString('pt-BR');
-    pdf.text(`Gerado em: ${now}`, marginX, 32);
-    pdf.setDrawColor(200, 200, 200);
-    pdf.line(marginX, 35, pdfWidth - marginX, 35);
+    pdf.text(`Data de Emissão: ${now} | Documento Oficial de Gestão`, margin, 32);
+    
+    pdf.setDrawColor(229, 231, 235);
+    pdf.line(margin, 38, pageWidth - margin, 38);
 
-    // Main Content Image
-    pdf.addImage(imgData, 'JPEG', marginX, 40, finalWidth, finalHeight);
+    currentY = 55;
 
-    // Footer with page numbering
-    const pageCount = (pdf as any).internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      pdf.setPage(i);
-      pdf.setFontSize(8);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(
-        `Página ${i} de ${pageCount} | Sistema de Gestão Operacional`,
-        pdfWidth / 2,
-        pdfHeight - 10,
-        { align: 'center' }
-      );
+    // Helper to capture and add elements safely
+    const addElementToPdf = async (el: HTMLElement, title?: string, forceNewPage = false) => {
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        onclone: (clonedDoc) => {
+          const clonedEl = clonedDoc.getElementById(el.id) || (clonedDoc.body.querySelector(`[data-pdf-id="${el.getAttribute('data-pdf-id')}"]`) as HTMLElement);
+          if (clonedEl) {
+            clonedEl.style.padding = '20px';
+            clonedEl.style.margin = '0';
+            clonedEl.querySelectorAll('button, .no-print').forEach(btn => (btn as HTMLElement).style.display = 'none');
+          }
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgWidth = contentWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (forceNewPage || (currentY + imgHeight > pageHeight - 30)) {
+        pdf.addPage();
+        currentY = 20;
+      }
+
+      if (title) {
+        pdf.setFontSize(14);
+        pdf.setTextColor(31, 41, 55);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(title, margin, currentY);
+        currentY += 8;
+      }
+
+      pdf.addImage(imgData, 'JPEG', margin, currentY, imgWidth, imgHeight);
+      currentY += imgHeight + 15;
+    };
+
+    // 2. Summary Section (Stats)
+    const statsContainer = element.querySelector('.grid-cols-1.md\\:grid-cols-3') as HTMLElement;
+    if (statsContainer) {
+      await addElementToPdf(statsContainer, 'Indicadores Chave de Desempenho (KPIs)');
     }
 
-    pdf.save(`${fileName}_${new Date().getTime()}.pdf`);
+    // 3. Charts Section
+    const charts = Array.from(element.querySelectorAll('.recharts-responsive-container')).map(c => c.closest('.rounded-\\[3rem\\], .rounded-\\[2\\.5rem\\]')) as HTMLElement[];
+    
+    for (let i = 0; i < charts.length; i++) {
+      const chart = charts[i];
+      const titles = ['Tendência de Operações', 'Distribuição por Conferente', 'Sectores Operacionais', 'Tipos de Materiais', 'Histórico de Sessões'];
+      await addElementToPdf(chart, titles[i] || 'Análise de Dados');
+    }
+
+    // 4. Page Numbering & Footer
+    const totalPages = (pdf as any).internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setDrawColor(243, 244, 246);
+      pdf.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+      
+      pdf.setFontSize(8);
+      pdf.setTextColor(156, 163, 175);
+      pdf.text(`Relatório de Dashboard - Confidencial`, margin, pageHeight - 10);
+      pdf.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+    }
+
+    pdf.save(`${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
     
     toast.dismiss(toastId);
-    toast.success('PDF gerado com sucesso!');
+    toast.success('Relatório PDF profissional gerado!');
   } catch (error) {
     console.error('Erro ao exportar PDF:', error);
-    toast.error('Falha ao gerar o relatório PDF.');
+    toast.error('Falha ao gerar o relatório PDF executivo.');
   }
 }
 
