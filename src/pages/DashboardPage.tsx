@@ -95,8 +95,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-50 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl -mx-6 sm:-mx-10 lg:-mx-12 xl:-mx-16 2xl:-mx-20 px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-10">
+      {/* Premium Header - Removed sticky to avoid overlap with main layout */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-10 rounded-b-[3rem]">
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-primary/80">
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
