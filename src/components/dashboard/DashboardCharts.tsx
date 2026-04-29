@@ -104,21 +104,12 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
               tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
               dx={-10}
             />
-            <ChartTooltip 
-              cursor={!isLow ? { stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' } : false}
-              contentStyle={{ 
-                borderRadius: '16px', 
-                border: '1px solid hsl(var(--border) / 0.5)', 
-                background: 'hsl(var(--card) / 0.8)',
-                backdropFilter: 'blur(12px)',
-                fontSize: '12px',
-                fontWeight: '700',
-                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)',
-                padding: '12px 16px'
-              }}
-              itemStyle={{ color: 'hsl(var(--foreground))' }}
-              formatter={(val: any) => [val, 'Quantidade']}
-              labelFormatter={(label: any) => `Data: ${label}`}
+            <ChartTooltip content={<CustomTooltip />} cursor={!isLow ? { stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' } : false} />
+            <Legend 
+              verticalAlign="top" 
+              height={36} 
+              iconType="circle"
+              formatter={(value) => <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{value === 'total' ? 'Registros' : value}</span>}
             />
             <Area 
               type={isLow ? "linear" : "monotone"} 
