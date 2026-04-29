@@ -100,9 +100,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="dashboard-content" className="space-y-16 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-24 px-4 sm:px-6 lg:px-8">
+    <div id="dashboard-content" className="space-y-10 sm:space-y-16 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20 sm:pb-24 px-4 sm:px-6 lg:px-8">
       {/* Premium Header - Removed sticky to avoid overlap with main layout */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-10 pb-12 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-12 rounded-b-[4rem]">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 sm:gap-10 pb-10 sm:pb-12 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-8 sm:pt-12 rounded-b-[2.5rem] sm:rounded-b-[4rem]">
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-primary/80">
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
@@ -147,16 +147,16 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-16 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 pt-10 sm:pt-16 relative z-10">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
           { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: Layers3, delay: '300' },
-        ].map((stat) => (
+        ].map((stat, idx) => (
           <button 
             key={stat.id}
             onClick={() => setDetailDialog(stat.id)} 
-            className="group relative cursor-pointer rounded-[3rem] border border-border/20 bg-card/60 backdrop-blur-xl p-10 lg:p-12 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm"
+            className={`group relative cursor-pointer rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-card/60 backdrop-blur-xl p-8 sm:p-10 lg:p-12 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm ${idx === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
             style={{ animationDelay: `${stat.delay}ms` }}
           >
             <div className="flex items-center justify-between mb-8 relative z-10">
@@ -170,7 +170,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="space-y-3 relative z-10">
-              <div className="text-6xl lg:text-7xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
+              <div className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
                 {stat.value}
               </div>
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500 leading-relaxed">
@@ -185,14 +185,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Premium Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-10">
         <div className="lg:col-span-2 xl:col-span-2">
-          <div className="h-full rounded-[3rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+          <div className="h-full rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
         </div>
 
-        <div className="space-y-10">
+        <div className="space-y-8 sm:space-y-10">
           <SummaryChart 
             title="Produção por Conferente" 
             desc="Top 5 em volume de registros" 
@@ -234,7 +234,7 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart}
         />
         
-        <div className="relative group rounded-[3rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-10 flex flex-col items-center justify-center text-center space-y-8 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
+        <div className="relative group rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-8 sm:p-10 flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
             <div className="relative p-6 rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
@@ -265,7 +265,7 @@ export default function DashboardPage() {
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-muted/10">
+          <DialogHeader className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-muted/10">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Users className="w-6 h-6" />
@@ -280,19 +280,19 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
                 <tr>
-                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
-                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
-                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
-                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-left font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
                 {stats.conferenteDetails.map(c => (
                   <tr key={c.name} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary transition-colors text-base">{c.name}</td>
-                    <td className="px-10 py-6 text-right font-mono text-muted-foreground font-semibold">{c.conferences}</td>
-                    <td className="px-10 py-6 text-right font-mono text-primary font-black text-xl">{c.total}</td>
-                    <td className="px-10 py-6 text-right font-mono text-muted-foreground/60 text-[12px] font-semibold hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 font-bold text-foreground/90 group-hover:text-primary transition-colors text-sm sm:text-base">{c.name}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-muted-foreground font-semibold">{c.conferences}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-black text-lg sm:text-xl">{c.total}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-muted-foreground/60 text-[11px] sm:text-[12px] font-semibold hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>

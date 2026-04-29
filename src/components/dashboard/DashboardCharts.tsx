@@ -62,8 +62,8 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[3rem]">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-10 py-10 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
+    <Card className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[2rem] sm:rounded-[3rem]">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-6 sm:px-10 py-8 sm:py-10 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
           <CardTitle className="text-xl font-extrabold tracking-tight flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -77,7 +77,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
           <Download className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-8 pb-12 pt-10 h-[350px] sm:h-[420px] lg:h-[480px]">
+      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-12 pt-8 sm:pt-10 h-[300px] sm:h-[420px] lg:h-[480px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             {!isLow && (
@@ -135,8 +135,8 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
   const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
 
   return (
-    <Card className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] rounded-[2.5rem]">
-      <CardHeader className="px-8 py-8 flex flex-row items-start justify-between">
+    <Card className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] rounded-[1.5rem] sm:rounded-[2.5rem]">
+      <CardHeader className="px-6 sm:px-8 py-6 sm:py-8 flex flex-row items-start justify-between">
         <div className="space-y-1.5">
           <CardTitle className="text-base font-extrabold flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
@@ -150,10 +150,10 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-8 pb-10 h-[260px] sm:h-[280px]">
+      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-10 h-[240px] sm:h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
-            <BarChart data={processedData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+            <BarChart data={processedData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
               <XAxis 
                 dataKey="name" 
