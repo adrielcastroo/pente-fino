@@ -53,14 +53,22 @@ export function AvariaForm({
 
   return (
     <div className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2.5">
+      <div className={`flex items-center justify-between px-3 py-2.5 transition-colors ${enabled ? 'bg-destructive/10' : ''}`}>
         <div className="flex items-center gap-2">
-          <AlertTriangle className={`w-4 h-4 ${enabled ? 'text-amber-500' : 'text-muted-foreground/60'}`} />
-          <Label htmlFor="avaria-toggle" className="text-[11px] font-semibold uppercase tracking-wide cursor-pointer">
+          <AlertTriangle className={`w-4 h-4 ${enabled ? 'text-destructive' : 'text-muted-foreground/60'}`} />
+          <Label 
+            htmlFor="avaria-toggle" 
+            className={`text-[11px] font-bold uppercase tracking-wide cursor-pointer transition-colors ${enabled ? 'text-destructive' : ''}`}
+          >
             Reportar Avaria
           </Label>
         </div>
-        <Switch id="avaria-toggle" checked={enabled} onCheckedChange={onEnabledChange} />
+        <Switch 
+          id="avaria-toggle" 
+          checked={enabled} 
+          onCheckedChange={onEnabledChange}
+          className="data-[state=checked]:bg-destructive"
+        />
       </div>
 
       {enabled && (
