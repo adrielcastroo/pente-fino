@@ -38,13 +38,14 @@ function generateSummaryText(title: string, data: any[], chartKey: string = 'val
  * Generates a professional PDF report of the dashboard using jsPDF and html2canvas.
  * Optimized for low memory and dynamic content.
  */
-export async function exportDashboardToPDF(elementId: string, fileName: string) {
+export async function exportDashboardToPDF(elementId: string, fileName: string, stats?: any) {
   try {
-    const toastId = toast.loading('Preparando relatório executivo...');
+    const toastId = toast.loading('Preparando relatório analítico de alta fidelidade...');
     
-    const [jsPDF, html2canvas] = await Promise.all([
+    const [jsPDF, html2canvas, autoTable] = await Promise.all([
       import('jspdf').then(m => m.default),
-      import('html2canvas').then(m => m.default)
+      import('html2canvas').then(m => m.default),
+      import('jspdf-autotable').then(m => m.default)
     ]);
 
     const element = document.getElementById(elementId);
@@ -64,38 +65,78 @@ export async function exportDashboardToPDF(elementId: string, fileName: string) 
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
-    let currentY = 20;
+    let currentY = margin;
 
-    // 1. Executive Header
-    pdf.setFillColor(15, 23, 42); // Navy Dark
-    pdf.rect(0, 0, pageWidth, 40, 'F');
-    
-    pdf.setFontSize(20);
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Relatório de Inteligência Operacional', margin, 22);
-    
-    pdf.setFontSize(9);
-    pdf.setTextColor(148, 163, 184); // Slate 400
-    pdf.setFont('helvetica', 'normal');
-    const now = new Date().toLocaleString('pt-BR');
-    pdf.text(`Gerado dinamicamente em: ${now} | Sistema SaaS Premium`, margin, 30);
-    
-    currentY = 50;
+    // Helper for Headers
+    const addHeader = (doc: any, pageTitle: string) => {
+      doc.setFillColor(15, 23, 42); // Navy Dark
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      doc.setFontSize(14);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text(pageTitle, margin, 15);
+      
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Relatório Gerencial - ${new Date().toLocaleDateString('pt-BR')}`, pageWidth - margin, 15, { align: 'right' });
+    };
 
-    // Data extraction for summaries (mock titles/keys based on current dashboard structure)
+    // Helper for Footers
+    const addFooter = (doc: any, pageNum: number, totalPages: number) => {
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Página ${pageNum} de ${totalPages} | SaaS Premium - Inteligência de Dados`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+    };
+
+    // Initial Header
+    addHeader(pdf, 'Dashboard - Relatório Executivo');
+    currentY = 35;
+
+    // 1. Stats Summary Table
+    if (stats) {
+      pdf.setFontSize(11);
+      pdf.setTextColor(30, 41, 59);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Métricas Principais', margin, currentY);
+      currentY += 6;
+
+      (pdf as any).autoTable({
+        startY: currentY,
+        head: [['Métrica', 'Valor']],
+        body: [
+          ['Total de Conferentes', stats.totalConferentes || 0],
+          ['Total de Conferências', stats.totalConferencias || 0],
+          ['Total de Registros', stats.totalRegistros || 0],
+          ['Média de Sessão', stats.avgDuration || '00:00']
+        ],
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [15, 23, 42], fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+      });
+    }
+
+    // 2. Charts Sections
     const chartContexts = [
-      { title: 'Volume de Operações', selector: '.recharts-responsive-container', key: 'total' },
-      { title: 'Produção por Conferente', selector: '.recharts-responsive-container', key: 'count' },
-      { title: 'Sectores Operacionais', selector: '.recharts-responsive-container', key: 'value' },
-      { title: 'Tipos de Materiais', selector: '.recharts-responsive-container', key: 'value' },
-      { title: 'Histórico de Sessões', selector: '.recharts-responsive-container', key: 'value' }
+      { title: 'Volume de Operações', data: stats?.timeline, key: 'total' },
+      { title: 'Produção por Conferente', data: stats?.topConferentes, key: 'count' },
+      { title: 'Sectores Operacionais', data: stats?.categorias, key: 'value' },
+      { title: 'Tipos de Materiais', data: stats?.tipos, key: 'value' }
     ];
 
-    // Helper to capture elements with low-memory impact
-    const addSection = async (el: HTMLElement, title: string, index: number) => {
-      const canvas = await html2canvas(el, {
-        scale: 1.5, // Lower scale for better performance on weak devices
+    const chartContainers = Array.from(element.querySelectorAll('.recharts-responsive-container'))
+      .map(c => c.closest('.rounded-\\[3rem\\], .rounded-\\[2\\.5rem\\]'))
+      .filter(Boolean) as HTMLElement[];
+
+    for (let i = 0; i < Math.min(chartContainers.length, chartContexts.length); i++) {
+      const container = chartContainers[i];
+      const context = chartContexts[i];
+
+      // Capture Chart
+      const canvas = await html2canvas(container, {
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false
@@ -104,61 +145,58 @@ export async function exportDashboardToPDF(elementId: string, fileName: string) 
       const imgWidth = contentWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      // Check for page break
-      if (currentY + imgHeight + 30 > pageHeight) {
+      // Check for page break (Title + Chart + Table)
+      if (currentY + imgHeight + 40 > pageHeight) {
         pdf.addPage();
-        currentY = 20;
+        addHeader(pdf, 'Dashboard - Relatório Executivo');
+        currentY = 35;
       }
 
-      // Section Title
-      pdf.setFontSize(14);
+      // Title
+      pdf.setFontSize(11);
       pdf.setTextColor(30, 41, 59);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(title, margin, currentY);
-      currentY += 8;
+      pdf.text(context.title, margin, currentY);
+      currentY += 5;
 
-      // The Chart Image
-      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      // Chart Image
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       pdf.addImage(imgData, 'JPEG', margin, currentY, imgWidth, imgHeight);
-      currentY += imgHeight + 8;
+      currentY += imgHeight + 10;
 
-      // Automated Analysis Text
-      pdf.setFontSize(10);
-      pdf.setTextColor(71, 85, 105);
-      pdf.setFont('helvetica', 'italic');
-      
-      // We attempt to find data summary if possible (placeholder logic as we don't have direct access to raw data arrays here)
-      const summary = `Análise Automática: Com base nos dados capturados em tempo real, este indicador apresenta a distribuição volumétrica de ${title.toLowerCase()}. Observa-se estabilidade nos processos monitorados.`;
-      
-      const splitText = pdf.splitTextToSize(summary, contentWidth);
-      pdf.text(splitText, margin, currentY);
-      currentY += (splitText.length * 5) + 15;
-    };
+      // Support Table
+      if (context.data && context.data.length > 0) {
+        const tableData = context.data.map((item: any) => [
+          item.name || item.date || 'N/A',
+          item[context.key] || 0
+        ]);
 
-    // Capture main sections
-    const sections = Array.from(element.querySelectorAll('.recharts-responsive-container'))
-      .map(c => c.closest('.rounded-\\[3rem\\], .rounded-\\[2\\.5rem\\]'))
-      .filter(Boolean) as HTMLElement[];
-
-    for (let i = 0; i < Math.min(sections.length, chartContexts.length); i++) {
-      await addSection(sections[i], chartContexts[i].title, i);
+        (pdf as any).autoTable({
+          startY: currentY,
+          head: [['Categoria/Referência', 'Quantidade']],
+          body: tableData.slice(0, 10), // Limit to top 10 for readability
+          margin: { left: margin, right: margin },
+          theme: 'striped',
+          headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+          bodyStyles: { fontSize: 7 },
+          didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+        });
+      }
     }
 
-    // Footer
+    // Add Page Numbers to all pages
     const totalPages = (pdf as any).internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
-      pdf.setFontSize(8);
-      pdf.setTextColor(148, 163, 184);
-      pdf.text(`Página ${i} de ${totalPages} | Relatório de Desempenho SaaS`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      addFooter(pdf, i, totalPages);
     }
 
-    pdf.save(`${fileName}_Relatorio_${new Date().getTime()}.pdf`);
+    pdf.save(`${fileName}_Analitico_${new Date().getTime()}.pdf`);
     toast.dismiss(toastId);
-    toast.success('Relatório gerado com sucesso!');
+    toast.success('Relatório analítico exportado com sucesso!');
   } catch (error) {
-    console.error('PDF Error:', error);
-    toast.error('Erro ao gerar relatório otimizado.');
+    console.error('PDF Export Error:', error);
+    toast.error('Falha ao gerar o relatório detalhado.');
   }
 }
 
