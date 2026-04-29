@@ -50,6 +50,7 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       import('html2canvas').then(m => m.default)
     ]);
 
+
     // Importante: Em ambientes de módulos (como o Vite/React aqui), 
     // o plugin jspdf-autotable geralmente precisa ser inicializado manualmente 
     // ou acessado via exportação padrão.
@@ -66,14 +67,14 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       unit: 'mm',
       format: 'a4',
       compress: true
-    }) as any;
+    });
 
-    // Garante que o plugin autoTable está disponível na instância
-    // Em algumas versões/configurações, o import(jspdf-autotable) registra automaticamente no protótipo global de jsPDF
-    // mas em outras precisamos garantir que a função seja chamada.
-    if (typeof pdf.autoTable !== 'function' && typeof (autoTable as any) === 'function') {
-      (autoTable as any)(pdf);
+    // Validamos se a biblioteca autoTable foi carregada corretamente
+    if (typeof autoTable !== 'function') {
+      console.error('Erro: autoTable não é uma função. Verifique a importação do jspdf-autotable.');
+      throw new Error('Plugin de tabelas (autoTable) não carregado.');
     }
+
 
 
 
@@ -117,7 +118,7 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       pdf.text('Métricas Principais', margin, currentY);
       currentY += 6;
 
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         startY: currentY,
         head: [['Métrica', 'Valor']],
         body: [
@@ -130,9 +131,14 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
         theme: 'grid',
         headStyles: { fillColor: [15, 23, 42], fontSize: 9 },
         bodyStyles: { fontSize: 8 },
-        didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+        didDrawPage: (data: any) => { 
+          if (data && data.cursor) {
+            currentY = data.cursor.y + 15;
+          }
+        }
       });
     }
+
 
     // 2. Charts Sections
     const chartContexts = [
@@ -196,17 +202,22 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
           ]);
 
         if (tableData.length > 0) {
-          (pdf as any).autoTable({
+          autoTable(pdf, {
             startY: currentY,
             head: [['Categoria/Referência', 'Quantidade']],
-            body: tableData.slice(0, 15), // Aumentado um pouco o limite
+            body: tableData.slice(0, 15),
             margin: { left: margin, right: margin },
             theme: 'striped',
             headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
             bodyStyles: { fontSize: 7 },
-            didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+            didDrawPage: (data: any) => { 
+              if (data && data.cursor) {
+                currentY = data.cursor.y + 15;
+              }
+            }
           });
         }
+
       }
 
     }
