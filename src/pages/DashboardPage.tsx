@@ -386,19 +386,10 @@ export default function DashboardPage() {
             <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
-              <tbody className="divide-y divide-border/10">
-                {history.slice(0, 50).map(conf => (
-                  <tr key={conf.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-bold text-foreground truncate max-w-[180px]">{conf.processo || conf.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground truncate max-w-[100px]">{conf.conferente || '—'}</td>
-                    <td className="px-4 py-3 font-mono text-muted-foreground/60 text-[10px]">{formatDateBR(conf.date)}</td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-primary text-base">{conf.registros.length}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
       </Dialog>
     </div>
   );
