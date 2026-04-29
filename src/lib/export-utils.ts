@@ -167,28 +167,34 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       currentY += 5;
 
       // Chart Image
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      pdf.addImage(imgData, 'JPEG', margin, currentY, imgWidth, imgHeight);
+      const imgData = canvas.toDataURL('image/png'); // Usando PNG para evitar problemas de compressão inicial
+      pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight, undefined, 'FAST');
+
       currentY += imgHeight + 10;
 
       // Support Table
-      if (context.data && context.data.length > 0) {
-        const tableData = context.data.map((item: any) => [
-          item.name || item.date || 'N/A',
-          item[context.key] || 0
-        ]);
+      if (context.data && Array.isArray(context.data) && context.data.length > 0) {
+        const tableData = context.data
+          .filter(item => item && (item.name || item.date)) // Validar item
+          .map((item: any) => [
+            String(item.name || item.date || 'N/A'),
+            String(item[context.key] || 0)
+          ]);
 
-        (pdf as any).autoTable({
-          startY: currentY,
-          head: [['Categoria/Referência', 'Quantidade']],
-          body: tableData.slice(0, 10), // Limit to top 10 for readability
-          margin: { left: margin, right: margin },
-          theme: 'striped',
-          headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
-          bodyStyles: { fontSize: 7 },
-          didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
-        });
+        if (tableData.length > 0) {
+          (pdf as any).autoTable({
+            startY: currentY,
+            head: [['Categoria/Referência', 'Quantidade']],
+            body: tableData.slice(0, 15), // Aumentado um pouco o limite
+            margin: { left: margin, right: margin },
+            theme: 'striped',
+            headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+            bodyStyles: { fontSize: 7 },
+            didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+          });
+        }
       }
+
     }
 
     // Add Page Numbers to all pages
