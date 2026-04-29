@@ -94,30 +94,39 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-3 sm:p-6 lg:p-8 xl:p-10 space-y-4 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
+    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-5 pb-5 border-b border-border/40">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/40">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+            <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-[10px] sm:text-xs md:text-sm max-w-lg">
-            Acompanhe a produtividade, gerencie fluxos e exporte relatórios.
+          <p className="text-muted-foreground text-xs sm:text-sm max-w-lg leading-relaxed">
+            Monitoramento de produtividade em tempo real. Visualize métricas operacionais e gerencie o fluxo de conferência.
           </p>
         </div>
         
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-start sm:self-auto">
-          <Badge variant="outline" className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border-primary/20 text-primary bg-primary/5">
-            <Clock className="w-3 h-3 mr-1" />
-            <span className="hidden xs:inline">Tempo médio: </span>{stats.avgDuration}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Badge variant="secondary" className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full border-border/50 bg-background/50 backdrop-blur-sm whitespace-nowrap">
+            <Clock className="w-3.5 h-3.5 mr-1.5 text-primary" />
+            <span className="opacity-70 mr-1 hidden xs:inline">Tempo médio:</span> {stats.avgDuration}
           </Badge>
+          
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border-border/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors" onClick={() => handleExport(history, 'Historico_Geral')}>
-                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-9 px-4 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm gap-2" 
+                onClick={() => handleExport(history, 'Historico_Geral')}
+              >
+                <Download className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Exportar Dados</span>
+                <span className="text-xs font-bold uppercase tracking-wider sm:hidden">Exportar</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="font-semibold">Exportar Banco de Dados</TooltipContent>
+            <TooltipContent className="font-semibold">Exportar Histórico Completo</TooltipContent>
           </Tooltip>
         </div>
       </header>
@@ -177,34 +186,36 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
-        <div className="md:col-span-2 xl:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+        <div className="lg:col-span-2 xl:col-span-2">
           <TimelineChart data={stats.timeline} onExport={handleExport} />
         </div>
 
-        <SummaryChart 
-          title="Top Conferentes" 
-          desc="Produção Individual" 
-          data={stats.topConferentes} 
-          type="bar" 
-          icon={Users} 
-          chartKey="count"
-          onDetailClick={setDetailChart} 
-        />
-        
-        <SummaryChart 
-          title="Distribuição" 
-          desc="Setores Operacionais" 
-          data={stats.categorias} 
-          type="pie" 
-          icon={Layers3} 
-          chartKey="value"
-          onDetailClick={setDetailChart} 
-        />
+        <div className="space-y-6">
+          <SummaryChart 
+            title="Top Conferentes" 
+            desc="Ranking de produtividade individual" 
+            data={stats.topConferentes} 
+            type="bar" 
+            icon={Users} 
+            chartKey="count"
+            onDetailClick={setDetailChart} 
+          />
+          
+          <SummaryChart 
+            title="Setores" 
+            desc="Distribuição por categoria" 
+            data={stats.categorias} 
+            type="pie" 
+            icon={Layers3} 
+            chartKey="value"
+            onDetailClick={setDetailChart} 
+          />
+        </div>
 
         <SummaryChart 
-          title="Especificações" 
-          desc="Materiais / Tipos" 
+          title="Materiais" 
+          desc="Tipos de itens conferidos" 
           data={stats.tipos} 
           type="pie" 
           icon={TrendingUp} 
@@ -213,14 +224,25 @@ export default function DashboardPage() {
         />
 
         <SummaryChart
-          title="Registros por Conferência"
-          desc="Volume por Sessão"
+          title="Sessões"
+          desc="Volume de registros recentes"
           data={registrosPerConference.slice(0, 10)}
           type="bar"
           icon={Package}
           chartKey="value"
           onDetailClick={setDetailChart}
         />
+        
+        <Card className="border border-border/40 bg-card/50 shadow-sm overflow-hidden flex flex-col justify-center p-6 text-center space-y-3">
+          <div className="p-4 rounded-full bg-primary/10 text-primary w-fit mx-auto">
+            <Activity className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-sm">Pronto para exportar?</h3>
+          <p className="text-xs text-muted-foreground">O relatório completo inclui todos os registros detalhados.</p>
+          <Button variant="outline" size="sm" onClick={() => handleExport(history, 'Relatorio_Dashboard')} className="w-full rounded-xl">
+            Gerar Relatório PDF
+          </Button>
+        </Card>
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />

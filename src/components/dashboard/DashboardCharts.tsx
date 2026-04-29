@@ -26,8 +26,8 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 border border-border/50 bg-card shadow-sm overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between px-5 sm:px-6 py-4">
+    <Card className="md:col-span-3 border border-border/50 bg-card shadow-lg shadow-black/5 overflow-hidden rounded-2xl">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 gap-4">
         <div>
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
@@ -39,7 +39,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
           <Download className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-2 h-[220px] sm:h-[280px]">
+      <CardContent className="px-3 pb-8 pt-2 h-[250px] sm:h-[320px] lg:h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             {!isLow && (
@@ -103,8 +103,8 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
   const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
 
   return (
-    <Card className="group border border-border/50 bg-card shadow-sm overflow-hidden transition-colors hover:border-primary/20">
-      <CardHeader className="px-5 sm:px-6 py-4 flex flex-row items-center justify-between">
+    <Card className="group border border-border/40 bg-card/60 backdrop-blur-sm shadow-sm overflow-hidden transition-all hover:border-primary/30 hover:shadow-md rounded-2xl">
+      <CardHeader className="px-6 py-5 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Icon className="w-3.5 h-3.5 text-primary" />
