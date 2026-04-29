@@ -258,37 +258,42 @@ export default function DashboardPage() {
 
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[80vh]">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-primary/10 text-primary"><Users className="w-5 h-5" /></div>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
+          <DialogHeader className="px-8 pt-8 pb-6 border-b border-border/10 bg-muted/10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                <Users className="w-6 h-6" />
+              </div>
               <div>
-                <DialogTitle className="text-lg font-black tracking-tight">Conferentes</DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">Detalhes de todos os conferentes</DialogDescription>
+                <DialogTitle className="text-2xl font-black tracking-tight text-foreground/90">Conferentes</DialogTitle>
+                <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Desempenho individual por conferente</DialogDescription>
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh]">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-muted/30">
+          <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground">Nome</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Conferências</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground">Registros</th>
-                  <th className="px-4 py-3 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground hidden xs:table-cell">Último</th>
+                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
+                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
+                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
+                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/10">
+              <tbody className="divide-y divide-border/5">
                 {stats.conferenteDetails.map(c => (
-                  <tr key={c.name} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-bold text-foreground">{c.name}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground">{c.conferences}</td>
-                    <td className="px-4 py-3 text-right font-mono text-primary font-bold">{c.total}</td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground/60 text-[10px] hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
+                  <tr key={c.name} className="hover:bg-primary/[0.02] transition-colors group">
+                    <td className="px-8 py-4 font-bold text-foreground/80 group-hover:text-primary transition-colors">{c.name}</td>
+                    <td className="px-8 py-4 text-right font-mono text-muted-foreground font-medium">{c.conferences}</td>
+                    <td className="px-8 py-4 text-right font-mono text-primary font-black text-lg">{c.total}</td>
+                    <td className="px-8 py-4 text-right font-mono text-muted-foreground/60 text-[11px] font-medium hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end">
+            <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
       </Dialog>
