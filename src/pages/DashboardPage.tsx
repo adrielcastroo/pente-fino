@@ -94,9 +94,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
+    <div className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20">
       {/* Premium Header */}
-      <header className="sticky top-0 z-50 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl -mx-6 sm:-mx-10 lg:-mx-12 xl:-mx-16 2xl:-mx-20 px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-4">
+      <header className="sticky top-0 z-50 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl -mx-6 sm:-mx-10 lg:-mx-12 xl:-mx-16 2xl:-mx-20 px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-10">
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-primary/80">
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
@@ -141,7 +141,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10 pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10 pt-12 relative z-10">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
@@ -150,7 +150,7 @@ export default function DashboardPage() {
           <button 
             key={stat.id}
             onClick={() => setDetailDialog(stat.id)} 
-            className="group relative cursor-pointer rounded-[2.5rem] border border-border/20 bg-card/40 backdrop-blur-xl p-8 lg:p-10 text-left transition-all duration-500 hover:border-primary/30 hover:bg-card/60 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden"
+            className="group relative cursor-pointer rounded-[2.5rem] border border-border/20 bg-card/60 backdrop-blur-xl p-8 lg:p-10 text-left transition-all duration-500 hover:border-primary/30 hover:bg-card/80 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm"
             style={{ animationDelay: `${stat.delay}ms` }}
           >
             <div className="flex items-center justify-between mb-8 relative z-10">
