@@ -77,7 +77,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
           <Download className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-12 pt-8 sm:pt-10 h-[300px] sm:h-[420px] lg:h-[480px]">
+      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-12 pt-8 sm:pt-10 h-[clamp(300px,50vh,600px)]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             {!isLow && (
@@ -150,7 +150,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-10 h-[240px] sm:h-[280px]">
+      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-10 h-[clamp(240px,40vh,350px)]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
             <BarChart data={processedData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
