@@ -18,6 +18,40 @@ const CHART_COLORS = [
   '#2563EB', // Blue 600
 ];
 
+const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const total = payload[0].chartType === 'PieChart' 
+      ? payload[0].payload.chartTotal 
+      : null;
+    
+    return (
+      <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-4 shadow-2xl shadow-black/10 animate-in fade-in zoom-in-95 duration-200">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 border-b border-border/10 pb-2">
+          {label || data.name}
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-8">
+            <span className="text-xs font-medium text-foreground/70">{payload[0].name || 'Valor'}:</span>
+            <span className="text-sm font-black text-primary tabular-nums">
+              {prefix}{payload[0].value}{suffix}
+            </span>
+          </div>
+          {total && (
+            <div className="flex items-center justify-between gap-8">
+              <span className="text-[10px] font-bold text-muted-foreground/60">Participação:</span>
+              <span className="text-[11px] font-bold text-muted-foreground tabular-nums">
+                {((payload[0].value / total) * 100).toFixed(1)}%
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 interface TimelineChartProps {
   data: any[];
   onExport: (data: any[], fileName: string) => void;
