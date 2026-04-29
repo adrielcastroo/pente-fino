@@ -223,6 +223,7 @@ export default function DashboardPage() {
           chartKey="value"
           onDetailClick={setDetailChart} 
         />
+        </div>
 
         <SummaryChart
           title="Histórico de Sessões"
@@ -233,6 +234,7 @@ export default function DashboardPage() {
           chartKey="value"
           onDetailClick={setDetailChart}
         />
+        </div>
         
         <div className="lg:col-span-4 relative group rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
           <div className="relative">

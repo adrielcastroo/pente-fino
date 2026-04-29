@@ -150,7 +150,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-10 h-[clamp(240px,40vh,350px)]">
+      <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8 h-[220px] sm:h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
             <BarChart data={processedData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
