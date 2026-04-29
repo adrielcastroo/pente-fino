@@ -118,7 +118,7 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       pdf.text('Métricas Principais', margin, currentY);
       currentY += 6;
 
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         startY: currentY,
         head: [['Métrica', 'Valor']],
         body: [
@@ -131,9 +131,14 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
         theme: 'grid',
         headStyles: { fillColor: [15, 23, 42], fontSize: 9 },
         bodyStyles: { fontSize: 8 },
-        didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+        didDrawPage: (data: any) => { 
+          if (data && data.cursor) {
+            currentY = data.cursor.y + 15;
+          }
+        }
       });
     }
+
 
     // 2. Charts Sections
     const chartContexts = [
