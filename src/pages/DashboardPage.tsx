@@ -42,6 +42,11 @@ export default function DashboardPage() {
     handleExportPDF,
   } = useDashboard();
 
+  const handleFullExportPDF = async () => {
+    const { exportDashboardToPDF } = await import('@/lib/export-utils');
+    await exportDashboardToPDF('dashboard-content', 'Relatorio_Completo', stats);
+  };
+
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
