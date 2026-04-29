@@ -390,7 +390,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-      </Dialog>
-    </div>
-  );
-}
