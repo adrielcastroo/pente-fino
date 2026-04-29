@@ -1,8 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { computeStats } from '@/lib/dashboard-utils';
-import { exportToExcel } from '@/lib/export-utils';
-
+import { exportToExcel, exportDashboardToPDF } from '@/lib/export-utils';
 
 export function useDashboard() {
   const history = useAppStore(s => s.history);
@@ -22,6 +21,10 @@ export function useDashboard() {
     exportToExcel(data, fileName);
   }, []);
 
+  const handleExportPDF = useCallback((elementId: string, fileName: string) => {
+    exportDashboardToPDF(elementId, fileName);
+  }, []);
+
   return {
     history,
     isHistoryLoading,
@@ -32,5 +35,6 @@ export function useDashboard() {
     setDetailChart,
     handleStatClick,
     handleExport,
+    handleExportPDF,
   };
 }
