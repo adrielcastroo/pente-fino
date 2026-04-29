@@ -53,20 +53,28 @@ export function AvariaForm({
 
   return (
     <div className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2.5">
+      <div className={`flex items-center justify-between px-3 py-2.5 transition-colors ${enabled ? 'bg-destructive/10' : ''}`}>
         <div className="flex items-center gap-2">
-          <AlertTriangle className={`w-4 h-4 ${enabled ? 'text-amber-500' : 'text-muted-foreground/60'}`} />
-          <Label htmlFor="avaria-toggle" className="text-[11px] font-semibold uppercase tracking-wide cursor-pointer">
+          <AlertTriangle className={`w-4 h-4 ${enabled ? 'text-destructive' : 'text-muted-foreground/60'}`} />
+          <Label 
+            htmlFor="avaria-toggle" 
+            className={`text-[11px] font-bold uppercase tracking-wide cursor-pointer transition-colors ${enabled ? 'text-destructive' : ''}`}
+          >
             Reportar Avaria
           </Label>
         </div>
-        <Switch id="avaria-toggle" checked={enabled} onCheckedChange={onEnabledChange} />
+        <Switch 
+          id="avaria-toggle" 
+          checked={enabled} 
+          onCheckedChange={onEnabledChange}
+          className="data-[state=checked]:bg-destructive"
+        />
       </div>
 
       {enabled && (
         <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/40 bg-background/40">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo (Opcional)</Label>
             <Select value={tipo ?? ''} onValueChange={(v) => onTipoChange(v as AvariaTipo)}>
               <SelectTrigger className="h-10 text-sm">
                 <SelectValue placeholder="Selecionar tipo…" />
@@ -80,7 +88,7 @@ export function AvariaForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Descrição</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Descrição (Opcional)</Label>
             <Textarea
               value={descricao}
               onChange={e => onDescricaoChange(e.target.value)}
@@ -91,7 +99,7 @@ export function AvariaForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Foto</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Foto (Opcional)</Label>
             <input
               ref={fileRef}
               type="file"

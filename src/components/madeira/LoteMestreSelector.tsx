@@ -66,7 +66,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
   return (
     <div className="space-y-1.5">
       <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-        <Palette className="w-3 h-3" /> Lote Mestre (Tonalidade)
+        <Palette className="w-3 h-3" /> Lote Mestre (Opcional)
       </Label>
 
       <div className="flex gap-2">

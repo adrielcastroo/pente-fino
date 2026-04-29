@@ -561,9 +561,11 @@ export const LeftPanel = memo(function LeftPanel() {
   };
 
   const handleAdd = () => {
-    // Basic validations that apply to all tecido modes
+    // Basic validations that apply to all modes
     if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
+    
+    // Processo is required for Madeira and some other modes
     if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
     if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
 
