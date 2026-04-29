@@ -307,13 +307,13 @@ export default function DashboardPage() {
       {/* Conferences Detail Dialog */}
       <Dialog open={detailDialog === 'conferences'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-8 pt-8 pb-6 border-b border-border/10 bg-muted/10">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-muted/10">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <BarChart3 className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black tracking-tight text-foreground/90">Histórico de Conferências</DialogTitle>
+                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Histórico de Conferências</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Linha do tempo detalhada das sessões operacionais</DialogDescription>
               </div>
             </div>
@@ -322,25 +322,25 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
                 <tr>
-                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Processo</th>
-                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden sm:table-cell">Conferente</th>
-                  <th className="px-8 py-4 text-center font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Início</th>
-                  <th className="px-8 py-4 text-center font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden md:table-cell">Fim</th>
-                  <th className="px-8 py-4 text-center font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Duração</th>
-                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
+                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Processo</th>
+                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden sm:table-cell">Conferente</th>
+                  <th className="px-10 py-6 text-center font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Início</th>
+                  <th className="px-10 py-6 text-center font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden md:table-cell">Fim</th>
+                  <th className="px-10 py-6 text-center font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Duração</th>
+                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
                 {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-8 py-4 font-bold text-foreground/80 group-hover:text-primary truncate max-w-[200px] transition-colors">{c.name}</td>
-                    <td className="px-8 py-4 text-muted-foreground font-medium truncate max-w-[120px] hidden sm:table-cell">{c.conferente || '—'}</td>
-                    <td className="px-8 py-4 text-center font-mono text-emerald-500/80 text-[11px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-8 py-4 text-center font-mono text-muted-foreground/60 text-[11px] font-medium hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
-                    <td className="px-8 py-4 text-center">
-                      <Badge variant="outline" className="text-[9px] font-bold px-3 py-0.5 rounded-full border-primary/20 text-primary bg-primary/5">{c.duration}</Badge>
+                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[200px] transition-colors text-base">{c.name}</td>
+                    <td className="px-10 py-6 text-muted-foreground font-semibold truncate max-w-[120px] hidden sm:table-cell">{c.conferente || '—'}</td>
+                    <td className="px-10 py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
+                    <td className="px-10 py-6 text-center font-mono text-muted-foreground/60 text-[12px] font-semibold hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
+                    <td className="px-10 py-6 text-center">
+                      <Badge variant="outline" className="text-[10px] font-bold px-4 py-1 rounded-full border-primary/20 text-primary bg-primary/5">{c.duration}</Badge>
                     </td>
-                    <td className="px-8 py-4 text-right font-mono font-black text-primary text-lg">{c.registros}</td>
+                    <td className="px-10 py-6 text-right font-mono font-black text-primary text-xl">{c.registros}</td>
                   </tr>
                 ))}
               </tbody>
@@ -355,13 +355,13 @@ export default function DashboardPage() {
       {/* Registros per Conference Dialog */}
       <Dialog open={detailDialog === 'registros'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-8 pt-8 pb-6 border-b border-border/10 bg-muted/10">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-muted/10">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Layers3 className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black tracking-tight text-foreground/90">Registros por Sessão</DialogTitle>
+                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Registros por Sessão</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Volume de itens por conferência realizada</DialogDescription>
               </div>
             </div>
@@ -370,19 +370,19 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
                 <tr>
-                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferência</th>
-                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferente</th>
-                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Data</th>
-                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
+                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferência</th>
+                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferente</th>
+                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Data</th>
+                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
                 {history.slice(0, 50).map(conf => (
                   <tr key={conf.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-8 py-4 font-bold text-foreground/80 group-hover:text-primary truncate max-w-[220px] transition-colors">{conf.processo || conf.name}</td>
-                    <td className="px-8 py-4 text-muted-foreground font-medium">{conf.conferente || '—'}</td>
-                    <td className="px-8 py-4 text-muted-foreground/60 font-mono text-[11px] font-medium">{formatDateBR(conf.date)}</td>
-                    <td className="px-8 py-4 text-right font-mono font-black text-primary text-lg">{conf.registros.length}</td>
+                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[220px] transition-colors text-base">{conf.processo || conf.name}</td>
+                    <td className="px-10 py-6 text-muted-foreground font-semibold">{conf.conferente || '—'}</td>
+                    <td className="px-10 py-6 text-muted-foreground/60 font-mono text-[12px] font-semibold">{formatDateBR(conf.date)}</td>
+                    <td className="px-10 py-6 text-right font-mono font-black text-primary text-xl">{conf.registros.length}</td>
                   </tr>
                 ))}
               </tbody>
