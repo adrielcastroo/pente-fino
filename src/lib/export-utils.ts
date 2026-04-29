@@ -71,9 +71,10 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
     // Garante que o plugin autoTable está disponível na instância
     // Em algumas versões/configurações, o import(jspdf-autotable) registra automaticamente no protótipo global de jsPDF
     // mas em outras precisamos garantir que a função seja chamada.
-    if (typeof pdf.autoTable !== 'function' && typeof autoTable === 'function') {
-      autoTable(pdf);
+    if (typeof pdf.autoTable !== 'function' && typeof (autoTable as any) === 'function') {
+      (autoTable as any)(pdf);
     }
+
 
 
     const pageWidth = pdf.internal.pageSize.getWidth();
