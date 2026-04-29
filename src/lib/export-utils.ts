@@ -44,11 +44,16 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
     console.log('Starting PDF Export for element:', elementId);
 
     
-    const [jsPDF, html2canvas, autoTable] = await Promise.all([
-      import('jspdf').then(m => m.default),
-      import('html2canvas').then(m => m.default),
-      import('jspdf-autotable').then(m => m.default)
+    const [{ jsPDF }, { default: autoTable }, html2canvas] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+      import('html2canvas').then(m => m.default)
     ]);
+
+    // Importante: Em ambientes de módulos (como o Vite/React aqui), 
+    // o plugin jspdf-autotable geralmente precisa ser inicializado manualmente 
+    // ou acessado via exportação padrão.
+
 
     const element = document.getElementById(elementId);
     if (!element) {
@@ -61,7 +66,16 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       unit: 'mm',
       format: 'a4',
       compress: true
-    });
+    }) as any;
+
+    // Garante que o plugin autoTable está disponível na instância
+    // Em algumas versões/configurações, o import(jspdf-autotable) registra automaticamente no protótipo global de jsPDF
+    // mas em outras precisamos garantir que a função seja chamada.
+    if (typeof pdf.autoTable !== 'function' && typeof (autoTable as any) === 'function') {
+      (autoTable as any)(pdf);
+    }
+
+
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
