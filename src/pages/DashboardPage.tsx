@@ -94,107 +94,95 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 space-y-6 sm:space-y-8 lg:space-y-10 max-w-[2000px] mx-auto overflow-x-hidden">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/40">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
-            <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+    <div className="space-y-10 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+      {/* Premium Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/40">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-primary">
+            <div className="p-2 rounded-lg bg-primary/10 backdrop-blur-sm border border-primary/20">
+              <Activity className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Analytics Overview</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
             Dashboard
           </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm max-w-lg leading-relaxed">
-            Monitoramento de produtividade em tempo real. Visualize métricas operacionais e gerencie o fluxo de conferência.
+          <p className="text-muted-foreground text-sm max-w-lg leading-relaxed font-medium opacity-80">
+            Monitoramento inteligente de produtividade. Insights em tempo real sobre o fluxo operacional da unidade.
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <Badge variant="secondary" className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full border-border/50 bg-background/50 backdrop-blur-sm whitespace-nowrap">
-            <Clock className="w-3.5 h-3.5 mr-1.5 text-primary" />
-            <span className="opacity-70 mr-1 hidden xs:inline">Tempo médio:</span> {stats.avgDuration}
-          </Badge>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-muted/30 backdrop-blur-md shadow-sm">
+            <Clock className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Média:</span>
+            <span className="text-[11px] font-black text-foreground">{stats.avgDuration}</span>
+          </div>
           
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm"
-                className="h-9 px-4 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm gap-2" 
+                className="h-10 px-6 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all gap-2 font-bold uppercase tracking-widest text-[10px]" 
                 onClick={() => handleExport(history, 'Historico_Geral')}
               >
-                <Download className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Exportar Dados</span>
-                <span className="text-xs font-bold uppercase tracking-wider sm:hidden">Exportar</span>
+                <Download className="w-3.5 h-3.5" />
+                Exportar Dados
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="font-semibold">Exportar Histórico Completo</TooltipContent>
+            <TooltipContent className="font-bold text-[10px] uppercase tracking-wider">Exportar Relatório Geral</TooltipContent>
           </Tooltip>
         </div>
       </header>
       
-      {/* Stat Cards - now clickable to open detail dialogs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        <button 
-          onClick={() => setDetailDialog('conferentes')} 
-          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
-        >
-          <div className="p-4 sm:p-6 lg:p-7 flex flex-row items-center gap-3 sm:gap-5 relative z-10">
-            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+      {/* Premium Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        {[
+          { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '0' },
+          { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '75' },
+          { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: Layers3, delay: '150' },
+        ].map((stat) => (
+          <button 
+            key={stat.id}
+            onClick={() => setDetailDialog(stat.id)} 
+            className="group relative cursor-pointer rounded-3xl border border-border/40 bg-card/40 backdrop-blur-sm p-8 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/60 hover:shadow-2xl hover:shadow-primary/5 active:scale-[0.98] animate-in slide-in-from-bottom-6"
+            style={{ animationDelay: `${stat.delay}ms` }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                <stat.icon className="w-6 h-6" />
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all duration-500" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferentes}</div>
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5 sm:mt-1 group-hover:text-primary/70 transition-colors">Conferentes</p>
+            
+            <div className="space-y-1">
+              <div className="text-4xl lg:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500">
+                {stat.value}
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/60 group-hover:text-primary/70 transition-colors duration-500">
+                {stat.label}
+              </p>
             </div>
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-
-        <button 
-          onClick={() => setDetailDialog('conferences')} 
-          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75"
-        >
-          <div className="p-4 sm:p-6 lg:p-7 flex flex-row items-center gap-3 sm:gap-5 relative z-10">
-            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalConferencias}</div>
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5 sm:mt-1 group-hover:text-primary/70 transition-colors">Conferências</p>
-            </div>
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-
-        <button 
-          onClick={() => setDetailDialog('registros')} 
-          className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.97] relative text-left w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150"
-        >
-          <div className="p-4 sm:p-6 lg:p-7 flex flex-row items-center gap-3 sm:gap-5 relative z-10">
-            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-primary/10 text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <Layers3 className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-300">{stats.totalRegistros}</div>
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mt-0.5 sm:mt-1 group-hover:text-primary/70 transition-colors">Registros</p>
-            </div>
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30 group-hover:text-primary transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
+            
+            {/* Visual Decorative Accent */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          </button>
+        ))}
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
-        <div className="lg:col-span-2 xl:col-span-2">
-          <TimelineChart data={stats.timeline} onExport={handleExport} />
+      {/* Premium Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 xl:col-span-2 group">
+          <div className="relative rounded-[2rem] border border-border/40 bg-card/30 backdrop-blur-sm p-1 overflow-hidden transition-all duration-500 hover:border-primary/30">
+            <TimelineChart data={stats.timeline} onExport={handleExport} />
+          </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           <SummaryChart 
-            title="Top Conferentes" 
-            desc="Ranking de produtividade individual" 
+            title="Produção por Conferente" 
+            desc="Top 5 em volume de registros" 
             data={stats.topConferentes} 
             type="bar" 
             icon={Users} 
@@ -203,8 +191,8 @@ export default function DashboardPage() {
           />
           
           <SummaryChart 
-            title="Setores" 
-            desc="Distribuição por categoria" 
+            title="Sectores Operacionais" 
+            desc="Distribuição de carga de trabalho" 
             data={stats.categorias} 
             type="pie" 
             icon={Layers3} 
@@ -214,8 +202,8 @@ export default function DashboardPage() {
         </div>
 
         <SummaryChart 
-          title="Materiais" 
-          desc="Tipos de itens conferidos" 
+          title="Tipos de Materiais" 
+          desc="Classificação de itens conferidos" 
           data={stats.tipos} 
           type="pie" 
           icon={TrendingUp} 
@@ -224,8 +212,8 @@ export default function DashboardPage() {
         />
 
         <SummaryChart
-          title="Sessões"
-          desc="Volume de registros recentes"
+          title="Histórico de Sessões"
+          desc="Registros das últimas conferências"
           data={registrosPerConference.slice(0, 10)}
           type="bar"
           icon={Package}
@@ -233,16 +221,29 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart}
         />
         
-        <Card className="border border-border/40 bg-card/50 shadow-sm overflow-hidden flex flex-col justify-center p-6 text-center space-y-3">
-          <div className="p-4 rounded-full bg-primary/10 text-primary w-fit mx-auto">
-            <Activity className="w-6 h-6" />
+        <div className="relative group rounded-[2rem] border border-border/40 bg-primary/[0.03] backdrop-blur-sm p-8 flex flex-col items-center justify-center text-center space-y-6 overflow-hidden transition-all duration-500 hover:bg-primary/[0.06] hover:border-primary/20">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 opacity-50 group-hover:opacity-80 transition-opacity duration-700" />
+            <div className="relative p-5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+              <Download className="w-8 h-8" />
+            </div>
           </div>
-          <h3 className="font-bold text-sm">Pronto para exportar?</h3>
-          <p className="text-xs text-muted-foreground">O relatório completo inclui todos os registros detalhados.</p>
-          <Button variant="outline" size="sm" onClick={() => handleExport(history, 'Relatorio_Dashboard')} className="w-full rounded-xl">
-            Gerar Relatório PDF
+          <div className="space-y-2">
+            <h3 className="font-black text-lg tracking-tight">Relatório Executivo</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px] mx-auto font-medium">Gere um PDF compilado com todas as métricas para apresentação.</p>
+          </div>
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => handleExport(history, 'Relatorio_Dashboard')} 
+            className="w-full rounded-full h-11 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10"
+          >
+            Exportar PDF
           </Button>
-        </Card>
+          
+          {/* Subtle bg glow */}
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-[100px]" />
+        </div>
       </div>
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
