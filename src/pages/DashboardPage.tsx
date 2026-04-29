@@ -94,92 +94,99 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-10 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+    <div className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
       {/* Premium Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/40">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 text-primary">
-            <div className="p-2 rounded-lg bg-primary/10 backdrop-blur-sm border border-primary/20">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-primary/80">
+            <div className="p-2 rounded-xl bg-primary/5 backdrop-blur-md border border-primary/10 transition-colors hover:bg-primary/10">
               <Activity className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Analytics Overview</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Visão Geral de Dados</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground text-sm max-w-lg leading-relaxed font-medium opacity-80">
-            Monitoramento inteligente de produtividade. Insights em tempo real sobre o fluxo operacional da unidade.
-          </p>
+          <div className="space-y-1">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground/90">
+              Dashboard
+            </h1>
+            <p className="text-muted-foreground text-base max-w-xl leading-relaxed font-medium opacity-70">
+              Gestão operacional em tempo real. Analise métricas, identifique gargalos e otimize o fluxo de trabalho da unidade.
+            </p>
+          </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-muted/30 backdrop-blur-md shadow-sm">
-            <Clock className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Média:</span>
-            <span className="text-[11px] font-black text-foreground">{stats.avgDuration}</span>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl border border-border/20 bg-muted/20 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/30">
+            <Clock className="w-4 h-4 text-primary/70" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Média de Sessão</span>
+              <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
+            </div>
           </div>
           
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
                 variant="default" 
-                size="sm"
-                className="h-10 px-6 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all gap-2 font-bold uppercase tracking-widest text-[10px]" 
+                size="lg"
+                className="h-12 px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 font-bold uppercase tracking-widest text-[11px] bg-primary hover:bg-primary/90" 
                 onClick={() => handleExport(history, 'Historico_Geral')}
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-4 h-4" />
                 Exportar Dados
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="font-bold text-[10px] uppercase tracking-wider">Exportar Relatório Geral</TooltipContent>
+            <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Completo</TooltipContent>
           </Tooltip>
         </div>
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
         {[
-          { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '0' },
-          { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '75' },
-          { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: Layers3, delay: '150' },
+          { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
+          { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
+          { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: Layers3, delay: '300' },
         ].map((stat) => (
           <button 
             key={stat.id}
             onClick={() => setDetailDialog(stat.id)} 
-            className="group relative cursor-pointer rounded-3xl border border-border/40 bg-card/40 backdrop-blur-sm p-8 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/60 hover:shadow-2xl hover:shadow-primary/5 active:scale-[0.98] animate-in slide-in-from-bottom-6"
+            className="group relative cursor-pointer rounded-[2.5rem] border border-border/20 bg-card/20 backdrop-blur-xl p-10 text-left transition-all duration-500 hover:border-primary/30 hover:bg-card/40 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8"
             style={{ animationDelay: `${stat.delay}ms` }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+            <div className="flex items-center justify-between mb-8">
+              <div className="p-4 rounded-[1.25rem] bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
                 <stat.icon className="w-6 h-6" />
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all duration-500" />
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">Detalhes</span>
+                <ChevronRight className="w-4 h-4 text-primary" />
+              </div>
             </div>
             
-            <div className="space-y-1">
-              <div className="text-4xl lg:text-5xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500">
+            <div className="space-y-2">
+              <div className="text-5xl lg:text-6xl font-black tracking-tighter tabular-nums text-foreground/90 group-hover:text-primary transition-colors duration-500">
                 {stat.value}
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/60 group-hover:text-primary/70 transition-colors duration-500">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500">
                 {stat.label}
               </p>
             </div>
             
-            {/* Visual Decorative Accent */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+            {/* Elegant Gradient Accent */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem]" />
           </button>
         ))}
       </div>
 
       {/* Premium Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 xl:col-span-2 group">
-          <div className="relative rounded-[2rem] border border-border/40 bg-card/30 backdrop-blur-sm p-1 overflow-hidden transition-all duration-500 hover:border-primary/30">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 xl:col-span-2">
+          <div className="h-full rounded-[3rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           <SummaryChart 
             title="Produção por Conferente" 
             desc="Top 5 em volume de registros" 
@@ -192,7 +199,7 @@ export default function DashboardPage() {
           
           <SummaryChart 
             title="Sectores Operacionais" 
-            desc="Distribuição de carga de trabalho" 
+            desc="Carga de trabalho por setor" 
             data={stats.categorias} 
             type="pie" 
             icon={Layers3} 
@@ -213,7 +220,7 @@ export default function DashboardPage() {
 
         <SummaryChart
           title="Histórico de Sessões"
-          desc="Registros das últimas conferências"
+          desc="Últimas conferências realizadas"
           data={registrosPerConference.slice(0, 10)}
           type="bar"
           icon={Package}
@@ -221,28 +228,29 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart}
         />
         
-        <div className="relative group rounded-[2rem] border border-border/40 bg-primary/[0.03] backdrop-blur-sm p-8 flex flex-col items-center justify-center text-center space-y-6 overflow-hidden transition-all duration-500 hover:bg-primary/[0.06] hover:border-primary/20">
+        <div className="relative group rounded-[3rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-10 flex flex-col items-center justify-center text-center space-y-8 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
           <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 opacity-50 group-hover:opacity-80 transition-opacity duration-700" />
-            <div className="relative p-5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
-              <Download className="w-8 h-8" />
+            <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
+            <div className="relative p-6 rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
+              <Download className="w-10 h-10" />
             </div>
           </div>
-          <div className="space-y-2">
-            <h3 className="font-black text-lg tracking-tight">Relatório Executivo</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px] mx-auto font-medium">Gere um PDF compilado com todas as métricas para apresentação.</p>
+          <div className="space-y-3">
+            <h3 className="font-extrabold text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato PDF.</p>
           </div>
           <Button 
             variant="default" 
-            size="sm" 
+            size="lg" 
             onClick={() => handleExport(history, 'Relatorio_Dashboard')} 
-            className="w-full rounded-full h-11 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10"
+            className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97]"
           >
             Exportar PDF
           </Button>
           
-          {/* Subtle bg glow */}
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-[100px]" />
+          {/* Elegant decorative element */}
+          <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         </div>
       </div>
 
