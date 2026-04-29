@@ -42,6 +42,11 @@ export default function DashboardPage() {
     handleExportPDF,
   } = useDashboard();
 
+  const handleFullExportPDF = async () => {
+    const { exportDashboardToPDF } = await import('@/lib/export-utils');
+    await exportDashboardToPDF('dashboard-content', 'Relatorio_Completo', stats);
+  };
+
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
@@ -130,7 +135,7 @@ export default function DashboardPage() {
                 variant="default" 
                 size="lg"
                 className="h-14 px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 font-bold uppercase tracking-widest text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
-                onClick={() => handleExportPDF('dashboard-content', 'Relatorio_Completo')}
+                onClick={handleFullExportPDF}
               >
                 <Download className="w-4 h-4" />
                 Exportar PDF
@@ -243,7 +248,7 @@ export default function DashboardPage() {
           <Button 
             variant="default" 
             size="lg" 
-            onClick={() => handleExportPDF('dashboard-content', 'Relatorio_Dashboard')} 
+            onClick={handleFullExportPDF} 
             className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-4"
           >
             Exportar PDF
