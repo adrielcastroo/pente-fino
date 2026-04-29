@@ -5,7 +5,7 @@ import { Activity, Download, Eye } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, LabelList, Legend
 } from 'recharts';
 
 // Premium Color Palette - Jewel Tones with WCAG accessibility
