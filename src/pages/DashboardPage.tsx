@@ -39,6 +39,7 @@ export default function DashboardPage() {
     setDetailChart,
     handleStatClick,
     handleExport,
+    handleExportPDF,
   } = useDashboard();
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20">
+    <div id="dashboard-content" className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20">
       {/* Premium Header - Removed sticky to avoid overlap with main layout */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-10 rounded-b-[3rem]">
         <div className="space-y-4">
@@ -114,7 +115,7 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 no-print">
           <div className="flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/50 min-w-fit">
             <Clock className="w-5 h-5 text-primary/70 shrink-0" />
             <div className="flex flex-col gap-1">
@@ -129,13 +130,13 @@ export default function DashboardPage() {
                 variant="default" 
                 size="lg"
                 className="h-14 px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 font-bold uppercase tracking-widest text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
-                onClick={() => handleExport(history, 'Historico_Geral')}
+                onClick={() => handleExportPDF('dashboard-content', 'Relatorio_Completo')}
               >
                 <Download className="w-4 h-4" />
-                Exportar Dados
+                Exportar PDF
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Completo</TooltipContent>
+            <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Executivo</TooltipContent>
           </Tooltip>
         </div>
       </header>
@@ -242,7 +243,7 @@ export default function DashboardPage() {
           <Button 
             variant="default" 
             size="lg" 
-            onClick={() => handleExport(history, 'Relatorio_Dashboard')} 
+            onClick={() => handleExportPDF('dashboard-content', 'Relatorio_Dashboard')} 
             className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-4"
           >
             Exportar PDF
