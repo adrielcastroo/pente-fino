@@ -100,9 +100,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="dashboard-content" className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20">
+    <div id="dashboard-content" className="space-y-16 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-24 px-4 sm:px-6 lg:px-8">
       {/* Premium Header - Removed sticky to avoid overlap with main layout */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-10 rounded-b-[3rem]">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-10 pb-12 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-12 rounded-b-[4rem]">
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-primary/80">
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Visão Geral de Dados</span>
           </div>
           <div className="space-y-1">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground/90 leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight text-foreground leading-[1.05]">
               Dashboard
             </h1>
             <p className="text-muted-foreground text-base max-w-xl leading-relaxed font-medium opacity-70">
@@ -147,7 +147,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10 pt-12 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-16 relative z-10">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
@@ -156,7 +156,7 @@ export default function DashboardPage() {
           <button 
             key={stat.id}
             onClick={() => setDetailDialog(stat.id)} 
-            className="group relative cursor-pointer rounded-[2.5rem] border border-border/20 bg-card/60 backdrop-blur-xl p-8 lg:p-10 text-left transition-all duration-500 hover:border-primary/30 hover:bg-card/80 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm"
+            className="group relative cursor-pointer rounded-[3rem] border border-border/20 bg-card/60 backdrop-blur-xl p-10 lg:p-12 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm"
             style={{ animationDelay: `${stat.delay}ms` }}
           >
             <div className="flex items-center justify-between mb-8 relative z-10">
@@ -170,7 +170,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="space-y-3 relative z-10">
-              <div className="text-5xl lg:text-6xl font-black tracking-tighter tabular-nums text-foreground/90 group-hover:text-primary transition-colors duration-500 leading-none">
+              <div className="text-6xl lg:text-7xl font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
                 {stat.value}
               </div>
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500 leading-relaxed">
@@ -265,13 +265,13 @@ export default function DashboardPage() {
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-8 pt-8 pb-6 border-b border-border/10 bg-muted/10">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-muted/10">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black tracking-tight text-foreground/90">Conferentes</DialogTitle>
+                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Conferentes</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Desempenho individual por conferente</DialogDescription>
               </div>
             </div>
@@ -280,19 +280,19 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
                 <tr>
-                  <th className="px-8 py-4 text-left font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
-                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
-                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
-                  <th className="px-8 py-4 text-right font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
+                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
+                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
+                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
+                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
                 {stats.conferenteDetails.map(c => (
                   <tr key={c.name} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-8 py-4 font-bold text-foreground/80 group-hover:text-primary transition-colors">{c.name}</td>
-                    <td className="px-8 py-4 text-right font-mono text-muted-foreground font-medium">{c.conferences}</td>
-                    <td className="px-8 py-4 text-right font-mono text-primary font-black text-lg">{c.total}</td>
-                    <td className="px-8 py-4 text-right font-mono text-muted-foreground/60 text-[11px] font-medium hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
+                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary transition-colors text-base">{c.name}</td>
+                    <td className="px-10 py-6 text-right font-mono text-muted-foreground font-semibold">{c.conferences}</td>
+                    <td className="px-10 py-6 text-right font-mono text-primary font-black text-xl">{c.total}</td>
+                    <td className="px-10 py-6 text-right font-mono text-muted-foreground/60 text-[12px] font-semibold hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
