@@ -5,7 +5,7 @@ import { Activity, Download, Eye } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, LabelList, Legend
 } from 'recharts';
 
 // Premium Color Palette - Jewel Tones with WCAG accessibility
@@ -17,6 +17,40 @@ const CHART_COLORS = [
   '#DC2626', // Red 600
   '#2563EB', // Blue 600
 ];
+
+const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const total = payload[0].chartType === 'PieChart' 
+      ? payload[0].payload.chartTotal 
+      : null;
+    
+    return (
+      <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-4 shadow-2xl shadow-black/10 animate-in fade-in zoom-in-95 duration-200">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 border-b border-border/10 pb-2">
+          {label || data.name}
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-8">
+            <span className="text-xs font-medium text-foreground/70">{payload[0].name || 'Valor'}:</span>
+            <span className="text-sm font-black text-primary tabular-nums">
+              {prefix}{payload[0].value}{suffix}
+            </span>
+          </div>
+          {total && (
+            <div className="flex items-center justify-between gap-8">
+              <span className="text-[10px] font-bold text-muted-foreground/60">Participação:</span>
+              <span className="text-[11px] font-bold text-muted-foreground tabular-nums">
+                {((payload[0].value / total) * 100).toFixed(1)}%
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 interface TimelineChartProps {
   data: any[];
@@ -70,21 +104,12 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
               tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
               dx={-10}
             />
-            <ChartTooltip 
-              cursor={!isLow ? { stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' } : false}
-              contentStyle={{ 
-                borderRadius: '16px', 
-                border: '1px solid hsl(var(--border) / 0.5)', 
-                background: 'hsl(var(--card) / 0.8)',
-                backdropFilter: 'blur(12px)',
-                fontSize: '12px',
-                fontWeight: '700',
-                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)',
-                padding: '12px 16px'
-              }}
-              itemStyle={{ color: 'hsl(var(--foreground))' }}
-              formatter={(val: any) => [val, 'Quantidade']}
-              labelFormatter={(label: any) => `Data: ${label}`}
+            <ChartTooltip content={<CustomTooltip />} cursor={!isLow ? { stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' } : false} />
+            <Legend 
+              verticalAlign="top" 
+              height={36} 
+              iconType="circle"
+              formatter={(value) => <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{value === 'total' ? 'Registros' : value}</span>}
             />
             <Area 
               type={isLow ? "linear" : "monotone"} 
@@ -125,63 +150,79 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-8 pb-10 h-[220px] sm:h-[240px]">
+      <CardContent className="px-8 pb-10 h-[260px] sm:h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
-            <BarChart data={processedData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-              <XAxis dataKey="name" hide />
+            <BarChart data={processedData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
+              <XAxis 
+                dataKey="name" 
+                fontSize={9} 
+                tickLine={false} 
+                axisLine={false} 
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+                interval={0}
+              />
+              <YAxis 
+                fontSize={9} 
+                tickLine={false} 
+                axisLine={false} 
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+              />
               <Bar 
                 dataKey={chartKey} 
                 fill="hsl(var(--primary))" 
                 radius={[6, 6, 2, 2]} 
-                barSize={28} 
+                barSize={24} 
                 isAnimationActive={!isLow}
                 animationDuration={1500}
-              />
-              <ChartTooltip 
-                cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.03)' } : false}
-                contentStyle={{ 
-                  borderRadius: '12px', 
-                  border: '1px solid hsl(var(--border) / 0.5)', 
-                  background: 'hsl(var(--card) / 0.8)',
-                  backdropFilter: 'blur(8px)',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  boxShadow: '0 10px 20px -5px rgba(0,0,0,0.1)',
-                  padding: '8px 12px'
-                }}
-                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(val: any) => [val, 'Quantidade']}
-                labelFormatter={(label: any) => label}
-              />
+                name="Quantidade"
+              >
+                <LabelList 
+                  dataKey={chartKey} 
+                  position="top" 
+                  fontSize={10} 
+                  fontWeight={800} 
+                  fill="hsl(var(--primary))"
+                  offset={10}
+                />
+              </Bar>
+              <ChartTooltip cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} content={<CustomTooltip />} />
             </BarChart>
           ) : (
             <PieChart>
               <Pie 
-                data={processedData} 
+                data={processedData.map((d: any) => ({ 
+                  ...d, 
+                  chartTotal: processedData.reduce((acc: number, curr: any) => acc + (curr[chartKey] || 0), 0) 
+                }))} 
                 dataKey={chartKey} 
-                innerRadius="65%" 
-                outerRadius="90%" 
+                innerRadius="60%" 
+                outerRadius="85%" 
                 stroke="transparent"
                 paddingAngle={isLow ? 0 : 4}
                 isAnimationActive={!isLow}
                 animationDuration={1500}
+                nameKey="name"
               >
                 {processedData.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer" />)}
+                <LabelList 
+                  dataKey={chartKey} 
+                  position="outside" 
+                  fontSize={10} 
+                  fontWeight={700} 
+                  fill="hsl(var(--muted-foreground))"
+                  formatter={(val: any) => val > 0 ? val : ''}
+                />
               </Pie>
-              <ChartTooltip 
-                contentStyle={{ 
-                  borderRadius: '12px', 
-                  border: '1px solid hsl(var(--border) / 0.5)', 
-                  background: 'hsl(var(--card) / 0.8)',
-                  backdropFilter: 'blur(8px)',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  boxShadow: '0 10px 20px -5px rgba(0,0,0,0.1)',
-                  padding: '8px 12px'
-                }}
-                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(val: any) => [val, 'Quantidade']}
+              <ChartTooltip content={<CustomTooltip />} />
+              <Legend 
+                layout="horizontal" 
+                verticalAlign="bottom" 
+                align="center"
+                iconType="circle"
+                wrapperStyle={{ paddingTop: '20px' }}
+                formatter={(value) => <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">{value}</span>}
               />
             </PieChart>
           )}
