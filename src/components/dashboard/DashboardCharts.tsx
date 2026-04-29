@@ -63,7 +63,7 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
 
   return (
     <Card className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[2rem] sm:rounded-[3rem]">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-6 sm:px-10 py-8 sm:py-10 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-6 sm:px-10 py-6 sm:py-8 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
           <CardTitle className="text-xl font-extrabold tracking-tight flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -135,7 +135,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
   const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
 
   return (
-    <Card className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] rounded-[1.5rem] sm:rounded-[2.5rem]">
+    <Card className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] rounded-[1.25rem] sm:rounded-[1.5rem]">
       <CardHeader className="px-6 sm:px-8 py-6 sm:py-8 flex flex-row items-start justify-between">
         <div className="space-y-1.5">
           <CardTitle className="text-base font-extrabold flex items-center gap-2.5">

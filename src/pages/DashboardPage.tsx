@@ -100,9 +100,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="dashboard-content" className="space-y-10 sm:space-y-16 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-20 sm:pb-24 px-4 sm:px-6 lg:px-8 xl:px-12">
+    <div id="dashboard-content" className="space-y-6 sm:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8">
       {/* Premium Header - Removed sticky to avoid overlap with main layout */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 sm:gap-10 pb-10 sm:pb-12 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-8 sm:pt-12 rounded-b-[2.5rem] sm:rounded-b-[4rem] px-2">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-6 rounded-b-[2rem] sm:rounded-b-[2.5rem]">
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-primary/80">
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Visão Geral de Dados</span>
           </div>
           <div className="space-y-1">
-            <h1 className="text-[clamp(2.5rem,8vw,4.5rem)] font-black tracking-tight text-foreground leading-[1.05]">
+            <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
               Dashboard
             </h1>
             <p className="text-muted-foreground text-base max-w-xl leading-relaxed font-medium opacity-70">
@@ -147,7 +147,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 pt-10 sm:pt-16 relative z-10 w-full overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6 relative z-10 w-full overflow-hidden">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
@@ -156,7 +156,7 @@ export default function DashboardPage() {
           <button 
             key={stat.id}
             onClick={() => setDetailDialog(stat.id)} 
-            className={`group relative cursor-pointer rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-card/60 backdrop-blur-xl p-8 sm:p-10 lg:p-12 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm flex flex-col justify-between min-h-[14rem] sm:min-h-[18rem] ${idx === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
+            className={`group relative cursor-pointer rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-6 sm:p-8 lg:p-10 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm flex flex-col justify-between min-h-[10rem] sm:min-h-[12rem] ${idx === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
             style={{ animationDelay: `${stat.delay}ms` }}
           >
             <div className="flex items-center justify-between mb-8 relative z-10">
@@ -170,7 +170,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="space-y-3 relative z-10">
-              <div className="text-[clamp(3rem,10vw,4.5rem)] font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
+              <div className="text-[clamp(2.5rem,8vw,3.5rem)] font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
                 {stat.value}
               </div>
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500 leading-relaxed">
@@ -185,14 +185,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Premium Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-10 w-full overflow-hidden">
-        <div className="lg:col-span-2 xl:col-span-2">
-          <div className="h-full rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 w-full overflow-hidden">
+        <div className="lg:col-span-8">
+          <div className="h-full rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
         </div>
 
-        <div className="space-y-8 sm:space-y-10">
+        <div className="lg:col-span-4 space-y-6 sm:space-y-8">
           <SummaryChart 
             title="Produção por Conferente" 
             desc="Top 5 em volume de registros" 
@@ -234,7 +234,7 @@ export default function DashboardPage() {
           onDetailClick={setDetailChart}
         />
         
-        <div className="relative group rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-8 sm:p-10 flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
+        <div className="lg:col-span-4 relative group rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
             <div className="relative p-6 rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
