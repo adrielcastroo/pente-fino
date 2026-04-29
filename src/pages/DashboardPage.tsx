@@ -248,7 +248,7 @@ export default function DashboardPage() {
           <Button 
             variant="default" 
             size="lg" 
-            onClick={() => handleExportPDF('dashboard-content', 'Relatorio_Dashboard')} 
+            onClick={handleFullExportPDF} 
             className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-4"
           >
             Exportar PDF
