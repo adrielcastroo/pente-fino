@@ -74,7 +74,7 @@ export function AvariaForm({
       {enabled && (
         <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/40 bg-background/40">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo (Opcional)</Label>
             <Select value={tipo ?? ''} onValueChange={(v) => onTipoChange(v as AvariaTipo)}>
               <SelectTrigger className="h-10 text-sm">
                 <SelectValue placeholder="Selecionar tipo…" />
@@ -88,7 +88,7 @@ export function AvariaForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Descrição</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Descrição (Opcional)</Label>
             <Textarea
               value={descricao}
               onChange={e => onDescricaoChange(e.target.value)}
@@ -99,7 +99,7 @@ export function AvariaForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Foto</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Foto (Opcional)</Label>
             <input
               ref={fileRef}
               type="file"
