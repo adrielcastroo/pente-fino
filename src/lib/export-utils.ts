@@ -3,26 +3,124 @@ import { Registro } from '@/types';
 
 /**
  * Dynamically imports the 'xlsx' library and exports data to an Excel file.
- * This reduces the initial bundle size as 'xlsx' is only loaded when needed.
  */
 export async function exportToExcel(data: any[], fileName: string) {
   try {
     const toastId = toast.loading('Preparando arquivo Excel...');
-    
-    // Dynamically import xlsx
     const XLSX = await import('xlsx');
-    
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
-    
     XLSX.writeFile(wb, `${fileName}.xlsx`);
-    
     toast.dismiss(toastId);
     toast.success('Relatório exportado com sucesso!');
   } catch (error) {
     console.error('Erro ao exportar Excel:', error);
     toast.error('Erro ao gerar o arquivo Excel.');
+  }
+}
+
+/**
+ * Generates a professional PDF report of the dashboard using jsPDF and html2canvas.
+ */
+export async function exportDashboardToPDF(elementId: string, fileName: string) {
+  try {
+    const toastId = toast.loading('Gerando relatório PDF de alta qualidade...');
+    
+    // Import libraries dynamically
+    const [jsPDF, html2canvas] = await Promise.all([
+      import('jspdf').then(m => m.default),
+      import('html2canvas').then(m => m.default)
+    ]);
+
+    const element = document.getElementById(elementId);
+    if (!element) {
+      toast.error('Dashboard não encontrado para exportação.');
+      return;
+    }
+
+    // Capture the dashboard with high scale for better resolution
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+      onclone: (clonedDoc) => {
+        const clonedElement = clonedDoc.getElementById(elementId);
+        if (clonedElement) {
+          // Hide elements that shouldn't be in the PDF (buttons, etc)
+          clonedElement.querySelectorAll('button, .no-print').forEach(el => {
+            (el as HTMLElement).style.display = 'none';
+          });
+          
+          // Ensure white background for charts
+          clonedElement.querySelectorAll('.recharts-surface').forEach(chart => {
+            (chart as HTMLElement).style.backgroundColor = '#ffffff';
+          });
+          
+          clonedElement.style.padding = '40px';
+          clonedElement.style.background = '#ffffff';
+        }
+      }
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    
+    const finalWidth = imgWidth * ratio - 20; // 10mm margin each side
+    const finalHeight = imgHeight * ratio;
+    const marginX = (pdfWidth - finalWidth) / 2;
+    const marginY = 20;
+
+    // Header
+    pdf.setFontSize(22);
+    pdf.setTextColor(40, 40, 40);
+    pdf.text('Relatório Executivo de Dashboard', marginX, 25);
+    
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 100, 100);
+    const now = new Date().toLocaleString('pt-BR');
+    pdf.text(`Gerado em: ${now}`, marginX, 32);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(marginX, 35, pdfWidth - marginX, 35);
+
+    // Main Content Image
+    pdf.addImage(imgData, 'JPEG', marginX, 40, finalWidth, finalHeight);
+
+    // Footer with page numbering
+    const pageCount = (pdf as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(
+        `Página ${i} de ${pageCount} | Sistema de Gestão Operacional`,
+        pdfWidth / 2,
+        pdfHeight - 10,
+        { align: 'center' }
+      );
+    }
+
+    pdf.save(`${fileName}_${new Date().getTime()}.pdf`);
+    
+    toast.dismiss(toastId);
+    toast.success('PDF gerado com sucesso!');
+  } catch (error) {
+    console.error('Erro ao exportar PDF:', error);
+    toast.error('Falha ao gerar o relatório PDF.');
   }
 }
 
