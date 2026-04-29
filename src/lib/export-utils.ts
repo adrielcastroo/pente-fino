@@ -39,8 +39,10 @@ function generateSummaryText(title: string, data: any[], chartKey: string = 'val
  * Optimized for low memory and dynamic content.
  */
 export async function exportDashboardToPDF(elementId: string, fileName: string, stats?: any) {
+  const toastId = toast.loading('Preparando relatório analítico de alta fidelidade...');
   try {
-    const toastId = toast.loading('Preparando relatório analítico de alta fidelidade...');
+    console.log('Starting PDF Export for element:', elementId);
+
     
     const [jsPDF, html2canvas, autoTable] = await Promise.all([
       import('jspdf').then(m => m.default),
@@ -128,7 +130,10 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
 
     const chartContainers = Array.from(element.querySelectorAll('.recharts-responsive-container'))
       .map(c => c.closest('.rounded-\\[3rem\\], .rounded-\\[2\\.5rem\\]'))
-      .filter(Boolean) as HTMLElement[];
+      .filter((c): c is HTMLElement => c !== null);
+    
+    console.log(`Found ${chartContainers.length} chart containers to export.`);
+
 
     for (let i = 0; i < Math.min(chartContainers.length, chartContexts.length); i++) {
       const container = chartContainers[i];
@@ -139,8 +144,10 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: true, // Habilitar logging temporariamente para debug
+        allowTaint: true
       });
+
 
       const imgWidth = contentWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -160,28 +167,34 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       currentY += 5;
 
       // Chart Image
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      pdf.addImage(imgData, 'JPEG', margin, currentY, imgWidth, imgHeight);
+      const imgData = canvas.toDataURL('image/png'); // Usando PNG para evitar problemas de compressão inicial
+      pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight, undefined, 'FAST');
+
       currentY += imgHeight + 10;
 
       // Support Table
-      if (context.data && context.data.length > 0) {
-        const tableData = context.data.map((item: any) => [
-          item.name || item.date || 'N/A',
-          item[context.key] || 0
-        ]);
+      if (context.data && Array.isArray(context.data) && context.data.length > 0) {
+        const tableData = context.data
+          .filter(item => item && (item.name || item.date)) // Validar item
+          .map((item: any) => [
+            String(item.name || item.date || 'N/A'),
+            String(item[context.key] || 0)
+          ]);
 
-        (pdf as any).autoTable({
-          startY: currentY,
-          head: [['Categoria/Referência', 'Quantidade']],
-          body: tableData.slice(0, 10), // Limit to top 10 for readability
-          margin: { left: margin, right: margin },
-          theme: 'striped',
-          headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
-          bodyStyles: { fontSize: 7 },
-          didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
-        });
+        if (tableData.length > 0) {
+          (pdf as any).autoTable({
+            startY: currentY,
+            head: [['Categoria/Referência', 'Quantidade']],
+            body: tableData.slice(0, 15), // Aumentado um pouco o limite
+            margin: { left: margin, right: margin },
+            theme: 'striped',
+            headStyles: { fillColor: [51, 65, 85], fontSize: 8 },
+            bodyStyles: { fontSize: 7 },
+            didDrawPage: (data: any) => { currentY = data.cursor.y + 15; }
+          });
+        }
       }
+
     }
 
     // Add Page Numbers to all pages
@@ -191,14 +204,16 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
       addFooter(pdf, i, totalPages);
     }
 
-    pdf.save(`${fileName}_Analitico_${new Date().getTime()}.pdf`);
     toast.dismiss(toastId);
+    pdf.save(`${fileName}_Analitico_${new Date().getTime()}.pdf`);
     toast.success('Relatório analítico exportado com sucesso!');
-  } catch (error) {
+  } catch (error: any) {
+    toast.dismiss(toastId);
     console.error('PDF Export Error:', error);
-    toast.error('Falha ao gerar o relatório detalhado.');
+    toast.error(`Falha ao gerar o relatório detalhado: ${error.message || 'Erro desconhecido'}`);
   }
 }
+
 
 /**
  * Specifically for conference data with headers and custom widths.
