@@ -96,16 +96,16 @@ export default function DashboardPage() {
   return (
     <div className="space-y-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
       {/* Premium Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10">
+      <header className="sticky top-0 z-50 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-border/10 bg-background/80 backdrop-blur-2xl -mx-6 sm:-mx-10 lg:-mx-12 xl:-mx-16 2xl:-mx-20 px-6 sm:px-10 lg:px-12 xl:px-16 2xl:px-20 pt-4">
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-primary/80">
-            <div className="p-2 rounded-xl bg-primary/5 backdrop-blur-md border border-primary/10 transition-colors hover:bg-primary/10">
+            <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
               <Activity className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Visão Geral de Dados</span>
           </div>
           <div className="space-y-1">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground/90">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground/90 leading-[1.1]">
               Dashboard
             </h1>
             <p className="text-muted-foreground text-base max-w-xl leading-relaxed font-medium opacity-70">
@@ -115,7 +115,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl border border-border/20 bg-muted/20 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/30">
+          <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/50">
             <Clock className="w-4 h-4 text-primary/70" />
             <div className="flex flex-col">
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Média de Sessão</span>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10 pt-4">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
@@ -150,11 +150,11 @@ export default function DashboardPage() {
           <button 
             key={stat.id}
             onClick={() => setDetailDialog(stat.id)} 
-            className="group relative cursor-pointer rounded-[2.5rem] border border-border/20 bg-card/20 backdrop-blur-xl p-10 text-left transition-all duration-500 hover:border-primary/30 hover:bg-card/40 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8"
+            className="group relative cursor-pointer rounded-[2.5rem] border border-border/20 bg-card/40 backdrop-blur-xl p-8 lg:p-10 text-left transition-all duration-500 hover:border-primary/30 hover:bg-card/60 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden"
             style={{ animationDelay: `${stat.delay}ms` }}
           >
-            <div className="flex items-center justify-between mb-8">
-              <div className="p-4 rounded-[1.25rem] bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+            <div className="flex items-center justify-between mb-8 relative z-10">
+              <div className="p-4 rounded-[1.25rem] bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-sm">
                 <stat.icon className="w-6 h-6" />
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
@@ -163,17 +163,17 @@ export default function DashboardPage() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="text-5xl lg:text-6xl font-black tracking-tighter tabular-nums text-foreground/90 group-hover:text-primary transition-colors duration-500">
+            <div className="space-y-3 relative z-10">
+              <div className="text-5xl lg:text-6xl font-black tracking-tighter tabular-nums text-foreground/90 group-hover:text-primary transition-colors duration-500 leading-none">
                 {stat.value}
               </div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500 leading-relaxed">
                 {stat.label}
               </p>
             </div>
             
             {/* Elegant Gradient Accent */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           </button>
         ))}
       </div>
