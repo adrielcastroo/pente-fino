@@ -120,7 +120,7 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 no-print">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 no-print w-full md:w-auto">
           <div className="flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/50 min-w-fit">
             <Clock className="w-5 h-5 text-primary/70 shrink-0" />
             <div className="flex flex-col gap-1">
@@ -147,7 +147,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 pt-10 sm:pt-16 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 pt-10 sm:pt-16 relative z-10 w-full overflow-hidden">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
@@ -185,7 +185,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Premium Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-10 w-full overflow-hidden">
         <div className="lg:col-span-2 xl:col-span-2">
           <div className="h-full rounded-[2rem] sm:rounded-[3rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart data={stats.timeline} onExport={handleExport} />
@@ -333,7 +333,7 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-border/5">
                 {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[200px] transition-colors text-base">{c.name}</td>
+                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base">{c.name}</td>
                     <td className="px-10 py-6 text-muted-foreground font-semibold truncate max-w-[120px] hidden sm:table-cell">{c.conferente || '—'}</td>
                     <td className="px-10 py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
                     <td className="px-10 py-6 text-center font-mono text-muted-foreground/60 text-[12px] font-semibold hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
@@ -379,7 +379,7 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-border/5">
                 {history.slice(0, 50).map(conf => (
                   <tr key={conf.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[220px] transition-colors text-base">{conf.processo || conf.name}</td>
+                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[150px] sm:max-w-[220px] transition-colors text-base">{conf.processo || conf.name}</td>
                     <td className="px-10 py-6 text-muted-foreground font-semibold">{conf.conferente || '—'}</td>
                     <td className="px-10 py-6 text-muted-foreground/60 font-mono text-[12px] font-semibold">{formatDateBR(conf.date)}</td>
                     <td className="px-10 py-6 text-right font-mono font-black text-primary text-xl">{conf.registros.length}</td>
