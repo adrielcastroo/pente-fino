@@ -139,7 +139,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 animationDuration={1500}
               />
               <ChartTooltip 
-                cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.03)', radius: [8, 8, 0, 0] } : false}
+                cursor={!isLow ? { fill: 'hsl(var(--primary) / 0.03)' } : false}
                 contentStyle={{ 
                   borderRadius: '12px', 
                   border: '1px solid hsl(var(--border) / 0.5)', 
