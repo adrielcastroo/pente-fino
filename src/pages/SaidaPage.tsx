@@ -280,11 +280,6 @@ export default function SaidaPage() {
                     <FileText className="w-3 h-3 text-muted-foreground/40 shrink-0" />
                     <span className="text-[10px] font-mono font-bold text-muted-foreground/70 truncate">{saida.lote_sistema || '—'}</span>
                   </div>
-                  {saida.observacoes && (
-                    <div className="w-full mt-2 text-[10px] italic text-muted-foreground/70 bg-muted/10 p-2 rounded-md border border-border/10">
-                      <strong>Obs:</strong> {saida.observacoes}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
