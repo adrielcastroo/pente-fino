@@ -182,7 +182,7 @@ export default function SaidaPage() {
               variant="outline" 
               className="w-full sm:w-auto h-11 px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95"
             >
-              <Truck className="w-5 h-5" />
+               <LogOut className="w-5 h-5" />
               <span>Dar saída</span>
             </Button>
 
@@ -294,7 +294,7 @@ export default function SaidaPage() {
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
-                <Truck className="w-5 h-5" />
+                <LogOut className="w-5 h-5" />
               </div>
               <div>
                 <DialogTitle className="text-lg font-black tracking-tight">Dar saída</DialogTitle>
