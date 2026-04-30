@@ -299,6 +299,7 @@ export default function ReservasPage() {
                       <TableCell className="text-center font-mono font-bold text-foreground">
                         {item.quantidadeCx || '—'}
                       </TableCell>
+                      <TableCell className="text-right">
                         <Button 
                           variant="ghost" 
                           size="icon" 
