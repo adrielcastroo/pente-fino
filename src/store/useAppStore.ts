@@ -183,24 +183,34 @@ export const useAppStore = create<AppState>()(
       
       resetFormData: () => {
         const state = get();
+        const isMadeira = state.currentMode === 'madeira';
         const newData = { 
           ...INITIAL_FORM_DATA,
           activeTab: state.formData.activeTab,
           estoqueActiveTec: state.formData.estoqueActiveTec,
-          diversosTipo: state.formData.diversosTipo // Preserve diversosTipo after reset
+          diversosTipo: state.formData.diversosTipo 
         };
         
-        if (state.lockNf) newData.nf = state.lockedNf;
-        if (state.lockEndereco) newData.endereco = state.lockedEndereco;
-        if (state.lockItem) newData.item = state.lockedItem;
-        if (state.lockLote) newData.lote = state.lockedLote;
-        if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
-        if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
+        if (isMadeira) {
+          if (state.lockMadeiraItem) newData.item = state.formData.item;
+          if (state.lockMadeiraLote) newData.lote = state.formData.lote;
+          if (state.lockMadeiraEndereco) newData.endereco = state.formData.endereco;
+        } else {
+          if (state.lockNf) newData.nf = state.lockedNf;
+          if (state.lockEndereco) newData.endereco = state.lockedEndereco;
+          if (state.lockItem) newData.item = state.lockedItem;
+          if (state.lockLote) newData.lote = state.lockedLote;
+          if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
+          if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
+        }
         
-        // Clear non-locked base store fields
         const updates: any = { formData: newData };
-        if (!state.lockProcesso) {
-          updates.processo = '';
+        if (isMadeira) {
+          if (!state.lockMadeiraProcesso) updates.processo = '';
+          else updates.processo = state.processo;
+        } else {
+          if (!state.lockProcesso) updates.processo = '';
+          else updates.processo = state.processo;
         }
 
         set(updates);
