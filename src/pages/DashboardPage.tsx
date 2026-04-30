@@ -116,6 +116,19 @@ export default function DashboardPage() {
     );
   }
 
+  const lastOutputs = useMemo(() => {
+    const allRegistros = history.flatMap(conf => 
+      conf.registros.map(reg => ({
+        id: `${conf.id}-${reg.nf || reg.processo || Math.random()}`,
+        date: conf.date,
+        item: reg.processo || reg.nf || 'Item sem identificação',
+        quantity: reg.metros || reg.quantidade || 0,
+        unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
+      }))
+    );
+    return allRegistros.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+  }, [history]);
+
   return (
     <div id="dashboard-content" className="space-y-5 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8">
       {/* Header */}
