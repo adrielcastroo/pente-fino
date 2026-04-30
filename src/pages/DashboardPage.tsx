@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useDashboard } from '@/hooks/useDashboard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
-import { TimelineChart, SummaryChart } from '@/components/dashboard/DashboardCharts';
+import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 
