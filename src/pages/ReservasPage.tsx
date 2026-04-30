@@ -40,6 +40,7 @@ export default function ReservasPage() {
   const [endereco, setEndereco] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [caixaNum, setCaixaNum] = useState('');
+  const [quantidadeCx, setQuantidadeCx] = useState('');
   const [observacao, setObservacao] = useState('');
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function ReservasPage() {
       endereco: endereco.trim(),
       quantidade: Number(quantidade),
       caixaNum: caixaNum.trim(),
+      quantidadeCx: quantidadeCx ? parseInt(quantidadeCx, 10) : undefined,
       observacao: observacao.trim(),
       createdAt: new Date().toISOString(),
     };
@@ -74,6 +76,7 @@ export default function ReservasPage() {
     setEndereco('');
     setQuantidade('');
     setCaixaNum('');
+    setQuantidadeCx('');
     setObservacao('');
     setIsDialogOpen(false);
   };
@@ -162,6 +165,24 @@ export default function ReservasPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="quantidadeCx" className="font-bold">Quantidade de CX</Label>
+                  <Input 
+                    id="quantidadeCx" 
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={quantidadeCx} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d+$/.test(val)) {
+                        setQuantidadeCx(val);
+                      }
+                    }} 
+                    placeholder="Ex: 5"
+                    className="focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="observacao" className="font-bold">Observação</Label>
                   <Textarea 
                     id="observacao" 
@@ -219,6 +240,7 @@ export default function ReservasPage() {
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº Caixa</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Qtd. CX</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Obs.</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Ações</TableHead>
                 </TableRow>
@@ -226,7 +248,7 @@ export default function ReservasPage() {
               <TableBody>
                 {filteredReservas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-48 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Package className="w-12 h-12 opacity-10" />
                         <p className="font-medium italic">Nenhum item encontrado na prateleira virtual.</p>
@@ -273,6 +295,9 @@ export default function ReservasPage() {
                             </TooltipContent>
                           </Tooltip>
                         ) : '—'}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-bold text-foreground">
+                        {item.quantidadeCx || '—'}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
