@@ -42,7 +42,17 @@ export interface Conference {
 }
 
 export type AppMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
-export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'table' | 'history' | 'settings';
+export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'reservas' | 'history' | 'settings';
+
+export interface Reserva {
+  id: string;
+  codigo: string;
+  descricao?: string;
+  endereco: string;
+  quantidade: number;
+  caixaNum?: string;
+  createdAt: string;
+}
 
 export interface FormData {
   item: string;
