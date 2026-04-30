@@ -235,7 +235,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 
 SummaryChart.displayName = 'SummaryChart';
 
-export const OccupationChart = React.memo(({ used, total, unit = 'm²' }: { used: number, total: number, unit?: string }) => {
+export const OccupationChart = React.memo(({ used, total, unit = 'alocações' }: { used: number, total: number, unit?: string }) => {
   const { isLow } = usePerformance();
   const percentage = Math.round((used / total) * 100);
   
