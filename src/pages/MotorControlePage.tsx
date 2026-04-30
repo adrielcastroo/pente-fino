@@ -412,30 +412,74 @@ export default function MotorControlePage() {
 
         {/* Form fields */}
         <div className="space-y-3">
+        <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Marca</label>
-            <input
-              ref={modeloRef}
-              value={modelo}
-              onChange={e => setModelo(sanitize(e.target.value))}
-              onBlur={handleModeloBlur}
-              placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
-              className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
-            />
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center justify-between">
+              Modelo / Marca
+              {modelo.length > 0 && <span className="text-[10px] lowercase font-normal">{modelo.length}/100</span>}
+            </label>
+            <Popover open={openModelo} onOpenChange={setOpenModelo}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openModelo}
+                  className="w-full h-11 justify-between bg-muted/20 border-border/50 text-sm font-medium hover:bg-muted/30"
+                >
+                  {modelo ? modelo : "Selecione ou digite o modelo..."}
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command className="w-full">
+                  <CommandInput 
+                    placeholder="Pesquisar modelo..." 
+                    value={modelo}
+                    onValueChange={(val) => setModelo(val)}
+                  />
+                  <CommandList>
+                    <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                    <CommandGroup heading="Sugestões">
+                      {(subMode === 'motor' ? MOTOR_MODELS : CONTROLE_MODELS).map((m) => (
+                        <CommandItem
+                          key={m}
+                          value={m}
+                          onSelect={() => {
+                            setModelo(m);
+                            setOpenModelo(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              modelo === m ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {m}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NFe) <span className="text-muted-foreground/50 lowercase">— opcional</span></label>
             <input
               value={nf}
-              onChange={e => setNf(sanitize(e.target.value))}
-              placeholder="Ex: 146842"
+              onChange={e => setNf(e.target.value)}
+              placeholder="000.000.000"
               className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Número de Série (S/N)</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+              Número de Série (S/N)
+              <Badge variant="outline" className="text-[9px] h-4 px-1 uppercase border-primary/20 text-primary">Obrigatório</Badge>
+            </label>
             <div className="relative">
               <input
                 ref={serieRef}
@@ -443,11 +487,29 @@ export default function MotorControlePage() {
                 onChange={e => setSerie(e.target.value)}
                 onKeyDown={handleSerieKeyDown}
                 placeholder="Bipe o código agora..."
-                className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                className={cn(
+                  "w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30",
+                  serieError && "border-destructive focus:ring-destructive/10 focus:border-destructive bg-destructive/5"
+                )}
               />
-              <ScanBarcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {validatingSerie ? (
+                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                ) : serieError ? (
+                  <AlertCircle className="w-4 h-4 text-destructive" />
+                ) : (
+                  <ScanBarcode className="w-4 h-4 text-muted-foreground/30" />
+                )}
+              </div>
             </div>
+            {serieError && (
+              <p className="text-[10px] text-destructive font-medium mt-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-3 h-3" />
+                {serieError}
+              </p>
+            )}
           </div>
+        </div>
         </div>
 
         {/* Action Button */}
