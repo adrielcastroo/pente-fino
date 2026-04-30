@@ -165,6 +165,24 @@ export default function ReservasPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="quantidadeCx" className="font-bold">Quantidade de CX</Label>
+                  <Input 
+                    id="quantidadeCx" 
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={quantidadeCx} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d+$/.test(val)) {
+                        setQuantidadeCx(val);
+                      }
+                    }} 
+                    placeholder="Ex: 5"
+                    className="focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="observacao" className="font-bold">Observação</Label>
                   <Textarea 
                     id="observacao" 
