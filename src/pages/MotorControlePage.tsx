@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
