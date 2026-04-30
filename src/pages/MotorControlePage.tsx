@@ -516,10 +516,20 @@ export default function MotorControlePage() {
         <div className="space-y-2 pb-4">
           <Button
             onClick={subMode === 'motor' ? handleAddMotor : handleAddControle}
-            className="w-full h-12 rounded-xl font-semibold text-sm"
+            disabled={validatingSerie || !modelo.trim() || !serie.trim()}
+            className="w-full h-12 rounded-xl font-semibold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
+            {validatingSerie ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                Validando...
+              </div>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
+              </>
+            )}
           </Button>
 
           {/* Preview table */}
