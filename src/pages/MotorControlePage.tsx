@@ -237,11 +237,9 @@ export default function MotorControlePage() {
     });
 
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
-    setSerie('');
-    setModelo('');
-    setNf('');
+    resetMotorFormData();
     serieRef.current?.focus();
-  }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, setSerie]);
+  }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, resetMotorFormData]);
 
   const handleSerieKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
