@@ -204,7 +204,7 @@ export default function DashboardPage() {
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
           
-          <OccupationChart used={750} total={1000} unit="m²" />
+          <OccupationChart used={7.5} total={10} unit="alocações" />
         </div>
 
         <div className="lg:col-span-4 space-y-6 sm:space-y-8">
