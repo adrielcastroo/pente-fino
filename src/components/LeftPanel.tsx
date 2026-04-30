@@ -1073,6 +1073,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     className={`w-full h-11 rounded-lg border px-3 text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
                       lockMadeiraLote ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'border-border/50 bg-muted/20 focus:border-primary'
                     }`}
+                    readOnly={lockMadeiraLote && !!lote}
                     placeholder="Lote..." autoComplete="off"
                   />
                 </div>
