@@ -183,7 +183,7 @@ export default function SaidaPage() {
               className="w-full sm:w-auto h-11 px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95"
             >
               <ScanBarcode className="w-5 h-5" />
-              <span>Bipagem</span>
+              <span>Dar saída</span>
             </Button>
 
             <div className="relative group w-full sm:w-64 lg:w-80">
@@ -297,7 +297,7 @@ export default function SaidaPage() {
                 <ScanBarcode className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-black tracking-tight">Saída por Bipagem</DialogTitle>
+                <DialogTitle className="text-lg font-black tracking-tight">Dar saída</DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
                   Bipe ou digite o <strong>Lote Final</strong> do tecido para dar saída
                 </DialogDescription>
@@ -358,7 +358,7 @@ export default function SaidaPage() {
       }}>
         <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-black">Confirmar Saída por Bipagem</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-black">Confirmar saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-4">
               {confirmScan && (
                 <>
