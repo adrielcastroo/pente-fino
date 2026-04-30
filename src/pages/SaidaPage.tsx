@@ -371,13 +371,16 @@ export default function SaidaPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Observações (opcional):</label>
+                  <div className="space-y-2 bg-muted/10 p-4 rounded-xl border border-border/20">
+                    <label className="text-xs font-black uppercase tracking-widest text-violet-500 flex items-center gap-2 mb-1">
+                      <User className="w-3.5 h-3.5" />
+                      Saída por {conferente || 'Sistema'}
+                    </label>
                     <textarea
                       value={observacoes}
                       onChange={(e) => setObservacoes(e.target.value)}
-                      placeholder="Adicione informações adicionais se necessário..."
-                      className="w-full min-h-[100px] p-3 rounded-xl border border-border/50 bg-muted/20 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
+                      placeholder="Observações / Informações adicionais (opcional)..."
+                      className="w-full min-h-[80px] p-3 rounded-lg border border-border/50 bg-background/50 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
                     />
                   </div>
 
