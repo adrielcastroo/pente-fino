@@ -62,6 +62,7 @@ export default function ReservasPage() {
       endereco: endereco.trim(),
       quantidade: Number(quantidade),
       caixaNum: caixaNum.trim(),
+      quantidadeCx: quantidadeCx ? parseInt(quantidadeCx, 10) : undefined,
       observacao: observacao.trim(),
       createdAt: new Date().toISOString(),
     };
