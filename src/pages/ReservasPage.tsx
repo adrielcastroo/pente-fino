@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
-import { Plus, Package, Trash2, MapPin, Hash, FileText, Search } from 'lucide-react';
+import { Plus, Package, Trash2, MapPin, Hash, FileText, Search, MessageSquare } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -20,10 +20,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function ReservasPage() {
   const setFormData = useAppStore(s => s.setFormData);
@@ -38,6 +40,7 @@ export default function ReservasPage() {
   const [endereco, setEndereco] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [caixaNum, setCaixaNum] = useState('');
+  const [observacao, setObservacao] = useState('');
 
   useEffect(() => {
     setFormData({ activeTab: 'reservas' });
@@ -58,6 +61,7 @@ export default function ReservasPage() {
       endereco: endereco.trim(),
       quantidade: Number(quantidade),
       caixaNum: caixaNum.trim(),
+      observacao: observacao.trim(),
       createdAt: new Date().toISOString(),
     };
 
@@ -70,6 +74,7 @@ export default function ReservasPage() {
     setEndereco('');
     setQuantidade('');
     setCaixaNum('');
+    setObservacao('');
     setIsDialogOpen(false);
   };
 
@@ -80,6 +85,7 @@ export default function ReservasPage() {
   ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
+    <TooltipProvider>
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -155,6 +161,16 @@ export default function ReservasPage() {
                     />
                   </div>
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="observacao" className="font-bold">Observação</Label>
+                  <Textarea 
+                    id="observacao" 
+                    value={observacao} 
+                    onChange={e => setObservacao(e.target.value)} 
+                    placeholder="Informações adicionais sobre a reserva..."
+                    className="min-h-[100px] resize-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
                 <DialogFooter className="mt-4">
                   <Button type="submit" className="w-full font-bold">Salvar Item</Button>
                 </DialogFooter>
@@ -203,6 +219,7 @@ export default function ReservasPage() {
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº Caixa</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Obs.</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -242,6 +259,21 @@ export default function ReservasPage() {
                           </div>
                         ) : '—'}
                       </TableCell>
+                      <TableCell className="max-w-[150px] truncate text-muted-foreground/70 text-xs">
+                        {item.observacao ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 cursor-help">
+                                <MessageSquare className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{item.observacao}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-xs font-medium">
+                              {item.observacao}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : '—'}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="ghost" 
@@ -264,5 +296,6 @@ export default function ReservasPage() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
