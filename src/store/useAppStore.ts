@@ -160,6 +160,8 @@ export const useAppStore = create<AppState>()(
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
       setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
       setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
+      setLockMotorModelo: (lock) => set({ lockMotorModelo: lock }),
+      setLockMotorNf: (lock) => set({ lockMotorNf: lock }),
       
       setFormData: (updates) => set(state => ({ formData: { ...state.formData, ...updates } })),
       
