@@ -217,6 +217,7 @@ export default function ReservasPage() {
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº Caixa</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Obs.</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
