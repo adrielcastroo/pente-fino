@@ -193,11 +193,34 @@ export default function MotorControlePage() {
     }
   }, [subMode, modelo, setModelo]);
 
-  const handleAddMotor = useCallback(() => {
+  const handleAddMotor = useCallback(async () => {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
-    // Remove trailing letter from motor model (e.g., 1246344B -> 1246344)
+    setValidatingSerie(true);
+    setSerieError(null);
+
+    // Uniqueness check in DB
+    try {
+      const { data: existing, error } = await supabase
+        .from('registros')
+        .select('id')
+        .eq('lote', serie.trim())
+        .maybeSingle();
+
+      if (error) throw error;
+      if (existing) {
+        setSerieError('Número de série já existe no banco de dados!');
+        toast.error('Número de série já cadastrado!');
+        setValidatingSerie(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking serial uniqueness:', err);
+    } finally {
+      setValidatingSerie(false);
+    }
+
     const cleanedModelo = modelo.trim().replace(/[a-zA-Z]$/, '').trim();
     if (cleanedModelo !== modelo.trim()) {
       setModelo(cleanedModelo);
@@ -205,7 +228,12 @@ export default function MotorControlePage() {
 
     const cleaned = cleanMotorSerie(serie, cleanedModelo);
     if (!cleaned) { toast.warning('Série inválida'); return; }
-    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
+    if (isDuplicate(cleaned)) { 
+      setSerieError('Série já cadastrada nesta sessão!');
+      toast.warning('Série já cadastrada!'); 
+      setSerie(''); 
+      return; 
+    }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
     const nfLabel = nf.trim() ? `NF ${nf.trim()}` : '';
@@ -230,23 +258,48 @@ export default function MotorControlePage() {
 
     toast.success(`Motor adicionado: ${cleaned}`);
     setSerie('');
-    // Clear other fields if not using a "lock" (Note: MotorControlePage doesn't have UI locks yet, 
-    // so we implement standard clear or the user can add locks later)
-    setModelo('');
-    setNf('');
     serieRef.current?.focus();
-  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, setSerie]);
+  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, setSerie, setModelo]);
 
-  const handleAddControle = useCallback(() => {
+  const handleAddControle = useCallback(async () => {
     const resolvedModelo = mapModelo(modelo);
-    setModelo(resolvedModelo);
+    if (resolvedModelo !== modelo) setModelo(resolvedModelo);
 
     if (!resolvedModelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
+    setValidatingSerie(true);
+    setSerieError(null);
+
+    // Uniqueness check in DB
+    try {
+      const { data: existing, error } = await supabase
+        .from('registros')
+        .select('id')
+        .eq('lote', serie.trim())
+        .maybeSingle();
+
+      if (error) throw error;
+      if (existing) {
+        setSerieError('Número de série já existe no banco de dados!');
+        toast.error('Número de série já cadastrado!');
+        setValidatingSerie(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking serial uniqueness:', err);
+    } finally {
+      setValidatingSerie(false);
+    }
+
     const cleaned = cleanControleSerie(serie);
     if (!cleaned) { toast.warning('Série inválida'); return; }
-    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
+    if (isDuplicate(cleaned)) { 
+      setSerieError('Série já cadastrada nesta sessão!');
+      toast.warning('Série já cadastrada!'); 
+      setSerie(''); 
+      return; 
+    }
 
     const seq = getSequencial();
     const loteSistema = nf.trim()
@@ -272,8 +325,6 @@ export default function MotorControlePage() {
 
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     setSerie('');
-    setModelo('');
-    setNf('');
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, setSerie]);
 
