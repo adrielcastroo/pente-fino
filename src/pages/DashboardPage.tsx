@@ -204,7 +204,10 @@ export default function DashboardPage() {
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
           
-          <OccupationChart used={7.5} total={10} unit="alocações" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <OccupationChart title="Ocupação Têxtil" used={4.5} total={6} unit="alocações" />
+            <OccupationChart title="Ocupação Madeira" used={3.0} total={4} unit="alocações" />
+          </div>
         </div>
 
         <div className="lg:col-span-4 space-y-6 sm:space-y-8">
