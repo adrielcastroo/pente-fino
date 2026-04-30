@@ -199,10 +199,12 @@ export default function DashboardPage() {
 
       {/* Premium Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 w-full overflow-hidden">
-        <div className="lg:col-span-8">
-          <div className="h-full rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+        <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+          <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
+          
+          <OccupationChart used={750} total={1000} unit="m²" />
         </div>
 
         <div className="lg:col-span-4 space-y-6 sm:space-y-8">
