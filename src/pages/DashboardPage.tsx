@@ -117,28 +117,26 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="dashboard-content" className="space-y-6 sm:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8">
-      {/* Premium Header - Removed sticky to avoid overlap with main layout */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-6 rounded-b-[2rem] sm:rounded-b-[2.5rem]">
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 text-primary/80">
-            <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
-              <Activity className="w-5 h-5" />
+    <div id="dashboard-content" className="space-y-5 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8">
+      {/* Header */}
+      <header className="flex flex-col gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-4 sm:pt-6 rounded-b-[1.5rem] sm:rounded-b-[2.5rem]">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-primary/5 border border-primary/10">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+            <h1 className="text-2xl sm:text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
               Dashboard
             </h1>
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 no-print w-full md:w-auto">
-          <div className="flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/50 min-w-fit">
-            <Clock className="w-5 h-5 text-primary/70 shrink-0" />
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
-              <span className="text-base font-bold text-foreground leading-none">{stats.avgDuration}</span>
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-6 no-print w-full">
+          <div className="flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm min-w-fit">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary/70 shrink-0" />
+            <div className="flex flex-col gap-0.5 sm:gap-1">
+              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
+              <span className="text-sm sm:text-base font-bold text-foreground leading-none">{stats.avgDuration}</span>
             </div>
           </div>
           
@@ -147,7 +145,7 @@ export default function DashboardPage() {
               <Button 
                 variant="default" 
                 size="lg"
-                className="h-14 px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 font-bold uppercase tracking-widest text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
+                className="h-11 sm:h-14 px-5 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-3 font-bold uppercase tracking-widest text-[10px] sm:text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
                 onClick={handleFullExportExcel}
               >
                 <Download className="w-4 h-4" />
