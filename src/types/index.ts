@@ -51,6 +51,7 @@ export interface Reserva {
   endereco: string;
   quantidade: number;
   caixaNum?: string;
+  quantidadeCx?: number;
   observacao?: string;
   createdAt: string;
 }
