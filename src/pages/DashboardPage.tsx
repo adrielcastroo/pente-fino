@@ -194,20 +194,20 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Premium Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 w-full overflow-hidden">
-        <div className="lg:col-span-8 space-y-6 sm:space-y-8">
-          <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
+        <div className="lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8">
+          <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart data={stats.timeline} onExport={handleExport} />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <OccupationChart title="Ocupação Têxtil" used={4.5} total={6} unit="alocações" />
             <OccupationChart title="Ocupação Madeira" used={3.0} total={4} unit="alocações" />
           </div>
         </div>
 
-        <div className="lg:col-span-4 space-y-6 sm:space-y-8">
+        <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
           <SummaryChart 
             title="Produção por Conferente" 
             desc="Top 5 em volume de registros" 
@@ -253,27 +253,26 @@ export default function DashboardPage() {
           />
         </div>
         
-        <div className="lg:col-span-4 relative group rounded-[1.5rem] sm:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
+        <div className="lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
-            <div className="relative p-6 rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
-              <Download className="w-10 h-10" />
+            <div className="relative p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
+              <Download className="w-7 h-7 sm:w-10 sm:h-10" />
             </div>
           </div>
-          <div className="space-y-3">
-            <h3 className="font-extrabold text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
           <Button 
             variant="default" 
             size="lg" 
             onClick={handleFullExportExcel} 
-            className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-4"
+            className="w-full rounded-2xl h-11 sm:h-14 font-extrabold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[10px] sm:text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-2 sm:mt-4"
           >
             Exportar Dados
           </Button>
           
-          {/* Elegant decorative element */}
           <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
           <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         </div>
