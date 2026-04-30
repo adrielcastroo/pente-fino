@@ -30,6 +30,8 @@ export interface AppState {
   // Cortina locks
   lockCortinaLargura: boolean;
   lockedCortinaLargura: string;
+  lockMotorModelo: boolean;
+  lockMotorNf: boolean;
   
   formData: FormData;
   
@@ -60,6 +62,8 @@ export interface AppState {
   setLockedMetragem: (m: string) => void;
   setLockCortinaLargura: (lock: boolean) => void;
   setLockedCortinaLargura: (l: string) => void;
+  setLockMotorModelo: (lock: boolean) => void;
+  setLockMotorNf: (lock: boolean) => void;
   
   setFormData: (updates: Partial<FormData>) => void;
   resetFormData: () => void;
@@ -111,6 +115,8 @@ export const useAppStore = create<AppState>()(
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
+      lockMotorModelo: false,
+      lockMotorNf: false,
       
       formData: INITIAL_FORM_DATA,
       
@@ -154,6 +160,8 @@ export const useAppStore = create<AppState>()(
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
       setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
       setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
+      setLockMotorModelo: (lock) => set({ lockMotorModelo: lock }),
+      setLockMotorNf: (lock) => set({ lockMotorNf: lock }),
       
       setFormData: (updates) => set(state => ({ formData: { ...state.formData, ...updates } })),
       
@@ -182,9 +190,17 @@ export const useAppStore = create<AppState>()(
         set(updates);
       },
       
-      resetMotorFormData: () => set(state => ({
-        formData: { ...state.formData, motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1' }
-      })),
+      resetMotorFormData: () => set(state => {
+        const newData = { 
+          ...state.formData, 
+          motorSerie: '',
+          motorTemCaixa: state.formData.motorTemCaixa, // Keep box state
+          motorCaixaNum: state.formData.motorCaixaNum  // Keep box number
+        };
+        if (!state.lockMotorModelo) newData.motorModelo = '';
+        if (!state.lockMotorNf) newData.motorNf = '';
+        return { formData: newData };
+      }),
       
       addRegistro: (reg) => set(state => {
         const newRegs = [...state.registros, reg];
@@ -413,6 +429,8 @@ export const useAppStore = create<AppState>()(
         lockedMetragem: state.lockedMetragem,
         lockCortinaLargura: state.lockCortinaLargura,
         lockedCortinaLargura: state.lockedCortinaLargura,
+        lockMotorModelo: state.lockMotorModelo,
+        lockMotorNf: state.lockMotorNf,
       } as any),
     }
   )
