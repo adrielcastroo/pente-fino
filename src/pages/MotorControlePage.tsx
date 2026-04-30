@@ -54,12 +54,14 @@ export default function MotorControlePage() {
   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
   const { isLow } = usePerformance();
 
+  const [openModelo, setOpenModelo] = useState(false);
+  const [validatingSerie, setValidatingSerie] = useState(false);
+  const [serieError, setSerieError] = useState<string | null>(null);
+
   useEffect(() => {
     setFormData({ activeTab: 'motor' });
   }, [setFormData]);
 
-
-  
   const subMode = formData.motorSubMode;
   const modelo = formData.motorModelo;
   const nf = formData.motorNf;
@@ -67,10 +69,32 @@ export default function MotorControlePage() {
   const temCaixa = formData.motorTemCaixa;
   const caixaNum = formData.motorCaixaNum;
 
-  const setSubMode = useCallback((val: 'motor' | 'controle') => setFormData({ motorSubMode: val }), [setFormData]);
-  const setModelo = useCallback((val: string) => setFormData({ motorModelo: val }), [setFormData]);
-  const setNf = useCallback((val: string) => setFormData({ motorNf: val }), [setFormData]);
-  const setSerie = useCallback((val: string) => setFormData({ motorSerie: val }), [setFormData]);
+  const setSubMode = useCallback((val: SubMode) => setFormData({ motorSubMode: val }), [setFormData]);
+  const setModelo = useCallback((val: string) => {
+    // Lock character specials for model: allow only letters, numbers and spaces
+    const locked = val.replace(/[^a-zA-Z0-9\s-]/g, '').slice(0, 100);
+    setFormData({ motorModelo: locked });
+  }, [setFormData]);
+
+  const setNf = useCallback((val: string) => {
+    // Mask for NF: 000.000.000
+    const numbersOnly = val.replace(/\D/g, '').slice(0, 9);
+    let masked = numbersOnly;
+    if (numbersOnly.length > 6) {
+      masked = `${numbersOnly.slice(0, 3)}.${numbersOnly.slice(3, 6)}.${numbersOnly.slice(6)}`;
+    } else if (numbersOnly.length > 3) {
+      masked = `${numbersOnly.slice(0, 3)}.${numbersOnly.slice(3)}`;
+    }
+    setFormData({ motorNf: masked });
+  }, [setFormData]);
+
+  const setSerie = useCallback((val: string) => {
+    // No spaces, Uppercase
+    const cleaned = val.replace(/\s/g, '').toUpperCase();
+    setFormData({ motorSerie: cleaned });
+    if (serieError) setSerieError(null);
+  }, [setFormData, serieError]);
+
   const setTemCaixa = useCallback((val: boolean) => setFormData({ motorTemCaixa: val }), [setFormData]);
   const setCaixaNum = useCallback((val: string) => setFormData({ motorCaixaNum: val }), [setFormData]);
 
