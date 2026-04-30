@@ -207,7 +207,7 @@ export default function DashboardPage() {
               title="Ocupação Madeira" 
               used={0} 
               total={0} 
-              unit="alocações"
+              unit="metros"
               customCategories={[
                 { name: 'Lâminas', value: 0 },
                 { name: 'Bases', value: 0 },
