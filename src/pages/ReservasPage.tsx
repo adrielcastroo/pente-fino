@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function ReservasPage() {
   const setFormData = useAppStore(s => s.setFormData);
