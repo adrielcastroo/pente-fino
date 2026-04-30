@@ -42,9 +42,26 @@ export default function DashboardPage() {
     handleExportPDF,
   } = useDashboard();
 
-  const handleFullExportPDF = async () => {
-    const { exportDashboardToPDF } = await import('@/lib/export-utils');
-    await exportDashboardToPDF('dashboard-content', 'Relatorio_Completo', stats);
+  const handleFullExportExcel = async () => {
+    const { exportToExcel } = await import('@/lib/export-utils');
+    
+    // Preparar dados para exportação
+    const exportData = [
+      { Categoria: 'MÉTRICAS GERAIS', Informação: '', Valor: '' },
+      { Categoria: 'Total de Conferentes', Informação: '', Valor: stats.totalConferentes },
+      { Categoria: 'Total de Conferências', Informação: '', Valor: stats.totalConferencias },
+      { Categoria: 'Total de Registros', Informação: '', Valor: stats.totalRegistros },
+      { Categoria: 'Média de Sessão', Informação: '', Valor: stats.avgDuration },
+      { Categoria: '', Informação: '', Valor: '' },
+      { Categoria: 'PRODUÇÃO POR CONFERENTE', Informação: 'Registros', Valor: 'Conferências' },
+      ...stats.topConferentes.map(c => ({
+        Categoria: c.name,
+        Informação: c.count,
+        Valor: c.conferences || 0
+      }))
+    ];
+
+    await exportToExcel(exportData, 'Relatorio_Dashboard');
   };
 
   useEffect(() => {
@@ -108,15 +125,11 @@ export default function DashboardPage() {
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
               <Activity className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Visão Geral de Dados</span>
           </div>
           <div className="space-y-1">
             <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
               Dashboard
             </h1>
-            <p className="text-muted-foreground text-base max-w-xl leading-relaxed font-medium opacity-70">
-              Gestão operacional em tempo real. Analise métricas, identifique gargalos e otimize o fluxo de trabalho da unidade.
-            </p>
           </div>
         </div>
         
@@ -135,10 +148,10 @@ export default function DashboardPage() {
                 variant="default" 
                 size="lg"
                 className="h-14 px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 font-bold uppercase tracking-widest text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
-                onClick={handleFullExportPDF}
+                onClick={handleFullExportExcel}
               >
                 <Download className="w-4 h-4" />
-                Exportar PDF
+                Exportar Dados
               </Button>
             </TooltipTrigger>
             <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Executivo</TooltipContent>
@@ -247,15 +260,15 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-3">
             <h3 className="font-extrabold text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato PDF.</p>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
           <Button 
             variant="default" 
             size="lg" 
-            onClick={handleFullExportPDF} 
+            onClick={handleFullExportExcel} 
             className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-4"
           >
-            Exportar PDF
+            Exportar Dados
           </Button>
           
           {/* Elegant decorative element */}
