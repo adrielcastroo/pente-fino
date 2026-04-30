@@ -92,6 +92,19 @@ export default function DashboardPage() {
     }));
   }, [history]);
 
+  const lastOutputs = useMemo(() => {
+    const allRegistros = history.flatMap(conf => 
+      conf.registros.map((reg, idx) => ({
+        id: `${conf.id}-${reg.id || idx}`,
+        date: conf.date,
+        item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
+        quantity: reg.quantidade || reg.mLinear || reg.m2 || 0,
+        unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
+      }))
+    );
+    return allRegistros.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+  }, [history]);
+
   if (isHistoryLoading && history.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -115,19 +128,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const lastOutputs = useMemo(() => {
-    const allRegistros = history.flatMap(conf => 
-      conf.registros.map((reg, idx) => ({
-        id: `${conf.id}-${reg.id || idx}`,
-        date: conf.date,
-        item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
-        quantity: reg.quantidade || reg.mLinear || reg.m2 || 0,
-        unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
-      }))
-    );
-    return allRegistros.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
-  }, [history]);
 
   return (
     <div id="dashboard-content" className="space-y-5 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8">
