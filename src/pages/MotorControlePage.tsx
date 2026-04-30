@@ -1,11 +1,15 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Check, AlertCircle, ChevronDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, Tooltip as TooltipUI, TooltipTrigger as TooltipTriggerUI } from '@/components/ui/tooltip';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover as PopoverUI, PopoverContent as PopoverContentUI, PopoverTrigger as PopoverTriggerUI } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { usePerformance } from '@/hooks/use-performance';
 
 
