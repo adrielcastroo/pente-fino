@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { usePerformance } from '@/hooks/use-performance';
 import { supabase } from '@/integrations/supabase/client';
+type SubMode = 'motor' | 'controle';
 
 const MOTOR_MODELS = [
   'SOMFY', 'DOOYA', 'GAVIOTA', 'EMMESTE', 'SAMSUNG', 'B-MOTION', 'T-MOTION', 'S-MOTION'
