@@ -332,15 +332,34 @@ export default function MotorControlePage() {
         {/* Form fields */}
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Marca</label>
-            <input
-              ref={modeloRef}
-              value={modelo}
-              onChange={e => setModelo(sanitize(e.target.value))}
-              onBlur={handleModeloBlur}
-              placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
-              className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
-            />
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Marca</label>
+              <button 
+                onClick={() => setLockMotorModelo(!lockMotorModelo)}
+                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
+                  lockMotorModelo 
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
+                    : 'text-muted-foreground/40 hover:text-muted-foreground'
+                }`}
+              >
+                {lockMotorModelo ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
+                {lockMotorModelo ? 'TRAVADO' : 'TRAVAR'}
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                ref={modeloRef}
+                value={modelo}
+                onChange={e => setModelo(sanitize(e.target.value))}
+                onBlur={handleModeloBlur}
+                placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
+                className={`w-full h-11 rounded-lg border bg-muted/20 px-3 text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-colors ${
+                  lockMotorModelo 
+                    ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
+                    : 'border-border/50'
+                }`}
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">
