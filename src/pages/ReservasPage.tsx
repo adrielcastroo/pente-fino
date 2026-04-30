@@ -248,7 +248,7 @@ export default function ReservasPage() {
               <TableBody>
                 {filteredReservas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-48 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Package className="w-12 h-12 opacity-10" />
                         <p className="font-medium italic">Nenhum item encontrado na prateleira virtual.</p>
