@@ -191,7 +191,12 @@ export const useAppStore = create<AppState>()(
       },
       
       resetMotorFormData: () => set(state => {
-        const newData = { ...state.formData, motorSerie: '' };
+        const newData = { 
+          ...state.formData, 
+          motorSerie: '',
+          motorTemCaixa: state.formData.motorTemCaixa, // Keep box state
+          motorCaixaNum: state.formData.motorCaixaNum  // Keep box number
+        };
         if (!state.lockMotorModelo) newData.motorModelo = '';
         if (!state.lockMotorNf) newData.motorNf = '';
         return { formData: newData };
