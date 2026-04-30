@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, Download, Eye } from 'lucide-react';
+import { Activity, Download, Eye, Package } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, LabelList, Legend
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, LabelList, Legend,
+  RadialBarChart, RadialBar
 } from 'recharts';
 
 // Premium Color Palette - Jewel Tones with WCAG accessibility
