@@ -235,22 +235,39 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 
 SummaryChart.displayName = 'SummaryChart';
 
-export const OccupationChart = React.memo(({ title, used, total, reserved = 0, blocked = 0, unit = 'alocações' }: { title: string, used: number, total: number, reserved?: number, blocked?: number, unit?: string }) => {
+export const OccupationChart = React.memo(({ 
+  title, 
+  used, 
+  total, 
+  reserved = 0, 
+  blocked = 0, 
+  unit = 'alocações',
+  customCategories
+}: { 
+  title: string, 
+  used: number, 
+  total: number, 
+  reserved?: number, 
+  blocked?: number, 
+  unit?: string,
+  customCategories?: { name: string, value: number, color?: string }[]
+}) => {
   const { isLow } = usePerformance();
-  const percentage = Math.round((used / total) * 100);
+  const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
   
-  const data = [
-    {
-      name: 'Disponível',
-      value: total,
-      fill: 'hsl(var(--muted) / 0.2)',
-    },
-    {
-      name: 'Ocupado',
-      value: used,
-      fill: 'hsl(var(--primary))',
+  const chartData = useMemo(() => {
+    if (customCategories) {
+      return customCategories;
     }
-  ];
+    return [
+      { name: 'Ocupado', value: used, color: 'hsl(var(--primary))' },
+      { name: 'Reservado', value: reserved, color: '#D97706' },
+      { name: 'Bloqueado', value: blocked, color: '#DC2626' },
+      { name: 'Livre', value: Math.max(0, total - used - reserved - blocked), color: 'hsl(var(--muted) / 0.3)' }
+    ];
+  }, [used, reserved, blocked, total, customCategories]);
+
+  const isEmpty = total === 0 && (!customCategories || customCategories.every(c => c.value === 0));
 
   return (
     <Card className="border-none bg-card/10 backdrop-blur-md overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] h-full transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
@@ -266,106 +283,132 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
         </div>
       </CardHeader>
       <CardContent className="px-3 sm:px-6 md:px-8 py-5 sm:py-8 md:py-12 flex flex-col items-center gap-6 sm:gap-8">
-        {/* Donut chart */}
         <div className="relative w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={[
-                  { name: 'Ocupado', value: used },
-                  { name: 'Reservado', value: reserved },
-                  { name: 'Bloqueado', value: blocked },
-                  { name: 'Livre', value: total - used - reserved - blocked }
-                ]}
+                data={isEmpty ? [{ name: 'Sem dados', value: 1 }] : chartData}
                 innerRadius="68%"
                 outerRadius="95%"
-                paddingAngle={4}
+                paddingAngle={isEmpty ? 0 : 4}
                 dataKey="value"
                 startAngle={90}
                 endAngle={450}
                 isAnimationActive={!isLow}
               >
-                <Cell fill="hsl(var(--primary))" />
-                <Cell fill="#D97706" /> {/* Amber for Reserved */}
-                <Cell fill="#DC2626" /> {/* Red for Blocked */}
-                <Cell fill="hsl(var(--muted) / 0.3)" />
+                {isEmpty ? (
+                  <Cell fill="hsl(var(--muted) / 0.2)" />
+                ) : (
+                  chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))
+                )}
               </Pie>
-              <ChartTooltip 
-                content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-3 sm:p-4 shadow-2xl">
-                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{payload[0].name}</p>
-                        <p className="text-xs sm:text-sm font-black text-primary">{payload[0].value} {unit}</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }} 
-              />
+              {!isEmpty && (
+                <ChartTooltip 
+                  content={({ active, payload }: any) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-3 sm:p-4 shadow-2xl">
+                          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{payload[0].name}</p>
+                          <p className="text-xs sm:text-sm font-black text-primary">{payload[0].value} {unit}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} 
+                />
+              )}
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-foreground">{percentage}%</span>
-            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground">Ocupado</span>
+            <span className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-foreground">{isEmpty ? 0 : percentage}%</span>
+            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground">{isEmpty ? 'Vazio' : 'Ocupado'}</span>
           </div>
         </div>
 
-        {/* Stats bars */}
         <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[280px]">
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Capacidade Total</span>
-              <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{total} {unit}</span>
-            </div>
-            <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-              <div className="h-full bg-muted-foreground/20 rounded-full w-full" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Espaço Utilizado</span>
-              <span className="text-xs sm:text-sm font-black text-primary tabular-nums whitespace-nowrap">{used} {unit}</span>
-            </div>
-            <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" 
-                style={{ width: `${percentage}%` }} 
-              />
-            </div>
-          </div>
-
-          {reserved > 0 && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Reservado</span>
-                <span className="text-xs sm:text-sm font-bold text-amber-600 tabular-nums whitespace-nowrap">{reserved} {unit}</span>
+          {customCategories ? (
+            <>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Total</span>
+                  <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{total} {unit}</span>
+                </div>
+                <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden" />
               </div>
-              <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-600 rounded-full" style={{ width: `${Math.round((reserved / total) * 100)}%` }} />
+              {customCategories.map((cat, idx) => (
+                <div key={idx} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">{cat.name}</span>
+                    <span className="text-xs sm:text-sm font-black text-primary tabular-nums whitespace-nowrap">{cat.value} {unit}</span>
+                  </div>
+                  <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" 
+                      style={{ width: `${total > 0 ? (cat.value / total) * 100 : 0}%`, backgroundColor: cat.color }} 
+                    />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Capacidade Total</span>
+                  <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{total} {unit}</span>
+                </div>
+                <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                  <div className="h-full bg-muted-foreground/20 rounded-full w-full" />
+                </div>
               </div>
-            </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Espaço Utilizado</span>
+                  <span className="text-xs sm:text-sm font-black text-primary tabular-nums whitespace-nowrap">{used} {unit}</span>
+                </div>
+                <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" 
+                    style={{ width: `${percentage}%` }} 
+                  />
+                </div>
+              </div>
+
+              {reserved > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Reservado</span>
+                    <span className="text-xs sm:text-sm font-bold text-amber-600 tabular-nums whitespace-nowrap">{reserved} {unit}</span>
+                  </div>
+                  <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-600 rounded-full" style={{ width: `${total > 0 ? Math.round((reserved / total) * 100) : 0}%` }} />
+                  </div>
+                </div>
+              )}
+
+              {blocked > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Bloqueado</span>
+                    <span className="text-xs sm:text-sm font-bold text-destructive tabular-nums whitespace-nowrap">{blocked} {unit}</span>
+                  </div>
+                  <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-destructive rounded-full" style={{ width: `${total > 0 ? Math.round((blocked / total) * 100) : 0}%` }} />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 sm:pt-4 mt-2 sm:mt-4 border-t border-border/10">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Livre</span>
+                  <span className="text-xs sm:text-sm font-bold text-foreground/70 tabular-nums whitespace-nowrap">{Math.max(0, total - used - reserved - blocked)} {unit}</span>
+                </div>
+              </div>
+            </>
           )}
-
-          {blocked > 0 && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Bloqueado</span>
-                <span className="text-xs sm:text-sm font-bold text-destructive tabular-nums whitespace-nowrap">{blocked} {unit}</span>
-              </div>
-              <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                <div className="h-full bg-destructive rounded-full" style={{ width: `${Math.round((blocked / total) * 100)}%` }} />
-              </div>
-            </div>
-          )}
-
-          <div className="pt-3 sm:pt-4 mt-2 sm:mt-4 border-t border-border/10">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Livre</span>
-              <span className="text-xs sm:text-sm font-bold text-foreground/70 tabular-nums whitespace-nowrap">{total - used - reserved - blocked} {unit}</span>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>
