@@ -513,7 +513,6 @@ export default function MotorControlePage() {
             )}
           </div>
         </div>
-        </div>
 
         {/* Action Button */}
         <div className="space-y-2 pb-4">
