@@ -950,7 +950,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
-                  readOnly={isPVT && lockItem && !!lockedItem}
+                  readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) && !!item}
                 />
                 {usesLarguraFromItem && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
