@@ -239,13 +239,14 @@ export default function SaidaPage() {
                     </p>
                     <p className="text-xs font-bold tracking-tight">{formatDateBR(saida.data_saida)}</p>
                   </div>
-                  <div className="space-y-1 flex flex-col justify-start">
+                  <div className="space-y-1">
                     <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-wider flex items-center gap-1">
-                      <User className="w-3 h-3" /> Saída por {saida.conferente_saida || '—'}
+                      <User className="w-3 h-3" /> Saída por:
                     </p>
+                    <p className="text-xs font-bold truncate tracking-tight">{saida.conferente_saida || '—'}</p>
                     {saida.observacoes && (
-                      <p className="text-[10px] font-bold text-muted-foreground/80 leading-tight mt-1">
-                        {saida.observacoes}
+                      <p className="text-[10px] font-bold text-muted-foreground/80 leading-tight mt-1 italic">
+                        Obs: {saida.observacoes}
                       </p>
                     )}
                   </div>
