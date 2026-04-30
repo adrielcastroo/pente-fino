@@ -62,6 +62,8 @@ export interface AppState {
   setLockedMetragem: (m: string) => void;
   setLockCortinaLargura: (lock: boolean) => void;
   setLockedCortinaLargura: (l: string) => void;
+  setLockMotorModelo: (lock: boolean) => void;
+  setLockMotorNf: (lock: boolean) => void;
   
   setFormData: (updates: Partial<FormData>) => void;
   resetFormData: () => void;
