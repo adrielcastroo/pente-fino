@@ -203,7 +203,18 @@ export default function DashboardPage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <OccupationChart title="Ocupação Tecidos" used={41} total={3120} reserved={0} blocked={0} unit="alocações" />
-            <OccupationChart title="Ocupação Madeira" used={0} total={0} reserved={0} blocked={0} unit="alocações" />
+            <OccupationChart 
+              title="Ocupação Madeira" 
+              used={0} 
+              total={0} 
+              unit="alocações"
+              customCategories={[
+                { name: 'Lâminas', value: 0 },
+                { name: 'Bases', value: 0 },
+                { name: 'Bandôs', value: 0 },
+                { name: 'Avarias', value: 0 },
+              ]}
+            />
           </div>
         </div>
 
