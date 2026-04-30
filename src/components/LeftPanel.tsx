@@ -918,7 +918,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   }`}
                   placeholder="Ex: 123456..."
                   autoComplete="off"
-                  readOnly={lockProcesso && !!lockedProcesso}
+                  readOnly={(isMadeira ? lockMadeiraProcesso : lockProcesso) && !!processo}
                 />
               </div>
             )}
