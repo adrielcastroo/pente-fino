@@ -123,6 +123,10 @@ export const useAppStore = create<AppState>()(
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
+      lockMadeiraProcesso: false,
+      lockMadeiraItem: false,
+      lockMadeiraLote: false,
+      lockMadeiraEndereco: false,
       lockMotorModelo: false,
       lockMotorNf: false,
       
