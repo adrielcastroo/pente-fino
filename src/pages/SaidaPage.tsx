@@ -239,11 +239,15 @@ export default function SaidaPage() {
                     </p>
                     <p className="text-xs font-bold tracking-tight">{formatDateBR(saida.data_saida)}</p>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col justify-start">
                     <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-wider flex items-center gap-1">
-                      <User className="w-3 h-3" /> Conferente
+                      <User className="w-3 h-3" /> Saída por {saida.conferente_saida || '—'}
                     </p>
-                    <p className="text-xs font-bold truncate tracking-tight">{saida.conferente_saida || '—'}</p>
+                    {saida.observacoes && (
+                      <p className="text-[10px] font-bold text-muted-foreground/80 leading-tight mt-1">
+                        {saida.observacoes}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-wider flex items-center gap-1">
@@ -276,11 +280,6 @@ export default function SaidaPage() {
                     <FileText className="w-3 h-3 text-muted-foreground/40 shrink-0" />
                     <span className="text-[10px] font-mono font-bold text-muted-foreground/70 truncate">{saida.lote_sistema || '—'}</span>
                   </div>
-                  {saida.observacoes && (
-                    <div className="w-full mt-2 text-[10px] italic text-muted-foreground/70 bg-muted/10 p-2 rounded-md border border-border/10">
-                      <strong>Obs:</strong> {saida.observacoes}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -372,13 +371,16 @@ export default function SaidaPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Observações (opcional):</label>
+                  <div className="space-y-2 bg-muted/10 p-4 rounded-xl border border-border/20">
+                    <label className="text-xs font-black uppercase tracking-widest text-violet-500 flex items-center gap-2 mb-1">
+                      <User className="w-3.5 h-3.5" />
+                      Saída por {conferente || 'Sistema'}
+                    </label>
                     <textarea
                       value={observacoes}
                       onChange={(e) => setObservacoes(e.target.value)}
-                      placeholder="Adicione informações adicionais se necessário..."
-                      className="w-full min-h-[100px] p-3 rounded-xl border border-border/50 bg-muted/20 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
+                      placeholder="Observações / Informações adicionais (opcional)..."
+                      className="w-full min-h-[80px] p-3 rounded-lg border border-border/50 bg-background/50 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
                     />
                   </div>
 
