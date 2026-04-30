@@ -235,7 +235,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 
 SummaryChart.displayName = 'SummaryChart';
 
-export const OccupationChart = React.memo(({ used, total, unit = 'alocações' }: { used: number, total: number, unit?: string }) => {
+export const OccupationChart = React.memo(({ title, used, total, unit = 'alocações' }: { title: string, used: number, total: number, unit?: string }) => {
   const { isLow } = usePerformance();
   const percentage = Math.round((used / total) * 100);
   
@@ -260,7 +260,7 @@ export const OccupationChart = React.memo(({ used, total, unit = 'alocações' }
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <Package className="w-5 h-5" />
             </div>
-            <span>Ocupação do Estoque</span>
+            <span>{title}</span>
           </CardTitle>
           <p className="text-sm text-muted-foreground font-medium opacity-70 ml-11">Visão em tempo real da capacidade</p>
         </div>
