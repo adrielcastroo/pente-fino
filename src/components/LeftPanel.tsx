@@ -927,9 +927,13 @@ export const LeftPanel = memo(function LeftPanel() {
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 h-4">
                 <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
-                {isPVT && (
-                  <button onClick={toggleLockItem} className={`transition-colors ${lockItem ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockItem ? 'Campo travado' : 'Travar campo'}>
-                    {lockItem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                {(isPVT || isMadeira) && (
+                  <button 
+                    onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
                 )}
               </div>
