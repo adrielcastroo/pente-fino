@@ -296,5 +296,6 @@ export default function ReservasPage() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
