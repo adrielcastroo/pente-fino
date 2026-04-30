@@ -42,9 +42,26 @@ export default function DashboardPage() {
     handleExportPDF,
   } = useDashboard();
 
-  const handleFullExportPDF = async () => {
-    const { exportDashboardToPDF } = await import('@/lib/export-utils');
-    await exportDashboardToPDF('dashboard-content', 'Relatorio_Completo', stats);
+  const handleFullExportExcel = async () => {
+    const { exportToExcel } = await import('@/lib/export-utils');
+    
+    // Preparar dados para exportação
+    const exportData = [
+      { Categoria: 'MÉTRICAS GERAIS', Informação: '', Valor: '' },
+      { Categoria: 'Total de Conferentes', Informação: '', Valor: stats.totalConferentes },
+      { Categoria: 'Total de Conferências', Informação: '', Valor: stats.totalConferencias },
+      { Categoria: 'Total de Registros', Informação: '', Valor: stats.totalRegistros },
+      { Categoria: 'Média de Sessão', Informação: '', Valor: stats.avgDuration },
+      { Categoria: '', Informação: '', Valor: '' },
+      { Categoria: 'PRODUÇÃO POR CONFERENTE', Informação: 'Registros', Valor: 'Conferências' },
+      ...stats.topConferentes.map(c => ({
+        Categoria: c.name,
+        Informação: c.count,
+        Valor: c.conferences || 0
+      }))
+    ];
+
+    await exportToExcel(exportData, 'Relatorio_Dashboard');
   };
 
   useEffect(() => {
