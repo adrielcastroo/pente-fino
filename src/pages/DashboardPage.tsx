@@ -202,7 +202,7 @@ export default function DashboardPage() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <OccupationChart title="Ocupação Têxtil" used={4.5} total={6} unit="alocações" />
+            <OccupationChart title="Ocupação Tecidos" used={41} total={3120} reserved={0} blocked={0} unit="alocações" />
             <OccupationChart title="Ocupação Madeira" used={3.0} total={4} unit="alocações" />
           </div>
         </div>
