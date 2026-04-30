@@ -424,6 +424,8 @@ export const useAppStore = create<AppState>()(
         lockedMetragem: state.lockedMetragem,
         lockCortinaLargura: state.lockCortinaLargura,
         lockedCortinaLargura: state.lockedCortinaLargura,
+        lockMotorModelo: state.lockMotorModelo,
+        lockMotorNf: state.lockMotorNf,
       } as any),
     }
   )
