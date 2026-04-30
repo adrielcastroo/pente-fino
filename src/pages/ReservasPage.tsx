@@ -60,6 +60,7 @@ export default function ReservasPage() {
       endereco: endereco.trim(),
       quantidade: Number(quantidade),
       caixaNum: caixaNum.trim(),
+      observacao: observacao.trim(),
       createdAt: new Date().toISOString(),
     };
 
