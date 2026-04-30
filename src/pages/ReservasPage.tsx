@@ -296,7 +296,9 @@ export default function ReservasPage() {
                           </Tooltip>
                         ) : '—'}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center font-mono font-bold text-foreground">
+                        {item.quantidadeCx || '—'}
+                      </TableCell>
                         <Button 
                           variant="ghost" 
                           size="icon" 
