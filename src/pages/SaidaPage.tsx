@@ -29,6 +29,7 @@ interface SaidaRegistro {
   coluna: string;
   nivel: number;
   posicao: number;
+  observacoes?: string;
 }
 
 export default function SaidaPage() {
@@ -44,6 +45,7 @@ export default function SaidaPage() {
   const [scanResult, setScanResult] = useState<{ item: any; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<any>(null);
   const scanRef = useRef<HTMLInputElement>(null);
+  const [observacoes, setObservacoes] = useState('');
   const conferente = useAppStore(s => s.conferente);
 
   const loadSaidas = async () => {
@@ -129,6 +131,7 @@ export default function SaidaPage() {
         conferente_saida: conferente || 'Sistema',
         data_registro: pos.data_registro,
         data_saida: new Date().toISOString(),
+        observacoes: observacoes.trim() || null,
       });
       if (saError) throw saError;
 
@@ -142,6 +145,7 @@ export default function SaidaPage() {
         message: `Saída realizada! Item "${pos.item}" removido de ${pos.estrutura}.${pos.coluna}.N${String(pos.nivel).padStart(2, '0')}`
       });
       setConfirmScan(null);
+      setObservacoes('');
       setScanInput('');
       loadSaidas();
     } catch (e: any) {
@@ -168,7 +172,7 @@ export default function SaidaPage() {
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
-              Arquivos de <span className="text-primary italic">Saída</span>
+              Saídas
             </h1>
           </div>
           
@@ -272,6 +276,11 @@ export default function SaidaPage() {
                     <FileText className="w-3 h-3 text-muted-foreground/40 shrink-0" />
                     <span className="text-[10px] font-mono font-bold text-muted-foreground/70 truncate">{saida.lote_sistema || '—'}</span>
                   </div>
+                  {saida.observacoes && (
+                    <div className="w-full mt-2 text-[10px] italic text-muted-foreground/70 bg-muted/10 p-2 rounded-md border border-border/10">
+                      <strong>Obs:</strong> {saida.observacoes}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -341,28 +350,46 @@ export default function SaidaPage() {
       </Dialog>
 
       {/* Confirm Scan Saida */}
-      <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+      <AlertDialog open={!!confirmScan} onOpenChange={(open) => {
+        if (!open) {
+          setConfirmScan(null);
+          setObservacoes('');
+        }
+      }}>
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-black">Confirmar Saída por Bipagem</AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">
+            <AlertDialogDescription className="text-sm text-muted-foreground space-y-4">
               {confirmScan && (
                 <>
-                  <div>Tecido encontrado:</div>
-                  <div className="bg-muted/20 p-3 rounded-lg space-y-1 text-foreground text-xs font-bold">
-                    <div>Item: <span className="font-mono">{confirmScan.item}</span></div>
-                    <div>Lote Final: <span className="font-mono text-primary">{confirmScan.lote_sistema}</span></div>
-                    <div>Posição: {confirmScan.estrutura}.{confirmScan.coluna}.N{String(confirmScan.nivel).padStart(2, '0')} P{confirmScan.posicao}</div>
-                    <div>M Linear: {confirmScan.m_linear}m | Largura: {confirmScan.largura}m</div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Tecido encontrado:</div>
+                    <div className="bg-muted/20 p-3 rounded-lg space-y-1 text-foreground text-xs font-bold border border-border/20">
+                      <div>Item: <span className="font-mono">{confirmScan.item}</span></div>
+                      <div>Lote Final: <span className="font-mono text-primary">{confirmScan.lote_sistema}</span></div>
+                      <div>Posição: {confirmScan.estrutura}.{confirmScan.coluna}.N{String(confirmScan.nivel).padStart(2, '0')} P{confirmScan.posicao}</div>
+                      <div>M Linear: {confirmScan.m_linear}m | Largura: {confirmScan.largura}m</div>
+                    </div>
                   </div>
-                  <div>Deseja confirmar a saída deste tecido?</div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Observações (opcional):</label>
+                    <textarea
+                      value={observacoes}
+                      onChange={(e) => setObservacoes(e.target.value)}
+                      placeholder="Adicione informações adicionais se necessário..."
+                      className="w-full min-h-[100px] p-3 rounded-xl border border-border/50 bg-muted/20 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
+                    />
+                  </div>
+
+                  <div className="pt-2 font-bold text-foreground">Deseja confirmar a saída deste tecido?</div>
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700" onClick={executeScanSaida}>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700 font-bold" onClick={executeScanSaida}>
               Confirmar Saída
             </AlertDialogAction>
           </AlertDialogFooter>
