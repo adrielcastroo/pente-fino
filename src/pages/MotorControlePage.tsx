@@ -363,12 +363,29 @@ export default function MotorControlePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NFe) <span className="text-muted-foreground/50 lowercase">— opcional</span></label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NFe) <span className="text-muted-foreground/50 lowercase">— opcional</span></label>
+              <button 
+                onClick={() => setLockMotorNf(!lockMotorNf)}
+                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
+                  lockMotorNf 
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
+                    : 'text-muted-foreground/40 hover:text-muted-foreground'
+                }`}
+              >
+                {lockMotorNf ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
+                {lockMotorNf ? 'TRAVADO' : 'TRAVAR'}
+              </button>
+            </div>
             <input
               value={nf}
               onChange={e => setNf(sanitize(e.target.value))}
               placeholder="Ex: 146842"
-              className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+              className={`w-full h-11 rounded-lg border bg-muted/20 px-3 text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
+                lockMotorNf 
+                  ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
+                  : 'border-border/50'
+              }`}
             />
           </div>
 
