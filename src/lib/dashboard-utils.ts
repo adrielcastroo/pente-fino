@@ -65,10 +65,14 @@ export function computeStats(history: Conference[]) {
 
     // Duration processing
     if (conference.startedAt && conference.finishedAt) {
-      const diff = new Date(conference.finishedAt).getTime() - new Date(conference.startedAt).getTime();
-      if (diff > 0) {
-        totalDuration += diff;
-        durationCount++;
+      const s = new Date(conference.startedAt).getTime();
+      const e = new Date(conference.finishedAt).getTime();
+      if (!isNaN(s) && !isNaN(e)) {
+        const diff = e - s;
+        if (diff > 0 && diff < 86400000) { // Limit to 24h to filter out anomalies
+          totalDuration += diff;
+          durationCount++;
+        }
       }
     }
     

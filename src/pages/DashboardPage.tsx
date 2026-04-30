@@ -118,8 +118,8 @@ export default function DashboardPage() {
 
   const lastOutputs = useMemo(() => {
     const allRegistros = history.flatMap(conf => 
-      conf.registros.map(reg => ({
-        id: `${conf.id}-${reg.nf || reg.processo || Math.random()}`,
+      conf.registros.map((reg, idx) => ({
+        id: `${conf.id}-${reg.id || idx}`,
         date: conf.date,
         item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
         quantity: reg.quantidade || reg.mLinear || reg.m2 || 0,

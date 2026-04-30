@@ -253,21 +253,31 @@ export const OccupationChart = React.memo(({
   customCategories?: { name: string, value: number, color?: string }[]
 }) => {
   const { isLow } = usePerformance();
-  const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
   
-  const chartData = useMemo(() => {
+  const { calculatedUsed, calculatedTotal, finalData } = useMemo(() => {
     if (customCategories) {
-      return customCategories;
+      const sum = customCategories.reduce((acc, c) => acc + c.value, 0);
+      return {
+        calculatedUsed: sum,
+        calculatedTotal: total || sum,
+        finalData: customCategories
+      };
     }
-    return [
-      { name: 'Ocupado', value: used, color: 'hsl(var(--primary))' },
-      { name: 'Reservado', value: reserved, color: '#D97706' },
-      { name: 'Bloqueado', value: blocked, color: '#DC2626' },
-      { name: 'Livre', value: Math.max(0, total - used - reserved - blocked), color: 'hsl(var(--muted) / 0.3)' }
-    ];
+    
+    return {
+      calculatedUsed: used,
+      calculatedTotal: total,
+      finalData: [
+        { name: 'Ocupado', value: used, color: 'hsl(var(--primary))' },
+        { name: 'Reservado', value: reserved, color: '#D97706' },
+        { name: 'Bloqueado', value: blocked, color: '#DC2626' },
+        { name: 'Livre', value: Math.max(0, total - used - reserved - blocked), color: 'hsl(var(--muted) / 0.3)' }
+      ]
+    };
   }, [used, reserved, blocked, total, customCategories]);
 
-  const isEmpty = total === 0 && (!customCategories || customCategories.every(c => c.value === 0));
+  const percentage = calculatedTotal > 0 ? Math.round((calculatedUsed / calculatedTotal) * 100) : 0;
+  const isEmpty = calculatedTotal === 0 && finalData.every(c => c.value === 0);
 
   return (
     <Card className="border-none bg-card/10 backdrop-blur-md overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] h-full transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
@@ -287,7 +297,7 @@ export const OccupationChart = React.memo(({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={isEmpty ? [{ name: 'Sem dados', value: 1 }] : chartData}
+                data={isEmpty ? [{ name: 'Sem dados', value: 1 }] : finalData}
                 innerRadius="68%"
                 outerRadius="95%"
                 paddingAngle={isEmpty ? 0 : 4}
@@ -299,7 +309,7 @@ export const OccupationChart = React.memo(({
                 {isEmpty ? (
                   <Cell fill="hsl(var(--muted) / 0.2)" />
                 ) : (
-                  chartData.map((entry, index) => (
+                  finalData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
                   ))
                 )}
@@ -333,7 +343,7 @@ export const OccupationChart = React.memo(({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Total</span>
-                  <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{total} {unit}</span>
+                  <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{calculatedTotal} {unit}</span>
                 </div>
                 <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden" />
               </div>
@@ -346,7 +356,7 @@ export const OccupationChart = React.memo(({
                   <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: `${total > 0 ? (cat.value / total) * 100 : 0}%`, backgroundColor: cat.color }} 
+                      style={{ width: `${calculatedTotal > 0 ? (cat.value / calculatedTotal) * 100 : 0}%`, backgroundColor: cat.color }} 
                     />
                   </div>
                 </div>
