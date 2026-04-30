@@ -159,6 +159,16 @@ export default function ReservasPage() {
                     />
                   </div>
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="observacao" className="font-bold">Observação</Label>
+                  <Textarea 
+                    id="observacao" 
+                    value={observacao} 
+                    onChange={e => setObservacao(e.target.value)} 
+                    placeholder="Informações adicionais sobre a reserva..."
+                    className="min-h-[100px] resize-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
                 <DialogFooter className="mt-4">
                   <Button type="submit" className="w-full font-bold">Salvar Item</Button>
                 </DialogFooter>
