@@ -148,10 +148,10 @@ export default function DashboardPage() {
                 variant="default" 
                 size="lg"
                 className="h-14 px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 font-bold uppercase tracking-widest text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
-                onClick={handleFullExportPDF}
+                onClick={handleFullExportExcel}
               >
                 <Download className="w-4 h-4" />
-                Exportar PDF
+                Exportar Dados
               </Button>
             </TooltipTrigger>
             <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Executivo</TooltipContent>
