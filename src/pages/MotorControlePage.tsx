@@ -11,9 +11,15 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover as PopoverUI, PopoverContent as PopoverContentUI, PopoverTrigger as PopoverTriggerUI } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { usePerformance } from '@/hooks/use-performance';
+import { supabase } from '@/integrations/supabase/client';
 
+const MOTOR_MODELS = [
+  'SOMFY', 'DOOYA', 'GAVIOTA', 'EMMESTE', 'SAMSUNG', 'B-MOTION', 'T-MOTION', 'S-MOTION'
+];
 
-type SubMode = 'motor' | 'controle';
+const CONTROLE_MODELS = [
+  '1870405', '1870421', '1811608', '1811610', 'SI 1 PU', 'SI 4 PU', 'SI 1 VA', 'SI 4 VA'
+];
 
 const CONTROLE_MODEL_MAP: Record<string, string> = {
   '1870405': 'SI 1 PU',
