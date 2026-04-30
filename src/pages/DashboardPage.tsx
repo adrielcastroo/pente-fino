@@ -260,15 +260,15 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-3">
             <h3 className="font-extrabold text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato PDF.</p>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
           <Button 
             variant="default" 
             size="lg" 
-            onClick={handleFullExportPDF} 
+            onClick={handleFullExportExcel} 
             className="w-full rounded-2xl h-14 font-extrabold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-4"
           >
-            Exportar PDF
+            Exportar Dados
           </Button>
           
           {/* Elegant decorative element */}
