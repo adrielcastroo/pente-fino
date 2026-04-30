@@ -38,7 +38,7 @@ export default function MainLayout() {
     if (p === 'motor') return 'motor';
     if (p === 'estoque') return 'estoque';
     if (p === 'saida') return 'saida';
-    if (p === 'tabela') return 'table';
+    if (p === 'reservas') return 'reservas';
     if (p === 'historico') return 'history';
     if (p === 'configuracoes') return 'settings';
     return 'inicio';

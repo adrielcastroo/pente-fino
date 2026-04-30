@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
-import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry } from '@/types';
+import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
 import { generateLoteSistema } from '@/lib/app-utils';
 
 export interface AppState {
   registros: Registro[];
+  reservas: Reserva[];
   undoStack: UndoEntry[];
   currentMode: AppMode;
   processo: string;
@@ -80,6 +81,10 @@ export interface AppState {
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
   clearAll: () => void;
+  addReserva: (res: Reserva) => void;
+  deleteReserva: (id: string) => void;
+  updateReserva: (id: string, updates: Partial<Reserva>) => void;
+  clearReservas: () => void;
   archiveAndClear: (name: string) => Promise<void>;
   loadHistory: () => Promise<void>;
   deleteConference: (id: string) => Promise<void>;
@@ -100,6 +105,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       registros: [],
+      reservas: [],
       undoStack: [],
       currentMode: 'manual',
       processo: '',
@@ -257,6 +263,16 @@ export const useAppStore = create<AppState>()(
       },
       
       clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null }),
+      
+      addReserva: (res) => set(state => ({ reservas: [...state.reservas, res] })),
+      
+      deleteReserva: (id) => set(state => ({ reservas: state.reservas.filter(r => r.id !== id) })),
+      
+      updateReserva: (id, updates) => set(state => ({
+        reservas: state.reservas.map(r => r.id === id ? { ...r, ...updates } : r)
+      })),
+      
+      clearReservas: () => set({ reservas: [] }),
       
       archiveAndClear: async (name: string) => {
         const state = get();
@@ -429,6 +445,7 @@ export const useAppStore = create<AppState>()(
       },
       partialize: (state) => ({
         registros: state.registros,
+        reservas: state.reservas,
         undoStack: state.undoStack,
         currentMode: state.currentMode,
         processo: state.processo,

@@ -14,7 +14,7 @@ const MadeiraPage = lazy(() => import("./pages/MadeiraPage.tsx"));
 const MotorControlePage = lazy(() => import("./pages/MotorControlePage.tsx"));
 const EstoquePage = lazy(() => import("./pages/EstoquePage.tsx"));
 const SaidaPage = lazy(() => import("./pages/SaidaPage.tsx"));
-const TabelaPage = lazy(() => import("./pages/TabelaPage.tsx"));
+const ReservasPage = lazy(() => import("./pages/ReservasPage.tsx"));
 const HistoricoPage = lazy(() => import("./pages/HistoricoPage.tsx"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
 
@@ -86,7 +86,7 @@ const App = () => (
                   <Route path="/motor" element={<MotorControlePage />} />
                   <Route path="/estoque" element={<EstoquePage />} />
                   <Route path="/saida" element={<SaidaPage />} />
-                  <Route path="/tabela" element={<TabelaPage />} />
+                  <Route path="/reservas" element={<ReservasPage />} />
                   <Route path="/historico" element={<HistoricoPage />} />
                   <Route path="/configuracoes" element={<SettingsPage />} />
                 </Route>
