@@ -1190,8 +1190,12 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="endereco-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Endereço de Armazenagem</label>
-                  <button onClick={toggleLockEndereco} className={`transition-colors ${lockEndereco ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockEndereco ? 'Campo travado' : 'Travar campo'}>
-                    {lockEndereco ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  <button 
+                    onClick={() => isMadeira ? setLockMadeiraEndereco(!lockMadeiraEndereco) : toggleLockEndereco()} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    title={(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraEndereco : lockEndereco) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
                 </div>
                 <input
