@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
-import { Plus, Package, Trash2, MapPin, Hash, FileText, Search } from 'lucide-react';
+import { Plus, Package, Trash2, MapPin, Hash, FileText, Search, MessageSquare } from 'lucide-react';
 import {
   Table,
   TableBody,
