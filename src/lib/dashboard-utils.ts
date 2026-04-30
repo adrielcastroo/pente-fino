@@ -112,7 +112,8 @@ export function computeStats(history: Conference[]) {
   const avgDurationStr = avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}min` : `${avgMins}min`;
 
   return {
-    topConferentes: Array.from(confMap, ([name, data]) => ({ name, count: data.items.size, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
+    topConferentes: Array.from(confMap.values())
+      .map(data => ({ name: data.name, count: data.items.size, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
       .sort((a, b) => b.count - a.count).slice(0, 10),
     conferenteDetails: Array.from(confMap, ([name, data]) => ({ name, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
       .sort(sortByTotalDesc),
