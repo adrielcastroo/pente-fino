@@ -197,6 +197,22 @@ export default function MotorControlePage() {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
+    const cleanedModelo = modelo.trim().replace(/[a-zA-Z]$/, '').trim();
+    if (cleanedModelo !== modelo.trim()) {
+      setModelo(cleanedModelo);
+    }
+
+    const cleaned = cleanMotorSerie(serie, cleanedModelo);
+    if (!cleaned) { toast.warning('Série inválida'); return; }
+    
+    // Check local session first
+    if (isDuplicate(cleaned)) { 
+      setSerieError('Série já cadastrada nesta sessão!');
+      toast.warning('Série já cadastrada!'); 
+      setSerie(''); 
+      return; 
+    }
+
     setValidatingSerie(true);
     setSerieError(null);
 
@@ -205,7 +221,7 @@ export default function MotorControlePage() {
       const { data: existing, error } = await supabase
         .from('registros')
         .select('id')
-        .eq('lote', serie.trim())
+        .eq('lote', cleaned)
         .maybeSingle();
 
       if (error) throw error;
@@ -219,20 +235,6 @@ export default function MotorControlePage() {
       console.error('Error checking serial uniqueness:', err);
     } finally {
       setValidatingSerie(false);
-    }
-
-    const cleanedModelo = modelo.trim().replace(/[a-zA-Z]$/, '').trim();
-    if (cleanedModelo !== modelo.trim()) {
-      setModelo(cleanedModelo);
-    }
-
-    const cleaned = cleanMotorSerie(serie, cleanedModelo);
-    if (!cleaned) { toast.warning('Série inválida'); return; }
-    if (isDuplicate(cleaned)) { 
-      setSerieError('Série já cadastrada nesta sessão!');
-      toast.warning('Série já cadastrada!'); 
-      setSerie(''); 
-      return; 
     }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
