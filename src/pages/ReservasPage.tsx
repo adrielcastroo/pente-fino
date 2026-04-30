@@ -257,6 +257,21 @@ export default function ReservasPage() {
                           </div>
                         ) : '—'}
                       </TableCell>
+                      <TableCell className="max-w-[150px] truncate text-muted-foreground/70 text-xs">
+                        {item.observacao ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 cursor-help">
+                                <MessageSquare className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{item.observacao}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-xs font-medium">
+                              {item.observacao}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : '—'}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="ghost" 
