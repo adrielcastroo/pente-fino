@@ -1,0 +1,1 @@
+ALTER TABLE public.estoque_saidas ADD COLUMN observacoes TEXT;
