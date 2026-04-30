@@ -411,7 +411,6 @@ export default function MotorControlePage() {
         )}
 
         {/* Form fields */}
-        <div className="space-y-3">
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center justify-between">
