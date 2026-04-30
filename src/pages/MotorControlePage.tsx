@@ -1,25 +1,15 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Check, AlertCircle, ChevronDown } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { usePerformance } from '@/hooks/use-performance';
-import { supabase } from '@/integrations/supabase/client';
+
+
 type SubMode = 'motor' | 'controle';
-
-const MOTOR_MODELS = [
-  'SOMFY', 'DOOYA', 'GAVIOTA', 'EMMESTE', 'SAMSUNG', 'B-MOTION', 'T-MOTION', 'S-MOTION'
-];
-
-const CONTROLE_MODELS = [
-  '1870405', '1870421', '1811608', '1811610', 'SI 1 PU', 'SI 4 PU', 'SI 1 VA', 'SI 4 VA'
-];
 
 const CONTROLE_MODEL_MAP: Record<string, string> = {
   '1870405': 'SI 1 PU',
@@ -54,14 +44,12 @@ export default function MotorControlePage() {
   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
   const { isLow } = usePerformance();
 
-  const [openModelo, setOpenModelo] = useState(false);
-  const [validatingSerie, setValidatingSerie] = useState(false);
-  const [serieError, setSerieError] = useState<string | null>(null);
-
   useEffect(() => {
     setFormData({ activeTab: 'motor' });
   }, [setFormData]);
 
+
+  
   const subMode = formData.motorSubMode;
   const modelo = formData.motorModelo;
   const nf = formData.motorNf;
@@ -69,32 +57,10 @@ export default function MotorControlePage() {
   const temCaixa = formData.motorTemCaixa;
   const caixaNum = formData.motorCaixaNum;
 
-  const setSubMode = useCallback((val: SubMode) => setFormData({ motorSubMode: val }), [setFormData]);
-  const setModelo = useCallback((val: string) => {
-    // Lock character specials for model: allow only letters, numbers and spaces
-    const locked = val.replace(/[^a-zA-Z0-9\s-]/g, '').slice(0, 100);
-    setFormData({ motorModelo: locked });
-  }, [setFormData]);
-
-  const setNf = useCallback((val: string) => {
-    // Mask for NF: 000.000.000
-    const numbersOnly = val.replace(/\D/g, '').slice(0, 9);
-    let masked = numbersOnly;
-    if (numbersOnly.length > 6) {
-      masked = `${numbersOnly.slice(0, 3)}.${numbersOnly.slice(3, 6)}.${numbersOnly.slice(6)}`;
-    } else if (numbersOnly.length > 3) {
-      masked = `${numbersOnly.slice(0, 3)}.${numbersOnly.slice(3)}`;
-    }
-    setFormData({ motorNf: masked });
-  }, [setFormData]);
-
-  const setSerie = useCallback((val: string) => {
-    // No spaces, Uppercase
-    const cleaned = val.replace(/\s/g, '').toUpperCase();
-    setFormData({ motorSerie: cleaned });
-    if (serieError) setSerieError(null);
-  }, [setFormData, serieError]);
-
+  const setSubMode = useCallback((val: 'motor' | 'controle') => setFormData({ motorSubMode: val }), [setFormData]);
+  const setModelo = useCallback((val: string) => setFormData({ motorModelo: val }), [setFormData]);
+  const setNf = useCallback((val: string) => setFormData({ motorNf: val }), [setFormData]);
+  const setSerie = useCallback((val: string) => setFormData({ motorSerie: val }), [setFormData]);
   const setTemCaixa = useCallback((val: boolean) => setFormData({ motorTemCaixa: val }), [setFormData]);
   const setCaixaNum = useCallback((val: string) => setFormData({ motorCaixaNum: val }), [setFormData]);
 
@@ -193,10 +159,11 @@ export default function MotorControlePage() {
     }
   }, [subMode, modelo, setModelo]);
 
-  const handleAddMotor = useCallback(async () => {
+  const handleAddMotor = useCallback(() => {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
+    // Remove trailing letter from motor model (e.g., 1246344B -> 1246344)
     const cleanedModelo = modelo.trim().replace(/[a-zA-Z]$/, '').trim();
     if (cleanedModelo !== modelo.trim()) {
       setModelo(cleanedModelo);
@@ -204,38 +171,7 @@ export default function MotorControlePage() {
 
     const cleaned = cleanMotorSerie(serie, cleanedModelo);
     if (!cleaned) { toast.warning('Série inválida'); return; }
-    
-    // Check local session first
-    if (isDuplicate(cleaned)) { 
-      setSerieError('Série já cadastrada nesta sessão!');
-      toast.warning('Série já cadastrada!'); 
-      setSerie(''); 
-      return; 
-    }
-
-    setValidatingSerie(true);
-    setSerieError(null);
-
-    // Uniqueness check in DB
-    try {
-      const { data: existing, error } = await supabase
-        .from('registros')
-        .select('id')
-        .eq('lote', cleaned)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (existing) {
-        setSerieError('Número de série já existe no banco de dados!');
-        toast.error('Número de série já cadastrado!');
-        setValidatingSerie(false);
-        return;
-      }
-    } catch (err) {
-      console.error('Error checking serial uniqueness:', err);
-    } finally {
-      setValidatingSerie(false);
-    }
+    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     const cxLabel = temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX';
     const nfLabel = nf.trim() ? `NF ${nf.trim()}` : '';
@@ -260,50 +196,23 @@ export default function MotorControlePage() {
 
     toast.success(`Motor adicionado: ${cleaned}`);
     setSerie('');
+    // Clear other fields if not using a "lock" (Note: MotorControlePage doesn't have UI locks yet, 
+    // so we implement standard clear or the user can add locks later)
+    setModelo('');
+    setNf('');
     serieRef.current?.focus();
-  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, setSerie, setModelo]);
+  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, setSerie]);
 
-  const handleAddControle = useCallback(async () => {
+  const handleAddControle = useCallback(() => {
     const resolvedModelo = mapModelo(modelo);
-    if (resolvedModelo !== modelo) setModelo(resolvedModelo);
+    setModelo(resolvedModelo);
 
     if (!resolvedModelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
     const cleaned = cleanControleSerie(serie);
     if (!cleaned) { toast.warning('Série inválida'); return; }
-    
-    // Check local session first
-    if (isDuplicate(cleaned)) { 
-      setSerieError('Série já cadastrada nesta sessão!');
-      toast.warning('Série já cadastrada!'); 
-      setSerie(''); 
-      return; 
-    }
-
-    setValidatingSerie(true);
-    setSerieError(null);
-
-    // Uniqueness check in DB
-    try {
-      const { data: existing, error } = await supabase
-        .from('registros')
-        .select('id')
-        .eq('lote', cleaned)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (existing) {
-        setSerieError('Número de série já existe no banco de dados!');
-        toast.error('Número de série já cadastrado!');
-        setValidatingSerie(false);
-        return;
-      }
-    } catch (err) {
-      console.error('Error checking serial uniqueness:', err);
-    } finally {
-      setValidatingSerie(false);
-    }
+    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     const seq = getSequencial();
     const loteSistema = nf.trim()
@@ -329,6 +238,8 @@ export default function MotorControlePage() {
 
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     setSerie('');
+    setModelo('');
+    setNf('');
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, setSerie]);
 
@@ -415,74 +326,31 @@ export default function MotorControlePage() {
         )}
 
         {/* Form fields */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center justify-between">
-              Modelo / Marca
-              {modelo.length > 0 && <span className="text-[10px] lowercase font-normal">{modelo.length}/100</span>}
-            </label>
-            <Popover open={openModelo} onOpenChange={setOpenModelo}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openModelo}
-                  className="w-full h-11 justify-between bg-muted/20 border-border/50 text-sm font-medium hover:bg-muted/30"
-                >
-                  {modelo ? modelo : "Selecione ou digite o modelo..."}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command className="w-full">
-                  <CommandInput 
-                    placeholder="Pesquisar modelo..." 
-                    value={modelo}
-                    onValueChange={(val) => setModelo(val)}
-                  />
-                  <CommandList>
-                    <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
-                    <CommandGroup heading="Sugestões">
-                      {(subMode === 'motor' ? MOTOR_MODELS : CONTROLE_MODELS).map((m) => (
-                        <CommandItem
-                          key={m}
-                          value={m}
-                          onSelect={() => {
-                            setModelo(m);
-                            setOpenModelo(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              modelo === m ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {m}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Marca</label>
+            <input
+              ref={modeloRef}
+              value={modelo}
+              onChange={e => setModelo(sanitize(e.target.value))}
+              onBlur={handleModeloBlur}
+              placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
+              className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NFe) <span className="text-muted-foreground/50 lowercase">— opcional</span></label>
             <input
               value={nf}
-              onChange={e => setNf(e.target.value)}
-              placeholder="000.000.000"
+              onChange={e => setNf(sanitize(e.target.value))}
+              placeholder="Ex: 146842"
               className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-              Número de Série (S/N)
-              <Badge variant="outline" className="text-[9px] h-4 px-1 uppercase border-primary/20 text-primary">Obrigatório</Badge>
-            </label>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Número de Série (S/N)</label>
             <div className="relative">
               <input
                 ref={serieRef}
@@ -490,27 +358,10 @@ export default function MotorControlePage() {
                 onChange={e => setSerie(e.target.value)}
                 onKeyDown={handleSerieKeyDown}
                 placeholder="Bipe o código agora..."
-                className={cn(
-                  "w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30",
-                  serieError && "border-destructive focus:ring-destructive/10 focus:border-destructive bg-destructive/5"
-                )}
+                className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                {validatingSerie ? (
-                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                ) : serieError ? (
-                  <AlertCircle className="w-4 h-4 text-destructive" />
-                ) : (
-                  <ScanBarcode className="w-4 h-4 text-muted-foreground/30" />
-                )}
-              </div>
+              <ScanBarcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
             </div>
-            {serieError && (
-              <p className="text-[10px] text-destructive font-medium mt-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
-                <AlertCircle className="w-3 h-3" />
-                {serieError}
-              </p>
-            )}
           </div>
         </div>
 
@@ -518,20 +369,10 @@ export default function MotorControlePage() {
         <div className="space-y-2 pb-4">
           <Button
             onClick={subMode === 'motor' ? handleAddMotor : handleAddControle}
-            disabled={validatingSerie || !modelo.trim() || !serie.trim()}
-            className="w-full h-12 rounded-xl font-semibold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all"
+            className="w-full h-12 rounded-xl font-semibold text-sm"
           >
-            {validatingSerie ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                Validando...
-              </div>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
-              </>
-            )}
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
           </Button>
 
           {/* Preview table */}
