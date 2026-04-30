@@ -39,6 +39,7 @@ export default function ReservasPage() {
   const [endereco, setEndereco] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [caixaNum, setCaixaNum] = useState('');
+  const [observacao, setObservacao] = useState('');
 
   useEffect(() => {
     setFormData({ activeTab: 'reservas' });
