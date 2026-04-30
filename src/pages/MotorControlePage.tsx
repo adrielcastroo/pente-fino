@@ -42,6 +42,10 @@ export default function MotorControlePage() {
   const formData = useAppStore(s => s.formData);
   const setFormData = useAppStore(s => s.setFormData);
   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
+  const lockMotorModelo = useAppStore(s => s.lockMotorModelo);
+  const setLockMotorModelo = useAppStore(s => s.setLockMotorModelo);
+  const lockMotorNf = useAppStore(s => s.lockMotorNf);
+  const setLockMotorNf = useAppStore(s => s.setLockMotorNf);
   const { isLow } = usePerformance();
 
   useEffect(() => {
