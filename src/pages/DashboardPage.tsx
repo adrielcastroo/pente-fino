@@ -125,15 +125,11 @@ export default function DashboardPage() {
             <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 transition-colors hover:bg-primary/10">
               <Activity className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Visão Geral de Dados</span>
           </div>
           <div className="space-y-1">
             <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
               Dashboard
             </h1>
-            <p className="text-muted-foreground text-base max-w-xl leading-relaxed font-medium opacity-70">
-              Gestão operacional em tempo real. Analise métricas, identifique gargalos e otimize o fluxo de trabalho da unidade.
-            </p>
           </div>
         </div>
         
