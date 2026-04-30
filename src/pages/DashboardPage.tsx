@@ -116,6 +116,19 @@ export default function DashboardPage() {
     );
   }
 
+  const lastOutputs = useMemo(() => {
+    const allRegistros = history.flatMap(conf => 
+      conf.registros.map(reg => ({
+        id: `${conf.id}-${reg.nf || reg.processo || Math.random()}`,
+        date: conf.date,
+        item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
+        quantity: reg.quantidade || reg.mLinear || reg.m2 || 0,
+        unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
+      }))
+    );
+    return allRegistros.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+  }, [history]);
+
   return (
     <div id="dashboard-content" className="space-y-5 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8">
       {/* Header */}
@@ -238,6 +251,55 @@ export default function DashboardPage() {
             chartKey="value"
             onDetailClick={setDetailChart} 
           />
+          
+          <Card className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+            <CardHeader className="p-5 sm:p-6 border-b border-border/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <CardTitle className="text-lg font-black tracking-tight uppercase">Últimas Saídas</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/5">
+                {lastOutputs.length > 0 ? (
+                  lastOutputs.map((output) => (
+                    <div key={output.id} className="p-4 sm:p-5 flex items-center justify-between hover:bg-primary/[0.02] transition-colors group">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-bold text-foreground/90 group-hover:text-primary transition-colors truncate max-w-[150px] sm:max-w-[200px]">
+                          {output.item}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">
+                            {formatDateBR(output.date)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-primary tabular-nums">
+                          {output.quantity} {output.unit}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-muted-foreground font-medium italic">Nenhum registro recente</p>
+                  </div>
+                )}
+              </div>
+              {lastOutputs.length > 0 && (
+                <div className="p-4 border-t border-border/5 bg-muted/5">
+                  <Button variant="ghost" className="w-full text-[10px] font-bold uppercase tracking-widest gap-2 text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
+                    Ver Histórico Completo
+                    <ChevronRight className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="lg:col-span-4 h-full">
