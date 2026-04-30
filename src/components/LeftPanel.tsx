@@ -1208,7 +1208,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     (isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
                   placeholder="TEC01.A.N03" autoComplete="off"
-                  readOnly={lockEndereco && !!lockedEndereco}
+                  readOnly={(isMadeira ? lockMadeiraEndereco : lockEndereco) && !!(isMadeira ? endereco : lockedEndereco)}
                 />
                 {enderecoError && <p className="text-[10px] text-destructive font-medium ml-1">{enderecoError}</p>}
               </div>
