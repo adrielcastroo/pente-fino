@@ -40,6 +40,7 @@ export default function ReservasPage() {
   const [endereco, setEndereco] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [caixaNum, setCaixaNum] = useState('');
+  const [quantidadeCx, setQuantidadeCx] = useState('');
   const [observacao, setObservacao] = useState('');
 
   useEffect(() => {
