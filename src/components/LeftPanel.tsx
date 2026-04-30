@@ -1054,7 +1054,16 @@ export const LeftPanel = memo(function LeftPanel() {
             {isMadeira && (
               <>
                 <div className="space-y-1.5">
-                  <label htmlFor="lote-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                  <div className="flex items-center gap-1.5 h-4">
+                    <label htmlFor="lote-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                    <button 
+                      onClick={() => setLockMadeiraLote(!lockMadeiraLote)} 
+                      className={`transition-colors ${lockMadeiraLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                      title={lockMadeiraLote ? 'Campo travado' : 'Travar campo'}
+                    >
+                      {lockMadeiraLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    </button>
+                  </div>
                   <input
                     id="lote-input"
                     ref={loteRef}
