@@ -73,6 +73,7 @@ export default function ReservasPage() {
     setEndereco('');
     setQuantidade('');
     setCaixaNum('');
+    setObservacao('');
     setIsDialogOpen(false);
   };
 
