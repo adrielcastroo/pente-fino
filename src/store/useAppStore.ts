@@ -6,6 +6,7 @@ import { generateLoteSistema } from '@/lib/app-utils';
 
 export interface AppState {
   registros: Registro[];
+  reservas: any[];
   undoStack: UndoEntry[];
   currentMode: AppMode;
   processo: string;
