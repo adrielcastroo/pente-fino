@@ -121,8 +121,8 @@ export default function DashboardPage() {
       conf.registros.map(reg => ({
         id: `${conf.id}-${reg.nf || reg.processo || Math.random()}`,
         date: conf.date,
-        item: reg.processo || reg.nf || 'Item sem identificação',
-        quantity: reg.metros || reg.quantidade || 0,
+        item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
+        quantity: reg.quantidade || reg.mLinear || reg.m2 || 0,
         unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
       }))
     );
