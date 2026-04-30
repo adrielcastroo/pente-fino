@@ -63,22 +63,22 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[2rem] sm:rounded-[3rem]">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-6 sm:px-10 py-6 sm:py-8 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
+    <Card className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] lg:rounded-[3rem]">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 gap-4 sm:gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
-          <CardTitle className="text-xl font-extrabold tracking-tight flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <Activity className="w-5 h-5" />
+          <CardTitle className="text-base sm:text-lg lg:text-xl font-extrabold tracking-tight flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 text-primary">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span>Volume de Operações</span>
           </CardTitle>
-          <p className="text-sm text-muted-foreground font-medium opacity-70 ml-11">Histórico de conferências por período</p>
+          <p className="text-[10px] sm:text-sm text-muted-foreground font-medium opacity-70 ml-8 sm:ml-11">Histórico de conferências por período</p>
         </div>
-        <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border/20 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all" onClick={() => onExport(data, 'Timeline_Operacoes')}>
+        <Button variant="outline" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/20 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all self-end sm:self-auto" onClick={() => onExport(data, 'Timeline_Operacoes')}>
           <Download className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-4 sm:px-8 pb-8 sm:pb-12 pt-8 sm:pt-10 h-[clamp(300px,50vh,600px)]">
+      <CardContent className="px-2 sm:px-4 lg:px-8 pb-6 sm:pb-8 lg:pb-12 pt-6 sm:pt-8 lg:pt-10 h-[clamp(250px,45vh,600px)]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             {!isLow && (
