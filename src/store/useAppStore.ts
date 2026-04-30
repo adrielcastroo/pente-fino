@@ -30,6 +30,10 @@ export interface AppState {
   // Cortina locks
   lockCortinaLargura: boolean;
   lockedCortinaLargura: string;
+  lockMadeiraProcesso: boolean;
+  lockMadeiraItem: boolean;
+  lockMadeiraLote: boolean;
+  lockMadeiraEndereco: boolean;
   lockMotorModelo: boolean;
   lockMotorNf: boolean;
   
@@ -62,6 +66,10 @@ export interface AppState {
   setLockedMetragem: (m: string) => void;
   setLockCortinaLargura: (lock: boolean) => void;
   setLockedCortinaLargura: (l: string) => void;
+  setLockMadeiraProcesso: (lock: boolean) => void;
+  setLockMadeiraItem: (lock: boolean) => void;
+  setLockMadeiraLote: (lock: boolean) => void;
+  setLockMadeiraEndereco: (lock: boolean) => void;
   setLockMotorModelo: (lock: boolean) => void;
   setLockMotorNf: (lock: boolean) => void;
   
@@ -115,6 +123,10 @@ export const useAppStore = create<AppState>()(
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
+      lockMadeiraProcesso: false,
+      lockMadeiraItem: false,
+      lockMadeiraLote: false,
+      lockMadeiraEndereco: false,
       lockMotorModelo: false,
       lockMotorNf: false,
       
@@ -160,6 +172,10 @@ export const useAppStore = create<AppState>()(
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
       setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
       setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
+      setLockMadeiraProcesso: (lock) => set({ lockMadeiraProcesso: lock }),
+      setLockMadeiraItem: (lock) => set({ lockMadeiraItem: lock }),
+      setLockMadeiraLote: (lock) => set({ lockMadeiraLote: lock }),
+      setLockMadeiraEndereco: (lock) => set({ lockMadeiraEndereco: lock }),
       setLockMotorModelo: (lock) => set({ lockMotorModelo: lock }),
       setLockMotorNf: (lock) => set({ lockMotorNf: lock }),
       
@@ -167,24 +183,34 @@ export const useAppStore = create<AppState>()(
       
       resetFormData: () => {
         const state = get();
+        const isMadeira = state.currentMode === 'madeira';
         const newData = { 
           ...INITIAL_FORM_DATA,
           activeTab: state.formData.activeTab,
           estoqueActiveTec: state.formData.estoqueActiveTec,
-          diversosTipo: state.formData.diversosTipo // Preserve diversosTipo after reset
+          diversosTipo: state.formData.diversosTipo 
         };
         
-        if (state.lockNf) newData.nf = state.lockedNf;
-        if (state.lockEndereco) newData.endereco = state.lockedEndereco;
-        if (state.lockItem) newData.item = state.lockedItem;
-        if (state.lockLote) newData.lote = state.lockedLote;
-        if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
-        if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
+        if (isMadeira) {
+          if (state.lockMadeiraItem) newData.item = state.formData.item;
+          if (state.lockMadeiraLote) newData.lote = state.formData.lote;
+          if (state.lockMadeiraEndereco) newData.endereco = state.formData.endereco;
+        } else {
+          if (state.lockNf) newData.nf = state.lockedNf;
+          if (state.lockEndereco) newData.endereco = state.lockedEndereco;
+          if (state.lockItem) newData.item = state.lockedItem;
+          if (state.lockLote) newData.lote = state.lockedLote;
+          if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
+          if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
+        }
         
-        // Clear non-locked base store fields
         const updates: any = { formData: newData };
-        if (!state.lockProcesso) {
-          updates.processo = '';
+        if (isMadeira) {
+          if (!state.lockMadeiraProcesso) updates.processo = '';
+          else updates.processo = state.processo;
+        } else {
+          if (!state.lockProcesso) updates.processo = '';
+          else updates.processo = state.processo;
         }
 
         set(updates);
@@ -429,6 +455,10 @@ export const useAppStore = create<AppState>()(
         lockedMetragem: state.lockedMetragem,
         lockCortinaLargura: state.lockCortinaLargura,
         lockedCortinaLargura: state.lockedCortinaLargura,
+        lockMadeiraProcesso: state.lockMadeiraProcesso,
+        lockMadeiraItem: state.lockMadeiraItem,
+        lockMadeiraLote: state.lockMadeiraLote,
+        lockMadeiraEndereco: state.lockMadeiraEndereco,
         lockMotorModelo: state.lockMotorModelo,
         lockMotorNf: state.lockMotorNf,
       } as any),

@@ -36,6 +36,10 @@ export const LeftPanel = memo(function LeftPanel() {
     lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco,
     lockItem, setLockItem, lockedItem, setLockedItem,
     lockLote, setLockLote, lockedLote, setLockedLote,
+    lockMadeiraProcesso, setLockMadeiraProcesso,
+    lockMadeiraItem, setLockMadeiraItem,
+    lockMadeiraLote, setLockMadeiraLote,
+    lockMadeiraEndereco, setLockMadeiraEndereco,
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
@@ -70,6 +74,14 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockLote: s.setLockLote,
     lockedLote: s.lockedLote,
     setLockedLote: s.setLockedLote,
+    lockMadeiraProcesso: s.lockMadeiraProcesso,
+    setLockMadeiraProcesso: s.setLockMadeiraProcesso,
+    lockMadeiraItem: s.lockMadeiraItem,
+    setLockMadeiraItem: s.setLockMadeiraItem,
+    lockMadeiraLote: s.lockMadeiraLote,
+    setLockMadeiraLote: s.setLockMadeiraLote,
+    lockMadeiraEndereco: s.lockMadeiraEndereco,
+    setLockMadeiraEndereco: s.setLockMadeiraEndereco,
     lockMetragem: s.lockMetragem,
     setLockMetragem: s.setLockMetragem,
     lockedMetragem: s.lockedMetragem,
@@ -312,8 +324,19 @@ export const LeftPanel = memo(function LeftPanel() {
     setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
-    setTimeout(() => itemRef.current?.focus(), 50);
-  }, [resetFormData]);
+    // Return focus to appropriate field
+    setTimeout(() => {
+      if (isMadeira) {
+        if (!lockMadeiraProcesso) itemRef.current?.focus();
+        else if (!lockMadeiraItem) itemRef.current?.focus();
+        else if (!lockMadeiraLote) loteRef.current?.focus();
+        else if (requiresEndereco && !lockMadeiraEndereco) enderecoRef.current?.focus();
+        else itemRef.current?.focus();
+      } else {
+        itemRef.current?.focus();
+      }
+    }, 50);
+  }, [resetFormData, isMadeira, lockMadeiraProcesso, lockMadeiraItem, lockMadeiraLote, lockMadeiraEndereco, requiresEndereco]);
 
   const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
     setFotoMime(file.type || 'image/jpeg');
@@ -888,8 +911,12 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
                   <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
-                  <button onClick={toggleLockProcesso} className={`transition-colors ${lockProcesso ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockProcesso ? 'Campo travado' : 'Travar campo'}>
-                    {lockProcesso ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  <button 
+                    onClick={() => isMadeira ? setLockMadeiraProcesso(!lockMadeiraProcesso) : toggleLockProcesso()} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    title={(isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraProcesso : lockProcesso) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
                 </div>
                 <input
@@ -898,11 +925,11 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleProcessoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    lockProcesso ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                   }`}
                   placeholder="Ex: 123456..."
                   autoComplete="off"
-                  readOnly={lockProcesso && !!lockedProcesso}
+                  readOnly={(isMadeira ? lockMadeiraProcesso : lockProcesso) && !!processo}
                 />
               </div>
             )}
@@ -911,9 +938,13 @@ export const LeftPanel = memo(function LeftPanel() {
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 h-4">
                 <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
-                {isPVT && (
-                  <button onClick={toggleLockItem} className={`transition-colors ${lockItem ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockItem ? 'Campo travado' : 'Travar campo'}>
-                    {lockItem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                {(isPVT || isMadeira) && (
+                  <button 
+                    onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
                 )}
               </div>
@@ -926,11 +957,11 @@ export const LeftPanel = memo(function LeftPanel() {
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    (isPVT && lockItem) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
-                  readOnly={isPVT && lockItem && !!lockedItem}
+                  readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) && !!item}
                 />
                 {usesLarguraFromItem && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
@@ -1034,14 +1065,26 @@ export const LeftPanel = memo(function LeftPanel() {
             {isMadeira && (
               <>
                 <div className="space-y-1.5">
-                  <label htmlFor="lote-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                  <div className="flex items-center gap-1.5 h-4">
+                    <label htmlFor="lote-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                    <button 
+                      onClick={() => setLockMadeiraLote(!lockMadeiraLote)} 
+                      className={`transition-colors ${lockMadeiraLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                      title={lockMadeiraLote ? 'Campo travado' : 'Travar campo'}
+                    >
+                      {lockMadeiraLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    </button>
+                  </div>
                   <input
                     id="lote-input"
                     ref={loteRef}
                     value={lote}
                     onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                     onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
-                    className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+                    className={`w-full h-11 rounded-lg border px-3 text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
+                      lockMadeiraLote ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'border-border/50 bg-muted/20 focus:border-primary'
+                    }`}
+                    readOnly={lockMadeiraLote && !!lote}
                     placeholder="Lote..." autoComplete="off"
                   />
                 </div>
@@ -1159,8 +1202,12 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="endereco-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Endereço de Armazenagem</label>
-                  <button onClick={toggleLockEndereco} className={`transition-colors ${lockEndereco ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockEndereco ? 'Campo travado' : 'Travar campo'}>
-                    {lockEndereco ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  <button 
+                    onClick={() => isMadeira ? setLockMadeiraEndereco(!lockMadeiraEndereco) : toggleLockEndereco()} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    title={(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraEndereco : lockEndereco) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
                 </div>
                 <input
@@ -1170,10 +1217,10 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleEnderecoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
-                    lockEndereco ? 'bg-primary/5 border-primary/30 text-primary' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
+                    (isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
                   placeholder="TEC01.A.N03" autoComplete="off"
-                  readOnly={lockEndereco && !!lockedEndereco}
+                  readOnly={(isMadeira ? lockMadeiraEndereco : lockEndereco) && !!(isMadeira ? endereco : lockedEndereco)}
                 />
                 {enderecoError && <p className="text-[10px] text-destructive font-medium ml-1">{enderecoError}</p>}
               </div>
