@@ -235,7 +235,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 
 SummaryChart.displayName = 'SummaryChart';
 
-export const OccupationChart = React.memo(({ title, used, total, unit = 'alocações' }: { title: string, used: number, total: number, unit?: string }) => {
+export const OccupationChart = React.memo(({ title, used, total, reserved = 0, blocked = 0, unit = 'alocações' }: { title: string, used: number, total: number, reserved?: number, blocked?: number, unit?: string }) => {
   const { isLow } = usePerformance();
   const percentage = Math.round((used / total) * 100);
   
@@ -273,7 +273,9 @@ export const OccupationChart = React.memo(({ title, used, total, unit = 'alocaç
               <Pie
                 data={[
                   { name: 'Ocupado', value: used },
-                  { name: 'Disponível', value: total - used }
+                  { name: 'Reservado', value: reserved },
+                  { name: 'Bloqueado', value: blocked },
+                  { name: 'Livre', value: total - used - reserved - blocked }
                 ]}
                 innerRadius="68%"
                 outerRadius="95%"
@@ -284,6 +286,8 @@ export const OccupationChart = React.memo(({ title, used, total, unit = 'alocaç
                 isAnimationActive={!isLow}
               >
                 <Cell fill="hsl(var(--primary))" />
+                <Cell fill="#D97706" /> {/* Amber for Reserved */}
+                <Cell fill="#DC2626" /> {/* Red for Blocked */}
                 <Cell fill="hsl(var(--muted) / 0.3)" />
               </Pie>
               <ChartTooltip 
@@ -332,10 +336,34 @@ export const OccupationChart = React.memo(({ title, used, total, unit = 'alocaç
             </div>
           </div>
 
+          {reserved > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Reservado</span>
+                <span className="text-xs sm:text-sm font-bold text-amber-600 tabular-nums whitespace-nowrap">{reserved} {unit}</span>
+              </div>
+              <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-600 rounded-full" style={{ width: `${Math.round((reserved / total) * 100)}%` }} />
+              </div>
+            </div>
+          )}
+
+          {blocked > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Bloqueado</span>
+                <span className="text-xs sm:text-sm font-bold text-destructive tabular-nums whitespace-nowrap">{blocked} {unit}</span>
+              </div>
+              <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                <div className="h-full bg-destructive rounded-full" style={{ width: `${Math.round((blocked / total) * 100)}%` }} />
+              </div>
+            </div>
+          )}
+
           <div className="pt-3 sm:pt-4 mt-2 sm:mt-4 border-t border-border/10">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Disponível</span>
-              <span className="text-xs sm:text-sm font-bold text-foreground/70 tabular-nums whitespace-nowrap">{total - used} {unit}</span>
+              <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Livre</span>
+              <span className="text-xs sm:text-sm font-bold text-foreground/70 tabular-nums whitespace-nowrap">{total - used - reserved - blocked} {unit}</span>
             </div>
           </div>
         </div>
