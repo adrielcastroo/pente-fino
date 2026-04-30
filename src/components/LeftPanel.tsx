@@ -324,8 +324,19 @@ export const LeftPanel = memo(function LeftPanel() {
     setAiStatus(null); setProgress(0);
     setEnderecoError('');
     stopCamera();
-    setTimeout(() => itemRef.current?.focus(), 50);
-  }, [resetFormData]);
+    // Return focus to appropriate field
+    setTimeout(() => {
+      if (isMadeira) {
+        if (!lockMadeiraProcesso) itemRef.current?.focus();
+        else if (!lockMadeiraItem) itemRef.current?.focus();
+        else if (!lockMadeiraLote) loteRef.current?.focus();
+        else if (requiresEndereco && !lockMadeiraEndereco) enderecoRef.current?.focus();
+        else itemRef.current?.focus();
+      } else {
+        itemRef.current?.focus();
+      }
+    }, 50);
+  }, [resetFormData, isMadeira, lockMadeiraProcesso, lockMadeiraItem, lockMadeiraLote, lockMadeiraEndereco, requiresEndereco]);
 
   const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
     setFotoMime(file.type || 'image/jpeg');
