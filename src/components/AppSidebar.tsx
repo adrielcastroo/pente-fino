@@ -32,7 +32,7 @@ const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
   { key: 'estoque', label: 'Estoque', icon: Warehouse, path: '/estoque' },
   { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
-  { key: 'table', label: 'Tabela', icon: Table, path: '/tabela' },
+  { key: 'reservas', label: 'Reservas Estoque', icon: Table, path: '/reservas' },
   { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
 ];
 
@@ -111,7 +111,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               {menuItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
-                const isTableTab = item.key === 'table';
+                const isTableTab = item.key === 'reservas';
                 const hasRecords = isTableTab && registroCount > 0;
 
                 return (
