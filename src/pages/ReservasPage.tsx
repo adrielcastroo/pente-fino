@@ -249,15 +249,14 @@ export default function ReservasPage() {
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade CX</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº CX</TableHead>
-                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Total</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">OBS</TableHead>
-                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Ações</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReservas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Package className="w-12 h-12 opacity-10" />
                         <p className="font-medium italic">Nenhum item encontrado na prateleira virtual.</p>
@@ -290,9 +289,6 @@ export default function ReservasPage() {
                           </div>
                         ) : '—'}
                       </TableCell>
-                      <TableCell className="text-center font-mono font-bold text-primary">
-                        {(item.quantidade || 0) * (item.quantidadeCx || 0)}
-                      </TableCell>
                       <TableCell className="max-w-[150px] truncate text-muted-foreground/70 text-xs">
                         {item.observacao ? (
                           <Tooltip>
@@ -308,18 +304,8 @@ export default function ReservasPage() {
                           </Tooltip>
                         ) : '—'}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                          onClick={() => {
-                            deleteReserva(item.id);
-                            toast.success('Item removido com sucesso.');
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      <TableCell className="text-right font-mono font-bold text-primary">
+                        {(item.quantidade || 0) * (item.quantidadeCx || 0)}
                       </TableCell>
                     </TableRow>
                   ))
