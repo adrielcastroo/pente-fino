@@ -53,10 +53,10 @@ export default function DashboardPage() {
       { Categoria: 'Total de Registros', Informação: '', Valor: stats.totalRegistros },
       { Categoria: 'Média de Sessão', Informação: '', Valor: stats.avgDuration },
       { Categoria: '', Informação: '', Valor: '' },
-      { Categoria: 'PRODUÇÃO POR CONFERENTE', Informação: 'Registros', Valor: 'Conferências' },
+      { Categoria: 'PRODUÇÃO POR CONFERENTE', Informação: 'Total Registros', Valor: 'Conferências' },
       ...stats.topConferentes.map(c => ({
         Categoria: c.name,
-        Informação: c.count,
+        Informação: c.total,
         Valor: c.conferences || 0
       }))
     ];
@@ -102,7 +102,11 @@ export default function DashboardPage() {
         unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
       }))
     );
-    return allRegistros.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+    return allRegistros.sort((a, b) => {
+      const timeA = new Date(a.date).getTime();
+      const timeB = new Date(b.date).getTime();
+      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+    }).slice(0, 5);
   }, [history]);
 
   if (isHistoryLoading && history.length === 0) {
