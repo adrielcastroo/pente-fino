@@ -84,7 +84,9 @@ export default function ReservasPage() {
   const filteredReservas = reservas.filter(r => 
     r.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.endereco.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.descricao && r.descricao.toLowerCase().includes(searchTerm.toLowerCase()))
+    (r.descricao && r.descricao.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (r.caixaNum && r.caixaNum.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (r.observacao && r.observacao.toLowerCase().includes(searchTerm.toLowerCase()))
   ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
@@ -148,9 +150,16 @@ export default function ReservasPage() {
                     <Label htmlFor="quantidade" className="font-bold">Quantidade <span className="text-destructive">*</span></Label>
                     <Input 
                       id="quantidade" 
-                      type="number" 
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={quantidade} 
-                      onChange={e => setQuantidade(e.target.value)} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '' || /^\d+$/.test(val)) {
+                          setQuantidade(val);
+                        }
+                      }} 
                       placeholder="0"
                     />
                   </div>
@@ -270,7 +279,7 @@ export default function ReservasPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="font-mono bg-primary/5 text-primary border-primary/20 font-bold px-3 py-1">
-                          {item.quantidade}
+                          {item.quantidade ?? 0}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center font-mono text-muted-foreground">
@@ -280,6 +289,9 @@ export default function ReservasPage() {
                             {item.caixaNum}
                           </div>
                         ) : '—'}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-bold text-foreground">
+                        {item.quantidadeCx ?? '—'}
                       </TableCell>
                       <TableCell className="max-w-[150px] truncate text-muted-foreground/70 text-xs">
                         {item.observacao ? (
@@ -295,9 +307,6 @@ export default function ReservasPage() {
                             </TooltipContent>
                           </Tooltip>
                         ) : '—'}
-                      </TableCell>
-                      <TableCell className="text-center font-mono font-bold text-foreground">
-                        {item.quantidadeCx || '—'}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
