@@ -245,12 +245,12 @@ export default function ReservasPage() {
               <TableHeader>
                 <TableRow className="hover:bg-transparent bg-muted/20">
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Código</TableHead>
-                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Descrição</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
-                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº Caixa</TableHead>
-                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Qtd. CX</TableHead>
-                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Obs.</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade CX</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº CX</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Total</TableHead>
+                  <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">OBS</TableHead>
                   <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -268,9 +268,6 @@ export default function ReservasPage() {
                   filteredReservas.map((item) => (
                     <TableRow key={item.id} className="group hover:bg-muted/40 transition-colors border-b border-border/30">
                       <TableCell className="font-mono font-bold text-primary">{item.codigo}</TableCell>
-                      <TableCell className="max-w-[200px] truncate text-muted-foreground font-medium">
-                        {item.descricao || <span className="text-muted-foreground/30 italic">Sem descrição</span>}
-                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5 font-bold text-foreground">
                           <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
@@ -282,6 +279,9 @@ export default function ReservasPage() {
                           {item.quantidade ?? 0}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-center font-mono font-bold text-foreground">
+                        {item.quantidadeCx ?? '—'}
+                      </TableCell>
                       <TableCell className="text-center font-mono text-muted-foreground">
                         {item.caixaNum ? (
                           <div className="flex items-center justify-center gap-1">
@@ -290,8 +290,8 @@ export default function ReservasPage() {
                           </div>
                         ) : '—'}
                       </TableCell>
-                      <TableCell className="text-center font-mono font-bold text-foreground">
-                        {item.quantidadeCx ?? '—'}
+                      <TableCell className="text-center font-mono font-bold text-primary">
+                        {(item.quantidade || 0) * (item.quantidadeCx || 0)}
                       </TableCell>
                       <TableCell className="max-w-[150px] truncate text-muted-foreground/70 text-xs">
                         {item.observacao ? (
