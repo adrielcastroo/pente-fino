@@ -25,7 +25,13 @@ interface ReservasTableProps {
  * Optimized for performance using React.memo to prevent re-renders
  * when the parent state (e.g., search query) changes but the items list remains identical.
  */
-const ReservasTable = ({ items }: ReservasTableProps) => {
+const ReservasTable = ({ items, onDelete }: ReservasTableProps) => {
+  const handleDelete = (id: string) => {
+    if (window.confirm('Tem certeza que deseja remover este item?')) {
+      onDelete(id);
+    }
+  };
+
   return (
     <div className="overflow-x-auto relative">
       <Table>
@@ -38,12 +44,13 @@ const ReservasTable = ({ items }: ReservasTableProps) => {
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº CX</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">OBS</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right pr-6">Total</TableHead>
+            <TableHead className="w-10 py-4 pr-6"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
+              <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
                 <div className="flex flex-col items-center justify-center gap-3 animate-in fade-in zoom-in-95 duration-300">
                   <Package className="w-12 h-12 opacity-20" aria-hidden="true" />
                   <p className="font-semibold italic text-sm">Nenhum item encontrado na prateleira virtual.</p>
@@ -100,6 +107,17 @@ const ReservasTable = ({ items }: ReservasTableProps) => {
                 </TableCell>
                 <TableCell className="text-right font-mono font-black text-primary px-6">
                   {calculateTotal(item.quantidade, item.quantidadeCx).toLocaleString('pt-BR')}
+                </TableCell>
+                <TableCell className="px-6 py-4 text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(item.id)}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Remover item</span>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))
