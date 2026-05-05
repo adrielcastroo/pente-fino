@@ -9,12 +9,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Hash, MessageSquare, Package } from 'lucide-react';
+import { MapPin, Hash, MessageSquare, Package, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import { memo } from 'react';
 
 interface ReservasTableProps {
   items: Reserva[];
+  onDelete: (id: string) => void;
 }
 
 /**
