@@ -29,7 +29,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 export default function ReservasPage() {
   const setFormData = useAppStore(s => s.setFormData);
-  const { reservas, addReserva, deleteReserva, clearReservas } = useAppStore();
+  const { reservas, addReserva, deleteReserva, clearReservas, loadReservas } = useAppStore();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +45,15 @@ export default function ReservasPage() {
 
   useEffect(() => {
     setFormData({ activeTab: 'reservas' });
-  }, [setFormData]);
+    loadReservas();
+    
+    // Configurar polling simples para manter os dados sincronizados entre usuários
+    const interval = setInterval(() => {
+      loadReservas();
+    }, 10000); // 10 segundos
+    
+    return () => clearInterval(interval);
+  }, [setFormData, loadReservas]);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +75,13 @@ export default function ReservasPage() {
       createdAt: new Date().toISOString(),
     };
 
-    addReserva(newReserva);
-    toast.success('Item adicionado com sucesso!');
+    addReserva(newReserva)
+      .then(() => {
+        toast.success('Item adicionado com sucesso!');
+      })
+      .catch(() => {
+        toast.error('Erro ao salvar item no banco de dados.');
+      });
     
     // Reset form
     setCodigo('');
@@ -211,8 +224,9 @@ export default function ReservasPage() {
           {reservas.length > 0 && (
             <Button variant="outline" onClick={() => {
               if (confirm('Tem certeza que deseja limpar todas as reservas?')) {
-                clearReservas();
-                toast.success('Reservas limpas com sucesso.');
+                clearReservas()
+                  .then(() => toast.success('Reservas limpas com sucesso.'))
+                  .catch(() => toast.error('Erro ao limpar reservas.'));
               }
             }} className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 font-bold">
               Limpar

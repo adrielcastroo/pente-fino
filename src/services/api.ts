@@ -2,6 +2,8 @@ import { Registro } from '@/types';
 import { conferenceService } from './conferenceService';
 import { registroService } from './registroService';
 import { estoqueService } from './estoqueService';
+import { reservaService } from './reservaService';
+
 
 export const apiService = {
   async archiveConference(
@@ -39,5 +41,21 @@ export const apiService = {
 
   async updateRegistro(conferenceId: string, registroId: string, payload: any) {
     return registroService.updateRegistro(conferenceId, registroId, payload);
+  },
+
+  async fetchReservas() {
+    return reservaService.fetchReservas();
+  },
+
+  async addReserva(reserva: any) {
+    return reservaService.addReserva(reserva);
+  },
+
+  async deleteReserva(id: string) {
+    return reservaService.deleteReserva(id);
+  },
+
+  async clearReservas() {
+    return reservaService.clearReservas();
   }
 };
