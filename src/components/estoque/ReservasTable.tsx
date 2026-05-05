@@ -11,43 +11,55 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Hash, MessageSquare, Package } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { memo } from 'react';
 
 interface ReservasTableProps {
   items: Reserva[];
 }
 
-export function ReservasTable({ items }: ReservasTableProps) {
+/**
+ * ReservasTable Component
+ * 
+ * Optimized for performance using React.memo to prevent re-renders
+ * when the parent state (e.g., search query) changes but the items list remains identical.
+ */
+const ReservasTable = ({ items }: ReservasTableProps) => {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative">
       <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent bg-muted/20">
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Código</TableHead>
+        <TableHeader className="bg-muted/30 sticky top-0 z-10">
+          <TableRow className="hover:bg-transparent border-b border-border/60">
+            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 px-6">Código</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade CX</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº CX</TableHead>
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">OBS</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right">Total</TableHead>
+            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right pr-6">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <Package className="w-12 h-12 opacity-10" />
-                  <p className="font-medium italic">Nenhum item encontrado na prateleira virtual.</p>
+                <div className="flex flex-col items-center justify-center gap-3 animate-in fade-in zoom-in-95 duration-300">
+                  <Package className="w-12 h-12 opacity-20" aria-hidden="true" />
+                  <p className="font-semibold italic text-sm">Nenhum item encontrado na prateleira virtual.</p>
                 </div>
               </TableCell>
             </TableRow>
           ) : (
             items.map((item) => (
-              <TableRow key={item.id} className="group hover:bg-muted/40 transition-colors border-b border-border/30">
-                <TableCell className="font-mono font-bold text-primary">{item.codigo}</TableCell>
+              <TableRow 
+                key={item.id} 
+                className="group hover:bg-primary/[0.02] transition-colors border-b border-border/30"
+              >
+                <TableCell className="font-mono font-black text-primary px-6 py-4">
+                  {item.codigo}
+                </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1.5 font-bold text-foreground">
-                    <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                  <div className="flex items-center gap-2 font-bold text-foreground">
+                    <MapPin className="w-3.5 h-3.5 text-primary/60" />
                     {item.endereco}
                   </div>
                 </TableCell>
@@ -56,34 +68,36 @@ export function ReservasTable({ items }: ReservasTableProps) {
                     {item.quantidade ?? 0}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-center font-mono font-bold text-foreground">
+                <TableCell className="text-center font-mono font-bold text-foreground/80">
                   {item.quantidadeCx ?? '—'}
                 </TableCell>
-                <TableCell className="text-center font-mono text-muted-foreground">
+                <TableCell className="text-center font-mono text-muted-foreground text-xs">
                   {item.caixaNum ? (
-                    <div className="flex items-center justify-center gap-1">
-                      <Hash className="w-3 h-3" />
-                      {item.caixaNum}
+                    <div className="flex items-center justify-center gap-1.5 py-1 px-2 rounded-md bg-muted/30">
+                      <Hash className="w-3 h-3 text-muted-foreground/50" />
+                      <span className="font-bold">{item.caixaNum}</span>
                     </div>
                   ) : '—'}
                 </TableCell>
-                <TableCell className="max-w-[150px] truncate text-muted-foreground/70 text-xs">
+                <TableCell className="max-w-[200px]">
                   {item.observacao ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1.5 cursor-help">
-                          <MessageSquare className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{item.observacao}</span>
+                        <div className="flex items-center gap-2 cursor-help text-muted-foreground/80 hover:text-foreground transition-colors">
+                          <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-50" />
+                          <span className="truncate text-xs font-medium">{item.observacao}</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-xs font-medium">
+                      <TooltipContent side="top" className="max-w-xs font-medium bg-popover shadow-lg border-border">
                         {item.observacao}
                       </TooltipContent>
                     </Tooltip>
-                  ) : '—'}
+                  ) : (
+                    <span className="text-muted-foreground/30 text-[10px]">—</span>
+                  )}
                 </TableCell>
-                <TableCell className="text-right font-mono font-bold text-primary">
-                  {calculateTotal(item.quantidade, item.quantidadeCx)}
+                <TableCell className="text-right font-mono font-black text-primary px-6">
+                  {calculateTotal(item.quantidade, item.quantidadeCx).toLocaleString('pt-BR')}
                 </TableCell>
               </TableRow>
             ))
@@ -92,4 +106,8 @@ export function ReservasTable({ items }: ReservasTableProps) {
       </Table>
     </div>
   );
-}
+};
+
+export const MemoizedReservasTable = memo(ReservasTable);
+export { ReservasTable };
+
