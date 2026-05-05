@@ -26,6 +26,17 @@ export function useReservas() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiService.deleteReserva(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: RESERVAS_QUERY_KEY });
+      toast.success('Item removido com sucesso.');
+    },
+    onError: () => {
+      toast.error('Erro ao remover item.');
+    },
+  });
+
   const clearMutation = useMutation({
     mutationFn: () => apiService.clearReservas(),
     onSuccess: () => {
@@ -42,8 +53,10 @@ export function useReservas() {
     isLoading: query.isLoading,
     isError: query.isError,
     addReserva: addMutation.mutateAsync,
+    deleteReserva: deleteMutation.mutateAsync,
     clearReservas: clearMutation.mutateAsync,
     isAdding: addMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     isClearing: clearMutation.isPending,
   };
 }
