@@ -20,7 +20,7 @@ import { useReservas } from '@/hooks/useReservas';
  * 3. Atomic Design: Logic extracted to custom hooks and utility functions.
  */
 const ReservasPage = () => {
-  const { reservas, addReserva, clearReservas } = useReservas();
+  const { reservas, addReserva, deleteReserva, clearReservas } = useReservas();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredReservas = useMemo(() => 
@@ -101,7 +101,7 @@ const ReservasPage = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ReservasTable items={filteredReservas} />
+            <ReservasTable items={filteredReservas} onDelete={deleteReserva} />
           </CardContent>
         </Card>
       </div>
