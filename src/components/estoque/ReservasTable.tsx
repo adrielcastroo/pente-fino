@@ -1,3 +1,4 @@
+import { useState, memo } from 'react';
 import { Reserva } from '@/types';
 import { calculateTotal } from './reservas-utils';
 import {
@@ -9,10 +10,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Hash, MessageSquare, Package, Trash2 } from 'lucide-react';
+import { MapPin, Hash, MessageSquare, Package, Trash2, AlertTriangle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { memo } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ReservasTableProps {
   items: Reserva[];
@@ -26,9 +37,12 @@ interface ReservasTableProps {
  * when the parent state (e.g., search query) changes but the items list remains identical.
  */
 const ReservasTable = ({ items, onDelete }: ReservasTableProps) => {
-  const handleDelete = (id: string) => {
-    if (window.confirm('Tem certeza que deseja remover este item?')) {
-      onDelete(id);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (itemToDelete) {
+      onDelete(itemToDelete);
+      setItemToDelete(null);
     }
   };
 
@@ -109,15 +123,42 @@ const ReservasTable = ({ items, onDelete }: ReservasTableProps) => {
                   {calculateTotal(item.quantidade, item.quantidadeCx).toLocaleString('pt-BR')}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(item.id)}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Remover item</span>
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setItemToDelete(item.id)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Remover item</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="max-w-[400px]">
+                      <AlertDialogHeader>
+                        <div className="flex items-center gap-3 text-destructive mb-2">
+                          <div className="p-2 bg-destructive/10 rounded-full">
+                            <AlertTriangle className="w-5 h-5" />
+                          </div>
+                          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                        </div>
+                        <AlertDialogDescription className="text-sm">
+                          Você está prestes a remover o item <span className="font-mono font-bold text-foreground">{item.codigo}</span>. 
+                          Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="gap-2 sm:gap-0">
+                        <AlertDialogCancel className="font-bold">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDelete}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-bold"
+                        >
+                          Confirmar Exclusão
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))
