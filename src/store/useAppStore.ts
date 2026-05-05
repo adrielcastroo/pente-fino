@@ -81,10 +81,11 @@ export interface AppState {
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
   clearAll: () => void;
-  addReserva: (res: Reserva) => void;
-  deleteReserva: (id: string) => void;
+  addReserva: (res: Reserva) => Promise<void>;
+  deleteReserva: (id: string) => Promise<void>;
   updateReserva: (id: string, updates: Partial<Reserva>) => void;
-  clearReservas: () => void;
+  clearReservas: () => Promise<void>;
+  loadReservas: () => Promise<void>;
   archiveAndClear: (name: string) => Promise<void>;
   loadHistory: () => Promise<void>;
   deleteConference: (id: string) => Promise<void>;
@@ -264,15 +265,48 @@ export const useAppStore = create<AppState>()(
       
       clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null }),
       
-      addReserva: (res) => set(state => ({ reservas: [...state.reservas, res] })),
+      addReserva: async (res) => {
+        try {
+          await apiService.addReserva(res);
+          set(state => ({ reservas: [...state.reservas, res] }));
+        } catch (e) {
+          console.error('Error adding reserva:', e);
+          throw e;
+        }
+      },
       
-      deleteReserva: (id) => set(state => ({ reservas: state.reservas.filter(r => r.id !== id) })),
+      deleteReserva: async (id) => {
+        try {
+          await apiService.deleteReserva(id);
+          set(state => ({ reservas: state.reservas.filter(r => r.id !== id) }));
+        } catch (e) {
+          console.error('Error deleting reserva:', e);
+          throw e;
+        }
+      },
       
       updateReserva: (id, updates) => set(state => ({
         reservas: state.reservas.map(r => r.id === id ? { ...r, ...updates } : r)
       })),
       
-      clearReservas: () => set({ reservas: [] }),
+      clearReservas: async () => {
+        try {
+          await apiService.clearReservas();
+          set({ reservas: [] });
+        } catch (e) {
+          console.error('Error clearing reservas:', e);
+          throw e;
+        }
+      },
+
+      loadReservas: async () => {
+        try {
+          const reservas = await apiService.fetchReservas();
+          set({ reservas });
+        } catch (e) {
+          console.error('Error loading reservas:', e);
+        }
+      },
       
       archiveAndClear: async (name: string) => {
         const state = get();
