@@ -610,6 +610,42 @@ export type Database = {
         }
         Relationships: []
       }
+      reservas: {
+        Row: {
+          caixa_num: string | null
+          codigo: string
+          created_at: string
+          descricao: string | null
+          endereco: string
+          id: string
+          observacao: string | null
+          quantidade: number
+          quantidade_cx: number | null
+        }
+        Insert: {
+          caixa_num?: string | null
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          endereco: string
+          id?: string
+          observacao?: string | null
+          quantidade: number
+          quantidade_cx?: number | null
+        }
+        Update: {
+          caixa_num?: string | null
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          endereco?: string
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          quantidade_cx?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
