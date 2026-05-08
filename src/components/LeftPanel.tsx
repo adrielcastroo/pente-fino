@@ -649,17 +649,20 @@ export const LeftPanel = memo(function LeftPanel() {
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
-    const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
+    const resolvedEndereco = isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.endereco || endereco) : requiresEndereco ? endereco : '';
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
+    const resolvedMLinear = isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.mLinear || mLinear) : mLinear;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
-    // Celular uses processo, other Diversos use NF
-    const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
+    // Celular and Etiq Pronta use processo, other Diversos use NF
+    const resolvedProcesso = (isDiversos && !isCelular) ? '' : isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.proc || proc) : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
 
-    // Celular uses box numbering
+    // Celular and Etiq Pronta uses box numbering or custom logic
     const loteSistema = isCelular
       ? generateLoteSistemaCaixa(resolvedProcesso, item, mLinear, registros)
+      : isEtiqPronta
+      ? etiqProntaUtils.generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros)
       : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     const reg = {
@@ -669,12 +672,12 @@ export const LeftPanel = memo(function LeftPanel() {
       nf: resolvedNf,
       endereco: resolvedEndereco,
       m2: resolvedM2,
-      mLinear,
+      mLinear: resolvedMLinear,
       largura: resolvedLargura,
-      lote: lote || '',
+      lote: isEtiqPronta ? etiqProntaLoteFinal : (lote || ''),
       loteSistema,
-      tipoTecido: isDiversos ? diversosTipo : '',
-      modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : 'manual',
+      tipoTecido: isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '',
+      modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : isEtiqPronta ? 'etiq_pronta' : 'manual',
       isNew: true,
     };
     addRegistro(reg);
@@ -982,7 +985,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   autoComplete="off"
                   readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) && !!item}
                 />
-                {usesLarguraFromItem && largura > 0 && (
+                {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                     {largura.toFixed(2)}m
                   </span>
