@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
+import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
@@ -108,6 +109,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const { isLow } = usePerformance();
   const setStoreConferente = useAppStore(s => s.setConferente);
+  const etiqProntaLoteFinalRef = useRef<HTMLInputElement>(null);
 
   // Sync effective conferente back to store if it's missing
   useEffect(() => {
@@ -195,7 +197,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || (!isDiversos || isCelular);
+  const requiresProcesso = isMadeira || isEtiqPronta || (!isDiversos || isCelular);
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
@@ -225,10 +227,10 @@ export const LeftPanel = memo(function LeftPanel() {
   const mLinear = useMemo(() => 
     isAI ? aiMLinearNum
     : isMadeira ? 0
-    : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinearNum
+    : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinearNum
     : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
     : (largura > 0 ? m2Num / largura : 0),
-    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, cortinaUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
+    [isAI, aiMLinearNum, isMadeira, isPVT, isEtiqPronta, coulisseUsesMLinear, cortinaUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
   );
   
   const isDuplicate = useMemo(() => {
@@ -336,11 +338,13 @@ export const LeftPanel = memo(function LeftPanel() {
         else if (!lockMadeiraLote) loteRef.current?.focus();
         else if (requiresEndereco && !lockMadeiraEndereco) enderecoRef.current?.focus();
         else itemRef.current?.focus();
+      } else if (isEtiqPronta) {
+        itemRef.current?.focus();
       } else {
         itemRef.current?.focus();
       }
     }, 50);
-  }, [resetFormData, isMadeira, lockMadeiraProcesso, lockMadeiraItem, lockMadeiraLote, lockMadeiraEndereco, requiresEndereco]);
+  }, [resetFormData, isMadeira, isEtiqPronta, lockMadeiraProcesso, lockMadeiraItem, lockMadeiraLote, lockMadeiraEndereco, requiresEndereco]);
 
   const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
     setFotoMime(file.type || 'image/jpeg');
@@ -588,6 +592,9 @@ export const LeftPanel = memo(function LeftPanel() {
   };
 
   const handleAdd = () => {
+    // Import helper
+    const { generateLoteEtiqPronta, parseEtiqProntaLote } = require('@/lib/etiq-pronta-utils');
+
     // Basic validations that apply to all modes
     if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
@@ -637,7 +644,8 @@ export const LeftPanel = memo(function LeftPanel() {
     if (isAI && aiLarguraNum <= 0) { toast.warning('Preencha a Largura.'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
     if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
-    if (mLinear <= 0) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
+    if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { toast.warning('Preencha o campo Lote Final.'); return; }
+    if (mLinear <= 0 && !isEtiqPronta) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
@@ -692,6 +700,7 @@ export const LeftPanel = memo(function LeftPanel() {
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
     if (isMadeira) return loteRef;
+    if (isEtiqPronta) return etiqProntaLoteFinalRef;
     if (isCoulisse) return manualLarguraRef; // always go to optional largura field
     if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
     return m2Ref;
@@ -710,6 +719,11 @@ export const LeftPanel = memo(function LeftPanel() {
       if (proc) return generateLoteSistemaCaixa(proc, item || '-', 0, registros);
       return '—';
     }
+    if (isEtiqPronta) {
+      const { generateLoteEtiqPronta } = require('@/lib/etiq-pronta-utils');
+      if (item && etiqProntaLoteFinal) return generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros);
+      return '—';
+    }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
     const resolvedEnd = requiresEndereco ? endereco : '';
@@ -720,7 +734,7 @@ export const LeftPanel = memo(function LeftPanel() {
       return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
-  }, [processo, item, nf, endereco, mLinear, isMadeira, isDiversos, isCelular, requiresEndereco, registros]);
+  }, [processo, item, nf, endereco, mLinear, isMadeira, isEtiqPronta, isDiversos, isCelular, requiresEndereco, registros, etiqProntaLoteFinal]);
 
   // Set default quantidade when madeiraTipo changes
   useEffect(() => {
@@ -1126,8 +1140,24 @@ export const LeftPanel = memo(function LeftPanel() {
               </>
             )}
 
+            {/* Etiq Pronta: Lote Final */}
+            {isEtiqPronta && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label>
+                <input
+                  id="etiq-lote-final"
+                  ref={etiqProntaLoteFinalRef}
+                  value={etiqProntaLoteFinal}
+                  onChange={e => setEtiqProntaLoteFinal(e.target.value.toUpperCase())}
+                  onKeyDown={e => handleFieldKeyDown(e, null)}
+                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  placeholder="Ex: 001234..." autoComplete="off"
+                />
+              </div>
+            )}
+
             {/* Metragem */}
-            {!isMadeira && (
+            {!isMadeira && !isEtiqPronta && (
               <>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
