@@ -1,6 +1,6 @@
 import { Registro } from "@/types";
 
-export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
+export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle' | 'etiq_pronta';
 export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade';
 
 export interface RegistroColumn {
@@ -33,10 +33,11 @@ const LAYOUTS = {
   madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
   motor: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
   controle: ['item', 'nf', 'lote', 'loteSistema'],
+  etiq_pronta: ['item', 'lote', 'endereco', 'processo', 'mLinear'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
 function normalizeMode(mode?: string | null, fallback: RegistroMode = 'manual'): RegistroMode {
-  if (mode === 'manual' || mode === 'openrouter' || mode === 'diversos' || mode === 'madeira' || mode === 'motor' || mode === 'controle') return mode;
+  if (mode === 'manual' || mode === 'openrouter' || mode === 'diversos' || mode === 'madeira' || mode === 'motor' || mode === 'controle' || mode === 'etiq_pronta') return mode;
   return fallback;
 }
 
@@ -60,6 +61,7 @@ function layoutFromMode(mode: RegistroMode) {
   if (mode === 'madeira') return LAYOUTS.madeira;
   if (mode === 'motor') return LAYOUTS.motor;
   if (mode === 'controle') return LAYOUTS.controle;
+  if (mode === 'etiq_pronta') return LAYOUTS.etiq_pronta;
   return LAYOUTS.rolo; // default diversos
 }
 
