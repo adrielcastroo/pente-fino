@@ -187,7 +187,6 @@ export const LeftPanel = memo(function LeftPanel() {
   const isDiversos = currentMode === 'diversos';
   const isMadeira = currentMode === 'madeira';
   const isEtiqPronta = currentMode === 'etiq_pronta';
-  const isDiversos = currentMode === 'diversos';
   const isPVT = isDiversos && diversosTipo === 'PVT';
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
