@@ -186,9 +186,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isMadeira = currentMode === 'madeira';
-  const isEtiqPronta = currentMode === 'diversos' && diversosTipo === 'PVT'; // Reusing PVT slot or similar? User said "beside Diversos"
-  // Wait, user said "crie um módulo chamado 'Etiq. pronta' ao lado de 'Diversos'".
-  // Diversos is a Tab in the top. Etiq. Pronta should be another tab then.
+  const isEtiqPronta = currentMode === 'etiq_pronta';
+  const isDiversos = currentMode === 'diversos';
   const isPVT = isDiversos && diversosTipo === 'PVT';
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
@@ -592,9 +591,6 @@ export const LeftPanel = memo(function LeftPanel() {
   };
 
   const handleAdd = () => {
-    // Import helper
-    const { generateLoteEtiqPronta, parseEtiqProntaLote } = require('@/lib/etiq-pronta-utils');
-
     // Basic validations that apply to all modes
     if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
@@ -723,8 +719,7 @@ export const LeftPanel = memo(function LeftPanel() {
       return '—';
     }
     if (isEtiqPronta) {
-      const { generateLoteEtiqPronta } = require('@/lib/etiq-pronta-utils');
-      if (item && etiqProntaLoteFinal) return generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros);
+      if (item && etiqProntaLoteFinal) return etiqProntaUtils.generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros);
       return '—';
     }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
