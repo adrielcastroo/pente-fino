@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
+import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
@@ -108,6 +109,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const { isLow } = usePerformance();
   const setStoreConferente = useAppStore(s => s.setConferente);
+  const etiqProntaLoteFinalRef = useRef<HTMLInputElement>(null);
 
   // Sync effective conferente back to store if it's missing
   useEffect(() => {
@@ -118,7 +120,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
-    cortinaLargura, cortinaMetragem
+    cortinaLargura, cortinaMetragem, etiqProntaLoteFinal
   } = formData;
 
   // Local state for non-store controlled values (if any)
@@ -174,6 +176,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const setQuantidade = useCallback((val: string) => setFormData({ quantidade: val }), [setFormData]);
   const setCortinaLargura = useCallback((val: string) => setFormData({ cortinaLargura: val }), [setFormData]);
   const setCortinaMetragem = useCallback((val: 'm2' | 'mlinear') => setFormData({ cortinaMetragem: val }), [setFormData]);
+  const setEtiqProntaLoteFinal = useCallback((val: string) => setFormData({ etiqProntaLoteFinal: val }), [setFormData]);
 
   const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
   const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
@@ -183,6 +186,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isMadeira = currentMode === 'madeira';
+  const isEtiqPronta = currentMode === 'etiq_pronta';
   const isPVT = isDiversos && diversosTipo === 'PVT';
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
@@ -191,7 +195,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || (!isDiversos || isCelular);
+  const requiresProcesso = isMadeira || isEtiqPronta || (!isDiversos || isCelular);
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
@@ -221,10 +225,10 @@ export const LeftPanel = memo(function LeftPanel() {
   const mLinear = useMemo(() => 
     isAI ? aiMLinearNum
     : isMadeira ? 0
-    : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinearNum
+    : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinearNum
     : isCelular ? (m2Num > 0 ? m2Num / celularDivisor : 0)
     : (largura > 0 ? m2Num / largura : 0),
-    [isAI, aiMLinearNum, isMadeira, isPVT, coulisseUsesMLinear, cortinaUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
+    [isAI, aiMLinearNum, isMadeira, isPVT, isEtiqPronta, coulisseUsesMLinear, cortinaUsesMLinear, diversosMLinearNum, isCelular, m2Num, celularDivisor, largura]
   );
   
   const isDuplicate = useMemo(() => {
@@ -332,11 +336,13 @@ export const LeftPanel = memo(function LeftPanel() {
         else if (!lockMadeiraLote) loteRef.current?.focus();
         else if (requiresEndereco && !lockMadeiraEndereco) enderecoRef.current?.focus();
         else itemRef.current?.focus();
+      } else if (isEtiqPronta) {
+        itemRef.current?.focus();
       } else {
         itemRef.current?.focus();
       }
     }, 50);
-  }, [resetFormData, isMadeira, lockMadeiraProcesso, lockMadeiraItem, lockMadeiraLote, lockMadeiraEndereco, requiresEndereco]);
+  }, [resetFormData, isMadeira, isEtiqPronta, lockMadeiraProcesso, lockMadeiraItem, lockMadeiraLote, lockMadeiraEndereco, requiresEndereco]);
 
   const loadFile = useCallback((file: File, options?: { autoSave?: boolean }) => {
     setFotoMime(file.type || 'image/jpeg');
@@ -633,21 +639,25 @@ export const LeftPanel = memo(function LeftPanel() {
     if (isAI && aiLarguraNum <= 0) { toast.warning('Preencha a Largura.'); return; }
     if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
     if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
-    if (mLinear <= 0) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
+    if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { toast.warning('Preencha o campo Lote Final.'); return; }
+    if (mLinear <= 0 && !isEtiqPronta) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
-    const resolvedEndereco = requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
+    const resolvedEndereco = isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.endereco || endereco) : requiresEndereco ? endereco : '';
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
+    const resolvedMLinear = isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.mLinear || mLinear) : mLinear;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
-    // Celular uses processo, other Diversos use NF
-    const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
+    // Celular and Etiq Pronta use processo, other Diversos use NF
+    const resolvedProcesso = (isDiversos && !isCelular) ? '' : isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.proc || proc) : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
 
-    // Celular uses box numbering
+    // Celular and Etiq Pronta uses box numbering or custom logic
     const loteSistema = isCelular
       ? generateLoteSistemaCaixa(resolvedProcesso, item, mLinear, registros)
+      : isEtiqPronta
+      ? etiqProntaUtils.generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros)
       : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     const reg = {
@@ -657,12 +667,12 @@ export const LeftPanel = memo(function LeftPanel() {
       nf: resolvedNf,
       endereco: resolvedEndereco,
       m2: resolvedM2,
-      mLinear,
+      mLinear: resolvedMLinear,
       largura: resolvedLargura,
-      lote: lote || '',
+      lote: isEtiqPronta ? etiqProntaLoteFinal : (lote || ''),
       loteSistema,
-      tipoTecido: isDiversos ? diversosTipo : '',
-      modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : 'manual',
+      tipoTecido: isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '',
+      modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : isEtiqPronta ? 'etiq_pronta' : 'manual',
       isNew: true,
     };
     addRegistro(reg);
@@ -679,6 +689,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
+    { key: 'etiq_pronta' as const, label: 'Etiq. pronta', icon: ScanBarcode },
     { key: 'openrouter' as const, label: 'IA', icon: Sparkles },
   ];
 
@@ -687,6 +698,7 @@ export const LeftPanel = memo(function LeftPanel() {
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
     if (isMadeira) return loteRef;
+    if (isEtiqPronta) return etiqProntaLoteFinalRef;
     if (isCoulisse) return manualLarguraRef; // always go to optional largura field
     if (isDiversos && !isCelular) return lockNf ? m2Ref : nfRef;
     return m2Ref;
@@ -705,6 +717,10 @@ export const LeftPanel = memo(function LeftPanel() {
       if (proc) return generateLoteSistemaCaixa(proc, item || '-', 0, registros);
       return '—';
     }
+    if (isEtiqPronta) {
+      if (item && etiqProntaLoteFinal) return etiqProntaUtils.generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros);
+      return '—';
+    }
     const resolvedProc = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNfVal = (isDiversos && !isCelular) ? nf.trim() : '';
     const resolvedEnd = requiresEndereco ? endereco : '';
@@ -715,7 +731,7 @@ export const LeftPanel = memo(function LeftPanel() {
       return generateLoteSistema(resolvedProc, resolvedEnd, mLinear, registros, resolvedNfVal, item);
     }
     return '—';
-  }, [processo, item, nf, endereco, mLinear, isMadeira, isDiversos, isCelular, requiresEndereco, registros]);
+  }, [processo, item, nf, endereco, mLinear, isMadeira, isEtiqPronta, isDiversos, isCelular, requiresEndereco, registros, etiqProntaLoteFinal]);
 
   // Set default quantidade when madeiraTipo changes
   useEffect(() => {
@@ -963,7 +979,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   autoComplete="off"
                   readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) && !!item}
                 />
-                {usesLarguraFromItem && largura > 0 && (
+                {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                     {largura.toFixed(2)}m
                   </span>
@@ -1121,8 +1137,24 @@ export const LeftPanel = memo(function LeftPanel() {
               </>
             )}
 
+            {/* Etiq Pronta: Lote Final */}
+            {isEtiqPronta && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label>
+                <input
+                  id="etiq-lote-final"
+                  ref={etiqProntaLoteFinalRef}
+                  value={etiqProntaLoteFinal}
+                  onChange={e => setEtiqProntaLoteFinal(e.target.value.toUpperCase())}
+                  onKeyDown={e => handleFieldKeyDown(e, null)}
+                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  placeholder="Ex: 001234..." autoComplete="off"
+                />
+              </div>
+            )}
+
             {/* Metragem */}
-            {!isMadeira && (
+            {!isMadeira && !isEtiqPronta && (
               <>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">

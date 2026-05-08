@@ -41,7 +41,7 @@ export interface Conference {
   registros: Registro[];
 }
 
-export type AppMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle';
+export type AppMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle' | 'etiq_pronta';
 export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'reservas' | 'history' | 'settings';
 
 export interface Reserva {
@@ -82,6 +82,7 @@ export interface FormData {
   estoqueActiveTec: string;
   estoqueSearch: string;
   estoqueHighlightStatus: string | null;
+  etiqProntaLoteFinal: string;
   activeTab: AppTab;
 }
 
