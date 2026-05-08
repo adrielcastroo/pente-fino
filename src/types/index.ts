@@ -82,6 +82,7 @@ export interface FormData {
   estoqueActiveTec: string;
   estoqueSearch: string;
   estoqueHighlightStatus: string | null;
+  etiqProntaLoteFinal: string;
   activeTab: AppTab;
 }
 

@@ -118,7 +118,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
-    cortinaLargura, cortinaMetragem
+    cortinaLargura, cortinaMetragem, etiqProntaLoteFinal
   } = formData;
 
   // Local state for non-store controlled values (if any)
@@ -174,6 +174,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const setQuantidade = useCallback((val: string) => setFormData({ quantidade: val }), [setFormData]);
   const setCortinaLargura = useCallback((val: string) => setFormData({ cortinaLargura: val }), [setFormData]);
   const setCortinaMetragem = useCallback((val: 'm2' | 'mlinear') => setFormData({ cortinaMetragem: val }), [setFormData]);
+  const setEtiqProntaLoteFinal = useCallback((val: string) => setFormData({ etiqProntaLoteFinal: val }), [setFormData]);
 
   const m2Num = useMemo(() => parseFloat(m2) || 0, [m2]);
   const aiLarguraNum = useMemo(() => parseFloat(aiLargura) || 0, [aiLargura]);
@@ -183,6 +184,9 @@ export const LeftPanel = memo(function LeftPanel() {
   const isAI = currentMode === 'openrouter';
   const isDiversos = currentMode === 'diversos';
   const isMadeira = currentMode === 'madeira';
+  const isEtiqPronta = currentMode === 'diversos' && diversosTipo === 'PVT'; // Reusing PVT slot or similar? User said "beside Diversos"
+  // Wait, user said "crie um módulo chamado 'Etiq. pronta' ao lado de 'Diversos'".
+  // Diversos is a Tab in the top. Etiq. Pronta should be another tab then.
   const isPVT = isDiversos && diversosTipo === 'PVT';
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
@@ -679,6 +683,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const tecidoModes = [
     { key: 'manual' as const, label: 'Coulisse', icon: SquarePen },
     { key: 'diversos' as const, label: 'Diversos', icon: Layers3 },
+    { key: 'etiq_pronta' as const, label: 'Etiq. pronta', icon: ScanBarcode },
     { key: 'openrouter' as const, label: 'IA', icon: Sparkles },
   ];
 

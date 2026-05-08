@@ -99,7 +99,9 @@ const INITIAL_FORM_DATA: FormData = {
   lockMetragem: false, cortinaLargura: '', cortinaMetragem: 'm2',
   madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
   motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1',
-  estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, activeTab: 'inicio',
+  estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, 
+  etiqProntaLoteFinal: '',
+  activeTab: 'inicio',
 };
 
 export const useAppStore = create<AppState>()(
