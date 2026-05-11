@@ -741,12 +741,30 @@ export const LeftPanel = memo(function LeftPanel() {
   }, [madeiraTipo, isMadeira]);
 
   return (
-    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
-      <div className="p-3.5 sm:p-5 flex-1 overflow-y-auto space-y-4 sm:space-y-6 custom-scrollbar">
+    /*
+     * Hierarquia visual mobile-first:
+     * - Container raiz: largura fluida (w-full + min-w-0), overflow-x-hidden
+     *   para garantir que nenhum filho cause scroll horizontal indesejado.
+     * - Padding fluido via clamp() (12px → 20px) escala suavemente em vez de
+     *   pular no breakpoint sm.
+     * - Espaçamento interno também via clamp() para preservar densidade
+     *   em telas pequenas e respiro em telas grandes.
+     */
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
+      <div
+        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar"
+        style={{
+          padding: 'clamp(0.75rem, 2.5vw, 1.25rem)',
+          rowGap: 'clamp(1rem, 3vw, 1.5rem)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         
-        {/* Mode Toggle */}
+        {/* Mode Toggle — flex-wrap para resoluções estreitas (<340px) e
+            min-w-0 para permitir truncamento. Altura mínima 44px (touch target). */}
         {!isMadeira && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -754,32 +772,33 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 py-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border ${
+                  className={`flex-1 min-w-0 basis-[calc(33.333%-0.5rem)] min-h-[44px] py-3 px-2 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border ${
                     isActive
                       ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                       : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
                   }`}
                   aria-pressed={isActive}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{m.label}</span>
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{m.label}</span>
                 </button>
               );
             })}
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* Action buttons — touch targets aumentados em mobile (h-11 = 44px),
+            voltam ao tamanho compacto h-7 em ≥sm para preservar densidade desktop. */}
         {!isAI && (
           <div className="flex items-center justify-end text-xs text-muted-foreground">
             <div className="flex gap-1">
               {undoStack.length > 0 && (
-                <Button variant="ghost" size="icon" onClick={handleUndo} className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary">
-                  <Undo2 className="w-3.5 h-3.5" />
+                <Button variant="ghost" size="icon" onClick={handleUndo} className="h-11 w-11 sm:h-7 sm:w-7 rounded-md hover:bg-primary/10 hover:text-primary">
+                  <Undo2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 </Button>
               )}
               {(item || nf || m2 || lote || endereco || processo) && (
-                <Button variant="ghost" size="sm" onClick={resetForm} className="h-7 rounded-md text-[10px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive px-2">
+                <Button variant="ghost" size="sm" onClick={resetForm} className="h-11 sm:h-7 rounded-md text-[11px] sm:text-[10px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive px-3 sm:px-2">
                   Limpar campos
                 </Button>
               )}
@@ -787,14 +806,15 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories */}
+        {/* Diversos categories — 2x2 em mobile estreito (<400px), 4 colunas a partir de xs.
+            min-h 44px garante touch target adequado. */}
         {isDiversos && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 [@media(min-width:400px)]:grid-cols-4 gap-2">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                className={`min-h-[44px] rounded-full border px-2 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all truncate ${
                   diversosTipo === tipo
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
