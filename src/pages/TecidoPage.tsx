@@ -11,7 +11,7 @@ export default function TecidoPage() {
 
   useEffect(() => {
     setFormData({ activeTab: 'tecido' });
-    if (!['manual', 'openrouter', 'diversos'].includes(currentMode)) {
+    if (!['manual', 'openrouter', 'diversos', 'etiq_pronta'].includes(currentMode)) {
       setMode('manual');
     }
   }, [currentMode, setMode, setFormData]);
