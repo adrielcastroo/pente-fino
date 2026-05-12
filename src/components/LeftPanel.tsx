@@ -195,7 +195,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || (!isDiversos || isCelular);
+  const requiresProcesso = isMadeira || (!isDiversos && !isEtiqPronta) || isCelular;
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
@@ -205,7 +205,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   // Cortina now uses manual largura (cortinaLargura), not extracted from item
   const usesLarguraFromItem = !isAI && isRolo;
-  const requiresEndereco = !isPVT && !isCelular;
+  const requiresEndereco = !isPVT && !isCelular && !isEtiqPronta;
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
@@ -1310,7 +1310,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   <p className="text-lg font-bold">{quantidade || madeiraDefaults[madeiraTipo]} <span className="text-xs text-muted-foreground">und</span></p>
                 </div>
               </>
-            ) : (
+            ) : isEtiqPronta ? null : (
               <>
                 <div>
                   <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Largura</p>
