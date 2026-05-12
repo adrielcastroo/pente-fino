@@ -195,7 +195,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || isEtiqPronta || (!isDiversos || isCelular);
+  const requiresProcesso = isMadeira || (!isDiversos || isCelular);
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
@@ -971,19 +971,20 @@ export const LeftPanel = memo(function LeftPanel() {
             )}
 
             {/* Item */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 h-4">
-                <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
-                {(isPVT || isMadeira) && (
-                  <button 
-                    onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
-                    className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
-                    title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
-                  >
-                    {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                  </button>
-                )}
-              </div>
+            {!isEtiqPronta && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 h-4">
+                  <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
+                  {(isPVT || isMadeira) && (
+                    <button 
+                      onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
+                      className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                      title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
+                    >
+                      {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    </button>
+                  )}
+                </div>
               <div className="relative">
                 <input
                   id="item-input"
@@ -1006,6 +1007,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 )}
               </div>
             </div>
+          )}
 
             {/* Coulisse largura */}
             {isCoulisse && (
@@ -1157,20 +1159,34 @@ export const LeftPanel = memo(function LeftPanel() {
               </>
             )}
 
-            {/* Etiq Pronta: Lote Final */}
+            {/* Etiq Pronta: Código item e Lote Final */}
             {isEtiqPronta && (
-              <div className="space-y-1.5 sm:col-span-2">
-                <label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label>
-                <input
-                  id="etiq-lote-final"
-                  ref={etiqProntaLoteFinalRef}
-                  value={etiqProntaLoteFinal}
-                  onChange={e => setEtiqProntaLoteFinal(e.target.value.toUpperCase())}
-                  onKeyDown={e => handleFieldKeyDown(e, null)}
-                  className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
-                  placeholder="Ex: 001234..." autoComplete="off"
-                />
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <label htmlFor="etiq-codigo-item" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Código item</label>
+                  <input
+                    id="etiq-codigo-item"
+                    ref={itemRef}
+                    value={item}
+                    onChange={e => setItem(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, etiqProntaLoteFinalRef)}
+                    className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                    placeholder="Ex: SRC-3003..." autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label>
+                  <input
+                    id="etiq-lote-final"
+                    ref={etiqProntaLoteFinalRef}
+                    value={etiqProntaLoteFinal}
+                    onChange={e => setEtiqProntaLoteFinal(e.target.value.toUpperCase())}
+                    onKeyDown={e => handleFieldKeyDown(e, null)}
+                    className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                    placeholder="Ex: 001234..." autoComplete="off"
+                  />
+                </div>
+              </>
             )}
 
             {/* Metragem */}
