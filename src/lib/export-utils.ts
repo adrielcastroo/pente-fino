@@ -1,5 +1,21 @@
 import { toast } from 'sonner';
 import { Registro } from '@/types';
+import { useAppStore } from '@/store/useAppStore';
+
+const triggerAutoArchive = async (fileName: string) => {
+  try {
+    const store = useAppStore.getState();
+    if (store.registros.length > 0) {
+      await store.archiveAndClear(fileName, true);
+      // resetFormData already cleans fields based on mode
+      store.resetFormData();
+      store.resetMotorFormData();
+      toast.info('Dados arquivados em histórico e campos limpos.');
+    }
+  } catch (error) {
+    console.error('Erro no arquivamento automático após exportação:', error);
+  }
+};
 
 /**
  * Dynamically imports the 'xlsx' library and exports data to an Excel file.
@@ -12,6 +28,7 @@ export async function exportToExcel(data: any[], fileName: string) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
     XLSX.writeFile(wb, `${fileName}.xlsx`);
+    triggerAutoArchive(fileName);
     toast.dismiss(toastId);
     toast.success('Relatório exportado com sucesso!');
   } catch (error) {
@@ -259,6 +276,7 @@ export async function exportConferenceToExcel(headers: string[], data: any[][], 
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
     
     XLSX.writeFile(wb, `${fileName}.xlsx`);
+    triggerAutoArchive(fileName);
     
     toast.dismiss(toastId);
     toast.success('Conferência exportada com sucesso!');
@@ -364,6 +382,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
     XLSX.utils.book_append_sheet(wb, ws, 'Motores');
 
     XLSX.writeFile(wb, `${fileName}.xlsx`);
+    triggerAutoArchive(fileName);
 
     toast.dismiss(toastId);
     toast.success('Conferência exportada com sucesso!');
