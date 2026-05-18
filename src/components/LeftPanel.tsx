@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
@@ -300,6 +301,40 @@ export const LeftPanel = memo(function LeftPanel() {
       setCortinaLargura(lockedCortinaLargura);
     }
   }, [lockCortinaLargura, lockedCortinaLargura, cortinaLargura, setCortinaLargura]);
+
+  // Auto-lookup for Etiq Pronta
+  useEffect(() => {
+    const lookupEtiqPronta = async () => {
+      if (!isEtiqPronta || !item || !etiqProntaLoteFinal || etiqProntaLoteFinal.length < 3) return;
+
+      const loteSistema = `EP${etiqProntaLoteFinal.toUpperCase()}`;
+      
+      try {
+        const { data, error } = await supabase
+          .from('estoque_posicoes')
+          .select('proc, endereco, m_linear')
+          .ilike('lote_sistema', loteSistema)
+          .eq('item', item)
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data) {
+          if (data.proc) setProcesso(data.proc);
+          setFormData({
+            endereco: data.endereco || endereco,
+            diversosMLinear: data.m_linear?.toString() || diversosMLinear
+          });
+          toast.info('Dados carregados do estoque');
+        }
+      } catch (e) {
+        console.error('Erro ao buscar etiqueta pronta:', e);
+      }
+    };
+
+    const timer = setTimeout(lookupEtiqPronta, 500);
+    return () => clearTimeout(timer);
+  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, processo, endereco, diversosMLinear]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -644,13 +679,13 @@ export const LeftPanel = memo(function LeftPanel() {
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
-    const resolvedEndereco = isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.endereco || endereco) : requiresEndereco ? endereco : '';
+    const resolvedEndereco = isEtiqPronta ? endereco : requiresEndereco ? endereco : '';
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
-    const resolvedMLinear = isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.mLinear || mLinear) : mLinear;
+    const resolvedMLinear = isEtiqPronta ? mLinear : mLinear;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
     // Celular and Etiq Pronta use processo, other Diversos use NF
-    const resolvedProcesso = (isDiversos && !isCelular) ? '' : isEtiqPronta ? (etiqProntaUtils.parseEtiqProntaLote(etiqProntaLoteFinal)?.proc || proc) : proc;
+    const resolvedProcesso = (isDiversos && !isCelular) ? '' : isEtiqPronta ? (processo || proc) : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
 
     // Celular and Etiq Pronta uses box numbering or custom logic
