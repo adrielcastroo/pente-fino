@@ -320,8 +320,8 @@ export const LeftPanel = memo(function LeftPanel() {
         if (error) throw error;
         
         if (data) {
+          if (data.proc) setProcesso(data.proc);
           setFormData({
-            processo: data.proc || processo,
             endereco: data.endereco || endereco,
             diversosMLinear: data.m_linear?.toString() || diversosMLinear
           });
