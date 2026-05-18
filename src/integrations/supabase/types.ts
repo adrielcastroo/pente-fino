@@ -280,6 +280,45 @@ export type Database = {
         }
         Relationships: []
       }
+      independent_reservations: {
+        Row: {
+          caixa_num: string | null
+          codigo: string
+          created_at: string | null
+          descricao: string | null
+          endereco: string
+          id: string
+          observacao: string | null
+          quantidade: number
+          quantidade_cx: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          caixa_num?: string | null
+          codigo: string
+          created_at?: string | null
+          descricao?: string | null
+          endereco: string
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          quantidade_cx?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          caixa_num?: string | null
+          codigo?: string
+          created_at?: string | null
+          descricao?: string | null
+          endereco?: string
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          quantidade_cx?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           created_at: string
