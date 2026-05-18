@@ -86,7 +86,7 @@ export interface AppState {
   updateReserva: (id: string, updates: Partial<Reserva>) => void;
   clearReservas: () => Promise<void>;
   loadReservas: () => Promise<void>;
-  archiveAndClear: (name: string) => Promise<void>;
+  archiveAndClear: (name: string, bypassLengthCheck?: boolean) => Promise<void>;
   loadHistory: () => Promise<void>;
   deleteConference: (id: string) => Promise<void>;
   clearHistory: () => Promise<void>;
@@ -310,9 +310,9 @@ export const useAppStore = create<AppState>()(
         }
       },
       
-      archiveAndClear: async (name: string) => {
+      archiveAndClear: async (name: string, bypassLengthCheck = false) => {
         const state = get();
-        if (!state.registros.length || state.isArchiving) return;
+        if ((!state.registros.length && !bypassLengthCheck) || state.isArchiving) return;
         
         set({ isArchiving: true, archiveError: null });
         const finishedAt = new Date().toISOString();
