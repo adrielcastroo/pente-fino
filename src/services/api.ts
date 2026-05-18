@@ -3,6 +3,7 @@ import { conferenceService } from './conferenceService';
 import { registroService } from './registroService';
 import { estoqueService } from './estoqueService';
 import { reservaService } from './reservaService';
+import { independentReservaService } from './independentReservaService';
 
 
 export const apiService = {
@@ -44,18 +45,18 @@ export const apiService = {
   },
 
   async fetchReservas() {
-    return reservaService.fetchReservas();
+    return independentReservaService.fetchReservas();
   },
 
   async addReserva(reserva: any) {
-    return reservaService.addReserva(reserva);
+    return independentReservaService.addReserva(reserva);
   },
 
   async deleteReserva(id: string) {
-    return reservaService.deleteReserva(id);
+    return independentReservaService.deleteReserva(id);
   },
 
   async clearReservas() {
-    return reservaService.clearReservas();
+    return independentReservaService.clearReservas();
   }
 };
