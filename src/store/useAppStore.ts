@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
-import { generateLoteSistema } from '@/lib/app-utils';
+import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
+
+
 
 export interface AppState {
   registros: Registro[];
@@ -188,7 +190,43 @@ export const useAppStore = create<AppState>()(
       setLockMotorModelo: (lock) => set({ lockMotorModelo: lock }),
       setLockMotorNf: (lock) => set({ lockMotorNf: lock }),
       
-      setFormData: (updates) => set(state => ({ formData: { ...state.formData, ...updates } })),
+      setFormData: (updates) => set(state => {
+        const newData = { ...state.formData, ...updates };
+        
+        // Auto-calculate M² when Width or M Linear changes
+        // m2 = largura * m_linear
+        if ('manualLargura' in updates || 'diversosMLinear' in updates) {
+          const mode = state.currentMode;
+          const isCoulisse = mode === 'manual';
+          const isDiversos = mode === 'diversos';
+          const isEtiqPronta = mode === 'etiq_pronta';
+          
+          if (isCoulisse || isDiversos || isEtiqPronta) {
+            const largura = parseFloat(newData.manualLargura) || extractLarguraFromItem(newData.item) || 0;
+            const mLinear = parseFloat(newData.diversosMLinear) || 0;
+            
+            if (largura > 0 && mLinear > 0) {
+              newData.m2 = (largura * mLinear).toFixed(2);
+            }
+          }
+        }
+        
+        // Reverse calculation: if M2 is updated manually, we might want to update M Linear?
+        // But user asked for: largura*m linear -> m2
+        if ('m2' in updates && !('diversosMLinear' in updates)) {
+           const mode = state.currentMode;
+           if (mode === 'manual' || mode === 'diversos' || mode === 'etiq_pronta') {
+              const largura = parseFloat(newData.manualLargura) || extractLarguraFromItem(newData.item) || 0;
+              const m2Val = parseFloat(newData.m2) || 0;
+              if (largura > 0 && m2Val > 0) {
+                newData.diversosMLinear = (m2Val / largura).toFixed(2);
+              }
+           }
+        }
+
+        return { formData: newData };
+      }),
+
       
       resetFormData: () => {
         const state = get();

@@ -302,39 +302,128 @@ export const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockCortinaLargura, lockedCortinaLargura, cortinaLargura, setCortinaLargura]);
 
-  // Auto-lookup for Etiq Pronta
+  // Auto-lookup for Etiq Pronta and Smart extraction
   useEffect(() => {
-    const lookupEtiqPronta = async () => {
-      if (!isEtiqPronta || !item || !etiqProntaLoteFinal || etiqProntaLoteFinal.length < 3) return;
+    const processEtiqPronta = async () => {
+      if (!isEtiqPronta || !etiqProntaLoteFinal) return;
 
-      const loteSistema = etiqProntaLoteFinal.toUpperCase();
+      const input = etiqProntaLoteFinal.toUpperCase().trim();
       
-      try {
-        const { data, error } = await supabase
-          .from('estoque_posicoes')
-          .select('proc, endereco, m_linear')
-          .ilike('lote_sistema', loteSistema)
-          .eq('item', item)
-          .maybeSingle();
+      // Smart extraction: Look for patterns like "TEC02.A.N02 PROC25/09079 27M-3"
+      // or "TEC02.A.N02 PROC 25/09079 27M" or "TEC02.A.N02 27M"
+      const addrMatch = input.match(/([A-Z0-9]{5}\.[A-Z]\.[A-Z0-9]+)/);
+      const procMatch = input.match(/PROC\s*([0-9/A-Z-]+)/);
+      const mlMatch = input.match(/(\d+(?:[.,]\d+)?)\s*M(?:LINEAR)?/);
 
-        if (error) throw error;
-        
-        if (data) {
-          if (data.proc) setProcesso(data.proc);
-          setFormData({
-            endereco: data.endereco || endereco,
-            diversosMLinear: data.m_linear?.toString() || diversosMLinear
-          });
-          toast.info('Dados carregados do estoque');
+      let foundSomething = false;
+      const updates: Partial<FormData> = {};
+
+      if (addrMatch && addrMatch[1] !== endereco) {
+        updates.endereco = addrMatch[1];
+        foundSomething = true;
+      }
+
+      if (procMatch && procMatch[1] !== processo) {
+        setProcesso(procMatch[1]);
+        foundSomething = true;
+      }
+
+      if (mlMatch) {
+        const val = mlMatch[1].replace(',', '.');
+        if (val !== diversosMLinear) {
+          updates.diversosMLinear = val;
+          foundSomething = true;
         }
-      } catch (e) {
-        console.error('Erro ao buscar etiqueta pronta:', e);
+      }
+
+      if (foundSomething) {
+        setFormData(updates);
+        if (addrMatch) validateEndereco(addrMatch[1]);
+        toast.info('Dados extraídos da etiqueta');
+        return; // Don't do lookup if we just extracted
+      }
+
+      // Standard lookup in database if no smart pattern was found or after extraction
+      if (item && etiqProntaLoteFinal.length >= 3) {
+        const loteSistema = input;
+        try {
+          const { data, error } = await supabase
+            .from('estoque_posicoes')
+            .select('proc, endereco, m_linear')
+            .ilike('lote_sistema', loteSistema)
+            .eq('item', item)
+            .maybeSingle();
+
+          if (error) throw error;
+          
+          if (data) {
+            if (data.proc) setProcesso(data.proc);
+            setFormData({
+              endereco: data.endereco || endereco,
+              diversosMLinear: data.m_linear?.toString() || diversosMLinear
+            });
+            toast.info('Dados carregados do estoque');
+          }
+        } catch (e) {
+          console.error('Erro ao buscar etiqueta pronta:', e);
+        }
       }
     };
 
-    const timer = setTimeout(lookupEtiqPronta, 500);
+    const timer = setTimeout(processEtiqPronta, 500);
     return () => clearTimeout(timer);
-  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, setProcesso, endereco, diversosMLinear]);
+  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, setProcesso, endereco, diversosMLinear, processo]);
+
+
+  // Global History Lookup for Item
+  useEffect(() => {
+    const lookupItemHistory = async () => {
+      if (!item || item.length < 4 || isMadeira) return;
+
+      try {
+        // Query the last archived record with this item
+        const { data, error } = await supabase
+          .from('registros')
+          .select('endereco, largura')
+          .eq('item', item)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+
+        if (error) throw error;
+
+        if (data) {
+          const updates: Partial<FormData> = {};
+          let notified = false;
+
+          const typedData = data as { endereco?: string; largura?: number };
+
+          if (typedData.endereco && !endereco && !lockEndereco) {
+            updates.endereco = typedData.endereco;
+            validateEndereco(typedData.endereco);
+            notified = true;
+          }
+
+          if (typedData.largura && !manualLargura && currentMode === 'manual') {
+            updates.manualLargura = typedData.largura.toString();
+            notified = true;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            setFormData(updates);
+            if (notified) toast.info('Sugerindo dados do histórico');
+          }
+        }
+
+      } catch (e) {
+        console.error('Erro ao buscar histórico do item:', e);
+      }
+    };
+
+    const timer = setTimeout(lookupItemHistory, 800);
+    return () => clearTimeout(timer);
+  }, [item, isMadeira, setFormData, endereco, manualLargura, lockEndereco, currentMode]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -343,6 +432,8 @@ export const LeftPanel = memo(function LeftPanel() {
     const safeItem = (item || 'rolo').trim().replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 24);
     return `conferencia_${date}_${safeItem}_${time}.jpg`;
   }, [item]);
+
+
 
   const downloadDataUrl = useCallback((dataUrl: string, fileName: string) => {
     const link = document.createElement('a');
