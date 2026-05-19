@@ -845,7 +845,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Diversos categories — 2x2 em mobile estreito (<400px), 4 colunas a partir de xs.
             min-h 44px garante touch target adequado. */}
         {isDiversos && (
-          <div className="grid grid-cols-2 [@media(min-width:400px)]:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
