@@ -196,7 +196,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || (!isDiversos && !isEtiqPronta && currentMode !== 'manual') || isCelular;
+  const requiresProcesso = isMadeira || isCelular || isAI;
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
