@@ -196,7 +196,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || (!isDiversos && !isEtiqPronta) || isCelular;
+  const requiresProcesso = isMadeira || (!isDiversos && !isEtiqPronta && currentMode !== 'manual') || isCelular || isEtiqPronta;
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
@@ -206,7 +206,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   // Cortina now uses manual largura (cortinaLargura), not extracted from item
   const usesLarguraFromItem = !isAI && isRolo;
-  const requiresEndereco = !isPVT && !isCelular && !isEtiqPronta;
+  const requiresEndereco = !isPVT && !isCelular && currentMode !== 'manual' && currentMode !== 'etiq_pronta';
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
@@ -334,7 +334,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
     const timer = setTimeout(lookupEtiqPronta, 500);
     return () => clearTimeout(timer);
-  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, processo, endereco, diversosMLinear]);
+  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, setProcesso, endereco, diversosMLinear]);
 
   const getPhotoFileName = useCallback(() => {
     const now = new Date();
@@ -675,6 +675,7 @@ export const LeftPanel = memo(function LeftPanel() {
     if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
     if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
     if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { toast.warning('Preencha o campo Lote Final.'); return; }
+    if (isEtiqPronta && !processo.trim()) { toast.warning('Preencha o campo Processo.'); return; }
     if (mLinear <= 0 && !isEtiqPronta) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
