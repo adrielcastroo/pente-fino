@@ -45,7 +45,9 @@ const TopBar = memo(function TopBar() {
     }
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
-    const requiresProcesso = !isMotorControle && (currentRegistros.some(r => r.modoOrigem !== 'diversos') || currentMode !== 'diversos');
+    const requiresProcesso = !isMotorControle && 
+      (currentRegistros.some(r => r.modoOrigem !== 'diversos' && r.modoOrigem !== 'etiq_pronta') || 
+       (currentMode !== 'diversos' && currentMode !== 'etiq_pronta'));
     
     if (requiresProcesso && !processo.trim()) { 
       toast.warning('Preencha o campo PROCESSO para continuar.'); 
