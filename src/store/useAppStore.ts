@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
-import { generateLoteSistema } from '@/lib/app-utils';
-import { extractLarguraFromItem } from '@/lib/app-utils';
+import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
+
 
 
 export interface AppState {
