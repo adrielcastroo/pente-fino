@@ -800,7 +800,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Mode Toggle — flex-wrap para resoluções estreitas (<340px) e
             min-w-0 para permitir truncamento. Altura mínima 44px (touch target). */}
         {!isMadeira && (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -808,10 +808,10 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`flex-1 min-w-0 basis-[calc(33.333%-0.5rem)] min-h-[44px] py-3 px-2 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border ${
+                  className={`min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider border ${
                     isActive
-                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                      : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]'
+                      : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-muted/30'
                   }`}
                   aria-pressed={isActive}
                 >
@@ -845,7 +845,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Diversos categories — 2x2 em mobile estreito (<400px), 4 colunas a partir de xs.
             min-h 44px garante touch target adequado. */}
         {isDiversos && (
-          <div className="grid grid-cols-2 [@media(min-width:400px)]:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
