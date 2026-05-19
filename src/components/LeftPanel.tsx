@@ -422,6 +422,13 @@ export const LeftPanel = memo(function LeftPanel() {
   }, [item, isMadeira, setFormData, endereco, manualLargura, lockEndereco, currentMode]);
 
   const getPhotoFileName = useCallback(() => {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+    const safeItem = (item || 'rolo').trim().replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 24);
+    return `conferencia_${date}_${safeItem}_${time}.jpg`;
+  }, [item]);
+
 
 
   const downloadDataUrl = useCallback((dataUrl: string, fileName: string) => {
