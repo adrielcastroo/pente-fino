@@ -681,7 +681,7 @@ export const LeftPanel = memo(function LeftPanel() {
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
 
     const resolvedEndereco = isEtiqPronta ? endereco : requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
+    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? (largura * mLinear) : m2Num;
     const resolvedMLinear = isEtiqPronta ? mLinear : mLinear;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
