@@ -383,12 +383,13 @@ export const LeftPanel = memo(function LeftPanel() {
       try {
         // Query the last archived record with this item
         const { data, error } = await supabase
-          .from('conferencia_registros')
+          .from('registros')
           .select('endereco, largura')
           .eq('item', item)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+
 
         if (error) throw error;
 
@@ -396,14 +397,16 @@ export const LeftPanel = memo(function LeftPanel() {
           const updates: Partial<FormData> = {};
           let notified = false;
 
-          if (data.endereco && !endereco && !lockEndereco) {
-            updates.endereco = data.endereco;
-            validateEndereco(data.endereco);
+          const typedData = data as { endereco?: string; largura?: number };
+
+          if (typedData.endereco && !endereco && !lockEndereco) {
+            updates.endereco = typedData.endereco;
+            validateEndereco(typedData.endereco);
             notified = true;
           }
 
-          if (data.largura && !manualLargura && currentMode === 'manual') {
-            updates.manualLargura = data.largura.toString();
+          if (typedData.largura && !manualLargura && currentMode === 'manual') {
+            updates.manualLargura = typedData.largura.toString();
             notified = true;
           }
 
@@ -412,6 +415,7 @@ export const LeftPanel = memo(function LeftPanel() {
             if (notified) toast.info('Sugerindo dados do histórico');
           }
         }
+
       } catch (e) {
         console.error('Erro ao buscar histórico do item:', e);
       }
