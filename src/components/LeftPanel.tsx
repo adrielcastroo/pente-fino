@@ -196,7 +196,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
-  const requiresProcesso = isMadeira || (!isDiversos && !isEtiqPronta && currentMode !== 'manual') || isCelular || isEtiqPronta;
+  const requiresProcesso = isMadeira || (!isDiversos && !isEtiqPronta && currentMode !== 'manual') || isCelular;
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
   const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
@@ -675,7 +675,7 @@ export const LeftPanel = memo(function LeftPanel() {
     if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
     if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
     if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { toast.warning('Preencha o campo Lote Final.'); return; }
-    if (isEtiqPronta && !processo.trim()) { toast.warning('Preencha o campo Processo.'); return; }
+    
     if (mLinear <= 0 && !isEtiqPronta) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
     if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
@@ -686,7 +686,7 @@ export const LeftPanel = memo(function LeftPanel() {
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
 
     // Celular and Etiq Pronta use processo, other Diversos use NF
-    const resolvedProcesso = (isDiversos && !isCelular) ? '' : isEtiqPronta ? (processo || proc) : proc;
+    const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
     const resolvedNf = (isDiversos && !isCelular) ? nf.trim() : '';
 
     // Celular and Etiq Pronta uses box numbering or custom logic
