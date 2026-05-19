@@ -307,7 +307,7 @@ export const LeftPanel = memo(function LeftPanel() {
     const lookupEtiqPronta = async () => {
       if (!isEtiqPronta || !item || !etiqProntaLoteFinal || etiqProntaLoteFinal.length < 3) return;
 
-      const loteSistema = `EP${etiqProntaLoteFinal.toUpperCase()}`;
+      const loteSistema = etiqProntaLoteFinal.toUpperCase();
       
       try {
         const { data, error } = await supabase

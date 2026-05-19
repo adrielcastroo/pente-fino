@@ -6,8 +6,8 @@ export function generateLoteEtiqPronta(
   loteFinal: string,
   registros: Registro[]
 ): string {
-  // Pattern: EP + loteFinal
-  return `EP${loteFinal.toUpperCase()}`;
+  // Pattern: loteFinal
+  return loteFinal.toUpperCase();
 }
 
 export function parseEtiqProntaLote(lote: string): { proc: string; endereco: string; mLinear: number } | null {
