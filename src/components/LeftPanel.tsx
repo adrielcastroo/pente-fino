@@ -1315,6 +1315,16 @@ export const LeftPanel = memo(function LeftPanel() {
                     placeholder="Ex: 001234..." autoComplete="off"
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label>
+                  <input
+                    id="etiq-posicao"
+                    value={posicao}
+                    readOnly
+                    className="w-full h-11 rounded-lg border border-border/50 bg-primary/5 px-3 text-sm font-bold text-primary focus:outline-none transition-colors"
+                    placeholder="Auto..."
+                  />
+                </div>
               </>
             )}
 
