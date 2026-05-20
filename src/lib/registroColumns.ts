@@ -1,7 +1,7 @@
 import { Registro } from "@/types";
 
 export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle' | 'etiq_pronta';
-export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade';
+export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade' | 'posicao';
 
 export interface RegistroColumn {
   key: RegistroColumnKey;
