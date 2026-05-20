@@ -303,15 +303,59 @@ export const LeftPanel = memo(function LeftPanel() {
     }
   }, [lockCortinaLargura, lockedCortinaLargura, cortinaLargura, setCortinaLargura]);
 
-  // Auto-lookup for Etiq Pronta and Smart extraction
+  // Auto-lookup for Etiq Pronta: DB first (source of truth), regex as fallback
   useEffect(() => {
     const processEtiqPronta = async () => {
       if (!isEtiqPronta || !etiqProntaLoteFinal) return;
 
       const input = etiqProntaLoteFinal.toUpperCase().trim();
-      
-      // Smart extraction: Look for patterns like "TEC02.A.N02 PROC25/09079 27M-3"
-      // or "TEC02.A.N02 PROC 25/09079 27M" or "TEC02.A.N02 27M"
+      if (input.length < 3) return;
+
+      // 1) DB lookup first — estoque_posicoes is the source of truth for the real address
+      try {
+        let query = supabase
+          .from('estoque_posicoes')
+          .select('item, proc, endereco, m_linear, posicao, lote_sistema')
+          .ilike('lote_sistema', input);
+        if (item) query = query.eq('item', item);
+
+        const { data: rows, error } = await query.limit(1);
+        if (error) throw error;
+
+        let match: any = rows?.[0];
+
+        // Fallback: try registros table (archived/historical)
+        if (!match) {
+          let rq = supabase
+            .from('registros')
+            .select('item, processo:lote_sistema, endereco, m_linear, posicao, lote_sistema')
+            .ilike('lote_sistema', input)
+            .order('created_at', { ascending: false });
+          if (item) rq = rq.eq('item', item);
+          const { data: regRows } = await rq.limit(1);
+          if (regRows?.[0]) {
+            const r: any = regRows[0];
+            match = { ...r, proc: r.processo };
+          }
+        }
+
+        if (match) {
+          const updates: Partial<FormData> = {};
+          if (match.item && !item) updates.item = match.item;
+          if (match.endereco && !lockEndereco) updates.endereco = match.endereco;
+          if (match.m_linear != null) updates.diversosMLinear = match.m_linear.toString();
+          if (match.posicao != null) updates.posicao = match.posicao.toString();
+          if (Object.keys(updates).length > 0) setFormData(updates);
+          if (match.proc) setProcesso(match.proc);
+          if (match.endereco && !lockEndereco) validateEndereco(match.endereco);
+          toast.info('Dados carregados do estoque', { id: 'etiq-extraction', duration: 2000 });
+          return;
+        }
+      } catch (e) {
+        console.error('Erro ao buscar etiqueta pronta:', e);
+      }
+
+      // 2) Fallback: regex extraction from the label text
       const addrMatch = input.match(/([A-Z0-9]{5}\.[A-Z]\.[A-Z0-9]+)/);
       const procMatch = input.match(/PROC\s*([0-9/A-Z-]+)/);
       const mlMatch = input.match(/(\d+(?:[.,]\d+)?)\s*M(?:LINEAR)?/);
@@ -319,16 +363,14 @@ export const LeftPanel = memo(function LeftPanel() {
       let foundSomething = false;
       const updates: Partial<FormData> = {};
 
-      if (addrMatch && addrMatch[1] !== endereco) {
+      if (addrMatch && addrMatch[1] !== endereco && !lockEndereco) {
         updates.endereco = addrMatch[1];
         foundSomething = true;
       }
-
       if (procMatch && procMatch[1] !== processo) {
         setProcesso(procMatch[1]);
         foundSomething = true;
       }
-
       if (mlMatch) {
         const val = mlMatch[1].replace(',', '.');
         if (val !== diversosMLinear) {
@@ -339,42 +381,14 @@ export const LeftPanel = memo(function LeftPanel() {
 
       if (foundSomething) {
         setFormData(updates);
-        if (addrMatch) validateEndereco(addrMatch[1]);
-        toast.info('Dados extraídos da etiqueta', { id: 'etiq-extraction', duration: 2000 });
-        return; // Don't do lookup if we just extracted
-      }
-
-      // Standard lookup in database if no smart pattern was found or after extraction
-      if (item && etiqProntaLoteFinal.length >= 3) {
-        const loteSistema = input;
-        try {
-          const { data, error } = await supabase
-            .from('estoque_posicoes')
-            .select('proc, endereco, m_linear, posicao')
-            .ilike('lote_sistema', loteSistema)
-            .eq('item', item)
-            .maybeSingle();
-
-          if (error) throw error;
-          
-          if (data) {
-            if (data.proc) setProcesso(data.proc);
-            setFormData({
-              endereco: data.endereco || endereco,
-              diversosMLinear: data.m_linear?.toString() || diversosMLinear,
-              posicao: data.posicao?.toString() || ''
-            });
-            toast.info('Dados carregados do estoque', { id: 'etiq-extraction', duration: 2000 });
-          }
-        } catch (e) {
-          console.error('Erro ao buscar etiqueta pronta:', e);
-        }
+        if (updates.endereco) validateEndereco(updates.endereco);
+        toast.warning('Lote não encontrado no estoque — usando dados da etiqueta', { id: 'etiq-extraction', duration: 2500 });
       }
     };
 
     const timer = setTimeout(processEtiqPronta, 800);
     return () => clearTimeout(timer);
-  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, setProcesso, endereco, diversosMLinear, processo]);
+  }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, setProcesso, endereco, diversosMLinear, processo, lockEndereco]);
 
 
   // Global History Lookup for Item
