@@ -1,7 +1,45 @@
 import { supabase } from '@/integrations/supabase/client';
 import { parseEndereco } from '@/lib/app-utils';
+import { Registro } from '@/types';
 
 export const estoqueService = {
+  async getNextAvailablePosition(endereco: string, item: string, currentRegistros: Registro[]): Promise<number | null> {
+    const parsed = parseEndereco(endereco);
+    if (!parsed) return null;
+
+    const { estrutura, coluna, nivel } = parsed;
+    const cellKey = `${estrutura}.${coluna}.${nivel}`;
+
+    // 1. Check database for occupied positions
+    const { data: dbOccupied, error } = await supabase
+      .from('estoque_posicoes')
+      .select('posicao')
+      .eq('estrutura', estrutura)
+      .eq('coluna', coluna)
+      .eq('nivel', nivel)
+      .not('status', 'in', ['saida', 'livre']);
+
+    if (error) {
+      console.error('Error fetching occupied positions:', error);
+      return null;
+    }
+
+    const occupiedSet = new Set<number>((dbOccupied || []).map(p => p.posicao));
+
+    // 2. Check current session's registros that are going to the same address
+    currentRegistros.forEach(r => {
+      if (r.endereco === endereco && r.posicao) {
+        occupiedSet.add(r.posicao);
+      }
+    });
+
+    // 3. Find first available (1-30)
+    let pos = 1;
+    while (pos <= 30 && occupiedSet.has(pos)) pos++;
+
+    return pos <= 30 ? pos : null;
+  },
+
   async processEstoque(insertedRegs: any[], registros: any[], processo: string, conferente: string) {
     try {
       const validEnderecos = (insertedRegs || [])
@@ -41,11 +79,16 @@ export const estoqueService = {
         if (!occupiedMap.has(cellKey)) occupiedMap.set(cellKey, new Set());
         const occupiedSet = occupiedMap.get(cellKey)!;
         
-        let pos = 1;
-        // The database constraint restricts positions to a maximum of 30.
-        while (pos <= 30 && occupiedSet.has(pos)) pos++;
+        const original = regMap.get(r.id);
+        let pos = original?.posicao;
         
-        if (pos <= 30) {
+        // If not already allocated in the frontend, find next available
+        if (!pos) {
+          pos = 1;
+          while (pos <= 30 && occupiedSet.has(pos)) pos++;
+        }
+        
+        if (pos && pos <= 30) {
           occupiedSet.add(pos);
           const original = regMap.get(r.id);
           estoqueRows.push({
@@ -82,12 +125,23 @@ export const estoqueService = {
           console.error('Error upserting to estoque_posicoes:', upsertError);
           throw upsertError;
         }
+
+        // Update the 'registros' table with the assigned positions
+        const updatePromises = estoqueRows.map(row => 
+          supabase
+            .from('registros')
+            .update({ posicao: row.posicao })
+            .eq('id', row.registro_id)
+        );
+        await Promise.all(updatePromises);
       }
 
       if (skippedRegs.length > 0) {
         // We throw an informative error if some records couldn't be placed
         throw new Error(`Alguns registros (${skippedRegs.length}) não foram alocados pois as posições do endereço estão cheias.`);
       }
+
+      return estoqueRows;
     } catch (e) {
       console.error('Detailed error in processEstoque:', e);
       throw e;

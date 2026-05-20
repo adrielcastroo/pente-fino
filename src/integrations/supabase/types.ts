@@ -509,6 +509,7 @@ export type Database = {
           m2: number
           modo_origem: string
           nf: string
+          posicao: number | null
           quantidade: number | null
           status: string | null
           tipo_tecido: string
@@ -538,6 +539,7 @@ export type Database = {
           m2?: number
           modo_origem?: string
           nf?: string
+          posicao?: number | null
           quantidade?: number | null
           status?: string | null
           tipo_tecido?: string
@@ -567,6 +569,7 @@ export type Database = {
           m2?: number
           modo_origem?: string
           nf?: string
+          posicao?: number | null
           quantidade?: number | null
           status?: string | null
           tipo_tecido?: string

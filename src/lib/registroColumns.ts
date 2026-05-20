@@ -1,7 +1,7 @@
 import { Registro } from "@/types";
 
 export type RegistroMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle' | 'etiq_pronta';
-export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade';
+export type RegistroColumnKey = 'item' | 'nf' | 'processo' | 'm2' | 'largura' | 'mLinear' | 'lote' | 'endereco' | 'loteSistema' | 'quantidade' | 'posicao';
 
 export interface RegistroColumn {
   key: RegistroColumnKey;
@@ -21,19 +21,20 @@ const COLUMN_MAP: Record<RegistroColumnKey, RegistroColumn> = {
   endereco: { key: 'endereco', label: 'Endereço', width: 18 },
   loteSistema: { key: 'loteSistema', label: 'Lote Final (Sistema)', shortLabel: 'Lote Final', width: 36 },
   quantidade: { key: 'quantidade', label: 'Quantidade', shortLabel: 'Qtd', width: 14 },
+  posicao: { key: 'posicao', label: 'Posição', shortLabel: 'Pos', width: 10 },
 };
 
 const LAYOUTS = {
-  coulisse: ['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
-  ia: ['item', 'largura', 'mLinear', 'endereco', 'loteSistema'],
-  rolo: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
-  cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
+  coulisse: ['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema'],
+  ia: ['item', 'largura', 'mLinear', 'endereco', 'posicao', 'loteSistema'],
+  rolo: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema'],
+  cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema'],
   celular: ['item', 'processo', 'm2', 'mLinear', 'lote', 'loteSistema'],
   pvt: ['item', 'nf', 'mLinear', 'lote'],
   madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
   motor: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
   controle: ['item', 'nf', 'lote', 'loteSistema'],
-  etiq_pronta: ['item', 'lote', 'endereco', 'processo', 'mLinear'],
+  etiq_pronta: ['item', 'lote', 'endereco', 'posicao', 'processo', 'mLinear'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
 function normalizeMode(mode?: string | null, fallback: RegistroMode = 'manual'): RegistroMode {
@@ -95,7 +96,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
 
   const visibility: Record<RegistroColumnKey, boolean> = {
     item: false, nf: false, processo: false, m2: false, largura: false,
-    mLinear: false, quantidade: false, lote: false, endereco: false, loteSistema: false
+    mLinear: false, quantidade: false, lote: false, endereco: false, loteSistema: false, posicao: false
   };
 
   for (let i = 0, len = rows.length; i < len; i++) {
@@ -121,6 +122,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     if (!visibility.lote && row.lote?.trim()) visibility.lote = true;
     if (!visibility.endereco && row.endereco?.trim()) visibility.endereco = true;
     if (!visibility.loteSistema && row.loteSistema?.trim()) visibility.loteSistema = true;
+    if (!visibility.posicao && (row.posicao !== undefined && row.posicao !== null)) visibility.posicao = true;
   }
 
   if (!hasMultipleModes) {
@@ -130,6 +132,6 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     return layoutFromMode(firstMode).map(key => COLUMN_MAP[key]);
   }
 
-  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'loteSistema'];
+  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'posicao', 'loteSistema'];
   return mixedOrder.filter(key => visibility[key]).map(key => COLUMN_MAP[key]);
 }

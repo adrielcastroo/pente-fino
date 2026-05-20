@@ -9,6 +9,7 @@ export interface Registro {
   largura: number;
   lote: string;
   loteSistema: string;
+  posicao?: number;
   quantidade?: number;
   isNew?: boolean;
   conference_id?: string | null;
@@ -83,6 +84,7 @@ export interface FormData {
   estoqueSearch: string;
   estoqueHighlightStatus: string | null;
   etiqProntaLoteFinal: string;
+  posicao: string;
   activeTab: AppTab;
 }
 

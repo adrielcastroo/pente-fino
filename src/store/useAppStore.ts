@@ -104,6 +104,7 @@ const INITIAL_FORM_DATA: FormData = {
   estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, 
   etiqProntaLoteFinal: '',
   activeTab: 'inicio',
+  posicao: '',
 };
 
 export const useAppStore = create<AppState>()(

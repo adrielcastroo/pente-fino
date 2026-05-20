@@ -2,6 +2,7 @@ import { memo, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
+import { estoqueService } from '@/services/estoqueService';
 import { toast } from 'sonner';
 import { Download, User, Archive, CheckCircle2, LogOut } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -38,10 +39,30 @@ const TopBar = memo(function TopBar() {
   
   const exportExcel = async () => {
     if (isArchiving) return;
-    const currentRegistros = useAppStore.getState().registros;
+    const currentRegistros = [...useAppStore.getState().registros];
     if (!currentRegistros.length) { 
       toast.warning('Nenhum registro para exportar.'); 
       return; 
+    }
+
+    // Ensure all records have a position if they need one
+    const needsAllocation = currentRegistros.filter(r => !r.posicao && r.endereco);
+    if (needsAllocation.length > 0) {
+      const toastId = toast.loading('Calculando alocação automática...');
+      try {
+        for (const reg of needsAllocation) {
+          const pos = await estoqueService.getNextAvailablePosition(reg.endereco, reg.item, currentRegistros);
+          if (pos) {
+            reg.posicao = pos;
+            // Update store as well so it's preserved
+            useAppStore.getState().updateRegistro(reg.id, { posicao: pos });
+          }
+        }
+        toast.dismiss(toastId);
+      } catch (e) {
+        console.error('Error during pre-export allocation:', e);
+        toast.dismiss(toastId);
+      }
     }
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');

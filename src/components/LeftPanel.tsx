@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
+import { estoqueService } from '@/services/estoqueService';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
@@ -121,7 +122,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
-    cortinaLargura, cortinaMetragem, etiqProntaLoteFinal
+    cortinaLargura, cortinaMetragem, etiqProntaLoteFinal, posicao
   } = formData;
 
   // Local state for non-store controlled values (if any)
@@ -349,7 +350,7 @@ export const LeftPanel = memo(function LeftPanel() {
         try {
           const { data, error } = await supabase
             .from('estoque_posicoes')
-            .select('proc, endereco, m_linear')
+            .select('proc, endereco, m_linear, posicao')
             .ilike('lote_sistema', loteSistema)
             .eq('item', item)
             .maybeSingle();
@@ -360,7 +361,8 @@ export const LeftPanel = memo(function LeftPanel() {
             if (data.proc) setProcesso(data.proc);
             setFormData({
               endereco: data.endereco || endereco,
-              diversosMLinear: data.m_linear?.toString() || diversosMLinear
+              diversosMLinear: data.m_linear?.toString() || diversosMLinear,
+              posicao: data.posicao?.toString() || ''
             });
             toast.info('Dados carregados do estoque', { id: 'etiq-extraction', duration: 2000 });
           }
@@ -715,7 +717,7 @@ export const LeftPanel = memo(function LeftPanel() {
     setAiLoading(false);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     // Basic validations that apply to all modes
     if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
@@ -787,6 +789,20 @@ export const LeftPanel = memo(function LeftPanel() {
       ? etiqProntaUtils.generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros)
       : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
+    // Live Allocation: assign position before adding to the list
+    let resolvedPosicao = (isEtiqPronta && posicao) ? parseInt(posicao) : undefined;
+    
+    if (!resolvedPosicao && (requiresEndereco || isEtiqPronta) && resolvedEndereco) {
+      try {
+        const nextPos = await estoqueService.getNextAvailablePosition(resolvedEndereco, item, registros);
+        if (nextPos) {
+          resolvedPosicao = nextPos;
+        }
+      } catch (e) {
+        console.error('Erro na alocação automática:', e);
+      }
+    }
+
     const reg = {
       id: crypto.randomUUID(),
       item,
@@ -800,6 +816,7 @@ export const LeftPanel = memo(function LeftPanel() {
       loteSistema,
       tipoTecido: isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '',
       modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : isEtiqPronta ? 'etiq_pronta' : 'manual',
+      posicao: resolvedPosicao,
       isNew: true,
     };
     addRegistro(reg);
@@ -1311,6 +1328,16 @@ export const LeftPanel = memo(function LeftPanel() {
                     onKeyDown={e => handleFieldKeyDown(e, null)}
                     className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
                     placeholder="Ex: 001234..." autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label>
+                  <input
+                    id="etiq-posicao"
+                    value={posicao}
+                    readOnly
+                    className="w-full h-11 rounded-lg border border-border/50 bg-primary/5 px-3 text-sm font-bold text-primary focus:outline-none transition-colors"
+                    placeholder="Auto..."
                   />
                 </div>
               </>
