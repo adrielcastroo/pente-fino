@@ -349,7 +349,7 @@ export const LeftPanel = memo(function LeftPanel() {
         try {
           const { data, error } = await supabase
             .from('estoque_posicoes')
-            .select('proc, endereco, m_linear')
+            .select('proc, endereco, m_linear, posicao')
             .ilike('lote_sistema', loteSistema)
             .eq('item', item)
             .maybeSingle();
