@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
+import { estoqueService } from '@/services/estoqueService';
 import { useAppStore } from '@/store/useAppStore';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
