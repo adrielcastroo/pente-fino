@@ -1481,7 +1481,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
           {showPreview && registros.length > 0 && (
             <div className="rounded-xl border border-border/50 overflow-hidden">
-              <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
+              <div className="max-h-[250px] overflow-auto custom-scrollbar">
                 <table className="w-full text-[11px]">
                   <thead className="sticky top-0 bg-muted/90 z-10">
                     <tr>
