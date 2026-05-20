@@ -360,7 +360,8 @@ export const LeftPanel = memo(function LeftPanel() {
             if (data.proc) setProcesso(data.proc);
             setFormData({
               endereco: data.endereco || endereco,
-              diversosMLinear: data.m_linear?.toString() || diversosMLinear
+              diversosMLinear: data.m_linear?.toString() || diversosMLinear,
+              posicao: data.posicao?.toString() || ''
             });
             toast.info('Dados carregados do estoque', { id: 'etiq-extraction', duration: 2000 });
           }
