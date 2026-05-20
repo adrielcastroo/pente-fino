@@ -339,7 +339,7 @@ export const LeftPanel = memo(function LeftPanel() {
       if (foundSomething) {
         setFormData(updates);
         if (addrMatch) validateEndereco(addrMatch[1]);
-        toast.info('Dados extraídos da etiqueta');
+        toast.info('Dados extraídos da etiqueta', { id: 'etiq-extraction' });
         return; // Don't do lookup if we just extracted
       }
 
@@ -362,7 +362,7 @@ export const LeftPanel = memo(function LeftPanel() {
               endereco: data.endereco || endereco,
               diversosMLinear: data.m_linear?.toString() || diversosMLinear
             });
-            toast.info('Dados carregados do estoque');
+            toast.info('Dados carregados do estoque', { id: 'etiq-extraction' });
           }
         } catch (e) {
           console.error('Erro ao buscar etiqueta pronta:', e);
@@ -370,7 +370,7 @@ export const LeftPanel = memo(function LeftPanel() {
       }
     };
 
-    const timer = setTimeout(processEtiqPronta, 500);
+    const timer = setTimeout(processEtiqPronta, 800);
     return () => clearTimeout(timer);
   }, [isEtiqPronta, item, etiqProntaLoteFinal, setFormData, setProcesso, endereco, diversosMLinear, processo]);
 
@@ -412,7 +412,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
           if (Object.keys(updates).length > 0) {
             setFormData(updates);
-            if (notified) toast.info('Sugerindo dados do histórico');
+            if (notified) toast.info('Sugerindo dados do histórico', { id: 'item-lookup' });
           }
         }
 
