@@ -96,7 +96,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
 
   const visibility: Record<RegistroColumnKey, boolean> = {
     item: false, nf: false, processo: false, m2: false, largura: false,
-    mLinear: false, quantidade: false, lote: false, endereco: false, loteSistema: false
+    mLinear: false, quantidade: false, lote: false, endereco: false, loteSistema: false, posicao: false
   };
 
   for (let i = 0, len = rows.length; i < len; i++) {
