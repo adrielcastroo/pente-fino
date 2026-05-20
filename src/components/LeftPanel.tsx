@@ -717,7 +717,7 @@ export const LeftPanel = memo(function LeftPanel() {
     setAiLoading(false);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     // Basic validations that apply to all modes
     if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { toast.warning('Preencha o campo Item.'); return; }
