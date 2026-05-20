@@ -121,7 +121,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const {
     item, nf, m2, lote, endereco, aiLargura, aiMLinear, diversosTipo, diversosMLinear,
     manualLargura, coulisseMetragem, lockMetragem, madeiraTipo, quantidade,
-    cortinaLargura, cortinaMetragem, etiqProntaLoteFinal
+    cortinaLargura, cortinaMetragem, etiqProntaLoteFinal, posicao
   } = formData;
 
   // Local state for non-store controlled values (if any)
