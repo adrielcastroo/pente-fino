@@ -789,6 +789,20 @@ export const LeftPanel = memo(function LeftPanel() {
       ? etiqProntaUtils.generateLoteEtiqPronta(item, etiqProntaLoteFinal, registros)
       : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
+    // Live Allocation: assign position before adding to the list
+    let resolvedPosicao = (isEtiqPronta && posicao) ? parseInt(posicao) : undefined;
+    
+    if (!resolvedPosicao && (requiresEndereco || isEtiqPronta) && resolvedEndereco) {
+      try {
+        const nextPos = await estoqueService.getNextAvailablePosition(resolvedEndereco, item, registros);
+        if (nextPos) {
+          resolvedPosicao = nextPos;
+        }
+      } catch (e) {
+        console.error('Erro na alocação automática:', e);
+      }
+    }
+
     const reg = {
       id: crypto.randomUUID(),
       item,
@@ -802,7 +816,7 @@ export const LeftPanel = memo(function LeftPanel() {
       loteSistema,
       tipoTecido: isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '',
       modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : isEtiqPronta ? 'etiq_pronta' : 'manual',
-      posicao: (isEtiqPronta && posicao) ? parseInt(posicao) : undefined,
+      posicao: resolvedPosicao,
       isNew: true,
     };
     addRegistro(reg);
