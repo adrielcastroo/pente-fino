@@ -1,7 +1,45 @@
 import { supabase } from '@/integrations/supabase/client';
 import { parseEndereco } from '@/lib/app-utils';
+import { Registro } from '@/types';
 
 export const estoqueService = {
+  async getNextAvailablePosition(endereco: string, item: string, currentRegistros: Registro[]): Promise<number | null> {
+    const parsed = parseEndereco(endereco);
+    if (!parsed) return null;
+
+    const { estrutura, coluna, nivel } = parsed;
+    const cellKey = `${estrutura}.${coluna}.${nivel}`;
+
+    // 1. Check database for occupied positions
+    const { data: dbOccupied, error } = await supabase
+      .from('estoque_posicoes')
+      .select('posicao')
+      .eq('estrutura', estrutura)
+      .eq('coluna', coluna)
+      .eq('nivel', nivel)
+      .not('status', 'in', ['saida', 'livre']);
+
+    if (error) {
+      console.error('Error fetching occupied positions:', error);
+      return null;
+    }
+
+    const occupiedSet = new Set<number>((dbOccupied || []).map(p => p.posicao));
+
+    // 2. Check current session's registros that are going to the same address
+    currentRegistros.forEach(r => {
+      if (r.endereco === endereco && r.posicao) {
+        occupiedSet.add(r.posicao);
+      }
+    });
+
+    // 3. Find first available (1-30)
+    let pos = 1;
+    while (pos <= 30 && occupiedSet.has(pos)) pos++;
+
+    return pos <= 30 ? pos : null;
+  },
+
   async processEstoque(insertedRegs: any[], registros: any[], processo: string, conferente: string) {
     try {
       const validEnderecos = (insertedRegs || [])
