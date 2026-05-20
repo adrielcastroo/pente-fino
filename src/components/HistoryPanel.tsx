@@ -64,6 +64,7 @@ function EditRegistroDialog({
         modoOrigem: form.modoOrigem || '',
         quantidade: form.quantidade,
         loteSistema: form.loteSistema || '',
+        posicao: Number(form.posicao) || null,
       });
       toast.success('Registro histórico atualizado com sucesso.');
       onOpenChange(false);
