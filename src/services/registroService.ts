@@ -14,6 +14,7 @@ export const registroService = {
       nf: r.nf || '',
       lote: r.lote,
       lote_sistema: r.loteSistema,
+      posicao: r.posicao ?? null,
       tipo_tecido: r.tipoTecido || '',
       modo_origem: r.modoOrigem || currentMode,
       was_edited: r.wasEdited || false,
