@@ -122,6 +122,7 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     if (!visibility.lote && row.lote?.trim()) visibility.lote = true;
     if (!visibility.endereco && row.endereco?.trim()) visibility.endereco = true;
     if (!visibility.loteSistema && row.loteSistema?.trim()) visibility.loteSistema = true;
+    if (!visibility.posicao && (row.posicao !== undefined && row.posicao !== null)) visibility.posicao = true;
   }
 
   if (!hasMultipleModes) {
