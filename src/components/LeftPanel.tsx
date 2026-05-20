@@ -1459,7 +1459,7 @@ export const LeftPanel = memo(function LeftPanel() {
         </div>
 
         {/* Actions */}
-        <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30">
+        <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <Button
             onClick={handleAdd}
             className="w-full h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"

@@ -76,7 +76,7 @@ function EditRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none">
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[1.5rem] sm:rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-8 bg-muted/30">
           <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
              <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>

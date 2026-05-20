@@ -370,8 +370,8 @@ export default function RightPanel() {
         </div>
       )}
 
-      <div className="px-3 sm:px-5 py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+      <div className="px-3 xs:px-4 sm:px-5 py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input 

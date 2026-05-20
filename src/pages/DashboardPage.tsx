@@ -162,7 +162,7 @@ export default function DashboardPage() {
               <Button 
                 variant="default" 
                 size="lg"
-                className="h-11 sm:h-14 px-5 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-3 font-bold uppercase tracking-widest text-[10px] sm:text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap" 
+                className="h-11 sm:h-14 px-4 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-3 font-bold uppercase tracking-widest text-[9px] xs:text-[10px] sm:text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap w-full xs:w-auto" 
                 onClick={handleFullExportExcel}
               >
                 <Download className="w-4 h-4" />
