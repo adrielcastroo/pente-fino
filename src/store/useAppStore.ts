@@ -81,7 +81,6 @@ export interface AppState {
   resetMotorFormData: () => void;
   addRegistro: (reg: Registro) => void;
   deleteRegistro: (id: string) => void;
-  updateRegistro: (id: string, updates: Partial<Registro>) => void;
   undo: () => Registro | null;
   clearAll: () => void;
   addReserva: (res: Reserva) => Promise<void>;
