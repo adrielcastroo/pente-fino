@@ -82,7 +82,18 @@ export const estoqueService = {
           console.error('Error upserting to estoque_posicoes:', upsertError);
           throw upsertError;
         }
+
+        // Update the 'registros' table with the assigned positions
+        const updatePromises = estoqueRows.map(row => 
+          supabase
+            .from('registros')
+            .update({ posicao: row.posicao })
+            .eq('id', row.registro_id)
+        );
+        await Promise.all(updatePromises);
       }
+
+      return estoqueRows;
 
       if (skippedRegs.length > 0) {
         // We throw an informative error if some records couldn't be placed
