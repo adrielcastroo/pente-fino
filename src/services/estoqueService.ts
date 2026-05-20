@@ -79,11 +79,16 @@ export const estoqueService = {
         if (!occupiedMap.has(cellKey)) occupiedMap.set(cellKey, new Set());
         const occupiedSet = occupiedMap.get(cellKey)!;
         
-        let pos = 1;
-        // The database constraint restricts positions to a maximum of 30.
-        while (pos <= 30 && occupiedSet.has(pos)) pos++;
+        const original = regMap.get(r.id);
+        let pos = original?.posicao;
         
-        if (pos <= 30) {
+        // If not already allocated in the frontend, find next available
+        if (!pos) {
+          pos = 1;
+          while (pos <= 30 && occupiedSet.has(pos)) pos++;
+        }
+        
+        if (pos && pos <= 30) {
           occupiedSet.add(pos);
           const original = regMap.get(r.id);
           estoqueRows.push({
