@@ -57,10 +57,10 @@ export default function MainLayout() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative">
+          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain">
             <div className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-6 sm:p-10 lg:p-12 xl:p-16 2xl:p-20">
+                <div className="p-4 sm:p-6 lg:p-10 xl:p-12 2xl:p-16">
                   <Outlet />
                 </div>
               </Suspense>
