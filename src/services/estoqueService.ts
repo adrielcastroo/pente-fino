@@ -93,12 +93,12 @@ export const estoqueService = {
         await Promise.all(updatePromises);
       }
 
-      return estoqueRows;
-
       if (skippedRegs.length > 0) {
         // We throw an informative error if some records couldn't be placed
         throw new Error(`Alguns registros (${skippedRegs.length}) não foram alocados pois as posições do endereço estão cheias.`);
       }
+
+      return estoqueRows;
     } catch (e) {
       console.error('Detailed error in processEstoque:', e);
       throw e;
