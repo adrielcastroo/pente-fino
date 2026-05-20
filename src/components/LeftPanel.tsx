@@ -324,18 +324,27 @@ export const LeftPanel = memo(function LeftPanel() {
 
         let match: any = rows?.[0];
 
-        // Fallback: try registros table (archived/historical)
+        // Fallback: try registros table (historical) — note: processo lives on conferences
         if (!match) {
           let rq = supabase
             .from('registros')
-            .select('item, processo:lote_sistema, endereco, m_linear, posicao, lote_sistema')
+            .select('item, endereco, m_linear, posicao, lote_sistema, conference_id')
             .ilike('lote_sistema', input)
             .order('created_at', { ascending: false });
           if (item) rq = rq.eq('item', item);
           const { data: regRows } = await rq.limit(1);
           if (regRows?.[0]) {
             const r: any = regRows[0];
-            match = { ...r, proc: r.processo };
+            let proc = '';
+            if (r.conference_id) {
+              const { data: conf } = await supabase
+                .from('conferences')
+                .select('processo')
+                .eq('id', r.conference_id)
+                .maybeSingle();
+              proc = conf?.processo || '';
+            }
+            match = { ...r, proc };
           }
         }
 
