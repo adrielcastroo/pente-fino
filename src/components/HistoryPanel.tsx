@@ -76,7 +76,7 @@ function EditRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none">
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[1.5rem] sm:rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-8 bg-muted/30">
           <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
              <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
@@ -324,7 +324,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                     variant="ghost"
                     size="icon"
                     onClick={() => setEditingRegistro(r)}
-                    className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all sm:opacity-0 sm:group-hover/row:opacity-100"
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
@@ -349,7 +349,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 
   const headerContent = (
     <div className="group/header">
-      <button onClick={() => setOpen(!open)} className="w-full px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
+      <button onClick={() => setOpen(!open)} className="w-full px-3 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
         <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
           <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>

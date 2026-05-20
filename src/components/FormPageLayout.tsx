@@ -25,8 +25,8 @@ export default function FormPageLayout({ children, showRightPanel = true }: Form
     return (
       <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 2xl:gap-8 overflow-x-hidden">
         <div
-          className="w-full shrink-0 h-full min-w-0"
-          style={{ flexBasis: 'clamp(360px, 32vw, 560px)' }}
+          className="w-full shrink-0 h-auto lg:h-full min-w-0"
+          style={{ flexBasis: isMobile ? 'auto' : 'clamp(360px, 32vw, 560px)' }}
         >
           {children}
         </div>

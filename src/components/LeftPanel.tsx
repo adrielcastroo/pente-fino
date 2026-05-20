@@ -1459,7 +1459,7 @@ export const LeftPanel = memo(function LeftPanel() {
         </div>
 
         {/* Actions */}
-        <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30">
+        <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <Button
             onClick={handleAdd}
             className="w-full h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
@@ -1481,7 +1481,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
           {showPreview && registros.length > 0 && (
             <div className="rounded-xl border border-border/50 overflow-hidden">
-              <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
+              <div className="max-h-[250px] overflow-auto custom-scrollbar">
                 <table className="w-full text-[11px]">
                   <thead className="sticky top-0 bg-muted/90 z-10">
                     <tr>
