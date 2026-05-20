@@ -801,6 +801,7 @@ export const LeftPanel = memo(function LeftPanel() {
       loteSistema,
       tipoTecido: isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '',
       modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : isEtiqPronta ? 'etiq_pronta' : 'manual',
+      posicao: (isEtiqPronta && posicao) ? parseInt(posicao) : undefined,
       isNew: true,
     };
     addRegistro(reg);
