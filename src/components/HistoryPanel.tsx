@@ -205,6 +205,7 @@ function downloadConferenceExcel(conf: Conference) {
       case 'lote': return r.lote || '';
       case 'endereco': return r.endereco || '';
       case 'loteSistema': return r.loteSistema || '';
+      case 'posicao': return r.posicao || '';
       default: return '';
     }
   }));
