@@ -44,5 +44,15 @@ export const registroService = {
       .eq('conference_id', conferenceId);
       
     if (error) throw error;
+  },
+
+  async deleteRegistro(conferenceId: string, registroId: string) {
+    const { error } = await supabase
+      .from('registros')
+      .delete()
+      .eq('id', registroId)
+      .eq('conference_id', conferenceId);
+      
+    if (error) throw error;
   }
 };
