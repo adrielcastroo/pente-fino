@@ -371,6 +371,8 @@ export const useAppStore = create<AppState>()(
             sessionStartedAt: null, 
             isArchiving: false 
           });
+          get().resetFormData();
+          get().resetMotorFormData();
           await get().loadHistory();
         } catch (e: any) {
           console.error('Error archiving:', e);
