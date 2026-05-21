@@ -535,41 +535,54 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
               </Badge>
             )}
 
-            <span className="hidden xs:block h-3 w-[1px] bg-border" />
-            <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
-            {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
-            {conf.conferente && (
-              <span className="hidden sm:flex items-center gap-1"><User className="w-3 h-3 shrink-0" /> {conf.conferente}</span>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-            className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-primary/10 text-primary transition-all"
-          >
-            <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Button>
-          {!isGuest && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl hover:bg-destructive/10 text-destructive transition-all"
-            >
-              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-          )}
+            <div className="flex gap-1.5 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); setIsAdding(true); }}
+                className="h-8 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-bold text-[10px] uppercase tracking-wider px-3"
+              >
+                <Plus className="w-3 h-3 mr-1" /> Incluir Item
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-primary/10 text-primary transition-all border border-border/40"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </Button>
+              {!isGuest && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-destructive/10 text-destructive transition-all border border-border/40"
+                >
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </Button>
+              )}
 
-          <div className={`p-1.5 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
-             <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
+              <div className={`p-1.5 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
+                 <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
+              </div>
+            </div>
           </div>
         </div>
       </button>
     </div>
   );
+
+  const deleteHistoryRegistro = useAppStore(s => s.deleteHistoryRegistro);
+
+  const handleDeleteItem = async (registroId: string) => {
+    try {
+      await deleteHistoryRegistro(conf.id, registroId);
+      toast.success('Item removido do histórico.');
+    } catch {
+      toast.error('Erro ao remover item do histórico.');
+    }
+  };
 
   return (
     <>
@@ -589,6 +602,14 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         conferenceId={conf.id}
       />
 
+      <AddHistoryRegistroDialog
+        open={isAdding}
+        onOpenChange={setIsAdding}
+        conferenceId={conf.id}
+        isDiversos={conf.registros.some(r => r.modoOrigem === 'diversos')}
+        isMotor={conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle')}
+      />
+
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
           <DialogHeader>
@@ -601,6 +622,13 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
+            <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <Button variant="destructive" className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
             <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
             <Button variant="destructive" className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
           </DialogFooter>
