@@ -93,6 +93,8 @@ export interface AppState {
   deleteConference: (id: string) => Promise<void>;
   clearHistory: () => Promise<void>;
   updateHistoryRegistro: (conferenceId: string, registroId: string, updates: Partial<Registro>) => Promise<void>;
+  deleteHistoryRegistro: (conferenceId: string, registroId: string) => Promise<void>;
+  addHistoryRegistro: (conferenceId: string, reg: Omit<Registro, 'id'>) => Promise<void>;
 }
 
 const INITIAL_FORM_DATA: FormData = {
