@@ -33,11 +33,11 @@ export const estoqueService = {
       }
     });
 
-    // 3. Find first available (1-30)
+    // 3. Find first available (1-100)
     let pos = 1;
-    while (pos <= 30 && occupiedSet.has(pos)) pos++;
+    while (pos <= 100 && occupiedSet.has(pos)) pos++;
 
-    return pos <= 30 ? pos : null;
+    return pos <= 100 ? pos : null;
   },
 
   async processEstoque(insertedRegs: any[], registros: any[], processo: string, conferente: string) {
@@ -82,13 +82,13 @@ export const estoqueService = {
         const original = regMap.get(r.id);
         let pos = original?.posicao;
         
-        // If not already allocated in the frontend, find next available
+        // If not already allocated in the frontend, find next available (up to 100)
         if (!pos) {
           pos = 1;
-          while (pos <= 30 && occupiedSet.has(pos)) pos++;
+          while (pos <= 100 && occupiedSet.has(pos)) pos++;
         }
         
-        if (pos && pos <= 30) {
+        if (pos && pos <= 100) {
           occupiedSet.add(pos);
           const original = regMap.get(r.id);
           estoqueRows.push({
@@ -117,6 +117,7 @@ export const estoqueService = {
       }
 
       if (estoqueRows.length > 0) {
+        console.log(`Upserting ${estoqueRows.length} rows to estoque_posicoes`);
         const { error: upsertError } = await supabase
           .from('estoque_posicoes')
           .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });
@@ -133,17 +134,21 @@ export const estoqueService = {
             .update({ posicao: row.posicao })
             .eq('id', row.registro_id)
         );
-        await Promise.all(updatePromises);
+        const results = await Promise.all(updatePromises);
+        const errors = results.filter(r => r.error).map(r => r.error);
+        if (errors.length > 0) {
+          console.error('Errors updating registros positions:', errors);
+        }
       }
 
       if (skippedRegs.length > 0) {
-        // We throw an informative error if some records couldn't be placed
-        throw new Error(`Alguns registros (${skippedRegs.length}) não foram alocados pois as posições do endereço estão cheias.`);
+        toast.error(`Atenção: ${skippedRegs.length} itens não couberam no endereço e ficaram fora do estoque.`);
       }
 
       return estoqueRows;
     } catch (e) {
       console.error('Detailed error in processEstoque:', e);
+      toast.error('Erro ao processar estoque. Verifique os logs.');
       throw e;
     }
   }
