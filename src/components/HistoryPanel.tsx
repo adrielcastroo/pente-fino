@@ -435,6 +435,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const { isGuest } = useAuth();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const { isLow } = usePerformance();
   const totalML = useMemo(() => {
