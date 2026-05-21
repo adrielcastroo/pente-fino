@@ -640,7 +640,6 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         </DialogContent>
       </Dialog>
     </>
-    </>
   );
 });
 
