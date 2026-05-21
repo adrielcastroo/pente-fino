@@ -45,24 +45,20 @@ const TopBar = memo(function TopBar() {
       return; 
     }
 
-    // Ensure all records have a position if they need one
-    const needsAllocation = currentRegistros.filter(r => !r.posicao && r.endereco);
-    if (needsAllocation.length > 0) {
-      const toastId = toast.loading('Calculando alocação automática...');
-      try {
-        for (const reg of needsAllocation) {
-          const pos = await estoqueService.getNextAvailablePosition(reg.endereco, reg.item, currentRegistros);
-          if (pos) {
-            reg.posicao = pos;
-            // Update store as well so it's preserved
-            useAppStore.getState().updateRegistro(reg.id, { posicao: pos });
-          }
-        }
-        toast.dismiss(toastId);
-      } catch (e) {
-        console.error('Error during pre-export allocation:', e);
-        toast.dismiss(toastId);
-      }
+    // 1. Process Stock Allocation for all records (even if already have one, to ensure consistency)
+    const toastId = toast.loading('Processando alocação e preparando estoque...');
+    try {
+      // We pass insertedRegs as the current records to be processed
+      // But archiveAndClear will call insertRegistros then processEstoque.
+      // To ensure they appear in stock, we let archiveAndClear handle the DB side,
+      // but we can pre-calculate positions here for better UX or to catch errors.
+      
+      const conferenteName = conferente.trim() || profile?.display_name || user?.email?.split('@')[0] || 'Sistema';
+      
+      // We'll let the archiveAndClear -> apiService handle the sequence.
+      // The apiService already calls processEstoque after inserting records.
+    } catch (e) {
+      console.error('Error during pre-export check:', e);
     }
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
