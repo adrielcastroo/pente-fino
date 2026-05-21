@@ -44,21 +44,8 @@ const TopBar = memo(function TopBar() {
       return; 
     }
 
-    // 1. Process Stock Allocation for all records (even if already have one, to ensure consistency)
-    const toastId = toast.loading('Processando alocação e preparando estoque...');
-    try {
-      // We pass insertedRegs as the current records to be processed
-      // But archiveAndClear will call insertRegistros then processEstoque.
-      // To ensure they appear in stock, we let archiveAndClear handle the DB side,
-      // but we can pre-calculate positions here for better UX or to catch errors.
-      
-      const conferenteName = conferente.trim() || profile?.display_name || user?.email?.split('@')[0] || 'Sistema';
-      
-      // We'll let the archiveAndClear -> apiService handle the sequence.
-      // The apiService already calls processEstoque after inserting records.
-    } catch (e) {
-      console.error('Error during pre-export check:', e);
-    }
+    // 1. Process Stock Allocation and saving
+    const toastId = toast.loading('Alocando tecidos e preparando arquivo...');
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
     const requiresProcesso = !isMotorControle && 
