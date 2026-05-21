@@ -474,15 +474,27 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                 </td>
               ))}
               <td className="px-5 py-3.5">
-                <div className="flex flex-col items-end gap-1.5">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setEditingRegistro(r)}
-                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
+                <div className="flex flex-col items-end gap-1.5 opacity-100 group-hover/row:opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingRegistro(r)}
+                      className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    {!isGuest && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteItem(r.id)}
+                        className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
                   {r.wasEdited && (
                     <Tooltip>
                       <TooltipTrigger asChild>
