@@ -582,6 +582,14 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
               </div>
             </div>
+            <div className="hidden xs:flex items-center gap-1.5 sm:gap-2.5 mt-2 flex-wrap">
+              <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
+              {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
+              {conf.conferente && (
+                <span className="hidden sm:flex items-center gap-1"><User className="w-3 h-3 shrink-0" /> {conf.conferente}</span>
+              )}
+            </div>
+          </div>
           </div>
         </div>
       </button>
