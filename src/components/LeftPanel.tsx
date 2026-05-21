@@ -193,7 +193,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const isCelular = isDiversos && diversosTipo === 'Celular';
   const isRolo = isDiversos && diversosTipo === 'Rolo';
   const isCortina = isDiversos && diversosTipo === 'Cortina';
-  const isHC45 = isCelular && item.toUpperCase().startsWith('HC-45');
+  const isHC45 = isCelular && (item.toUpperCase().includes('HC-45') || item.toUpperCase().includes('HC45'));
   const celularDivisor = isHC45 ? 3.66 : 3.05;
 
   // Celular uses PROC instead of NF
