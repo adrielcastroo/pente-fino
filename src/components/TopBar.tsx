@@ -106,16 +106,24 @@ const TopBar = memo(function TopBar() {
 
     try {
       const count = currentRegistros.length;
+      
+      // 2. Archive and Clear (This includes saving to DB and allocating stock)
+      // We do this BEFORE downloading the Excel to ensure data is safe in DB first
+      await archiveAndClear(archiveName);
+      
+      // 3. Download the Excel file
       if (isMotorControle) {
         await exportMotorControleToExcel(currentRegistros, fileName);
       } else {
         await exportConferenceToExcel(headers, data, fileName, columnWidths);
       }
-      await archiveAndClear(archiveName);
-      toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
+      
+      toast.dismiss(toastId);
+      toast.success(`Exportação concluída! ${count} registros alocados no estoque e arquivados.`, {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
       });
     } catch (error: any) {
+      toast.dismiss(toastId);
       toast.error(error.message || 'Falha ao exportar e arquivar registros.');
     }
   };
