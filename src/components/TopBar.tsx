@@ -2,7 +2,6 @@ import { memo, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
-import { estoqueService } from '@/services/estoqueService';
 import { toast } from 'sonner';
 import { Download, User, Archive, CheckCircle2, LogOut } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -45,25 +44,8 @@ const TopBar = memo(function TopBar() {
       return; 
     }
 
-    // Ensure all records have a position if they need one
-    const needsAllocation = currentRegistros.filter(r => !r.posicao && r.endereco);
-    if (needsAllocation.length > 0) {
-      const toastId = toast.loading('Calculando alocação automática...');
-      try {
-        for (const reg of needsAllocation) {
-          const pos = await estoqueService.getNextAvailablePosition(reg.endereco, reg.item, currentRegistros);
-          if (pos) {
-            reg.posicao = pos;
-            // Update store as well so it's preserved
-            useAppStore.getState().updateRegistro(reg.id, { posicao: pos });
-          }
-        }
-        toast.dismiss(toastId);
-      } catch (e) {
-        console.error('Error during pre-export allocation:', e);
-        toast.dismiss(toastId);
-      }
-    }
+    // 1. Process Stock Allocation and saving
+    const toastId = toast.loading('Alocando tecidos e preparando arquivo...');
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
     const requiresProcesso = !isMotorControle && 
@@ -110,16 +92,24 @@ const TopBar = memo(function TopBar() {
 
     try {
       const count = currentRegistros.length;
+      
+      // 2. Archive and Clear (This includes saving to DB and allocating stock)
+      // We do this BEFORE downloading the Excel to ensure data is safe in DB first
+      await archiveAndClear(archiveName);
+      
+      // 3. Download the Excel file
       if (isMotorControle) {
         await exportMotorControleToExcel(currentRegistros, fileName);
       } else {
         await exportConferenceToExcel(headers, data, fileName, columnWidths);
       }
-      await archiveAndClear(archiveName);
-      toast.success(`Exportação concluída! ${count} registros arquivados com sucesso.`, {
+      
+      toast.dismiss(toastId);
+      toast.success(`Exportação concluída! ${count} registros alocados no estoque e arquivados.`, {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
       });
     } catch (error: any) {
+      toast.dismiss(toastId);
       toast.error(error.message || 'Falha ao exportar e arquivar registros.');
     }
   };
