@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { parseEndereco } from '@/lib/app-utils';
 import { Registro } from '@/types';
+import { toast } from 'sonner';
 
 export const estoqueService = {
   async getNextAvailablePosition(endereco: string, item: string, currentRegistros: Registro[]): Promise<number | null> {
