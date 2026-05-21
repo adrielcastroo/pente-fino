@@ -44,6 +44,14 @@ export const apiService = {
     return registroService.updateRegistro(conferenceId, registroId, payload);
   },
 
+  async deleteRegistro(conferenceId: string, registroId: string) {
+    return registroService.deleteRegistro(conferenceId, registroId);
+  },
+
+  async insertRegistros(conferenceId: string, registros: Registro[], currentMode: string) {
+    return registroService.insertRegistros(conferenceId, registros, currentMode);
+  },
+
   async fetchReservas() {
     return independentReservaService.fetchReservas();
   },
