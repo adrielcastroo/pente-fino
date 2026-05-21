@@ -590,7 +590,6 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
               )}
             </div>
           </div>
-          </div>
         </div>
       </button>
     </div>
