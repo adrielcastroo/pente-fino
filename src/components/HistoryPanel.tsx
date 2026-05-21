@@ -320,6 +320,8 @@ function AddHistoryRegistroDialog({
 }
 
 function getConferenceFolderName(conf: Conference): string {
+  if (conf.processo && conf.processo !== 'conferencia_conferencia') return conf.processo;
+
   const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
   if (isMotorControle) {
     const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
