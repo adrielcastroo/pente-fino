@@ -628,12 +628,6 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         </DialogContent>
       </Dialog>
     </>
-  );
-            <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button variant="destructive" className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 });
