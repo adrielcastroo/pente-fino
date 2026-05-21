@@ -491,6 +491,80 @@ export const useAppStore = create<AppState>()(
           throw e;
         }
       },
+
+      deleteHistoryRegistro: async (conferenceId, registroId) => {
+        try {
+          await apiService.deleteRegistro(conferenceId, registroId);
+          set(state => ({
+            history: state.history.map(conf => 
+              conf.id !== conferenceId 
+                ? conf 
+                : { ...conf, registros: conf.registros.filter(r => r.id !== registroId) }
+            )
+          }));
+        } catch (e: any) {
+          console.error('Error deleting history registro:', e);
+          throw e;
+        }
+      },
+
+      addHistoryRegistro: async (conferenceId, regData) => {
+        try {
+          const state = get();
+          const conference = state.history.find(c => c.id === conferenceId);
+          if (!conference) return;
+
+          const id = crypto.randomUUID();
+          const newReg: Registro = { ...regData, id, conference_id: conferenceId };
+          
+          // Ensure loteSistema is generated if not provided
+          if (!newReg.loteSistema) {
+            newReg.loteSistema = generateLoteSistema(
+              newReg.processo || conference.processo,
+              newReg.endereco || '',
+              newReg.mLinear || 0,
+              conference.registros,
+              newReg.nf || '',
+              newReg.item || ''
+            );
+          }
+
+          const inserted = await apiService.insertRegistros(conferenceId, [newReg], newReg.modoOrigem || 'manual');
+          if (!inserted || inserted.length === 0) throw new Error('Falha ao inserir registro');
+          
+          const r = inserted[0];
+          const mappedReg: Registro = {
+            id: r.id,
+            item: r.item,
+            processo: (r.modo_origem === 'diversos' && r.tipo_tecido !== 'Celular') ? '' : conference.processo,
+            nf: r.nf || '',
+            endereco: r.endereco,
+            m2: Number(r.m2),
+            mLinear: Number(r.m_linear),
+            largura: Number(r.largura),
+            lote: r.lote,
+            loteSistema: r.lote_sistema,
+            conference_id: r.conference_id,
+            tipoTecido: r.tipo_tecido,
+            modoOrigem: r.modo_origem,
+            wasEdited: r.was_edited,
+            editedBy: r.edited_by,
+            editedAt: r.edited_at,
+            quantidade: r.quantidade ?? undefined,
+          };
+
+          set(state => ({
+            history: state.history.map(conf => 
+              conf.id !== conferenceId 
+                ? conf 
+                : { ...conf, registros: [...conf.registros, mappedReg] }
+            )
+          }));
+        } catch (e: any) {
+          console.error('Error adding history registro:', e);
+          throw e;
+        }
+      },
     }),
     {
       name: 'cft4-registros',
