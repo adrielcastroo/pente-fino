@@ -156,14 +156,14 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
         {
           type: 'cellIs',
           priority: 1,
-          operator: 'greaterThanOrEqual',
+          operator: 'ge',
           formulae: ['0.9'],
           style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
         },
         {
           type: 'cellIs',
           priority: 2,
-          operator: 'lessThan',
+          operator: 'lt',
           formulae: ['0.5'],
           style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
         }
@@ -217,18 +217,21 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
       rules: [
         {
           type: 'containsText',
+          priority: 1,
           operator: 'containsText',
           text: 'Concluído',
-          style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
+          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
         },
         {
           type: 'containsText',
+          priority: 2,
           operator: 'containsText',
           text: 'Vazio',
-          style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
+          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
         }
       ]
     });
+
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
