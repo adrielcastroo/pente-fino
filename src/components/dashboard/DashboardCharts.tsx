@@ -56,14 +56,15 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
 interface TimelineChartProps {
   data: any[];
   onExport: (data: any[], fileName: string) => void;
+  id?: string;
 }
 
-export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps) => {
+export const TimelineChart = React.memo(({ data, onExport, id }: TimelineChartProps) => {
   const { isLow } = usePerformance();
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] lg:rounded-[3rem]">
+    <Card id={id} className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] lg:rounded-[3rem]">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 gap-4 sm:gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
           <CardTitle className="text-base sm:text-lg lg:text-xl font-extrabold tracking-tight flex items-center gap-2 sm:gap-3">
@@ -131,12 +132,12 @@ export const TimelineChart = React.memo(({ data, onExport }: TimelineChartProps)
 
 TimelineChart.displayName = 'TimelineChart';
 
-export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey }: any) => {
+export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const { isLow } = usePerformance();
   const processedData = useMemo(() => isLow ? data.slice(0, 5) : data, [data, isLow]);
 
   return (
-    <Card className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] rounded-[1.25rem] sm:rounded-[1.5rem]">
+    <Card id={id} className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] rounded-[1.25rem] sm:rounded-[1.5rem]">
       <CardHeader className="px-6 sm:px-8 py-6 sm:py-8 flex flex-row items-start justify-between">
         <div className="space-y-1.5">
           <CardTitle className="text-base font-extrabold flex items-center gap-2.5">
@@ -242,7 +243,8 @@ export const OccupationChart = React.memo(({
   reserved = 0, 
   blocked = 0, 
   unit = 'alocações',
-  customCategories
+  customCategories,
+  id
 }: { 
   title: string, 
   used: number, 
@@ -250,7 +252,8 @@ export const OccupationChart = React.memo(({
   reserved?: number, 
   blocked?: number, 
   unit?: string,
-  customCategories?: { name: string, value: number, color?: string }[]
+  customCategories?: { name: string, value: number, color?: string }[],
+  id?: string
 }) => {
   const { isLow } = usePerformance();
   
@@ -280,7 +283,7 @@ export const OccupationChart = React.memo(({
   const isEmpty = calculatedTotal === 0 && finalData.every(c => c.value === 0);
 
   return (
-    <Card className="border-none bg-card/10 backdrop-blur-md overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] h-full transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+    <Card id={id} className="border-none bg-card/10 backdrop-blur-md overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] h-full transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
       <CardHeader className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 md:py-8 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
           <CardTitle className="text-base sm:text-lg md:text-xl font-extrabold tracking-tight flex items-center gap-2 sm:gap-3">
