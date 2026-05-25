@@ -84,7 +84,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </BarChart>
             ) : detailChart.type === 'area' ? (
-              <AreaChart data={detailChart.data} margin={{ bottom: 20, top: 10, left: 0, right: 30 }}>
+              <AreaChart data={detailChart.data} margin={{ bottom: 10, top: 10, left: 0, right: 30 }}>
                 <defs>
                   <linearGradient id="detailAreaGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
