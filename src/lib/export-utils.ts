@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import { Registro, Conference } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
-import ExcelJS from 'exceljs';
+import { Workbook, ChartFactory } from 'xml-xlsx-lite';
 import { saveAs } from 'file-saver';
 
 const triggerAutoArchive = async (fileName: string) => {
