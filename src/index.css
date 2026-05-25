@@ -121,6 +121,11 @@
     min-height: 0;
   }
 
+  /* Prevent text selection on long press for mobile except for inputs */
+  *:not(input):not(textarea) {
+    -webkit-touch-callout: none;
+  }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary overflow-x-hidden;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
