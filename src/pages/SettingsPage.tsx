@@ -329,11 +329,11 @@ export default function SettingsPage() {
     ), [searchQuery]);
 
   return (
-    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
-      <header className="flex flex-row items-center justify-between gap-4 border-b border-border/10 pb-4 sm:pb-6">
+    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-1 sm:px-0">
+      <header className="flex flex-row items-center justify-between gap-3 border-b border-border/10 pb-4 sm:pb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
-          <p className="text-muted-foreground text-[10px] sm:text-sm hidden xs:block">Gerencie sua conta e preferências.</p>
+          <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
+          <p className="text-muted-foreground text-[10px] sm:text-sm hidden sm:block">Gerencie sua conta e preferências.</p>
         </div>
         
         <div className="flex items-center gap-3">
