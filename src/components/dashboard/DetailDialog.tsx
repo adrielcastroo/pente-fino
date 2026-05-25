@@ -84,7 +84,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </BarChart>
             ) : detailChart.type === 'area' ? (
-              <AreaChart data={detailChart.data} margin={{ bottom: 10, top: 10, left: 0, right: 30 }}>
+              <AreaChart data={detailChart.data} margin={{ bottom: 40, top: 20, left: 10, right: 20 }}>
                 <defs>
                   <linearGradient id="detailAreaGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -94,19 +94,20 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
                 <XAxis 
                   dataKey="name" 
-                  fontSize={10} 
+                  fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fontWeight: 600 }}
-                  dy={10}
+                  dy={15}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  fontSize={10} 
+                  fontSize={11} 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fontWeight: 600 }}
+                  dx={-5}
                 />
                 <ChartTooltip 
                   cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
