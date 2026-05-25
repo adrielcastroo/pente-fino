@@ -34,7 +34,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         </div>
       </DialogHeader>
       
-      <div className="px-4 sm:px-10 py-6 sm:py-10 h-[500px] sm:h-[600px] overflow-y-auto">
+      <div className="px-4 sm:px-10 py-6 sm:py-10 h-[500px] sm:h-[600px] shrink-0">
         {detailChart && (
           <ResponsiveContainer width="100%" height="100%">
             {detailChart.type === 'bar' ? (
