@@ -179,7 +179,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
       wsTipos.setCell(`B${i + 2}`, row.value);
     });
     const lastRowTipos = stats.tipos.length + 1;
-    wsTipos.addChart(ChartFactory.createDoughnutChart('TiposChart', [
+    wsTipos.addChart(ChartFactory.createPieChart('TiposChart', [
       { series: 'Materiais', categories: `'Tipos de Materiais'!$A$2:$A$${lastRowTipos}`, values: `'Tipos de Materiais'!$B$2:$B$${lastRowTipos}` }
     ], { title: 'Mix de Materiais' }, { row: 1, col: 4 }));
 
