@@ -124,9 +124,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="dashboard-content" className="space-y-5 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8">
+    <div id="dashboard-content" className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8">
       {/* Header */}
-      <header className="flex flex-col gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-4 sm:pt-6 rounded-b-[1.5rem] sm:rounded-b-[2.5rem]">
+      <header className="flex flex-col gap-3 sm:gap-6 pb-4 sm:pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-2 sm:pt-6 rounded-b-[1.25rem] sm:rounded-b-[2.5rem]">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
