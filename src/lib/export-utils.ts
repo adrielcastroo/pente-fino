@@ -3,7 +3,6 @@ import { Registro, Conference } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import html2canvas from 'html2canvas';
 
 const triggerAutoArchive = async (fileName: string) => {
   try {
@@ -27,6 +26,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
   const toastId = toast.loading('Gerando relatório corporativo premium com gráficos...');
   try {
     const workbook = new ExcelJS.Workbook();
+    const html2canvas = (await import('html2canvas')).default;
     
     // Helper para capturar gráfico e adicionar na planilha
     const addChartToWorksheet = async (ws: ExcelJS.Worksheet, elementId: string, position: { row: number, col: number }) => {
