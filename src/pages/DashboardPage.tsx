@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FolderOpen, Calendar } from 'lucide-react';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,28 +40,18 @@ export default function DashboardPage() {
     handleStatClick,
     handleExport,
     handleExportPDF,
+    handleFullExport,
   } = useDashboard();
 
-  const handleFullExportExcel = async () => {
-    const { exportToExcel } = await import('@/lib/export-utils');
-    
-    // Preparar dados para exportação
-    const exportData = [
-      { Categoria: 'MÉTRICAS GERAIS', Informação: '', Valor: '' },
-      { Categoria: 'Total de Conferentes', Informação: '', Valor: stats.totalConferentes },
-      { Categoria: 'Total de Conferências', Informação: '', Valor: stats.totalConferencias },
-      { Categoria: 'Total de Registros', Informação: '', Valor: stats.totalRegistros },
-      { Categoria: 'Média de Sessão', Informação: '', Valor: stats.avgDuration },
-      { Categoria: '', Informação: '', Valor: '' },
-      { Categoria: 'PRODUÇÃO POR CONFERENTE', Informação: 'Total Registros', Valor: 'Conferências' },
-      ...stats.topConferentes.map(c => ({
-        Categoria: c.name,
-        Informação: c.total,
-        Valor: c.conferences || 0
-      }))
-    ];
+  const [isExporting, setIsExporting] = useState(false);
 
-    await exportToExcel(exportData, 'Relatorio_Dashboard');
+  const handleFullExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      await handleFullExport(stats, history, 'Relatorio_Completo_Logistica');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   useEffect(() => {
@@ -162,11 +152,16 @@ export default function DashboardPage() {
               <Button 
                 variant="default" 
                 size="lg"
-                className="h-11 sm:h-14 px-4 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-3 font-bold uppercase tracking-widest text-[9px] xs:text-[10px] sm:text-[11px] bg-primary hover:bg-primary/90 whitespace-nowrap w-full xs:w-auto" 
+                disabled={isExporting}
+                className="h-11 sm:h-14 px-4 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-3 font-bold uppercase tracking-widest text-[9px] xs:text-[10px] sm:text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap w-full xs:w-auto" 
                 onClick={handleFullExportExcel}
               >
-                <Download className="w-4 h-4" />
-                Exportar Dados
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
+                {isExporting ? 'Gerando...' : 'Exportar Relatório Completo (Excel)'}
               </Button>
             </TooltipTrigger>
             <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Executivo</TooltipContent>
@@ -334,7 +329,7 @@ export default function DashboardPage() {
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
             <div className="relative p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
-              <Download className="w-7 h-7 sm:w-10 sm:h-10" />
+              <FileText className="w-7 h-7 sm:w-10 sm:h-10" />
             </div>
           </div>
           <div className="space-y-2 sm:space-y-3">
@@ -344,10 +339,11 @@ export default function DashboardPage() {
           <Button 
             variant="default" 
             size="lg" 
+            disabled={isExporting}
             onClick={handleFullExportExcel} 
-            className="w-full rounded-2xl h-11 sm:h-14 font-extrabold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[10px] sm:text-[11px] shadow-2xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] mt-2 sm:mt-4"
+            className="w-full rounded-2xl h-11 sm:h-14 font-extrabold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[10px] sm:text-[11px] shadow-2xl shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-[1.03] active:scale-[0.97] mt-2 sm:mt-4"
           >
-            Exportar Dados
+            {isExporting ? 'Gerando Relatório...' : 'Exportar Dados (Excel)'}
           </Button>
           
           <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
