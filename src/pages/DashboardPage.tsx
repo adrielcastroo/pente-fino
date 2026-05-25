@@ -360,8 +360,8 @@ export default function DashboardPage() {
 
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-muted/10">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
+          <DialogHeader className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-slate-50/50">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Users className="w-6 h-6" />
@@ -374,7 +374,7 @@ export default function DashboardPage() {
           </DialogHeader>
           <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
+              <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
                 <tr>
                   <th className="px-6 sm:px-10 py-4 sm:py-6 text-left font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
                   <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
@@ -402,8 +402,8 @@ export default function DashboardPage() {
 
       {/* Conferences Detail Dialog */}
       <Dialog open={detailDialog === 'conferences'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-muted/10">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <BarChart3 className="w-6 h-6" />
@@ -416,7 +416,7 @@ export default function DashboardPage() {
           </DialogHeader>
           <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
+              <thead className="sticky top-0 bg-white border-b border-border/10 z-20 shadow-sm">
                 <tr>
                   <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Processo</th>
                   <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden sm:table-cell">Conferente</th>
@@ -450,8 +450,8 @@ export default function DashboardPage() {
 
       {/* Registros per Conference Dialog */}
       <Dialog open={detailDialog === 'registros'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-background/80 backdrop-blur-2xl overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-muted/10">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Layers3 className="w-6 h-6" />
@@ -464,7 +464,7 @@ export default function DashboardPage() {
           </DialogHeader>
           <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted/30 backdrop-blur-md z-10">
+              <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
                 <tr>
                   <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferência</th>
                   <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferente</th>

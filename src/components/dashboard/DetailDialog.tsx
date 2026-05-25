@@ -17,8 +17,8 @@ const CHART_COLORS = [
 
 export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClose: () => void }) => (
   <Dialog open={!!detailChart} onOpenChange={onClose}>
-    <DialogContent className="max-w-4xl rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-background/80 backdrop-blur-2xl animate-in zoom-in-95 duration-300">
-      <DialogHeader className="p-8 pb-6 border-b border-border/10 bg-muted/10">
+    <DialogContent className="max-w-4xl rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300">
+      <DialogHeader className="p-8 pb-6 border-b border-border/10 bg-slate-50/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-xl shadow-primary/10 border border-primary/20">
