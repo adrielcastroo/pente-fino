@@ -519,13 +519,13 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 
   const headerContent = (
     <div className="group/header">
-      <button onClick={() => setOpen(!open)} className="w-full px-3 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 transition-all text-left">
-        <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
-          <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+      <button onClick={() => setOpen(!open)} className="w-full px-2 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-4 hover:bg-muted/30 transition-all text-left">
+        <div className={`p-2 sm:p-3 rounded-lg sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
+          <FolderOpen className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <span className="text-sm sm:text-base font-black tracking-tight truncate">{folderName}</span>
+            <span className="text-xs sm:text-base font-black tracking-tight truncate">{folderName}</span>
             <div className="flex gap-1 flex-wrap">
               {modeBadges.map(b => (
                 <Badge key={b} variant="secondary" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-0.5 bg-primary/5 text-primary/80 border-primary/10">{b}</Badge>
