@@ -11,7 +11,7 @@ export function useDashboard() {
   const setFormData = useAppStore(s => s.setFormData);
   
   const stats = useMemo(() => computeStats(history), [history]);
-  const [detailChart, setDetailChart] = useState<{ title: string; data: any[]; type: 'pie' | 'bar' } | null>(null);
+  const [detailChart, setDetailChart] = useState<{ title: string; data: any[]; type: 'pie' | 'bar' | 'area' } | null>(null);
 
   const handleStatClick = useCallback((tab: any) => {
     setFormData({ activeTab: tab });

@@ -15,14 +15,14 @@ const CHART_COLORS = [
   'hsl(var(--primary) / 0.2)',
 ];
 
-export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClose: () => void }) => (
+export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => (
   <Dialog open={!!detailChart} onOpenChange={onClose}>
     <DialogContent className="max-w-4xl rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300">
       <DialogHeader className="p-8 pb-6 border-b border-border/10 bg-slate-50/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-xl shadow-primary/10 border border-primary/20">
-              {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
+              {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : detailChart?.type === 'area' ? <Activity className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
             </div>
             <div className="space-y-1">
               <DialogTitle className="text-2xl font-black tracking-tight text-foreground/90">{detailChart?.title}</DialogTitle>
@@ -83,6 +83,53 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: any, onClo
                   animationDuration={1500}
                 />
               </BarChart>
+            ) : detailChart.type === 'area' ? (
+              <AreaChart data={detailChart.data} margin={{ bottom: 20, top: 10, left: 0, right: 30 }}>
+                <defs>
+                  <linearGradient id="detailAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
+                <XAxis 
+                  dataKey="name" 
+                  fontSize={10} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontWeight: 600 }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  fontSize={10} 
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontWeight: 600 }}
+                />
+                <ChartTooltip 
+                  cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
+                  contentStyle={{ 
+                    borderRadius: '16px', 
+                    border: '1px solid hsl(var(--border) / 0.5)', 
+                    background: 'hsl(var(--card) / 0.9)', 
+                    backdropFilter: 'blur(10px)',
+                    fontWeight: 'bold',
+                    boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
+                  }} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="total" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={4}
+                  fillOpacity={1} 
+                  fill="url(#detailAreaGradient)" 
+                  animationDuration={1500}
+                  name="Registros"
+                />
+              </AreaChart>
             ) : (
               <PieChart>
                 <Pie 
