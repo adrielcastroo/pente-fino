@@ -155,18 +155,21 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
       rules: [
         {
           type: 'cellIs',
+          priority: 1,
           operator: 'greaterThanOrEqual',
           formulae: ['0.9'],
-          style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
+          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
         },
         {
           type: 'cellIs',
+          priority: 2,
           operator: 'lessThan',
           formulae: ['0.5'],
-          style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
+          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
         }
       ]
     });
+
 
     // 5. Ocupação Madeira (Similiar)
     const wsOcupMadeira = workbook.addWorksheet('Ocupação Madeira');
