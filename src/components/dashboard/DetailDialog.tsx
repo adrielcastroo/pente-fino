@@ -34,11 +34,11 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         </div>
       </DialogHeader>
       
-      <div className="p-10 h-[500px]">
+      <div className="px-6 sm:px-10 py-6 sm:py-10 h-[500px] sm:h-[600px]">
         {detailChart && (
           <ResponsiveContainer width="100%" height="100%">
             {detailChart.type === 'bar' ? (
-              <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10 }}>
+              <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
                 <defs>
                   <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
@@ -50,7 +50,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   angle={-45} 
                   textAnchor="end" 
                   interval={0} 
-                  fontSize={10} 
+                  fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
                   stroke="hsl(var(--muted-foreground))"
@@ -59,9 +59,10 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  fontSize={10} 
+                  fontSize={11} 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fontWeight: 600 }}
+                  dx={-5}
                 />
                 <ChartTooltip 
                   cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} 
@@ -84,7 +85,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </BarChart>
             ) : detailChart.type === 'area' ? (
-              <AreaChart data={detailChart.data} margin={{ bottom: 10, top: 10, left: 0, right: 30 }}>
+              <AreaChart data={detailChart.data} margin={{ bottom: 40, top: 20, left: 10, right: 20 }}>
                 <defs>
                   <linearGradient id="detailAreaGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -94,19 +95,20 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
                 <XAxis 
                   dataKey="name" 
-                  fontSize={10} 
+                  fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fontWeight: 600 }}
-                  dy={10}
+                  dy={15}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  fontSize={10} 
+                  fontSize={11} 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fontWeight: 600 }}
+                  dx={-5}
                 />
                 <ChartTooltip 
                   cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
