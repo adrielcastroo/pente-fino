@@ -3,6 +3,7 @@ import { Registro, Conference } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import html2canvas from 'html2canvas';
 
 const triggerAutoArchive = async (fileName: string) => {
   try {
@@ -23,9 +24,42 @@ const triggerAutoArchive = async (fileName: string) => {
  * Generates a professional full report with ExcelJS including native charts logic.
  */
 export async function exportDashboardToExcel(stats: any, history: Conference[], fileName: string) {
-  const toastId = toast.loading('Gerando relatório corporativo premium...');
+  const toastId = toast.loading('Gerando relatório corporativo premium com gráficos...');
   try {
     const workbook = new ExcelJS.Workbook();
+    
+    // Helper para capturar gráfico e adicionar na planilha
+    const addChartToWorksheet = async (ws: ExcelJS.Worksheet, elementId: string, position: { row: number, col: number }) => {
+      const element = document.getElementById(elementId);
+      if (!element) {
+        console.warn(`Elemento ${elementId} não encontrado para exportação.`);
+        return;
+      }
+
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          allowTaint: true
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imageId = workbook.addImage({
+          base64: imgData,
+          extension: 'png',
+        });
+
+        ws.addImage(imageId, {
+          tl: { col: position.col - 0.99, row: position.row - 1 },
+          ext: { width: 500, height: 300 },
+          editAs: 'oneCell'
+        });
+      } catch (err) {
+        console.error(`Erro ao capturar gráfico ${elementId}:`, err);
+      }
+    };
     workbook.creator = 'ERP Logística';
     workbook.lastModifiedBy = 'Sistema';
     workbook.created = new Date();
@@ -92,6 +126,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ];
     wsTimeline.addRows(stats.timeline);
     applyTableStyle(wsTimeline, stats.timeline.length, 5);
+    await addChartToWorksheet(wsTimeline, 'chart-timeline', { row: stats.timeline.length + 3, col: 1 });
     
     // 2. Produção por Conferente
     const wsConferentes = workbook.addWorksheet('Produção por Conferente');
@@ -103,6 +138,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ];
     wsConferentes.addRows(stats.topConferentes);
     applyTableStyle(wsConferentes, stats.topConferentes.length, 4);
+    await addChartToWorksheet(wsConferentes, 'chart-conferentes', { row: stats.topConferentes.length + 3, col: 1 });
 
     // 3. Setores Operacionais
     const wsSetores = workbook.addWorksheet('Setores Operacionais');
@@ -112,6 +148,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ];
     wsSetores.addRows(stats.categorias);
     applyTableStyle(wsSetores, stats.categorias.length, 2);
+    await addChartToWorksheet(wsSetores, 'chart-setores', { row: stats.categorias.length + 3, col: 1 });
 
     // 4. Ocupação Tecidos (Dummy Data or Calc)
     const wsOcupTecido = workbook.addWorksheet('Ocupação Tecidos');
@@ -123,6 +160,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ]);
     wsOcupTecido.getCell('B4').numFmt = '0.0%';
     applyTableStyle(wsOcupTecido, 3, 2);
+    await addChartToWorksheet(wsOcupTecido, 'chart-ocupacao-tecido', { row: 6, col: 1 });
 
     // 5. Ocupação Madeira
     const wsOcupMadeira = workbook.addWorksheet('Ocupação Madeira');
@@ -135,6 +173,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ];
     wsOcupMadeira.addRows(madeiraCats);
     applyTableStyle(wsOcupMadeira, madeiraCats.length, 2);
+    await addChartToWorksheet(wsOcupMadeira, 'chart-ocupacao-madeira', { row: madeiraCats.length + 3, col: 1 });
 
     // 6. Tipos de Materiais
     const wsTipos = workbook.addWorksheet('Tipos de Materiais');
@@ -144,6 +183,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ];
     wsTipos.addRows(stats.tipos);
     applyTableStyle(wsTipos, stats.tipos.length, 2);
+    await addChartToWorksheet(wsTipos, 'chart-materiais', { row: stats.tipos.length + 3, col: 1 });
 
     // 7. Histórico de Sessões (Audit)
     const wsAudit = workbook.addWorksheet('Histórico de Sessões');
@@ -168,6 +208,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     wsAudit.addRows(auditData);
     applyTableStyle(wsAudit, auditData.length, 7);
     wsAudit.autoFilter = 'A1:G1';
+    await addChartToWorksheet(wsAudit, 'chart-sessoes', { row: auditData.length + 3, col: 1 });
 
     // Generate buffer and save
     const buffer = await workbook.xlsx.writeBuffer();
