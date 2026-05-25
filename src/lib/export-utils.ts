@@ -1,8 +1,8 @@
 import { toast } from 'sonner';
 import { Registro, Conference } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { Workbook, ChartFactory } from 'xml-xlsx-lite';
 
 const triggerAutoArchive = async (fileName: string) => {
   try {
@@ -23,59 +23,49 @@ const WHITE = 'FFFFFF';
 const LIGHT_BLUE = 'F1F5F9';
 const BORDER_COLOR = 'CBD5E1';
 
-const applyTableHeaders = (sheet: ExcelJS.Worksheet, row: number, headers: string[]) => {
+const applyTableHeaders = (sheet: any, row: number, headers: string[]) => {
   headers.forEach((header, i) => {
-    const cell = sheet.getCell(row, i + 1);
-    cell.value = header;
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF' + BLUE_CORP }
-    };
-    cell.font = {
-      name: 'Segoe UI',
-      size: 11,
-      bold: true,
-      color: { argb: 'FF' + WHITE }
-    };
-    cell.alignment = { horizontal: 'center', vertical: 'middle' };
-    cell.border = {
-      top: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } },
-      left: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } },
-      bottom: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } },
-      right: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } }
-    };
-    sheet.getColumn(i + 1).width = Math.max(header.length + 8, 15);
+    const col = String.fromCharCode(65 + i);
+    sheet.setCell(`${col}${row}`, header, {
+      fill: { type: 'pattern', patternType: 'solid', fgColor: BLUE_CORP },
+      font: { bold: true, color: WHITE, size: 11, name: 'Segoe UI' },
+      alignment: { horizontal: 'center', vertical: 'middle' },
+      border: {
+        top: { style: 'thin', color: BORDER_COLOR },
+        left: { style: 'thin', color: BORDER_COLOR },
+        bottom: { style: 'thin', color: BORDER_COLOR },
+        right: { style: 'thin', color: BORDER_COLOR }
+      }
+    });
+    sheet.setColumnWidth(i + 1, Math.max(header.length + 8, 15));
   });
 };
 
-const createKPICard = (sheet: ExcelJS.Worksheet, row: number, col: number, label: string, value: any, numFmt?: string) => {
-  const cell = sheet.getCell(row, col);
-  sheet.mergeCells(row, col, row + 2, col + 1);
-  cell.value = `${label}\n${value}`;
-  cell.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFF8FAFC' }
-  };
-  cell.font = { name: 'Segoe UI', size: 10, bold: true };
-  cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-  cell.border = {
-    top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-    left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-    bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-    right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
-  };
-  if (numFmt) cell.numFmt = numFmt;
+const createKPICard = (sheet: any, row: number, col: number, label: string, value: any, numFmt?: string) => {
+  const colLetter = String.fromCharCode(64 + col);
+  const nextColLetter = String.fromCharCode(65 + col);
+  sheet.mergeCells(`${colLetter}${row}:${nextColLetter}${row + 2}`);
+  sheet.setCell(`${colLetter}${row}`, `${label}\n${value}`, {
+    fill: { type: 'pattern', patternType: 'solid', fgColor: 'F8FAFC' },
+    font: { bold: true, size: 10, name: 'Segoe UI' },
+    alignment: { horizontal: 'center', vertical: 'middle', wrapText: true },
+    border: {
+      top: { style: 'thin', color: 'E2E8F0' },
+      left: { style: 'thin', color: 'E2E8F0' },
+      bottom: { style: 'thin', color: 'E2E8F0' },
+      right: { style: 'thin', color: 'E2E8F0' }
+    },
+    numFmt: numFmt
+  });
 };
 
 export async function exportDashboardToExcel(stats: any, history: Conference[], fileName: string) {
-  const toastId = toast.loading('Gerando relatório analítico avançado com ExcelJS...');
+  const toastId = toast.loading('Gerando relatório analítico com GRÁFICOS NATIVOS...');
   try {
-    const workbook = new ExcelJS.Workbook();
+    const workbook = new Workbook();
     
     // 1. Volume de Operações
-    const wsTimeline = workbook.addWorksheet('Volume de Operações');
+    const wsTimeline = workbook.getWorksheet('Volume de Operações');
     createKPICard(wsTimeline, 1, 1, 'Total de Movimentações', stats.totalRegistros);
     
     const timelineHeaders = ['Data', 'Tecidos', 'Madeira', 'Motor', 'Total'];
@@ -83,168 +73,131 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     
     stats.timeline.forEach((row: any, i: number) => {
       const rowIndex = i + 6;
-      const r = wsTimeline.getRow(rowIndex);
-      r.values = [row.name, row.tecido, row.madeira, row.motor, row.total];
+      wsTimeline.setCell(`A${rowIndex}`, row.name);
+      wsTimeline.setCell(`B${rowIndex}`, row.tecido);
+      wsTimeline.setCell(`C${rowIndex}`, row.madeira);
+      wsTimeline.setCell(`D${rowIndex}`, row.motor);
+      wsTimeline.setCell(`E${rowIndex}`, row.total);
+      
       if (i % 2 !== 0) {
-        r.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+        ['A', 'B', 'C', 'D', 'E'].forEach(col => {
+          const cell = wsTimeline.getCell(`${col}${rowIndex}`);
+          cell.options = { ...cell.options, fill: { type: 'pattern', patternType: 'solid', fgColor: 'F1F5F9' } };
+        });
       }
     });
 
-    // Formula Nativa para Total
+    // Fórmulas Nativas
     const lastRowTimeline = stats.timeline.length + 6;
-    const totalRowTimeline = wsTimeline.getRow(lastRowTimeline);
-    totalRowTimeline.getCell(1).value = 'TOTAL GERAL';
-    totalRowTimeline.getCell(1).font = { bold: true };
+    wsTimeline.setCell(`A${lastRowTimeline}`, 'TOTAL GERAL', { font: { bold: true } });
     for (let i = 2; i <= 5; i++) {
       const colLetter = String.fromCharCode(64 + i);
-      totalRowTimeline.getCell(i).value = { formula: `=SUM(${colLetter}6:${colLetter}${lastRowTimeline - 1})` };
-      totalRowTimeline.getCell(i).font = { bold: true };
+      wsTimeline.setFormula(`${colLetter}${lastRowTimeline}`, `SUM(${colLetter}6:${colLetter}${lastRowTimeline - 1})`, { font: { bold: true } });
     }
 
-    // 2. Produção por Conferente
-    const wsConferentes = workbook.addWorksheet('Produção por Conferente');
-    const avgPieces = stats.topConferentes.length > 0 
-      ? Math.round(stats.totalRegistros / stats.topConferentes.length) 
-      : 0;
-    createKPICard(wsConferentes, 1, 1, 'Média Peças / Conferente', avgPieces);
+    // Gráfico de Linha Nativo
+    wsTimeline.addChart(ChartFactory.createLineChart('VolumeChart', [
+      { series: 'Total', categories: `'Volume de Operações'!$A$6:$A$${lastRowTimeline - 1}`, values: `'Volume de Operações'!$E$6:$E$${lastRowTimeline - 1}` }
+    ], { title: 'Tendência de Operações', showLegend: true }, { row: 1, col: 4 }));
 
-    const confHeaders = ['Conferente', 'Volume Registros', 'Total Geral', 'Conferências'];
-    applyTableHeaders(wsConferentes, 5, confHeaders);
+    // 2. Produção por Conferente
+    const wsConf = workbook.getWorksheet('Produção por Conferente');
+    const avgPieces = stats.topConferentes.length > 0 ? Math.round(stats.totalRegistros / stats.topConferentes.length) : 0;
+    createKPICard(wsConf, 1, 1, 'Média Peças / Conferente', avgPieces);
+    applyTableHeaders(wsConf, 5, ['Conferente', 'Volume', 'Total', 'Conferências']);
     
     stats.topConferentes.forEach((row: any, i: number) => {
       const rowIndex = i + 6;
-      const r = wsConferentes.getRow(rowIndex);
-      r.values = [row.name, row.count, row.total, row.conferences];
-      if (i % 2 !== 0) r.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+      wsConf.setCell(`A${rowIndex}`, row.name);
+      wsConf.setCell(`B${rowIndex}`, row.count);
+      wsConf.setCell(`C${rowIndex}`, row.total);
+      wsConf.setCell(`D${rowIndex}`, row.conferences);
     });
-
+    
     const lastRowConf = stats.topConferentes.length + 6;
-    wsConferentes.getCell(lastRowConf, 1).value = 'MÉDIA POR CONFERENTE';
-    wsConferentes.getCell(lastRowConf, 1).font = { bold: true };
-    wsConferentes.getCell(lastRowConf, 2).value = { formula: `=AVERAGE(B6:B${lastRowConf - 1})` };
-    wsConferentes.getCell(lastRowConf, 2).font = { bold: true };
+    wsConf.setFormula(`B${lastRowConf}`, `AVERAGE(B6:B${lastRowConf - 1})`, { font: { bold: true } });
+
+    wsConf.addChart(ChartFactory.createColumnChart('ConfChart', [
+      { series: 'Volume', categories: `'Produção por Conferente'!$A$6:$A$${lastRowConf - 1}`, values: `'Produção por Conferente'!$B$6:$B$${lastRowConf - 1}` }
+    ], { title: 'Produtividade por Conferente' }, { row: 1, col: 4 }));
 
     // 3. Setores Operacionais
-    const wsSetores = workbook.addWorksheet('Setores Operacionais');
+    const wsSetores = workbook.getWorksheet('Setores Operacionais');
     applyTableHeaders(wsSetores, 1, ['Setor', 'Movimentações']);
     stats.categorias.forEach((row: any, i: number) => {
-      const r = wsSetores.getRow(i + 2);
-      r.values = [row.name, row.value];
+      wsSetores.setCell(`A${i + 2}`, row.name);
+      wsSetores.setCell(`B${i + 2}`, row.value);
     });
+    
+    const lastRowSetores = stats.categorias.length + 1;
+    wsSetores.addChart(ChartFactory.createPieChart('SetoresChart', [
+      { series: 'Movimentações', categories: `'Setores Operacionais'!$A$2:$A$${lastRowSetores}`, values: `'Setores Operacionais'!$B$2:$B$${lastRowSetores}` }
+    ], { title: 'Distribuição por Setor' }, { row: 1, col: 4 }));
 
     // 4. Ocupação Tecidos
-    const wsOcupTecido = workbook.addWorksheet('Ocupação Tecidos');
-    const avgOcup = 0.013; // Valor real vindo do dashboard
-    createKPICard(wsOcupTecido, 1, 1, 'Média Geral Ocupação', avgOcup, '0.0%');
-
+    const wsOcupTecido = workbook.getWorksheet('Ocupação Tecidos');
+    createKPICard(wsOcupTecido, 1, 1, 'Média Geral Ocupação', '1.3%', '0.0%');
     applyTableHeaders(wsOcupTecido, 5, ['Métrica', 'Valor']);
-    const ocupData = [
-      { m: 'Capacidade Total', v: 3120 },
-      { m: 'Ocupado', v: 41 },
-      { m: 'Percentual', v: 0.013 }
-    ];
-    ocupData.forEach((row, i) => {
-      const r = wsOcupTecido.getRow(i + 6);
-      r.values = [row.m, row.v];
-      if (i === 2) r.getCell(2).numFmt = '0.0%';
-    });
+    wsOcupTecido.setCell('A6', 'Capacidade Total'); wsOcupTecido.setCell('B6', 3120);
+    wsOcupTecido.setCell('A7', 'Ocupado'); wsOcupTecido.setCell('B7', 41);
+    wsOcupTecido.setCell('A8', 'Percentual'); wsOcupTecido.setCell('B8', 0.013, { numFmt: '0.0%' });
 
-    // Formatação Condicional Ocupação
-    wsOcupTecido.addConditionalFormatting({
-      ref: 'B6:B50',
-      rules: [
-        {
-          type: 'cellIs',
-          priority: 1,
-          operator: 'greaterThanOrEqual' as any,
-          formulae: ['0.9'],
-          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
-        },
-        {
-          type: 'cellIs',
-          priority: 2,
-          operator: 'lessThan' as any,
-          formulae: ['0.5'],
-          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
-        }
-      ]
-    });
+    wsOcupTecido.addChart(ChartFactory.createBarChart('OcupTecidoChart', [
+      { series: 'Ocupação', categories: `'Ocupação Tecidos'!$A$6:$A$7`, values: `'Ocupação Tecidos'!$B$6:$B$7` }
+    ], { title: 'Ocupação de Tecidos' }, { row: 1, col: 4 }));
 
-
-
-    // 5. Ocupação Madeira (Similiar)
-    const wsOcupMadeira = workbook.addWorksheet('Ocupação Madeira');
+    // 5. Ocupação Madeira
+    const wsOcupMadeira = workbook.getWorksheet('Ocupação Madeira');
     applyTableHeaders(wsOcupMadeira, 1, ['Categoria', 'Valor']);
-    const madeiraCats = [
-      { name: 'Lâminas', value: 0 },
-      { name: 'Bases', value: 0 },
-      { name: 'Bandôs', value: 0 },
-      { name: 'Avarias', value: 0 },
-    ];
-    madeiraCats.forEach((row, i) => {
-      wsOcupMadeira.getRow(i + 2).values = [row.name, row.value];
+    const madeiraRows = ['Lâminas', 'Bases', 'Bandôs', 'Avarias'];
+    madeiraRows.forEach((name, i) => {
+      wsOcupMadeira.setCell(`A${i + 2}`, name);
+      wsOcupMadeira.setCell(`B${i + 2}`, 0);
     });
+    wsOcupMadeira.addChart(ChartFactory.createBarChart('OcupMadeiraChart', [
+      { series: 'Madeira', categories: `'Ocupação Madeira'!$A$2:$A$5`, values: `'Ocupação Madeira'!$B$2:$B$5` }
+    ], { title: 'Ocupação de Madeira' }, { row: 1, col: 4 }));
 
     // 6. Tipos de Materiais
-    const wsTipos = workbook.addWorksheet('Tipos de Materiais');
+    const wsTipos = workbook.getWorksheet('Tipos de Materiais');
     applyTableHeaders(wsTipos, 1, ['Tipo', 'Quantidade']);
     stats.tipos.forEach((row: any, i: number) => {
-      wsTipos.getRow(i + 2).values = [row.name, row.value];
+      wsTipos.setCell(`A${i + 2}`, row.name);
+      wsTipos.setCell(`B${i + 2}`, row.value);
     });
-    wsTipos.autoFilter = 'A1:B1';
+    const lastRowTipos = stats.tipos.length + 1;
+    wsTipos.addChart(ChartFactory.createPieChart('TiposChart', [
+      { series: 'Materiais', categories: `'Tipos de Materiais'!$A$2:$A$${lastRowTipos}`, values: `'Tipos de Materiais'!$B$2:$B$${lastRowTipos}` }
+    ], { title: 'Mix de Materiais' }, { row: 1, col: 4 }));
 
     // 7. Histórico de Sessões
-    const wsAudit = workbook.addWorksheet('Histórico de Sessões');
-    const auditHeaders = ['ID', 'Processo', 'Conferente', 'Data', 'Itens', 'Status'];
-    applyTableHeaders(wsAudit, 1, auditHeaders);
-    
+    const wsAudit = workbook.getWorksheet('Histórico de Sessões');
+    applyTableHeaders(wsAudit, 1, ['ID', 'Processo', 'Conferente', 'Data', 'Itens', 'Status']);
     history.slice(0, 100).forEach((conf, i) => {
-      const rowIndex = i + 2;
-      const status = conf.registros.length > 0 ? 'Concluído' : 'Vazio';
-      wsAudit.getRow(rowIndex).values = [
-        conf.id.slice(0, 8),
-        conf.processo || conf.name,
-        conf.conferente,
-        new Date(conf.date).toLocaleDateString('pt-BR'),
-        conf.registros.length,
-        status
-      ];
-    });
-    wsAudit.autoFilter = 'A1:F1';
-
-    // Formatação Condicional Status
-    wsAudit.addConditionalFormatting({
-      ref: 'F2:F101',
-      rules: [
-        {
-          type: 'containsText',
-          priority: 1,
-          operator: 'containsText',
-          text: 'Concluído',
-          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
-        },
-        {
-          type: 'containsText',
-          priority: 2,
-          operator: 'containsText',
-          text: 'Vazio',
-          style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
-        }
-      ]
+      const row = i + 2;
+      wsAudit.setCell(`A${row}`, conf.id.slice(0, 8));
+      wsAudit.setCell(`B${row}`, conf.processo || conf.name);
+      wsAudit.setCell(`C${row}`, conf.conferente);
+      wsAudit.setCell(`D${row}`, new Date(conf.date).toLocaleDateString('pt-BR'));
+      wsAudit.setCell(`E${row}`, conf.registros.length);
+      wsAudit.setCell(`F${row}`, conf.registros.length > 0 ? 'Concluído' : 'Falha', {
+        fill: { type: 'pattern', patternType: 'solid', fgColor: conf.registros.length > 0 ? 'C6EFCE' : 'FFC7CE' }
+      });
     });
 
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const buffer = await workbook.writeBuffer();
+    saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${fileName}_Premium_${new Date().toISOString().split('T')[0]}.xlsx`);
 
     toast.dismiss(toastId);
-    toast.success('Relatório com Fórmulas e Inteligência gerado!');
+    toast.success('Relatório com GRÁFICOS NATIVOS e Interativos gerado!');
   } catch (error) {
-    console.error('Erro ao exportar Excel Avançado:', error);
+    console.error('Erro ao exportar Excel Premium:', error);
     toast.dismiss(toastId);
-    toast.error('Erro ao gerar o arquivo Excel.');
+    toast.error('Erro ao gerar gráficos nativos do Excel.');
   }
 }
+
 
 
 /**
