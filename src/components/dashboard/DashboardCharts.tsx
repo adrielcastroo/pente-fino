@@ -56,10 +56,11 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
 interface TimelineChartProps {
   data: any[];
   onExport: (data: any[], fileName: string) => void;
+  onDetailClick?: (config: any) => void;
   id?: string;
 }
 
-export const TimelineChart = React.memo(({ data, onExport, id }: TimelineChartProps) => {
+export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: TimelineChartProps) => {
   const { isLow } = usePerformance();
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
@@ -75,9 +76,21 @@ export const TimelineChart = React.memo(({ data, onExport, id }: TimelineChartPr
           </CardTitle>
           <p className="text-[10px] sm:text-sm text-muted-foreground font-medium opacity-70 ml-8 sm:ml-11">Histórico de conferências por período</p>
         </div>
-        <Button variant="outline" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/20 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all self-end sm:self-auto" onClick={() => onExport(data, 'Timeline_Operacoes')}>
-          <Download className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          {onDetailClick && (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/20 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all" 
+              onClick={() => onDetailClick({ title: 'Volume de Operações', data, type: 'area' })}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          )}
+          <Button variant="outline" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/20 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all" onClick={() => onExport(data, 'Timeline_Operacoes')}>
+            <Download className="w-4 h-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="px-2 sm:px-4 lg:px-8 pb-6 sm:pb-8 lg:pb-12 pt-6 sm:pt-8 lg:pt-10 h-[clamp(250px,45vh,600px)]">
         <ResponsiveContainer width="100%" height="100%">
