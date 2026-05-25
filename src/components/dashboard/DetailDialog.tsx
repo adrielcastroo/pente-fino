@@ -59,9 +59,10 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  fontSize={10} 
+                  fontSize={11} 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fontWeight: 600 }}
+                  dx={-5}
                 />
                 <ChartTooltip 
                   cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} 
