@@ -17,8 +17,8 @@ const CHART_COLORS = [
 
 export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => (
   <Dialog open={!!detailChart} onOpenChange={onClose}>
-    <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-y-auto bg-white animate-in zoom-in-95 duration-300">
-      <DialogHeader className="p-8 pb-6 border-b border-border/10 bg-slate-50/50">
+    <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
+      <DialogHeader className="p-6 sm:p-8 pb-4 sm:pb-6 border-b border-border/10 bg-slate-50/50 flex-none">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-xl shadow-primary/10 border border-primary/20">
@@ -34,7 +34,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         </div>
       </DialogHeader>
       
-      <div className="px-4 sm:px-10 py-6 sm:py-10 h-[500px] sm:h-[600px] shrink-0">
+      <div className="px-4 sm:px-10 py-6 sm:py-10 flex-1 min-h-[350px] sm:min-h-[450px]">
         {detailChart && (
           <ResponsiveContainer width="100%" height="100%">
             {detailChart.type === 'bar' ? (
@@ -169,7 +169,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         )}
       </div>
       
-      <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end">
+      <div className="p-4 sm:p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
         <Button 
           variant="outline" 
           className="rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]" 
