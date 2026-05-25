@@ -270,7 +270,7 @@ export default function MotorControlePage() {
 
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4 custom-scrollbar">
+      <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
 
         {/* Subtoggle */}
         <div className="flex gap-2">
@@ -278,7 +278,7 @@ export default function MotorControlePage() {
             <button
               key={mode}
               onClick={() => handleSubModeChange(mode)}
-              className={`flex-1 py-3 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider border ${
+              className={`flex-1 py-2.5 sm:py-3 rounded-full text-[10px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 uppercase tracking-wider border ${
                 subMode === mode
                   ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                   : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
@@ -301,10 +301,10 @@ export default function MotorControlePage() {
 
         {/* Motor: caixa toggle */}
         {subMode === 'motor' && (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
+          <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-card border border-border/50">
             <Switch checked={temCaixa} onCheckedChange={setTemCaixa} className="data-[state=checked]:bg-primary flex-shrink-0" />
-            <span className="text-xs font-medium text-foreground">Armazenado em Caixa</span>
-            <div className="flex items-center gap-2 ml-auto bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
+            <span className="text-[10px] sm:text-xs font-medium text-foreground">Armazenado em Caixa</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto bg-primary/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-primary/20">
               {temCaixa ? (
                 <>
                   <span className="text-[10px] font-semibold text-primary uppercase">Nº Caixa:</span>
@@ -347,7 +347,7 @@ export default function MotorControlePage() {
                 onChange={e => setModelo(sanitize(e.target.value))}
                 onBlur={handleModeloBlur}
                 placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
-                className={`w-full h-11 rounded-lg border bg-muted/20 px-3 text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-colors ${
+                className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-colors ${
                   lockMotorModelo 
                     ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
                     : 'border-border/50'
@@ -375,7 +375,7 @@ export default function MotorControlePage() {
               value={nf}
               onChange={e => setNf(sanitize(e.target.value))}
               placeholder="Ex: 146842"
-              className={`w-full h-11 rounded-lg border bg-muted/20 px-3 text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
+              className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
                 lockMotorNf 
                   ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
                   : 'border-border/50'
@@ -392,7 +392,7 @@ export default function MotorControlePage() {
                 onChange={e => setSerie(e.target.value)}
                 onKeyDown={handleSerieKeyDown}
                 placeholder="Bipe o código agora..."
-                className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                className="w-full h-10 sm:h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-xs sm:text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
               />
               <ScanBarcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
             </div>
@@ -403,7 +403,7 @@ export default function MotorControlePage() {
         <div className="space-y-2 pb-4">
           <Button
             onClick={subMode === 'motor' ? handleAddMotor : handleAddControle}
-            className="w-full h-12 rounded-xl font-semibold text-sm"
+            className="w-full h-11 sm:h-12 rounded-xl font-semibold text-xs sm:text-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}

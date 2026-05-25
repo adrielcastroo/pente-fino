@@ -168,10 +168,10 @@ export default function SaidaPage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
+      <div className="p-3 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
+          <div className="space-y-1 sm:space-y-2">
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tighter text-foreground">
               Saídas
             </h1>
           </div>
@@ -180,7 +180,7 @@ export default function SaidaPage() {
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
-              className="w-full sm:w-auto h-11 px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95"
+              className="w-full sm:w-auto h-10 sm:h-11 px-4 sm:px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-95 text-xs sm:text-sm"
             >
                <LogOut className="w-5 h-5" />
               <span>Dar saída</span>
@@ -192,7 +192,7 @@ export default function SaidaPage() {
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Filtrar por item, PROC, conferente..."
-                className="pl-10 h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold"
+                className="pl-10 h-10 sm:h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm"
               />
             </div>
           </div>

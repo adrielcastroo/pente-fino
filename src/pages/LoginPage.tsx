@@ -197,12 +197,12 @@ export default function LoginPage() {
       </div>
 
       {/* Coluna Direita: Formulário (Todos os dispositivos) */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-12 relative overflow-y-auto">
         {/* Grid dots for mobile background consistency */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none md:hidden" 
              style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        <div className="w-full max-w-[420px] z-10 py-12">
+        <div className="w-full max-w-[420px] z-10 py-6 sm:py-12">
           <div className="flex flex-col items-center mb-8 md:hidden">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -222,20 +222,20 @@ export default function LoginPage() {
             <Card className={`border-border/40 shadow-2xl rounded-2xl overflow-hidden ${isLow ? 'bg-card' : 'bg-card/80 backdrop-blur-md'}`}>
               <div className="h-1 bg-primary w-full opacity-80" />
               
-              <CardHeader className="space-y-1 pb-4">
-                <CardTitle className="text-2xl font-bold">
+              <CardHeader className="space-y-1 pb-4 px-4 sm:px-6">
+                <CardTitle className="text-xl sm:text-2xl font-bold">
                   {mode === 'login' && 'Entrar'}
                   {mode === 'signup' && 'Criar Conta'}
                   {mode === 'forgot' && 'Recuperar Senha'}
                 </CardTitle>
-                <CardDescription className="text-sm">
+                <CardDescription className="text-xs sm:text-sm">
                   {mode === 'login' && 'Acesse sua conta para continuar'}
                   {mode === 'signup' && 'Cadastre-se para começar a usar'}
                   {mode === 'forgot' && 'Enviaremos um link para seu email'}
                 </CardDescription>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="px-4 sm:px-6">
                 <AnimatePresence mode="wait">
                   {mode === 'login' && (
                     <motion.form
