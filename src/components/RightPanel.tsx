@@ -129,8 +129,8 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
       {columns.map((column: any) => {
         // Critical columns that should always show: item, mLinear, quantidade, loteSistema
         // Less critical: nf, processo, m2, largura, lote, endereco
-        const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
-        const responsiveClass = isCritical ? "" : "hidden md:table-cell";
+        const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
+        const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : "hidden md:table-cell";
 
         return (
           <TableCell
@@ -370,8 +370,8 @@ export default function RightPanel() {
         </div>
       )}
 
-      <div className="px-3 xs:px-4 sm:px-5 py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+      <div className="px-2 xs:px-4 py-3 sm:py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
+        <div className="flex flex-row items-center gap-2 sm:gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
             <input 
@@ -383,13 +383,13 @@ export default function RightPanel() {
             />
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex-1 sm:flex-none h-11 px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-2 transition-all hover:bg-muted/50 group">
+          <div className="flex items-center gap-2">
+            <div className="flex-none h-11 px-2 sm:px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-1.5 sm:gap-2 transition-all hover:bg-muted/50 group">
               <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-primary" />
               <select 
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
-                className="flex-1 sm:flex-none bg-transparent border-none outline-none text-[10px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground"
+                className="bg-transparent border-none outline-none text-[8px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground w-16 sm:w-auto"
               >
                 <option value="">Ordenar</option>
                 <option value="item">A-Z</option>
