@@ -210,12 +210,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
         <div className="lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8">
           <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
-            <TimelineChart data={stats.timeline} onExport={handleExport} />
+            <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <OccupationChart title="Ocupação Tecidos" used={41} total={3120} reserved={0} blocked={0} unit="alocações" />
+            <OccupationChart id="chart-ocupacao-tecido" title="Ocupação Tecidos" used={41} total={3120} reserved={0} blocked={0} unit="alocações" />
             <OccupationChart 
+              id="chart-ocupacao-madeira"
               title="Ocupação Madeira" 
               used={0} 
               total={0} 
@@ -232,6 +233,7 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
           <SummaryChart 
+            id="chart-conferentes"
             title="Produção por Conferente" 
             desc="Top 5 em volume de registros" 
             data={stats.topConferentes} 
@@ -242,6 +244,7 @@ export default function DashboardPage() {
           />
           
           <SummaryChart 
+            id="chart-setores"
             title="Sectores Operacionais" 
             desc="Carga de trabalho por setor" 
             data={stats.categorias} 
@@ -303,6 +306,7 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-4 h-full">
           <SummaryChart 
+            id="chart-materiais"
             title="Tipos de Materiais" 
             desc="Classificação de itens" 
             data={stats.tipos} 
@@ -315,6 +319,7 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-4 h-full">
           <SummaryChart
+            id="chart-sessoes"
             title="Histórico de Sessões"
             desc="Últimas conferências"
             data={registrosPerConference.slice(0, 10)}
