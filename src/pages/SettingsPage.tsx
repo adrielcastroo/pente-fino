@@ -362,19 +362,19 @@ export default function SettingsPage() {
             />
           </div>
 
-          <nav className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-1 gap-1.5 overflow-x-auto sm:overflow-visible pb-1 no-scrollbar">
+          <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar -mx-1 px-1">
             {filteredCategories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 group ${
+                className={`flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 group whitespace-nowrap lg:whitespace-normal shrink-0 lg:shrink ${
                   activeCategory === cat.id 
                     ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
                     : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <cat.icon className={`w-4 h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
-                <span className="truncate">{cat.name}</span>
+                <cat.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
+                <span>{cat.name}</span>
               </button>
             ))}
           </nav>
