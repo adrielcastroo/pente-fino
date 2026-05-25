@@ -156,19 +156,20 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
         {
           type: 'cellIs',
           priority: 1,
-          operator: 'ge',
+          operator: 'greaterThanOrEqual' as any,
           formulae: ['0.9'],
           style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }, font: { color: { argb: 'FF9C0006' } } }
         },
         {
           type: 'cellIs',
           priority: 2,
-          operator: 'lt',
+          operator: 'lessThan' as any,
           formulae: ['0.5'],
           style: { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } }, font: { color: { argb: 'FF006100' } } }
         }
       ]
     });
+
 
 
     // 5. Ocupação Madeira (Similiar)
