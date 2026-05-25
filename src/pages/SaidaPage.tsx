@@ -222,10 +222,10 @@ export default function SaidaPage() {
                   <div className="min-w-0">
                     <h3 className="font-black text-foreground text-base sm:text-lg tracking-tight truncate">{saida.item}</h3>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider border-primary/20 bg-primary/5 text-primary rounded-lg px-2 py-0.5">
+                      <Badge variant="outline" className="text-[10px] sm:text-[9px] font-bold uppercase tracking-wider border-primary/20 bg-primary/5 text-primary rounded-lg px-2 py-0.5">
                         {saida.proc || 'Sem PROC'}
                       </Badge>
-                      <span className="text-[10px] font-mono font-bold text-muted-foreground/60">
+                      <span className="text-xs sm:text-[10px] font-mono font-bold text-muted-foreground/60">
                         {saida.estrutura}.{saida.coluna}.N{String(saida.nivel).padStart(2, '0')} P{saida.posicao}
                       </span>
                     </div>
