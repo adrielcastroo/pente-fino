@@ -12,18 +12,18 @@ interface StatCardProps {
 export const StatCard = memo(({ label, value, icon: Icon, tab, onClick }: StatCardProps) => (
   <button 
     onClick={() => onClick(tab)} 
-    className="group cursor-pointer rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] relative text-left w-full"
+    className="group cursor-pointer rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] relative text-left w-full"
     role="button"
   >
-    <div className="p-5 sm:p-6 flex flex-row items-center gap-4 relative z-10">
-      <div className="p-3 rounded-xl bg-primary/8 text-primary">
-        <Icon className="w-5 h-5" />
+    <div className="p-4 sm:p-6 flex flex-row items-center gap-3 sm:gap-4 relative z-10">
+      <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-primary/8 text-primary shrink-0">
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors">{value}</div>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">{label}</p>
+        <div className="text-xl sm:text-4xl font-bold tracking-tight tabular-nums text-foreground group-hover:text-primary transition-colors">{value}</div>
+        <p className="text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary/50 transition-colors" />
+      <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground/20 group-hover:text-primary/50 transition-colors" />
     </div>
   </button>
 ));
