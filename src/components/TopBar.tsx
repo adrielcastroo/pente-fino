@@ -116,9 +116,9 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-1.5 sm:gap-4 px-2 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          <SidebarTrigger className="h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-xl shrink-0" />
+      <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-1 sm:gap-4 px-2 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-xl shrink-0" />
           <div className="hidden sm:flex flex-col">
             <p className="text-sm font-bold text-foreground tracking-tight">
               Sistema <span className="text-primary">Pente Fino</span>
@@ -128,14 +128,14 @@ const TopBar = memo(function TopBar() {
 
         <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
           {isGuest && (
-            <div className="relative group w-full max-w-[120px] xs:max-w-[180px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
+            <div className="relative group w-full max-w-[100px] xs:max-w-[180px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
               <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>
-              <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
-                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors z-10 pointer-events-none">
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
               </div>
               <input
                 id="conferente-input"
-                className="h-9 sm:h-10 xl:h-11 w-full rounded-xl border border-border/60 bg-muted/30 pl-7 sm:pl-10 pr-2 text-[10px] sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                className="h-8 sm:h-10 xl:h-11 w-full rounded-lg sm:rounded-xl border border-border/60 bg-muted/30 pl-7 sm:pl-10 pr-2 text-[10px] sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
                 value={conferente}
                 onChange={e => setConferente(e.target.value)}
                 placeholder={isMobile ? "Conf..." : "Conferente..."}
