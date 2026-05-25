@@ -1523,7 +1523,7 @@ export const LeftPanel = memo(function LeftPanel() {
         <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <Button
             onClick={handleAdd}
-            className="w-full h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+            className="w-full h-11 sm:h-14 rounded-xl font-bold text-xs sm:text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
           >
             <Plus className="w-5 h-5 mr-2" />
             Adicionar Registro
@@ -1533,7 +1533,7 @@ export const LeftPanel = memo(function LeftPanel() {
             <Button
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className="w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40"
+              className="w-full h-9 sm:h-10 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40"
             >
               {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
               {showPreview ? 'Ocultar' : `Ver Tabela (${registros.length})`}
