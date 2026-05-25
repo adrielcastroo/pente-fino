@@ -65,8 +65,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     const workbook = new Workbook();
     
     // 1. Volume de Operações
-    const wsTimeline = workbook.getWorksheet(0);
-    wsTimeline.name = 'Volume de Operações';
+    const wsTimeline = workbook.getWorksheet('Volume de Operações');
     createKPICard(wsTimeline, 1, 1, 'Total de Movimentações', stats.totalRegistros);
     
     const timelineHeaders = ['Data', 'Tecidos', 'Madeira', 'Motor', 'Total'];
@@ -82,7 +81,8 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
       
       if (i % 2 !== 0) {
         ['A', 'B', 'C', 'D', 'E'].forEach(col => {
-          wsTimeline.getCell(`${col}${rowIndex}`).options.fill = { type: 'pattern', patternType: 'solid', fgColor: 'F1F5F9' };
+          const cell = wsTimeline.getCell(`${col}${rowIndex}`);
+          cell.options = { ...cell.options, fill: { type: 'pattern', patternType: 'solid', fgColor: 'F1F5F9' } };
         });
       }
     });
@@ -101,16 +101,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ], { title: 'Tendência de Operações', showLegend: true }, { row: 1, col: 4 }));
 
     // 2. Produção por Conferente
-    const wsConferentes = workbook.addLargeDataset ? workbook.getWorksheet(workbook.getWorksheets().length) : workbook.getWorksheet(1);
-    // Note: xml-xlsx-lite might only have one sheet by default, let's see.
-    // Based on index.d.ts, workbook.getWorksheet(nameOrIndex) returns a Worksheet.
-    // Usually, we can just access them. Let's try to name them as we go.
-    
-    // Fallback: if getWorksheet(index) returns undefined or crashes, we should check how to add.
-    // Actually Workbook has no addWorksheet. It usually auto-creates if accessed.
-    
-    const wsConf = workbook.getWorksheet(1);
-    wsConf.name = 'Produção por Conferente';
+    const wsConf = workbook.getWorksheet('Produção por Conferente');
     const avgPieces = stats.topConferentes.length > 0 ? Math.round(stats.totalRegistros / stats.topConferentes.length) : 0;
     createKPICard(wsConf, 1, 1, 'Média Peças / Conferente', avgPieces);
     applyTableHeaders(wsConf, 5, ['Conferente', 'Volume', 'Total', 'Conferências']);
@@ -131,8 +122,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ], { title: 'Produtividade por Conferente' }, { row: 1, col: 4 }));
 
     // 3. Setores Operacionais
-    const wsSetores = workbook.getWorksheet(2);
-    wsSetores.name = 'Setores Operacionais';
+    const wsSetores = workbook.getWorksheet('Setores Operacionais');
     applyTableHeaders(wsSetores, 1, ['Setor', 'Movimentações']);
     stats.categorias.forEach((row: any, i: number) => {
       wsSetores.setCell(`A${i + 2}`, row.name);
@@ -145,8 +135,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ], { title: 'Distribuição por Setor' }, { row: 1, col: 4 }));
 
     // 4. Ocupação Tecidos
-    const wsOcupTecido = workbook.getWorksheet(3);
-    wsOcupTecido.name = 'Ocupação Tecidos';
+    const wsOcupTecido = workbook.getWorksheet('Ocupação Tecidos');
     createKPICard(wsOcupTecido, 1, 1, 'Média Geral Ocupação', '1.3%', '0.0%');
     applyTableHeaders(wsOcupTecido, 5, ['Métrica', 'Valor']);
     wsOcupTecido.setCell('A6', 'Capacidade Total'); wsOcupTecido.setCell('B6', 3120);
@@ -158,8 +147,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ], { title: 'Ocupação de Tecidos' }, { row: 1, col: 4 }));
 
     // 5. Ocupação Madeira
-    const wsOcupMadeira = workbook.getWorksheet(4);
-    wsOcupMadeira.name = 'Ocupação Madeira';
+    const wsOcupMadeira = workbook.getWorksheet('Ocupação Madeira');
     applyTableHeaders(wsOcupMadeira, 1, ['Categoria', 'Valor']);
     const madeiraRows = ['Lâminas', 'Bases', 'Bandôs', 'Avarias'];
     madeiraRows.forEach((name, i) => {
@@ -171,8 +159,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ], { title: 'Ocupação de Madeira' }, { row: 1, col: 4 }));
 
     // 6. Tipos de Materiais
-    const wsTipos = workbook.getWorksheet(5);
-    wsTipos.name = 'Tipos de Materiais';
+    const wsTipos = workbook.getWorksheet('Tipos de Materiais');
     applyTableHeaders(wsTipos, 1, ['Tipo', 'Quantidade']);
     stats.tipos.forEach((row: any, i: number) => {
       wsTipos.setCell(`A${i + 2}`, row.name);
@@ -184,8 +171,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ], { title: 'Mix de Materiais' }, { row: 1, col: 4 }));
 
     // 7. Histórico de Sessões
-    const wsAudit = workbook.getWorksheet(6);
-    wsAudit.name = 'Histórico de Sessões';
+    const wsAudit = workbook.getWorksheet('Histórico de Sessões');
     applyTableHeaders(wsAudit, 1, ['ID', 'Processo', 'Conferente', 'Data', 'Itens', 'Status']);
     history.slice(0, 100).forEach((conf, i) => {
       const row = i + 2;
@@ -198,6 +184,7 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
         fill: { type: 'pattern', patternType: 'solid', fgColor: conf.registros.length > 0 ? 'C6EFCE' : 'FFC7CE' }
       });
     });
+
 
     const buffer = await workbook.writeBuffer();
     saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${fileName}_Premium_${new Date().toISOString().split('T')[0]}.xlsx`);
