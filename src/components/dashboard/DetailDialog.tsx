@@ -169,7 +169,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         )}
       </div>
       
-      <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end">
+      <div className="p-4 sm:p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
         <Button 
           variant="outline" 
           className="rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]" 
