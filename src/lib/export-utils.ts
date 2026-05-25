@@ -32,17 +32,17 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     const WHITE = 'FFFFFF';
     const HEADER_STYLE = {
       font: { name: 'Segoe UI', size: 11, bold: true, color: WHITE },
-      fill: { type: 'pattern', patternType: 'solid', fgColor: BLUE_CORP },
-      alignment: { horizontal: 'center', vertical: 'middle' },
-      border: { style: 'thin', color: '475569' }
+      fill: { type: 'pattern' as const, patternType: 'solid' as const, fgColor: BLUE_CORP },
+      alignment: { horizontal: 'center' as const, vertical: 'middle' as const },
+      border: { style: 'thin' as const, color: '475569' }
     };
     const DATA_STYLE = {
       font: { name: 'Segoe UI', size: 10 },
-      border: { style: 'thin', color: 'E2E8F0' }
+      border: { style: 'thin' as const, color: 'E2E8F0' }
     };
     const ZEBRA_STYLE = {
       ...DATA_STYLE,
-      fill: { type: 'pattern', patternType: 'solid', fgColor: 'F8FAFC' }
+      fill: { type: 'pattern' as const, patternType: 'solid' as const, fgColor: 'F8FAFC' }
     };
 
     const applyTableHeaders = (sheet: any, headers: string[]) => {
@@ -121,14 +121,15 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
     ];
     ocupData.forEach((row: any, i: number) => {
       const rowIndex = i + 2;
-      wsOcupTecido.setCell(addrFromRC(rowIndex, 1), row.m, i % 2 === 0 ? DATA_STYLE : ZEBRA_STYLE);
+      const style = i % 2 === 0 ? DATA_STYLE : ZEBRA_STYLE;
+      wsOcupTecido.setCell(addrFromRC(rowIndex, 1), row.m, style);
       wsOcupTecido.setCell(addrFromRC(rowIndex, 2), row.v, { 
-        ...(i % 2 === 0 ? DATA_STYLE : ZEBRA_STYLE),
+        ...style,
         numFmt: i === 2 ? '0.0%' : undefined
       });
     });
 
-    const ocupChart = ChartFactory.createDoughnutChart('Ocupacao', [
+    const ocupChart = ChartFactory.createPieChart('Ocupacao', [
       { series: 'Status', categories: `'Ocupação Tecidos'!$A$2:$A$3`, values: `'Ocupação Tecidos'!$B$2:$B$3` }
     ], { title: 'Taxa de Ocupação Tecidos' }, { row: 6, col: 1 });
     wsOcupTecido.addChart(ocupChart);
