@@ -65,6 +65,7 @@
         "tailwindcss-animate": "^1.0.7",
         "vaul": "^0.9.9",
         "xlsx": "^0.18.5",
+        "xml-xlsx-lite": "^1.7.4",
         "zod": "^3.25.76",
         "zustand": "^5.0.12",
       },
@@ -1341,6 +1342,8 @@
     "xlsx": ["xlsx@0.18.5", "", { "dependencies": { "adler-32": "~1.3.0", "cfb": "~1.2.1", "codepage": "~1.15.0", "crc-32": "~1.2.1", "ssf": "~0.11.2", "wmf": "~1.0.1", "word": "~0.3.0" }, "bin": "bin/xlsx.njs" }, "sha512-dmg3LCjBPHZnQp5/F/+nnTa+miPJxUXB6vtk42YjBBKayDNagxGEeIdWApkYPOf3Z3pm3k62Knjzp7lMeTEtFQ=="],
 
     "xml-name-validator": ["xml-name-validator@4.0.0", "", {}, "sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw=="],
+
+    "xml-xlsx-lite": ["xml-xlsx-lite@1.7.4", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/xml-xlsx-lite/-/xml-xlsx-lite-1.7.4.tgz", { "dependencies": { "jszip": "^3.10.0" } }, "sha512-yVehNDEBCx7pPRxEWoCF9NDbjW+JRqYGuWap0CwjUIvglVR99qGdsPSFUsZvjrnIzCY6ibn4ovcK0H25oAEGMg=="],
 
     "xmlchars": ["xmlchars@2.2.0", "", {}, "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="],
 
