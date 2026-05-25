@@ -130,9 +130,9 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
-              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Activity className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
-            <h1 className="text-xl sm:text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+            <h1 className="text-xl sm:text-[clamp(1.75rem,5vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
               Dashboard
             </h1>
           </div>
