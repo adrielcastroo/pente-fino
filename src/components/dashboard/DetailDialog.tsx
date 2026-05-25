@@ -167,8 +167,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
               </PieChart>
             )}
           </ResponsiveContainer>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
       
       <div className="p-4 sm:p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
         <Button 
