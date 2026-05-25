@@ -127,23 +127,23 @@ export default function DashboardPage() {
     <div id="dashboard-content" className="space-y-5 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-12 sm:pb-16 px-3 sm:px-6 lg:px-8">
       {/* Header */}
       <header className="flex flex-col gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-4 sm:pt-6 rounded-b-[1.5rem] sm:rounded-b-[2.5rem]">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 sm:p-2 rounded-xl bg-primary/5 border border-primary/10">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
               <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <h1 className="text-2xl sm:text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+            <h1 className="text-xl sm:text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
               Dashboard
             </h1>
           </div>
         </div>
         
         <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-6 no-print w-full">
-          <div className="flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm min-w-fit">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary/70 shrink-0" />
-            <div className="flex flex-col gap-0.5 sm:gap-1">
-              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
-              <span className="text-sm sm:text-base font-bold text-foreground leading-none">{stats.avgDuration}</span>
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm min-w-fit flex-1 sm:flex-none">
+            <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary/70 shrink-0" />
+            <div className="flex flex-col gap-0 sm:gap-1">
+              <span className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
+              <span className="text-xs sm:text-base font-bold text-foreground leading-none">{stats.avgDuration}</span>
             </div>
           </div>
           
@@ -151,9 +151,9 @@ export default function DashboardPage() {
             <TooltipTrigger asChild>
               <Button 
                 variant="default" 
-                size="lg"
+                size="default"
                 disabled={isExporting}
-                className="h-11 sm:h-14 px-4 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-3 font-bold uppercase tracking-widest text-[9px] xs:text-[10px] sm:text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap w-full xs:w-auto" 
+                className="h-10 sm:h-14 px-3 sm:px-8 rounded-xl sm:rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5 sm:gap-3 font-bold uppercase tracking-widest text-[8px] xs:text-[10px] sm:text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap w-auto"
                 onClick={handleFullExportExcel}
               >
                 {isExporting ? (

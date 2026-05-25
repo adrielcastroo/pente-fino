@@ -329,11 +329,11 @@ export default function SettingsPage() {
     ), [searchQuery]);
 
   return (
-    <div className="flex flex-col h-full space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/10 pb-6">
+    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
+      <header className="flex flex-row items-center justify-between gap-4 border-b border-border/10 pb-4 sm:pb-6">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Configurações</h1>
-          <p className="text-muted-foreground text-sm">Personalize sua experiência no Sistema Pente Fino.</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
+          <p className="text-muted-foreground text-[10px] sm:text-sm hidden xs:block">Gerencie sua conta e preferências.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -342,14 +342,14 @@ export default function SettingsPage() {
               Alterações pendentes
             </Badge>
           )}
-          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="gap-2 shadow-lg shadow-primary/20 font-bold px-6">
-            <Save className="w-4 h-4" />
+          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="gap-1.5 sm:gap-2 shadow-lg shadow-primary/20 font-bold px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm">
+            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Salvar
           </Button>
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
         {/* Navigation Sidebar */}
         <aside className="w-full lg:w-64 space-y-4 shrink-0">
           <div className="relative group">
@@ -362,7 +362,7 @@ export default function SettingsPage() {
             />
           </div>
 
-          <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1.5">
+          <nav className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-1 gap-1.5 overflow-x-auto sm:overflow-visible pb-1 no-scrollbar">
             {filteredCategories.map((cat) => (
               <button
                 key={cat.id}

@@ -728,22 +728,22 @@ export default function HistoryPanel() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-          <div className="space-y-2">
-             <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
+      <div className="p-3 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
+          <div className="space-y-1 sm:space-y-2">
+             <h1 className="text-2xl sm:text-4xl font-black tracking-tighter text-foreground">
                Histórico de <span className="text-primary italic">Conferências</span>
              </h1>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
              <div className="relative group flex-1 sm:w-64 lg:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
                 <Input 
                   value={localSearch} 
                   onChange={e => setLocalSearch(e.target.value)}
                   placeholder="Buscar no histórico..."
-                  className="pl-10 h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold"
+                  className="pl-10 h-10 sm:h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm"
                 />
              </div>
              {history.length > 0 && !isGuest && (
