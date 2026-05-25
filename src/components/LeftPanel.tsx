@@ -1024,7 +1024,7 @@ export const LeftPanel = memo(function LeftPanel() {
             </div>
             {/* Próximo CX preview */}
             <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <Package className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Próxima Caixa</span>
               </div>
