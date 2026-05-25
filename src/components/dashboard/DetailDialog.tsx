@@ -38,7 +38,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         {detailChart && (
           <ResponsiveContainer width="100%" height="100%">
             {detailChart.type === 'bar' ? (
-              <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10 }}>
+              <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
                 <defs>
                   <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
