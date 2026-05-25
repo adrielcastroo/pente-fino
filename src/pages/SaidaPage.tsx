@@ -168,10 +168,10 @@ export default function SaidaPage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-3 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
-          <div className="space-y-1 sm:space-y-2">
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tighter text-foreground">
+      <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-0.5 sm:space-y-1 text-center sm:text-left">
+            <h1 className="text-xl sm:text-4xl font-black tracking-tight text-foreground">
               Saídas
             </h1>
           </div>
