@@ -17,7 +17,7 @@ const CHART_COLORS = [
 
 export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => (
   <Dialog open={!!detailChart} onOpenChange={onClose}>
-    <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
+    <DialogContent className="w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
       <DialogHeader className="p-6 sm:p-8 pb-4 sm:pb-6 border-b border-border/10 bg-slate-50/50 flex-none">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -34,11 +34,12 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
         </div>
       </DialogHeader>
       
-      <div className="px-4 sm:px-10 py-6 sm:py-10 flex-1 h-[450px] sm:h-[550px]">
+      <div className="flex-1 relative w-full overflow-hidden" key={detailChart?.title}>
         {detailChart && (
-          <ResponsiveContainer width="100%" height="100%">
-            {detailChart.type === 'bar' ? (
-              <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
+          <div className="absolute inset-0 p-4 sm:p-10">
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
+              {detailChart.type === 'bar' ? (
+                <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
                 <defs>
                   <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
@@ -166,8 +167,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
               </PieChart>
             )}
           </ResponsiveContainer>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
       
       <div className="p-4 sm:p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
         <Button 

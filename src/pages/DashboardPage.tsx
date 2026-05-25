@@ -360,8 +360,8 @@ export default function DashboardPage() {
 
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-slate-50/50">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] sm:h-[80vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
+          <DialogHeader className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Users className="w-6 h-6" />
@@ -372,7 +372,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
                 <tr>
@@ -394,7 +394,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end">
+          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
             <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
@@ -402,8 +402,8 @@ export default function DashboardPage() {
 
       {/* Conferences Detail Dialog */}
       <Dialog open={detailDialog === 'conferences'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <BarChart3 className="w-6 h-6" />
@@ -414,7 +414,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white border-b border-border/10 z-20 shadow-sm">
                 <tr>
@@ -442,7 +442,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end">
+          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
             <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
@@ -450,8 +450,8 @@ export default function DashboardPage() {
 
       {/* Registros per Conference Dialog */}
       <Dialog open={detailDialog === 'registros'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
+          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Layers3 className="w-6 h-6" />
@@ -462,7 +462,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
                 <tr>
@@ -484,7 +484,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end">
+          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
             <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
