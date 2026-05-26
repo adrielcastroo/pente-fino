@@ -139,7 +139,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </AreaChart>
             ) : (
-              <PieChart margin={{ top: 20, right: isMobile ? 20 : 80, left: isMobile ? 20 : 80, bottom: 60 }}>
+              <PieChart margin={{ top: 20, right: isMobile ? 10 : 40, left: isMobile ? 10 : 40, bottom: isMobile ? 100 : 80 }}>
                 <Pie 
                   data={detailChart.data} 
                   dataKey="value" 
@@ -183,13 +183,15 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   iconType="circle" 
                   verticalAlign="bottom"
                   align="center"
+                  formatter={(value: string) => {
+                    const limit = isMobile ? 12 : 16;
+                    return value.length > limit ? `${value.substring(0, limit - 2)}...` : value;
+                  }}
                   wrapperStyle={{ 
-                    paddingTop: isMobile ? '10px' : '20px', 
-                    fontWeight: 'bold', 
-                    fontSize: isMobile ? '10px' : '11px',
-                    width: '100%',
-                    left: 0,
-                    bottom: 0
+                    paddingTop: isMobile ? '15px' : '25px', 
+                    fontWeight: '600', 
+                    fontSize: isMobile ? '10px' : '12px',
+                    lineHeight: '1.4'
                   }} 
                 />
 
