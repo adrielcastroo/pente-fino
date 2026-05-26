@@ -139,20 +139,22 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </AreaChart>
             ) : (
-              <PieChart margin={{ top: 20, right: isMobile ? 30 : 100, left: isMobile ? 30 : 100, bottom: 20 }}>
+              <PieChart margin={{ top: 20, right: isMobile ? 20 : 80, left: isMobile ? 20 : 80, bottom: 60 }}>
                 <Pie 
                   data={detailChart.data} 
                   dataKey="value" 
                   nameKey="name" 
                   cx="50%"
-                  cy="50%"
-                  outerRadius={isMobile ? "80%" : "95%"} 
-                  innerRadius={isMobile ? "45%" : "55%"} 
-
+                  cy="45%"
+                  outerRadius={isMobile ? "70%" : "80%"} 
+                  innerRadius={isMobile ? "40%" : "48%"} 
                   label={({ name, percent }: any) => {
                     if (percent < (isMobile ? 0.08 : 0.05)) return null; 
-                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} (${(percent * 100).toFixed(0)}%)`;
+                    const displayName = name.length > 12 ? `${name.substring(0, 10)}...` : name;
+                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${displayName} (${(percent * 100).toFixed(0)}%)`;
                   }}
+
+
                   paddingAngle={4} 
                   stroke="hsl(var(--background))" 
                   strokeWidth={2}
@@ -179,8 +181,18 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
                 <Legend 
                   iconType="circle" 
-                  wrapperStyle={{ paddingTop: '32px', fontWeight: 'bold', fontSize: '12px' }} 
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{ 
+                    paddingTop: isMobile ? '10px' : '20px', 
+                    fontWeight: 'bold', 
+                    fontSize: isMobile ? '10px' : '11px',
+                    width: '100%',
+                    left: 0,
+                    bottom: 0
+                  }} 
                 />
+
               </PieChart>
             )}
           </ResponsiveContainer>
