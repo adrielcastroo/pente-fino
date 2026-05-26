@@ -53,13 +53,13 @@ const ReservasPage = () => {
   return (
     <TooltipProvider>
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground flex items-center gap-2 sm:gap-3">
-              <Package className="w-8 h-8 text-primary" aria-hidden="true" />
-              Reservas Estoque
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
+          <div className="space-y-1 sm:space-y-2">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground flex items-center gap-3">
+              <Package className="w-8 h-8 sm:w-10 sm:h-10 text-primary shrink-0" aria-hidden="true" />
+              Reservas
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            <p className="text-muted-foreground text-[10px] sm:text-sm font-medium opacity-70 max-w-lg leading-relaxed">
               Gerenciamento de prateleira virtual e reservas sincronizadas em tempo real.
             </p>
           </div>

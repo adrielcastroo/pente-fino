@@ -169,30 +169,30 @@ export default function SaidaPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-0.5 sm:space-y-1 text-center sm:text-left">
-            <h1 className="text-xl sm:text-4xl font-black tracking-tight text-foreground">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-0.5 sm:space-y-1 text-left">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
               Saídas
             </h1>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex flex-col xs:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
-              className="w-full sm:w-auto h-10 sm:h-11 px-4 sm:px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-95 text-xs sm:text-sm"
+              className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-xs sm:text-sm shrink-0"
             >
                <LogOut className="w-5 h-5" />
               <span>Dar saída</span>
             </Button>
 
             <div className="relative group w-full sm:w-64 lg:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Filtrar por item, PROC, conferente..."
-                className="pl-10 h-10 sm:h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm"
+                placeholder="Filtrar item, PROC..."
+                className="pl-10 h-11 sm:h-12 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
               />
             </div>
           </div>

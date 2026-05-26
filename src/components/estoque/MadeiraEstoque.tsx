@@ -103,21 +103,23 @@ export default function MadeiraEstoque() {
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-3">
-        {[
-          { label: 'Total', value: stats.total, color: 'text-foreground' },
-          { label: 'Lâminas', value: stats.laminas, color: 'text-emerald-400' },
-          { label: 'Bases', value: stats.bases, color: 'text-cyan-400' },
-          { label: 'Bandôs', value: stats.bandos, color: 'text-violet-400' },
-          { label: 'Avarias', value: stats.avarias, color: 'text-red-400' },
-        ].map((s) => (
-          <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none">
-            <CardContent className="p-4 text-center space-y-1">
-              <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
-              <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain">
+        <div className="flex sm:grid sm:grid-cols-5 gap-3 min-w-max sm:min-w-0">
+          {[
+            { label: 'Total', value: stats.total, color: 'text-foreground' },
+            { label: 'Lâminas', value: stats.laminas, color: 'text-emerald-400' },
+            { label: 'Bases', value: stats.bases, color: 'text-cyan-400' },
+            { label: 'Bandôs', value: stats.bandos, color: 'text-violet-400' },
+            { label: 'Avarias', value: stats.avarias, color: 'text-red-400' },
+          ].map((s) => (
+            <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none shrink-0 w-[120px] sm:w-auto">
+              <CardContent className="p-4 text-center space-y-1">
+                <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Legenda Lotes Mestres */}
