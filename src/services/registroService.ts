@@ -29,7 +29,7 @@ export const registroService = {
 
     const { data, error } = await supabase
       .from('registros')
-      .insert(rows as any)
+      .upsert(rows as any, { onConflict: 'id' })
       .select();
       
     if (error) throw error;
