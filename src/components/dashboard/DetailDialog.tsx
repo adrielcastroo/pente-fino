@@ -146,8 +146,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   nameKey="name" 
                   cx="50%"
                   cy="50%"
-                  outerRadius={isMobile ? "60%" : "75%"} 
-                  innerRadius={isMobile ? "35%" : "45%"} 
+                  outerRadius={isMobile ? "80%" : "95%"} 
+                  innerRadius={isMobile ? "45%" : "55%"} 
+
                   label={({ name, percent }: any) => {
                     if (percent < (isMobile ? 0.08 : 0.05)) return null; 
                     return isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} (${(percent * 100).toFixed(0)}%)`;
