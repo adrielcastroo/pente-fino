@@ -152,8 +152,10 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
 
                   label={({ name, percent }: any) => {
                     if (percent < (isMobile ? 0.08 : 0.05)) return null; 
-                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} (${(percent * 100).toFixed(0)}%)`;
+                    const displayName = name.length > 15 ? `${name.substring(0, 12)}...` : name;
+                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${displayName} (${(percent * 100).toFixed(0)}%)`;
                   }}
+
                   paddingAngle={4} 
                   stroke="hsl(var(--background))" 
                   strokeWidth={2}
