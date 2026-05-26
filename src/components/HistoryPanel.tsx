@@ -450,8 +450,8 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
   const tableContent = (
-    <div className="overflow-x-auto bg-muted/5">
-      <table className="w-full text-xs min-w-[700px] border-separate border-spacing-0">
+    <div className="overflow-x-auto bg-muted/5 custom-scrollbar">
+      <table className="w-full text-xs min-w-full sm:min-w-[700px] border-separate border-spacing-0">
         <thead>
           <tr className="bg-muted/30">
             {columns.map(column => (
@@ -464,7 +464,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
           {conf.registros.map((r, i) => (
             <tr key={r.id} className="group/row hover:bg-white/50 dark:hover:bg-black/20 transition-colors">
               {columns.map(column => (
-                <td key={column.key} className={`px-5 py-3.5 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
+                <td key={column.key} className={`px-2 sm:px-5 py-2 sm:py-3.5 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
                   {column.key === 'item' ? (
                     <div className="flex flex-col gap-1">
                       <span>{r.item || '—'}</span>
@@ -519,9 +519,9 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 
   const headerContent = (
     <div className="group/header">
-      <button onClick={() => setOpen(!open)} className="w-full px-2 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-4 hover:bg-muted/30 transition-all text-left">
+      <button onClick={() => setOpen(!open)} className="w-full px-2.5 sm:px-6 py-4 flex items-center gap-2.5 sm:gap-4 hover:bg-muted/30 transition-all text-left">
         <div className={`p-2 sm:p-3 rounded-lg sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
-          <FolderOpen className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+          <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
@@ -555,9 +555,9 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                 variant="outline"
                 size="sm"
                 onClick={(e) => { e.stopPropagation(); setIsAdding(true); }}
-                className="h-8 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-bold text-[10px] uppercase tracking-wider px-3"
+                className="h-8 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-bold text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3"
               >
-                <Plus className="w-3 h-3 mr-1" /> Incluir Item
+                <Plus className="w-3 h-3 sm:mr-1" /> <span className="hidden xs:inline">Incluir Item</span>
               </Button>
               <Button
                 variant="ghost"
