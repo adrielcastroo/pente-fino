@@ -182,8 +182,18 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
                 <Legend 
                   iconType="circle" 
-                  wrapperStyle={{ paddingTop: '32px', fontWeight: 'bold', fontSize: '12px' }} 
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{ 
+                    paddingTop: isMobile ? '10px' : '20px', 
+                    fontWeight: 'bold', 
+                    fontSize: isMobile ? '10px' : '11px',
+                    width: '100%',
+                    left: 0,
+                    bottom: 0
+                  }} 
                 />
+
               </PieChart>
             )}
           </ResponsiveContainer>
