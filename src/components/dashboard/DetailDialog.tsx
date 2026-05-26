@@ -1,23 +1,28 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, X, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, Activity } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid
 } from 'recharts';
 
-// Premium Color Palette
+// Premium Color Palette - Jewel Tones synced with DashboardCharts
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  'hsl(var(--primary) / 0.8)',
-  'hsl(var(--primary) / 0.6)',
-  'hsl(var(--primary) / 0.4)',
-  'hsl(var(--primary) / 0.2)',
+  '#0D9488', // Teal 600
+  '#7C3AED', // Violet 600
+  '#D97706', // Amber 600
+  '#DC2626', // Red 600
+  '#2563EB', // Blue 600
 ];
 
-export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => (
-  <Dialog open={!!detailChart} onOpenChange={onClose}>
-    <DialogContent className="w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
+export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => {
+  const isMobile = useIsMobile();
+  
+  return (
+    <Dialog open={!!detailChart} onOpenChange={onClose}>
+      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
       <DialogHeader className="p-6 sm:p-8 pb-4 sm:pb-6 border-b border-border/10 bg-slate-50/50 flex-none">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -134,20 +139,31 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </AreaChart>
             ) : (
-              <PieChart>
+              <PieChart margin={{ top: 20, right: isMobile ? 30 : 100, left: isMobile ? 30 : 100, bottom: 20 }}>
                 <Pie 
                   data={detailChart.data} 
                   dataKey="value" 
                   nameKey="name" 
-                  outerRadius={160} 
-                  innerRadius={90} 
-                  label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`} 
-                  paddingAngle={3} 
-                  stroke="hsl(var(--border))" 
-                  strokeWidth={1}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={isMobile ? "60%" : "75%"} 
+                  innerRadius={isMobile ? "35%" : "45%"} 
+                  label={({ name, percent }: any) => {
+                    if (percent < (isMobile ? 0.08 : 0.05)) return null; 
+                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} (${(percent * 100).toFixed(0)}%)`;
+                  }}
+                  paddingAngle={4} 
+                  stroke="hsl(var(--background))" 
+                  strokeWidth={2}
                   animationDuration={1500}
                 >
-                  {detailChart.data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="hover:opacity-80 transition-opacity" />)}
+                  {detailChart.data.map((_: any, i: number) => (
+                    <Cell 
+                      key={i} 
+                      fill={CHART_COLORS[i % CHART_COLORS.length]} 
+                      className="hover:opacity-80 transition-opacity cursor-pointer" 
+                    />
+                  ))}
                 </Pie>
                 <ChartTooltip 
                   contentStyle={{ 
@@ -180,6 +196,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
           Fechar Visualização
         </Button>
       </div>
-    </DialogContent>
-  </Dialog>
-);
+      </DialogContent>
+    </Dialog>
+  );
+};
