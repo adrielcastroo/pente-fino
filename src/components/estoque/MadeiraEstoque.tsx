@@ -103,7 +103,7 @@ export default function MadeiraEstoque() {
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-5 gap-3">
         {[
           { label: 'Total', value: stats.total, color: 'text-foreground' },
           { label: 'Lâminas', value: stats.laminas, color: 'text-emerald-400' },
