@@ -1512,7 +1512,7 @@ export const LeftPanel = memo(function LeftPanel() {
             )}
             <div className="col-span-2 pt-2 border-t border-border/30">
               <p className="text-[10px] font-medium uppercase text-muted-foreground mb-1">Lote Sistema</p>
-              <div className="p-2.5 rounded-lg bg-muted/30 font-mono text-xs font-medium text-foreground/80 truncate border border-border/30">
+              <div className="p-2.5 rounded-lg bg-muted/30 font-mono text-xs font-medium text-foreground/80 break-all border border-border/30">
                 {previewLoteSistema}
               </div>
             </div>
