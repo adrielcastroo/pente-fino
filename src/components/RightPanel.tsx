@@ -381,7 +381,7 @@ export default function RightPanel() {
             <input 
               value={localSearch} 
               onChange={e => setLocalSearch(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
               placeholder="Buscar material, lote ou endereço..." 
               autoComplete="off" 
             />
