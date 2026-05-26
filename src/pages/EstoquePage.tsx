@@ -361,28 +361,30 @@ export default function EstoquePage() {
       ) : (
         <>
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-2 sm:gap-4">
-        {[
-          { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
-          { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
-          { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
-          { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
-          { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
-        ].map((s) => (
-          <Card 
-            key={s.label} 
-            onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-            className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md ${
-              selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-            }`}
-          >
-            <CardContent className="p-3 sm:p-4 text-center space-y-0.5 sm:space-y-1">
-              <div className={`text-xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
-              <div className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-[0.1em] sm:tracking-[0.15em]">{s.label}</div>
-              <div className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain">
+        <div className="flex sm:grid sm:grid-cols-5 gap-2 sm:gap-4 min-w-max sm:min-w-0">
+          {[
+            { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
+            { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
+            { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
+            { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
+            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
+          ].map((s) => (
+            <Card 
+              key={s.label} 
+              onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+              className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md shrink-0 w-[120px] sm:w-auto ${
+                selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
+              }`}
+            >
+              <CardContent className="p-3 sm:p-4 text-center space-y-0.5 sm:space-y-1">
+                <div className={`text-xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
+                <div className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-[0.1em] sm:tracking-[0.15em]">{s.label}</div>
+                <div className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* TEC Tabs */}
