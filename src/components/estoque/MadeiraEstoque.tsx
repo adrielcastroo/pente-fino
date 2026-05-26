@@ -103,15 +103,15 @@ export default function MadeiraEstoque() {
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-5 gap-3">
         {[
           { label: 'Total', value: stats.total, color: 'text-foreground' },
           { label: 'Lâminas', value: stats.laminas, color: 'text-emerald-400' },
           { label: 'Bases', value: stats.bases, color: 'text-cyan-400' },
           { label: 'Bandôs', value: stats.bandos, color: 'text-violet-400' },
           { label: 'Avarias', value: stats.avarias, color: 'text-red-400' },
-        ].map(s => (
-          <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none">
+        ].map((s, idx) => (
+          <Card key={s.label} className={`border border-border/30 bg-card/40 shadow-none ${idx === 4 ? 'col-span-2 xs:col-span-1' : ''}`}>
             <CardContent className="p-4 text-center space-y-1">
               <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
               <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
