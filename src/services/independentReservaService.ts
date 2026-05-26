@@ -26,7 +26,7 @@ export const independentReservaService = {
   async addReserva(reserva: Reserva) {
     const { data, error } = await supabase
       .from('independent_reservations')
-      .insert([{
+      .upsert([{
         id: reserva.id,
         codigo: reserva.codigo,
         descricao: reserva.descricao,
@@ -36,7 +36,7 @@ export const independentReservaService = {
         quantidade_cx: reserva.quantidadeCx,
         observacao: reserva.observacao,
         created_at: reserva.createdAt,
-      }])
+      }], { onConflict: 'id' })
       .select()
       .single();
     
