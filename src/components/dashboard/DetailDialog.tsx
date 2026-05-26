@@ -6,13 +6,14 @@ import {
   PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid
 } from 'recharts';
 
-// Premium Color Palette
+// Premium Color Palette - Jewel Tones synced with DashboardCharts
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  'hsl(var(--primary) / 0.8)',
-  'hsl(var(--primary) / 0.6)',
-  'hsl(var(--primary) / 0.4)',
-  'hsl(var(--primary) / 0.2)',
+  '#0D9488', // Teal 600
+  '#7C3AED', // Violet 600
+  '#D97706', // Amber 600
+  '#DC2626', // Red 600
+  '#2563EB', // Blue 600
 ];
 
 export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => (
@@ -134,20 +135,31 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </AreaChart>
             ) : (
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 100, left: 100, bottom: 20 }}>
                 <Pie 
                   data={detailChart.data} 
                   dataKey="value" 
                   nameKey="name" 
-                  outerRadius={160} 
-                  innerRadius={90} 
-                  label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`} 
-                  paddingAngle={3} 
-                  stroke="hsl(var(--border))" 
-                  strokeWidth={1}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius="75%" 
+                  innerRadius="45%" 
+                  label={({ name, percent }: any) => {
+                    if (percent < 0.05) return null; // Oculta labels muito pequenos para evitar sobreposição
+                    return `${name} (${(percent * 100).toFixed(0)}%)`;
+                  }}
+                  paddingAngle={4} 
+                  stroke="hsl(var(--background))" 
+                  strokeWidth={2}
                   animationDuration={1500}
                 >
-                  {detailChart.data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="hover:opacity-80 transition-opacity" />)}
+                  {detailChart.data.map((_: any, i: number) => (
+                    <Cell 
+                      key={i} 
+                      fill={CHART_COLORS[i % CHART_COLORS.length]} 
+                      className="hover:opacity-80 transition-opacity cursor-pointer" 
+                    />
+                  ))}
                 </Pie>
                 <ChartTooltip 
                   contentStyle={{ 
