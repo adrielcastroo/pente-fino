@@ -121,7 +121,7 @@ interface TableRowProps {
   isGuest?: boolean;
 }
 
-const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit, isGuest }: TableRowProps) => {
+const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit, isGuest, showActions }: TableRowProps & { showActions?: boolean }) => {
 
   return (
     <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''} transition-colors`}>
@@ -151,37 +151,39 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
           />
         );
       })}
-      <td className="px-2 sm:px-4 py-2 sm:py-3.5">
-        <div className="flex justify-end gap-1 sm:gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => onCopy(r.loteSistema)} 
-                className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-             <TooltipContent>Copiar Lote Sistema</TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => onDelete(r.id)} 
-                className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Remover Registro</TooltipContent>
-          </Tooltip>
-        </div>
-      </td>
+      {showActions && (
+        <td className="px-2 sm:px-4 py-2 sm:py-3.5">
+          <div className="flex justify-end gap-1 sm:gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => onCopy(r.loteSistema)} 
+                  className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+               <TooltipContent>Copiar Lote Sistema</TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => onDelete(r.id)} 
+                  className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Remover Registro</TooltipContent>
+            </Tooltip>
+          </div>
+        </td>
+      )}
     </tr>
   );
 });
@@ -351,6 +353,8 @@ export default function RightPanel() {
     setVisibleCount(prev => prev + (isLow ? 50 : 200));
   }, [isLow]);
 
+  const showActions = !['manual', 'openrouter', 'diversos', 'etiq_pronta'].includes(currentMode);
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
       {undoStack.length > 0 && (
@@ -431,9 +435,11 @@ export default function RightPanel() {
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
                     Séries Sistema
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
-                    Ações
-                  </th>
+                  {showActions && (
+                    <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
+                      Ações
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -470,28 +476,30 @@ export default function RightPanel() {
                             {r.loteSistema || '—'}
                           </Badge>
                         </td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-3">
-                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
-                                  <Copy className="w-3 h-3" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Copiar</TooltipContent>
-                            </Tooltip>
-                            {!isGuest && (
+                        {showActions && (
+                          <td className="px-2 sm:px-4 py-2 sm:py-3">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                                    <X className="w-3.5 h-3.5" />
+                                  <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
+                                    <Copy className="w-3 h-3" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Remover</TooltipContent>
+                                <TooltipContent>Copiar</TooltipContent>
                               </Tooltip>
-                            )}
-                          </div>
-                        </td>
+                              {!isGuest && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                                      <X className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Remover</TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </React.Fragment>
@@ -502,7 +510,7 @@ export default function RightPanel() {
                   <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
                     <td className="px-4 py-4">{sortedRows.length} {sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}</td>
                     <td className="px-4 py-4">{motorGroups.length} {motorGroups.length !== 1 ? 'CAIXAS' : 'CAIXA'}</td>
-                    <td className="px-4 py-4"></td>
+                    {showActions && <td className="px-4 py-4"></td>}
                   </tr>
                 </tfoot>
               )}
@@ -524,7 +532,7 @@ export default function RightPanel() {
                       </th>
                     );
                   })}
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>
+                  {showActions && <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
@@ -560,7 +568,7 @@ export default function RightPanel() {
                         {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
                       </td>
                     ))}
-                    <td className="px-4 py-4"></td>
+                    {showActions && <td className="px-4 py-4"></td>}
                   </tr>
                 </tfoot>
               )}
