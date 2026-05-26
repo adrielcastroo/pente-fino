@@ -126,51 +126,64 @@ export default function DashboardPage() {
   return (
     <div id="dashboard-content" className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8">
       {/* Header */}
-      <header className="flex flex-col gap-3 sm:gap-6 pb-4 sm:pb-6 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-2 sm:pt-6 rounded-b-[1.25rem] sm:rounded-b-[2.5rem]">
-        <div className="flex flex-col xs:flex-row items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
-              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-4 sm:pt-8 rounded-b-[1.5rem] sm:rounded-b-[3rem] no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/10 shadow-inner">
+              <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
             </div>
-            <h1 className="text-xl sm:text-[clamp(1.75rem,5vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
-              Dashboard
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-2xl sm:text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+                Dashboard
+              </h1>
+              <p className="text-[9px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 sm:mt-2 opacity-70">
+                Monitoramento Logístico & Operacional
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-center">
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/60">
+              <Clock className="w-5 h-5 text-primary/70 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
+                <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
+              </div>
+            </div>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="default" 
+                  size="lg"
+                  disabled={isExporting}
+                  className="h-10 sm:h-16 px-4 sm:px-10 rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-4 font-black uppercase tracking-widest text-[10px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap"
+                  onClick={handleFullExportExcel}
+                >
+                  {isExporting ? (
+                    <Loader2 className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
+                  ) : (
+                    <FileText className="w-4 h-4 sm:w-6 sm:h-6" />
+                  )}
+                  {isExporting ? 'Processando...' : 'Exportar Excel'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Gerar Relatório Completo de Atividades</TooltipContent>
+            </Tooltip>
           </div>
         </div>
         
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-6 no-print w-full">
-          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-1.5 sm:py-3 rounded-xl sm:rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm min-w-fit flex-1 sm:flex-none">
-            <Clock className="w-3 h-3 sm:w-5 sm:h-5 text-primary/70 shrink-0" />
-            <div className="flex flex-col gap-0 sm:gap-1">
-              <span className="text-[7px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
-              <span className="text-[10px] sm:text-base font-bold text-foreground leading-none">{stats.avgDuration}</span>
-            </div>
+        <div className="flex md:hidden items-center gap-3 px-4 py-2.5 rounded-xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm w-fit transition-all hover:bg-muted/60">
+          <Clock className="w-4 h-4 text-primary/70 shrink-0" />
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sessão:</span>
+            <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
           </div>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="default" 
-                size="default"
-                disabled={isExporting}
-                className="h-9 sm:h-14 px-3 sm:px-8 rounded-xl sm:rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5 sm:gap-3 font-bold uppercase tracking-widest text-[7px] xs:text-[10px] sm:text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap w-auto"
-                onClick={handleFullExportExcel}
-              >
-                {isExporting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FileText className="w-4 h-4" />
-                )}
-                {isExporting ? 'Gerando...' : 'Exportar Relatório Completo (Excel)'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Baixar Relatório Executivo</TooltipContent>
-          </Tooltip>
         </div>
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 pt-3 sm:pt-6 relative z-10 w-full overflow-hidden">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
