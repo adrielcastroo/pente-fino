@@ -361,7 +361,7 @@ export default function EstoquePage() {
       ) : (
         <>
       {/* Stats */}
-      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
         {[
           { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
           { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
