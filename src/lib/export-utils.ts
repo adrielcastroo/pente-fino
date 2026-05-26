@@ -195,26 +195,42 @@ export async function exportDashboardToExcel(stats: any, history: Conference[], 
 
     // 7. Histórico de Sessões
     const wsAudit = workbook.addWorksheet('Histórico de Sessões');
-    const auditHeaders = ['ID', 'Processo', 'Conferente', 'Data', 'Itens', 'Status'];
+    const auditHeaders = ['ID', 'Processo', 'Conferente', 'Data', 'Hora Início', 'Hora Término', 'Itens', 'Status'];
     applyTableHeaders(wsAudit, 1, auditHeaders);
     
     history.slice(0, 100).forEach((conf, i) => {
       const rowIndex = i + 2;
       const status = conf.registros.length > 0 ? 'Concluído' : 'Vazio';
+      
+      const formatTime = (isoString?: string | null) => {
+        if (!isoString) return '-';
+        try {
+          return new Date(isoString).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+          });
+        } catch (e) {
+          return '-';
+        }
+      };
+
       wsAudit.getRow(rowIndex).values = [
         conf.id.slice(0, 8),
         conf.processo || conf.name,
         conf.conferente,
         new Date(conf.date).toLocaleDateString('pt-BR'),
+        formatTime(conf.startedAt),
+        formatTime(conf.finishedAt),
         conf.registros.length,
         status
       ];
     });
-    wsAudit.autoFilter = 'A1:F1';
+    wsAudit.autoFilter = 'A1:H1';
 
     // Formatação Condicional Status
     wsAudit.addConditionalFormatting({
-      ref: 'F2:F101',
+      ref: 'H2:H101',
       rules: [
         {
           type: 'containsText',
