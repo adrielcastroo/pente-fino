@@ -92,9 +92,9 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-4 lg:px-8 pb-6 sm:pb-8 lg:pb-12 pt-6 sm:pt-8 lg:pt-10 h-[clamp(250px,45vh,600px)]">
+      <CardContent className="px-1 sm:px-4 lg:px-8 pb-4 sm:pb-8 lg:pb-12 pt-4 sm:pt-8 lg:pt-10 h-[clamp(220px,40vh,600px)] sm:h-[clamp(250px,45vh,600px)]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={processedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             {!isLow && (
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">

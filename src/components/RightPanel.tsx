@@ -125,12 +125,12 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 
   return (
     <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''} transition-colors`}>
-      <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[10px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
+      <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[9px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
       {columns.map((column: any) => {
         // Critical columns that should always show: item, mLinear, quantidade, loteSistema
         // Less critical: nf, processo, m2, largura, lote, endereco
         const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
-        const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : "hidden md:table-cell";
+        const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : column.key === 'nf' ? "hidden lg:table-cell" : "hidden md:table-cell";
 
         return (
           <TableCell
