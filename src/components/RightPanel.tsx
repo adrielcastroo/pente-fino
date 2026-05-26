@@ -553,6 +553,7 @@ export default function RightPanel() {
                     onCommitEdit={commitEdit}
                     onCancelEdit={cancelEdit}
                     isGuest={isGuest}
+                    showActions={showActions}
                   />
                 ))}
               </tbody>
