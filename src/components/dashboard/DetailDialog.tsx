@@ -146,15 +146,14 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   nameKey="name" 
                   cx="50%"
                   cy="45%"
-                  outerRadius={isMobile ? "70%" : "85%"} 
-                  innerRadius={isMobile ? "40%" : "50%"} 
-
-
+                  outerRadius={isMobile ? "70%" : "80%"} 
+                  innerRadius={isMobile ? "40%" : "48%"} 
                   label={({ name, percent }: any) => {
                     if (percent < (isMobile ? 0.08 : 0.05)) return null; 
-                    const displayName = name.length > 15 ? `${name.substring(0, 12)}...` : name;
+                    const displayName = name.length > 12 ? `${name.substring(0, 10)}...` : name;
                     return isMobile ? `${(percent * 100).toFixed(0)}%` : `${displayName} (${(percent * 100).toFixed(0)}%)`;
                   }}
+
 
                   paddingAngle={4} 
                   stroke="hsl(var(--background))" 
