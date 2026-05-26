@@ -60,7 +60,7 @@ export default function MainLayout() {
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain">
             <div className="min-h-full w-full max-w-[2000px] mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-3 sm:p-6 lg:p-8 xl:p-10 2xl:p-12">
+                <div className="p-3 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 3xl:p-16">
                   <Outlet />
                 </div>
               </Suspense>

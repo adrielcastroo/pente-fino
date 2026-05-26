@@ -555,9 +555,9 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                 variant="outline"
                 size="sm"
                 onClick={(e) => { e.stopPropagation(); setIsAdding(true); }}
-                className="h-8 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-bold text-[10px] uppercase tracking-wider px-3"
+                className="h-8 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-bold text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3"
               >
-                <Plus className="w-3 h-3 mr-1" /> Incluir Item
+                <Plus className="w-3 h-3 sm:mr-1" /> <span className="hidden xs:inline">Incluir Item</span>
               </Button>
               <Button
                 variant="ghost"
