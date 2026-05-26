@@ -942,7 +942,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Mode Toggle — flex-wrap para resoluções estreitas (<340px) e
             min-w-0 para permitir truncamento. Altura mínima 44px (touch target). */}
         {!isMadeira && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -950,7 +950,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider border ${
+                  className={`flex-1 min-w-[80px] sm:min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider border ${
                     isActive
                       ? 'bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]'
                       : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-muted/30'
@@ -987,12 +987,12 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Diversos categories — 2x2 em mobile estreito (<400px), 4 colunas a partir de xs.
             min-h 44px garante touch target adequado. */}
         {isDiversos && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`min-h-[44px] rounded-full border px-2 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all truncate ${
+                className={`flex-1 min-w-[65px] min-h-[44px] rounded-full border px-2 py-2.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider transition-all truncate ${
                   diversosTipo === tipo
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
