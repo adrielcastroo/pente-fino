@@ -139,15 +139,16 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </AreaChart>
             ) : (
-              <PieChart margin={{ top: 20, right: isMobile ? 30 : 100, left: isMobile ? 30 : 100, bottom: 20 }}>
+              <PieChart margin={{ top: 20, right: isMobile ? 20 : 80, left: isMobile ? 20 : 80, bottom: 60 }}>
                 <Pie 
                   data={detailChart.data} 
                   dataKey="value" 
                   nameKey="name" 
                   cx="50%"
-                  cy="50%"
-                  outerRadius={isMobile ? "80%" : "95%"} 
-                  innerRadius={isMobile ? "45%" : "55%"} 
+                  cy="45%"
+                  outerRadius={isMobile ? "70%" : "85%"} 
+                  innerRadius={isMobile ? "40%" : "50%"} 
+
 
                   label={({ name, percent }: any) => {
                     if (percent < (isMobile ? 0.08 : 0.05)) return null; 
