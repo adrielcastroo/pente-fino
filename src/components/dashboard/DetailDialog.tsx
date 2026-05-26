@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, X, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, Activity } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid
@@ -16,9 +17,12 @@ const CHART_COLORS = [
   '#2563EB', // Blue 600
 ];
 
-export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => (
-  <Dialog open={!!detailChart} onOpenChange={onClose}>
-    <DialogContent className="w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
+export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => {
+  const isMobile = useIsMobile();
+  
+  return (
+    <Dialog open={!!detailChart} onOpenChange={onClose}>
+      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
       <DialogHeader className="p-6 sm:p-8 pb-4 sm:pb-6 border-b border-border/10 bg-slate-50/50 flex-none">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -135,18 +139,18 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 />
               </AreaChart>
             ) : (
-              <PieChart margin={{ top: 20, right: 100, left: 100, bottom: 20 }}>
+              <PieChart margin={{ top: 20, right: isMobile ? 30 : 100, left: isMobile ? 30 : 100, bottom: 20 }}>
                 <Pie 
                   data={detailChart.data} 
                   dataKey="value" 
                   nameKey="name" 
                   cx="50%"
                   cy="50%"
-                  outerRadius="75%" 
-                  innerRadius="45%" 
+                  outerRadius={isMobile ? "60%" : "75%"} 
+                  innerRadius={isMobile ? "35%" : "45%"} 
                   label={({ name, percent }: any) => {
-                    if (percent < 0.05) return null; // Oculta labels muito pequenos para evitar sobreposição
-                    return `${name} (${(percent * 100).toFixed(0)}%)`;
+                    if (percent < (isMobile ? 0.08 : 0.05)) return null; 
+                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} (${(percent * 100).toFixed(0)}%)`;
                   }}
                   paddingAngle={4} 
                   stroke="hsl(var(--background))" 
@@ -192,6 +196,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
           Fechar Visualização
         </Button>
       </div>
-    </DialogContent>
-  </Dialog>
-);
+      </DialogContent>
+    </Dialog>
+  );
+};
