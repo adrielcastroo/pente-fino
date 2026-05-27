@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
-import { Download, User, Archive, CheckCircle2, LogOut } from 'lucide-react';
+import { Download, User, Archive, CheckCircle2, LogOut, ScanBarcode, Plus } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'react-router-dom';
 
 
 const TopBar = memo(function TopBar() {
