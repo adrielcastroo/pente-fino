@@ -249,7 +249,10 @@ export const LeftPanel = memo(function LeftPanel() {
   
 
   const formatEndereco = (val: string): string => {
-    const clean = val.toUpperCase().replace(/\./g, '');
+    const upper = val.toUpperCase();
+    if (upper === 'CHÃO' || upper === 'CHAO') return 'CHÃO';
+    
+    const clean = upper.replace(/\./g, '');
     if (clean.length <= 5) return clean;
     if (clean.length <= 6) return `${clean.slice(0, 5)}.${clean.slice(5)}`;
     return `${clean.slice(0, 5)}.${clean.slice(5, 6)}.${clean.slice(6)}`;
