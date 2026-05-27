@@ -31,7 +31,7 @@ export function formatTimeBR(iso: string | null | undefined): string {
 }
 
 
-export const ENDERECO_REGEX = /^[A-Z0-9]{5}\.[A-Z0-9]\.[A-Z0-9]+$/;
+export const ENDERECO_REGEX = /^[A-Z0-9]{3,10}\.[A-Z0-9]\.[A-Z0-9]+$/;
 
 export function parseEndereco(addr: string) {
   if (!addr || !ENDERECO_REGEX.test(addr)) return null;

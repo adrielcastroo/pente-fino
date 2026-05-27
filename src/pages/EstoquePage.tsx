@@ -46,6 +46,7 @@ const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
   TEC03: { cols: ['A', 'B'], levels: 9 },
   TEC04: { cols: ['A', 'B', 'C'], levels: 5 },
   TEC05: { cols: ['A', 'B', 'C'], levels: 5 },
+  CHAO: { cols: ['G'], levels: 1 },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -399,7 +400,7 @@ export default function EstoquePage() {
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            {tec}
+            {tec === 'CHAO' ? 'Chão' : tec}
           </button>
         ))}
       </div>
@@ -494,7 +495,7 @@ export default function EstoquePage() {
                     </div>
                     <div>
                       <DialogTitle className="text-lg sm:text-xl font-black tracking-tight">
-                        {activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
+                        {activeTec === 'CHAO' ? 'Chão' : activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
                       <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
                         {occupiedCount} de 30 posições ocupadas
@@ -608,7 +609,7 @@ export default function EstoquePage() {
                         {detailPos.item || 'Item sem nome'}
                       </DialogTitle>
                       <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
-                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura === 'CHAO' ? 'Chão' : detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
                       </DialogDescription>
                     </div>
                     <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-14 sm:mr-12 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
@@ -720,13 +721,14 @@ export default function EstoquePage() {
 
             // Per-TEC breakdown
             const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
+              const label = tec === 'CHAO' ? 'Chão' : tec;
               const tecPosicoes = allPosicoes.filter(p => (p as any).estrutura === tec);
               const totalForTec = cfg.cols.length * cfg.levels * 30;
               let val = 0;
               if (selectedStat === 'total') val = totalForTec;
               else if (selectedStat === 'livre') val = totalForTec - tecPosicoes.length;
               else val = tecPosicoes.filter(p => p.status === selectedStat).length;
-              return { tec, value: val, total: totalForTec, percent: totalForTec ? Math.round((val / totalForTec) * 100) : 0 };
+              return { tec: label, value: val, total: totalForTec, percent: totalForTec ? Math.round((val / totalForTec) * 100) : 0 };
             });
 
             return (
