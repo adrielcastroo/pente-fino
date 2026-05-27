@@ -388,12 +388,12 @@ export default function EstoquePage() {
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 overflow-x-auto custom-scrollbar">
+      <div className="flex bg-muted/30 rounded-xl p-1 gap-1.5 border border-border/30 overflow-x-auto custom-scrollbar no-scrollbar snap-x -mx-4 px-4 sm:mx-0 sm:px-0">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 ${
+            className={`flex-1 min-w-[65px] sm:min-w-[80px] py-2.5 sm:py-3 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 snap-start ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
