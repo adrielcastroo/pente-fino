@@ -16,6 +16,7 @@ import { useLocation } from 'react-router-dom';
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
+  const location = useLocation();
   const { user, isGuest, guestName, signOut, profile } = useAuth();
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
@@ -24,7 +25,12 @@ const TopBar = memo(function TopBar() {
    const registroCount = useAppStore(s => s.registros.length);
    const archiveAndClear = useAppStore(s => s.archiveAndClear);
    const isArchiving = useAppStore(s => s.isArchiving);
+   const resetFormData = useAppStore(s => s.resetFormData);
+   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
    const { registros } = useAppStore(useShallow(s => ({ registros: s.registros })));
+
+   const path = location.pathname.replace(/\/$/, '');
+   const isRegistroRoute = path === '/tecido' || path === '/madeira' || path === '/motor';
 
     // Ensure conferente is synced with auth profile or guest name
     useEffect(() => {
