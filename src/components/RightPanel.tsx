@@ -456,9 +456,9 @@ export default function RightPanel() {
             ].map((k, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
+                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[160px] sm:min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
               >
-                <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
+                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
                   <k.icon className="w-5 h-5" strokeWidth={2.2} />
                 </div>
                 <div className="flex flex-col min-w-0">
