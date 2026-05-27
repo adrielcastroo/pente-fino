@@ -133,7 +133,7 @@ export default function DashboardPage() {
               <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl sm:text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+              <h1 className="text-[clamp(1.5rem,8vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
                 Dashboard
               </h1>
               <p className="text-[9px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 sm:mt-2 opacity-70">
