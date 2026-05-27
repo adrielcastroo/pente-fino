@@ -31,10 +31,15 @@ export function formatTimeBR(iso: string | null | undefined): string {
 }
 
 
-export const ENDERECO_REGEX = /^[A-Z0-9]{3,10}\.[A-Z0-9]\.[A-Z0-9]+$/;
+export const ENDERECO_REGEX = /^([A-Z0-9]{3,10}\.[A-Z0-9]\.[A-Z0-9]+|CHÃO)$/i;
 
 export function parseEndereco(addr: string) {
-  if (!addr || !ENDERECO_REGEX.test(addr)) return null;
+  if (!addr) return null;
+  const normalizedAddr = addr.trim().toUpperCase();
+  if (normalizedAddr === 'CHÃO') {
+    return { estrutura: 'CHÃO', coluna: 'G', nivel: 1 };
+  }
+  if (!ENDERECO_REGEX.test(normalizedAddr)) return null;
   const parts = addr.split('.');
   if (parts.length < 3) return null;
   const [est, col, nivStr] = parts;
