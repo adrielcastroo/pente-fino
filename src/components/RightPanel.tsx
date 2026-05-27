@@ -284,6 +284,27 @@ export default function RightPanel() {
     return getRegistroColumns(registros, currentMode);
   }, [currentMode, registros]);
 
+  // KPIs derived from current registros
+  const kpis = useMemo(() => {
+    const lotesSet = new Set<string>();
+    let lastTs = 0;
+    for (const r of registros) {
+      const k = (r.lote || r.loteSistema || '').trim();
+      if (k) lotesSet.add(k.toLowerCase());
+      const t = new Date((r as any).updatedAt || (r as any).createdAt || 0).getTime();
+      if (!isNaN(t) && t > lastTs) lastTs = t;
+    }
+    const lastDate = lastTs ? new Date(lastTs) : null;
+    return {
+      total: registros.length,
+      m2: totals.m2,
+      ml: totals.ml,
+      lotes: lotesSet.size,
+      lastTime: lastDate ? lastDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—',
+      lastDate: lastDate ? `Hoje, ${lastDate.toLocaleDateString('pt-BR')}` : 'Sem registros',
+    };
+  }, [registros, totals]);
+
   const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
   }, []);
