@@ -272,6 +272,25 @@ export default function MotorControlePage() {
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
       <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
 
+        {/* "Novo registro" hero header */}
+        <div className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm">
+          <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <ScanBarcode className="w-5 h-5" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] sm:text-sm font-black text-foreground leading-tight">Novo registro</div>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">Bipe a série do {subMode === 'motor' ? 'motor' : 'controle'} ou digite manualmente</p>
+          </div>
+          {(modelo || nf || serie) && (
+            <button
+              onClick={resetFields}
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2 py-1 rounded-md hover:bg-destructive/10"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+
         {/* Subtoggle */}
         <div className="flex gap-2">
           {(['motor', 'controle'] as SubMode[]).map(mode => (
