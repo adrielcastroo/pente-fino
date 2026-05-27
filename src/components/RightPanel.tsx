@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
-import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2 } from 'lucide-react';
+import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2, FileText, Layers3, Clock, Info, Tag } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -284,6 +284,27 @@ export default function RightPanel() {
     return getRegistroColumns(registros, currentMode);
   }, [currentMode, registros]);
 
+  // KPIs derived from current registros
+  const kpis = useMemo(() => {
+    const lotesSet = new Set<string>();
+    let lastTs = 0;
+    for (const r of registros) {
+      const k = (r.lote || r.loteSistema || '').trim();
+      if (k) lotesSet.add(k.toLowerCase());
+      const t = new Date((r as any).updatedAt || (r as any).createdAt || 0).getTime();
+      if (!isNaN(t) && t > lastTs) lastTs = t;
+    }
+    const lastDate = lastTs ? new Date(lastTs) : null;
+    return {
+      total: registros.length,
+      m2: totals.m2,
+      ml: totals.ml,
+      lotes: lotesSet.size,
+      lastTime: lastDate ? lastDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—',
+      lastDate: lastDate ? `Hoje, ${lastDate.toLocaleDateString('pt-BR')}` : 'Sem registros',
+    };
+  }, [registros, totals]);
+
   const copyText = useCallback((t: string) => {
     navigator.clipboard.writeText(t).then(() => toast.success(`Lote "${t}" copiado para a área de transferência.`));
   }, []);
@@ -422,6 +443,34 @@ export default function RightPanel() {
           </div>
         </div>
       </div>
+
+      {/* KPI strip — inspired by mockup */}
+      {registros.length > 0 && (
+        <div className="flex-shrink-0 px-2 xs:px-4 py-3 bg-card/40 border-b border-border/40 overflow-x-auto custom-scrollbar">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+            {[
+              { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Total de Registros', value: kpis.total.toString(), sub: 'Registros cadastrados' },
+              { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: 'Metragem Total (m²)', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml), sub: kpis.m2 > 0 ? 'Soma de m² conferidos' : 'Total em metros lineares' },
+              { icon: Layers3, color: 'text-purple-500', bg: 'bg-purple-500/10', label: 'Lotes Distintos', value: kpis.lotes.toString(), sub: 'Lotes únicos' },
+              { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-500/10', label: 'Última Atualização', value: kpis.lastTime, sub: kpis.lastDate },
+            ].map((k, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
+              >
+                <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
+                  <k.icon className="w-5 h-5" strokeWidth={2.2} />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-muted-foreground/80 truncate">{k.label}</span>
+                  <span className="text-base sm:text-lg font-black text-foreground leading-tight font-mono truncate">{k.value}</span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-medium truncate">{k.sub}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
@@ -602,6 +651,43 @@ export default function RightPanel() {
               </Button>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Legend / Tips footer — inspired by mockup */}
+      <div className="flex-shrink-0 border-t border-border/40 bg-card/40 px-3 sm:px-4 py-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Info className="w-3.5 h-3.5" strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-primary mb-0.5">Dica</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug">Use a busca e a ordenação acima para refinar e encontrar registros rapidamente.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5 min-w-0">
+            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-success/10 text-success flex items-center justify-center">
+              <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-success mb-0.5">Status</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug">
+                <span className="font-bold">Novo:</span> recém-bipado · <span className="font-bold">Conferido:</span> arquivado via exportar
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5 min-w-0">
+            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+              <Tag className="w-3.5 h-3.5" strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-purple-500 mb-0.5">Legenda</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug">
+                <span className="font-bold">M²:</span> metragem quadrada · <span className="font-bold">M. Linear:</span> metragem linear
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
