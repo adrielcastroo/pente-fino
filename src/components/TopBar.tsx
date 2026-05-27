@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
-import { Download, User, Archive, CheckCircle2, LogOut } from 'lucide-react';
+import { Download, User, Archive, CheckCircle2, LogOut, ScanBarcode, Plus } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'react-router-dom';
 
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
+  const location = useLocation();
   const { user, isGuest, guestName, signOut, profile } = useAuth();
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
@@ -23,7 +25,12 @@ const TopBar = memo(function TopBar() {
    const registroCount = useAppStore(s => s.registros.length);
    const archiveAndClear = useAppStore(s => s.archiveAndClear);
    const isArchiving = useAppStore(s => s.isArchiving);
+   const resetFormData = useAppStore(s => s.resetFormData);
+   const resetMotorFormData = useAppStore(s => s.resetMotorFormData);
    const { registros } = useAppStore(useShallow(s => ({ registros: s.registros })));
+
+   const path = location.pathname.replace(/\/$/, '');
+   const isRegistroRoute = path === '/tecido' || path === '/madeira' || path === '/motor';
 
     // Ensure conferente is synced with auth profile or guest name
     useEffect(() => {
@@ -117,13 +124,27 @@ const TopBar = memo(function TopBar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-1 sm:gap-4 px-2 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
-        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-xl shrink-0" />
-          <div className="hidden xs:flex flex-col">
-            <p className="text-[10px] sm:text-sm font-bold text-foreground tracking-tight">
-              Sistema <span className="text-primary font-black uppercase tracking-widest text-[8px] sm:text-xs">Pente Fino</span>
-            </p>
-          </div>
+          {isRegistroRoute ? (
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="hidden xs:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary items-center justify-center shrink-0">
+                <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[11px] sm:text-sm font-black text-foreground tracking-tight whitespace-nowrap">Registro &amp; Bipagem</span>
+                <span className="hidden sm:block text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground/70 font-bold">
+                  {path === '/tecido' ? 'Tecido' : path === '/madeira' ? 'Madeira' : 'Motor / Controle'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="hidden xs:flex flex-col">
+              <p className="text-[10px] sm:text-sm font-bold text-foreground tracking-tight">
+                Sistema <span className="text-primary font-black uppercase tracking-widest text-[8px] sm:text-xs">Pente Fino</span>
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
@@ -158,6 +179,27 @@ const TopBar = memo(function TopBar() {
           )}
 
 
+
+          {isRegistroRoute && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    if (path === '/motor') resetMotorFormData();
+                    else resetFormData();
+                    toast.success('Pronto para um novo registro');
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="h-9 sm:h-10 xl:h-11 rounded-xl px-2.5 sm:px-4 gap-1.5 font-bold text-xs border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden md:inline">Novo registro</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Limpar formulário para um novo registro</TooltipContent>
+            </Tooltip>
+          )}
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
