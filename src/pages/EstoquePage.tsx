@@ -721,7 +721,7 @@ export default function EstoquePage() {
 
             // Per-TEC breakdown
             const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
-              const label = tec === 'CHAO' ? 'Chão' : tec;
+              const label = tec;
               const tecPosicoes = allPosicoes.filter(p => (p as any).estrutura === tec);
               const totalForTec = cfg.cols.length * cfg.levels * 30;
               let val = 0;
