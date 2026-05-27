@@ -176,7 +176,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                   onClick={() => onDelete(r.id)} 
                   className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
                 >
-                  <X className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Remover Registro</TooltipContent>
@@ -353,7 +353,7 @@ export default function RightPanel() {
     setVisibleCount(prev => prev + (isLow ? 50 : 200));
   }, [isLow]);
 
-  const showActions = !['manual', 'openrouter', 'diversos', 'etiq_pronta'].includes(currentMode);
+  const showActions = true;
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
@@ -491,7 +491,7 @@ export default function RightPanel() {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                                      <X className="w-3.5 h-3.5" />
+                                      <Trash2 className="w-3.5 h-3.5" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Remover</TooltipContent>
