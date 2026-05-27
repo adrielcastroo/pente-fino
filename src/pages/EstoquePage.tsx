@@ -46,7 +46,7 @@ const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
   TEC03: { cols: ['A', 'B'], levels: 9 },
   TEC04: { cols: ['A', 'B', 'C'], levels: 5 },
   TEC05: { cols: ['A', 'B', 'C'], levels: 5 },
-  CHAO: { cols: ['G'], levels: 1 },
+  'CHÃO': { cols: ['G'], levels: 1 },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
