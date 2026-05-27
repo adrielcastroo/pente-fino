@@ -1,8 +1,7 @@
-
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import LeftPanel from '@/components/LeftPanel';
-import FormPageLayout from '@/components/FormPageLayout';
+import PreRegistrosLayout from '@/components/PreRegistrosLayout';
 
 export default function TecidoPage() {
   const setMode = useAppStore(s => s.setMode);
@@ -17,8 +16,8 @@ export default function TecidoPage() {
   }, [currentMode, setMode, setFormData]);
 
   return (
-    <FormPageLayout>
+    <PreRegistrosLayout title="PréRegistros — Tecidos" filtersTitle="Filtros de PréRegistro">
       <LeftPanel />
-    </FormPageLayout>
+    </PreRegistrosLayout>
   );
 }
