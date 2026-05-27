@@ -495,7 +495,7 @@ export default function EstoquePage() {
                     </div>
                     <div>
                       <DialogTitle className="text-lg sm:text-xl font-black tracking-tight">
-                        {activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
+                        {activeTec === 'CHAO' ? 'Chão' : activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
                       <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
                         {occupiedCount} de 30 posições ocupadas
