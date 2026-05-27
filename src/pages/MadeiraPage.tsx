@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import LeftPanel from '@/components/LeftPanel';
-import PreRegistrosLayout from '@/components/PreRegistrosLayout';
+import FormPageLayout from '@/components/FormPageLayout';
 
 export default function MadeiraPage() {
   const setMode = useAppStore(s => s.setMode);
@@ -14,8 +14,8 @@ export default function MadeiraPage() {
   }, [setMode, setFormData]);
 
   return (
-    <PreRegistrosLayout title="PréRegistros — Madeira" filtersTitle="Filtros de Madeira">
+    <FormPageLayout>
       <LeftPanel />
-    </PreRegistrosLayout>
+    </FormPageLayout>
   );
 }

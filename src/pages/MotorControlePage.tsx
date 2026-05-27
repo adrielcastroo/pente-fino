@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
-import PreRegistrosLayout from '@/components/PreRegistrosLayout';
 
 
 type SubMode = 'motor' | 'controle';
@@ -270,8 +269,8 @@ export default function MotorControlePage() {
   const currentCount = subMode === 'motor' ? motorCount : controleCount;
 
   return (
-    <PreRegistrosLayout title="PréRegistros — Motor / Controle" filtersTitle="Filtros de Motor/Controle">
-      <div className="p-3 sm:p-5 space-y-3 sm:space-y-4">
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
+      <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
 
         {/* Subtoggle */}
         <div className="flex gap-2">
@@ -451,6 +450,6 @@ export default function MotorControlePage() {
           )}
         </div>
       </div>
-    </PreRegistrosLayout>
+    </div>
   );
 }
