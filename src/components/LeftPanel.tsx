@@ -930,10 +930,10 @@ export const LeftPanel = memo(function LeftPanel() {
      */
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
       <div
-        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar"
+        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain"
         style={{
-          padding: 'clamp(0.75rem, 2.5vw, 1.25rem)',
-          rowGap: 'clamp(1rem, 3vw, 1.5rem)',
+          padding: 'clamp(0.75rem, 3vw, 1.5rem)',
+          rowGap: 'clamp(0.75rem, 2.5vw, 1.25rem)',
           display: 'flex',
           flexDirection: 'column',
         }}
