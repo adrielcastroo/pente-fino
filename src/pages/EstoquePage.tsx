@@ -361,8 +361,8 @@ export default function EstoquePage() {
       ) : (
         <>
       {/* Stats */}
-      <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain">
-        <div className="flex sm:grid sm:grid-cols-5 gap-2 sm:gap-4 min-w-max sm:min-w-0">
+      <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain snap-x">
+        <div className="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-4 min-w-max sm:min-w-0">
           {[
             { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
             { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
