@@ -400,7 +400,7 @@ export default function EstoquePage() {
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            {tec === 'CHAO' ? 'Chão' : tec}
+            {tec}
           </button>
         ))}
       </div>
