@@ -325,7 +325,7 @@ export default function EstoquePage() {
       {/* Header */}
       <div className="flex flex-row items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">Estoque</h1>
+          <h1 className="text-[clamp(1.5rem,5vw,3.5rem)] font-black tracking-tight leading-none">Estoque</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
@@ -361,8 +361,8 @@ export default function EstoquePage() {
       ) : (
         <>
       {/* Stats */}
-      <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain">
-        <div className="flex sm:grid sm:grid-cols-5 gap-2 sm:gap-4 min-w-max sm:min-w-0">
+      <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain snap-x">
+        <div className="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-4 min-w-max sm:min-w-0">
           {[
             { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
             { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
@@ -388,12 +388,12 @@ export default function EstoquePage() {
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 overflow-x-auto custom-scrollbar">
+      <div className="flex bg-muted/30 rounded-xl p-1 gap-1.5 border border-border/30 overflow-x-auto custom-scrollbar no-scrollbar snap-x -mx-4 px-4 sm:mx-0 sm:px-0">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 ${
+            className={`flex-1 min-w-[65px] sm:min-w-[80px] py-2.5 sm:py-3 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 snap-start ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'

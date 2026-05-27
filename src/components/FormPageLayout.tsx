@@ -1,37 +1,59 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import RightPanel from '@/components/RightPanel';
+import { Button } from '@/components/ui/button';
+import { List, ClipboardList } from 'lucide-react';
 
 interface FormPageLayoutProps {
   children: ReactNode;
   showRightPanel?: boolean;
 }
 
-/**
- * Hierarquia visual:
- * - Mobile (<lg): coluna única, formulário ocupa 100% da largura, sem painel direito.
- *   Tabela de registros fica acessível via botão "Ver Tabela" dentro do LeftPanel.
- * - Desktop (≥lg): grid bidimensional fluido. A coluna do formulário usa clamp()
- *   para escalar suavemente entre 360px e 560px conforme o viewport, evitando
- *   "degraus" bruscos entre breakpoints (especialmente em tablets em paisagem,
- *   dobráveis e monitores intermediários).
- * - O container raiz aplica overflow-x-hidden + min-w-0 para impedir scroll
- *   horizontal indesejado caso algum filho extrapole o viewport.
- */
 export default function FormPageLayout({ children, showRightPanel = true }: FormPageLayoutProps) {
   const isMobile = useIsMobile();
+  const [showTableMobile, setShowTableMobile] = useState(false);
 
-  if (showRightPanel && !isMobile) {
-    return (
-      <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 2xl:gap-8 overflow-x-hidden">
-        <div
-          className="w-full shrink-0 h-auto lg:h-full min-w-0"
-          style={{ flexBasis: isMobile ? 'auto' : 'clamp(360px, 32vw, 560px)' }}
-        >
-          {children}
+  if (showRightPanel) {
+    if (!isMobile) {
+      return (
+        <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 2xl:gap-8 overflow-x-hidden">
+          <div
+            className="w-full shrink-0 h-auto lg:h-full min-w-0"
+            style={{ flexBasis: 'clamp(360px, 32vw, 560px)' }}
+          >
+            {children}
+          </div>
+          <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500">
+            <RightPanel />
+          </div>
         </div>
-        <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500">
-          <RightPanel />
+      );
+    }
+
+    // Mobile specific layout with toggle
+    return (
+      <div className="h-full w-full max-w-full min-w-0 flex flex-col relative animate-in fade-in duration-300">
+        <div className="flex-1 overflow-y-auto pb-20">
+          {showTableMobile ? (
+            <div className="animate-in slide-in-from-right-4 duration-300 h-full">
+              <RightPanel />
+            </div>
+          ) : (
+            <div className="animate-in slide-in-from-left-4 duration-300">
+              {children}
+            </div>
+          )}
+        </div>
+
+        {/* Floating Mobile Toggle Button */}
+        <div className="fixed bottom-6 right-6 z-50 lg:hidden">
+          <Button
+            size="lg"
+            onClick={() => setShowTableMobile(!showTableMobile)}
+            className="rounded-full h-14 w-14 shadow-2xl shadow-primary/40 border-2 border-white/20 active:scale-90 transition-transform bg-primary text-primary-foreground"
+          >
+            {showTableMobile ? <ClipboardList className="w-6 h-6" /> : <List className="w-6 h-6" />}
+          </Button>
         </div>
       </div>
     );

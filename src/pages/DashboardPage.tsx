@@ -133,7 +133,7 @@ export default function DashboardPage() {
               <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl sm:text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+              <h1 className="text-[clamp(1.5rem,8vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
                 Dashboard
               </h1>
               <p className="text-[9px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 sm:mt-2 opacity-70">
@@ -183,7 +183,7 @@ export default function DashboardPage() {
       </header>
       
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
         {[
           { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
           { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },

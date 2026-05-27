@@ -456,9 +456,9 @@ export default function RightPanel() {
             ].map((k, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
+                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[160px] sm:min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
               >
-                <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
+                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
                   <k.icon className="w-5 h-5" strokeWidth={2.2} />
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -610,14 +610,19 @@ export default function RightPanel() {
                 <tfoot className="sticky bottom-0 z-10">
                   <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
                     <td className="px-4 py-4">FIM</td>
-                    {columns.map(column => (
-                      <td key={column.key} className="px-4 py-4">
-                        {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
-                        {column.key === 'mLinear' ? formatML(totals.ml) : ''}
-                        {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
-                        {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
-                      </td>
-                    ))}
+                    {columns.map(column => {
+                      const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
+                      const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : column.key === 'nf' ? "hidden lg:table-cell" : "hidden md:table-cell";
+                      
+                      return (
+                        <td key={column.key} className={`px-4 py-4 ${responsiveClass}`}>
+                          {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
+                          {column.key === 'mLinear' ? formatML(totals.ml) : ''}
+                          {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
+                          {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
+                        </td>
+                      );
+                    })}
                     {showActions && <td className="px-4 py-4"></td>}
                   </tr>
                 </tfoot>

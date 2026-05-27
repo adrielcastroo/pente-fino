@@ -930,10 +930,10 @@ export const LeftPanel = memo(function LeftPanel() {
      */
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
       <div
-        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar"
+        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain"
         style={{
-          padding: 'clamp(0.75rem, 2.5vw, 1.25rem)',
-          rowGap: 'clamp(1rem, 3vw, 1.5rem)',
+          padding: 'clamp(0.75rem, 3vw, 1.5rem)',
+          rowGap: 'clamp(0.75rem, 2.5vw, 1.25rem)',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -1520,12 +1520,12 @@ export const LeftPanel = memo(function LeftPanel() {
         </div>
 
         {/* Actions */}
-        <div className="space-y-2 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
+        <div className="space-y-3 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <Button
             onClick={handleAdd}
-            className="w-full h-11 sm:h-14 rounded-xl font-bold text-xs sm:text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+            className="w-full h-14 sm:h-16 rounded-2xl font-black text-sm sm:text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
             Adicionar Registro
           </Button>
 
@@ -1533,10 +1533,10 @@ export const LeftPanel = memo(function LeftPanel() {
             <Button
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className="w-full h-9 sm:h-10 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40"
+              className="w-full h-10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40 shadow-sm"
             >
               {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-              {showPreview ? 'Ocultar' : `Ver Tabela (${registros.length})`}
+              {showPreview ? 'Ocultar Resumo' : `Ver Resumo (${registros.length})`}
             </Button>
           )}
 
