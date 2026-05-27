@@ -444,6 +444,34 @@ export default function RightPanel() {
         </div>
       </div>
 
+      {/* KPI strip — inspired by mockup */}
+      {registros.length > 0 && (
+        <div className="flex-shrink-0 px-2 xs:px-4 py-3 bg-card/40 border-b border-border/40 overflow-x-auto custom-scrollbar">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+            {[
+              { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Total de Registros', value: kpis.total.toString(), sub: 'Registros cadastrados' },
+              { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: 'Metragem Total (m²)', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml), sub: kpis.m2 > 0 ? 'Soma de m² conferidos' : 'Total em metros lineares' },
+              { icon: Layers3, color: 'text-purple-500', bg: 'bg-purple-500/10', label: 'Lotes Distintos', value: kpis.lotes.toString(), sub: 'Lotes únicos' },
+              { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-500/10', label: 'Última Atualização', value: kpis.lastTime, sub: kpis.lastDate },
+            ].map((k, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
+              >
+                <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
+                  <k.icon className="w-5 h-5" strokeWidth={2.2} />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-muted-foreground/80 truncate">{k.label}</span>
+                  <span className="text-base sm:text-lg font-black text-foreground leading-tight font-mono truncate">{k.value}</span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-medium truncate">{k.sub}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
         <div className="min-w-full inline-block align-middle">
           {isMotorControle ? (
