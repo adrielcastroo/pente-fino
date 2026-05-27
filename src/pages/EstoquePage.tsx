@@ -609,7 +609,7 @@ export default function EstoquePage() {
                         {detailPos.item || 'Item sem nome'}
                       </DialogTitle>
                       <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
-                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura === 'CHAO' ? 'Chão' : detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
                       </DialogDescription>
                     </div>
                     <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-14 sm:mr-12 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
