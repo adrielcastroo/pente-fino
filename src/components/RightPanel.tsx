@@ -353,7 +353,7 @@ export default function RightPanel() {
     setVisibleCount(prev => prev + (isLow ? 50 : 200));
   }, [isLow]);
 
-  const showActions = !['manual', 'openrouter', 'diversos', 'etiq_pronta'].includes(currentMode);
+  const showActions = true;
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
