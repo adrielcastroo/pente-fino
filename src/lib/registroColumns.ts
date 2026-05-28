@@ -33,7 +33,7 @@ const LAYOUTS = {
   pvt: ['item', 'nf', 'mLinear', 'lote'],
   madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
   motor: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
-  controle: ['item', 'nf', 'lote', 'loteSistema'],
+  controle: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
   etiq_pronta: ['item', 'lote', 'endereco', 'posicao', 'processo', 'mLinear'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
