@@ -432,6 +432,7 @@ export default function MotorControlePage() {
 
         </div>
       </div>
+    </div>
     </FormPageLayout>
   );
 }
