@@ -541,6 +541,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         }
         rows.push(['', '', '']);
       }
+    }
     if (coulisseRegs.length > 0) {
       rows.push(['COULISSE', '', 'Séries']);
       for (const r of coulisseRegs) {
