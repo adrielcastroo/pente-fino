@@ -343,12 +343,14 @@ export default function RightPanel() {
     let currentGroup: { cxLabel: string; item: string; rows: Registro[] } | null = null;
 
     for (const r of pagedRows) {
+      if (!r) continue;
       // Extract CX label from loteSistema
-      const cxMatch = r.loteSistema?.match(/^(CX\d+|S\/CX)/i);
-      const cxLabel = cxMatch ? cxMatch[1].toUpperCase() : 'S/CX';
+      const ls = String(r.loteSistema || '');
+      const cxMatch = ls.match(/^(CX\d+|S\/CX)/i);
+      const cxLabel = (cxMatch && cxMatch[1]) ? cxMatch[1].toUpperCase() : 'S/CX';
 
       if (!currentGroup || currentGroup.cxLabel !== cxLabel || currentGroup.item !== r.item) {
-        currentGroup = { cxLabel, item: r.item, rows: [] };
+        currentGroup = { cxLabel, item: r.item || '', rows: [] };
         groups.push(currentGroup);
       }
       currentGroup.rows.push(r);
