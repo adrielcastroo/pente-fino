@@ -103,6 +103,7 @@ const INITIAL_FORM_DATA: FormData = {
   lockMetragem: false, cortinaLargura: '', cortinaMetragem: 'm2',
   madeiraTipo: 'Lâmina', quantidade: '', motorSubMode: 'motor',
   motorModelo: '', motorNf: '', motorSerie: '', motorTemCaixa: false, motorCaixaNum: '1',
+  coulisseModeloProcCx: '', coulisseLote: '',
   estoqueActiveTec: 'TEC01', estoqueSearch: '', estoqueHighlightStatus: null, 
   etiqProntaLoteFinal: '',
   activeTab: 'inicio',
@@ -271,9 +272,14 @@ export const useAppStore = create<AppState>()(
           ...state.formData, 
           motorSerie: '',
           motorTemCaixa: state.formData.motorTemCaixa, // Keep box state
-          motorCaixaNum: state.formData.motorCaixaNum  // Keep box number
+          motorCaixaNum: state.formData.motorCaixaNum, // Keep box number
+          coulisseModeloProcCx: state.formData.coulisseModeloProcCx, // Keep if you want, or clear
+          coulisseLote: ''
         };
-        if (!state.lockMotorModelo) newData.motorModelo = '';
+        if (!state.lockMotorModelo) {
+          newData.motorModelo = '';
+          newData.coulisseModeloProcCx = '';
+        }
         if (!state.lockMotorNf) newData.motorNf = '';
         return { formData: newData };
       }),
