@@ -343,12 +343,14 @@ export default function RightPanel() {
     let currentGroup: { cxLabel: string; item: string; rows: Registro[] } | null = null;
 
     for (const r of pagedRows) {
+      if (!r) continue;
       // Extract CX label from loteSistema
-      const cxMatch = r.loteSistema?.match(/^(CX\d+|S\/CX)/i);
-      const cxLabel = cxMatch ? cxMatch[1].toUpperCase() : 'S/CX';
+      const ls = String(r.loteSistema || '');
+      const cxMatch = ls.match(/^(CX\d+|S\/CX)/i);
+      const cxLabel = (cxMatch && cxMatch[1]) ? cxMatch[1].toUpperCase() : 'S/CX';
 
       if (!currentGroup || currentGroup.cxLabel !== cxLabel || currentGroup.item !== r.item) {
-        currentGroup = { cxLabel, item: r.item, rows: [] };
+        currentGroup = { cxLabel, item: r.item || '', rows: [] };
         groups.push(currentGroup);
       }
       currentGroup.rows.push(r);
@@ -511,46 +513,49 @@ export default function RightPanel() {
                         {group.rows.length} itens
                       </td>
                     </tr>
-                    {group.rows.map((r) => (
-                      <tr key={r.id} className={`group hover:bg-muted/40 border-b border-border/20 ${r.isNew ? 'bg-primary/5' : ''}`}>
-                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-muted-foreground/90">
-                          {r.item} {r.lote}
-                        </td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-foreground font-bold">
-                          <Badge 
-                            variant="outline" 
-                            className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed"
-                            onClick={() => copyText(r.loteSistema)}
-                          >
-                            {r.loteSistema || '—'}
-                          </Badge>
-                        </td>
-                        {showActions && (
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">
-                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
-                                    <Copy className="w-3 h-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Copiar</TooltipContent>
-                              </Tooltip>
-                              {!isGuest && (
+                    {group.rows.map((r) => {
+                      if (!r) return null;
+                      return (
+                        <tr key={r.id} className={`group hover:bg-muted/40 border-b border-border/20 ${r.isNew ? 'bg-primary/5' : ''}`}>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-muted-foreground/90">
+                            {r.item} {r.lote}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-foreground font-bold">
+                            <Badge 
+                              variant="outline" 
+                              className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed"
+                              onClick={() => copyText(r.loteSistema)}
+                            >
+                              {r.loteSistema || '—'}
+                            </Badge>
+                          </td>
+                          {showActions && (
+                            <td className="px-2 sm:px-4 py-2 sm:py-3">
+                              <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                                      <Trash2 className="w-3.5 h-3.5" />
+                                    <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
+                                      <Copy className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Remover</TooltipContent>
+                                  <TooltipContent>Copiar</TooltipContent>
                                 </Tooltip>
-                              )}
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
+                                {!isGuest && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Remover</TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </React.Fragment>
                 ))}
               </tbody>
