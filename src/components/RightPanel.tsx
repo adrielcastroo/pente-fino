@@ -513,7 +513,9 @@ export default function RightPanel() {
                         {group.rows.length} itens
                       </td>
                     </tr>
-                    {group.rows.map((r) => (
+                    {group.rows.map((r) => {
+                      if (!r) return null;
+                      return (
                       <tr key={r.id} className={`group hover:bg-muted/40 border-b border-border/20 ${r.isNew ? 'bg-primary/5' : ''}`}>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-muted-foreground/90">
                           {r.item} {r.lote}
