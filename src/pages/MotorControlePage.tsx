@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
+import FormPageLayout from '@/components/FormPageLayout';
 
 
 type SubMode = 'motor' | 'controle';
@@ -269,8 +270,9 @@ export default function MotorControlePage() {
   const currentCount = subMode === 'motor' ? motorCount : controleCount;
 
   return (
-    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full">
-      <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
+    <FormPageLayout>
+      <div className="bg-background overflow-hidden flex flex-col h-full">
+        <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
 
         {/* "Novo registro" hero header */}
         <div className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm">
@@ -428,47 +430,8 @@ export default function MotorControlePage() {
             Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
           </Button>
 
-          {/* Preview table */}
-          {currentCount > 0 && (
-            <div className="rounded-xl border border-border/50 overflow-hidden">
-              <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
-                <table className="w-full text-[11px]">
-                  <thead className="sticky top-0 bg-muted/90 z-10">
-                    <tr>
-                      {subMode === 'motor' && <th className="px-3 py-2 text-left font-medium text-muted-foreground">Caixa</th>}
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Modelo</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">NF</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Série</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lote Final</th>
-                      {subMode === 'controle' && <th className="px-3 py-2 text-left font-medium text-muted-foreground">Seq</th>}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/20">
-                    {currentItems.slice(-5).reverse().map(r => (
-                      <tr key={r.id} className="hover:bg-muted/30 transition-colors">
-                        {subMode === 'motor' && (
-                          <td className="px-3 py-2 font-mono text-primary/80">
-                            {r.quantidade ? `CX${String(r.quantidade).padStart(2, '0')}` : 'S/CX'}
-                          </td>
-                        )}
-                        <td className="px-3 py-2 font-medium">{r.item}</td>
-                        <td className="px-3 py-2 font-mono text-muted-foreground">{r.nf || '—'}</td>
-                        <td className="px-3 py-2 font-mono text-primary/80">{r.lote}</td>
-                        <td className="px-3 py-2 font-mono text-muted-foreground text-[10px] truncate max-w-[140px]">{r.loteSistema}</td>
-                        {subMode === 'controle' && (
-                          <td className="px-3 py-2">
-                            <Badge variant="outline" className="font-mono border-primary/20 text-primary bg-primary/5 text-[10px]">#{r.quantidade}</Badge>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </div>
+    </FormPageLayout>
   );
 }
