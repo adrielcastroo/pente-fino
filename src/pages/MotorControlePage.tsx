@@ -308,8 +308,8 @@ export default function MotorControlePage() {
 
   return (
     <FormPageLayout>
-      <div className="bg-background overflow-hidden flex flex-col h-full">
-        <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar">
+      <div className="bg-background flex flex-col min-h-[500px] h-full">
+        <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 custom-scrollbar min-h-0">
 
         {/* "Novo registro" hero header */}
         <div className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm">
