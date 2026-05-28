@@ -10,7 +10,7 @@ import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
 
 
-type SubMode = 'motor' | 'controle';
+type SubMode = 'motor' | 'controle' | 'coulisse';
 
 const CONTROLE_MODEL_MAP: Record<string, string> = {
   '1870405': 'SI 1 PU',
@@ -61,20 +61,24 @@ export default function MotorControlePage() {
   const serie = formData.motorSerie;
   const temCaixa = formData.motorTemCaixa;
   const caixaNum = formData.motorCaixaNum;
+  const coulisseModeloProcCx = formData.coulisseModeloProcCx;
+  const coulisseLote = formData.coulisseLote;
 
-  const setSubMode = useCallback((val: 'motor' | 'controle') => setFormData({ motorSubMode: val }), [setFormData]);
+  const setSubMode = useCallback((val: SubMode) => setFormData({ motorSubMode: val }), [setFormData]);
   const setModelo = useCallback((val: string) => setFormData({ motorModelo: val }), [setFormData]);
   const setNf = useCallback((val: string) => setFormData({ motorNf: val }), [setFormData]);
   const setSerie = useCallback((val: string) => setFormData({ motorSerie: val }), [setFormData]);
   const setTemCaixa = useCallback((val: boolean) => setFormData({ motorTemCaixa: val }), [setFormData]);
   const setCaixaNum = useCallback((val: string) => setFormData({ motorCaixaNum: val }), [setFormData]);
+  const setCoulisseModeloProcCx = useCallback((val: string) => setFormData({ coulisseModeloProcCx: val }), [setFormData]);
+  const setCoulisseLote = useCallback((val: string) => setFormData({ coulisseLote: val }), [setFormData]);
 
   const serieRef = useRef<HTMLInputElement>(null);
   const modeloRef = useRef<HTMLInputElement>(null);
 
-  const handleSubModeChange = useCallback((mode: 'motor' | 'controle') => {
+  const handleSubModeChange = useCallback((mode: SubMode) => {
     setSubMode(mode);
-    setMode(mode);
+    setMode(mode === 'coulisse' ? 'motor' : mode); // Use motor as base mode for Coulisse
   }, [setSubMode, setMode]);
 
   const resetFields = useCallback(() => {
@@ -242,13 +246,43 @@ export default function MotorControlePage() {
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, isDuplicate, getSequencial, addRegistro, setModelo, resetMotorFormData]);
 
+  const handleAddCoulisse = useCallback(() => {
+    if (!coulisseModeloProcCx.trim()) { toast.warning('Preencha o Modelo/Proc/Cx'); return; }
+    if (!coulisseLote.trim()) { toast.warning('Bipe o Lote'); return; }
+
+    if (isDuplicate(coulisseLote)) { toast.warning('Lote já cadastrado!'); setCoulisseLote(''); return; }
+
+    const loteSistema = `${coulisseModeloProcCx.trim()} ${coulisseLote.trim()}`;
+
+    addRegistro({
+      id: crypto.randomUUID(),
+      item: coulisseModeloProcCx.trim(),
+      processo: '',
+      nf: '',
+      endereco: '',
+      m2: 0,
+      mLinear: 0,
+      largura: 0,
+      lote: coulisseLote.trim(),
+      loteSistema,
+      tipoTecido: 'Coulisse',
+      modoOrigem: 'motor',
+      isNew: true,
+    });
+
+    toast.success(`Coulisse adicionado: ${coulisseLote}`);
+    resetMotorFormData();
+    serieRef.current?.focus();
+  }, [coulisseModeloProcCx, coulisseLote, isDuplicate, addRegistro, resetMotorFormData]);
+
   const handleSerieKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (subMode === 'motor') handleAddMotor();
-      else handleAddControle();
+      else if (subMode === 'controle') handleAddControle();
+      else handleAddCoulisse();
     }
-  }, [subMode, handleAddMotor, handleAddControle]);
+  }, [subMode, handleAddMotor, handleAddControle, handleAddCoulisse]);
 
 
   return (
@@ -263,7 +297,9 @@ export default function MotorControlePage() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[13px] sm:text-sm font-black text-foreground leading-tight">Novo registro</div>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">Bipe a série do {subMode === 'motor' ? 'motor' : 'controle'} ou digite manualmente</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">
+              {subMode === 'coulisse' ? 'Bipe o lote da Coulisse' : `Bipe a série do ${subMode === 'motor' ? 'motor' : 'controle'} ou digite manualmente`}
+            </p>
           </div>
           {(modelo || nf || serie) && (
             <button
@@ -277,7 +313,7 @@ export default function MotorControlePage() {
 
         {/* Subtoggle */}
         <div className="flex gap-2">
-          {(['motor', 'controle'] as SubMode[]).map(mode => (
+          {(['motor', 'controle', 'coulisse'] as SubMode[]).map(mode => (
             <button
               key={mode}
               onClick={() => handleSubModeChange(mode)}
@@ -288,7 +324,7 @@ export default function MotorControlePage() {
               }`}
             >
               <Settings2 className="w-3.5 h-3.5" />
-              <span>{mode === 'motor' ? 'Motores' : 'Controles'}</span>
+              <span>{mode === 'motor' ? 'Motores' : mode === 'controle' ? 'Controles' : 'Coulisse'}</span>
             </button>
           ))}
         </div>
@@ -328,88 +364,136 @@ export default function MotorControlePage() {
 
         {/* Form fields */}
         <div className="space-y-3">
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Marca</label>
-              <button 
-                onClick={() => setLockMotorModelo(!lockMotorModelo)}
-                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
-                  lockMotorModelo 
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
-                    : 'text-muted-foreground/40 hover:text-muted-foreground'
-                }`}
-              >
-                {lockMotorModelo ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
-                {lockMotorModelo ? 'TRAVADO' : 'TRAVAR'}
-              </button>
-            </div>
-            <div className="relative">
-              <input
-                ref={modeloRef}
-                value={modelo}
-                onChange={e => setModelo(sanitize(e.target.value))}
-                onBlur={handleModeloBlur}
-                placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
-                className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-colors ${
-                  lockMotorModelo 
-                    ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
-                    : 'border-border/50'
-                }`}
-              />
-            </div>
-          </div>
+          {subMode === 'coulisse' ? (
+            <>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Proc / Cx</label>
+                  <button 
+                    onClick={() => setLockMotorModelo(!lockMotorModelo)}
+                    className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
+                      lockMotorModelo 
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
+                        : 'text-muted-foreground/40 hover:text-muted-foreground'
+                    }`}
+                  >
+                    {lockMotorModelo ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
+                    {lockMotorModelo ? 'TRAVADO' : 'TRAVAR'}
+                  </button>
+                </div>
+                <input
+                  value={coulisseModeloProcCx}
+                  onChange={e => setCoulisseModeloProcCx(sanitize(e.target.value))}
+                  placeholder="Ex: MOTION CM-01 PROC 1234 CX01"
+                  className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-colors ${
+                    lockMotorModelo 
+                      ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
+                      : 'border-border/50'
+                  }`}
+                />
+              </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NFe) <span className="text-muted-foreground/50 lowercase">— opcional</span></label>
-              <button 
-                onClick={() => setLockMotorNf(!lockMotorNf)}
-                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
-                  lockMotorNf 
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
-                    : 'text-muted-foreground/40 hover:text-muted-foreground'
-                }`}
-              >
-                {lockMotorNf ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
-                {lockMotorNf ? 'TRAVADO' : 'TRAVAR'}
-              </button>
-            </div>
-            <input
-              value={nf}
-              onChange={e => setNf(sanitize(e.target.value))}
-              placeholder="Ex: 146842"
-              className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
-                lockMotorNf 
-                  ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
-                  : 'border-border/50'
-              }`}
-            />
-          </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote</label>
+                <div className="relative">
+                  <input
+                    ref={serieRef}
+                    value={coulisseLote}
+                    onChange={e => setCoulisseLote(e.target.value)}
+                    onKeyDown={handleSerieKeyDown}
+                    placeholder="Bipe o lote agora..."
+                    className="w-full h-10 sm:h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-xs sm:text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  />
+                  <ScanBarcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modelo / Marca</label>
+                  <button 
+                    onClick={() => setLockMotorModelo(!lockMotorModelo)}
+                    className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
+                      lockMotorModelo 
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
+                        : 'text-muted-foreground/40 hover:text-muted-foreground'
+                    }`}
+                  >
+                    {lockMotorModelo ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
+                    {lockMotorModelo ? 'TRAVADO' : 'TRAVAR'}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    ref={modeloRef}
+                    value={modelo}
+                    onChange={e => setModelo(sanitize(e.target.value))}
+                    onBlur={handleModeloBlur}
+                    placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'}
+                    className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-primary/10 transition-colors ${
+                      lockMotorModelo 
+                        ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
+                        : 'border-border/50'
+                    }`}
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Número de Série (S/N)</label>
-            <div className="relative">
-              <input
-                ref={serieRef}
-                value={serie}
-                onChange={e => setSerie(e.target.value)}
-                onKeyDown={handleSerieKeyDown}
-                placeholder="Bipe o código agora..."
-                className="w-full h-10 sm:h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-xs sm:text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
-              />
-              <ScanBarcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NFe) <span className="text-muted-foreground/50 lowercase">— opcional</span></label>
+                  <button 
+                    onClick={() => setLockMotorNf(!lockMotorNf)}
+                    className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
+                      lockMotorNf 
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' 
+                        : 'text-muted-foreground/40 hover:text-muted-foreground'
+                    }`}
+                  >
+                    {lockMotorNf ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
+                    {lockMotorNf ? 'TRAVADO' : 'TRAVAR'}
+                  </button>
+                </div>
+                <input
+                  value={nf}
+                  onChange={e => setNf(sanitize(e.target.value))}
+                  placeholder="Ex: 146842"
+                  className={`w-full h-10 sm:h-11 rounded-lg border bg-muted/20 px-3 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
+                    lockMotorNf 
+                      ? 'border-amber-500/30 text-amber-700 dark:text-amber-300' 
+                      : 'border-border/50'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Número de Série (S/N)</label>
+                <div className="relative">
+                  <input
+                    ref={serieRef}
+                    value={serie}
+                    onChange={e => setSerie(e.target.value)}
+                    onKeyDown={handleSerieKeyDown}
+                    placeholder="Bipe o código agora..."
+                    className="w-full h-10 sm:h-11 rounded-lg border border-border/50 bg-muted/20 px-3 pr-10 text-xs sm:text-sm font-mono focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors placeholder:text-muted-foreground/30"
+                  />
+                  <ScanBarcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Action Button */}
         <div className="space-y-2 pb-4">
           <Button
-            onClick={subMode === 'motor' ? handleAddMotor : handleAddControle}
+            onClick={subMode === 'motor' ? handleAddMotor : subMode === 'controle' ? handleAddControle : handleAddCoulisse}
             className="w-full h-11 sm:h-12 rounded-xl font-semibold text-xs sm:text-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar {subMode === 'motor' ? 'Motor' : 'Controle'}
+            Adicionar {subMode === 'motor' ? 'Motor' : subMode === 'controle' ? 'Controle' : 'Coulisse'}
           </Button>
 
         </div>
