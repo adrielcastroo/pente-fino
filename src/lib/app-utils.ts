@@ -163,3 +163,26 @@ export function generateLoteSistemaCaixa(
   const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', mlFormatted].filter(Boolean);
   return parts.join(' ');
 }
+
+export function parseCoulisseString(input: string) {
+  const trimmed = input.trim();
+  // Regex to match "MODELO" ... "PROC" <val> ... "CX" <val>
+  // Case-insensitive, capture model, proc, and cx
+  const regex = /^(.*?)\s+PROC\s+([A-Z0-9]+)\s+CX\s*(\d+)/i;
+  const match = trimmed.match(regex);
+  
+  if (match) {
+    return {
+      modelo: match[1].trim(),
+      processo: match[2].trim(),
+      cx: parseInt(match[3], 10)
+    };
+  }
+  
+  // Fallback for just "MODELO" or other partial formats if regex fails
+  return {
+    modelo: trimmed,
+    processo: '',
+    cx: 0
+  };
+}

@@ -32,7 +32,7 @@ const LAYOUTS = {
   celular: ['item', 'processo', 'm2', 'mLinear', 'lote', 'loteSistema'],
   pvt: ['item', 'nf', 'mLinear', 'lote'],
   madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
-  motor: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
+  motor: ['item', 'nf', 'processo', 'lote', 'quantidade', 'loteSistema'],
   controle: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
   etiq_pronta: ['item', 'lote', 'endereco', 'posicao', 'processo', 'mLinear'],
 } satisfies Record<string, RegistroColumnKey[]>;

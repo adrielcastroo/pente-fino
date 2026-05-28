@@ -1,13 +1,14 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock, Package, Hash, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
+import { parseCoulisseString } from '@/lib/app-utils';
 
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
