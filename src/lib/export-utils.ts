@@ -543,11 +543,11 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
       }
     }
     if (coulisseRegs.length > 0) {
-      rows.push(['COULISSE', '', 'Séries']);
+      rows.push(['COULISSE', 'Proc', 'Cx', 'Lote', 'Lote Final']);
       for (const r of coulisseRegs) {
-        rows.push([r.item, r.lote, r.loteSistema]);
+        rows.push([r.item, r.processo, r.quantidade, r.lote, r.loteSistema]);
       }
-      rows.push(['', '', '']);
+      rows.push(['', '', '', '', '']);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
