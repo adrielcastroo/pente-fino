@@ -501,8 +501,9 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
   try {
     const toastId = toast.loading('Preparando arquivo Excel...');
     const XLSX = await import('xlsx');
-    const motorRegs = registros.filter(r => r.modoOrigem === 'motor');
+    const motorRegs = registros.filter(r => r.modoOrigem === 'motor' && r.tipoTecido !== 'Coulisse');
     const controleRegs = registros.filter(r => r.modoOrigem === 'controle');
+    const coulisseRegs = registros.filter(r => r.tipoTecido === 'Coulisse');
     const rows: any[][] = [];
 
     if (motorRegs.length > 0) {
@@ -540,6 +541,12 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         }
         rows.push(['', '', '']);
       }
+    if (coulisseRegs.length > 0) {
+      rows.push(['COULISSE', '', 'Séries']);
+      for (const r of coulisseRegs) {
+        rows.push([r.item, r.lote, r.loteSistema]);
+      }
+      rows.push(['', '', '']);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
