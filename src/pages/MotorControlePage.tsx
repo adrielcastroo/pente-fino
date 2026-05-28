@@ -62,14 +62,14 @@ export default function MotorControlePage() {
 
 
   
-  const subMode = formData.motorSubMode;
-  const modelo = formData.motorModelo;
-  const nf = formData.motorNf;
-  const serie = formData.motorSerie;
-  const temCaixa = formData.motorTemCaixa;
-  const caixaNum = formData.motorCaixaNum;
-  const coulisseModeloProcCx = formData.coulisseModeloProcCx;
-  const coulisseLote = formData.coulisseLote;
+  const subMode = formData.motorSubMode || 'motor';
+  const modelo = formData.motorModelo || '';
+  const nf = formData.motorNf || '';
+  const serie = formData.motorSerie || '';
+  const temCaixa = !!formData.motorTemCaixa;
+  const caixaNum = formData.motorCaixaNum || '1';
+  const coulisseModeloProcCx = formData.coulisseModeloProcCx || '';
+  const coulisseLote = formData.coulisseLote || '';
 
   const setSubMode = useCallback((val: SubMode) => setFormData({ motorSubMode: val }), [setFormData]);
   const setModelo = useCallback((val: string) => setFormData({ motorModelo: val }), [setFormData]);
