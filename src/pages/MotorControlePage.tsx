@@ -1,13 +1,14 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock, Package, Hash, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
+import { parseCoulisseString } from '@/lib/app-utils';
 
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
@@ -252,12 +253,13 @@ export default function MotorControlePage() {
 
     if (isDuplicate(coulisseLote)) { toast.warning('Lote já cadastrado!'); setCoulisseLote(''); return; }
 
+    const parsed = parseCoulisseString(coulisseModeloProcCx);
     const loteSistema = `${coulisseModeloProcCx.trim()} ${coulisseLote.trim()}`;
 
     addRegistro({
       id: crypto.randomUUID(),
-      item: coulisseModeloProcCx.trim(),
-      processo: '',
+      item: parsed.modelo || coulisseModeloProcCx.trim(),
+      processo: parsed.processo || '',
       nf: '',
       endereco: '',
       m2: 0,
@@ -265,6 +267,7 @@ export default function MotorControlePage() {
       largura: 0,
       lote: coulisseLote.trim(),
       loteSistema,
+      quantidade: parsed.cx || 0,
       tipoTecido: 'Coulisse',
       modoOrigem: 'motor',
       isNew: true,
@@ -392,6 +395,57 @@ export default function MotorControlePage() {
                   }`}
                 />
               </div>
+
+              {/* Lote Final (Preview) updated for Coulisse Disassembly */}
+              {coulisseModeloProcCx.trim() && (
+                <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-2 animate-in fade-in slide-in-from-top-1">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Reconhecimento Inteligente (Preview)</span>
+                  </div>
+                  
+                  {(() => {
+                    const parsed = parseCoulisseString(coulisseModeloProcCx);
+                    return (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-background/60 p-2 rounded-lg border border-border/40">
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5 flex items-center gap-1">
+                            <Package className="w-2.5 h-2.5" /> Modelo
+                          </div>
+                          <div className="text-[11px] font-black text-foreground truncate" title={parsed.modelo || '-'}>
+                            {parsed.modelo || '-'}
+                          </div>
+                        </div>
+                        <div className="bg-background/60 p-2 rounded-lg border border-border/40">
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5 flex items-center gap-1">
+                            <Hash className="w-2.5 h-2.5" /> Proc
+                          </div>
+                          <div className="text-[11px] font-black text-foreground truncate" title={parsed.processo || '-'}>
+                            {parsed.processo || '-'}
+                          </div>
+                        </div>
+                        <div className="bg-background/60 p-2 rounded-lg border border-border/40">
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5 flex items-center gap-1">
+                            <Info className="w-2.5 h-2.5" /> Cx
+                          </div>
+                          <div className="text-[11px] font-black text-foreground truncate">
+                            {parsed.cx ? parsed.cx.toString().padStart(2, '0') : '-'}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="pt-1 flex items-center gap-2">
+                    <div className="h-px flex-1 bg-primary/10" />
+                    <div className="text-[9px] font-bold text-primary/40 uppercase">Lote Final</div>
+                    <div className="h-px flex-1 bg-primary/10" />
+                  </div>
+                  <div className="text-[10px] font-mono font-medium text-center text-primary/70 break-all bg-primary/5 p-1.5 rounded-md border border-primary/5">
+                    {coulisseModeloProcCx.trim()} {coulisseLote.trim() || '[LOTE]'}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote</label>
