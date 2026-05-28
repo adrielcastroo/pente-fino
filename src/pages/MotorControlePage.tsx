@@ -52,7 +52,13 @@ export default function MotorControlePage() {
 
   useEffect(() => {
     setFormData({ activeTab: 'motor' });
-  }, [setFormData]);
+    // Set initial mode if not already motor/controle/coulisse
+    if (formData.motorSubMode === 'coulisse') {
+      setMode('motor');
+    } else {
+      setMode(formData.motorSubMode || 'motor');
+    }
+  }, [setFormData, setMode, formData.motorSubMode]);
 
 
   
