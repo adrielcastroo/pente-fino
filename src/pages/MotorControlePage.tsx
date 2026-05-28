@@ -250,24 +250,6 @@ export default function MotorControlePage() {
     }
   }, [subMode, handleAddMotor, handleAddControle]);
 
-  const { motorCount, controleCount, currentItems } = useMemo(() => {
-    let mCount = 0;
-    let cCount = 0;
-    const items = [];
-    for (let i = 0, len = registros.length; i < len; i++) {
-      const r = registros[i];
-      if (r.modoOrigem === 'motor') mCount++;
-      if (r.modoOrigem === 'controle') cCount++;
-      if (r.modoOrigem === subMode) items.push(r);
-    }
-    return { 
-      motorCount: mCount, 
-      controleCount: cCount, 
-      currentItems: items 
-    };
-  }, [registros, subMode]);
-
-  const currentCount = subMode === 'motor' ? motorCount : controleCount;
 
   return (
     <FormPageLayout>
