@@ -74,12 +74,14 @@ export interface FormData {
   cortinaMetragem: 'm2' | 'mlinear';
   madeiraTipo: 'Lâmina' | 'Base' | 'Bandô';
   quantidade: string;
-  motorSubMode: 'motor' | 'controle';
+  motorSubMode: 'motor' | 'controle' | 'coulisse';
   motorModelo: string;
   motorNf: string;
   motorSerie: string;
   motorTemCaixa: boolean;
   motorCaixaNum: string;
+  coulisseModeloProcCx: string;
+  coulisseLote: string;
   estoqueActiveTec: string;
   estoqueSearch: string;
   estoqueHighlightStatus: string | null;
