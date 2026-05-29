@@ -6,6 +6,16 @@ import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
 
 
 
+export interface LabelSettings {
+  width: number;
+  height: number;
+  fields: string[];
+  fontSize: number;
+  showLogo: boolean;
+  showQRCode: boolean;
+  orientation: 'portrait' | 'landscape';
+}
+
 export interface AppState {
   registros: Registro[];
   reservas: Reserva[];
@@ -42,6 +52,9 @@ export interface AppState {
   
   formData: FormData;
   
+  // Label Settings
+  labelSettings: LabelSettings;
+
   // Loading & Error States
   isArchiving: boolean;
   archiveError: string | null;
@@ -77,6 +90,7 @@ export interface AppState {
   setLockMotorNf: (lock: boolean) => void;
   
   setFormData: (updates: Partial<FormData>) => void;
+  setLabelSettings: (settings: Partial<LabelSettings>) => void;
   resetFormData: () => void;
   resetMotorFormData: () => void;
   addRegistro: (reg: Registro) => void;
