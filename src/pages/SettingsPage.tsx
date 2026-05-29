@@ -642,6 +642,10 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   )}
+                  
+                  {activeCategory === 'label-layout' && (
+                    <LabelLayoutPanel />
+                  )}
 
                   {activeCategory === 'security' && (
                     <div className="space-y-8">
