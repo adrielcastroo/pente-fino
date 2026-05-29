@@ -10,6 +10,9 @@ export interface LabelSettings {
   width: number;
   height: number;
   fields: string[];
+  motorFields?: string[];
+  motorWidth?: number;
+  motorHeight?: number;
   fontSize: number;
   showLogo: boolean;
   showQRCode: boolean;
