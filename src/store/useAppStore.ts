@@ -6,6 +6,16 @@ import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
 
 
 
+export interface LabelSettings {
+  width: number;
+  height: number;
+  fields: string[];
+  fontSize: number;
+  showLogo: boolean;
+  showQRCode: boolean;
+  orientation: 'portrait' | 'landscape';
+}
+
 export interface AppState {
   registros: Registro[];
   reservas: Reserva[];
@@ -42,6 +52,9 @@ export interface AppState {
   
   formData: FormData;
   
+  // Label Settings
+  labelSettings: LabelSettings;
+
   // Loading & Error States
   isArchiving: boolean;
   archiveError: string | null;
@@ -77,6 +90,7 @@ export interface AppState {
   setLockMotorNf: (lock: boolean) => void;
   
   setFormData: (updates: Partial<FormData>) => void;
+  setLabelSettings: (settings: Partial<LabelSettings>) => void;
   resetFormData: () => void;
   resetMotorFormData: () => void;
   addRegistro: (reg: Registro) => void;
@@ -146,6 +160,16 @@ export const useAppStore = create<AppState>()(
       lockMotorNf: false,
       
       formData: INITIAL_FORM_DATA,
+
+      labelSettings: {
+        width: 100,
+        height: 50,
+        fields: ['item', 'lote', 'endereco', 'm_linear', 'largura'],
+        fontSize: 10,
+        showLogo: true,
+        showQRCode: true,
+        orientation: 'landscape'
+      },
       
       isArchiving: false,
       archiveError: null,
@@ -230,6 +254,10 @@ export const useAppStore = create<AppState>()(
 
         return { formData: newData };
       }),
+
+      setLabelSettings: (updates) => set(state => ({
+        labelSettings: { ...state.labelSettings, ...updates }
+      })),
 
       
       resetFormData: () => {

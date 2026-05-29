@@ -59,12 +59,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LotesMestresPanel from '@/components/settings/LotesMestresPanel';
+import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
 const categories = [
   { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
   { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
   { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
+  { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.' },
   { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
   { id: 'lotes-mestres', name: 'Lotes Mestres', icon: Palette, description: 'Tonalidades de referência para classificar lâminas de madeira.' },
   { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
@@ -639,6 +641,10 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     </div>
+                  )}
+                  
+                  {activeCategory === 'label-layout' && (
+                    <LabelLayoutPanel />
                   )}
 
                   {activeCategory === 'security' && (
