@@ -160,6 +160,16 @@ export const useAppStore = create<AppState>()(
       lockMotorNf: false,
       
       formData: INITIAL_FORM_DATA,
+
+      labelSettings: {
+        width: 100,
+        height: 50,
+        fields: ['item', 'lote', 'endereco', 'm_linear', 'largura'],
+        fontSize: 10,
+        showLogo: true,
+        showQRCode: true,
+        orientation: 'landscape'
+      },
       
       isArchiving: false,
       archiveError: null,
@@ -244,6 +254,10 @@ export const useAppStore = create<AppState>()(
 
         return { formData: newData };
       }),
+
+      setLabelSettings: (updates) => set(state => ({
+        labelSettings: { ...state.labelSettings, ...updates }
+      })),
 
       
       resetFormData: () => {
