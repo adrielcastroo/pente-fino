@@ -64,7 +64,7 @@ export default function LabelLayoutPanel() {
 
   const handleReset = () => {
     if (isMotor) {
-      setLabelSettings({ motorFields: MOTOR_DEFAULT, motorWidth: 90, motorHeight: 80 });
+      setLabelSettings({ motorFields: MOTOR_DEFAULT, motorWidth: 60, motorHeight: 50 });
     } else {
       setLabelSettings({ fields: TECIDO_DEFAULT, width: 100, height: 60 });
     }
@@ -73,7 +73,7 @@ export default function LabelLayoutPanel() {
 
   const handleSave = () => toast.success('Configurações de etiqueta salvas!');
 
-  const scale = isMotor ? 3.6 : 3.2;
+  const scale = isMotor ? 5.2 : 3.2;
   const wPx = (labelSettings.orientation === 'landscape' ? w : h) * scale;
   const hPx = (labelSettings.orientation === 'landscape' ? h : w) * scale;
   const fs = labelSettings.fontSize;
@@ -101,7 +101,7 @@ export default function LabelLayoutPanel() {
                     <CardTitle className="text-sm font-black uppercase tracking-wider">Dimensões (mm)</CardTitle>
                   </div>
                   <CardDescription>
-                    {isMotor ? 'Padrão Motores: 90mm × 80mm.' : 'Padrão Tecidos Somfy: 100mm × 60mm.'}
+                    {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos Somfy: 100mm × 60mm.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -279,9 +279,9 @@ function TecidoPreview({ wPx, hPx, fs, has }: { wPx: number; hPx: number; fs: nu
 function MotorPreview({ wPx, hPx, fs, has }: { wPx: number; hPx: number; fs: number; has: (id: string) => boolean }) {
   return (
     <div style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
-      className="bg-white text-black shadow-2xl border border-black/80 flex flex-col font-mono p-2 gap-1">
+      className="bg-white text-black shadow-2xl border border-black/80 flex flex-col font-mono p-1 gap-1">
       {/* Topo: SKU + descrição (com borda) */}
-      <div className="border border-black p-2 flex flex-col">
+      <div className="border border-black p-1 flex flex-col">
         {has('sku') && (
           <div className="font-black tracking-tight leading-none text-center" style={{ fontSize: `${fs * 1.7}px` }}>
             002.001.002.000.83.4
@@ -296,18 +296,18 @@ function MotorPreview({ wPx, hPx, fs, has }: { wPx: number; hPx: number; fs: num
       </div>
 
       {/* Meio: SERIE + CX/NF + NT */}
-      <div className="border border-black p-2 flex flex-col gap-1">
+      <div className="border border-black p-1 flex flex-col gap-0.5">
         {has('serie') && (
           <span className="bg-black text-white font-bold px-1.5 py-0.5 w-fit" style={{ fontSize: `${fs * 0.8}px` }}>
             SERIE
           </span>
         )}
-        <div className="flex items-center gap-4 font-black tracking-wide" style={{ fontSize: `${fs * 1.5}px` }}>
+        <div className="flex items-center gap-2 font-black tracking-wide" style={{ fontSize: `${fs * 1.3}px` }}>
           {has('cx') && <span>CX01</span>}
           {has('nf') && <span>NF&nbsp;&nbsp;148362</span>}
         </div>
         {has('nt') && (
-          <div className="font-black tracking-wide" style={{ fontSize: `${fs * 1.5}px` }}>
+          <div className="font-black tracking-tight" style={{ fontSize: `${fs * 1.2}px` }}>
             NT725284000424
           </div>
         )}
@@ -315,7 +315,7 @@ function MotorPreview({ wPx, hPx, fs, has }: { wPx: number; hPx: number; fs: num
 
       {/* Inferior: RNP+DATA | QR Lote+SKU */}
       <div className="border border-black flex flex-1">
-        <div className="flex-1 p-2 flex flex-col justify-center gap-2 border-r border-black">
+        <div className="flex-1 p-1 flex flex-col justify-center gap-1 border-r border-black">
           {has('rnp') && (
             <div style={{ fontSize: `${fs * 1.05}px` }}>
               <span className="font-bold">RNP: </span>
