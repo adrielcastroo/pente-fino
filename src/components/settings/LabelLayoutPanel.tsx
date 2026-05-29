@@ -31,6 +31,19 @@ export default function LabelLayoutPanel() {
     }
   };
 
+  const handleReset = () => {
+    setLabelSettings({
+      width: 100,
+      height: 50,
+      fields: ['item', 'lote', 'endereco', 'm_linear', 'largura'],
+      fontSize: 10,
+      showLogo: true,
+      showQRCode: true,
+      orientation: 'landscape'
+    });
+    toast.info('Layout redefinido para o padrão.');
+  };
+
   const handleSave = () => {
     toast.success('Configurações de etiqueta salvas localmente!');
   };
@@ -238,10 +251,16 @@ export default function LabelLayoutPanel() {
             </p>
           </div>
           
-          <Button onClick={handleSave} className="w-full gap-2 font-bold shadow-lg shadow-primary/20">
-            <Save className="w-4 h-4" />
-            Salvar Preferências de Etiqueta
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={handleReset} variant="outline" className="flex-1 gap-2 font-bold border-dashed">
+              <RefreshCw className="w-4 h-4" />
+              Resetar Padrão
+            </Button>
+            <Button onClick={handleSave} className="flex-[2] gap-2 font-bold shadow-lg shadow-primary/20">
+              <Save className="w-4 h-4" />
+              Salvar Preferências
+            </Button>
+          </div>
         </div>
       </div>
     </div>
