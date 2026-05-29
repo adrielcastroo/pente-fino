@@ -10,6 +10,9 @@ export interface LabelSettings {
   width: number;
   height: number;
   fields: string[];
+  motorFields?: string[];
+  motorWidth?: number;
+  motorHeight?: number;
   fontSize: number;
   showLogo: boolean;
   showQRCode: boolean;
@@ -163,8 +166,11 @@ export const useAppStore = create<AppState>()(
 
       labelSettings: {
         width: 100,
-        height: 50,
-        fields: ['item', 'lote', 'endereco', 'm_linear', 'largura'],
+        height: 60,
+        fields: ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote', 'somfy'],
+        motorFields: ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'],
+        motorWidth: 90,
+        motorHeight: 80,
         fontSize: 10,
         showLogo: true,
         showQRCode: true,
