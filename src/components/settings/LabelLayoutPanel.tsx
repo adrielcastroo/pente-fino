@@ -241,9 +241,9 @@ function TecidoPreview({ wPx, hPx, fs, has }: { wPx: number; hPx: number; fs: nu
       {/* QTD | RNP+DATA | QR LOTE */}
       <div className="flex flex-[1.3]">
         {has('qtd') && (
-          <div className="w-[22%] border-r-2 border-black p-2 flex flex-col justify-center">
+          <div className="w-[28%] border-r-2 border-black p-2 flex items-center gap-1.5">
             <div style={{ fontSize: `${fs * 0.85}px` }} className="font-bold">QTD:</div>
-            <div className="font-black leading-none" style={{ fontSize: `${fs * 1.8}px` }}>1,00 PÇ</div>
+            <div className="font-black leading-none whitespace-nowrap" style={{ fontSize: `${fs * 1.7}px` }}>1,00 M</div>
           </div>
         )}
         <div className="flex-1 border-r-2 border-black p-2 flex flex-col justify-around">
