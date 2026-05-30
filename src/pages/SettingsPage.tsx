@@ -324,6 +324,9 @@ export default function SettingsPage() {
     }
   };
 
+  const labelSettings = useAppStore(s => s.labelSettings);
+  const setLabelSettings = useAppStore(s => s.setLabelSettings);
+
   const filteredCategories = useMemo(() => 
     categories.filter(cat => 
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
