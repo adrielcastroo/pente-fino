@@ -324,6 +324,9 @@ export default function SettingsPage() {
     }
   };
 
+  const labelSettings = useAppStore(s => s.labelSettings);
+  const setLabelSettings = useAppStore(s => s.setLabelSettings);
+
   const filteredCategories = useMemo(() => 
     categories.filter(cat => 
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -640,6 +643,37 @@ export default function SettingsPage() {
                           </Select>
                         </div>
                       </div>
+
+                      <div className="space-y-4 pt-4 border-t border-border/10">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <h4 className="text-sm font-bold flex items-center gap-2">
+                              Impressão Automática PPLA
+                              <Badge variant="outline" className={labelSettings.autoPrint ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
+                                {labelSettings.autoPrint ? "Ativa" : "Desativada"}
+                              </Badge>
+                            </h4>
+                            <p className="text-xs text-muted-foreground">Dispara etiqueta para n8n local ao bipar.</p>
+                          </div>
+                          <Switch 
+                            checked={labelSettings.autoPrint} 
+                            onCheckedChange={(val) => { setLabelSettings({ autoPrint: val }); setHasUnsavedChanges(true); }}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">URL do Webhook (n8n)</Label>
+                          <div className="relative">
+                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input 
+                              value={labelSettings.webhookUrl}
+                              onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
+                              className="pl-9 text-sm bg-muted/20 font-mono"
+                              placeholder="http://localhost:5678/webhook/..."
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
@@ -935,7 +969,7 @@ export default function SettingsPage() {
                     <LotesMestresPanel />
                   )}
 
-                  {!['profile', 'appearance', 'performance', 'integrations', 'security', 'preferences', 'users'].includes(activeCategory) && (
+                  {!['profile', 'appearance', 'performance', 'integrations', 'security', 'preferences', 'users', 'label-layout', 'lotes-mestres'].includes(activeCategory) && (
                     <div className="py-20 text-center space-y-4">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-50">
                         <Settings className="w-8 h-8 text-muted-foreground" />

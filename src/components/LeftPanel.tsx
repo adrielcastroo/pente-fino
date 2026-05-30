@@ -2,7 +2,8 @@ import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { estoqueService } from '@/services/estoqueService';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore, LabelSettings } from '@/store/useAppStore';
+import { printLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
@@ -46,7 +47,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
-    formData, setFormData, resetFormData
+    formData, setFormData, resetFormData, labelSettings
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
     setMode: s.setMode,
@@ -95,7 +96,8 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockedCortinaLargura: s.setLockedCortinaLargura,
     formData: s.formData,
     setFormData: s.setFormData,
-    resetFormData: s.resetFormData
+    resetFormData: s.resetFormData,
+    labelSettings: s.labelSettings
   })));
 
   const { user, profile, isGuest, guestName } = useAuth();
@@ -790,6 +792,18 @@ export const LeftPanel = memo(function LeftPanel() {
       };
       addRegistro(reg);
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
+
+      // Impressão Automática (PPLA)
+      if (labelSettings.autoPrint) {
+        printLabel({
+          item: reg.item,
+          descricao: reg.tipoTecido || '',
+          lote: reg.loteSistema,
+          processo: reg.processo,
+          endereco: reg.endereco
+        }, labelSettings);
+      }
+
       resetForm();
       setQuantidade(madeiraDefaults[madeiraTipo].toString());
       // Reset avaria after submission, keep lote mestre as it is usually shared per box
@@ -858,6 +872,20 @@ export const LeftPanel = memo(function LeftPanel() {
     };
     addRegistro(reg);
     toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.loteSistema,
+        processo: reg.processo,
+        nf: reg.nf,
+        m_linear: reg.mLinear.toFixed(2),
+        endereco: reg.endereco
+      }, labelSettings);
+    }
+
     resetForm();
     setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
   };

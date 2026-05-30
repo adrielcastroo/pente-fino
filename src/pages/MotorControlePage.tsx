@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
 import { parseCoulisseString } from '@/lib/app-utils';
+import { printLabel } from '@/services/printService';
 
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
@@ -48,6 +49,7 @@ export default function MotorControlePage() {
   const setLockMotorModelo = useAppStore(s => s.setLockMotorModelo);
   const lockMotorNf = useAppStore(s => s.lockMotorNf);
   const setLockMotorNf = useAppStore(s => s.setLockMotorNf);
+  const labelSettings = useAppStore(s => s.labelSettings);
   const { isLow } = usePerformance();
 
   useEffect(() => {
@@ -205,7 +207,7 @@ export default function MotorControlePage() {
     const nfLabel = nf.trim() ? `NF ${nf.trim()}` : '';
     const loteSistema = [cxLabel, nfLabel, cleaned].filter(Boolean).join(' ');
 
-    addRegistro({
+    const reg = {
       id: crypto.randomUUID(),
       item: cleanedModelo,
       processo: '',
@@ -220,7 +222,20 @@ export default function MotorControlePage() {
       tipoTecido: 'Motor',
       modoOrigem: 'motor',
       isNew: true,
-    });
+    };
+    addRegistro(reg);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.lote,
+        nf: reg.nf,
+        processo: reg.processo,
+        m_linear: reg.quantidade ? `CX:${reg.quantidade}` : ''
+      }, labelSettings);
+    }
 
     toast.success(`Motor adicionado: ${cleaned}`);
     resetMotorFormData();
@@ -243,7 +258,7 @@ export default function MotorControlePage() {
       ? `${resolvedModelo.trim()} NFe ${nf.trim()} ${cleaned}*${seq}`
       : `${resolvedModelo.trim()} ${cleaned}*${seq}`;
 
-    addRegistro({
+    const reg = {
       id: crypto.randomUUID(),
       item: resolvedModelo.trim(),
       processo: '',
@@ -258,7 +273,20 @@ export default function MotorControlePage() {
       tipoTecido: 'Controle',
       modoOrigem: 'controle',
       isNew: true,
-    });
+    };
+    addRegistro(reg);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.lote,
+        nf: reg.nf,
+        processo: reg.processo,
+        m_linear: `SEQ:${reg.quantidade}`
+      }, labelSettings);
+    }
 
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     resetMotorFormData();
@@ -274,7 +302,7 @@ export default function MotorControlePage() {
     const parsed = parseCoulisseString(coulisseModeloProcCx);
     const loteSistema = `${coulisseModeloProcCx.trim()} ${coulisseLote.trim()}`;
 
-    addRegistro({
+    const reg = {
       id: crypto.randomUUID(),
       item: parsed.modelo || coulisseModeloProcCx.trim(),
       processo: parsed.processo || '',
@@ -289,7 +317,19 @@ export default function MotorControlePage() {
       tipoTecido: 'Coulisse',
       modoOrigem: 'motor',
       isNew: true,
-    });
+    };
+    addRegistro(reg);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.lote,
+        processo: reg.processo,
+        m_linear: reg.quantidade ? `CX:${reg.quantidade}` : ''
+      }, labelSettings);
+    }
 
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
