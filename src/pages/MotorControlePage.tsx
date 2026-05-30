@@ -207,7 +207,7 @@ export default function MotorControlePage() {
     const nfLabel = nf.trim() ? `NF ${nf.trim()}` : '';
     const loteSistema = [cxLabel, nfLabel, cleaned].filter(Boolean).join(' ');
 
-    addRegistro({
+    const reg = {
       id: crypto.randomUUID(),
       item: cleanedModelo,
       processo: '',
@@ -222,7 +222,20 @@ export default function MotorControlePage() {
       tipoTecido: 'Motor',
       modoOrigem: 'motor',
       isNew: true,
-    });
+    };
+    addRegistro(reg);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.lote,
+        nf: reg.nf,
+        processo: reg.processo,
+        m_linear: reg.quantidade ? `CX:${reg.quantidade}` : ''
+      }, labelSettings);
+    }
 
     toast.success(`Motor adicionado: ${cleaned}`);
     resetMotorFormData();
