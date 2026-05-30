@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
 import { parseCoulisseString } from '@/lib/app-utils';
+import { printLabel } from '@/services/printService';
 
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
