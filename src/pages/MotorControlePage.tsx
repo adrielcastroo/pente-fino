@@ -258,7 +258,7 @@ export default function MotorControlePage() {
       ? `${resolvedModelo.trim()} NFe ${nf.trim()} ${cleaned}*${seq}`
       : `${resolvedModelo.trim()} ${cleaned}*${seq}`;
 
-    addRegistro({
+    const reg = {
       id: crypto.randomUUID(),
       item: resolvedModelo.trim(),
       processo: '',
@@ -273,7 +273,20 @@ export default function MotorControlePage() {
       tipoTecido: 'Controle',
       modoOrigem: 'controle',
       isNew: true,
-    });
+    };
+    addRegistro(reg);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.lote,
+        nf: reg.nf,
+        processo: reg.processo,
+        m_linear: `SEQ:${reg.quantidade}`
+      }, labelSettings);
+    }
 
     toast.success(`Controle #${seq} adicionado: ${cleaned}`);
     resetMotorFormData();
