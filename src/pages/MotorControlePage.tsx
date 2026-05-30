@@ -302,7 +302,7 @@ export default function MotorControlePage() {
     const parsed = parseCoulisseString(coulisseModeloProcCx);
     const loteSistema = `${coulisseModeloProcCx.trim()} ${coulisseLote.trim()}`;
 
-    addRegistro({
+    const reg = {
       id: crypto.randomUUID(),
       item: parsed.modelo || coulisseModeloProcCx.trim(),
       processo: parsed.processo || '',
@@ -317,7 +317,19 @@ export default function MotorControlePage() {
       tipoTecido: 'Coulisse',
       modoOrigem: 'motor',
       isNew: true,
-    });
+    };
+    addRegistro(reg);
+
+    // Impressão Automática (PPLA)
+    if (labelSettings.autoPrint) {
+      printLabel({
+        item: reg.item,
+        descricao: reg.tipoTecido || '',
+        lote: reg.lote,
+        processo: reg.processo,
+        m_linear: reg.quantidade ? `CX:${reg.quantidade}` : ''
+      }, labelSettings);
+    }
 
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
