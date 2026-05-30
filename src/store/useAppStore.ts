@@ -17,6 +17,8 @@ export interface LabelSettings {
   showLogo: boolean;
   showQRCode: boolean;
   orientation: 'portrait' | 'landscape';
+  autoPrint: boolean;
+  webhookUrl: string;
 }
 
 export interface AppState {
@@ -174,7 +176,9 @@ export const useAppStore = create<AppState>()(
         fontSize: 10,
         showLogo: true,
         showQRCode: true,
-        orientation: 'landscape'
+        orientation: 'landscape',
+        autoPrint: false,
+        webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta'
       },
       
       isArchiving: false,
