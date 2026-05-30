@@ -49,6 +49,7 @@ export default function MotorControlePage() {
   const setLockMotorModelo = useAppStore(s => s.setLockMotorModelo);
   const lockMotorNf = useAppStore(s => s.lockMotorNf);
   const setLockMotorNf = useAppStore(s => s.setLockMotorNf);
+  const labelSettings = useAppStore(s => s.labelSettings);
   const { isLow } = usePerformance();
 
   useEffect(() => {
