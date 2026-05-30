@@ -642,7 +642,6 @@ export default function SettingsPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        </div>
                       </div>
 
                       <div className="space-y-4 pt-4 border-t border-border/10">
