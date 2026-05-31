@@ -110,6 +110,8 @@ export function computeStats(history: Conference[], dbStats?: any) {
   }
 
   const sortByValueDesc = (a: any, b: any) => (b.value || b.count || 0) - (a.value || a.count || 0);
+  const sortByTotalDesc = (a: any, b: any) => (b.total || 0) - (a.total || 0);
+
 
   const avgMins = durationCount > 0 ? Math.round(totalDuration / durationCount / 60000) : 0;
   const avgDurationStr = avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}min` : `${avgMins}min`;
