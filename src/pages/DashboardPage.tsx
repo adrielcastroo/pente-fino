@@ -39,11 +39,11 @@ export default function DashboardPage() {
     setDetailChart,
     handleStatClick,
     handleExport,
-    handleExportPDF,
     handleFullExport,
   } = useDashboard();
 
   const [isExporting, setIsExporting] = useState(false);
+  const [detailDialog, setDetailDialog] = useState<string | null>(null);
 
   const handleFullExportExcel = async () => {
     setIsExporting(true);
@@ -57,8 +57,6 @@ export default function DashboardPage() {
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
-
-  const [detailDialog, setDetailDialog] = useState<string | null>(null);
 
   // Conference summary list (only 50 recent)
   const conferenceSummary = useMemo(() => {
@@ -125,9 +123,9 @@ export default function DashboardPage() {
 
   return (
     <div id="dashboard-content" className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8">
-      {/* Header */}
-      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-border/10 bg-background/80 backdrop-blur-2xl pt-4 sm:pt-8 rounded-b-[1.5rem] sm:rounded-b-[3rem] no-print">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header - Sticky with Soft White Background */}
+      <header className="sticky top-0 z-50 flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-border/10 bg-[#F8FAFC]/95 backdrop-blur-md pt-4 sm:pt-8 rounded-b-[1.5rem] sm:rounded-b-[3rem] no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/10 shadow-inner">
               <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
@@ -143,7 +141,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-center">
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm transition-all hover:bg-muted/60">
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-white shadow-sm transition-all hover:bg-white/80">
               <Clock className="w-5 h-5 text-primary/70 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
@@ -173,7 +171,7 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="flex md:hidden items-center gap-3 px-4 py-2.5 rounded-xl border border-border/20 bg-muted/40 backdrop-blur-xl shadow-sm w-fit transition-all hover:bg-muted/60">
+        <div className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/20 bg-white shadow-sm w-fit transition-all hover:bg-white/80">
           <Clock className="w-4 h-4 text-primary/70 shrink-0" />
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sessão:</span>
@@ -182,42 +180,8 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      {/* Premium Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
-        {[
-          { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: Users, delay: '100' },
-          { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: BarChart3, delay: '200' },
-          { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: Layers3, delay: '300' },
-        ].map((stat, idx) => (
-          <button 
-            key={stat.id}
-            onClick={() => setDetailDialog(stat.id)} 
-            className={`group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] active:scale-[0.98] animate-in slide-in-from-bottom-8 overflow-hidden shadow-sm flex flex-col justify-between min-h-[8rem] sm:min-h-[10rem] lg:min-h-[12rem] ${idx === 2 ? 'xs:col-span-2 lg:col-span-1' : ''}`}
-            style={{ animationDelay: `${stat.delay}ms` }}
-          >
-            <div className="flex items-center justify-between mb-4 sm:mb-8 relative z-10">
-              <div className="p-2.5 sm:p-4 rounded-[1rem] sm:rounded-[1.25rem] bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-sm">
-                <stat.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
-                <span className="text-[9px] sm:text-[10px] font-bold text-primary uppercase tracking-tighter">Detalhes</span>
-                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-              </div>
-            </div>
-            
-            <div className="space-y-2 sm:space-y-3 relative z-10">
-              <div className="text-[clamp(1.75rem,8vw,3.5rem)] font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
-                {stat.value}
-              </div>
-              <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500 leading-relaxed">
-                {stat.label}
-              </p>
-            </div>
-            
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-          </button>
-        ))}
-      </div>
+      {/* Stat Cards - Consolidated and Optimized */}
+      <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
@@ -227,12 +191,22 @@ export default function DashboardPage() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <OccupationChart id="chart-ocupacao-tecido" title="Ocupação Tecidos" used={41} total={3120} reserved={0} blocked={0} unit="alocações" />
+            <OccupationChart 
+              id="chart-ocupacao-tecido" 
+              title="Ocupação Tecidos" 
+              used={stats.occupation.tecido.used} 
+              total={stats.occupation.tecido.total} 
+              reserved={stats.occupation.tecido.reserved} 
+              blocked={stats.occupation.tecido.blocked} 
+              unit="alocações" 
+            />
             <OccupationChart 
               id="chart-ocupacao-madeira"
               title="Ocupação Madeira" 
-              used={0} 
-              total={0} 
+              used={stats.occupation.madeira.used} 
+              total={stats.occupation.madeira.total} 
+              reserved={stats.occupation.madeira.reserved} 
+              blocked={stats.occupation.madeira.blocked}
               unit="metros"
               customCategories={[
                 { name: 'Lâminas', value: 0 },
@@ -252,7 +226,7 @@ export default function DashboardPage() {
             data={stats.topConferentes} 
             type="bar" 
             icon={Users} 
-            chartKey="count"
+            chartKey="value"
             onDetailClick={setDetailChart} 
           />
           
@@ -355,26 +329,23 @@ export default function DashboardPage() {
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
           <Button 
-            variant="default" 
-            size="lg" 
+            className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] bg-foreground text-background hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 group/btn"
+            onClick={handleFullExportExcel}
             disabled={isExporting}
-            onClick={handleFullExportExcel} 
-            className="w-full rounded-2xl h-11 sm:h-14 font-extrabold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[10px] sm:text-[11px] shadow-2xl shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-[1.03] active:scale-[0.97] mt-2 sm:mt-4"
           >
-            {isExporting ? 'Gerando Relatório...' : 'Exportar Dados (Excel)'}
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />}
+            {isExporting ? 'Processando' : 'Baixar Relatório'}
           </Button>
-          
-          <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         </div>
       </div>
 
+      {/* Detail Dialogs */}
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] sm:h-[80vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
-          <DialogHeader className="px-6 sm:px-10 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
+          <DialogHeader className="px-6 sm:px-10 pt-6 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                 <Users className="w-6 h-6" />
@@ -449,56 +420,16 @@ export default function DashboardPage() {
                     <td className="px-10 py-6 text-center">
                       <Badge variant="outline" className="text-[10px] font-bold px-4 py-1 rounded-full border-primary/20 text-primary bg-primary/5">{c.duration}</Badge>
                     </td>
-                    <td className="px-10 py-6 text-right font-mono font-black text-primary text-xl">{c.registros}</td>
+                    <td className="px-10 py-6 text-right font-mono text-primary font-black text-xl">{c.registros}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
-            <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Registros per Conference Dialog */}
-      <Dialog open={detailDialog === 'registros'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
-                <Layers3 className="w-6 h-6" />
-              </div>
-              <div>
-                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Registros por Sessão</DialogTitle>
-                <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Volume de itens por conferência realizada</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="overflow-y-auto flex-1 custom-scrollbar">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
-                <tr>
-                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferência</th>
-                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferente</th>
-                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Data</th>
-                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/5">
-                {history.slice(0, 50).map(conf => (
-                  <tr key={conf.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[150px] sm:max-w-[220px] transition-colors text-base">{conf.processo || conf.name}</td>
-                    <td className="px-10 py-6 text-muted-foreground font-semibold">{conf.conferente || '—'}</td>
-                    <td className="px-10 py-6 text-muted-foreground/60 font-mono text-[12px] font-semibold">{formatDateBR(conf.date)}</td>
-                    <td className="px-10 py-6 text-right font-mono font-black text-primary text-xl">{conf.registros.length}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
-            <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
+            <Button variant="outline" className="rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]" onClick={() => setDetailDialog(null)}>
+              Fechar Histórico
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
