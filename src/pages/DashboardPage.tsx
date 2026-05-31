@@ -325,8 +325,8 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="space-y-2 sm:space-y-3">
-            <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
+            <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground">Relatório Executivo</h3>
+            <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed max-w-[240px] mx-auto font-bold">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
           <Button 
             className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] bg-foreground text-background hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 group/btn"
