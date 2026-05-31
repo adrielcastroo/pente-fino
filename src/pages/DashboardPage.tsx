@@ -123,8 +123,8 @@ export default function DashboardPage() {
 
   return (
     <div id="dashboard-content" className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8">
-      {/* Header - Sticky with Soft White Background */}
-      <header className="sticky top-0 z-50 flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-border/10 bg-[#F8FAFC]/95 backdrop-blur-md pt-4 sm:pt-8 rounded-b-[1.5rem] sm:rounded-b-[3rem] no-print">
+      {/* Header - Simple and Clean */}
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-8 no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/10 shadow-inner">
