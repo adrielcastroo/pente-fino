@@ -32,6 +32,9 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 
 export default function DashboardPage() {
   const isMobile = useIsMobile();
+  const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
+  const isDark = dashboardDialogTheme === 'dark';
+
   const {
     history,
     isHistoryLoading,
@@ -98,6 +101,16 @@ export default function DashboardPage() {
       const timeB = new Date(b.date).getTime();
       return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
     }).slice(0, 5);
+  }, [history]);
+
+  const allRegistrosDetailed = useMemo(() => {
+    return history.flatMap(conf => 
+      conf.registros.map(reg => ({
+        ...reg,
+        conferenceName: conf.processo || conf.name,
+        date: conf.date
+      }))
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [history]);
 
   if (isHistoryLoading && history.length === 0) {
