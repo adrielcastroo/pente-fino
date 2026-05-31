@@ -92,8 +92,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border={`1px solid ${tooltipBorder}`}, 
-                    background={tooltipBg}, 
+                    border: `1px solid ${tooltipBorder}`, 
+                    background: tooltipBg, 
+
 
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
@@ -139,8 +140,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border={`1px solid ${tooltipBorder}`}, 
-                    background={tooltipBg}, 
+                    border: `1px solid ${tooltipBorder}`, 
+                    background: tooltipBg, 
+
 
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
@@ -191,8 +193,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <ChartTooltip 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border={`1px solid ${tooltipBorder}`}, 
-                    background={tooltipBg}, 
+                    border: `1px solid ${tooltipBorder}`, 
+                    background: tooltipBg, 
+
 
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
