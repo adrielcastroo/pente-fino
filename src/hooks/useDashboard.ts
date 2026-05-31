@@ -45,7 +45,7 @@ export function useDashboard() {
 
   const handleStatClick = useCallback((id: string) => {
     // If it's a specific tab identifier from our cards
-    const tabMap: Record<string, string> = {
+    const tabMap: Record<string, import('@/types').AppTab> = {
       'conferentes': 'inicio',
       'conferences': 'history',
       'registros': 'reservas'
