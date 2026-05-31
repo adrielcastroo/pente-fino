@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
     
     return (
       <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-4 shadow-2xl shadow-black/10 animate-in fade-in zoom-in-95 duration-200">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 border-b border-border/10 pb-2">
+        <p className="text-[10px] font-black uppercase tracking-widest text-foreground/50 mb-2 border-b border-border/10 pb-2">
           {label || data.name}
         </p>
         <div className="flex flex-col gap-1.5">
@@ -40,8 +40,8 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
           </div>
           {total && (
             <div className="flex items-center justify-between gap-8">
-              <span className="text-[10px] font-bold text-muted-foreground/60">Participação:</span>
-              <span className="text-[11px] font-bold text-muted-foreground tabular-nums">
+              <span className="text-[10px] font-black text-foreground/40">Participação:</span>
+              <span className="text-[11px] font-black text-foreground/60 tabular-nums">
                 {((payload[0].value / total) * 100).toFixed(1)}%
               </span>
             </div>
@@ -74,7 +74,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
             </div>
             <span>Volume de Operações</span>
           </CardTitle>
-          <p className="text-[10px] sm:text-sm text-muted-foreground font-medium opacity-70 ml-8 sm:ml-11">Histórico de conferências por período</p>
+          <p className="text-[10px] sm:text-sm text-foreground/60 font-black ml-8 sm:ml-11">Histórico de conferências por período</p>
         </div>
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {onDetailClick && (
@@ -109,14 +109,14 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
               fontSize={10} 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+              tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }}
               dy={15}
             />
             <YAxis 
               fontSize={10} 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+              tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }}
               dx={-10}
             />
             <ChartTooltip content={<CustomTooltip />} cursor={!isLow ? { stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' } : false} />
@@ -124,7 +124,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
               verticalAlign="top" 
               height={36} 
               iconType="circle"
-              formatter={(value) => <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{value === 'total' ? 'Registros' : value}</span>}
+              formatter={(value) => <span className="text-[10px] font-black uppercase tracking-wider text-foreground/60">{value === 'total' ? 'Registros' : value}</span>}
             />
             <Area 
               type={isLow ? "linear" : "monotone"} 
@@ -159,7 +159,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
             </div>
             <span className="text-foreground/90">{title}</span>
           </CardTitle>
-          <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider opacity-60 ml-8">{desc}</p>
+          <p className="text-[11px] text-foreground/60 font-black uppercase tracking-wider ml-8">{desc}</p>
         </div>
         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl opacity-0 group-hover:opacity-100 transition-all text-muted-foreground hover:text-primary hover:bg-primary/5" onClick={() => onDetailClick({ title, data, type })}>
           <Eye className="w-4 h-4" />
@@ -175,14 +175,14 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 fontSize={9} 
                 tickLine={false} 
                 axisLine={false} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+                tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }}
                 interval={0}
               />
               <YAxis 
                 fontSize={9} 
                 tickLine={false} 
                 axisLine={false} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+                tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }}
               />
               <Bar 
                 dataKey={chartKey} 
@@ -226,7 +226,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                   position="outside" 
                   fontSize={10} 
                   fontWeight={700} 
-                  fill="hsl(var(--muted-foreground))"
+                  fill="hsl(var(--foreground) / 0.6)"
                   formatter={(val: any) => val > 0 ? val : ''}
                 />
               </Pie>
@@ -237,7 +237,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                 align="center"
                 iconType="circle"
                 wrapperStyle={{ paddingTop: '20px' }}
-                formatter={(value) => <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">{value}</span>}
+                formatter={(value) => <span className="text-[9px] font-black uppercase tracking-wider text-foreground/60">{value}</span>}
               />
             </PieChart>
           )}
@@ -305,7 +305,7 @@ export const OccupationChart = React.memo(({
             </div>
             <span className="truncate">{title}</span>
           </CardTitle>
-          <p className="text-[10px] sm:text-sm text-muted-foreground font-medium opacity-70 ml-8 sm:ml-11">Visão em tempo real da capacidade</p>
+          <p className="text-[10px] sm:text-sm text-foreground/60 font-black ml-8 sm:ml-11">Visão em tempo real da capacidade</p>
         </div>
       </CardHeader>
       <CardContent className="px-3 sm:px-6 md:px-8 py-5 sm:py-8 md:py-12 flex flex-col items-center gap-6 sm:gap-8">
@@ -336,7 +336,7 @@ export const OccupationChart = React.memo(({
                     if (active && payload && payload.length) {
                       return (
                         <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-3 sm:p-4 shadow-2xl">
-                          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{payload[0].name}</p>
+                          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-foreground/50 mb-1">{payload[0].name}</p>
                           <p className="text-xs sm:text-sm font-black text-primary">{payload[0].value} {unit}</p>
                         </div>
                       );
@@ -349,7 +349,7 @@ export const OccupationChart = React.memo(({
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-foreground">{isEmpty ? 0 : percentage}%</span>
-            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground">{isEmpty ? 'Vazio' : 'Ocupado'}</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-foreground/50">{isEmpty ? 'Vazio' : 'Ocupado'}</span>
           </div>
         </div>
 
@@ -358,7 +358,7 @@ export const OccupationChart = React.memo(({
             <>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Total</span>
+                  <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest text-foreground/50">Total</span>
                   <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{calculatedTotal} {unit}</span>
                 </div>
                 <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden" />
@@ -366,7 +366,7 @@ export const OccupationChart = React.memo(({
               {customCategories.map((cat, idx) => (
                 <div key={idx} className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">{cat.name}</span>
+                    <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest text-foreground/50">{cat.name}</span>
                     <span className="text-xs sm:text-sm font-black text-primary tabular-nums whitespace-nowrap">{cat.value} {unit}</span>
                   </div>
                   <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">

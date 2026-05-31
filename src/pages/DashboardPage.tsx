@@ -101,7 +101,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-muted-foreground font-medium animate-pulse">Carregando dados do dashboard...</p>
+        <p className="text-foreground/70 font-black animate-pulse uppercase tracking-wider text-sm">Carregando dados do dashboard...</p>
       </div>
     );
   }
@@ -113,7 +113,7 @@ export default function DashboardPage() {
           <Activity className="w-10 h-10" />
         </div>
         <h3 className="text-xl font-bold">Erro ao carregar dados</h3>
-        <p className="text-muted-foreground max-w-md">{historyError}</p>
+        <p className="text-foreground/60 max-w-md font-bold">{historyError}</p>
         <Button onClick={() => loadHistory()} className="mt-4">
           Tentar Novamente
         </Button>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
               <h1 className="text-[clamp(1.5rem,8vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
                 Dashboard
               </h1>
-              <p className="text-[9px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 sm:mt-2 opacity-70">
+              <p className="text-[9px] sm:text-xs font-black text-foreground/60 uppercase tracking-[0.2em] mt-1 sm:mt-2">
                 Monitoramento Logístico & Operacional
               </p>
             </div>
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-transparent transition-all hover:bg-white/5">
               <Clock className="w-5 h-5 text-primary/70 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
+                <span className="text-[9px] font-black text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
                 <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
         <div className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-transparent w-fit transition-all hover:bg-white/5">
           <Clock className="w-4 h-4 text-primary/70 shrink-0" />
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sessão:</span>
+            <span className="text-[10px] font-black text-foreground/50 uppercase tracking-widest">Sessão:</span>
             <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
           </div>
         </div>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                         </span>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
                             {formatDateBR(output.date)}
                           </span>
                         </div>
@@ -275,13 +275,13 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   <div className="p-8 text-center">
-                    <p className="text-sm text-muted-foreground font-medium italic">Nenhum registro recente</p>
+                    <p className="text-sm text-foreground/60 font-black italic">Nenhum registro recente</p>
                   </div>
                 )}
               </div>
               {lastOutputs.length > 0 && (
                 <div className="p-4 border-t border-border/5 bg-muted/5">
-                  <Button variant="ghost" className="w-full text-[10px] font-bold uppercase tracking-widest gap-2 text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
+                  <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest gap-2 text-foreground/60 hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
                     Ver Histórico Completo
                     <ChevronRight className="w-3 h-3" />
                   </Button>
@@ -325,8 +325,8 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="space-y-2 sm:space-y-3">
-            <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground/90">Relatório Executivo</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-[240px] mx-auto font-medium opacity-80">Compilado profissional de todas as métricas em formato Excel.</p>
+            <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground">Relatório Executivo</h3>
+            <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed max-w-[240px] mx-auto font-bold">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
           <Button 
             className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] bg-foreground text-background hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 group/btn"
@@ -352,7 +352,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Conferentes</DialogTitle>
-                <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Desempenho individual por conferente</DialogDescription>
+                <DialogDescription className="text-sm font-bold text-foreground/70">Desempenho individual por conferente</DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -360,19 +360,19 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
                 <tr>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-left font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Nome</th>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Conferências</th>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Nome</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Conferências</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Registros</th>
+                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
                 {stats.conferenteDetails.map(c => (
                   <tr key={c.name} className="hover:bg-primary/[0.02] transition-colors group">
                     <td className="px-6 sm:px-10 py-4 sm:py-6 font-bold text-foreground/90 group-hover:text-primary transition-colors text-sm sm:text-base">{c.name}</td>
-                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-muted-foreground font-semibold">{c.conferences}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-foreground/70 font-bold">{c.conferences}</td>
                     <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-black text-lg sm:text-xl">{c.total}</td>
-                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-muted-foreground/60 text-[11px] sm:text-[12px] font-semibold hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-foreground/50 text-[11px] sm:text-[12px] font-bold hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -394,7 +394,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Histórico de Conferências</DialogTitle>
-                <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">Linha do tempo detalhada das sessões operacionais</DialogDescription>
+                <DialogDescription className="text-sm font-bold text-foreground/70">Linha do tempo detalhada das sessões operacionais</DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -402,21 +402,21 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white border-b border-border/10 z-20 shadow-sm">
                 <tr>
-                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Processo</th>
-                  <th className="px-10 py-6 text-left font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden sm:table-cell">Conferente</th>
-                  <th className="px-10 py-6 text-center font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden xs:table-cell">Início</th>
-                  <th className="px-10 py-6 text-center font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5 hidden md:table-cell">Fim</th>
-                  <th className="px-10 py-6 text-center font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Duração</th>
-                  <th className="px-10 py-6 text-right font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border/5">Registros</th>
+                   <th className="px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Processo</th>
+                  <th className="px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden sm:table-cell">Conferente</th>
+                  <th className="px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden xs:table-cell">Início</th>
+                  <th className="px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden md:table-cell">Fim</th>
+                  <th className="px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Duração</th>
+                  <th className="px-10 py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Registros</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
                 {conferenceSummary.map(c => (
                   <tr key={c.id} className="hover:bg-primary/[0.02] transition-colors group">
                     <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base">{c.name}</td>
-                    <td className="px-10 py-6 text-muted-foreground font-semibold truncate max-w-[120px] hidden sm:table-cell">{c.conferente || '—'}</td>
+                    <td className="px-10 py-6 text-foreground/70 font-bold truncate max-w-[120px] hidden sm:table-cell">{c.conferente || '—'}</td>
                     <td className="px-10 py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-10 py-6 text-center font-mono text-muted-foreground/60 text-[12px] font-semibold hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
+                    <td className="px-10 py-6 text-center font-mono text-foreground/50 text-[12px] font-bold hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
                     <td className="px-10 py-6 text-center">
                       <Badge variant="outline" className="text-[10px] font-bold px-4 py-1 rounded-full border-primary/20 text-primary bg-primary/5">{c.duration}</Badge>
                     </td>
