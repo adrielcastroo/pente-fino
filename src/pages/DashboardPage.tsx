@@ -101,7 +101,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-muted-foreground font-medium animate-pulse">Carregando dados do dashboard...</p>
+        <p className="text-foreground/70 font-black animate-pulse uppercase tracking-wider text-sm">Carregando dados do dashboard...</p>
       </div>
     );
   }
@@ -113,7 +113,7 @@ export default function DashboardPage() {
           <Activity className="w-10 h-10" />
         </div>
         <h3 className="text-xl font-bold">Erro ao carregar dados</h3>
-        <p className="text-muted-foreground max-w-md">{historyError}</p>
+        <p className="text-foreground/60 max-w-md font-bold">{historyError}</p>
         <Button onClick={() => loadHistory()} className="mt-4">
           Tentar Novamente
         </Button>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                         </span>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
                             {formatDateBR(output.date)}
                           </span>
                         </div>
@@ -275,13 +275,13 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   <div className="p-8 text-center">
-                    <p className="text-sm text-muted-foreground font-medium italic">Nenhum registro recente</p>
+                    <p className="text-sm text-foreground/60 font-black italic">Nenhum registro recente</p>
                   </div>
                 )}
               </div>
               {lastOutputs.length > 0 && (
                 <div className="p-4 border-t border-border/5 bg-muted/5">
-                  <Button variant="ghost" className="w-full text-[10px] font-bold uppercase tracking-widest gap-2 text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
+                  <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest gap-2 text-foreground/60 hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
                     Ver Histórico Completo
                     <ChevronRight className="w-3 h-3" />
                   </Button>
