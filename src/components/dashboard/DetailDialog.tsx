@@ -83,7 +83,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   formatter={(val: any) => [val, 'Quantidade']} 
                 />
                 <Bar 
-                  dataKey={detailChart.data?.[0]?.count !== undefined ? 'count' : 'value'} 
+                  dataKey="value" 
                   fill="url(#detailBarGradient)" 
                   radius={[8, 8, 2, 2]} 
                   maxBarSize={64}

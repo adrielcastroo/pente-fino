@@ -186,3 +186,15 @@ export function parseCoulisseString(input: string) {
     cx: 0
   };
 }
+
+export const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
+  TEC00: { cols: ['A', 'B'], levels: 9 },
+  TEC01: { cols: ['A', 'B', 'C', 'D', 'E', 'F'], levels: 6 },
+  TEC02: { cols: ['A', 'B'], levels: 4 },
+  TEC03: { cols: ['A', 'B'], levels: 9 },
+  TEC04: { cols: ['A', 'B', 'C'], levels: 5 },
+  TEC05: { cols: ['A', 'B', 'C'], levels: 5 },
+  'CHÃO': { cols: ['G'], levels: 1 },
+};
+
+export const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => acc + (cols.length * levels * 30), 0);
