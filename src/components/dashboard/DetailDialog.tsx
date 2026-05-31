@@ -25,6 +25,12 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
   const theme = useAppStore(s => s.dashboardDialogTheme);
   const isDark = theme === 'dark';
   
+  const axisStroke = isDark ? 'rgba(255,255,255,0.4)' : 'hsl(var(--foreground) / 0.4)';
+  const tooltipBg = isDark ? '#1E293B' : 'hsl(var(--card) / 0.9)';
+  const tooltipBorder = isDark ? '#334155' : 'hsl(var(--border) / 0.5)';
+  const gridStroke = isDark ? 'rgba(255,255,255,0.1)' : 'hsl(var(--border) / 0.3)';
+  const pieStroke = isDark ? '#0F172A' : 'hsl(var(--background))';
+  
   return (
     <Dialog open={!!detailChart} onOpenChange={onClose}>
       <DialogContent className={cn(
@@ -71,14 +77,14 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
                   fontSize={11} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                   dx={-5}
                 />
@@ -86,8 +92,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border) / 0.5)', 
-                    background: 'hsl(var(--card) / 0.9)', 
+                    border={`1px solid ${tooltipBorder}`}, 
+                    background={tooltipBg}, 
+
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
                     boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
@@ -110,13 +117,13 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
                 <XAxis 
                   dataKey="name" 
                   fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                   dy={15}
                 />
@@ -124,7 +131,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   axisLine={false} 
                   tickLine={false} 
                   fontSize={11} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                   dx={-5}
                 />
@@ -132,8 +139,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border) / 0.5)', 
-                    background: 'hsl(var(--card) / 0.9)', 
+                    border={`1px solid ${tooltipBorder}`}, 
+                    background={tooltipBg}, 
+
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
                     boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
@@ -168,7 +176,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
 
 
                   paddingAngle={4} 
-                  stroke="hsl(var(--background))" 
+                  stroke={pieStroke} 
                   strokeWidth={2}
                   animationDuration={1500}
                 >
@@ -183,8 +191,9 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <ChartTooltip 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border) / 0.5)', 
-                    background: 'hsl(var(--card) / 0.9)', 
+                    border={`1px solid ${tooltipBorder}`}, 
+                    background={tooltipBg}, 
+
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
                     boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
