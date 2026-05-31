@@ -1,8 +1,8 @@
 import { Conference } from '@/types';
+import { TOTAL_SLOTS } from './app-utils';
 
 // Memoized date formatter to avoid recreation
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
-const fullDateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 // Bounded LRU-ish cache to avoid unbounded memory growth on long sessions
 const dateCache = new Map<string, string>();
@@ -21,7 +21,7 @@ function getCachedDate(id: string, raw: string): string {
   return value;
 }
 
-export function computeStats(history: Conference[]) {
+export function computeStats(history: Conference[], dbStats?: any) {
   const confMap = new Map<string, { name: string; total: number; conferences: number; lastDate: string; items: Set<string> }>();
   const catMap = new Map<string, number>();
   const subMap = new Map<string, number>();
@@ -109,23 +109,25 @@ export function computeStats(history: Conference[]) {
     }
   }
 
-  const sortByValueDesc = (a: any, b: any) => b.value - a.value;
-  const sortByTotalDesc = (a: any, b: any) => b.total - a.total;
+  const sortByValueDesc = (a: any, b: any) => (b.value || b.count || 0) - (a.value || a.count || 0);
 
   const avgMins = durationCount > 0 ? Math.round(totalDuration / durationCount / 60000) : 0;
   const avgDurationStr = avgMins >= 60 ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}min` : `${avgMins}min`;
 
+  // Default occupation values if no dbStats provided
+  const occupation = dbStats || {
+    tecido: { used: 41, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
+    madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 }
+  };
+
   return {
     topConferentes: Array.from(confMap.values())
-      .map(data => ({ name: data.name, count: data.items.size, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
-      .sort((a, b) => b.count - a.count).slice(0, 10),
-    conferenteDetails: Array.from(confMap.values())
-      .map(data => ({ name: data.name, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
-      .sort(sortByTotalDesc),
+      .map(data => ({ name: data.name, value: data.items.size, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
+      .sort(sortByValueDesc).slice(0, 10),
     categorias: Array.from(catMap, ([name, value]) => ({ name, value }))
       .sort(sortByValueDesc),
-    ferramentas: Array.from(subMap, ([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count),
+    ferramentas: Array.from(subMap, ([name, value]) => ({ name, value }))
+      .sort(sortByValueDesc),
     tipos: Array.from(tipoMap, ([name, value]) => ({ name, value }))
       .sort(sortByValueDesc).slice(0, 8),
     timeline: Array.from(timelineMap.values()).slice(-10),
@@ -133,5 +135,6 @@ export function computeStats(history: Conference[]) {
     totalConferencias: history.length,
     totalConferentes: confMap.size,
     avgDuration: avgDurationStr,
+    occupation
   };
 }
