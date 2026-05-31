@@ -120,10 +120,15 @@ export function computeStats(history: Conference[], dbStats?: any) {
     madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 }
   };
 
+  const conferenteDetails = Array.from(confMap.values())
+    .map(data => ({ name: data.name, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
+    .sort(sortByTotalDesc);
+
   return {
     topConferentes: Array.from(confMap.values())
       .map(data => ({ name: data.name, value: data.items.size, total: data.total, conferences: data.conferences, lastDate: data.lastDate }))
       .sort(sortByValueDesc).slice(0, 10),
+    conferenteDetails,
     categorias: Array.from(catMap, ([name, value]) => ({ name, value }))
       .sort(sortByValueDesc),
     ferramentas: Array.from(subMap, ([name, value]) => ({ name, value }))
