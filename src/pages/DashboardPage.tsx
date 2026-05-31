@@ -141,7 +141,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-center">
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/20 bg-white shadow-sm transition-all hover:bg-white/80">
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-transparent transition-all hover:bg-white/5">
               <Clock className="w-5 h-5 text-primary/70 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Média de Sessão</span>
@@ -171,7 +171,7 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/20 bg-white shadow-sm w-fit transition-all hover:bg-white/80">
+        <div className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-transparent w-fit transition-all hover:bg-white/5">
           <Clock className="w-4 h-4 text-primary/70 shrink-0" />
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sessão:</span>
