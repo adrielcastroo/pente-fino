@@ -2,6 +2,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, Activity } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAppStore } from '@/store/useAppStore';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid
@@ -19,23 +22,38 @@ const CHART_COLORS = [
 
 export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => {
   const isMobile = useIsMobile();
+  const theme = useAppStore(s => s.dashboardDialogTheme);
+  const isDark = theme === 'dark';
+  
+  const axisStroke = isDark ? 'rgba(255,255,255,0.4)' : 'hsl(var(--foreground) / 0.4)';
+  const tooltipBg = isDark ? '#1E293B' : 'hsl(var(--card) / 0.9)';
+  const tooltipBorder = isDark ? '#334155' : 'hsl(var(--border) / 0.5)';
+  const gridStroke = isDark ? 'rgba(255,255,255,0.1)' : 'hsl(var(--border) / 0.3)';
+  const pieStroke = isDark ? '#0F172A' : 'hsl(var(--background))';
   
   return (
     <Dialog open={!!detailChart} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border border-border/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden bg-white animate-in zoom-in-95 duration-300 flex flex-col">
-      <DialogHeader className="p-6 sm:p-8 pb-4 sm:pb-6 border-b border-border/10 bg-slate-50/50 flex-none">
+      <DialogContent className={cn(
+        "w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col",
+        isDark ? "bg-[#0F172A] border-slate-800" : "bg-white border-border/10"
+      )}>
+      <DialogHeader className={cn(
+        "p-6 sm:p-8 pb-4 sm:pb-6 border-b flex-none",
+        isDark ? "bg-[#1E293B]/50 border-slate-800" : "bg-slate-50/50 border-border/10"
+      )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-xl shadow-primary/10 border border-primary/20">
               {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : detailChart?.type === 'area' ? <Activity className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
             </div>
             <div className="space-y-1">
-              <DialogTitle className="text-2xl font-black tracking-tight text-foreground">{detailChart?.title}</DialogTitle>
-              <DialogDescription className="text-sm font-bold text-foreground/60">
+              <DialogTitle className={cn("text-2xl font-black tracking-tight", isDark ? "text-slate-100" : "text-foreground")}>{detailChart?.title}</DialogTitle>
+              <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/60")}>
                 Visualização detalhada das métricas operacionais
               </DialogDescription>
             </div>
           </div>
+          <ThemeToggle />
         </div>
       </DialogHeader>
       
@@ -59,14 +77,14 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
                   fontSize={11} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                   dx={-5}
                 />
@@ -74,8 +92,10 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border) / 0.5)', 
-                    background: 'hsl(var(--card) / 0.9)', 
+                    border: `1px solid ${tooltipBorder}`, 
+                    background: tooltipBg, 
+
+
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
                     boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
@@ -98,13 +118,13 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
                 <XAxis 
                   dataKey="name" 
                   fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                   dy={15}
                 />
@@ -112,7 +132,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   axisLine={false} 
                   tickLine={false} 
                   fontSize={11} 
-                  stroke="hsl(var(--foreground) / 0.4)"
+                  stroke={axisStroke}
                   tick={{ fontWeight: 800 }}
                   dx={-5}
                 />
@@ -120,8 +140,10 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border) / 0.5)', 
-                    background: 'hsl(var(--card) / 0.9)', 
+                    border: `1px solid ${tooltipBorder}`, 
+                    background: tooltipBg, 
+
+
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
                     boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
@@ -156,7 +178,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
 
 
                   paddingAngle={4} 
-                  stroke="hsl(var(--background))" 
+                  stroke={pieStroke} 
                   strokeWidth={2}
                   animationDuration={1500}
                 >
@@ -171,8 +193,10 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                 <ChartTooltip 
                   contentStyle={{ 
                     borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border) / 0.5)', 
-                    background: 'hsl(var(--card) / 0.9)', 
+                    border: `1px solid ${tooltipBorder}`, 
+                    background: tooltipBg, 
+
+
                     backdropFilter: 'blur(10px)',
                     fontWeight: 'bold',
                     boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
@@ -200,10 +224,16 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
       )}
     </div>
       
-      <div className="p-4 sm:p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
+      <div className={cn(
+        "p-4 sm:p-6 border-t flex justify-end flex-none",
+        isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10"
+      )}>
         <Button 
           variant="outline" 
-          className="rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]" 
+          className={cn(
+            "rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]",
+            isDark ? "border-slate-700 text-slate-300 hover:border-primary" : ""
+          )} 
           onClick={onClose}
         >
           Fechar Visualização

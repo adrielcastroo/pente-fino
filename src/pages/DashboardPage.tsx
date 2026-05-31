@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2 } from 'lucide-react';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Moon, Sun } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,9 @@ import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
+import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/useAppStore';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -29,6 +32,9 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 
 export default function DashboardPage() {
   const isMobile = useIsMobile();
+  const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
+  const isDark = dashboardDialogTheme === 'dark';
+
   const {
     history,
     isHistoryLoading,
@@ -95,6 +101,16 @@ export default function DashboardPage() {
       const timeB = new Date(b.date).getTime();
       return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
     }).slice(0, 5);
+  }, [history]);
+
+  const allRegistrosDetailed = useMemo(() => {
+    return history.flatMap(conf => 
+      conf.registros.map(reg => ({
+        ...reg,
+        conferenceName: conf.processo || conf.name,
+        date: conf.date
+      }))
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [history]);
 
   if (isHistoryLoading && history.length === 0) {
@@ -344,81 +360,99 @@ export default function DashboardPage() {
 
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
-          <DialogHeader className="px-6 sm:px-10 pt-6 sm:pt-10 pb-6 sm:pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
-                <Users className="w-6 h-6" />
+        <DialogContent className={cn(
+          "max-w-[95vw] sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col border-border/10",
+          isDark ? "bg-[#0F172A] border-slate-800" : "bg-white"
+        )}>
+          <DialogHeader className={cn(
+            "px-6 sm:px-10 pt-6 sm:pt-10 pb-6 sm:pb-8 border-b flex-none",
+            isDark ? "bg-[#1E293B]/50 border-slate-800" : "bg-slate-50/50 border-border/10"
+          )}>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-foreground")}>Conferentes</DialogTitle>
+                  <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>Desempenho individual por conferente</DialogDescription>
+                </div>
               </div>
-              <div>
-                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Conferentes</DialogTitle>
-                <DialogDescription className="text-sm font-bold text-foreground/70">Desempenho individual por conferente</DialogDescription>
-              </div>
+              <ThemeToggle />
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white border-b border-border/10 z-20">
+              <thead className={cn("sticky top-0 z-20", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Nome</th>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Conferências</th>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Registros</th>
-                  <th className="px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden xs:table-cell">Última Ativ.</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Nome</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Conferências</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Registros</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Última Ativ.</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/5">
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
                 {stats.conferenteDetails.map(c => (
-                  <tr key={c.name} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-6 sm:px-10 py-4 sm:py-6 font-bold text-foreground/90 group-hover:text-primary transition-colors text-sm sm:text-base">{c.name}</td>
-                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-foreground/70 font-bold">{c.conferences}</td>
+                  <tr key={c.name} className={cn("transition-colors group", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}>
+                    <td className={cn("px-6 sm:px-10 py-4 sm:py-6 font-bold group-hover:text-primary transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-foreground/90")}>{c.name}</td>
+                    <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>{c.conferences}</td>
                     <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-black text-lg sm:text-xl">{c.total}</td>
-                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-foreground/50 text-[11px] sm:text-[12px] font-bold hidden xs:table-cell">{formatDateBR(c.lastDate)}</td>
+                    <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-[11px] sm:text-[12px] font-bold hidden xs:table-cell", isDark ? "text-slate-500" : "text-foreground/50")}>{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
-            <Button variant="outline" className="rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all" onClick={() => setDetailDialog(null)}>Fechar</Button>
+          <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
+            <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-6 h-10 hover:bg-primary hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "")} onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Conferences Detail Dialog */}
       <Dialog open={detailDialog === 'conferences'} onOpenChange={() => setDetailDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-border/10 bg-white overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col">
-          <DialogHeader className="px-10 pt-10 pb-8 border-b border-border/10 bg-slate-50/50 flex-none">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
-                <BarChart3 className="w-6 h-6" />
+        <DialogContent className={cn(
+          "max-w-[95vw] sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col border-border/10",
+          isDark ? "bg-[#0F172A] border-slate-800" : "bg-white"
+        )}>
+          <DialogHeader className={cn(
+            "px-6 sm:px-10 pt-6 sm:pt-10 pb-6 sm:pb-8 border-b flex-none",
+            isDark ? "bg-[#1E293B]/50 border-slate-800" : "bg-slate-50/50 border-border/10"
+          )}>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div>
+                  <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-foreground")}>Histórico de Conferências</DialogTitle>
+                  <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>Linha do tempo detalhada das sessões operacionais</DialogDescription>
+                </div>
               </div>
-              <div>
-                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Histórico de Conferências</DialogTitle>
-                <DialogDescription className="text-sm font-bold text-foreground/70">Linha do tempo detalhada das sessões operacionais</DialogDescription>
-              </div>
+              <ThemeToggle />
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white border-b border-border/10 z-20 shadow-sm">
+              <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
-                   <th className="px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Processo</th>
-                  <th className="px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden sm:table-cell">Conferente</th>
-                  <th className="px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden xs:table-cell">Início</th>
-                  <th className="px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5 hidden md:table-cell">Fim</th>
-                  <th className="px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Duração</th>
-                  <th className="px-10 py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 border-b border-border/5">Registros</th>
+                   <th className={cn("px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Processo</th>
+                  <th className={cn("px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Conferente</th>
+                  <th className={cn("px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Início</th>
+                  <th className={cn("px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Fim</th>
+                  <th className={cn("px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Duração</th>
+                  <th className={cn("px-10 py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Registros</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/5">
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
                 {conferenceSummary.map(c => (
-                  <tr key={c.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-10 py-6 font-bold text-foreground/90 group-hover:text-primary truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base">{c.name}</td>
-                    <td className="px-10 py-6 text-foreground/70 font-bold truncate max-w-[120px] hidden sm:table-cell">{c.conferente || '—'}</td>
+                  <tr key={c.id} className={cn("transition-colors group", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}>
+                    <td className={cn("px-10 py-6 font-bold group-hover:text-primary truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-foreground/90")}>{c.name}</td>
+                    <td className={cn("px-10 py-6 font-bold truncate max-w-[120px] hidden sm:table-cell", isDark ? "text-slate-400" : "text-foreground/70")}>{c.conferente || '—'}</td>
                     <td className="px-10 py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
-                    <td className="px-10 py-6 text-center font-mono text-foreground/50 text-[12px] font-bold hidden md:table-cell">{formatTimeBR(c.finishedAt)}</td>
+                    <td className={cn("px-10 py-6 text-center font-mono text-[12px] font-bold hidden md:table-cell", isDark ? "text-slate-500" : "text-foreground/50")}>{formatTimeBR(c.finishedAt)}</td>
                     <td className="px-10 py-6 text-center">
-                      <Badge variant="outline" className="text-[10px] font-bold px-4 py-1 rounded-full border-primary/20 text-primary bg-primary/5">{c.duration}</Badge>
+                      <Badge variant="outline" className={cn("text-[10px] font-bold px-4 py-1 rounded-full border-primary/20 text-primary bg-primary/5")}>{c.duration}</Badge>
                     </td>
                     <td className="px-10 py-6 text-right font-mono text-primary font-black text-xl">{c.registros}</td>
                   </tr>
@@ -426,9 +460,83 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-6 border-t border-border/10 bg-muted/5 flex justify-end flex-none">
-            <Button variant="outline" className="rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]" onClick={() => setDetailDialog(null)}>
+          <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
+            <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "")} onClick={() => setDetailDialog(null)}>
               Fechar Histórico
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Registros Detail Dialog */}
+      <Dialog open={detailDialog === 'registros'} onOpenChange={() => setDetailDialog(null)}>
+        <DialogContent className={cn(
+          "max-w-[95vw] sm:max-w-5xl p-0 gap-0 overflow-hidden rounded-[2.5rem] h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 flex flex-col border-border/10",
+          isDark ? "bg-[#0F172A] border-slate-800" : "bg-white"
+        )}>
+          <DialogHeader className={cn(
+            "px-6 sm:px-10 pt-6 sm:pt-10 pb-6 sm:pb-8 border-b flex-none",
+            isDark ? "bg-[#1E293B]/50 border-slate-800" : "bg-slate-50/50 border-border/10"
+          )}>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                  <Layers3 className="w-6 h-6" />
+                </div>
+                <div>
+                  <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-foreground")}>Histórico de Registros</DialogTitle>
+                  <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>Listagem completa de todos os itens registrados</DialogDescription>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
+            <table className="w-full text-sm">
+              <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
+                <tr>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Item / NF</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Conferência</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Qtd / Medida</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Endereço</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-foreground/60 border-border/5")}>Data</th>
+                </tr>
+              </thead>
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
+                {allRegistrosDetailed.map((reg, idx) => (
+                  <tr key={idx} className={cn("transition-colors group", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6">
+                      <div className="flex flex-col">
+                        <span className={cn("font-bold transition-colors text-sm sm:text-base group-hover:text-primary", isDark ? "text-slate-200" : "text-foreground/90")}>
+                          {reg.processo || reg.nf || reg.item || 'Item sem identificação'}
+                        </span>
+                        {reg.item && reg.item !== (reg.processo || reg.nf) && (
+                           <span className={cn("text-[10px] font-bold uppercase tracking-wider", isDark ? "text-slate-500" : "text-foreground/40")}>{reg.item}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className={cn("px-6 sm:px-10 py-4 sm:py-6 font-bold truncate max-w-[150px] hidden sm:table-cell", isDark ? "text-slate-400" : "text-foreground/70")}>
+                      {reg.conferenceName}
+                    </td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right">
+                      <div className="text-sm font-black text-primary tabular-nums">
+                        {reg.quantidade || reg.mLinear || reg.m2 || 0} {reg.modoOrigem === 'madeira' ? 'm' : 'un'}
+                      </div>
+                    </td>
+                    <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono font-bold hidden md:table-cell", isDark ? "text-slate-400" : "text-foreground/70")}>
+                      {reg.endereco || '—'}
+                    </td>
+                    <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-[11px] sm:text-[12px] font-bold hidden xs:table-cell", isDark ? "text-slate-500" : "text-foreground/50")}>
+                      {formatDateBR(reg.date)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
+            <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "")} onClick={() => setDetailDialog(null)}>
+              Fechar Registros
             </Button>
           </div>
         </DialogContent>
