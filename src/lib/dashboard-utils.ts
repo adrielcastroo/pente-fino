@@ -82,16 +82,16 @@ export const computeStats = (history: Conference[], stats_estoque: any[]): AppSt
     conferenteDetails,
     occupation: {
       tecido: {
-        used: stats_estoque?.filter(p => p.status === 'ocupado').length || 0,
-        total: TOTAL_SLOTS,
-        reserved: stats_estoque?.filter(p => p.status === 'reservado').length || 0,
-        blocked: stats_estoque?.filter(p => p.status === 'bloqueado').length || 0,
+        used: stats_estoque?.tecido?.used || 0,
+        total: stats_estoque?.tecido?.total || TOTAL_SLOTS,
+        reserved: stats_estoque?.tecido?.reserved || 0,
+        blocked: stats_estoque?.tecido?.blocked || 0,
       },
       madeira: {
-        used: 0,
-        total: 0,
-        reserved: 0,
-        blocked: 0,
+        used: stats_estoque?.madeira?.used || 0,
+        total: stats_estoque?.madeira?.total || 0,
+        reserved: stats_estoque?.madeira?.reserved || 0,
+        blocked: stats_estoque?.madeira?.blocked || 0,
       }
     }
   };
