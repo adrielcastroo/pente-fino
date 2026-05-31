@@ -1,7 +1,7 @@
 import { Conference, AppStats } from '@/types';
 import { TOTAL_SLOTS } from './app-utils';
 
-export const computeStats = (history: Conference[], stats_estoque: any[]): AppStats => {
+export const computeStats = (history: Conference[], stats_estoque: any): AppStats => {
   const totalConferentes = new Set(history.map(h => h.conferente)).size;
   const totalConferencias = history.length;
   const totalRegistros = history.reduce((acc, h) => acc + h.registros.length, 0);
