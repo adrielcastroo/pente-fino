@@ -94,3 +94,34 @@ export interface UndoEntry {
   reg: Registro;
   idx: number;
 }
+
+export interface AppStats {
+  totalConferentes: number;
+  totalConferencias: number;
+  totalRegistros: number;
+  avgDuration: string;
+  timeline: { name: string; total: number }[];
+  topConferentes: { name: string; value: number }[];
+  categorias: { name: string; value: number }[];
+  tipos: { name: string; value: number }[];
+  conferenteDetails: {
+    name: string;
+    total: number;
+    conferences: number;
+    lastDate: string;
+  }[];
+  occupation: {
+    tecido: {
+      used: number;
+      total: number;
+      reserved: number;
+      blocked: number;
+    };
+    madeira: {
+      used: number;
+      total: number;
+      reserved: number;
+      blocked: number;
+    };
+  };
+}
