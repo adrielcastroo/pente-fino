@@ -30,8 +30,8 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
               {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : detailChart?.type === 'area' ? <Activity className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
             </div>
             <div className="space-y-1">
-              <DialogTitle className="text-2xl font-black tracking-tight text-foreground/90">{detailChart?.title}</DialogTitle>
-              <DialogDescription className="text-sm font-medium text-muted-foreground opacity-70">
+              <DialogTitle className="text-2xl font-black tracking-tight text-foreground">{detailChart?.title}</DialogTitle>
+              <DialogDescription className="text-sm font-bold text-foreground/60">
                 Visualização detalhada das métricas operacionais
               </DialogDescription>
             </div>
@@ -59,15 +59,15 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontWeight: 600 }}
+                  stroke="hsl(var(--foreground) / 0.4)"
+                  tick={{ fontWeight: 800 }}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
                   fontSize={11} 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontWeight: 600 }}
+                  stroke="hsl(var(--foreground) / 0.4)"
+                  tick={{ fontWeight: 800 }}
                   dx={-5}
                 />
                 <ChartTooltip 
@@ -104,16 +104,16 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
                   fontSize={11} 
                   axisLine={false} 
                   tickLine={false} 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontWeight: 600 }}
+                  stroke="hsl(var(--foreground) / 0.4)"
+                  tick={{ fontWeight: 800 }}
                   dy={15}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
                   fontSize={11} 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontWeight: 600 }}
+                  stroke="hsl(var(--foreground) / 0.4)"
+                  tick={{ fontWeight: 800 }}
                   dx={-5}
                 />
                 <ChartTooltip 

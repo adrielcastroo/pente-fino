@@ -31,7 +31,7 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay, onClick }: 
       <div className="text-[clamp(1.75rem,8vw,3.5rem)] font-black tracking-tighter tabular-nums text-foreground group-hover:text-primary transition-colors duration-500 leading-none">
         {value}
       </div>
-      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-muted-foreground group-hover:text-primary/70 transition-colors duration-500 leading-relaxed">
+      <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-foreground/60 group-hover:text-primary transition-colors duration-500 leading-relaxed">
         {label}
       </p>
     </div>
