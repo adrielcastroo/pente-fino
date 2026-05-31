@@ -669,7 +669,7 @@ export default function SettingsPage() {
                               value={labelSettings.webhookUrl}
                               onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
                               className="pl-9 text-sm bg-muted/20 font-mono"
-                              placeholder="http://localhost:5678/webhook/..."
+                              placeholder="http://172.18.224.1:5678/webhook-test/..."
                             />
                           </div>
                         </div>
