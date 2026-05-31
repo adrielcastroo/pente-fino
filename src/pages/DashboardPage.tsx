@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2 } from 'lucide-react';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
-import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
+import { formatDateBR, formatTimeBR, cn } from '@/lib/app-utils';
+import { useAppStore } from '@/store/useAppStore';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
