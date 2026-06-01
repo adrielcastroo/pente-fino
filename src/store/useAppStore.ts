@@ -180,7 +180,7 @@ export const useAppStore = create<AppState>()(
         showQRCode: true,
         orientation: 'landscape',
         autoPrint: true,
-        webhookUrl: 'http://172.18.224.1:5678/webhook-test/imprimir-etiqueta'
+        webhookUrl: 'http://localhost:5678/webhook-test/imprimir-etiqueta'
       },
       
       isArchiving: false,
