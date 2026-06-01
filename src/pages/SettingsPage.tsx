@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
@@ -81,6 +82,8 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
   const setFormData = useAppStore(s => s.setFormData);
+  const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
+  const setDashboardDialogTheme = useAppStore(s => s.setDashboardDialogTheme);
 
   useEffect(() => {
     setFormData({ activeTab: 'settings' });
@@ -557,6 +560,35 @@ export default function SettingsPage() {
                             </span>
                           </button>
                         ))}
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-4 mt-6">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-sm font-bold">Tema dos Diálogos do Dashboard</Label>
+                            <p className="text-xs text-muted-foreground">Escolha o tema para os popups detalhados do Dashboard.</p>
+                          </div>
+                          <div className="flex bg-background/50 p-1 rounded-xl border border-border/20">
+                            <button 
+                              onClick={() => { setDashboardDialogTheme('light'); setHasUnsavedChanges(true); }}
+                              className={cn(
+                                "p-2 rounded-lg transition-all",
+                                dashboardDialogTheme === 'light' ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <Sun className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => { setDashboardDialogTheme('dark'); setHasUnsavedChanges(true); }}
+                              className={cn(
+                                "p-2 rounded-lg transition-all",
+                                dashboardDialogTheme === 'dark' ? "bg-slate-900 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <Moon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
