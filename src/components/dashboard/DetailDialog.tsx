@@ -12,7 +12,7 @@ import {
 
 // Premium Color Palette - Jewel Tones synced with DashboardCharts
 const CHART_COLORS = [
-  'hsl(var(--primary))',
+  '#2563EB', // Blue 600 (Pente Fino Blue)
   '#0D9488', // Teal 600
   '#7C3AED', // Violet 600
   '#D97706', // Amber 600
@@ -35,7 +35,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
     <Dialog open={!!detailChart} onOpenChange={onClose}>
       <DialogContent className={cn(
         "w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[1.5rem] sm:rounded-[2.5rem] border shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col",
-        isDark ? "bg-[#0F172A] border-slate-800" : "bg-white border-border/10"
+        isDark ? "bg-[#0F172A] border-slate-800" : "bg-white border-border/10 text-[#2563EB]"
       )}>
       <DialogHeader className={cn(
         "p-6 sm:p-8 pb-4 sm:pb-6 border-b flex-none",
@@ -47,8 +47,8 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
               {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : detailChart?.type === 'area' ? <Activity className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
             </div>
             <div className="space-y-1">
-              <DialogTitle className={cn("text-2xl font-black tracking-tight", isDark ? "text-slate-100" : "text-foreground")}>{detailChart?.title}</DialogTitle>
-              <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/60")}>
+              <DialogTitle className={cn("text-2xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>{detailChart?.title}</DialogTitle>
+              <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/60")}>
                 Visualização detalhada das métricas operacionais
               </DialogDescription>
             </div>
@@ -232,7 +232,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
           variant="outline" 
           className={cn(
             "rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]",
-            isDark ? "border-slate-700 text-slate-300 hover:border-primary" : ""
+            isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB] hover:border-[#2563EB]"
           )} 
           onClick={onClose}
         >
