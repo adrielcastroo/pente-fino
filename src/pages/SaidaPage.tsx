@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { usePerformance } from '@/hooks/use-performance';
+import { printLabel } from '@/services/printService';
+import { useAppStore } from '@/store/useAppStore';
 import { formatDateBR } from '@/lib/app-utils';
 
 interface SaidaRegistro {
@@ -138,6 +140,18 @@ export default function SaidaPage() {
       // Delete from estoque_posicoes
       const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
       if (delError) throw delError;
+      
+      // Impressão Automática (PPLA)
+      if (labelSettings.autoPrint) {
+        printLabel({
+          item: pos.item,
+          descricao: 'SAÍDA',
+          lote: pos.lote,
+          processo: pos.proc,
+          m_linear: `${pos.m_linear}m`,
+          endereco: pos.endereco
+        }, labelSettings);
+      }
 
       setScanResult({
         item: pos,

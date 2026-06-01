@@ -296,6 +296,19 @@ export default function EstoquePage() {
 
       const { error: delError } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
       if (delError) throw delError;
+      
+      // Impressão Automática (PPLA)
+      const labelSettings = useAppStore.getState().labelSettings;
+      if (labelSettings.autoPrint) {
+        printLabel({
+          item: pos.item,
+          descricao: 'SAÍDA',
+          lote: pos.lote,
+          processo: pos.proc,
+          m_linear: `${pos.m_linear}m`,
+          endereco: pos.endereco
+        }, labelSettings);
+      }
 
       setScanResult({
         item: pos,
