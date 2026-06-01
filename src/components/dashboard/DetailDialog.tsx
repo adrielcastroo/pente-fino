@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, Activity } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,7 +24,10 @@ const CHART_COLORS = [
 export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => {
   const isMobile = useIsMobile();
   const theme = useAppStore(s => s.dashboardDialogTheme);
-  const isDark = theme === 'dark';
+  const { theme: systemTheme } = useTheme();
+  
+  // Se o tema for 'system', usamos o tema do sistema, caso contrário usamos o tema fixo ('light' ou 'dark')
+  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   
   const axisStroke = isDark ? 'rgba(255,255,255,0.4)' : 'hsl(var(--foreground) / 0.4)';
   const tooltipBg = isDark ? '#1E293B' : 'hsl(var(--card) / 0.9)';

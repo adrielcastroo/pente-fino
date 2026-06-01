@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Moon, Sun } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useTheme } from 'next-themes';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Moon, Sun, Laptop } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,7 +34,8 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 export default function DashboardPage() {
   const isMobile = useIsMobile();
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
-  const isDark = dashboardDialogTheme === 'dark';
+  const { theme: systemTheme } = useTheme();
+  const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
 
   const {
     history,

@@ -59,7 +59,7 @@ export interface AppState {
   
   // Label Settings
   labelSettings: LabelSettings;
-  dashboardDialogTheme: 'light' | 'dark';
+  dashboardDialogTheme: 'light' | 'dark' | 'system';
 
   // Loading & Error States
   isArchiving: boolean;
@@ -97,7 +97,7 @@ export interface AppState {
   
   setFormData: (updates: Partial<FormData>) => void;
   setLabelSettings: (settings: Partial<LabelSettings>) => void;
-  setDashboardDialogTheme: (theme: 'light' | 'dark') => void;
+  setDashboardDialogTheme: (theme: 'light' | 'dark' | 'system') => void;
   resetFormData: () => void;
   resetMotorFormData: () => void;
   addRegistro: (reg: Registro) => void;
@@ -167,7 +167,7 @@ export const useAppStore = create<AppState>()(
       lockMotorNf: false,
       
   formData: INITIAL_FORM_DATA,
-      dashboardDialogTheme: 'light',
+      dashboardDialogTheme: 'system',
       labelSettings: {
         width: 100,
         height: 60,
