@@ -563,29 +563,44 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-4 mt-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="space-y-0.5">
                             <Label className="text-sm font-bold">Tema dos Diálogos do Dashboard</Label>
                             <p className="text-xs text-muted-foreground">Escolha o tema para os popups detalhados do Dashboard.</p>
                           </div>
-                          <div className="flex bg-background/50 p-1 rounded-xl border border-border/20">
+                          <div className="flex bg-background/50 p-1 rounded-xl border border-border/20 self-start sm:self-center">
                             <button 
                               onClick={() => { setDashboardDialogTheme('light'); setHasUnsavedChanges(true); }}
+                              title="Modo Claro"
                               className={cn(
-                                "p-2 rounded-lg transition-all",
+                                "p-2 rounded-lg transition-all flex items-center gap-2",
                                 dashboardDialogTheme === 'light' ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                               )}
                             >
                               <Sun className="w-4 h-4" />
+                              <span className="text-[10px] font-bold uppercase sm:hidden">Claro</span>
                             </button>
                             <button 
                               onClick={() => { setDashboardDialogTheme('dark'); setHasUnsavedChanges(true); }}
+                              title="Modo Escuro"
                               className={cn(
-                                "p-2 rounded-lg transition-all",
+                                "p-2 rounded-lg transition-all flex items-center gap-2",
                                 dashboardDialogTheme === 'dark' ? "bg-slate-900 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                               )}
                             >
                               <Moon className="w-4 h-4" />
+                              <span className="text-[10px] font-bold uppercase sm:hidden">Escuro</span>
+                            </button>
+                            <button 
+                              onClick={() => { setDashboardDialogTheme('system'); setHasUnsavedChanges(true); }}
+                              title="Modo Sistema"
+                              className={cn(
+                                "p-2 rounded-lg transition-all flex items-center gap-2",
+                                dashboardDialogTheme === 'system' ? "bg-background/80 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <Laptop className="w-4 h-4" />
+                              <span className="text-[10px] font-bold uppercase sm:hidden">Sistema</span>
                             </button>
                           </div>
                         </div>
