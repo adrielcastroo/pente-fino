@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
