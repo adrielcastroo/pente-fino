@@ -13,7 +13,7 @@ import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
-import { ThemeToggle } from '@/components/ThemeToggle';
+
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -378,7 +378,6 @@ export default function DashboardPage() {
                   <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>Desempenho individual por conferente</DialogDescription>
                 </div>
               </div>
-              <ThemeToggle />
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
@@ -429,7 +428,6 @@ export default function DashboardPage() {
                   <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>Linha do tempo detalhada das sessões operacionais</DialogDescription>
                 </div>
               </div>
-              <ThemeToggle />
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
@@ -488,7 +486,7 @@ export default function DashboardPage() {
                   <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-foreground/70")}>Listagem completa de todos os itens registrados</DialogDescription>
                 </div>
               </div>
-              <ThemeToggle />
+              
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">

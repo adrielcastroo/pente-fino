@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, Activity } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppStore } from '@/store/useAppStore';
-import { ThemeToggle } from '@/components/ThemeToggle';
+
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
@@ -53,7 +53,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
               </DialogDescription>
             </div>
           </div>
-          <ThemeToggle />
+          
         </div>
       </DialogHeader>
       
