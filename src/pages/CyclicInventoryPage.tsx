@@ -150,7 +150,8 @@ export default function CyclicInventoryPage() {
           conferente_nome: user?.email?.split('@')[0] || 'Conferente',
           quantidade_contada: counted,
           quantidade_sistema: foundItem.systemQty,
-          diferenca: diff
+          diferenca: diff,
+          detalhes_bipagem: sessionScans
         });
 
       if (historyError) throw historyError;
