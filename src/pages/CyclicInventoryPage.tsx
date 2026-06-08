@@ -157,12 +157,36 @@ export default function CyclicInventoryPage() {
 
       if (historyError) throw historyError;
 
-      // 2. If it was a pending task, mark as completed
+      // 2. If it was a pending task, mark as completed and update item last count date
       if (foundItem.tarefaId) {
         await supabase
           .from('tarefas_contagem')
           .update({ status: 'concluido' })
           .eq('id', foundItem.tarefaId);
+          
+        // Update last count date in the respective table
+        const now = new Date().toISOString();
+        const { data: task } = await supabase
+          .from('tarefas_contagem')
+          .select('item_id')
+          .eq('id', foundItem.tarefaId)
+          .single();
+
+        if (task?.item_id) {
+          // Try updating in registros first
+          const { error: regErr } = await supabase
+            .from('registros')
+            .update({ ultima_contagem: now })
+            .eq('id', task.item_id);
+            
+          if (regErr) {
+            // If not in registros, try inventory
+            await supabase
+              .from('inventory')
+              .update({ ultima_contagem: now })
+              .eq('id', task.item_id);
+          }
+        }
       }
 
       toast.success('Contagem finalizada com sucesso!');
