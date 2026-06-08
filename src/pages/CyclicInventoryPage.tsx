@@ -12,6 +12,7 @@ import { Barcode, CheckCircle2, AlertTriangle, Search, Package2, ArrowLeft, Send
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { CountingHistoryTable } from '@/components/inventory/CountingHistoryTable';
+import { InventorySuggestionsTab } from '@/components/inventory/InventorySuggestionsTab';
 import { cn } from '@/lib/utils';
 import { TarefaContagem } from '@/types';
 import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
@@ -156,12 +157,36 @@ export default function CyclicInventoryPage() {
 
       if (historyError) throw historyError;
 
-      // 2. If it was a pending task, mark as completed
+      // 2. If it was a pending task, mark as completed and update item last count date
       if (foundItem.tarefaId) {
         await supabase
           .from('tarefas_contagem')
           .update({ status: 'concluido' })
           .eq('id', foundItem.tarefaId);
+          
+        // Update last count date in the respective table
+        const now = new Date().toISOString();
+        const { data: task } = await supabase
+          .from('tarefas_contagem')
+          .select('item_id')
+          .eq('id', foundItem.tarefaId)
+          .single();
+
+        if (task?.item_id) {
+          // Try updating in registros first
+          const { error: regErr } = await supabase
+            .from('registros')
+            .update({ ultima_contagem: now })
+            .eq('id', task.item_id);
+            
+          if (regErr) {
+            // If not in registros, try inventory
+            await supabase
+              .from('inventory')
+              .update({ ultima_contagem: now })
+              .eq('id', task.item_id);
+          }
+        }
       }
 
       toast.success('Contagem finalizada com sucesso!');
@@ -216,18 +241,24 @@ export default function CyclicInventoryPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-16 bg-card/20 backdrop-blur-md rounded-2xl border border-border/10 p-1.5 shadow-sm">
+        <TabsList className="grid w-full grid-cols-3 h-16 bg-card/20 backdrop-blur-md rounded-2xl border border-border/10 p-1.5 shadow-sm">
           <TabsTrigger 
             value="execution" 
             className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
           >
-            Execução de Contagem
+            Execução
+          </TabsTrigger>
+          <TabsTrigger 
+            value="suggestions" 
+            className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
+          >
+            Sugestões
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
             className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
           >
-            Histórico e Auditoria
+            Histórico
           </TabsTrigger>
         </TabsList>
 
@@ -396,6 +427,10 @@ export default function CyclicInventoryPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="suggestions" className="mt-8">
+          <InventorySuggestionsTab />
         </TabsContent>
 
         <TabsContent value="history" className="mt-8">

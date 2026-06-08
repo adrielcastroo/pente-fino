@@ -25,6 +25,7 @@ export const registroService = {
       avaria_tipo: r.avariaTipo ?? null,
       avaria_descricao: r.avariaDescricao ?? null,
       avaria_foto_url: r.avariaFotoUrl ?? null,
+      curva_abc: r.curva_abc || 'C',
     }));
 
     const { data, error } = await supabase

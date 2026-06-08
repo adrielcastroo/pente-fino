@@ -61,6 +61,7 @@ import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LotesMestresPanel from '@/components/settings/LotesMestresPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
+import InventorySettingsPanel from '@/components/settings/InventorySettingsPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
 const categories = [
@@ -72,6 +73,7 @@ const categories = [
   { id: 'lotes-mestres', name: 'Lotes Mestres', icon: Palette, description: 'Tonalidades de referência para classificar lâminas de madeira.' },
   { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
   { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
+  { id: 'inventory-cyclic', name: 'Inventário Cíclico', icon: RefreshCw, description: 'Configure as frequências das curvas ABC.' },
 ];
 
 export default function SettingsPage() {
@@ -726,6 +728,10 @@ export default function SettingsPage() {
                   
                   {activeCategory === 'label-layout' && (
                     <LabelLayoutPanel />
+                  )}
+
+                  {activeCategory === 'inventory-cyclic' && (
+                    <InventorySettingsPanel />
                   )}
 
                   {activeCategory === 'security' && (

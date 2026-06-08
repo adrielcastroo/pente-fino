@@ -867,6 +867,7 @@ export const LeftPanel = memo(function LeftPanel() {
       tipoTecido: isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '',
       modoOrigem: isAI ? 'openrouter' : isDiversos ? 'diversos' : isEtiqPronta ? 'etiq_pronta' : 'manual',
       posicao: resolvedPosicao,
+      curva_abc: formData.curvaABC || 'C',
       isNew: true,
     };
     addRegistro(reg);
@@ -1210,6 +1211,20 @@ export const LeftPanel = memo(function LeftPanel() {
                     >
                       {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                     </button>
+                  )}
+                  {isRolo && (
+                    <div className="flex items-center gap-1 ml-auto">
+                      <label className="text-[9px] font-black uppercase text-muted-foreground">Curva</label>
+                      <select 
+                        value={formData.curvaABC || 'C'}
+                        onChange={(e) => setFormData({ curvaABC: e.target.value })}
+                        className="bg-transparent text-[10px] font-black border-none focus:ring-0 p-0 h-auto cursor-pointer"
+                      >
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                      </select>
+                    </div>
                   )}
                 </div>
               <div className="relative">

@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes_inventario: {
+        Row: {
+          created_at: string | null
+          curva: string
+          dias_frequencia: number
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          curva: string
+          dias_frequencia?: number
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          curva?: string
+          dias_frequencia?: number
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       estoque_posicoes: {
         Row: {
           codigo_cor: string | null
@@ -366,29 +390,35 @@ export type Database = {
       inventory: {
         Row: {
           created_at: string
+          curva_abc: string | null
           id: string
           location: string | null
           name: string
           quantity: number | null
           sku: string
+          ultima_contagem: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          curva_abc?: string | null
           id?: string
           location?: string | null
           name: string
           quantity?: number | null
           sku: string
+          ultima_contagem?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          curva_abc?: string | null
           id?: string
           location?: string | null
           name?: string
           quantity?: number | null
           sku?: string
+          ultima_contagem?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -537,6 +567,7 @@ export type Database = {
           composicao: string | null
           conference_id: string | null
           created_at: string
+          curva_abc: string | null
           edited_at: string | null
           edited_by: string
           endereco: string
@@ -557,6 +588,7 @@ export type Database = {
           quantidade: number | null
           status: string | null
           tipo_tecido: string
+          ultima_contagem: string | null
           was_edited: boolean
         }
         Insert: {
@@ -567,6 +599,7 @@ export type Database = {
           composicao?: string | null
           conference_id?: string | null
           created_at?: string
+          curva_abc?: string | null
           edited_at?: string | null
           edited_by?: string
           endereco?: string
@@ -587,6 +620,7 @@ export type Database = {
           quantidade?: number | null
           status?: string | null
           tipo_tecido?: string
+          ultima_contagem?: string | null
           was_edited?: boolean
         }
         Update: {
@@ -597,6 +631,7 @@ export type Database = {
           composicao?: string | null
           conference_id?: string | null
           created_at?: string
+          curva_abc?: string | null
           edited_at?: string | null
           edited_by?: string
           endereco?: string
@@ -617,6 +652,7 @@ export type Database = {
           quantidade?: number | null
           status?: string | null
           tipo_tecido?: string
+          ultima_contagem?: string | null
           was_edited?: boolean
         }
         Relationships: [

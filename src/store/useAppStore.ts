@@ -129,6 +129,7 @@ const INITIAL_FORM_DATA: FormData = {
   etiqProntaLoteFinal: '',
   activeTab: 'inicio',
   posicao: '',
+  curvaABC: 'C',
 };
 
 export const useAppStore = create<AppState>()(

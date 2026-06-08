@@ -22,6 +22,8 @@ export interface Registro {
   avariaTipo?: 'riscado' | 'manchado' | 'quebrado' | 'outro' | null;
   avariaDescricao?: string | null;
   avariaFotoUrl?: string | null;
+  curva_abc?: string;
+  ultima_contagem?: string | null;
 }
 
 export interface LoteMestre {
@@ -88,6 +90,7 @@ export interface FormData {
   etiqProntaLoteFinal: string;
   posicao: string;
   activeTab: AppTab;
+  curvaABC: string;
 }
 
 export interface UndoEntry {
