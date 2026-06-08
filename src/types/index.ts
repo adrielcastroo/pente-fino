@@ -144,5 +144,6 @@ export interface HistoricoContagem {
   quantidade_sistema: number;
   data_conferencia: string;
   diferenca: number;
+  detalhes_bipagem?: any[];
 }
 
