@@ -1,4 +1,4 @@
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
@@ -35,6 +35,7 @@ const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'reservas', label: 'Reservas Estoque', icon: Table, path: '/reservas' },
   { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
   { key: 'ciclico', label: 'Inv. Cíclico', icon: ClipboardCheck, path: '/inventario-ciclico' },
+  { key: 'enderecamento', label: 'Endereçamento', icon: MapPin, path: '/enderecamento' },
 ];
 
 

@@ -489,6 +489,39 @@ export type Database = {
         }
         Relationships: []
       }
+      movimentacoes_endereco: {
+        Row: {
+          codigo_lote: string
+          conferente_nome: string
+          created_at: string | null
+          data_movimentacao: string | null
+          endereco_anterior: string | null
+          endereco_novo: string
+          id: string
+          item_id: string | null
+        }
+        Insert: {
+          codigo_lote: string
+          conferente_nome: string
+          created_at?: string | null
+          data_movimentacao?: string | null
+          endereco_anterior?: string | null
+          endereco_novo: string
+          id?: string
+          item_id?: string | null
+        }
+        Update: {
+          codigo_lote?: string
+          conferente_nome?: string
+          created_at?: string | null
+          data_movimentacao?: string | null
+          endereco_anterior?: string | null
+          endereco_novo?: string
+          id?: string
+          item_id?: string | null
+        }
+        Relationships: []
+      }
       operation_logs: {
         Row: {
           conferente_name: string

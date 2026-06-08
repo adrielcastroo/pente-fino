@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { formatDateBR } from './app-utils';
 
 interface ExportCyclicInventoryParams {
   itemCode: string;
@@ -54,4 +55,50 @@ export const exportCyclicInventoryXLSX = ({ itemCode, referenceDate, scans }: Ex
   // Save file
   const fileName = `conferencia_${itemCode}_${referenceDate.replace(/\//g, '-')}.xlsx`;
   saveAs(data, fileName);
+};
+
+interface ExportAllocationParams {
+  data: {
+    timestamp: string;
+    conferente: string;
+    item: string;
+    lote: string;
+    origem: string;
+    destino: string;
+  };
+}
+
+export const exportAllocationXLSX = ({ data }: ExportAllocationParams) => {
+  const wb = XLSX.utils.book_new();
+  
+  const headers = ['DATA/HORA', 'CONFERENTE', 'ITEM/DESCRIÇÃO', 'LOTE', 'ENDEREÇO ORIGEM', 'ENDEREÇO DESTINO'];
+  const row = [
+    data.timestamp,
+    data.conferente,
+    data.item,
+    data.lote,
+    data.origem,
+    data.destino
+  ];
+  
+  const wsData = [headers, row];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  
+  const wscols = [
+    { wch: 20 }, // Data/Hora
+    { wch: 20 }, // Conferente
+    { wch: 30 }, // Item
+    { wch: 20 }, // Lote
+    { wch: 20 }, // Origem
+    { wch: 20 }, // Destino
+  ];
+  ws['!cols'] = wscols;
+  
+  XLSX.utils.book_append_sheet(wb, ws, 'Alocação');
+  
+  const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  
+  const fileName = `alocacao_${data.lote}_${data.timestamp.replace(/[:/]/g, '-')}.xlsx`;
+  saveAs(blob, fileName);
 };

@@ -18,6 +18,7 @@ const ReservasPage = lazy(() => import("./pages/ReservasPage.tsx"));
 const HistoricoPage = lazy(() => import("./pages/HistoricoPage.tsx"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
 const CyclicInventoryPage = lazy(() => import("./pages/CyclicInventoryPage.tsx"));
+const WMSAllocationPage = lazy(() => import("./pages/WMSAllocationPage.tsx"));
 
 
 const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
@@ -92,6 +93,7 @@ const App = () => (
                   <Route path="/historico" element={<HistoricoPage />} />
                   <Route path="/configuracoes" element={<SettingsPage />} />
                   <Route path="/inventario-ciclico" element={<CyclicInventoryPage />} />
+                  <Route path="/enderecamento" element={<WMSAllocationPage />} />
                 </Route>
 
 
