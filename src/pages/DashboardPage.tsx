@@ -14,6 +14,8 @@ import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
+import { CyclicNotification } from '@/components/inventory/CyclicNotification';
+
 
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
@@ -198,8 +200,12 @@ export default function DashboardPage() {
         </div>
       </header>
       
+      {/* Cyclic Inventory Notification */}
+      <CyclicNotification />
+
       {/* Stat Cards - Consolidated and Optimized */}
       <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
+
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
