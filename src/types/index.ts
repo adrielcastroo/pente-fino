@@ -43,7 +43,7 @@ export interface Conference {
 }
 
 export type AppMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle' | 'etiq_pronta';
-export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'reservas' | 'history' | 'settings';
+export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'reservas' | 'history' | 'settings' | 'ciclico';
 
 export interface Reserva {
   id: string;
@@ -125,3 +125,24 @@ export interface AppStats {
     };
   };
 }
+
+export interface TarefaContagem {
+  id: string;
+  item_id?: string;
+  item_name?: string;
+  codigo_lote: string;
+  quantidade_esperada_sistema: number;
+  status: 'pendente' | 'concluido';
+  data_geracao: string;
+}
+
+export interface HistoricoContagem {
+  id: string;
+  tarefa_id: string;
+  conferente_nome: string;
+  quantidade_contada: number;
+  quantidade_sistema: number;
+  data_conferencia: string;
+  diferenca: number;
+}
+
