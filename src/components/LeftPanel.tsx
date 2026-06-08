@@ -1307,9 +1307,11 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="nf-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NF)</label>
-                  <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
-                    {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                  </button>
+                  {(lockNf || isRolo) && (
+                    <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
+                      {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    </button>
+                  )}
                 </div>
                 <input
                   id="nf-input"
@@ -1318,7 +1320,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleNfChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    lockNf ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                   }`}
                   placeholder="NF..."
                   autoComplete="off"
