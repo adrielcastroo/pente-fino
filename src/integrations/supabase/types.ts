@@ -280,6 +280,47 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_contagens: {
+        Row: {
+          conferente_nome: string | null
+          created_at: string | null
+          data_conferencia: string | null
+          diferenca: number
+          id: string
+          quantidade_contada: number
+          quantidade_sistema: number
+          tarefa_id: string | null
+        }
+        Insert: {
+          conferente_nome?: string | null
+          created_at?: string | null
+          data_conferencia?: string | null
+          diferenca: number
+          id?: string
+          quantidade_contada: number
+          quantidade_sistema?: number
+          tarefa_id?: string | null
+        }
+        Update: {
+          conferente_nome?: string | null
+          created_at?: string | null
+          data_conferencia?: string | null
+          diferenca?: number
+          id?: string
+          quantidade_contada?: number
+          quantidade_sistema?: number
+          tarefa_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_contagens_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas_contagem"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       independent_reservations: {
         Row: {
           caixa_num: string | null
@@ -685,6 +726,42 @@ export type Database = {
           observacao?: string | null
           quantidade?: number
           quantidade_cx?: number | null
+        }
+        Relationships: []
+      }
+      tarefas_contagem: {
+        Row: {
+          codigo_lote: string
+          created_at: string | null
+          data_geracao: string | null
+          id: string
+          item_id: string | null
+          item_name: string | null
+          quantidade_esperada_sistema: number
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          codigo_lote: string
+          created_at?: string | null
+          data_geracao?: string | null
+          id?: string
+          item_id?: string | null
+          item_name?: string | null
+          quantidade_esperada_sistema?: number
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          codigo_lote?: string
+          created_at?: string | null
+          data_geracao?: string | null
+          id?: string
+          item_id?: string | null
+          item_name?: string | null
+          quantidade_esperada_sistema?: number
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
