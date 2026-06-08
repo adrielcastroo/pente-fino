@@ -148,7 +148,6 @@ export default function CyclicInventoryPage() {
         .insert({
           tarefa_id: foundItem.tarefaId || null,
           conferente_nome: user?.email?.split('@')[0] || 'Conferente',
-          detalhes_bipagem: sessionScans, // We'll try to save this if possible, or just keep it in memory for export
           quantidade_contada: counted,
           quantidade_sistema: foundItem.systemQty,
           diferenca: diff
