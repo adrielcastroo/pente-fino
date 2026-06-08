@@ -51,7 +51,7 @@ export function InventorySuggestionsTab() {
       if (registrosRes.error) throw registrosRes.error;
       if (inventoryRes.error) throw inventoryRes.error;
 
-      const allItems: Suggestion[] = [
+      const allItems = [
         ...(registrosRes.data || []).map(r => ({
           id: r.id,
           name: r.item,
@@ -73,17 +73,20 @@ export function InventorySuggestionsTab() {
       ];
 
       const today = new Date();
-      const suggested = allItems.filter(item => {
-        const referenceDate = new Date(item.ultima_contagem || item.created_at);
-        const diffTime = Math.abs(today.getTime() - referenceDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const maxDays = configMap[item.curva_abc] || 90;
+      const suggested: Suggestion[] = allItems
+        .map(item => {
+          const referenceDate = new Date(item.ultima_contagem || item.created_at);
+          const diffTime = Math.abs(today.getTime() - referenceDate.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const maxDays = configMap[item.curva_abc] || 90;
 
-        (item as any).dias_desde_referencia = diffDays;
-        item.dias_atraso = diffDays - maxDays;
-
-        return diffDays > maxDays;
-      }).sort((a, b) => b.dias_atraso - a.dias_atraso);
+          return {
+            ...item,
+            dias_atraso: diffDays - maxDays
+          } as Suggestion;
+        })
+        .filter(item => item.dias_atraso > 0)
+        .sort((a, b) => b.dias_atraso - a.dias_atraso);
 
       setSuggestions(suggested);
     } catch (error: any) {
