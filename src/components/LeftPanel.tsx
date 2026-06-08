@@ -218,12 +218,11 @@ export const LeftPanel = memo(function LeftPanel() {
   const largura = useMemo(() => 
     isAI ? aiLarguraNum
     : isMadeira ? 0
-    : isCoulisse ? (manualLarguraNum || extractLarguraFromItem(item))
+    : (isCoulisse || isRolo) ? (manualLarguraNum || extractLarguraFromItem(item))
     : isCortina ? cortinaLarguraNum
     : isCelular ? celularDivisor
-    : usesLarguraFromItem ? extractLarguraFromItem(item)
     : 0,
-    [isAI, aiLarguraNum, isMadeira, isCoulisse, manualLarguraNum, item, isCortina, cortinaLarguraNum, isCelular, celularDivisor, usesLarguraFromItem]
+    [isAI, aiLarguraNum, isMadeira, isCoulisse, isRolo, manualLarguraNum, item, isCortina, cortinaLarguraNum, isCelular, celularDivisor]
   );
 
   const mLinear = useMemo(() => 
