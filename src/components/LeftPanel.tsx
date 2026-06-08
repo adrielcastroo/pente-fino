@@ -1545,7 +1545,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleEnderecoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
-                    (isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
+                    (isMadeira ? lockMadeiraEndereco || (isRolo && lockEndereco) : lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
                   placeholder="TEC01.A.N03" autoComplete="off"
                   readOnly={(isMadeira ? lockMadeiraEndereco : lockEndereco) && !!(isMadeira ? endereco : lockedEndereco)}
