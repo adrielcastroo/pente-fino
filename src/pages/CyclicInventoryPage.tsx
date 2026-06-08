@@ -29,6 +29,7 @@ export default function CyclicInventoryPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [errorStatus, setErrorStatus] = useState<'none' | 'not_found' | 'warning'>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionScans, setSessionScans] = useState<{timestamp: string, itemCode: string, inspectorName: string}[]>([]);
   const [lastExportData, setLastExportData] = useState<{ itemCode: string, scans: any[] } | null>(null);
   
   const lotInputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +63,14 @@ export default function CyclicInventoryPage() {
           systemQty: taskData.quantidade_esperada_sistema,
           tarefaId: taskData.id
         });
+        
+        // Add to session scans
+        setSessionScans(prev => [...prev, {
+          timestamp: new Date().toLocaleString('pt-BR'),
+          itemCode: lotInput.trim(),
+          inspectorName: user?.email?.split('@')[0] || 'Conferente'
+        }]);
+        
         setTimeout(() => qtyInputRef.current?.focus(), 100);
       } else {
         // 2. If no pending task, check if lot exists in 'registros'
@@ -78,6 +87,14 @@ export default function CyclicInventoryPage() {
             systemQty: regData.quantidade || regData.m2 || regData.m_linear || 0,
             tarefaId: undefined
           });
+          
+          // Add to session scans
+          setSessionScans(prev => [...prev, {
+            timestamp: new Date().toLocaleString('pt-BR'),
+            itemCode: lotInput.trim(),
+            inspectorName: user?.email?.split('@')[0] || 'Conferente'
+          }]);
+          
           setTimeout(() => qtyInputRef.current?.focus(), 100);
         } else {
           // 3. Check 'inventory' for motors or others
@@ -92,9 +109,17 @@ export default function CyclicInventoryPage() {
               id: invData.id,
               name: invData.name,
               systemQty: invData.quantity,
-              tarefaId: undefined
-            });
-            setTimeout(() => qtyInputRef.current?.focus(), 100);
+                tarefaId: undefined
+              });
+              
+              // Add to session scans
+              setSessionScans(prev => [...prev, {
+                timestamp: new Date().toLocaleString('pt-BR'),
+                itemCode: lotInput.trim(),
+                inspectorName: user?.email?.split('@')[0] || 'Conferente'
+              }]);
+              
+              setTimeout(() => qtyInputRef.current?.focus(), 100);
           } else {
             setErrorStatus('not_found');
             toast.error('Lote não encontrado no sistema!');
@@ -123,6 +148,7 @@ export default function CyclicInventoryPage() {
         .insert({
           tarefa_id: foundItem.tarefaId || null,
           conferente_nome: user?.email?.split('@')[0] || 'Conferente',
+          detalhes_bipagem: sessionScans, // We'll try to save this if possible, or just keep it in memory for export
           quantidade_contada: counted,
           quantidade_sistema: foundItem.systemQty,
           diferenca: diff
@@ -142,12 +168,8 @@ export default function CyclicInventoryPage() {
       
       // Prepare export data
       const scanData = {
-        itemCode: lotInput.trim(),
-        scans: [{
-          timestamp: new Date().toLocaleString('pt-BR'),
-          itemCode: lotInput.trim(),
-          inspectorName: user?.email?.split('@')[0] || 'Conferente'
-        }]
+        itemCode: foundItem.name, // Use the item name or first lot as reference
+        scans: [...sessionScans]
       };
       setLastExportData(scanData);
 
@@ -155,6 +177,7 @@ export default function CyclicInventoryPage() {
       setLotInput('');
       setFoundItem(null);
       setPhysicalQty('');
+      setSessionScans([]);
       lotInputRef.current?.focus();
     } catch (err) {
       console.error('Submit error:', err);
@@ -312,8 +335,44 @@ export default function CyclicInventoryPage() {
                       )}
                     </Button>
                   </div>
-                )}
+                    )}
               </form>
+
+              {sessionScans.length > 0 && (
+                <div className="mt-8 space-y-4 animate-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Log de Bipagem da Sessão ({sessionScans.length})</h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setSessionScans([])}
+                      className="text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10"
+                    >
+                      Limpar Sessão
+                    </Button>
+                  </div>
+                  <div className="rounded-2xl border border-border/10 overflow-hidden bg-muted/10">
+                    <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20">
+                      {sessionScans.map((scan, idx) => (
+                        <div key={idx} className="p-4 border-b border-border/5 flex items-center justify-between hover:bg-primary/5 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                              {idx + 1}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-black uppercase">{scan.itemCode}</span>
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase">{scan.timestamp}</span>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-[9px] font-black uppercase py-0 px-2 border-primary/20 text-primary">
+                            {scan.inspectorName}
+                          </Badge>
+                        </div>
+                      )).reverse()}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {lastExportData && (
                 <div className="mt-8 p-6 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-500">
