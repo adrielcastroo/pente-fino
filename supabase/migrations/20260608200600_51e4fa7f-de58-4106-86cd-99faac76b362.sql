@@ -1,0 +1,1 @@
+ALTER TABLE public.historico_contagens ADD COLUMN detalhes_bipagem JSONB;

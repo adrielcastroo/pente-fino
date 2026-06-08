@@ -285,6 +285,7 @@ export type Database = {
           conferente_nome: string | null
           created_at: string | null
           data_conferencia: string | null
+          detalhes_bipagem: Json | null
           diferenca: number
           id: string
           quantidade_contada: number
@@ -295,6 +296,7 @@ export type Database = {
           conferente_nome?: string | null
           created_at?: string | null
           data_conferencia?: string | null
+          detalhes_bipagem?: Json | null
           diferenca: number
           id?: string
           quantidade_contada: number
@@ -305,6 +307,7 @@ export type Database = {
           conferente_nome?: string | null
           created_at?: string | null
           data_conferencia?: string | null
+          detalhes_bipagem?: Json | null
           diferenca?: number
           id?: string
           quantidade_contada?: number

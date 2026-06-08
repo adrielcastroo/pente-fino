@@ -6,7 +6,9 @@ import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { HistoricoContagem } from '@/types';
-import { Search, History } from 'lucide-react';
+import { Search, History, FileSpreadsheet } from 'lucide-react';
+import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export function CountingHistoryTable() {
@@ -32,8 +34,26 @@ export function CountingHistoryTable() {
   }, []);
 
   const filteredHistory = history.filter(item => 
-    item.conferente_nome?.toLowerCase().includes(searchTerm.toLowerCase())
+    item.conferente_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleExportRow = (item: HistoricoContagem) => {
+    // We need the item code for the header. We might need to fetch it from the task or just use a placeholder
+    // if it's not directly in the history record.
+    // However, the history record we have now has detalhes_bipagem.
+    const scans = item.detalhes_bipagem || [{
+      timestamp: formatDateBR(item.data_conferencia) + ' ' + formatTimeBR(item.data_conferencia),
+      itemCode: 'ITEM-' + item.id.substring(0, 5),
+      inspectorName: item.conferente_nome
+    }];
+
+    exportCyclicInventoryXLSX({
+      itemCode: scans[0]?.itemCode || 'N/A',
+      referenceDate: formatDateBR(item.data_conferencia),
+      scans: scans
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -65,6 +85,7 @@ export function CountingHistoryTable() {
               <TableHead className="font-black uppercase tracking-widest text-[10px] text-right">Qtd. Sistema</TableHead>
               <TableHead className="font-black uppercase tracking-widest text-[10px] text-right">Qtd. Contada</TableHead>
               <TableHead className="font-black uppercase tracking-widest text-[10px] text-center">Divergência</TableHead>
+              <TableHead className="font-black uppercase tracking-widest text-[10px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -107,6 +128,17 @@ export function CountingHistoryTable() {
                     >
                       {item.diferenca > 0 ? `+${item.diferenca}` : item.diferenca}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleExportRow(item)}
+                      title="Exportar XLSX"
+                      className="rounded-xl hover:bg-primary/10 text-primary"
+                    >
+                      <FileSpreadsheet className="w-5 h-5" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
