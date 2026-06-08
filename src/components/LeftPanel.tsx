@@ -1484,16 +1484,24 @@ export const LeftPanel = memo(function LeftPanel() {
                   <div className="space-y-1.5 sm:col-span-2">
                     <div className="flex items-center justify-between gap-3 p-1 rounded-lg border border-border bg-muted/20">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-2">Unidade</span>
-                      <div className="flex bg-muted/40 p-0.5 rounded-md">
+                      <div className="flex bg-muted/40 p-1 rounded-lg gap-1">
                         <button
                           onClick={() => setCoulisseMetragem('m2')}
-                          className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${!coulisseUsesMLinear ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                          className={`flex-1 min-w-[60px] py-1.5 text-[10px] font-bold rounded-md transition-all duration-300 transform active:scale-95 ${
+                            !coulisseUsesMLinear 
+                              ? 'bg-primary text-primary-foreground shadow-md scale-105' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
                         >
                           M²
                         </button>
                         <button
                           onClick={() => setCoulisseMetragem('mlinear')}
-                          className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${coulisseUsesMLinear ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                          className={`flex-1 min-w-[60px] py-1.5 text-[10px] font-bold rounded-md transition-all duration-300 transform active:scale-95 ${
+                            coulisseUsesMLinear 
+                              ? 'bg-primary text-primary-foreground shadow-md scale-105' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
                         >
                           LINEAR
                         </button>
