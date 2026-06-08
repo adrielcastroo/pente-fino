@@ -1203,7 +1203,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
                   <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
-                  {(isPVT || isMadeira) && (
+                  {(isPVT || isMadeira || isRolo) && (
                     <button 
                       onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
                       className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
@@ -1222,11 +1222,11 @@ export const LeftPanel = memo(function LeftPanel() {
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
-                  readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem)) && !!item}
+                  readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) && !!item}
                 />
                 {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
@@ -1307,9 +1307,11 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="nf-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NF)</label>
-                  <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
-                    {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                  </button>
+                  {(lockNf || isRolo) && (
+                    <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
+                      {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    </button>
+                  )}
                 </div>
                 <input
                   id="nf-input"
@@ -1318,7 +1320,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleNfChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    lockNf ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    lockNf ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                   }`}
                   placeholder="NF..."
                   autoComplete="off"
@@ -1433,7 +1435,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
                     <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
+                      {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total'}
                     </label>
                     {isPVT && (
                       <button onClick={toggleLockMetragem} className={`transition-colors ${lockMetragemGlobal ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockMetragemGlobal ? 'Campo travado' : 'Travar campo'}>
@@ -1463,6 +1465,26 @@ export const LeftPanel = memo(function LeftPanel() {
                   </div>
                 </div>
 
+                {/* Metragem Toggle for Rolo */}
+                {isRolo && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                      <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${!coulisseUsesMLinear ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        M²
+                      </span>
+                      <Switch
+                        checked={coulisseUsesMLinear}
+                        onCheckedChange={(checked) => setCoulisseMetragem(checked ? 'mlinear' : 'm2')}
+                        aria-label="Alternar tipo de metragem"
+                      />
+                      <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${coulisseUsesMLinear ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        M Linear
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {isAI ? (
                   <div className="space-y-1.5">
                     <label htmlFor="largura-ai" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
@@ -1480,8 +1502,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 h-4">
                       <label htmlFor="lote-material" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
-                      {isPVT && (
-                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
+                      {(isPVT || isRolo) && (
+                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
                           {lockLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </button>
                       )}
@@ -1493,10 +1515,10 @@ export const LeftPanel = memo(function LeftPanel() {
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
                       className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                        (isPVT && lockLote) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                        ((isPVT || isRolo) && lockLote) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                       }`}
                       placeholder="Lote..." autoComplete="off"
-                      readOnly={isPVT && lockLote && !!lockedLote}
+                      readOnly={((isPVT || isRolo) && lockLote) && !!lockedLote}
                     />
                   </div>
                 )}
@@ -1523,7 +1545,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleEnderecoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
-                    (isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
+                    (isMadeira ? lockMadeiraEndereco : (isRolo && lockEndereco) || lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
                   }`}
                   placeholder="TEC01.A.N03" autoComplete="off"
                   readOnly={(isMadeira ? lockMadeiraEndereco : lockEndereco) && !!(isMadeira ? endereco : lockedEndereco)}
