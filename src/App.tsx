@@ -17,6 +17,8 @@ const SaidaPage = lazy(() => import("./pages/SaidaPage.tsx"));
 const ReservasPage = lazy(() => import("./pages/ReservasPage.tsx"));
 const HistoricoPage = lazy(() => import("./pages/HistoricoPage.tsx"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
+const CyclicInventoryPage = lazy(() => import("./pages/CyclicInventoryPage.tsx"));
+
 
 const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.tsx"));
@@ -89,7 +91,9 @@ const App = () => (
                   <Route path="/reservas" element={<ReservasPage />} />
                   <Route path="/historico" element={<HistoricoPage />} />
                   <Route path="/configuracoes" element={<SettingsPage />} />
+                  <Route path="/inventario-ciclico" element={<CyclicInventoryPage />} />
                 </Route>
+
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
