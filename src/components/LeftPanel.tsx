@@ -202,8 +202,8 @@ export const LeftPanel = memo(function LeftPanel() {
   const requiresProcesso = isMadeira || isCelular || isAI;
   const requiresNF = isDiversos && !isCelular;
   const isCoulisse = currentMode === 'manual';
-  const coulisseUsesM2 = isCoulisse && coulisseMetragem === 'm2';
-  const coulisseUsesMLinear = isCoulisse && coulisseMetragem === 'mlinear';
+  const coulisseUsesM2 = (isCoulisse || isRolo) && coulisseMetragem === 'm2';
+  const coulisseUsesMLinear = (isCoulisse || isRolo) && coulisseMetragem === 'mlinear';
   const cortinaUsesM2 = isCortina && cortinaMetragem === 'm2';
   const cortinaUsesMLinear = isCortina && cortinaMetragem === 'mlinear';
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
