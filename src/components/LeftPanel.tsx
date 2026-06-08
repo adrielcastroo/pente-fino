@@ -1449,7 +1449,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       type="number" step="0.1"
                       value={isAI ? aiMLinear : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? diversosMLinear : m2}
                       onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
-                      onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : loteRef)}
+                      onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : (isRolo ? manualLarguraRef : loteRef))}
                       className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
                         (isPVT && lockMetragemGlobal) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                       }`}
@@ -1464,22 +1464,40 @@ export const LeftPanel = memo(function LeftPanel() {
                   </div>
                 </div>
 
-                {/* Metragem Toggle for Rolo */}
                 {isRolo && (
+                  <div className="space-y-1.5">
+                    <label htmlFor="largura-rolo" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
+                    <input
+                      id="largura-rolo"
+                      ref={manualLarguraRef}
+                      type="number" step="0.01" value={manualLargura}
+                      onChange={e => setManualLargura(e.target.value)}
+                      onKeyDown={e => handleFieldKeyDown(e, loteRef)}
+                      className="w-full h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+                      placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
+                    />
+                  </div>
+                )}
+
+                {/* Metragem Toggle - Modernized */}
+                {(isRolo || isCoulisse) && (
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
-                    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
-                      <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${!coulisseUsesMLinear ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        M²
-                      </span>
-                      <Switch
-                        checked={coulisseUsesMLinear}
-                        onCheckedChange={(checked) => setCoulisseMetragem(checked ? 'mlinear' : 'm2')}
-                        aria-label="Alternar tipo de metragem"
-                      />
-                      <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${coulisseUsesMLinear ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        M Linear
-                      </span>
+                    <div className="flex items-center justify-between gap-3 p-1 rounded-lg border border-border bg-muted/20">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-2">Unidade</span>
+                      <div className="flex bg-muted/40 p-0.5 rounded-md">
+                        <button
+                          onClick={() => setCoulisseMetragem('m2')}
+                          className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${!coulisseUsesMLinear ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          M²
+                        </button>
+                        <button
+                          onClick={() => setCoulisseMetragem('mlinear')}
+                          className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${coulisseUsesMLinear ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          LINEAR
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
