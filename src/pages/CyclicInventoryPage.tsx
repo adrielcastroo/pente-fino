@@ -12,6 +12,7 @@ import { Barcode, CheckCircle2, AlertTriangle, Search, Package2, ArrowLeft, Send
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { CountingHistoryTable } from '@/components/inventory/CountingHistoryTable';
+import { InventorySuggestionsTab } from '@/components/inventory/InventorySuggestionsTab';
 import { cn } from '@/lib/utils';
 import { TarefaContagem } from '@/types';
 import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
@@ -216,18 +217,24 @@ export default function CyclicInventoryPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-16 bg-card/20 backdrop-blur-md rounded-2xl border border-border/10 p-1.5 shadow-sm">
+        <TabsList className="grid w-full grid-cols-3 h-16 bg-card/20 backdrop-blur-md rounded-2xl border border-border/10 p-1.5 shadow-sm">
           <TabsTrigger 
             value="execution" 
             className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
           >
-            Execução de Contagem
+            Execução
+          </TabsTrigger>
+          <TabsTrigger 
+            value="suggestions" 
+            className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
+          >
+            Sugestões
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
             className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
           >
-            Histórico e Auditoria
+            Histórico
           </TabsTrigger>
         </TabsList>
 
@@ -396,6 +403,10 @@ export default function CyclicInventoryPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="suggestions" className="mt-8">
+          <InventorySuggestionsTab />
         </TabsContent>
 
         <TabsContent value="history" className="mt-8">
