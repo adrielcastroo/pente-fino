@@ -1435,7 +1435,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
                     <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total (M²)'}
+                      {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total'}
                     </label>
                     {isPVT && (
                       <button onClick={toggleLockMetragem} className={`transition-colors ${lockMetragemGlobal ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockMetragemGlobal ? 'Campo travado' : 'Travar campo'}>
@@ -1465,6 +1465,26 @@ export const LeftPanel = memo(function LeftPanel() {
                   </div>
                 </div>
 
+                {/* Metragem Toggle for Rolo */}
+                {isRolo && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                      <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${!coulisseUsesMLinear ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        M²
+                      </span>
+                      <Switch
+                        checked={coulisseUsesMLinear}
+                        onCheckedChange={(checked) => setCoulisseMetragem(checked ? 'mlinear' : 'm2')}
+                        aria-label="Alternar tipo de metragem"
+                      />
+                      <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${coulisseUsesMLinear ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        M Linear
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {isAI ? (
                   <div className="space-y-1.5">
                     <label htmlFor="largura-ai" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
@@ -1482,8 +1502,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 h-4">
                       <label htmlFor="lote-material" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
-                      {isPVT && (
-                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
+                      {(isPVT || isRolo) && (
+                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
                           {lockLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </button>
                       )}
@@ -1495,10 +1515,10 @@ export const LeftPanel = memo(function LeftPanel() {
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
                       className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                        (isPVT && lockLote) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                        ((isPVT || isRolo) && lockLote) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                       }`}
                       placeholder="Lote..." autoComplete="off"
-                      readOnly={isPVT && lockLote && !!lockedLote}
+                      readOnly={((isPVT || isRolo) && lockLote) && !!lockedLote}
                     />
                   </div>
                 )}
