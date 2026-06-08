@@ -125,3 +125,24 @@ export interface AppStats {
     };
   };
 }
+
+export interface TarefaContagem {
+  id: string;
+  item_id?: string;
+  item_name?: string;
+  codigo_lote: string;
+  quantidade_esperada_sistema: number;
+  status: 'pendente' | 'concluido';
+  data_geracao: string;
+}
+
+export interface HistoricoContagem {
+  id: string;
+  tarefa_id: string;
+  conferente_nome: string;
+  quantidade_contada: number;
+  quantidade_sistema: number;
+  data_conferencia: string;
+  diferenca: number;
+}
+
