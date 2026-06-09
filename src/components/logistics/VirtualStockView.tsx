@@ -224,7 +224,8 @@ export function VirtualStockView() {
                         </div>
                       </TableCell>
                     </motion.tr>
-                  ))}
+                    ))}
+                  </AnimatePresence>
                 </TableBody>
               </Table>
             </div>
