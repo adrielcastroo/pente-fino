@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Calendar, AlertTriangle, Package } from 'lucide-react';
+import { Loader2, Plus, Calendar, AlertTriangle, Package, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDateBR } from '@/lib/app-utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Suggestion {
   id: string;
@@ -39,7 +41,6 @@ export function InventorySuggestionsTab() {
 
       const configMap = configs.reduce((acc: any, curr: any) => {
         acc[curr.curva || 'C'] = curr.curve_a_days || 15; // fallback or logic
-        // Actually the table has curve_a_days, curve_b_days, curve_c_days
         return acc;
       }, {});
 
@@ -109,7 +110,6 @@ export function InventorySuggestionsTab() {
     try {
       setCreatingTask(item.id);
       
-      // Check if task already exists for this lot/item
       const { data: existing } = await supabase
         .from('inventory_tasks')
         .select('id')
@@ -122,7 +122,6 @@ export function InventorySuggestionsTab() {
         return;
       }
 
-      // We need to know expected qty to create task
       let qty = 0;
       if (item.source === 'registros') {
         const { data } = await supabase.from('registros').select('quantidade, m2, m_linear').eq('id', item.id).single();
@@ -163,7 +162,6 @@ export function InventorySuggestionsTab() {
       </div>
     );
   }
-
 
   return (
     <div className="space-y-6">
@@ -256,4 +254,3 @@ export function InventorySuggestionsTab() {
     </div>
   );
 }
-
