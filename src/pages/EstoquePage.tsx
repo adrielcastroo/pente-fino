@@ -1018,6 +1018,6 @@ export default function EstoquePage() {
 
       {/* Import Dialog */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
-    </div>
+    </motion.div>
   );
 }
