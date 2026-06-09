@@ -32,15 +32,23 @@ export function InventorySuggestionsTab() {
       
       // 1. Fetch configs
       const { data: configs, error: configError } = await supabase
-        .from('configuracoes_inventario')
+        .from('inventory_configs')
         .select('*');
 
       if (configError) throw configError;
 
       const configMap = configs.reduce((acc: any, curr: any) => {
-        acc[curr.curva] = curr.dias_frequencia;
+        acc[curr.curva || 'C'] = curr.curve_a_days || 15; // fallback or logic
+        // Actually the table has curve_a_days, curve_b_days, curve_c_days
         return acc;
       }, {});
+
+      const curveDays = configs[0] || { curve_a_days: 15, curve_b_days: 30, curve_c_days: 60 };
+      const getDaysForCurve = (curve: string) => {
+          if (curve === 'A') return curveDays.curve_a_days;
+          if (curve === 'B') return curveDays.curve_b_days;
+          return curveDays.curve_c_days;
+      };
 
       // 2. Fetch data from registros and inventory
       const [registrosRes, inventoryRes] = await Promise.all([
@@ -78,7 +86,7 @@ export function InventorySuggestionsTab() {
           const referenceDate = new Date(item.ultima_contagem || item.created_at);
           const diffTime = Math.abs(today.getTime() - referenceDate.getTime());
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          const maxDays = configMap[item.curva_abc] || 90;
+          const maxDays = getDaysForCurve(item.curva_abc);
 
           return {
             ...item,
@@ -103,7 +111,7 @@ export function InventorySuggestionsTab() {
       
       // Check if task already exists for this lot/item
       const { data: existing } = await supabase
-        .from('tarefas_contagem')
+        .from('inventory_tasks')
         .select('id')
         .eq('item_id', item.id)
         .eq('status', 'pendente')
@@ -124,13 +132,15 @@ export function InventorySuggestionsTab() {
         qty = data?.quantity || 0;
       }
 
-      const { error } = await supabase
-        .from('tarefas_contagem')
+      const { error } = await (supabase
+        .from('inventory_tasks') as any)
         .insert({
           item_id: item.id,
+          item_type: item.source,
           item_name: item.name,
           codigo_lote: item.lote || 'N/A',
-          quantidade_esperada_sistema: qty,
+          expected_qty: qty,
+          has_lote: item.source === 'registros',
           status: 'pendente'
         });
 

@@ -178,21 +178,28 @@ export const InventoryTimelineChart = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: hist } = await supabase
-        .from('historico_contagens')
+      const { data: hist } = await (supabase
+        .from('inventory_tasks') as any)
         .select('*')
-        .order('created_at', { ascending: true })
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: true })
         .limit(100);
 
       if (hist) {
         const grouped = hist.reduce((acc: any, curr: any) => {
-          const date = new Date(curr.created_at).toLocaleDateString('pt-BR');
-          if (!acc[date]) acc[date] = { name: date, divergence: 0, counts: 0 };
-          acc[date].divergence += Math.abs(curr.diferenca);
+          const date = new Date(curr.completed_at).toLocaleDateString('pt-BR');
+          if (!acc[date]) acc[date] = { name: date, divergence: 0, counts: 0, inspectors: new Set() };
+          const details = curr.divergence_details as any;
+          acc[date].divergence += Math.abs(details?.diff || 0);
           acc[date].counts += 1;
+          if (curr.conferente_nome) acc[date].inspectors.add(curr.conferente_nome);
           return acc;
         }, {});
-        setData(Object.values(grouped));
+        
+        setData(Object.values(grouped).map((g: any) => ({
+            ...g,
+            inspectors: Array.from(g.inspectors).join(', ')
+        })));
       }
       setLoading(false);
     };
