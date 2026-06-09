@@ -23,10 +23,11 @@ export default function WMSAllocationPage() {
   const [lotInput, setLotInput] = useState('');
   const [addressInput, setAddressInput] = useState('');
   const [manualDescription, setManualDescription] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [isNewItem, setIsNewItem] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [foundItem, setFoundItem] = useState<{ id: string | null, name: string, lote: string, currentAddress: string } | null>(null);
+  const [foundItem, setFoundItem] = useState<{ id: string | null, name: string, lote: string, currentAddress: string, isVirtual?: boolean } | null>(null);
   const [sessionAllocations, setSessionAllocations] = useState<any[]>([]);
   const [lastAllocated, setLastAllocated] = useState<any | null>(null);
 
@@ -84,8 +85,16 @@ export default function WMSAllocationPage() {
           setStep(2);
           toast.success('Item validado! Agora bipe o novo endereço.');
         } else {
-          setIsNewItem(true);
-          toast.info('Item não cadastrado. Informe uma descrição para continuar.');
+          // Automatic Fallback to Virtual Stock
+          setFoundItem({
+            id: null,
+            name: `Item Virtual - Lote [${lot}]`,
+            lote: lot,
+            currentAddress: 'ESTOQUE VIRTUAL',
+            isVirtual: true
+          });
+          setStep(2);
+          toast.warning('Lote não encontrado. Criado como Estoque Virtual provisório.');
         }
       }
     } catch (err) {
@@ -116,6 +125,11 @@ export default function WMSAllocationPage() {
   const handleFinalize = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!foundItem || !addressInput.trim()) return;
+    
+    if (foundItem.isVirtual && !quantity.trim()) {
+      toast.error('Informe a quantidade para itens virtuais');
+      return;
+    }
 
     setIsSubmitting(true);
     const newAddress = addressInput.trim().toUpperCase();
@@ -132,7 +146,11 @@ export default function WMSAllocationPage() {
           endereco_anterior: foundItem.currentAddress,
           endereco_novo: newAddress,
           conferente_nome: conferente,
-          data_movimentacao: new Date().toISOString()
+          data_movimentacao: new Date().toISOString(),
+          tipo_estoque: foundItem.isVirtual ? 'VIRTUAL' : 'OFICIAL',
+          status_integracao: foundItem.isVirtual ? 'pendente' : 'integrado',
+          quantidade: foundItem.isVirtual ? parseFloat(quantity) : null,
+          descricao_item: foundItem.name
         });
 
       if (error) throw error;
@@ -143,7 +161,8 @@ export default function WMSAllocationPage() {
         item: foundItem.name,
         lote: foundItem.lote,
         origem: foundItem.currentAddress,
-        destino: newAddress
+        destino: newAddress,
+        origemCadastro: foundItem.isVirtual ? 'Estoque Virtual (Contingência)' : 'Cadastro Oficial'
       };
 
       setLastAllocated(allocationData);
@@ -155,6 +174,7 @@ export default function WMSAllocationPage() {
       setLotInput('');
       setAddressInput('');
       setManualDescription('');
+      setQuantity('');
       setFoundItem(null);
       setIsNewItem(false);
       setStep(1);
@@ -257,17 +277,31 @@ export default function WMSAllocationPage() {
         {/* Found Item Detail Card (Visible when found or in Step 2) */}
         {foundItem && (
           <div className="animate-in zoom-in-95 slide-in-from-top-4 duration-500">
-            <Card className="rounded-[2rem] border-emerald-500/30 bg-emerald-500/[0.02] border-dashed border-2 shadow-inner overflow-hidden">
+            <Card className={cn(
+              "rounded-[2rem] border-dashed border-2 shadow-inner overflow-hidden animate-in zoom-in-95 duration-500",
+              foundItem.isVirtual ? "border-amber-500/30 bg-amber-500/[0.02]" : "border-emerald-500/30 bg-emerald-500/[0.02]"
+            )}>
               <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-6">
-                  <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-600">
+                  <div className={cn(
+                    "p-4 rounded-2xl",
+                    foundItem.isVirtual ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600"
+                  )}>
                     <Package className="w-10 h-10" />
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-tight">{foundItem.name}</h4>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[9px] uppercase tracking-widest">LOTE: {foundItem.lote}</Badge>
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest">ATUAL: {foundItem.currentAddress}</Badge>
+                      <Badge variant="outline" className={cn(
+                        "font-black text-[9px] uppercase tracking-widest",
+                        foundItem.isVirtual ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-primary/10 text-primary border-primary/20"
+                      )}>
+                        {foundItem.isVirtual ? 'ESTOQUE VIRTUAL / PROVISÓRIO' : `ATUAL: ${foundItem.currentAddress}`}
+                      </Badge>
+                      {foundItem.isVirtual && (
+                        <Badge className="bg-amber-500 text-white font-black text-[9px] uppercase tracking-widest border-none">Aguardando Regularização</Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -307,6 +341,22 @@ export default function WMSAllocationPage() {
                 disabled={isSubmitting}
               />
             </form>
+            
+            {foundItem?.isVirtual && (
+              <div className="space-y-4 animate-in slide-in-from-top-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 ml-1 flex items-center gap-2">
+                  <AlertTriangle className="w-3 h-3" />
+                  QUANTIDADE / METRAGEM (ESTOQUE VIRTUAL)
+                </Label>
+                <Input 
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="INFORME A QUANTIDADE..." 
+                  className="h-16 px-6 text-xl font-black uppercase rounded-2xl bg-amber-500/5 border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all"
+                />
+              </div>
+            )}
 
             <Button 
               onClick={handleFinalize}
