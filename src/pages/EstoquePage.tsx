@@ -572,107 +572,131 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card/95  overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40">
           {selectedCell && (
             <>
               {/* Dialog Header */}
-              <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary">
-                      <Grid3X3 className="w-5 h-5" />
+              <div className="px-8 pt-10 pb-8 border-b border-white/5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent relative">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="p-4 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20">
+                      <Grid3X3 className="w-8 h-8" />
                     </div>
                     <div>
-                      <DialogTitle className="text-lg sm:text-xl font-black tracking-tight">
-                        {activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
+                      <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight uppercase">
+                        {activeTec} · {selectedCell.col}N{String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
-                      <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
-                        {occupiedCount} de 30 posições ocupadas
+                      <DialogDescription className="text-[10px] sm:text-xs text-muted-foreground font-black uppercase tracking-[0.2em] mt-1 opacity-60">
+                         Monitoramento de Célula · {occupiedCount} de 30 Posições
                       </DialogDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border mr-14 ${
-                    occupiedCount === 0 ? 'border-primary/30 text-primary bg-primary/5' :
-                    occupiedCount >= 25 ? 'border-red-500/30 text-red-400 bg-red-500/10' :
-                    'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
-                  }`}>
-                    {occupiedCount === 0 ? 'Vazio' : occupiedCount >= 25 ? 'Quase Cheio' : `${Math.round((occupiedCount/30)*100)}%`}
+                  <Badge className={cn(
+                    "text-[10px] font-black px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest",
+                    occupiedCount === 0 ? "bg-primary text-primary-foreground ring-primary/10" :
+                    occupiedCount >= 25 ? "bg-rose-500 text-white ring-rose-500/10" :
+                    "bg-emerald-500 text-white ring-emerald-500/10"
+                  )}>
+                    {occupiedCount === 0 ? 'Célula Vazia' : occupiedCount >= 25 ? 'Capacidade Crítica' : `${Math.round((occupiedCount/30)*100)}% Ocupado`}
                   </Badge>
                 </div>
                 {/* Occupation bar */}
-                <div className="mt-4 h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                  <div 
-                    style={{ width: `${(occupiedCount/30)*100}%` }}
-                    className={`h-full rounded-full transition-all ${
-                      occupiedCount >= 25 ? 'bg-red-500' : occupiedCount >= 15 ? 'bg-amber-500' : 'bg-primary'
-                    }`} 
+                <div className="mt-8 h-2 rounded-full bg-white/5 overflow-hidden shadow-inner border border-white/5">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(occupiedCount/30)*100}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className={cn(
+                      "h-full rounded-full transition-all shadow-[0_0_10px_rgba(var(--primary),0.5)]",
+                      occupiedCount >= 25 ? 'bg-rose-500' : occupiedCount >= 15 ? 'bg-amber-500' : 'bg-primary'
+                    )} 
                   />
                 </div>
               </div>
 
               {/* Positions List/Grid */}
-              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar bg-card/20">
                 {occupiedCount === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 gap-3 border-2 border-dashed border-border/20 rounded-2xl bg-muted/5">
-                    <Box className="w-10 h-10 text-muted-foreground/30" />
-                    <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Nenhum item nesta célula</p>
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-24 gap-6 border-2 border-dashed border-white/10 rounded-[2.5rem] bg-white/5"
+                  >
+                    <Box className="w-16 h-16 text-muted-foreground/20" />
+                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Célula Disponível para Armazenagem</p>
+                  </motion.div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
-                      const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
-                      return (
-                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
-                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
-                              </Badge>
-                              <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                  <div className="grid grid-cols-1 gap-4">
+                    <AnimatePresence>
+                      {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map((item, idx) => {
+                        const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
+                        return (
+                          <motion.div 
+                            key={item.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-primary/50 hover:bg-primary/5 transition-all duration-500 shadow-xl shadow-black/5 ring-1 ring-white/5"
+                          >
+                            <div className="flex-1 min-w-0 space-y-3">
+                              <div className="flex items-center gap-3">
+                                <Badge variant="outline" className={cn(
+                                  "text-[9px] font-black px-3 py-1 rounded-xl border-2 uppercase tracking-widest",
+                                  statusCfg.color,
+                                  statusCfg.border,
+                                  statusCfg.bg
+                                )}>
+                                  POS {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                                </Badge>
+                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
+                                   <Barcode className="w-3 h-3 text-muted-foreground/50" />
+                                   <span className="text-[10px] font-black text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
+                                </div>
+                              </div>
+                              <h3 className="font-black text-foreground text-lg sm:text-xl tracking-tight uppercase group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
+                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                                <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
+                                <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
+                                <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(item.data_registro)}</span>
+                              </div>
                             </div>
-                            <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
-                              <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
-                              <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
-                              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                              onClick={() => setDetailPos(item)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                            >
-                              Detalhes
-                            </Button>
-                            {!isGuest && (
+                            <div className="flex items-center gap-3 shrink-0">
                               <Button
-                                onClick={() => {
-                                  setDetailPos(item);
-                                  handleStatusChange(item, 'saida');
-                                }}
+                                onClick={() => setDetailPos(item)}
+                                variant="ghost"
                                 size="sm"
-                                className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20"
                               >
-                                <LogOut className="w-3 h-3" />
-                                Dar Saída
+                                Ficha Técnica
                               </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                              {!isGuest && (
+                                <Button
+                                  onClick={() => {
+                                    setDetailPos(item);
+                                    handleStatusChange(item, 'saida');
+                                  }}
+                                  size="sm"
+                                  className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
+                                >
+                                  <LogOut className="w-4 h-4" />
+                                  Dar Saída
+                                </Button>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                   </div>
                 )}
 
                 {/* Grid View Toggle or Helper */}
-                <div className="mt-6 pt-4 border-t border-border/15 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{occupiedCount} Itens encontrados</span>
+                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-60">{occupiedCount} Itens encontrados nesta célula</span>
                   </div>
-                  <p className="text-[9px] font-medium text-muted-foreground/40 italic">* Somente posições ocupadas são exibidas</p>
+                  <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">* Célula do Galpão G4</p>
                 </div>
               </div>
             </>
