@@ -409,8 +409,8 @@ export default function EstoquePage() {
       ) : (
         <>
       {/* Stats Cards */}
-      <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain snap-x">
-        <div className="flex sm:grid sm:grid-cols-5 gap-4 min-w-max sm:min-w-0">
+      <div className="w-full pb-4 px-0">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
           {[
             { key: 'total', label: 'Capacidade Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40 shadow-2xl ring-1 ring-white/10', border: 'border-white/5' } },
             { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
@@ -425,13 +425,13 @@ export default function EstoquePage() {
             >
               <Card 
                 onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-                className={`rounded-[2rem] border-2 ${s.config.border} ${s.config.bg} backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl shrink-0 w-[160px] sm:w-auto relative overflow-hidden group ${
-                  selectedStat === s.key ? 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background scale-105' : ''
-                }`}
+                className={`rounded-[1.5rem] sm:rounded-[2rem] border-2 ${s.config.border} ${s.config.bg} backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl relative overflow-hidden group ${
+                  selectedStat === s.key ? 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background scale-[1.02] sm:scale-105' : ''
+                } ${s.key === 'total' ? 'col-span-2 sm:col-span-1' : ''}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                <CardContent className="p-6 text-center space-y-2 relative z-10">
-                  <div className={`text-3xl sm:text-4xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                <CardContent className="p-4 sm:p-6 text-center space-y-1 sm:space-y-2 relative z-10">
+                  <div className={`text-2xl sm:text-4xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
                   <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
                   <div className="flex items-center justify-center gap-1.5 pt-2">
                     <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
@@ -447,12 +447,12 @@ export default function EstoquePage() {
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[2rem] p-1.5 gap-2 border border-white/10 shadow-2xl overflow-x-auto custom-scrollbar no-scrollbar snap-x ring-1 ring-white/5">
+      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] p-1.5 gap-1.5 sm:gap-2 border border-white/10 shadow-2xl flex-wrap sm:flex-nowrap ring-1 ring-white/5">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[75px] sm:min-w-[100px] py-3.5 sm:py-4 rounded-2xl text-[10px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 snap-start ${
+            className={`flex-1 min-w-[60px] sm:min-w-[100px] py-2.5 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
@@ -479,9 +479,9 @@ export default function EstoquePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
-          className="overflow-x-auto pb-6 custom-scrollbar"
+          className="w-full pb-6"
         >
-          <div className="min-w-full space-y-2 sm:space-y-3 p-1">
+          <div className="w-full space-y-2 sm:space-y-3 p-1">
             {/* Column headers */}
             <div className="flex gap-2 sm:gap-3">
               <div className="w-10 sm:w-12 md:w-16 shrink-0" />
@@ -520,7 +520,7 @@ export default function EstoquePage() {
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 min-w-0 h-16 sm:h-20 md:h-24 rounded-2xl sm:rounded-3xl cursor-pointer p-3 sm:p-4 transition-all duration-300 group relative overflow-hidden border ${
+                      className={`flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-xl sm:rounded-3xl cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border ${
                         !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : 'shadow-lg hover:shadow-primary/10'
                       } ${
                         hasItems
