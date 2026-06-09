@@ -17,9 +17,6 @@ const SaidaPage = lazy(() => import("./pages/SaidaPage.tsx"));
 const ReservasPage = lazy(() => import("./pages/ReservasPage.tsx"));
 const HistoricoPage = lazy(() => import("./pages/HistoricoPage.tsx"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
-const CyclicInventoryPage = lazy(() => import("./pages/CyclicInventoryPage.tsx"));
-const WMSAllocationPage = lazy(() => import("./pages/WMSAllocationPage.tsx"));
-const VirtualStockDashboard = lazy(() => import("./pages/VirtualStockDashboard.tsx"));
 const LogisticsHubPage = lazy(() => import("./pages/LogisticsHubPage.tsx"));
 
 
@@ -94,9 +91,6 @@ const App = () => (
                   <Route path="/reservas" element={<ReservasPage />} />
                   <Route path="/historico" element={<HistoricoPage />} />
                   <Route path="/configuracoes" element={<SettingsPage />} />
-                  <Route path="/inventario-ciclico" element={<CyclicInventoryPage />} />
-                  <Route path="/enderecamento" element={<WMSAllocationPage />} />
-                  <Route path="/estoque-virtual" element={<VirtualStockDashboard />} />
                   <Route path="/logistica/hub" element={<LogisticsHubPage />} />
                 </Route>
 
