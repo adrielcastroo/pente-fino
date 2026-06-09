@@ -86,47 +86,51 @@ export function VirtualStockView() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 shadow-inner">
-            <AlertCircle className="w-6 h-6" />
+    <div className="space-y-8 pb-20">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <div className="p-4 rounded-[1.5rem] bg-amber-500 text-white shadow-2xl shadow-amber-500/30 ring-4 ring-amber-500/10">
+            <AlertCircle className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight">Estoque Virtual</h2>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Gerenciamento de Itens Provisórios</p>
+            <h2 className="text-3xl font-black uppercase tracking-tight">Estoque Virtual</h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1 opacity-70">Gerenciamento de Itens em Contingência</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {data.length > 0 && (
             <Button 
               onClick={handleClearAll} 
               variant="destructive" 
               size="sm" 
-              className="rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 h-10 px-4 shadow-lg shadow-destructive/20 hover:scale-105 transition-all"
+              className="rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] gap-2.5 h-14 px-8 shadow-2xl shadow-destructive/20 hover:scale-105 active:scale-95 transition-all duration-300 ring-4 ring-destructive/5"
             >
-              <Trash2 className="w-3 h-3" />
-              Limpar Tudo
+              <Trash2 className="w-4 h-4" />
+              Limpar Todos
             </Button>
           )}
           <Button 
             onClick={fetchData} 
             variant="outline" 
             size="sm" 
-            className="rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 h-10 px-4 border-border/20 hover:bg-muted transition-all"
+            className="rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] gap-2.5 h-14 px-8 border-white/10 bg-card/40 backdrop-blur-xl hover:bg-primary hover:text-white transition-all duration-300 shadow-xl"
           >
-            <RefreshCw className={loading ? 'w-3 h-3 animate-spin' : 'w-3 h-3'} />
-            Atualizar Dados
+            <RefreshCw className={loading ? 'w-4 h-4 animate-spin' : 'w-4 h-4'} />
+            Sincronizar
           </Button>
         </div>
       </div>
 
 
-      <Card className="rounded-[2.5rem] border-border/10 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
-        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent p-8 border-b border-white/5">
-          <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-widest text-amber-600">
-            Itens Aguardando Regularização
+      <Card className="rounded-[3rem] border-white/10 bg-card/40 backdrop-blur-3xl shadow-2xl overflow-hidden ring-1 ring-white/10 group transition-all duration-500">
+        <CardHeader className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-10 border-b border-white/5 flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-[0.2em] text-amber-600">
+            <div className="w-2 h-8 bg-amber-500 rounded-full" />
+            Itens para Regularização
           </CardTitle>
+          <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30 font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest shadow-sm">
+            {data.length} Pendências
+          </Badge>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
