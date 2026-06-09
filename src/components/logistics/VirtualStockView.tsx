@@ -183,47 +183,47 @@ export function VirtualStockView() {
                         transition={{ delay: index * 0.05 }}
                         className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
                       >
-                      <TableCell className="px-8 text-xs font-bold text-muted-foreground">
-                        {formatDateBR(item.data_movimentacao)}
-                      </TableCell>
-                      <TableCell className="px-8 text-xs font-black uppercase">
-                        {item.conferente_nome}
-                      </TableCell>
-                      <TableCell className="px-8">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-black uppercase text-foreground">{item.codigo_lote}</span>
-                          <span className="text-[9px] text-amber-600 font-black uppercase tracking-widest mt-0.5">{item.descricao_item}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-8">
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-lg">
-                          {item.endereco_novo}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-8 text-sm font-black text-foreground">
-                        {item.quantidade || '-'}
-                      </TableCell>
-                      <TableCell className="px-8 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button 
-                            onClick={() => handleRegularize(item.id)}
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
-                          >
-                            Regularizar
-                          </Button>
-                          <Button 
-                            onClick={() => handleDeleteItem(item.id)}
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 shadow-sm"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
+                        <TableCell className="px-8 text-xs font-bold text-muted-foreground">
+                          {formatDateBR(item.data_movimentacao)}
+                        </TableCell>
+                        <TableCell className="px-8 text-xs font-black uppercase">
+                          {item.conferente_nome}
+                        </TableCell>
+                        <TableCell className="px-8">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black uppercase text-foreground">{item.codigo_lote}</span>
+                            <span className="text-[9px] text-amber-600 font-black uppercase tracking-widest mt-0.5">{item.descricao_item}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-8">
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-lg">
+                            {item.endereco_novo}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-8 text-sm font-black text-foreground">
+                          {item.quantidade || '-'}
+                        </TableCell>
+                        <TableCell className="px-8 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              onClick={() => handleRegularize(item.id)}
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
+                            >
+                              Regularizar
+                            </Button>
+                            <Button 
+                              onClick={() => handleDeleteItem(item.id)}
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 shadow-sm"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
                     ))}
                   </AnimatePresence>
                 </TableBody>
