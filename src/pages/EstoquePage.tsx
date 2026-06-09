@@ -465,27 +465,41 @@ export default function EstoquePage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="text-sm font-semibold">Carregando...</span>
+        <div className="flex flex-col items-center justify-center py-32 gap-6 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-2xl ring-1 ring-white/5">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Warehouse className="w-6 h-6 text-primary animate-pulse" />
+            </div>
           </div>
+          <span className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
         </div>
       ) : (
-        <div className="overflow-x-auto pb-4 custom-scrollbar">
-          <div className="min-w-full space-y-1 sm:space-y-1.5">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="overflow-x-auto pb-6 custom-scrollbar"
+        >
+          <div className="min-w-full space-y-2 sm:space-y-3 p-1">
             {/* Column headers */}
-            <div className="flex gap-1 sm:gap-1.5">
-              <div className="w-8 sm:w-10 md:w-14 shrink-0" />
+            <div className="flex gap-2 sm:gap-3">
+              <div className="w-10 sm:w-12 md:w-16 shrink-0" />
               {config.cols.map(col => (
-                <div key={col} className="flex-1 text-center text-[7px] sm:text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest py-1">
+                <div key={col} className="flex-1 text-center text-[8px] sm:text-[10px] md:text-xs font-black text-primary uppercase tracking-[0.3em] py-2 bg-primary/5 rounded-xl border border-primary/10 mb-2">
                   {col}
                 </div>
               ))}
             </div>
-            {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
-              <div key={nivel} className="flex gap-1 sm:gap-1.5">
-                <div className="w-8 sm:w-10 md:w-14 text-[7px] sm:text-[8px] md:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/40 dark:bg-muted/20 rounded-md sm:rounded-lg shrink-0 border border-border/40 dark:border-border/30">
+            {Array.from({ length: config.levels }, (_, i) => config.levels - i).map((nivel, idx) => (
+              <motion.div 
+                key={nivel} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="flex gap-2 sm:gap-3"
+              >
+                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-black text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-2xl shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
@@ -501,40 +515,58 @@ export default function EstoquePage() {
                                       items.some(i => i.status === selectedStat);
                   
                   return (
-                    <div 
+                    <motion.div 
                       key={col} 
+                      whileHover={{ scale: 1.02, zIndex: 10 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 min-w-0 h-12 sm:h-16 md:h-[4.5rem] rounded-lg sm:rounded-xl cursor-pointer p-1.5 sm:p-2 md:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
-                        !matchesFilter ? 'opacity-30' : ''
+                      className={`flex-1 min-w-0 h-16 sm:h-20 md:h-24 rounded-2xl sm:rounded-3xl cursor-pointer p-3 sm:p-4 transition-all duration-300 group relative overflow-hidden border ${
+                        !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : 'shadow-lg hover:shadow-primary/10'
                       } ${
                         hasItems
-                          ? 'bg-accent/60 dark:bg-accent/20 border-border/50 dark:border-border/40 hover:border-primary/60 hover:bg-primary/10'
-                          : 'bg-muted/30 dark:bg-muted/10 border-border/40 dark:border-border/25 hover:border-primary/40 hover:bg-primary/5'
+                          ? 'bg-card/60 backdrop-blur-xl border-white/10 ring-1 ring-white/5'
+                          : 'bg-muted/10 border-white/5 opacity-50'
                       }`}
                     >
                       {/* Fill bar */}
                       {hasItems && (
-                        <div 
-                          className="absolute bottom-0 left-0 right-0 bg-primary/10 dark:bg-primary/8" 
-                          style={{ height: `${fillPercent}%` }} 
+                        <motion.div 
+                          initial={{ height: 0 }}
+                          animate={{ height: `${fillPercent}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="absolute bottom-0 left-0 right-0 bg-primary/10 dark:bg-primary/5" 
                         />
                       )}
-                      <div className="relative z-10">
-                        <div className="text-[7px] sm:text-[8px] font-bold uppercase tracking-tight text-muted-foreground/70 dark:text-muted-foreground/50 group-hover:text-primary transition-colors">
-                          {col}-N{nivel}
+                      
+                      {/* Status indicator dots */}
+                      <div className="absolute top-2 right-2 flex gap-0.5">
+                         {items.slice(0, 3).map((it, i) => (
+                            <div key={i} className={`w-1 h-1 rounded-full ${
+                              it.status === 'bloqueado' ? 'bg-red-500' : 
+                              it.status === 'reservado' ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`} />
+                         ))}
+                         {items.length > 3 && <div className="text-[6px] font-black text-muted-foreground/50">+</div>}
+                      </div>
+
+                      <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary transition-colors">
+                          {col}N{nivel}
                         </div>
-                        <div className="text-sm sm:text-base font-black text-foreground mt-0.5">
-                          {items.length}
-                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/60 dark:text-muted-foreground/40 font-semibold ml-0.5">/30</span>
+                        <div className="flex items-end gap-1">
+                          <span className="text-lg sm:text-2xl font-black text-foreground tracking-tighter leading-none">
+                            {items.length}
+                          </span>
+                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/40 font-black uppercase mb-0.5">/30</span>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
         </>
       )}
