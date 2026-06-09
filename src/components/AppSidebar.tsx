@@ -1,4 +1,5 @@
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle } from 'lucide-react';
+
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
@@ -27,6 +28,7 @@ interface AppSidebarProps {
 
 const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'inicio', label: 'Início', icon: Home, path: '/dashboard' },
+  { key: 'logistics', label: 'Hub Logístico', icon: LayoutDashboard, path: '/logistica/hub' },
   { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
   { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
   { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
@@ -34,11 +36,7 @@ const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
   { key: 'reservas', label: 'Reservas Estoque', icon: Table, path: '/reservas' },
   { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
-  { key: 'ciclico', label: 'Inv. Cíclico', icon: ClipboardCheck, path: '/inventario-ciclico' },
-  { key: 'enderecamento', label: 'Endereçamento', icon: MapPin, path: '/enderecamento' },
-  { key: 'virtual-stock', label: 'Estoque Virtual', icon: AlertCircle, path: '/estoque-virtual' },
 ];
-
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
@@ -87,7 +85,6 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       onMouseLeave={handleMouseLeave}
       aria-label="Menu Principal"
     >
-      {/* ── Header / Logo ── */}
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
         <button
           onClick={() => handleTabClick('inicio', '/dashboard')}
@@ -108,7 +105,6 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
         </button>
       </SidebarHeader>
 
-      {/* ── Nav Items ── */}
       <SidebarContent className="px-3 group-data-[state=collapsed]:px-0 custom-scrollbar">
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
@@ -138,12 +134,10 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                         ${hasRecords && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
                       `}
                     >
-                      {/* Active indicator bar */}
                       {isActive && (
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
                       )}
 
-                      {/* Icon */}
                       <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
                         <Icon className="h-[18px] w-[18px]" />
                         {hasRecords && collapsed && (
@@ -153,12 +147,10 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                         )}
                       </div>
 
-                      {/* Label */}
                       <span className="truncate text-[13px] transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
                         {item.label}
                       </span>
 
-                      {/* Badge (expanded) */}
                       {hasRecords && (
                         <span
                           className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
@@ -179,10 +171,8 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* ── Footer ── */}
       <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-0 border-t border-border/30">
         <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
-          {/* Settings */}
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
@@ -211,7 +201,6 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
             </SidebarMenuButton>
           </SidebarMenuItem>
 
-          {/* Logout */}
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
@@ -228,7 +217,6 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
