@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle, CheckCircle2, RefreshCw, Calendar, User, Package, MapPin, Hash, Settings2 } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, RefreshCw, Calendar, User, Package, MapPin, Hash, Settings2, Trash2 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 export function VirtualStockView() {
