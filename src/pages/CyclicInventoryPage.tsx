@@ -80,7 +80,7 @@ export default function CyclicInventoryPage() {
       
       // 1. Check tasks
       const { data: task } = await supabase
-        .from('tarefas_contagem')
+        .from('inventory_tasks')
         .select('*')
         .eq('codigo_lote', code)
         .eq('status', 'pendente')
@@ -90,7 +90,7 @@ export default function CyclicInventoryPage() {
         setFoundItem({
           id: task.item_id,
           name: task.item_name,
-          systemQty: task.quantidade_esperada_sistema,
+          systemQty: task.expected_qty,
           tarefaId: task.id,
           hasLote: task.has_lote || false,
           lote: task.codigo_lote
