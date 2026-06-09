@@ -152,12 +152,12 @@ export function WarehouseSlottingView() {
       </div>
 
       <Tabs value={selectedCorredor} onValueChange={setSelectedCorredor} className="w-full">
-        <TabsList className="grid grid-cols-5 sm:grid-cols-10 h-auto p-2 rounded-[2rem] bg-card/40 border border-white/5 gap-2">
+        <TabsList className="grid grid-cols-5 sm:grid-cols-10 h-auto p-2 rounded-[2.5rem] bg-card/40 backdrop-blur-3xl border border-white/10 gap-2.5 shadow-2xl ring-1 ring-white/5">
           {corredores.map((corredor) => (
             <TabsTrigger 
               key={corredor} 
               value={corredor}
-              className="rounded-xl font-black text-[10px] uppercase py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-lg transition-all"
+              className="rounded-2xl font-black text-[10px] uppercase py-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-2xl data-[state=active]:shadow-primary/30 transition-all duration-500 hover:scale-105"
             >
               {corredor}
             </TabsTrigger>
