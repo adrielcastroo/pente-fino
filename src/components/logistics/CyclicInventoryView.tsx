@@ -266,81 +266,108 @@ export function CyclicInventoryView() {
                       </div>
                     </form>
                   ) : (
-                    <div className="space-y-8 animate-in zoom-in-95 duration-500">
-                      <div className="p-8 rounded-[2rem] bg-primary/5 border-2 border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                        <div className="text-center sm:text-left">
-                          <h4 className="text-2xl font-black uppercase tracking-tight text-foreground">{foundItem.name}</h4>
-                          <div className="flex items-center gap-3 mt-1 justify-center sm:justify-start">
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sistema:</span>
-                            <span className="text-sm font-black text-primary">{foundItem.systemQty}</span>
+                    <div className="space-y-10 animate-in zoom-in-95 duration-500">
+                      <div className="p-10 rounded-[2.5rem] bg-primary/5 border-2 border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-8 shadow-inner ring-1 ring-primary/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                        <div className="text-center sm:text-left relative z-10">
+                          <h4 className="text-3xl font-black uppercase tracking-tight text-foreground drop-shadow-sm">{foundItem.name}</h4>
+                          <div className="flex items-center gap-4 mt-2 justify-center sm:justify-start">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-60">Estoque Teórico:</span>
+                            <span className="text-xl font-black text-primary tracking-tighter">{foundItem.systemQty}</span>
                           </div>
                         </div>
-                        <Badge className="bg-primary text-primary-foreground font-black py-2 px-6 rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-widest text-[10px]">
-                            {foundItem.hasLote ? 'COM LOTE' : 'SEM LOTE'}
+                        <Badge className="bg-primary text-primary-foreground font-black py-3 px-8 rounded-2xl shadow-2xl shadow-primary/30 uppercase tracking-[0.3em] text-[10px] ring-4 ring-primary/10 relative z-10">
+                            {foundItem.hasLote ? 'MODO: LOTE INDIVIDUAL' : 'MODO: QUANTIDADE TOTAL'}
                         </Badge>
                       </div>
 
                       {foundItem.hasLote ? (
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                           <form onSubmit={handleLoteBipe} className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1">Bipar Lotes Individuais</Label>
+                            <div className="flex items-center justify-between ml-1">
+                               <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Bipar Lotes Individuais</Label>
+                               <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Sequencial Automático</span>
+                            </div>
                             <Input 
                               name="loteBipe"
                               ref={loteBipeRef}
                               autoFocus
                               placeholder="BIPE CADA LOTE..."
-                              className="h-20 px-8 text-2xl font-black uppercase rounded-[1.5rem] border-2 border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 bg-primary/5 shadow-inner"
+                              className="h-24 px-10 text-3xl font-black uppercase rounded-[2rem] border-2 border-primary/30 focus:border-primary focus:ring-8 focus:ring-primary/5 bg-primary/5 shadow-2xl shadow-black/5 tracking-[0.2em]"
                             />
                           </form>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[250px] overflow-y-auto p-4 rounded-[1.5rem] bg-muted/10 border border-border/5">
-                            {bipedLotes.length === 0 ? (
-                              <div className="col-span-full py-10 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Aguardando bipe...</div>
-                            ) : bipedLotes.map((b, i) => (
-                              <Badge key={i} variant="outline" className="h-12 justify-center px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 font-black text-[10px] rounded-xl shadow-sm">
-                                {b.lote}
-                              </Badge>
-                            ))}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 max-h-[350px] overflow-y-auto p-6 rounded-[2rem] bg-muted/20 border border-white/5 shadow-inner">
+                            <AnimatePresence>
+                              {bipedLotes.length === 0 ? (
+                                <motion.div 
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="col-span-full py-20 text-center text-muted-foreground font-black uppercase text-[10px] tracking-[0.4em] opacity-40"
+                                >
+                                  Aguardando leitura de lotes...
+                                </motion.div>
+                              ) : bipedLotes.map((b, i) => (
+                                <motion.div
+                                  key={i}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.8 }}
+                                >
+                                  <Badge className="h-14 w-full justify-center border-2 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 font-black text-[10px] rounded-xl shadow-lg hover:scale-105 transition-transform">
+                                    {b.lote}
+                                  </Badge>
+                                </motion.div>
+                              ))}
+                            </AnimatePresence>
                           </div>
-                          <div className="flex items-center justify-between bg-emerald-500/5 p-6 rounded-[1.5rem] border border-emerald-500/10">
+                          <div className="flex items-center justify-between bg-emerald-500/5 p-8 rounded-[2rem] border-2 border-emerald-500/20 shadow-xl shadow-emerald-500/5 relative overflow-hidden group">
+                              <div className="absolute inset-y-0 left-0 w-2 bg-emerald-500" />
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => setBipedLotes([])} 
-                                className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 rounded-xl px-4"
+                                className="h-12 rounded-xl text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-rose-500/10 hover:border-rose-500/30 px-6 transition-all"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Limpar
+                                Limpar Lista
                               </Button>
                               <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-muted-foreground uppercase">Total Bipado</span>
-                                <span className="text-3xl font-black text-emerald-600 tracking-tighter">{bipedLotes.length}</span>
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total Auditoria</span>
+                                <span className="text-5xl font-black text-emerald-600 tracking-tighter tabular-nums drop-shadow-sm">{bipedLotes.length}</span>
                               </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1 text-center block">Quantidade Total Encontrada</Label>
+                        <div className="space-y-6">
+                          <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1 text-center block">Quantidade Total Encontrada</Label>
                           <Input 
                             type="number"
                             ref={qtyInputRef}
                             value={physicalQtyInput}
                             onChange={(e) => setPhysicalQtyInput(e.target.value)}
                             placeholder="0.00"
-                            className="h-32 text-6xl font-black text-center rounded-[2rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-8 focus:ring-primary/5 shadow-inner"
+                            className="h-40 text-8xl font-black text-center rounded-[2.5rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-12 focus:ring-primary/5 shadow-2xl shadow-black/5 tracking-tighter"
                           />
                         </div>
                       )}
 
-                      <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                          <Button variant="outline" onClick={() => setFoundItem(null)} className="h-20 rounded-[1.5rem] font-black uppercase tracking-widest flex-1 hover:bg-muted transition-colors border-2">Trocar Item</Button>
+                      <div className="flex flex-col sm:flex-row gap-6 pt-6">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setFoundItem(null)} 
+                            className="h-24 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] flex-1 hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30 transition-all duration-300 border-2"
+                          >
+                            Trocar Item
+                          </Button>
                           <Button 
                             onClick={handleFinalize}
                             disabled={isSubmitting || (foundItem.hasLote ? bipedLotes.length === 0 : !physicalQtyInput)}
-                            className="h-20 rounded-[1.5rem] bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-emerald-600/20 flex-[2] group"
+                            className="h-24 rounded-[2rem] bg-emerald-600 hover:bg-emerald-500 text-white text-2xl font-black uppercase tracking-[0.4em] shadow-2xl shadow-emerald-600/30 flex-[2] group relative overflow-hidden ring-8 ring-emerald-500/10 transition-all active:scale-95"
                           >
-                            {isSubmitting ? <Loader2 className="w-8 h-8 animate-spin" /> : (
+                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] transition-all" />
+                            {isSubmitting ? <Loader2 className="w-10 h-10 animate-spin" /> : (
                                 <>
-                                    <CheckCircle2 className="w-8 h-8 mr-3 group-hover:scale-110 transition-transform" />
+                                    <CheckCircle2 className="w-10 h-10 mr-4 group-hover:scale-125 transition-transform duration-500 drop-shadow-lg" />
                                     Finalizar
                                 </>
                             )}
