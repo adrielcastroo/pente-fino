@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Barcode, CheckCircle2, Search, Loader2 } from 'lucide-react';
+import { Barcode, CheckCircle2, Search, Loader2, History, Lightbulb, PlayCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { CountingHistoryTable } from '@/components/inventory/CountingHistoryTable';
 import { InventorySuggestionsTab } from '@/components/inventory/InventorySuggestionsTab';
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 export function CyclicInventoryView() {
   const { user } = useAuth();
@@ -204,118 +206,157 @@ export function CyclicInventoryView() {
     }
   };
 
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-14 rounded-2xl p-1.5 shadow-sm bg-muted/20">
-          <TabsTrigger value="execution" className="font-black uppercase tracking-widest text-[10px]">Execução</TabsTrigger>
-          <TabsTrigger value="suggestions" className="font-black uppercase tracking-widest text-[10px]">Sugestões</TabsTrigger>
-          <TabsTrigger value="history" className="font-black uppercase tracking-widest text-[10px]">Histórico</TabsTrigger>
+        <TabsList className="flex w-full sm:w-auto h-14 rounded-2xl p-1 shadow-inner bg-muted/30 border border-border/5 mb-8">
+          <TabsTrigger value="execution" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 gap-2">
+            <PlayCircle className="w-4 h-4" />
+            Execução
+          </TabsTrigger>
+          <TabsTrigger value="suggestions" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 gap-2">
+            <Lightbulb className="w-4 h-4" />
+            Sugestões
+          </TabsTrigger>
+          <TabsTrigger value="history" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 gap-2">
+            <History className="w-4 h-4" />
+            Histórico
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="execution" className="space-y-6 mt-8">
-          <Card className="rounded-[2rem] border-border/20 shadow-2xl overflow-hidden bg-card/10 backdrop-blur-md">
-            <CardHeader className="bg-primary/[0.03] p-6 border-b">
-              <CardTitle className="flex items-center gap-4 text-xl font-black uppercase">
-                <Barcode className="w-8 h-8 text-primary" />
-                {foundItem ? 'Identificar Itens' : 'Bipar Lote'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {!foundItem ? (
-                <form onSubmit={handleItemSearch} className="space-y-6">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Lote ou SKU</Label>
-                  <div className="relative group">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input 
-                      ref={lotInputRef}
-                      value={lotInput}
-                      onChange={(e) => setLotInput(e.target.value)}
-                      placeholder="BIPE O CÓDIGO AQUI..." 
-                      className="h-20 pl-16 text-xl sm:text-2xl font-black uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                    />
-                    {isValidating && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
-                  </div>
-                </form>
-              ) : (
-                <div className="space-y-8 animate-in zoom-in-95 duration-500">
-                  <div className="p-6 rounded-3xl bg-primary/5 border-2 border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-center sm:text-left">
-                      <h4 className="text-xl font-black uppercase tracking-tight">{foundItem.name}</h4>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Sistema: {foundItem.systemQty}</p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <TabsContent value="execution" className="space-y-6 mt-0">
+              <Card className="rounded-[2.5rem] border-border/10 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent p-8 border-b border-white/5">
+                  <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
+                    <div className="p-3.5 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                      <Barcode className="w-8 h-8" />
                     </div>
-                    <Badge className="bg-primary text-white font-black py-1.5 px-4 rounded-xl uppercase tracking-widest text-[10px]">
-                        {foundItem.hasLote ? 'COM LOTE' : 'SEM LOTE'}
-                    </Badge>
-                  </div>
-
-                  {foundItem.hasLote ? (
-                    <div className="space-y-6">
-                      <form onSubmit={handleLoteBipe} className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1">Bipar Lotes Individuais</Label>
+                    {foundItem ? 'Identificar Itens' : 'Início de Inventário'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  {!foundItem ? (
+                    <form onSubmit={handleItemSearch} className="space-y-6">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Bipar Lote ou SKU</Label>
+                      <div className="relative group">
+                        <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input 
-                          name="loteBipe"
-                          ref={loteBipeRef}
-                          autoFocus
-                          placeholder="BIPE CADA LOTE..."
-                          className="h-16 text-xl font-black uppercase rounded-2xl border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/5 bg-primary/5"
+                          ref={lotInputRef}
+                          value={lotInput}
+                          onChange={(e) => setLotInput(e.target.value)}
+                          placeholder="BIPE O CÓDIGO AQUI..." 
+                          className="h-24 pl-20 text-2xl sm:text-3xl font-black uppercase rounded-[2rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
                         />
-                      </form>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[200px] overflow-y-auto p-2 scrollbar-hide">
-                        {bipedLotes.map((b, i) => (
-                          <Badge key={i} variant="outline" className="h-10 justify-center px-4 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 font-black text-[10px] rounded-xl">
-                            {b.lote}
-                          </Badge>
-                        ))}
+                        {isValidating && <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-8 h-8 animate-spin text-primary" />}
                       </div>
-                      <div className="flex items-center justify-between border-t border-border/10 pt-4">
-                          <Button variant="ghost" size="sm" onClick={() => setBipedLotes([])} className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10">Limpar Tudo</Button>
-                          <p className="text-lg font-black text-emerald-600 uppercase tracking-widest">Total: {bipedLotes.length}</p>
-                      </div>
-                    </div>
+                    </form>
                   ) : (
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1">Quantidade Total Encontrada</Label>
-                      <Input 
-                        type="number"
-                        ref={qtyInputRef}
-                        value={physicalQtyInput}
-                        onChange={(e) => setPhysicalQtyInput(e.target.value)}
-                        placeholder="0.00"
-                        className="h-24 text-4xl font-black text-center rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5"
-                      />
+                    <div className="space-y-8 animate-in zoom-in-95 duration-500">
+                      <div className="p-8 rounded-[2rem] bg-primary/5 border-2 border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div className="text-center sm:text-left">
+                          <h4 className="text-2xl font-black uppercase tracking-tight text-foreground">{foundItem.name}</h4>
+                          <div className="flex items-center gap-3 mt-1 justify-center sm:justify-start">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sistema:</span>
+                            <span className="text-sm font-black text-primary">{foundItem.systemQty}</span>
+                          </div>
+                        </div>
+                        <Badge className="bg-primary text-primary-foreground font-black py-2 px-6 rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-widest text-[10px]">
+                            {foundItem.hasLote ? 'COM LOTE' : 'SEM LOTE'}
+                        </Badge>
+                      </div>
+
+                      {foundItem.hasLote ? (
+                        <div className="space-y-6">
+                          <form onSubmit={handleLoteBipe} className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1">Bipar Lotes Individuais</Label>
+                            <Input 
+                              name="loteBipe"
+                              ref={loteBipeRef}
+                              autoFocus
+                              placeholder="BIPE CADA LOTE..."
+                              className="h-20 px-8 text-2xl font-black uppercase rounded-[1.5rem] border-2 border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 bg-primary/5 shadow-inner"
+                            />
+                          </form>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[250px] overflow-y-auto p-4 rounded-[1.5rem] bg-muted/10 border border-border/5">
+                            {bipedLotes.length === 0 ? (
+                              <div className="col-span-full py-10 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Aguardando bipe...</div>
+                            ) : bipedLotes.map((b, i) => (
+                              <Badge key={i} variant="outline" className="h-12 justify-center px-4 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 font-black text-[10px] rounded-xl shadow-sm">
+                                {b.lote}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between bg-emerald-500/5 p-6 rounded-[1.5rem] border border-emerald-500/10">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setBipedLotes([])} 
+                                className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 rounded-xl px-4"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Limpar
+                              </Button>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] font-black text-muted-foreground uppercase">Total Bipado</span>
+                                <span className="text-3xl font-black text-emerald-600 tracking-tighter">{bipedLotes.length}</span>
+                              </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary ml-1 text-center block">Quantidade Total Encontrada</Label>
+                          <Input 
+                            type="number"
+                            ref={qtyInputRef}
+                            value={physicalQtyInput}
+                            onChange={(e) => setPhysicalQtyInput(e.target.value)}
+                            placeholder="0.00"
+                            className="h-32 text-6xl font-black text-center rounded-[2rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-8 focus:ring-primary/5 shadow-inner"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                          <Button variant="outline" onClick={() => setFoundItem(null)} className="h-20 rounded-[1.5rem] font-black uppercase tracking-widest flex-1 hover:bg-muted transition-colors border-2">Trocar Item</Button>
+                          <Button 
+                            onClick={handleFinalize}
+                            disabled={isSubmitting || (foundItem.hasLote ? bipedLotes.length === 0 : !physicalQtyInput)}
+                            className="h-20 rounded-[1.5rem] bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-emerald-600/20 flex-[2] group"
+                          >
+                            {isSubmitting ? <Loader2 className="w-8 h-8 animate-spin" /> : (
+                                <>
+                                    <CheckCircle2 className="w-8 h-8 mr-3 group-hover:scale-110 transition-transform" />
+                                    Finalizar
+                                </>
+                            )}
+                          </Button>
+                      </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                      <Button variant="outline" onClick={() => setFoundItem(null)} className="h-16 rounded-2xl font-black uppercase tracking-widest flex-1">Trocar Item</Button>
-                      <Button 
-                        onClick={handleFinalize}
-                        disabled={isSubmitting || (foundItem.hasLote ? bipedLotes.length === 0 : !physicalQtyInput)}
-                        className="h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-black uppercase tracking-widest shadow-xl flex-[2] group"
-                      >
-                        {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
-                            <>
-                                <CheckCircle2 className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform" />
-                                Finalizar Contagem
-                            </>
-                        )}
-                      </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <TabsContent value="suggestions" className="mt-0">
+              <InventorySuggestionsTab />
+            </TabsContent>
 
-        <TabsContent value="suggestions" className="mt-8">
-          <InventorySuggestionsTab />
-        </TabsContent>
-
-        <TabsContent value="history" className="mt-8">
-          <CountingHistoryTable />
-        </TabsContent>
+            <TabsContent value="history" className="mt-0">
+              <CountingHistoryTable />
+            </TabsContent>
+          </motion.div>
+        </AnimatePresence>
       </Tabs>
     </div>
   );
+
 }
