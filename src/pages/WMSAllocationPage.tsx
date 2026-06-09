@@ -22,9 +22,12 @@ export default function WMSAllocationPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [lotInput, setLotInput] = useState('');
   const [addressInput, setAddressInput] = useState('');
+  const [manualDescription, setManualDescription] = useState('');
+  const [isNewItem, setIsNewItem] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [foundItem, setFoundItem] = useState<{ id: string, name: string, lote: string, currentAddress: string } | null>(null);
+  const [foundItem, setFoundItem] = useState<{ id: string | null, name: string, lote: string, currentAddress: string } | null>(null);
+  const [sessionAllocations, setSessionAllocations] = useState<any[]>([]);
   const [lastAllocated, setLastAllocated] = useState<any | null>(null);
 
   // Refs
