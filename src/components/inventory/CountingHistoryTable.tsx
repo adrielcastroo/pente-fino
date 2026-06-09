@@ -62,52 +62,52 @@ export function CountingHistoryTable() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-6 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner">
-            <History className="w-6 h-6" />
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col sm:flex-row gap-8 items-center justify-between">
+        <div className="flex items-center gap-5">
+          <div className="p-4 rounded-[1.5rem] bg-primary text-white shadow-2xl shadow-primary/30 ring-4 ring-primary/10">
+            <History className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Registros de contagens finalizadas</p>
+            <h2 className="text-3xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1 opacity-70">Rastreabilidade completa de contagens</p>
           </div>
         </div>
         
-        <div className="relative w-full sm:w-80 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <div className="relative w-full sm:w-96 group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors duration-500" />
           <Input 
-            placeholder="Buscar por conferente ou item..." 
-            className="pl-12 h-14 bg-card/40 border-2 border-border/50 font-black uppercase text-[10px] tracking-widest rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
+            placeholder="BUSCAR CONFERENTE OU ITEM..." 
+            className="pl-16 h-16 bg-card/40 backdrop-blur-xl border-2 border-white/10 font-black uppercase text-[10px] tracking-[0.2em] rounded-[1.5rem] focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-2xl shadow-black/5"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border border-white/5 overflow-hidden bg-card/40 backdrop-blur-xl shadow-2xl">
+      <div className="rounded-[3rem] border border-white/10 overflow-hidden bg-card/40 backdrop-blur-3xl shadow-2xl ring-1 ring-white/5 group transition-all duration-500">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent border-border/10 bg-muted/20 h-16">
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                  <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> Data / Hora</div>
+              <TableRow className="hover:bg-transparent border-white/5 bg-muted/20 h-20">
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                  <div className="flex items-center gap-3"><Calendar className="w-3.5 h-3.5" /> Data / Hora</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                  <div className="flex items-center gap-2"><Package className="w-3 h-3" /> Item / Lote</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                  <div className="flex items-center gap-3"><Package className="w-3.5 h-3.5" /> Item / Lote</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                  <div className="flex items-center gap-2"><User className="w-3 h-3" /> Conferente</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                  <div className="flex items-center gap-3"><User className="w-3.5 h-3.5" /> Conferente</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                  <div className="flex items-center gap-2 justify-end"><Hash className="w-3 h-3" /> Sistema</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                  <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Teórico</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                  <div className="flex items-center gap-2 justify-end"><Hash className="w-3 h-3" /> Contado</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                  <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Real</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-center">Status</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                  <div className="flex items-center gap-2 justify-end"><Settings2 className="w-3 h-3" /> Exportar</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-center">Status Auditoria</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                  <div className="flex items-center gap-3 justify-end"><Settings2 className="w-3.5 h-3.5" /> Relatório</div>
                 </TableHead>
               </TableRow>
             </TableHeader>
