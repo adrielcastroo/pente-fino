@@ -177,150 +177,159 @@ export function WMSAllocationView() {
     toast.success('Relatório completo exportado!');
   };
 
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black uppercase tracking-tight">Endereçamento WMS</h2>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Bipagem Sequencial de Itens e Endereços</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Bipagem Sequencial de Itens e Endereços</p>
         </div>
         {sessionAllocations.length > 0 && (
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleExportAll}
-            className="rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 text-emerald-500 hover:bg-emerald-500/10"
+            className="rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 text-emerald-600 hover:bg-emerald-500/10 border-emerald-500/20"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            Relatório da Sessão ({sessionAllocations.length})
+            Exportar ({sessionAllocations.length})
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <Card className={cn(
-          "rounded-[2rem] border-border/20 bg-card/10 backdrop-blur-xl shadow-2xl overflow-hidden transition-all duration-500",
-          step === 2 && "opacity-50 grayscale scale-95 pointer-events-none"
-        )}>
-          <CardHeader className="bg-primary/[0.03] p-6 border-b border-border/5">
-            <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                <Barcode className="w-6 h-6" />
-              </div>
-              ETAPA 1: BIPAR ITEM / LOTE
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleLotSearch} className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">CÓDIGO DO LOTE</Label>
-              <div className="relative group">
-                <Input 
-                  ref={lotInputRef}
-                  value={lotInput}
-                  onChange={(e) => setLotInput(e.target.value)}
-                  placeholder="BIPE O LOTE AQUI..." 
-                  className="h-16 px-6 text-xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                  disabled={isValidating || step === 2}
-                />
-                {isValidating && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        {foundItem && (
-          <Card className={cn(
-            "rounded-[2rem] border-dashed border-2 shadow-inner overflow-hidden animate-in zoom-in-95 duration-500",
-            foundItem.isVirtual ? "border-amber-500/30 bg-amber-500/[0.02]" : "border-emerald-500/30 bg-emerald-500/[0.02]"
-          )}>
-            <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-6">
-                <div className={cn(
-                  "p-4 rounded-2xl",
-                  foundItem.isVirtual ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600"
-                )}>
-                  <Package className="w-8 h-8" />
+      <div className="grid grid-cols-1 gap-6">
+        <motion.div
+           animate={{ opacity: step === 2 ? 0.6 : 1, scale: step === 2 ? 0.98 : 1 }}
+           className="relative"
+        >
+          <Card className="rounded-[2.5rem] border-border/10 bg-card/50 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent p-8 border-b border-white/5">
+              <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
+                <div className="p-3.5 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                  <Barcode className="w-6 h-6" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-xl font-black text-foreground uppercase tracking-tight">{foundItem.name}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[9px] uppercase tracking-widest">LOTE: {foundItem.lote}</Badge>
-                    <Badge variant="outline" className={cn(
-                      "font-black text-[9px] uppercase tracking-widest",
-                      foundItem.isVirtual ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-primary/10 text-primary border-primary/20"
-                    )}>
-                      {foundItem.isVirtual ? 'ESTOQUE VIRTUAL / PROVISÓRIO' : `ATUAL: ${foundItem.currentAddress}`}
-                    </Badge>
-                  </div>
+                Etapa 1: Identificação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <form onSubmit={handleLotSearch} className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Código do Lote / SKU</Label>
+                <div className="relative group">
+                  <Input 
+                    ref={lotInputRef}
+                    value={lotInput}
+                    onChange={(e) => setLotInput(e.target.value)}
+                    placeholder="BIPE O LOTE AQUI..." 
+                    className="h-20 px-8 text-2xl font-black tracking-widest uppercase rounded-[1.5rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
+                    disabled={isValidating || step === 2}
+                  />
+                  {isValidating && <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
                 </div>
-              </div>
-              {step === 2 && (
-                 <Button variant="ghost" size="sm" onClick={() => { setStep(1); setFoundItem(null); setLotInput(''); }} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted">
-                  Trocar Item
-                 </Button>
-              )}
+              </form>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {foundItem && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative"
+          >
+            <Card className={cn(
+              "rounded-[2rem] border-2 shadow-xl overflow-hidden bg-background/50",
+              foundItem.isVirtual ? "border-amber-500/30" : "border-emerald-500/30"
+            )}>
+              <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  <div className={cn(
+                    "p-4 rounded-2xl",
+                    foundItem.isVirtual ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600"
+                  )}>
+                    <Package className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-foreground uppercase tracking-tight">{foundItem.name}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="bg-background/50 font-black text-[10px] uppercase tracking-widest py-1 px-3">LOTE: {foundItem.lote}</Badge>
+                      <Badge variant="outline" className={cn(
+                        "font-black text-[10px] uppercase tracking-widest py-1 px-3",
+                        foundItem.isVirtual ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                      )}>
+                        {foundItem.isVirtual ? 'ESTOQUE VIRTUAL' : `ATUAL: ${foundItem.currentAddress}`}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                 <Button variant="ghost" size="sm" onClick={() => { setStep(1); setFoundItem(null); setLotInput(''); }} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted">
+                  Trocar
+                 </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
-        <Card className={cn(
-          "rounded-[2rem] border-border/20 bg-card/10 backdrop-blur-xl shadow-2xl overflow-hidden transition-all duration-500",
-          step === 1 && "opacity-0 translate-y-8 pointer-events-none hidden",
-          step === 2 && "opacity-100 translate-y-0"
-        )}>
-          <CardHeader className="bg-primary/[0.03] p-6 border-b border-border/5">
-            <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
-              <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                <MapPin className="w-6 h-6" />
-              </div>
-              ETAPA 2: BIPAR ENDEREÇO
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-8">
-            <form onSubmit={handleFinalize} className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">CÓDIGO DO ENDEREÇO (DESTINO)</Label>
-              <Input 
-                ref={addressInputRef}
-                value={addressInput}
-                onChange={(e) => setAddressInput(e.target.value)}
-                placeholder="BIPE O ENDEREÇO AQUI..." 
-                className="h-16 px-6 text-xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                disabled={isSubmitting}
-              />
-            </form>
-            
-            {foundItem?.isVirtual && (
-              <div className="space-y-4 animate-in slide-in-from-top-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 ml-1 flex items-center gap-2">
-                  <AlertTriangle className="w-3 h-3" />
-                  QUANTIDADE / METRAGEM (ESTOQUE VIRTUAL)
-                </Label>
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: step === 2 ? 1 : 0, height: step === 2 ? 'auto' : 0 }}
+          className="overflow-hidden"
+        >
+          <Card className="rounded-[2.5rem] border-border/10 bg-card/50 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent p-8 border-b border-white/5">
+              <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
+                <div className="p-3.5 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                Etapa 2: Endereçamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <form onSubmit={handleFinalize} className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Código do Endereço (Destino)</Label>
                 <Input 
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="INFORME A QUANTIDADE..." 
-                  className="h-16 px-6 text-xl font-black uppercase rounded-2xl bg-amber-500/5 border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all"
+                  ref={addressInputRef}
+                  value={addressInput}
+                  onChange={(e) => setAddressInput(e.target.value)}
+                  placeholder="BIPE O ENDEREÇO AQUI..." 
+                  className="h-20 px-8 text-2xl font-black tracking-widest uppercase rounded-[1.5rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
+                  disabled={isSubmitting}
                 />
-              </div>
-            )}
-
-            <Button 
-              onClick={handleFinalize}
-              disabled={isSubmitting || !addressInput.trim()}
-              className="w-full h-20 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-4 group"
-            >
-              {isSubmitting ? <Loader2 className="w-8 h-8 animate-spin" /> : (
-                <>
-                  <CheckCircle2 className="w-6 h-6" />
-                  Confirmar Alocação
-                  <Send className="w-5 h-5 ml-2" />
-                </>
+              </form>
+              
+              {foundItem?.isVirtual && (
+                <div className="space-y-4 animate-in slide-in-from-top-2">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 ml-1 flex items-center gap-2">
+                    <AlertTriangle className="w-3 h-3" />
+                    Quantidade / Metragem
+                  </Label>
+                  <Input 
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="0.00" 
+                    className="h-20 px-8 text-2xl font-black uppercase rounded-[1.5rem] bg-amber-500/5 border-2 border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all shadow-inner"
+                  />
+                </div>
               )}
-            </Button>
-          </CardContent>
-        </Card>
+
+              <Button 
+                onClick={handleFinalize}
+                disabled={isSubmitting || !addressInput.trim()}
+                className="w-full h-24 rounded-[2rem] bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-600/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-4 group"
+              >
+                {isSubmitting ? <Loader2 className="w-8 h-8 animate-spin" /> : (
+                  <>
+                    <CheckCircle2 className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                    Confirmar Alocação
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
+
 }
