@@ -1,26 +1,22 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Barcode, CheckCircle2, AlertTriangle, Search, Package2, ArrowLeft, Send, ListChecks, History as HistoryIcon, User, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Barcode, CheckCircle2, Search, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { CountingHistoryTable } from '@/components/inventory/CountingHistoryTable';
 import { InventorySuggestionsTab } from '@/components/inventory/InventorySuggestionsTab';
-import { cn } from '@/lib/utils';
-import { formatDateBR } from '@/lib/app-utils';
 
-export default function CyclicInventoryPage() {
-  const navigate = useNavigate();
+export function CyclicInventoryView() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('execution');
   
-  // Execution state
   const [lotInput, setLotInput] = useState('');
   const [foundItem, setFoundItem] = useState<{ 
     id: string, 
@@ -78,14 +74,11 @@ export default function CyclicInventoryPage() {
     try {
       const code = lotInput.trim();
       
-      // 1. Check tasks
-      const { data: task, error: taskError } = await (supabase.from('inventory_tasks') as any)
+      const { data: task } = await (supabase.from('inventory_tasks') as any)
         .select('*')
-        .eq('codigo_lote' as any, code)
+        .eq('codigo_lote', code)
         .eq('status', 'pendente')
         .maybeSingle();
-
-      if (taskError) throw taskError;
 
       if (task) {
         const taskData = task as any;
@@ -99,7 +92,6 @@ export default function CyclicInventoryPage() {
         });
         toast.success('Tarefa encontrada!');
       } else {
-        // 2. Fallback search
         const { data: reg } = await supabase.from('registros').select('*').eq('lote', code).maybeSingle();
         if (reg) {
           setFoundItem({
@@ -173,15 +165,6 @@ export default function CyclicInventoryPage() {
           .eq('id', foundItem.tarefaId);
       }
 
-      if (foundItem.hasLote && bipedLotes.length > 0 && foundItem.tarefaId) {
-        const itemsToInsert = bipedLotes.map(b => ({
-            task_id: foundItem.tarefaId,
-            lote: b.lote,
-            quantity: b.quantity
-        }));
-        await supabase.from('inventory_task_items').insert(itemsToInsert as any);
-      }
-
       const today = new Date().toISOString().split('T')[0];
       const { data: limit } = await supabase.from('inventory_daily_limits').select('*').eq('user_id', user.id).eq('date', today).maybeSingle();
       
@@ -222,19 +205,7 @@ export default function CyclicInventoryPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 p-4 sm:p-0">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="rounded-full">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">Inventário</h1>
-            <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-widest">Contagem e Auditoria</p>
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 h-14 rounded-2xl p-1.5 shadow-sm bg-muted/20">
           <TabsTrigger value="execution" className="font-black uppercase tracking-widest text-[10px]">Execução</TabsTrigger>
@@ -244,13 +215,13 @@ export default function CyclicInventoryPage() {
 
         <TabsContent value="execution" className="space-y-6 mt-8">
           <Card className="rounded-[2rem] border-border/20 shadow-2xl overflow-hidden bg-card/10 backdrop-blur-md">
-            <CardHeader className="bg-primary/[0.03] p-6 sm:p-8 border-b">
-              <CardTitle className="flex items-center gap-4 text-xl sm:text-2xl font-black uppercase">
+            <CardHeader className="bg-primary/[0.03] p-6 border-b">
+              <CardTitle className="flex items-center gap-4 text-xl font-black uppercase">
                 <Barcode className="w-8 h-8 text-primary" />
                 {foundItem ? 'Identificar Itens' : 'Bipar Lote'}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 sm:p-8">
+            <CardContent className="p-6">
               {!foundItem ? (
                 <form onSubmit={handleItemSearch} className="space-y-6">
                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Lote ou SKU</Label>
@@ -270,8 +241,8 @@ export default function CyclicInventoryPage() {
                 <div className="space-y-8 animate-in zoom-in-95 duration-500">
                   <div className="p-6 rounded-3xl bg-primary/5 border-2 border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-center sm:text-left">
-                      <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tight">{foundItem.name}</h4>
-                      <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">Sistema: {foundItem.systemQty}</p>
+                      <h4 className="text-xl font-black uppercase tracking-tight">{foundItem.name}</h4>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Sistema: {foundItem.systemQty}</p>
                     </div>
                     <Badge className="bg-primary text-white font-black py-1.5 px-4 rounded-xl uppercase tracking-widest text-[10px]">
                         {foundItem.hasLote ? 'COM LOTE' : 'SEM LOTE'}
@@ -311,7 +282,7 @@ export default function CyclicInventoryPage() {
                         value={physicalQtyInput}
                         onChange={(e) => setPhysicalQtyInput(e.target.value)}
                         placeholder="0.00"
-                        className="h-24 text-4xl sm:text-5xl font-black text-center rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5"
+                        className="h-24 text-4xl font-black text-center rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5"
                       />
                     </div>
                   )}
@@ -321,7 +292,7 @@ export default function CyclicInventoryPage() {
                       <Button 
                         onClick={handleFinalize}
                         disabled={isSubmitting || (foundItem.hasLote ? bipedLotes.length === 0 : !physicalQtyInput)}
-                        className="h-16 sm:h-20 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-black uppercase tracking-widest shadow-xl flex-[2] group"
+                        className="h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-black uppercase tracking-widest shadow-xl flex-[2] group"
                       >
                         {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                             <>

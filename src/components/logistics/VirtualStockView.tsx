@@ -6,12 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle, CheckCircle2, Package, RefreshCw, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Loader2, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 
-export default function VirtualStockDashboard() {
-  const navigate = useNavigate();
+export function VirtualStockView() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
 
@@ -43,16 +41,11 @@ export default function VirtualStockDashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-0 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="rounded-full">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight uppercase">Estoque Virtual</h1>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Gerenciamento de Itens Provisórios</p>
-          </div>
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tight">Estoque Virtual</h2>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Gerenciamento de Itens Provisórios</p>
         </div>
         <Button onClick={fetchData} variant="outline" size="sm" className="rounded-xl font-bold uppercase text-[10px] gap-2">
           <RefreshCw className={loading ? 'w-3 h-3 animate-spin' : 'w-3 h-3'} />
