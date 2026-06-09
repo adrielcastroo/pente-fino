@@ -79,21 +79,24 @@ export default function CyclicInventoryPage() {
       const code = lotInput.trim();
       
       // 1. Check tasks
-      const { data: task } = await supabase
+      const { data: task, error: taskError } = await supabase
         .from('inventory_tasks')
         .select('*')
         .eq('codigo_lote' as any, code)
         .eq('status', 'pendente')
         .maybeSingle();
 
+      if (taskError) throw taskError;
+
       if (task) {
+        const taskData = task as any;
         setFoundItem({
-          id: task.item_id || '',
-          name: (task as any).item_name || 'Item sem nome',
-          systemQty: task.expected_qty || 0,
-          tarefaId: task.id,
-          hasLote: task.has_lote || false,
-          lote: (task as any).codigo_lote
+          id: taskData.item_id || '',
+          name: taskData.item_name || 'Item sem nome',
+          systemQty: taskData.expected_qty || 0,
+          tarefaId: taskData.id,
+          hasLote: taskData.has_lote || false,
+          lote: taskData.codigo_lote
         });
         toast.success('Tarefa encontrada!');
       } else {
