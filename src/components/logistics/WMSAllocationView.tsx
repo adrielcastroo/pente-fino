@@ -192,41 +192,60 @@ export function WMSAllocationView() {
             variant="outline" 
             size="sm" 
             onClick={handleExportAll}
-            className="rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 text-emerald-600 hover:bg-emerald-500/10 border-emerald-500/20"
+            className="rounded-xl font-black uppercase tracking-widest text-[9px] h-11 px-5 flex items-center gap-2 text-emerald-600 hover:bg-emerald-500 hover:text-white border-emerald-500/30 transition-all duration-300 shadow-lg shadow-emerald-500/5 hover:scale-105 active:scale-95"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <FileSpreadsheet className="w-4 h-4" />
             Exportar ({sessionAllocations.length})
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-8">
         <motion.div
-           animate={{ opacity: step === 2 ? 0.6 : 1, scale: step === 2 ? 0.98 : 1 }}
+           animate={{ 
+             opacity: step === 2 ? 0.6 : 1, 
+             scale: step === 2 ? 0.98 : 1,
+             translateY: step === 2 ? -10 : 0
+           }}
+           transition={{ duration: 0.4 }}
            className="relative"
         >
-          <Card className="rounded-[2.5rem] border-border/10 bg-card/50 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent p-8 border-b border-white/5">
-              <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
-                <div className="p-3.5 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                  <Barcode className="w-6 h-6" />
+          <Card className="rounded-[3rem] border-white/10 bg-card/40 backdrop-blur-3xl shadow-2xl overflow-hidden ring-1 ring-white/10 group transition-all duration-500 hover:shadow-primary/5">
+            <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-10 border-b border-white/5">
+              <CardTitle className="flex items-center gap-5 text-2xl font-black uppercase tracking-tight">
+                <div className="p-4 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20 group-hover:scale-110 transition-transform duration-500">
+                  <Barcode className="w-8 h-8" />
                 </div>
-                Etapa 1: Identificação
+                <div>
+                  <span className="block text-primary text-[10px] font-black tracking-[0.3em] mb-1">Passo 01</span>
+                  Identificação do Lote
+                </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8">
-              <form onSubmit={handleLotSearch} className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Código do Lote / SKU</Label>
-                <div className="relative group">
+            <CardContent className="p-10">
+              <form onSubmit={handleLotSearch} className="space-y-6">
+                <div className="flex items-center justify-between ml-1">
+                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Código de Barras / SKU</Label>
+                   <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-primary/20 text-primary">Aguardando Bipe</Badge>
+                </div>
+                <div className="relative group/input">
                   <Input 
                     ref={lotInputRef}
                     value={lotInput}
                     onChange={(e) => setLotInput(e.target.value)}
                     placeholder="BIPE O LOTE AQUI..." 
-                    className="h-20 px-8 text-2xl font-black tracking-widest uppercase rounded-[1.5rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
+                    className="h-24 px-10 text-3xl font-black tracking-[0.1em] uppercase rounded-[2rem] bg-background/50 border-2 border-border/50 focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-2xl shadow-black/5 group-hover/input:border-primary/50"
                     disabled={isValidating || step === 2}
                   />
-                  {isValidating && <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
+                  {isValidating ? (
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-20 group-focus-within/input:opacity-100 transition-opacity">
+                      <Send className="w-8 h-8 text-primary" />
+                    </div>
+                  )}
                 </div>
               </form>
             </CardContent>
