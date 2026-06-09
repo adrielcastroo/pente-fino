@@ -45,6 +45,7 @@ export default function WMSAllocationPage() {
 
     setIsValidating(true);
     setFoundItem(null);
+    setIsNewItem(false);
 
     try {
       const lot = lotInput.trim();
@@ -83,8 +84,8 @@ export default function WMSAllocationPage() {
           setStep(2);
           toast.success('Item validado! Agora bipe o novo endereço.');
         } else {
-          toast.error('Lote não encontrado no sistema!');
-          lotInputRef.current?.select();
+          setIsNewItem(true);
+          toast.info('Item não cadastrado. Informe uma descrição para continuar.');
         }
       }
     } catch (err) {
@@ -93,6 +94,23 @@ export default function WMSAllocationPage() {
     } finally {
       setIsValidating(false);
     }
+  };
+
+  const handleConfirmNewItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualDescription.trim()) {
+      toast.error('Informe a descrição do item');
+      return;
+    }
+
+    setFoundItem({
+      id: null,
+      name: manualDescription.trim(),
+      lote: lotInput.trim(),
+      currentAddress: 'Não cadastrado'
+    });
+    setStep(2);
+    toast.success('Descrição registrada! Agora bipe o endereço.');
   };
 
   const handleFinalize = async (e?: React.FormEvent) => {
