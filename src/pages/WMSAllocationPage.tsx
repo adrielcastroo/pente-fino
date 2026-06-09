@@ -327,31 +327,58 @@ export default function WMSAllocationPage() {
         </Card>
       </div>
 
-      {/* History Log (Optional preview of current session) */}
-      {lastAllocated && (
-        <div className="p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 animate-in fade-in duration-500">
-           <div className="flex items-center gap-3 mb-4">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
-              <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Última Movimentação Registrada</h4>
+      {/* History Log (Session preview) */}
+      {sessionAllocations.length > 0 && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+           <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                 <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                 <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Resumo da Sessão</h4>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSessionAllocations([])} className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Limpar</Button>
            </div>
-           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Item</p>
-                 <p className="text-xs font-black uppercase truncate">{lastAllocated.item}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Lote</p>
-                 <p className="text-xs font-black uppercase">{lastAllocated.lote}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">De</p>
-                 <p className="text-xs font-black uppercase text-amber-500">{lastAllocated.origem}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Para</p>
-                 <p className="text-xs font-black uppercase text-emerald-500">{lastAllocated.destino}</p>
-              </div>
+           
+           <div className="rounded-3xl border border-border/10 bg-card/5 overflow-hidden">
+             <div className="overflow-x-auto">
+               <table className="w-full text-left border-collapse">
+                 <thead>
+                   <tr className="bg-muted/30 border-b border-border/5">
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Item / Lote</th>
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">De -> Para</th>
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Hora</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-border/5">
+                   {sessionAllocations.slice().reverse().map((alloc, i) => (
+                     <tr key={i} className="hover:bg-muted/20 transition-colors">
+                       <td className="px-4 py-3">
+                         <p className="text-xs font-black uppercase truncate max-w-[150px]">{alloc.item}</p>
+                         <p className="text-[9px] font-bold text-muted-foreground uppercase">{alloc.lote}</p>
+                       </td>
+                       <td className="px-4 py-3">
+                         <div className="flex items-center gap-2">
+                           <span className="text-[10px] font-black text-amber-500">{alloc.origem}</span>
+                           <span className="text-muted-foreground">→</span>
+                           <span className="text-[10px] font-black text-emerald-500">{alloc.destino}</span>
+                         </div>
+                       </td>
+                       <td className="px-4 py-3 text-[9px] font-bold text-muted-foreground">
+                         {alloc.timestamp.split(' ')[1]}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
            </div>
+           
+           <Button 
+             onClick={handleExportAll}
+             className="w-full h-14 rounded-2xl bg-muted border border-border/20 hover:bg-muted/80 text-foreground text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+           >
+             <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+             Exportar Planilha Completa (.xlsx)
+           </Button>
         </div>
       )}
     </div>
