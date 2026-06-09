@@ -184,7 +184,7 @@ export function WMSAllocationView() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight">Endereçamento WMS</h2>
+          <h2 className="text-2xl font-black uppercase tracking-tight">Endereçamento</h2>
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Bipagem Sequencial de Itens e Endereços</p>
         </div>
         {sessionAllocations.length > 0 && (
