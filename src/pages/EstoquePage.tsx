@@ -707,82 +707,93 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 max-h-[90vh] overflow-y-auto custom-scrollbar">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             return (
               <>
                 {/* Detail Header */}
-                <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/20 bg-muted/20">
-                  <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
-                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                <div className="px-8 pt-10 pb-8 border-b border-white/5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="p-5 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20 shrink-0">
+                      <Package className="w-10 h-10" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <DialogTitle className="text-sm sm:text-lg font-black tracking-tight truncate leading-snug">
-                        {detailPos.item || 'Item sem nome'}
+                    <div className="min-w-0 flex-1 text-center sm:text-left">
+                      <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight truncate uppercase leading-none">
+                        {detailPos.item || 'Item sem identificação'}
                       </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
-                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-black uppercase tracking-[0.2em] mt-2 opacity-60">
+                        {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
                       </DialogDescription>
                     </div>
-                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-14 sm:mr-12 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                    <Badge className={cn(
+                      "text-[10px] font-black px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest border-2",
+                      statusCfg.bg,
+                      statusCfg.border,
+                      statusCfg.color,
+                      "bg-transparent"
+                    )}>
                       {statusCfg.label}
                     </Badge>
                   </div>
                 </div>
 
                 {/* Info Grid */}
-                <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="p-8 space-y-8 bg-card/20">
+                  <div className="grid grid-cols-2 gap-4">
                     {[
-                      { label: 'Lote', value: detailPos.lote || '—' },
-                      { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
-                      { label: 'Endereço', value: detailPos.endereco || '—' },
-                      { label: 'Conferente', value: detailPos.conferente_entrada || '—' },
-                      { label: 'M²', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
-                      { label: 'Largura', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
-                      { label: 'M Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
-                      { label: 'Data Entrada', value: formatDateBR(detailPos.data_registro) },
-                    ].map(f => (
-                      <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
-                        <div className="text-[8px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
-                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-all leading-snug">{f.value}</div>
-                      </div>
+                      { label: 'Lote Fábrica', value: detailPos.lote || '—' },
+                      { label: 'Lote Sistema (Final)', value: detailPos.lote_sistema || '—' },
+                      { label: 'Endereço Atual', value: detailPos.endereco || '—' },
+                      { label: 'Conferente Responsável', value: detailPos.conferente_entrada || '—' },
+                      { label: 'Área Total (M²)', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
+                      { label: 'Largura Nominal', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
+                      { label: 'Metragem Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
+                      { label: 'Data de Entrada', value: formatDateBR(detailPos.data_registro) },
+                    ].map((f, i) => (
+                      <motion.div 
+                        key={f.label} 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-lg group hover:border-primary/30 transition-all duration-300"
+                      >
+                        <div className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
+                        <div className="text-sm sm:text-base font-black text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
+                      </motion.div>
                     ))}
                   </div>
 
                   {/* Status Actions */}
-                  <div className="space-y-2.5 sm:space-y-3">
-                    <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
-                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                  <div className="space-y-4">
+                    <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] text-center mb-4">Gerenciamento de Status</div>
+                    <div className="grid grid-cols-2 gap-3">
                       {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
                         const cfg = STATUS_CONFIG[st];
                         const isActive = detailPos.status === st;
-                        const dotColor = st === 'ocupado' ? 'bg-emerald-400' : st === 'bloqueado' ? 'bg-red-400' : 'bg-amber-400';
-                        const activeRing = st === 'ocupado' ? 'ring-emerald-500/30' : st === 'bloqueado' ? 'ring-red-500/30' : 'ring-amber-500/30';
-                        const activeBg = st === 'ocupado' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500' 
-                          : st === 'bloqueado' ? 'bg-red-500/15 border-red-500/50 text-red-500' 
-                          : 'bg-amber-500/15 border-amber-500/50 text-amber-500';
-                        const hoverBg = st === 'ocupado' ? 'hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-500' 
-                          : st === 'bloqueado' ? 'hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-500' 
-                          : 'hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-500';
+                        const activeBg = st === 'ocupado' ? 'bg-emerald-500 shadow-emerald-500/30' 
+                          : st === 'bloqueado' ? 'bg-rose-500 shadow-rose-500/30' 
+                          : 'bg-amber-500 shadow-amber-500/30';
+                        
                         return (
                           <Button 
                             key={st} 
                             onClick={() => handleStatusChange(detailPos, st)} 
                             variant="outline"
-                            className={`h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                            className={cn(
+                              "h-14 font-black uppercase tracking-widest text-[10px] rounded-2xl border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
                               isActive 
-                                ? `${activeBg} ring-2 ${activeRing} ring-offset-1 ring-offset-card shadow-sm pointer-events-none` 
-                                : `border-border/20 text-muted-foreground ${hoverBg} active:scale-[0.97]`
-                            }`}
+                                ? `${activeBg} text-white border-transparent ring-4 ring-white/10 scale-105 z-10` 
+                                : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/20 active:scale-95"
+                            )}
                           >
-                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} ${isActive ? 'animate-pulse' : ''}`} 
-                              style={isActive ? { boxShadow: `0 0 8px ${st === 'ocupado' ? '#34d399' : st === 'bloqueado' ? '#f87171' : '#fbbf24'}` } : {}}
-                            />
+                            <div className={cn(
+                              "w-2.5 h-2.5 rounded-full transition-all duration-500",
+                              isActive ? "bg-white animate-pulse" : 
+                              st === 'ocupado' ? "bg-emerald-500" : st === 'bloqueado' ? "bg-rose-500" : "bg-amber-500"
+                            )} />
                             {cfg.label}
-                            {isActive && <span className="ml-1.5 text-[10px] font-bold opacity-80">✓</span>}
+                            {isActive && <CheckCircle2 className="w-4 h-4 ml-auto" />}
                           </Button>
                         );
                       })}
@@ -790,25 +801,24 @@ export default function EstoquePage() {
                         <Button 
                           onClick={() => handleStatusChange(detailPos, 'saida')} 
                           variant="outline"
-                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-500/15 hover:border-violet-500/50 hover:text-violet-400 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0 shadow-sm"
+                          className="h-14 font-black uppercase tracking-widest text-[10px] rounded-2xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
                         >
-                          <div className="w-2.5 h-2.5 rounded-full mr-2 bg-violet-400" />
-                          <LogOut className="w-3 h-3 mr-1.5" />
-                          Dar Saída
+                          <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          Confirmar Saída
                         </Button>
                       )}
                     </div>
                   </div>
 
                   {!isGuest && (
-                    <div className="pt-3 border-t border-border/15">
+                    <div className="pt-6 border-t border-white/5">
                       <Button 
                         variant="ghost" 
                         onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                        className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Excluir Item
+                        <Trash2 className="w-5 h-5 mr-3" />
+                        Remover do Sistema Permanentemente
                       </Button>
                     </div>
                   )}
