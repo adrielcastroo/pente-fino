@@ -173,14 +173,16 @@ export function VirtualStockView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((item, index) => (
-                    <motion.tr 
-                      key={item.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
-                    >
+                  <AnimatePresence mode="popLayout">
+                    {data.map((item, index) => (
+                      <motion.tr 
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
+                      >
                       <TableCell className="px-8 text-xs font-bold text-muted-foreground">
                         {formatDateBR(item.data_movimentacao)}
                       </TableCell>
