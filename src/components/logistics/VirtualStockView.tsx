@@ -202,14 +202,24 @@ export function VirtualStockView() {
                         {item.quantidade || '-'}
                       </TableCell>
                       <TableCell className="px-8 text-right">
-                        <Button 
-                          onClick={() => handleRegularize(item.id)}
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
-                        >
-                          Regularizar
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            onClick={() => handleRegularize(item.id)}
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
+                          >
+                            Regularizar
+                          </Button>
+                          <Button 
+                            onClick={() => handleDeleteItem(item.id)}
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 shadow-sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </motion.tr>
                   ))}
