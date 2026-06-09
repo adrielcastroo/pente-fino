@@ -279,25 +279,31 @@ export function WarehouseSlottingView() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="rounded-[2.5rem] border-white/5 bg-card/30 backdrop-blur-2xl shadow-xl">
-            <CardHeader className="p-6 border-b border-white/5">
-              <CardTitle className="text-lg font-black uppercase flex items-center gap-3 text-amber-500">
-                <AlertTriangle className="w-5 h-5" />
-                Alertas de Slotting
+          <Card className="rounded-[3rem] border-white/10 bg-card/40 backdrop-blur-3xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
+            <CardHeader className="p-8 border-b border-white/5 bg-gradient-to-br from-amber-500/10 to-transparent">
+              <CardTitle className="text-xl font-black uppercase flex items-center gap-4 text-amber-500">
+                <div className="p-3 rounded-2xl bg-amber-500 text-white shadow-xl shadow-amber-500/20">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                Alertas Slotting
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-8 space-y-6">
               {alerts.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {alerts.map((alert, idx) => (
                     <motion.div
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1, duration: 0.5 }}
                       key={idx}
                     >
-                      <Alert variant="destructive" className="bg-amber-500/10 border-amber-500/20 text-amber-600 rounded-2xl p-4">
-                        <AlertTitle className="text-[10px] font-black uppercase tracking-widest mb-1">Otimização Necessária</AlertTitle>
-                        <AlertDescription className="text-[11px] font-bold leading-relaxed">
+                      <Alert variant="destructive" className="bg-amber-500/10 border-amber-500/30 text-amber-600 rounded-3xl p-6 shadow-lg shadow-amber-500/5 group hover:bg-amber-500/15 transition-all duration-300">
+                        <AlertTitle className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                           Otimização Necessária
+                        </AlertTitle>
+                        <AlertDescription className="text-[11px] font-black leading-relaxed opacity-90">
                           {alert}
                         </AlertDescription>
                       </Alert>
@@ -305,41 +311,44 @@ export function WarehouseSlottingView() {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-                  <div className="p-4 rounded-full bg-emerald-500/10">
-                    <Info className="w-8 h-8 text-emerald-500" />
+                <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                  <div className="p-6 rounded-full bg-emerald-500/10 shadow-inner ring-4 ring-emerald-500/5">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                   </div>
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-loose">
-                    Parabéns!<br/>Todas as posições estão<br/>otimizadas conforme<br/>Curva ABC.
-                  </p>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-black uppercase tracking-tight text-emerald-600">Grade Otimizada</h4>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] leading-relaxed opacity-60">
+                      Parabéns! Todas as posições<br/>estão configuradas conforme<br/>Curva ABC.
+                    </p>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="rounded-[2.5rem] border-white/5 bg-card/30 backdrop-blur-2xl shadow-xl overflow-hidden">
-             <div className="p-6 bg-primary/10 border-b border-white/5">
-                <h4 className="text-xs font-black uppercase tracking-widest text-primary">Resumo Galpão G4</h4>
+          <Card className="rounded-[3rem] border-white/10 bg-card/40 backdrop-blur-3xl shadow-2xl ring-1 ring-white/10 overflow-hidden group">
+             <div className="p-8 bg-primary/10 border-b border-white/5">
+                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-primary group-hover:tracking-[0.4em] transition-all duration-700">Resumo Galpão G4</h4>
              </div>
-             <CardContent className="p-6 space-y-6">
+             <CardContent className="p-8 space-y-8">
                 <div className="flex items-center justify-between">
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase">Ocupação Total</p>
-                      <p className="text-2xl font-black">{Math.round((items.filter(i => i.endereco?.startsWith('G4')).length / (10 * 9 * 11)) * 100)}%</p>
+                   <div className="space-y-2">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Taxa de Ocupação</p>
+                      <p className="text-4xl font-black tracking-tighter drop-shadow-sm">{Math.round((items.filter(i => i.endereco?.startsWith('G4')).length / (10 * 9 * 11)) * 100)}%</p>
                    </div>
-                   <div className="p-3 rounded-xl bg-background/50 border border-white/5">
-                      <LayoutDashboard className="w-5 h-5 text-muted-foreground" />
+                   <div className="p-4 rounded-2xl bg-background/50 border border-white/5 shadow-inner">
+                      <LayoutDashboard className="w-6 h-6 text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
                    </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10">
-                      <p className="text-[8px] font-black text-red-500 uppercase mb-1">Ocupados</p>
-                      <p className="text-lg font-black">{items.filter(i => i.endereco?.startsWith('G4')).length}</p>
+                <div className="grid grid-cols-2 gap-5">
+                   <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/20 shadow-lg shadow-red-500/5 group-hover:scale-105 transition-all duration-500">
+                      <p className="text-[9px] font-black text-red-500 uppercase mb-2 tracking-widest opacity-70">Ocupados</p>
+                      <p className="text-2xl font-black tabular-nums">{items.filter(i => i.endereco?.startsWith('G4')).length}</p>
                    </div>
-                   <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                      <p className="text-[8px] font-black text-emerald-500 uppercase mb-1">Disponíveis</p>
-                      <p className="text-lg font-black">{(10 * 9 * 11) - items.filter(i => i.endereco?.startsWith('G4')).length}</p>
+                   <div className="p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5 group-hover:scale-105 transition-all duration-500">
+                      <p className="text-[9px] font-black text-emerald-500 uppercase mb-2 tracking-widest opacity-70">Livres</p>
+                      <p className="text-2xl font-black tabular-nums">{(10 * 9 * 11) - items.filter(i => i.endereco?.startsWith('G4')).length}</p>
                    </div>
                 </div>
              </CardContent>
