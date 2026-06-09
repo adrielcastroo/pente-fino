@@ -3,16 +3,19 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine, ArrowLeft, LayoutDashboard, Barcode, Warehouse } from 'lucide-react';
 import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { usePerformance } from '@/hooks/use-performance';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -65,6 +68,7 @@ import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
   const { isGuest } = useAuth();
+  const navigate = useNavigate();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
 
   const setFormData = useAppStore(s => s.setFormData);
@@ -322,82 +326,136 @@ export default function EstoquePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-7xl mx-auto space-y-8 pb-20 p-4 sm:p-0"
+    >
       {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-[clamp(1.5rem,5vw,3.5rem)] font-black tracking-tight leading-none">Estoque</h1>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate('/dashboard')} 
+            className="rounded-2xl hover:bg-primary/10 hover:scale-110 active:scale-95 transition-all duration-300 w-12 h-12 shadow-sm"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <div>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
+              Gestão de Estoque
+            </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-1 w-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+              <p className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.3em] opacity-70">
+                Monitoramento de Posições e Ocupação
+              </p>
+            </div>
+          </div>
         </div>
+        
         <div className="flex items-center gap-3">
-          <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
-            <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Importar</span>
+          <motion.div 
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="hidden sm:flex items-center gap-3 p-3 px-5 bg-card/40 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl shadow-black/5"
+          >
+              <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-primary/10">
+                  <Warehouse className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Estoque Central</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Localização G4</span>
+              </div>
+          </motion.div>
+
+          <Button 
+            onClick={() => setImportOpen(true)} 
+            variant="outline" 
+            className="h-14 px-8 rounded-2xl border-white/10 bg-card/40 backdrop-blur-xl font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 active:scale-95"
+          >
+            <Upload className="w-5 h-5" />
+            Importar
           </Button>
         </div>
       </div>
 
-      {/* Categoria Tabs: Tecido / Madeira */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-md">
-        {([
-          { key: 'tecido', label: 'Tecido', Icon: Shirt },
-          { key: 'madeira', label: 'Madeira', Icon: TreePine },
-        ] as const).map(({ key, label, Icon }) => (
-          <button
-            key={key}
-            onClick={() => setCategory(key)}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 ${
-              category === key
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </button>
-        ))}
+      {/* Categoria Tabs */}
+      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] p-1.5 gap-1.5 border border-white/10 shadow-2xl max-w-md ring-1 ring-white/5">
+        {(['tecido', 'madeira'] as const).map((key) => {
+          const Icon = key === 'tecido' ? Shirt : TreePine;
+          const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
+          return (
+            <button
+              key={key}
+              onClick={() => setCategory(key)}
+              className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-2.5 ${
+                category === key
+                  ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {category === 'madeira' ? (
         <MadeiraEstoque />
       ) : (
         <>
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain snap-x">
-        <div className="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-4 min-w-max sm:min-w-0">
+        <div className="flex sm:grid sm:grid-cols-5 gap-4 min-w-max sm:min-w-0">
           {[
-            { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
-            { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
-            { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
-            { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
-            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
+            { key: 'total', label: 'Capacidade Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40 shadow-2xl ring-1 ring-white/10', border: 'border-white/5' } },
+            { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
+            { key: 'livre', label: 'Posições Livres', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5 shadow-primary/5', border: 'border-primary/20' } },
+            { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.bloqueado, bg: 'bg-red-500/10 shadow-red-500/5', border: 'border-red-500/20' } },
+            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.reservado, bg: 'bg-amber-500/10 shadow-amber-500/5', border: 'border-amber-500/20' } },
           ].map((s) => (
-            <Card 
-              key={s.label} 
-              onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-              className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md shrink-0 w-[120px] sm:w-auto ${
-                selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-              }`}
+            <motion.div
+              key={s.label}
+              whileHover={{ scale: 1.05, translateY: -5 }}
+              transition={{ duration: 0.3 }}
             >
-              <CardContent className="p-3 sm:p-4 text-center space-y-0.5 sm:space-y-1">
-                <div className={`text-xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
-                <div className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-[0.1em] sm:tracking-[0.15em]">{s.label}</div>
-                <div className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-              </CardContent>
-            </Card>
+              <Card 
+                onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+                className={`rounded-[2rem] border-2 ${s.config.border} ${s.config.bg} backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl shrink-0 w-[160px] sm:w-auto relative overflow-hidden group ${
+                  selectedStat === s.key ? 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background scale-105' : ''
+                }`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                <CardContent className="p-6 text-center space-y-2 relative z-10">
+                  <div className={`text-3xl sm:text-4xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
+                  <div className="flex items-center justify-center gap-1.5 pt-2">
+                    <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
+                       <div className={`h-full ${s.config.color.replace('text', 'bg')}`} style={{ width: `${s.percent}%` }} />
+                    </div>
+                    <span className="text-[10px] font-black text-muted-foreground/80">{s.percent}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1.5 border border-border/30 overflow-x-auto custom-scrollbar no-scrollbar snap-x -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[2rem] p-1.5 gap-2 border border-white/10 shadow-2xl overflow-x-auto custom-scrollbar no-scrollbar snap-x ring-1 ring-white/5">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[65px] sm:min-w-[80px] py-2.5 sm:py-3 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 snap-start ${
+            className={`flex-1 min-w-[75px] sm:min-w-[100px] py-3.5 sm:py-4 rounded-2xl text-[10px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 snap-start ${
               activeTec === tec 
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
             }`}
           >
             {tec}
@@ -407,27 +465,41 @@ export default function EstoquePage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="text-sm font-semibold">Carregando...</span>
+        <div className="flex flex-col items-center justify-center py-32 gap-6 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-2xl ring-1 ring-white/5">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Warehouse className="w-6 h-6 text-primary animate-pulse" />
+            </div>
           </div>
+          <span className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
         </div>
       ) : (
-        <div className="overflow-x-auto pb-4 custom-scrollbar">
-          <div className="min-w-full space-y-1 sm:space-y-1.5">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="overflow-x-auto pb-6 custom-scrollbar"
+        >
+          <div className="min-w-full space-y-2 sm:space-y-3 p-1">
             {/* Column headers */}
-            <div className="flex gap-1 sm:gap-1.5">
-              <div className="w-8 sm:w-10 md:w-14 shrink-0" />
+            <div className="flex gap-2 sm:gap-3">
+              <div className="w-10 sm:w-12 md:w-16 shrink-0" />
               {config.cols.map(col => (
-                <div key={col} className="flex-1 text-center text-[7px] sm:text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest py-1">
+                <div key={col} className="flex-1 text-center text-[8px] sm:text-[10px] md:text-xs font-black text-primary uppercase tracking-[0.3em] py-2 bg-primary/5 rounded-xl border border-primary/10 mb-2">
                   {col}
                 </div>
               ))}
             </div>
-            {Array.from({ length: config.levels }, (_, i) => config.levels - i).map(nivel => (
-              <div key={nivel} className="flex gap-1 sm:gap-1.5">
-                <div className="w-8 sm:w-10 md:w-14 text-[7px] sm:text-[8px] md:text-[10px] font-black text-muted-foreground flex items-center justify-center bg-muted/40 dark:bg-muted/20 rounded-md sm:rounded-lg shrink-0 border border-border/40 dark:border-border/30">
+            {Array.from({ length: config.levels }, (_, i) => config.levels - i).map((nivel, idx) => (
+              <motion.div 
+                key={nivel} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="flex gap-2 sm:gap-3"
+              >
+                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-black text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-2xl shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
@@ -443,147 +515,189 @@ export default function EstoquePage() {
                                       items.some(i => i.status === selectedStat);
                   
                   return (
-                    <div 
+                    <motion.div 
                       key={col} 
+                      whileHover={{ scale: 1.02, zIndex: 10 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 min-w-0 h-12 sm:h-16 md:h-[4.5rem] rounded-lg sm:rounded-xl cursor-pointer p-1.5 sm:p-2 md:p-2.5 transition-colors duration-150 group relative overflow-hidden border ${
-                        !matchesFilter ? 'opacity-30' : ''
+                      className={`flex-1 min-w-0 h-16 sm:h-20 md:h-24 rounded-2xl sm:rounded-3xl cursor-pointer p-3 sm:p-4 transition-all duration-300 group relative overflow-hidden border ${
+                        !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : 'shadow-lg hover:shadow-primary/10'
                       } ${
                         hasItems
-                          ? 'bg-accent/60 dark:bg-accent/20 border-border/50 dark:border-border/40 hover:border-primary/60 hover:bg-primary/10'
-                          : 'bg-muted/30 dark:bg-muted/10 border-border/40 dark:border-border/25 hover:border-primary/40 hover:bg-primary/5'
+                          ? 'bg-card/60 backdrop-blur-xl border-white/10 ring-1 ring-white/5'
+                          : 'bg-muted/10 border-white/5 opacity-50'
                       }`}
                     >
                       {/* Fill bar */}
                       {hasItems && (
-                        <div 
-                          className="absolute bottom-0 left-0 right-0 bg-primary/10 dark:bg-primary/8" 
-                          style={{ height: `${fillPercent}%` }} 
+                        <motion.div 
+                          initial={{ height: 0 }}
+                          animate={{ height: `${fillPercent}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="absolute bottom-0 left-0 right-0 bg-primary/10 dark:bg-primary/5" 
                         />
                       )}
-                      <div className="relative z-10">
-                        <div className="text-[7px] sm:text-[8px] font-bold uppercase tracking-tight text-muted-foreground/70 dark:text-muted-foreground/50 group-hover:text-primary transition-colors">
-                          {col}-N{nivel}
+                      
+                      {/* Status indicator dots */}
+                      <div className="absolute top-2 right-2 flex gap-0.5">
+                         {items.slice(0, 3).map((it, i) => (
+                            <div key={i} className={`w-1 h-1 rounded-full ${
+                              it.status === 'bloqueado' ? 'bg-red-500' : 
+                              it.status === 'reservado' ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`} />
+                         ))}
+                         {items.length > 3 && <div className="text-[6px] font-black text-muted-foreground/50">+</div>}
+                      </div>
+
+                      <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary transition-colors">
+                          {col}N{nivel}
                         </div>
-                        <div className="text-sm sm:text-base font-black text-foreground mt-0.5">
-                          {items.length}
-                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/60 dark:text-muted-foreground/40 font-semibold ml-0.5">/30</span>
+                        <div className="flex items-end gap-1">
+                          <span className="text-lg sm:text-2xl font-black text-foreground tracking-tighter leading-none">
+                            {items.length}
+                          </span>
+                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/40 font-black uppercase mb-0.5">/30</span>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
         </>
       )}
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card/95  overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40">
           {selectedCell && (
             <>
               {/* Dialog Header */}
-              <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary">
-                      <Grid3X3 className="w-5 h-5" />
+              <div className="px-8 pt-10 pb-8 border-b border-white/5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent relative">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="p-4 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20">
+                      <Grid3X3 className="w-8 h-8" />
                     </div>
                     <div>
-                      <DialogTitle className="text-lg sm:text-xl font-black tracking-tight">
-                        {activeTec} · Coluna {selectedCell.col} · Nível {String(selectedCell.nivel).padStart(2, '0')}
+                      <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight uppercase">
+                        {activeTec} · {selectedCell.col}N{String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
-                      <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
-                        {occupiedCount} de 30 posições ocupadas
+                      <DialogDescription className="text-[10px] sm:text-xs text-muted-foreground font-black uppercase tracking-[0.2em] mt-1 opacity-60">
+                         Monitoramento de Célula · {occupiedCount} de 30 Posições
                       </DialogDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-black px-2.5 py-1 rounded-lg border mr-14 ${
-                    occupiedCount === 0 ? 'border-primary/30 text-primary bg-primary/5' :
-                    occupiedCount >= 25 ? 'border-red-500/30 text-red-400 bg-red-500/10' :
-                    'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
-                  }`}>
-                    {occupiedCount === 0 ? 'Vazio' : occupiedCount >= 25 ? 'Quase Cheio' : `${Math.round((occupiedCount/30)*100)}%`}
+                  <Badge className={cn(
+                    "text-[10px] font-black px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest",
+                    occupiedCount === 0 ? "bg-primary text-primary-foreground ring-primary/10" :
+                    occupiedCount >= 25 ? "bg-rose-500 text-white ring-rose-500/10" :
+                    "bg-emerald-500 text-white ring-emerald-500/10"
+                  )}>
+                    {occupiedCount === 0 ? 'Célula Vazia' : occupiedCount >= 25 ? 'Capacidade Crítica' : `${Math.round((occupiedCount/30)*100)}% Ocupado`}
                   </Badge>
                 </div>
                 {/* Occupation bar */}
-                <div className="mt-4 h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                  <div 
-                    style={{ width: `${(occupiedCount/30)*100}%` }}
-                    className={`h-full rounded-full transition-all ${
-                      occupiedCount >= 25 ? 'bg-red-500' : occupiedCount >= 15 ? 'bg-amber-500' : 'bg-primary'
-                    }`} 
+                <div className="mt-8 h-2 rounded-full bg-white/5 overflow-hidden shadow-inner border border-white/5">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(occupiedCount/30)*100}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className={cn(
+                      "h-full rounded-full transition-all shadow-[0_0_10px_rgba(var(--primary),0.5)]",
+                      occupiedCount >= 25 ? 'bg-rose-500' : occupiedCount >= 15 ? 'bg-amber-500' : 'bg-primary'
+                    )} 
                   />
                 </div>
               </div>
 
               {/* Positions List/Grid */}
-              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar bg-card/20">
                 {occupiedCount === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 gap-3 border-2 border-dashed border-border/20 rounded-2xl bg-muted/5">
-                    <Box className="w-10 h-10 text-muted-foreground/30" />
-                    <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Nenhum item nesta célula</p>
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-24 gap-6 border-2 border-dashed border-white/10 rounded-[2.5rem] bg-white/5"
+                  >
+                    <Box className="w-16 h-16 text-muted-foreground/20" />
+                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Célula Disponível para Armazenagem</p>
+                  </motion.div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map(item => {
-                      const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
-                      return (
-                        <div key={item.id} className="bg-muted/10 border border-border/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 hover:bg-muted/20 transition-all duration-200 shadow-sm hover:shadow-md">
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
-                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
-                              </Badge>
-                              <span className="text-[10px] font-bold text-muted-foreground/60 font-mono">{item.lote_sistema || 'Sem Lote Sistema'}</span>
+                  <div className="grid grid-cols-1 gap-4">
+                    <AnimatePresence>
+                      {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map((item, idx) => {
+                        const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
+                        return (
+                          <motion.div 
+                            key={item.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-primary/50 hover:bg-primary/5 transition-all duration-500 shadow-xl shadow-black/5 ring-1 ring-white/5"
+                          >
+                            <div className="flex-1 min-w-0 space-y-3">
+                              <div className="flex items-center gap-3">
+                                <Badge variant="outline" className={cn(
+                                  "text-[9px] font-black px-3 py-1 rounded-xl border-2 uppercase tracking-widest",
+                                  statusCfg.color,
+                                  statusCfg.border,
+                                  statusCfg.bg
+                                )}>
+                                  POS {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                                </Badge>
+                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
+                                   <Barcode className="w-3 h-3 text-muted-foreground/50" />
+                                   <span className="text-[10px] font-black text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
+                                </div>
+                              </div>
+                              <h3 className="font-black text-foreground text-lg sm:text-xl tracking-tight uppercase group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
+                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                                <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
+                                <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
+                                <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(item.data_registro)}</span>
+                              </div>
                             </div>
-                            <h3 className="font-black text-foreground text-sm sm:text-base tracking-tight truncate leading-none">{item.item || 'Item sem nome'}</h3>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-bold text-muted-foreground/50">
-                              <span className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
-                              <span className="flex items-center gap-1.5"><Box className="w-3 h-3" /> {item.m_linear}m x {item.largura}m</span>
-                              <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                              onClick={() => setDetailPos(item)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                            >
-                              Detalhes
-                            </Button>
-                            {!isGuest && (
+                            <div className="flex items-center gap-3 shrink-0">
                               <Button
-                                onClick={() => {
-                                  setDetailPos(item);
-                                  handleStatusChange(item, 'saida');
-                                }}
+                                onClick={() => setDetailPos(item)}
+                                variant="ghost"
                                 size="sm"
-                                className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow-md shadow-violet-600/15"
+                                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20"
                               >
-                                <LogOut className="w-3 h-3" />
-                                Dar Saída
+                                Ficha Técnica
                               </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                              {!isGuest && (
+                                <Button
+                                  onClick={() => {
+                                    setDetailPos(item);
+                                    handleStatusChange(item, 'saida');
+                                  }}
+                                  size="sm"
+                                  className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
+                                >
+                                  <LogOut className="w-4 h-4" />
+                                  Dar Saída
+                                </Button>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                   </div>
                 )}
 
                 {/* Grid View Toggle or Helper */}
-                <div className="mt-6 pt-4 border-t border-border/15 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{occupiedCount} Itens encontrados</span>
+                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-60">{occupiedCount} Itens encontrados nesta célula</span>
                   </div>
-                  <p className="text-[9px] font-medium text-muted-foreground/40 italic">* Somente posições ocupadas são exibidas</p>
+                  <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">* Célula do Galpão G4</p>
                 </div>
               </div>
             </>
@@ -593,82 +707,93 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 max-h-[90vh] overflow-y-auto custom-scrollbar">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             return (
               <>
                 {/* Detail Header */}
-                <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/20 bg-muted/20">
-                  <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
-                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                <div className="px-8 pt-10 pb-8 border-b border-white/5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="p-5 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20 shrink-0">
+                      <Package className="w-10 h-10" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <DialogTitle className="text-sm sm:text-lg font-black tracking-tight truncate leading-snug">
-                        {detailPos.item || 'Item sem nome'}
+                    <div className="min-w-0 flex-1 text-center sm:text-left">
+                      <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight truncate uppercase leading-none">
+                        {detailPos.item || 'Item sem identificação'}
                       </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-medium mt-0.5">
-                        Pos {String(detailPos.posicao).padStart(2, '0')} · {detailPos.estrutura} · Col {detailPos.coluna} · N{String(detailPos.nivel).padStart(2, '0')}
+                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-black uppercase tracking-[0.2em] mt-2 opacity-60">
+                        {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
                       </DialogDescription>
                     </div>
-                    <Badge className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border shrink-0 mr-14 sm:mr-12 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color} bg-transparent`}>
+                    <Badge className={cn(
+                      "text-[10px] font-black px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest border-2",
+                      statusCfg.bg,
+                      statusCfg.border,
+                      statusCfg.color,
+                      "bg-transparent"
+                    )}>
                       {statusCfg.label}
                     </Badge>
                   </div>
                 </div>
 
                 {/* Info Grid */}
-                <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="p-8 space-y-8 bg-card/20">
+                  <div className="grid grid-cols-2 gap-4">
                     {[
-                      { label: 'Lote', value: detailPos.lote || '—' },
-                      { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
-                      { label: 'Endereço', value: detailPos.endereco || '—' },
-                      { label: 'Conferente', value: detailPos.conferente_entrada || '—' },
-                      { label: 'M²', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
-                      { label: 'Largura', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
-                      { label: 'M Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
-                      { label: 'Data Entrada', value: formatDateBR(detailPos.data_registro) },
-                    ].map(f => (
-                      <div key={f.label} className="bg-muted/15 border border-border/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3.5">
-                        <div className="text-[8px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">{f.label}</div>
-                        <div className="text-[11px] sm:text-base font-bold text-foreground mt-0.5 sm:mt-1 break-all leading-snug">{f.value}</div>
-                      </div>
+                      { label: 'Lote Fábrica', value: detailPos.lote || '—' },
+                      { label: 'Lote Sistema (Final)', value: detailPos.lote_sistema || '—' },
+                      { label: 'Endereço Atual', value: detailPos.endereco || '—' },
+                      { label: 'Conferente Responsável', value: detailPos.conferente_entrada || '—' },
+                      { label: 'Área Total (M²)', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
+                      { label: 'Largura Nominal', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
+                      { label: 'Metragem Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
+                      { label: 'Data de Entrada', value: formatDateBR(detailPos.data_registro) },
+                    ].map((f, i) => (
+                      <motion.div 
+                        key={f.label} 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-lg group hover:border-primary/30 transition-all duration-300"
+                      >
+                        <div className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
+                        <div className="text-sm sm:text-base font-black text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
+                      </motion.div>
                     ))}
                   </div>
 
                   {/* Status Actions */}
-                  <div className="space-y-2.5 sm:space-y-3">
-                    <div className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">Alterar Status</div>
-                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                  <div className="space-y-4">
+                    <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] text-center mb-4">Gerenciamento de Status</div>
+                    <div className="grid grid-cols-2 gap-3">
                       {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
                         const cfg = STATUS_CONFIG[st];
                         const isActive = detailPos.status === st;
-                        const dotColor = st === 'ocupado' ? 'bg-emerald-400' : st === 'bloqueado' ? 'bg-red-400' : 'bg-amber-400';
-                        const activeRing = st === 'ocupado' ? 'ring-emerald-500/30' : st === 'bloqueado' ? 'ring-red-500/30' : 'ring-amber-500/30';
-                        const activeBg = st === 'ocupado' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500' 
-                          : st === 'bloqueado' ? 'bg-red-500/15 border-red-500/50 text-red-500' 
-                          : 'bg-amber-500/15 border-amber-500/50 text-amber-500';
-                        const hoverBg = st === 'ocupado' ? 'hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-500' 
-                          : st === 'bloqueado' ? 'hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-500' 
-                          : 'hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-500';
+                        const activeBg = st === 'ocupado' ? 'bg-emerald-500 shadow-emerald-500/30' 
+                          : st === 'bloqueado' ? 'bg-rose-500 shadow-rose-500/30' 
+                          : 'bg-amber-500 shadow-amber-500/30';
+                        
                         return (
                           <Button 
                             key={st} 
                             onClick={() => handleStatusChange(detailPos, st)} 
                             variant="outline"
-                            className={`h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                            className={cn(
+                              "h-14 font-black uppercase tracking-widest text-[10px] rounded-2xl border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
                               isActive 
-                                ? `${activeBg} ring-2 ${activeRing} ring-offset-1 ring-offset-card shadow-sm pointer-events-none` 
-                                : `border-border/20 text-muted-foreground ${hoverBg} active:scale-[0.97]`
-                            }`}
+                                ? `${activeBg} text-white border-transparent ring-4 ring-white/10 scale-105 z-10` 
+                                : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/20 active:scale-95"
+                            )}
                           >
-                            <div className={`w-2.5 h-2.5 rounded-full mr-2 ${dotColor} ${isActive ? 'animate-pulse' : ''}`} 
-                              style={isActive ? { boxShadow: `0 0 8px ${st === 'ocupado' ? '#34d399' : st === 'bloqueado' ? '#f87171' : '#fbbf24'}` } : {}}
-                            />
+                            <div className={cn(
+                              "w-2.5 h-2.5 rounded-full transition-all duration-500",
+                              isActive ? "bg-white animate-pulse" : 
+                              st === 'ocupado' ? "bg-emerald-500" : st === 'bloqueado' ? "bg-rose-500" : "bg-amber-500"
+                            )} />
                             {cfg.label}
-                            {isActive && <span className="ml-1.5 text-[10px] font-bold opacity-80">✓</span>}
+                            {isActive && <CheckCircle2 className="w-4 h-4 ml-auto" />}
                           </Button>
                         );
                       })}
@@ -676,25 +801,24 @@ export default function EstoquePage() {
                         <Button 
                           onClick={() => handleStatusChange(detailPos, 'saida')} 
                           variant="outline"
-                          className="h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-500/15 hover:border-violet-500/50 hover:text-violet-400 transition-all duration-200 active:scale-[0.97] focus-visible:ring-0 focus-visible:ring-offset-0 shadow-sm"
+                          className="h-14 font-black uppercase tracking-widest text-[10px] rounded-2xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
                         >
-                          <div className="w-2.5 h-2.5 rounded-full mr-2 bg-violet-400" />
-                          <LogOut className="w-3 h-3 mr-1.5" />
-                          Dar Saída
+                          <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          Confirmar Saída
                         </Button>
                       )}
                     </div>
                   </div>
 
                   {!isGuest && (
-                    <div className="pt-3 border-t border-border/15">
+                    <div className="pt-6 border-t border-white/5">
                       <Button 
                         variant="ghost" 
                         onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-9 sm:h-11 text-[10px] sm:text-sm font-bold rounded-lg sm:rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                        className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Excluir Item
+                        <Trash2 className="w-5 h-5 mr-3" />
+                        Remover do Sistema Permanentemente
                       </Button>
                     </div>
                   )}
@@ -708,14 +832,14 @@ export default function EstoquePage() {
 
       {/* ===== STAT DETAIL DIALOG ===== */}
       <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl">
           {selectedStat && (() => {
-            const statItems: { label: string; value: number; percent: number; color: string }[] = [
-              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground' },
-              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500' },
-              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500' },
-              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-red-500' },
-              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary' },
+            const statItems: { label: string; value: number; percent: number; color: string; bg: string }[] = [
+              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-white/5' },
+              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary', bg: 'bg-primary/10' },
             ];
             const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
 
@@ -733,65 +857,71 @@ export default function EstoquePage() {
 
             return (
               <>
-                <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
-                  <DialogTitle className="text-lg font-black tracking-tight flex items-center gap-3">
-                    <div className={`text-3xl font-black tabular-nums ${current.color}`}>{current.value}</div>
-                    <div>
-                      <div className="text-base font-black">{current.label}</div>
-                      <DialogDescription className="text-xs text-muted-foreground font-medium">{current.percent}% do total de posições</DialogDescription>
-                    </div>
-                  </DialogTitle>
+                <div className="px-10 pt-12 pb-8 border-b border-white/5 bg-gradient-to-br from-white/10 to-transparent">
+                  <div className="flex flex-col sm:flex-row items-center gap-8">
+                     <div className={cn("p-6 rounded-[2rem] shadow-2xl ring-4 ring-white/10", current.bg, current.color)}>
+                        <LayoutDashboard className="w-10 h-10" />
+                     </div>
+                     <div className="flex-1 text-center sm:text-left">
+                        <DialogTitle className="text-3xl font-black tracking-tight uppercase leading-none">
+                           Detalhamento de {current.label}
+                        </DialogTitle>
+                        <DialogDescription className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
+                           {current.value} Itens · {current.percent}% da Capacidade Total
+                        </DialogDescription>
+                     </div>
+                  </div>
                 </div>
-                <div className="p-5 sm:p-6 space-y-5">
-                  {/* Bar Chart */}
-                  <div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Por Estrutura</div>
-                    <div className="h-[180px]">
+                
+                <div className="p-10 space-y-10 bg-card/20">
+                  {/* Bar Chart Section */}
+                  <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 shadow-xl ring-1 ring-white/5">
+                    <div className="flex items-center justify-between mb-8">
+                       <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Distribuição por Estrutura</h4>
+                       <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-3 border-white/10">Tempo Real</Badge>
+                    </div>
+                    <div className="h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={tecBreakdown} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
-                          <XAxis dataKey="tec" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                          <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                          <ChartTooltip
-                            cursor={false}
-                            contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 11 }}
-                            formatter={(value: number, _name: string, props: any) => [`${value}/${props.payload.total} (${props.payload.percent}%)`, current.label]}
+                        <BarChart data={tecBreakdown} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                          <XAxis 
+                            dataKey="tec" 
+                            fontSize={9} 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
                           />
-                          <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={current.color.replace('text-', '').replace('foreground', 'hsl(var(--foreground))').replace('emerald-500', 'hsl(160, 84%, 39%)').replace('amber-500', 'hsl(38, 92%, 50%)').replace('red-500', 'hsl(0, 84%, 60%)').replace('primary', 'hsl(var(--primary))')} />
+                          <YAxis 
+                            fontSize={9} 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
+                          />
+                          <ChartTooltip
+                            cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
+                            contentStyle={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                            itemStyle={{ color: '#fff' }}
+                            formatter={(value: number, _name: string, props: any) => [`${value} POSIÇÕES`, `ESTRUTURA ${props.payload.tec}`]}
+                          />
+                          <Bar 
+                            dataKey="value" 
+                            radius={[8, 8, 0, 0]} 
+                            fill="currentColor"
+                            className={current.color}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
-                  {/* Mini Pie */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-[80px] h-[80px] shrink-0">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={tecBreakdown.filter(t => t.value > 0)}
-                            dataKey="value"
-                            nameKey="tec"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={20}
-                            outerRadius={36}
-                            strokeWidth={0}
-                          >
-                            {tecBreakdown.filter(t => t.value > 0).map((_, i) => (
-                              <Cell key={i} fill={`hsl(var(--primary) / ${1 - i * 0.15})`} />
-                            ))}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {tecBreakdown.map((t, i) => (
-                        <div key={t.tec} className="flex items-center gap-1.5 text-[10px]">
-                          <div className="w-2 h-2 rounded-full" style={{ background: `hsl(var(--primary) / ${1 - i * 0.15})` }} />
-                          <span className="font-bold">{t.tec}</span>
-                          <span className="text-muted-foreground">{t.value}</span>
-                        </div>
-                      ))}
-                    </div>
+
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {tecBreakdown.slice(0, 4).map((t, i) => (
+                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-lg text-center group hover:border-primary/30 transition-all duration-300">
+                         <div className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1 opacity-60">{t.tec}</div>
+                         <div className="text-xl font-black text-foreground tracking-tighter tabular-nums">{t.value}</div>
+                         <div className="text-[7px] font-black text-primary uppercase mt-1">{t.percent}%</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </>
@@ -928,6 +1058,6 @@ export default function EstoquePage() {
 
       {/* Import Dialog */}
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
-    </div>
+    </motion.div>
   );
 }
