@@ -79,8 +79,7 @@ export default function CyclicInventoryPage() {
       const code = lotInput.trim();
       
       // 1. Check tasks
-      const { data: task, error: taskError } = await supabase
-        .from('inventory_tasks')
+      const { data: task, error: taskError } = await (supabase.from('inventory_tasks') as any)
         .select('*')
         .eq('codigo_lote' as any, code)
         .eq('status', 'pendente')
