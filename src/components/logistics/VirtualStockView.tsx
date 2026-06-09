@@ -42,6 +42,48 @@ export function VirtualStockView() {
     toast.info('Funcionalidade de regularização será vinculada ao ERP em breve.');
   };
 
+  const handleDeleteItem = async (id: string) => {
+    if (!confirm('Deseja realmente remover este item do estoque virtual?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('movimentacoes_endereco')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Item removido com sucesso');
+      setData(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error('Erro ao remover item');
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm('Deseja realmente limpar TODOS os itens do estoque virtual? Esta ação não pode ser desfeita.')) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('movimentacoes_endereco')
+        .delete()
+        .eq('tipo_estoque', 'VIRTUAL');
+
+      if (error) throw error;
+      
+      toast.success('Estoque virtual limpo com sucesso');
+      setData([]);
+    } catch (err) {
+      console.error('Clear error:', err);
+      toast.error('Erro ao limpar estoque virtual');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   return (
     <div className="space-y-6">
