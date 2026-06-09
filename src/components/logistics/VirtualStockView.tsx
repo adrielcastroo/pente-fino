@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, RefreshCw, Calendar, User, Package, MapPin, Hash, Settings2 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import { motion } from 'framer-motion';
+
 
 export function VirtualStockView() {
   const [loading, setLoading] = useState(true);
@@ -40,90 +42,120 @@ export function VirtualStockView() {
     toast.info('Funcionalidade de regularização será vinculada ao ERP em breve.');
   };
 
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight">Estoque Virtual</h2>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Gerenciamento de Itens Provisórios</p>
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 shadow-inner">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tight">Estoque Virtual</h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Gerenciamento de Itens Provisórios</p>
+          </div>
         </div>
-        <Button onClick={fetchData} variant="outline" size="sm" className="rounded-xl font-bold uppercase text-[10px] gap-2">
+        <Button 
+          onClick={fetchData} 
+          variant="outline" 
+          size="sm" 
+          className="rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 h-10 px-4 border-border/20 hover:bg-muted transition-all"
+        >
           <RefreshCw className={loading ? 'w-3 h-3 animate-spin' : 'w-3 h-3'} />
-          Atualizar
+          Atualizar Dados
         </Button>
       </div>
 
-      <Card className="rounded-[2rem] border-border/20 bg-card/10 backdrop-blur-xl shadow-xl overflow-hidden">
-        <CardHeader className="bg-amber-500/5 border-b border-border/5 p-6">
-          <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
-              <AlertCircle className="w-5 h-5" />
-            </div>
+      <Card className="rounded-[2.5rem] border-border/10 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
+        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent p-8 border-b border-white/5">
+          <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-widest text-amber-600">
             Itens Aguardando Regularização
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center py-32">
+              <Loader2 className="w-12 h-12 animate-spin text-amber-500" />
             </div>
           ) : data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-              <div className="p-4 rounded-full bg-muted/20">
-                <CheckCircle2 className="w-10 h-10 text-muted-foreground" />
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-32 text-center space-y-6"
+            >
+              <div className="p-8 rounded-full bg-emerald-500/10 text-emerald-500 shadow-inner ring-4 ring-emerald-500/5">
+                <CheckCircle2 className="w-16 h-16" />
               </div>
-              <div>
-                <h4 className="text-sm font-bold uppercase">Tudo em ordem</h4>
-                <p className="text-xs text-muted-foreground">Não há itens virtuais pendentes de cadastro.</p>
+              <div className="space-y-2">
+                <h4 className="text-xl font-black uppercase tracking-tight text-foreground">Tudo em ordem</h4>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Não há itens virtuais pendentes.</p>
               </div>
-            </div>
+            </motion.div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent border-border/5 bg-muted/30">
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Data</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Conferente</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Lote Bipado</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Endereço</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Qtd/Metragem</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 text-right">Ação</TableHead>
+                  <TableRow className="hover:bg-transparent border-border/5 bg-muted/20 h-16">
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                      <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> Data</div>
+                    </TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                      <div className="flex items-center gap-2"><User className="w-3 h-3" /> Conferente</div>
+                    </TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                      <div className="flex items-center gap-2"><Package className="w-3 h-3" /> Lote Bipado</div>
+                    </TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                      <div className="flex items-center gap-2"><MapPin className="w-3 h-3" /> Endereço</div>
+                    </TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                      <div className="flex items-center gap-2"><Hash className="w-3 h-3" /> Qtd</div>
+                    </TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
+                      <div className="flex items-center gap-2 justify-end"><Settings2 className="w-3 h-3" /> Gestão</div>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-muted/20 transition-colors border-border/5">
-                      <TableCell className="px-6 py-4 text-xs font-bold text-muted-foreground">
+                  {data.map((item, index) => (
+                    <motion.tr 
+                      key={item.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
+                    >
+                      <TableCell className="px-8 text-xs font-bold text-muted-foreground">
                         {formatDateBR(item.data_movimentacao)}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-xs font-black uppercase">
+                      <TableCell className="px-8 text-xs font-black uppercase">
                         {item.conferente_nome}
                       </TableCell>
-                      <TableCell className="px-6 py-4">
+                      <TableCell className="px-8">
                         <div className="flex flex-col">
-                          <span className="text-xs font-black uppercase">{item.codigo_lote}</span>
-                          <span className="text-[10px] text-amber-500 font-bold uppercase">{item.descricao_item}</span>
+                          <span className="text-xs font-black uppercase text-foreground">{item.codigo_lote}</span>
+                          <span className="text-[9px] text-amber-600 font-black uppercase tracking-widest mt-0.5">{item.descricao_item}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4">
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[9px] uppercase tracking-widest px-2 py-0.5">
+                      <TableCell className="px-8">
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-lg">
                           {item.endereco_novo}
                         </Badge>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-xs font-black">
+                      <TableCell className="px-8 text-sm font-black text-foreground">
                         {item.quantidade || '-'}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-right">
+                      <TableCell className="px-8 text-right">
                         <Button 
                           onClick={() => handleRegularize(item.id)}
                           size="sm" 
                           variant="ghost" 
-                          className="h-8 rounded-lg font-black uppercase text-[9px] text-primary hover:bg-primary/10"
+                          className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
                         >
                           Regularizar
                         </Button>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>
@@ -134,3 +166,4 @@ export function VirtualStockView() {
     </div>
   );
 }
+

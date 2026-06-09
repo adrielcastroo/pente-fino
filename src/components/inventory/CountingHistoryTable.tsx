@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, History, FileSpreadsheet } from 'lucide-react';
+import { Search, History, FileSpreadsheet, Calendar, User, Package, Settings2, Hash, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 export function CountingHistoryTable() {
   const [history, setHistory] = useState<any[]>([]);
@@ -60,104 +63,139 @@ export function CountingHistoryTable() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary">
-            <History className="w-5 h-5" />
+      <div className="flex flex-col sm:flex-row gap-6 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner">
+            <History className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Registros de contagens finalizadas</p>
+          </div>
         </div>
         
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="relative w-full sm:w-80 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input 
             placeholder="Buscar por conferente ou item..." 
-            className="pl-10 h-11 bg-muted/50 border-border/50 font-bold"
+            className="pl-12 h-14 bg-card/40 border-2 border-border/50 font-black uppercase text-[10px] tracking-widest rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/20 overflow-hidden bg-card/10 backdrop-blur-md shadow-inner">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow className="hover:bg-transparent border-border/10">
-              <TableHead className="font-black uppercase tracking-widest text-[10px]">Data / Hora</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px]">Item / Lote</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px]">Conferente</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px] text-right">Qtd. Sistema</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px] text-right">Qtd. Contada</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px] text-center">Status</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px] text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                    <span className="font-bold text-muted-foreground uppercase text-xs">Carregando histórico...</span>
-                  </div>
-                </TableCell>
+      <div className="rounded-[2.5rem] border border-white/5 overflow-hidden bg-card/40 backdrop-blur-xl shadow-2xl">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-border/10 bg-muted/20 h-16">
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                  <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> Data / Hora</div>
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                  <div className="flex items-center gap-2"><Package className="w-3 h-3" /> Item / Lote</div>
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
+                  <div className="flex items-center gap-2"><User className="w-3 h-3" /> Conferente</div>
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
+                  <div className="flex items-center gap-2 justify-end"><Hash className="w-3 h-3" /> Sistema</div>
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
+                  <div className="flex items-center gap-2 justify-end"><Hash className="w-3 h-3" /> Contado</div>
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-center">Status</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
+                  <div className="flex items-center gap-2 justify-end"><Settings2 className="w-3 h-3" /> Exportar</div>
+                </TableHead>
               </TableRow>
-            ) : filteredHistory.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center font-bold text-muted-foreground italic uppercase text-xs">
-                  Nenhum registro encontrado
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredHistory.map((item) => {
-                const diff = (item.counted_qty || 0) - (item.expected_qty || 0);
-                return (
-                  <TableRow key={item.id} className="hover:bg-primary/[0.02] transition-colors border-border/5">
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-sm">{formatDateBR(item.completed_at)}</span>
-                        <span className="text-[10px] font-black text-muted-foreground uppercase">{formatTimeBR(item.completed_at)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                        <div className="flex flex-col">
-                            <span className="font-bold text-sm truncate max-w-[150px]">{item.item_name}</span>
-                            <Badge variant="outline" className="w-fit text-[9px] font-black uppercase tracking-widest py-0 border-border/20">LOTE: {item.codigo_lote}</Badge>
-                        </div>
-                    </TableCell>
-                    <TableCell className="font-bold text-sm uppercase">{item.conferente_nome || '—'}</TableCell>
-                    <TableCell className="text-right font-black text-sm tabular-nums">{item.expected_qty}</TableCell>
-                    <TableCell className="text-right font-black text-sm tabular-nums">{item.counted_qty}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge 
-                        variant="outline"
-                        className={cn(
-                          "font-black text-[9px] uppercase tracking-widest min-w-[100px] justify-center py-1 rounded-lg border-2",
-                          item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/20 bg-emerald-500/5" : 
-                          item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/20 bg-amber-500/5" :
-                          "text-rose-600 border-rose-600/20 bg-rose-500/5 animate-pulse"
-                        )}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                      <span className="font-black text-muted-foreground uppercase text-[10px] tracking-widest">Carregando histórico...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredHistory.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4 opacity-30">
+                      <History className="w-12 h-12" />
+                      <span className="font-black text-muted-foreground uppercase text-[10px] tracking-widest">Nenhum registro encontrado</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <AnimatePresence>
+                  {filteredHistory.map((item, index) => {
+                    const diff = (item.counted_qty || 0) - (item.expected_qty || 0);
+                    return (
+                      <motion.tr 
+                        key={item.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
                       >
-                        {item.status === 'awaiting_recheck' ? 'Reconferência' : (diff === 0 ? 'Conforme' : `Divergência: ${diff > 0 ? '+' : ''}${diff}`)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleExportRow(item)}
-                        title="Exportar XLSX"
-                        className="rounded-xl hover:bg-primary/10 text-primary"
-                      >
-                        <FileSpreadsheet className="w-5 h-5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                        <TableCell className="px-8">
+                          <div className="flex flex-col">
+                            <span className="font-black text-xs text-foreground tracking-tight">{formatDateBR(item.completed_at)}</span>
+                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{formatTimeBR(item.completed_at)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-8">
+                            <div className="flex flex-col">
+                                <span className="font-black text-xs text-foreground uppercase tracking-tight truncate max-w-[200px]">{item.item_name}</span>
+                                <Badge variant="outline" className="w-fit text-[8px] font-black uppercase tracking-[0.2em] py-0 px-2 border-white/10 bg-white/5 mt-1">LOTE: {item.codigo_lote}</Badge>
+                            </div>
+                        </TableCell>
+                        <TableCell className="px-8 font-black text-xs uppercase text-foreground">{item.conferente_nome || '—'}</TableCell>
+                        <TableCell className="px-8 text-right font-black text-sm tabular-nums text-muted-foreground">{item.expected_qty}</TableCell>
+                        <TableCell className="px-8 text-right font-black text-sm tabular-nums text-foreground">{item.counted_qty}</TableCell>
+                        <TableCell className="px-8 text-center">
+                          <Badge 
+                            variant="outline"
+                            className={cn(
+                              "font-black text-[9px] uppercase tracking-widest min-w-[120px] justify-center py-1.5 rounded-xl border-2 shadow-sm",
+                              item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/20 bg-emerald-500/5" : 
+                              item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/20 bg-amber-500/5" :
+                              "text-rose-600 border-rose-600/20 bg-rose-500/5 animate-pulse"
+                            )}
+                          >
+                            {item.status === 'awaiting_recheck' ? (
+                              <span className="flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> Reconferência</span>
+                            ) : (
+                              diff === 0 ? (
+                                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> Conforme</span>
+                              ) : (
+                                <span>Divergência: {diff > 0 ? '+' : ''}{diff}</span>
+                              )
+                            )}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-8 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleExportRow(item)}
+                            className="rounded-xl hover:bg-primary/10 text-primary w-10 h-10 transition-all active:scale-90"
+                          >
+                            <FileSpreadsheet className="w-5 h-5" />
+                          </Button>
+                        </TableCell>
+                      </motion.tr>
+                    );
+                  })}
+                </AnimatePresence>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );
