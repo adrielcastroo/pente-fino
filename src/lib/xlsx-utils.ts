@@ -65,6 +65,7 @@ interface ExportAllocationParams {
     lote: string;
     origem: string;
     destino: string;
+    origemCadastro?: string;
   } | {
     timestamp: string;
     conferente: string;
@@ -72,13 +73,14 @@ interface ExportAllocationParams {
     lote: string;
     origem: string;
     destino: string;
+    origemCadastro?: string;
   }[];
 }
 
 export const exportAllocationXLSX = ({ data }: ExportAllocationParams) => {
   const wb = XLSX.utils.book_new();
   
-  const headers = ['DATA/HORA', 'CONFERENTE', 'ITEM/DESCRIÇÃO', 'LOTE', 'ENDEREÇO ORIGEM', 'ENDEREÇO DESTINO'];
+  const headers = ['DATA/HORA', 'CONFERENTE', 'ITEM/DESCRIÇÃO', 'LOTE', 'ENDEREÇO ORIGEM', 'ENDEREÇO DESTINO', 'ORIGEM DO CADASTRO'];
   
   const dataArray = Array.isArray(data) ? data : [data];
   
@@ -88,7 +90,8 @@ export const exportAllocationXLSX = ({ data }: ExportAllocationParams) => {
     item.item,
     item.lote,
     item.origem,
-    item.destino
+    item.destino,
+    item.origemCadastro || 'Cadastro Oficial'
   ]);
   
   const wsData = [headers, ...rows];
@@ -101,6 +104,7 @@ export const exportAllocationXLSX = ({ data }: ExportAllocationParams) => {
     { wch: 20 }, // Lote
     { wch: 20 }, // Origem
     { wch: 20 }, // Destino
+    { wch: 25 }, // Origem Cadastro
   ];
   ws['!cols'] = wscols;
   
