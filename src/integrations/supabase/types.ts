@@ -119,6 +119,62 @@ export type Database = {
         }
         Relationships: []
       }
+      contagem_itens_bipados: {
+        Row: {
+          bipado_em: string | null
+          id: string
+          lote: string | null
+          quantidade: number | null
+          tarefa_id: string | null
+        }
+        Insert: {
+          bipado_em?: string | null
+          id?: string
+          lote?: string | null
+          quantidade?: number | null
+          tarefa_id?: string | null
+        }
+        Update: {
+          bipado_em?: string | null
+          id?: string
+          lote?: string | null
+          quantidade?: number | null
+          tarefa_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contagem_itens_bipados_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas_contagem"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contagens_diarias_limite: {
+        Row: {
+          contagens_com_lote: number | null
+          contagens_sem_lote: number | null
+          data: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          contagens_com_lote?: number | null
+          contagens_sem_lote?: number | null
+          data?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          contagens_com_lote?: number | null
+          contagens_sem_lote?: number | null
+          data?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       estoque_posicoes: {
         Row: {
           codigo_cor: string | null
@@ -391,6 +447,7 @@ export type Database = {
         Row: {
           created_at: string
           curva_abc: string | null
+          data_entrada: string | null
           id: string
           location: string | null
           name: string
@@ -402,6 +459,7 @@ export type Database = {
         Insert: {
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           id?: string
           location?: string | null
           name: string
@@ -413,6 +471,7 @@ export type Database = {
         Update: {
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           id?: string
           location?: string | null
           name?: string
@@ -744,6 +803,7 @@ export type Database = {
           conference_id: string | null
           created_at: string
           curva_abc: string | null
+          data_entrada: string | null
           edited_at: string | null
           edited_by: string
           endereco: string
@@ -776,6 +836,7 @@ export type Database = {
           conference_id?: string | null
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           edited_at?: string | null
           edited_by?: string
           endereco?: string
@@ -808,6 +869,7 @@ export type Database = {
           conference_id?: string | null
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           edited_at?: string | null
           edited_by?: string
           endereco?: string
@@ -947,8 +1009,10 @@ export type Database = {
       tarefas_contagem: {
         Row: {
           codigo_lote: string
+          conferente_id: string | null
           created_at: string | null
           data_geracao: string | null
+          has_lote: boolean | null
           id: string
           item_id: string | null
           item_name: string | null
@@ -958,8 +1022,10 @@ export type Database = {
         }
         Insert: {
           codigo_lote: string
+          conferente_id?: string | null
           created_at?: string | null
           data_geracao?: string | null
+          has_lote?: boolean | null
           id?: string
           item_id?: string | null
           item_name?: string | null
@@ -969,8 +1035,10 @@ export type Database = {
         }
         Update: {
           codigo_lote?: string
+          conferente_id?: string | null
           created_at?: string | null
           data_geracao?: string | null
+          has_lote?: boolean | null
           id?: string
           item_id?: string | null
           item_name?: string | null

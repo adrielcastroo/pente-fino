@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,14 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Barcode, CheckCircle2, AlertTriangle, Search, Package2, ArrowLeft, Send, FileSpreadsheet } from 'lucide-react';
+import { Barcode, CheckCircle2, AlertTriangle, Search, Package2, ArrowLeft, Send, ListChecks, History as HistoryIcon, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { CountingHistoryTable } from '@/components/inventory/CountingHistoryTable';
 import { InventorySuggestionsTab } from '@/components/inventory/InventorySuggestionsTab';
 import { cn } from '@/lib/utils';
-import { TarefaContagem } from '@/types';
-import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function CyclicInventoryPage() {
@@ -25,403 +22,277 @@ export default function CyclicInventoryPage() {
   
   // Execution state
   const [lotInput, setLotInput] = useState('');
-  const [foundItem, setFoundItem] = useState<{ id?: string, name: string, systemQty: number, tarefaId?: string } | null>(null);
-  const [physicalQty, setPhysicalQty] = useState('');
+  const [foundItem, setFoundItem] = useState<{ 
+    id: string, 
+    name: string, 
+    systemQty: number, 
+    tarefaId?: string, 
+    hasLote: boolean,
+    lote?: string
+  } | null>(null);
+  
+  const [physicalQtyInput, setPhysicalQtyInput] = useState('');
+  const [bipedLotes, setBipedLotes] = useState<{lote: string, quantity: number}[]>([]);
   const [isValidating, setIsValidating] = useState(false);
-  const [errorStatus, setErrorStatus] = useState<'none' | 'not_found' | 'warning'>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sessionScans, setSessionScans] = useState<{timestamp: string, itemCode: string, inspectorName: string}[]>([]);
-  const [lastExportData, setLastExportData] = useState<{ itemCode: string, scans: any[] } | null>(null);
   
   const lotInputRef = useRef<HTMLInputElement>(null);
   const qtyInputRef = useRef<HTMLInputElement>(null);
+  const loteBipeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    lotInputRef.current?.focus();
+    if (activeTab === 'execution') lotInputRef.current?.focus();
   }, [activeTab]);
 
-  const handleLotSearch = async (e: React.FormEvent) => {
+  const checkDailyLimits = async (hasLote: boolean) => {
+    if (!user) return true;
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('contagens_diarias_limite')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('data', today)
+      .maybeSingle();
+
+    if (data) {
+      if (hasLote && data.contagens_com_lote >= 2) {
+        toast.error('Limite diário atingido: Máximo de 2 contagens com lote por dia.');
+        return false;
+      }
+      if (!hasLote && data.contagens_sem_lote >= 3) {
+        toast.error('Limite diário atingido: Máximo de 3 contagens sem lote por dia.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleItemSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!lotInput.trim()) return;
 
     setIsValidating(true);
-    setErrorStatus('none');
     setFoundItem(null);
+    setBipedLotes([]);
 
     try {
-      // 1. Check if there's a pending task for this lot
-      const { data: taskData, error: taskError } = await supabase
+      const code = lotInput.trim();
+      
+      // 1. Check tasks
+      const { data: task } = await supabase
         .from('tarefas_contagem')
         .select('*')
-        .eq('codigo_lote', lotInput.trim())
+        .eq('codigo_lote', code)
         .eq('status', 'pendente')
         .maybeSingle();
 
-      if (taskData) {
+      if (task) {
         setFoundItem({
-          id: taskData.item_id,
-          name: taskData.item_name || 'Item do Sistema',
-          systemQty: taskData.quantidade_esperada_sistema,
-          tarefaId: taskData.id
+          id: task.item_id,
+          name: task.item_name,
+          systemQty: task.quantidade_esperada_sistema,
+          tarefaId: task.id,
+          hasLote: task.has_lote || false,
+          lote: task.codigo_lote
         });
-        
-        // Add to session scans
-        setSessionScans(prev => [...prev, {
-          timestamp: new Date().toLocaleString('pt-BR'),
-          itemCode: lotInput.trim(),
-          inspectorName: user?.email?.split('@')[0] || 'Conferente'
-        }]);
-        
-        setTimeout(() => qtyInputRef.current?.focus(), 100);
+        toast.success('Tarefa encontrada!');
       } else {
-        // 2. If no pending task, check if lot exists in 'registros'
-        const { data: regData, error: regError } = await supabase
-          .from('registros')
-          .select('id, item, quantidade, m2, m_linear')
-          .eq('lote', lotInput.trim())
-          .maybeSingle();
-
-        if (regData) {
+        // 2. Fallback search
+        const { data: reg } = await supabase.from('registros').select('*').eq('lote', code).maybeSingle();
+        if (reg) {
           setFoundItem({
-            id: regData.id,
-            name: regData.item || 'Item de Tecido',
-            systemQty: regData.quantidade || regData.m2 || regData.m_linear || 0,
-            tarefaId: undefined
+            id: reg.id,
+            name: reg.item,
+            systemQty: reg.quantidade || reg.m2 || reg.m_linear || 0,
+            hasLote: true,
+            lote: reg.lote
           });
-          
-          // Add to session scans
-          setSessionScans(prev => [...prev, {
-            timestamp: new Date().toLocaleString('pt-BR'),
-            itemCode: lotInput.trim(),
-            inspectorName: user?.email?.split('@')[0] || 'Conferente'
-          }]);
-          
-          setTimeout(() => qtyInputRef.current?.focus(), 100);
         } else {
-          // 3. Check 'inventory' for motors or others
-          const { data: invData, error: invError } = await supabase
-            .from('inventory')
-            .select('id, name, quantity, sku')
-            .or(`sku.eq.${lotInput.trim()},name.ilike.%${lotInput.trim()}%`)
-            .maybeSingle();
-
-          if (invData) {
+          const { data: inv } = await supabase.from('inventory').select('*').or(`sku.eq.${code},name.ilike.%${code}%`).maybeSingle();
+          if (inv) {
             setFoundItem({
-              id: invData.id,
-              name: invData.name,
-              systemQty: invData.quantity,
-                tarefaId: undefined
-              });
-              
-              // Add to session scans
-              setSessionScans(prev => [...prev, {
-                timestamp: new Date().toLocaleString('pt-BR'),
-                itemCode: lotInput.trim(),
-                inspectorName: user?.email?.split('@')[0] || 'Conferente'
-              }]);
-              
-              setTimeout(() => qtyInputRef.current?.focus(), 100);
+              id: inv.id,
+              name: inv.name,
+              systemQty: inv.quantity,
+              hasLote: false
+            });
           } else {
-            setErrorStatus('not_found');
-            toast.error('Lote não encontrado no sistema!');
+            toast.error('Item não encontrado!');
           }
         }
       }
     } catch (err) {
-      console.error('Search error:', err);
-      toast.error('Erro ao validar lote');
+      toast.error('Erro na busca');
     } finally {
       setIsValidating(false);
     }
   };
 
+  const handleLoteBipe = (e: React.FormEvent) => {
+    e.preventDefault();
+    const bipe = (e.target as any).loteBipe.value.trim();
+    if (!bipe) return;
+    setBipedLotes(prev => [...prev, { lote: bipe, quantity: 1 }]);
+    (e.target as any).loteBipe.value = '';
+    loteBipeRef.current?.focus();
+  };
+
   const handleFinalize = async () => {
-    if (!foundItem || !physicalQty) return;
+    if (!foundItem || !user) return;
+    
+    const canProceed = await checkDailyLimits(foundItem.hasLote);
+    if (!canProceed) return;
 
     setIsSubmitting(true);
-    const counted = parseFloat(physicalQty);
-    const diff = counted - foundItem.systemQty;
+    const countedQty = foundItem.hasLote ? bipedLotes.length : parseFloat(physicalQtyInput);
+    const diffPercent = Math.abs((countedQty - foundItem.systemQty) / foundItem.systemQty);
+    const needsRecheck = diffPercent > 0.05;
 
     try {
-      // 1. Create history record
-      const { error: historyError } = await supabase
-        .from('historico_contagens')
-        .insert({
-          tarefa_id: foundItem.tarefaId || null,
-          conferente_nome: user?.email?.split('@')[0] || 'Conferente',
-          quantidade_contada: counted,
-          quantidade_sistema: foundItem.systemQty,
-          diferenca: diff,
-          detalhes_bipagem: sessionScans
+      const { error: histErr } = await supabase.from('historico_contagens').insert({
+        tarefa_id: foundItem.tarefaId,
+        conferente_nome: user.email?.split('@')[0],
+        quantidade_contada: countedQty,
+        quantidade_sistema: foundItem.systemQty,
+        diferenca: countedQty - foundItem.systemQty,
+        detalhes_bipagem: foundItem.hasLote ? bipedLotes : [{ qty: countedQty }]
+      });
+
+      if (histErr) throw histErr;
+
+      // Update daily limits
+      const today = new Date().toISOString().split('T')[0];
+      const { data: limit } = await supabase.from('contagens_diarias_limite').select('*').eq('user_id', user.id).eq('data', today).maybeSingle();
+      if (limit) {
+        await supabase.from('contagens_diarias_limite').update({
+          contagens_com_lote: foundItem.hasLote ? limit.contagens_com_lote + 1 : limit.contagens_com_lote,
+          contagens_sem_lote: !foundItem.hasLote ? limit.contagens_sem_lote + 1 : limit.contagens_sem_lote,
+        }).eq('id', limit.id);
+      } else {
+        await supabase.from('contagens_diarias_limite').insert({
+          user_id: user.id,
+          data: today,
+          contagens_com_lote: foundItem.hasLote ? 1 : 0,
+          contagens_sem_lote: !foundItem.hasLote ? 1 : 0
         });
-
-      if (historyError) throw historyError;
-
-      // 2. If it was a pending task, mark as completed and update item last count date
-      if (foundItem.tarefaId) {
-        await supabase
-          .from('tarefas_contagem')
-          .update({ status: 'concluido' })
-          .eq('id', foundItem.tarefaId);
-          
-        // Update last count date in the respective table
-        const now = new Date().toISOString();
-        const { data: task } = await supabase
-          .from('tarefas_contagem')
-          .select('item_id')
-          .eq('id', foundItem.tarefaId)
-          .single();
-
-        if (task?.item_id) {
-          // Try updating in registros first
-          const { error: regErr } = await supabase
-            .from('registros')
-            .update({ ultima_contagem: now })
-            .eq('id', task.item_id);
-            
-          if (regErr) {
-            // If not in registros, try inventory
-            await supabase
-              .from('inventory')
-              .update({ ultima_contagem: now })
-              .eq('id', task.item_id);
-          }
-        }
       }
 
-      toast.success('Contagem finalizada com sucesso!');
-      
-      // Prepare export data
-      const scanData = {
-        itemCode: foundItem.name, // Use the item name or first lot as reference
-        scans: [...sessionScans]
-      };
-      setLastExportData(scanData);
+      if (needsRecheck && foundItem.tarefaId) {
+        await supabase.from('tarefas_contagem').update({ status: 'awaiting_recheck' }).eq('id', foundItem.tarefaId);
+        toast.warning('Divergência alta (>5%). Solicitada reconferência.');
+      } else if (foundItem.tarefaId) {
+        await supabase.from('tarefas_contagem').update({ status: 'completed' }).eq('id', foundItem.tarefaId);
+        toast.success('Contagem finalizada e aprovada!');
+      } else {
+        toast.success('Contagem avulsa registrada!');
+      }
 
-      // Reset state
-      setLotInput('');
+      // Reset
       setFoundItem(null);
-      setPhysicalQty('');
-      setSessionScans([]);
-      lotInputRef.current?.focus();
+      setLotInput('');
+      setPhysicalQtyInput('');
+      setBipedLotes([]);
     } catch (err) {
-      console.error('Submit error:', err);
-      toast.error('Erro ao salvar contagem');
+      toast.error('Erro ao finalizar');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleExport = () => {
-    if (!lastExportData) return;
-    exportCyclicInventoryXLSX({
-      itemCode: lastExportData.itemCode,
-      referenceDate: formatDateBR(new Date().toISOString()),
-      scans: lastExportData.scans
-    });
-    toast.success('Relatório XLSX gerado!');
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="rounded-full hover:bg-primary/10">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="rounded-full">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div>
-            <h1 className="text-4xl font-black tracking-tight uppercase leading-none">Inventário Cíclico</h1>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-2">Módulo de Conferência e Auditoria</p>
+            <h1 className="text-4xl font-black uppercase tracking-tight">Inventário</h1>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Contagem e Auditoria</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2 p-1 bg-muted/30 rounded-2xl border border-border/10">
-          <Badge variant="outline" className="px-4 py-1 rounded-xl border-primary/20 text-primary font-black uppercase tracking-widest text-[10px]">ERP Conectado</Badge>
-          <Badge variant="outline" className="px-4 py-1 rounded-xl border-emerald-500/20 text-emerald-500 font-black uppercase tracking-widest text-[10px]">Real-time</Badge>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-16 bg-card/20 backdrop-blur-md rounded-2xl border border-border/10 p-1.5 shadow-sm">
-          <TabsTrigger 
-            value="execution" 
-            className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
-          >
-            Execução
-          </TabsTrigger>
-          <TabsTrigger 
-            value="suggestions" 
-            className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
-          >
-            Sugestões
-          </TabsTrigger>
-          <TabsTrigger 
-            value="history" 
-            className="rounded-xl font-black uppercase tracking-widest text-xs transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20"
-          >
-            Histórico
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 h-16 rounded-2xl p-1.5 shadow-sm bg-muted/20">
+          <TabsTrigger value="execution" className="font-black uppercase tracking-widest text-xs">Execução</TabsTrigger>
+          <TabsTrigger value="suggestions" className="font-black uppercase tracking-widest text-xs">Sugestões</TabsTrigger>
+          <TabsTrigger value="history" className="font-black uppercase tracking-widest text-xs">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="execution" className="space-y-6 mt-8">
-          <Card className="rounded-[2rem] border-border/20 bg-card/10 backdrop-blur-xl shadow-2xl overflow-hidden group">
-            <CardHeader className="bg-primary/[0.03] p-8 border-b border-border/5">
-              <CardTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tight">
-                <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
-                  <Barcode className="w-8 h-8" />
-                </div>
-                Entrada de Dados (Bipe)
+          <Card className="rounded-[2rem] border-border/20 shadow-2xl overflow-hidden">
+            <CardHeader className="bg-primary/[0.03] p-8 border-b">
+              <CardTitle className="flex items-center gap-4 text-2xl font-black uppercase">
+                <Barcode className="w-8 h-8 text-primary" />
+                {foundItem ? 'Identificar Itens' : 'Bipar Lote'}
               </CardTitle>
-              <CardDescription className="text-sm font-bold uppercase tracking-widest text-muted-foreground ml-12">
-                Bipe o lote ou digite o código do item para validar
-              </CardDescription>
             </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <form onSubmit={handleLotSearch} className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Código do Lote / Identificação</Label>
-                  <div className="relative group">
-                    <Search className={cn(
-                      "absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 transition-colors duration-300",
-                      isValidating ? "text-primary animate-pulse" : "text-muted-foreground group-focus-within:text-primary"
-                    )} />
+            <CardContent className="p-8">
+              {!foundItem ? (
+                <form onSubmit={handleItemSearch} className="space-y-6">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Lote ou SKU</Label>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
                     <Input 
                       ref={lotInputRef}
                       value={lotInput}
                       onChange={(e) => setLotInput(e.target.value)}
-                      placeholder="BIPE O CÓDIGO AQUI..." 
-                      className={cn(
-                        "h-20 pl-14 text-2xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all",
-                        errorStatus === 'not_found' && "border-destructive/50 ring-destructive/10 text-destructive placeholder:text-destructive/30"
-                      )}
+                      placeholder="BIPE O CÓDIGO..." 
+                      className="h-20 pl-14 text-2xl font-black uppercase rounded-2xl bg-muted/20"
                     />
-                    {lotInput && !isValidating && (
-                      <Button 
-                        type="submit" 
-                        size="sm"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-xl font-black uppercase tracking-widest text-[10px] bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all"
-                      >
-                        Validar
-                      </Button>
-                    )}
                   </div>
-                </div>
-
-                {errorStatus === 'not_found' && (
-                  <div className="p-6 rounded-2xl bg-destructive/5 border-2 border-destructive/20 border-dashed animate-in zoom-in-95 duration-300 flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-destructive/10 text-destructive">
-                      <AlertTriangle className="w-8 h-8" />
-                    </div>
+                </form>
+              ) : (
+                <div className="space-y-8">
+                  <div className="p-6 rounded-2xl bg-primary/5 border-2 border-primary/20 flex items-center justify-between">
                     <div>
-                      <h4 className="text-lg font-black text-destructive uppercase tracking-tight">Lote não encontrado!</h4>
-                      <p className="text-xs font-bold text-destructive/70 uppercase tracking-widest leading-relaxed">Este lote não consta no sistema. Separe o item para análise ou verifique o código.</p>
+                      <h4 className="text-2xl font-black uppercase">{foundItem.name}</h4>
+                      <p className="text-sm font-bold text-muted-foreground uppercase">Sistema: {foundItem.systemQty}</p>
                     </div>
+                    <Badge className="bg-primary text-white font-black">{foundItem.hasLote ? 'COM LOTE' : 'SEM LOTE'}</Badge>
                   </div>
-                )}
 
-                {foundItem && (
-                  <div className="space-y-8 animate-in slide-in-from-top-4 duration-500">
-                    <div className="p-8 rounded-[1.5rem] bg-emerald-500/5 border-2 border-emerald-500/20 border-dashed flex flex-col md:flex-row items-center justify-between gap-6">
-                      <div className="flex items-center gap-6">
-                        <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-600 shadow-inner">
-                          <Package2 className="w-10 h-10" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-2xl font-black text-foreground uppercase tracking-tight">{foundItem.name}</h4>
-                            <Badge className="bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest py-0.5">Validado</Badge>
-                          </div>
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                            Qtd. no Sistema: <span className="text-emerald-600 font-black">{foundItem.systemQty}</span>
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="w-full md:w-64 space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Quantidade Física Contada</Label>
+                  {foundItem.hasLote ? (
+                    <div className="space-y-6">
+                      <form onSubmit={handleLoteBipe} className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Bipar Cada Lote Individualmente</Label>
                         <Input 
-                          ref={qtyInputRef}
-                          type="number"
-                          step="any"
-                          value={physicalQty}
-                          onChange={(e) => setPhysicalQty(e.target.value)}
-                          placeholder="0.00" 
-                          className="h-16 text-2xl font-black text-center rounded-2xl bg-white dark:bg-black/20 border-emerald-500/30 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all"
+                          name="loteBipe"
+                          ref={loteBipeRef}
+                          autoFocus
+                          placeholder="BIPE LOTE..."
+                          className="h-16 text-xl font-black uppercase rounded-2xl border-primary/30"
                         />
-                      </div>
-                    </div>
-
-                    <Button 
-                      onClick={handleFinalize}
-                      disabled={isSubmitting || !physicalQty}
-                      className="w-full h-24 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-4 group"
-                    >
-                      {isSubmitting ? (
-                        <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-8 h-8 group-hover:scale-110 transition-transform" />
-                          Finalizar Contagem
-                          <Send className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                    )}
-              </form>
-
-              {sessionScans.length > 0 && (
-                <div className="mt-8 space-y-4 animate-in slide-in-from-top-4 duration-500">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Log de Bipagem da Sessão ({sessionScans.length})</h4>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setSessionScans([])}
-                      className="text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10"
-                    >
-                      Limpar Sessão
-                    </Button>
-                  </div>
-                  <div className="rounded-2xl border border-border/10 overflow-hidden bg-muted/10">
-                    <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20">
-                      {sessionScans.map((scan, idx) => (
-                        <div key={idx} className="p-4 border-b border-border/5 flex items-center justify-between hover:bg-primary/5 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
-                              {idx + 1}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-black uppercase">{scan.itemCode}</span>
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase">{scan.timestamp}</span>
-                            </div>
-                          </div>
-                          <Badge variant="outline" className="text-[9px] font-black uppercase py-0 px-2 border-primary/20 text-primary">
-                            {scan.inspectorName}
+                      </form>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {bipedLotes.map((b, i) => (
+                          <Badge key={i} variant="outline" className="h-10 justify-between px-3 border-emerald-500/30 bg-emerald-500/5">
+                            {b.lote}
                           </Badge>
-                        </div>
-                      )).reverse()}
+                        ))}
+                      </div>
+                      <p className="text-right font-black text-emerald-600 uppercase tracking-widest">Total: {bipedLotes.length}</p>
                     </div>
-                  </div>
-                </div>
-              )}
+                  ) : (
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Quantidade Total Encontrada</Label>
+                      <Input 
+                        type="number"
+                        value={physicalQtyInput}
+                        onChange={(e) => setPhysicalQtyInput(e.target.value)}
+                        placeholder="0.00"
+                        className="h-20 text-3xl font-black text-center rounded-2xl"
+                      />
+                    </div>
+                  )}
 
-              {lastExportData && (
-                <div className="mt-8 p-6 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-500">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-primary/10 text-primary">
-                      <FileSpreadsheet className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-black uppercase tracking-tight text-sm">Contagem finalizada para: {lastExportData.itemCode}</h4>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Deseja exportar os detalhes para Excel?</p>
-                    </div>
-                  </div>
                   <Button 
-                    onClick={handleExport}
-                    variant="default"
-                    className="rounded-xl font-black uppercase tracking-widest text-xs px-6 py-4 h-auto shadow-lg shadow-primary/20"
+                    onClick={handleFinalize}
+                    disabled={isSubmitting || (foundItem.hasLote ? bipedLotes.length === 0 : !physicalQtyInput)}
+                    className="w-full h-24 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-black uppercase tracking-widest shadow-2xl transition-all"
                   >
-                    Exportar XLSX
+                    Finalizar Contagem ({foundItem.hasLote ? bipedLotes.length : physicalQtyInput})
                   </Button>
                 </div>
               )}

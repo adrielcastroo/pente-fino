@@ -138,6 +138,7 @@ export default function WMSAllocationPage() {
 
     try {
       // 1. Save to movimentacoes_endereco
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from('movimentacoes_endereco')
         .insert({
@@ -146,7 +147,7 @@ export default function WMSAllocationPage() {
           endereco_anterior: foundItem.currentAddress,
           endereco_novo: newAddress,
           conferente_nome: conferente,
-          data_movimentacao: new Date().toISOString(),
+          data_movimentacao: now,
           tipo_estoque: foundItem.isVirtual ? 'VIRTUAL' : 'OFICIAL',
           status_integracao: foundItem.isVirtual ? 'pendente' : 'integrado',
           quantidade: foundItem.isVirtual ? parseFloat(quantity) : null,
@@ -154,6 +155,15 @@ export default function WMSAllocationPage() {
         });
 
       if (error) throw error;
+
+      // 2. Update data_entrada/endereco in the item table
+      if (foundItem.id) {
+        const table = foundItem.id.length > 30 ? 'registros' : 'inventory'; // basic heuristic or check source
+        // Since we don't know the source for sure here, let's try both or refine foundItem to include source
+        await supabase.from('registros').update({ endereco: newAddress, data_entrada: now }).eq('id', foundItem.id);
+        await supabase.from('inventory').update({ location: newAddress, data_entrada: now }).eq('id', foundItem.id);
+      }
+
 
       const allocationData = {
         timestamp,
