@@ -137,55 +137,59 @@ export function CountingHistoryTable() {
                     return (
                       <motion.tr 
                         key={item.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.04, duration: 0.5 }}
+                        className="hover:bg-primary/5 transition-all duration-300 border-white/5 h-24 group"
                       >
-                        <TableCell className="px-8">
+                        <TableCell className="px-10">
                           <div className="flex flex-col">
-                            <span className="font-black text-xs text-foreground tracking-tight">{formatDateBR(item.completed_at)}</span>
-                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{formatTimeBR(item.completed_at)}</span>
+                            <span className="font-black text-sm text-foreground tracking-tighter">{formatDateBR(item.completed_at)}</span>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">{formatTimeBR(item.completed_at)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-8">
+                        <TableCell className="px-10">
                             <div className="flex flex-col">
-                                <span className="font-black text-xs text-foreground uppercase tracking-tight truncate max-w-[200px]">{item.item_name}</span>
-                                <Badge variant="outline" className="w-fit text-[8px] font-black uppercase tracking-[0.2em] py-0 px-2 border-white/10 bg-white/5 mt-1">LOTE: {item.codigo_lote}</Badge>
+                                <span className="font-black text-sm text-foreground uppercase tracking-tight truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
+                                <Badge variant="outline" className="w-fit text-[9px] font-black uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
                             </div>
                         </TableCell>
-                        <TableCell className="px-8 font-black text-xs uppercase text-foreground">{item.conferente_nome || '—'}</TableCell>
-                        <TableCell className="px-8 text-right font-black text-sm tabular-nums text-muted-foreground">{item.expected_qty}</TableCell>
-                        <TableCell className="px-8 text-right font-black text-sm tabular-nums text-foreground">{item.counted_qty}</TableCell>
-                        <TableCell className="px-8 text-center">
+                        <TableCell className="px-10">
+                           <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-white/10 bg-white/5 py-1 px-4">
+                              {item.conferente_nome || '—'}
+                           </Badge>
+                        </TableCell>
+                        <TableCell className="px-10 text-right font-black text-base tabular-nums text-muted-foreground opacity-50">{item.expected_qty}</TableCell>
+                        <TableCell className="px-10 text-right font-black text-lg tabular-nums text-foreground">{item.counted_qty}</TableCell>
+                        <TableCell className="px-10 text-center">
                           <Badge 
                             variant="outline"
                             className={cn(
-                              "font-black text-[9px] uppercase tracking-widest min-w-[120px] justify-center py-1.5 rounded-xl border-2 shadow-sm",
-                              item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/20 bg-emerald-500/5" : 
-                              item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/20 bg-amber-500/5" :
-                              "text-rose-600 border-rose-600/20 bg-rose-500/5 animate-pulse"
+                              "font-black text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-2xl border-2 shadow-sm transition-all duration-500",
+                              item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/30 bg-emerald-500/10" : 
+                              item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/30 bg-amber-500/10" :
+                              "text-rose-600 border-rose-600/30 bg-rose-500/10 animate-pulse"
                             )}
                           >
                             {item.status === 'awaiting_recheck' ? (
-                              <span className="flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> Reconferência</span>
+                              <span className="flex items-center gap-2"><AlertTriangle className="w-3.5 h-3.5" /> RECONFERIR</span>
                             ) : (
                               diff === 0 ? (
-                                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> Conforme</span>
+                                <span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5" /> CONFORME</span>
                               ) : (
-                                <span>Divergência: {diff > 0 ? '+' : ''}{diff}</span>
+                                <span>DIV: {diff > 0 ? '+' : ''}{diff}</span>
                               )
                             )}
                           </Badge>
                         </TableCell>
-                        <TableCell className="px-8 text-right">
+                        <TableCell className="px-10 text-right">
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleExportRow(item)}
-                            className="rounded-xl hover:bg-primary/10 text-primary w-10 h-10 transition-all active:scale-90"
+                            className="rounded-2xl hover:bg-emerald-500 hover:text-white text-emerald-600 w-12 h-12 transition-all duration-300 active:scale-90 border border-transparent hover:border-emerald-500/20 shadow-sm"
                           >
-                            <FileSpreadsheet className="w-5 h-5" />
+                            <FileSpreadsheet className="w-6 h-6" />
                           </Button>
                         </TableCell>
                       </motion.tr>
