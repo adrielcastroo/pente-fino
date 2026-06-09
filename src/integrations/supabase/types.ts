@@ -119,6 +119,62 @@ export type Database = {
         }
         Relationships: []
       }
+      contagem_itens_bipados: {
+        Row: {
+          bipado_em: string | null
+          id: string
+          lote: string | null
+          quantidade: number | null
+          tarefa_id: string | null
+        }
+        Insert: {
+          bipado_em?: string | null
+          id?: string
+          lote?: string | null
+          quantidade?: number | null
+          tarefa_id?: string | null
+        }
+        Update: {
+          bipado_em?: string | null
+          id?: string
+          lote?: string | null
+          quantidade?: number | null
+          tarefa_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contagem_itens_bipados_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas_contagem"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contagens_diarias_limite: {
+        Row: {
+          contagens_com_lote: number | null
+          contagens_sem_lote: number | null
+          data: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          contagens_com_lote?: number | null
+          contagens_sem_lote?: number | null
+          data?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          contagens_com_lote?: number | null
+          contagens_sem_lote?: number | null
+          data?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       estoque_posicoes: {
         Row: {
           codigo_cor: string | null
@@ -391,6 +447,7 @@ export type Database = {
         Row: {
           created_at: string
           curva_abc: string | null
+          data_entrada: string | null
           id: string
           location: string | null
           name: string
@@ -402,6 +459,7 @@ export type Database = {
         Insert: {
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           id?: string
           location?: string | null
           name: string
@@ -413,6 +471,7 @@ export type Database = {
         Update: {
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           id?: string
           location?: string | null
           name?: string
@@ -420,6 +479,137 @@ export type Database = {
           sku?: string
           ultima_contagem?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_configs: {
+        Row: {
+          created_at: string | null
+          curve_a_days: number
+          curve_b_days: number
+          curve_c_days: number
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          curve_a_days?: number
+          curve_b_days?: number
+          curve_c_days?: number
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          curve_a_days?: number
+          curve_b_days?: number
+          curve_c_days?: number
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      inventory_daily_limits: {
+        Row: {
+          counts_with_lote: number | null
+          counts_without_lote: number | null
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          counts_with_lote?: number | null
+          counts_without_lote?: number | null
+          date?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          counts_with_lote?: number | null
+          counts_without_lote?: number | null
+          date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      inventory_task_items: {
+        Row: {
+          biped_at: string | null
+          id: string
+          lote: string | null
+          quantity: number | null
+          task_id: string | null
+        }
+        Insert: {
+          biped_at?: string | null
+          id?: string
+          lote?: string | null
+          quantity?: number | null
+          task_id?: string | null
+        }
+        Update: {
+          biped_at?: string | null
+          id?: string
+          lote?: string | null
+          quantity?: number | null
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_task_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          completed_by: string | null
+          counted_qty: number | null
+          created_at: string | null
+          divergence_details: Json | null
+          expected_qty: number | null
+          has_lote: boolean | null
+          id: string
+          item_id: string | null
+          item_type: string
+          scheduled_date: string | null
+          status: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          counted_qty?: number | null
+          created_at?: string | null
+          divergence_details?: Json | null
+          expected_qty?: number | null
+          has_lote?: boolean | null
+          id?: string
+          item_id?: string | null
+          item_type: string
+          scheduled_date?: string | null
+          status?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          counted_qty?: number | null
+          created_at?: string | null
+          divergence_details?: Json | null
+          expected_qty?: number | null
+          has_lote?: boolean | null
+          id?: string
+          item_id?: string | null
+          item_type?: string
+          scheduled_date?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -613,6 +803,7 @@ export type Database = {
           conference_id: string | null
           created_at: string
           curva_abc: string | null
+          data_entrada: string | null
           edited_at: string | null
           edited_by: string
           endereco: string
@@ -645,6 +836,7 @@ export type Database = {
           conference_id?: string | null
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           edited_at?: string | null
           edited_by?: string
           endereco?: string
@@ -677,6 +869,7 @@ export type Database = {
           conference_id?: string | null
           created_at?: string
           curva_abc?: string | null
+          data_entrada?: string | null
           edited_at?: string | null
           edited_by?: string
           endereco?: string
@@ -816,8 +1009,10 @@ export type Database = {
       tarefas_contagem: {
         Row: {
           codigo_lote: string
+          conferente_id: string | null
           created_at: string | null
           data_geracao: string | null
+          has_lote: boolean | null
           id: string
           item_id: string | null
           item_name: string | null
@@ -827,8 +1022,10 @@ export type Database = {
         }
         Insert: {
           codigo_lote: string
+          conferente_id?: string | null
           created_at?: string | null
           data_geracao?: string | null
+          has_lote?: boolean | null
           id?: string
           item_id?: string | null
           item_name?: string | null
@@ -838,8 +1035,10 @@ export type Database = {
         }
         Update: {
           codigo_lote?: string
+          conferente_id?: string | null
           created_at?: string | null
           data_geracao?: string | null
+          has_lote?: boolean | null
           id?: string
           item_id?: string | null
           item_name?: string | null

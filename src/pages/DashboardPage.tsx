@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useDashboard } from '@/hooks/useDashboard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
-import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
+import { TimelineChart, SummaryChart, OccupationChart, InventoryTimelineChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
@@ -212,6 +212,10 @@ export default function DashboardPage() {
         <div className="lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8">
           <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} />
+          </div>
+          
+          <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-6 mb-6">
+            <InventoryTimelineChart />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
