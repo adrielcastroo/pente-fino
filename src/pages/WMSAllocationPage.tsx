@@ -218,20 +218,39 @@ export default function WMSAllocationPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 sm:p-8">
-            <form onSubmit={handleLotSearch} className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">CÓDIGO DO LOTE</Label>
-              <div className="relative group">
-                <Input 
-                  ref={lotInputRef}
-                  value={lotInput}
-                  onChange={(e) => setLotInput(e.target.value)}
-                  placeholder="BIPE O LOTE AQUI..." 
-                  className="h-16 sm:h-20 px-6 text-xl sm:text-2xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                  disabled={isValidating || step === 2}
-                />
-                {isValidating && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
-              </div>
-            </form>
+            {!isNewItem ? (
+              <form onSubmit={handleLotSearch} className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">CÓDIGO DO LOTE</Label>
+                <div className="relative group">
+                  <Input 
+                    ref={lotInputRef}
+                    value={lotInput}
+                    onChange={(e) => setLotInput(e.target.value)}
+                    placeholder="BIPE O LOTE AQUI..." 
+                    className="h-16 sm:h-20 px-6 text-xl sm:text-2xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                    disabled={isValidating || step === 2}
+                  />
+                  {isValidating && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleConfirmNewItem} className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 ml-1">DESCRIÇÃO DO NOVO ITEM</Label>
+                   <Input 
+                     autoFocus
+                     value={manualDescription}
+                     onChange={(e) => setManualDescription(e.target.value)}
+                     placeholder="EX: MOTOR ELÉTRICO 5HP..." 
+                     className="h-16 px-6 text-xl font-black uppercase rounded-2xl bg-amber-500/5 border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5"
+                   />
+                </div>
+                <div className="flex gap-4">
+                   <Button type="button" variant="outline" onClick={() => setIsNewItem(false)} className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]">Cancelar</Button>
+                   <Button type="submit" className="flex-2 h-14 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest px-8">Confirmar Item</Button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
 
