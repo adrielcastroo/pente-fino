@@ -28,17 +28,17 @@ export default function LogisticsHubPage() {
             variant="ghost" 
             size="icon" 
             onClick={() => navigate('/dashboard')} 
-            className="rounded-2xl hover:bg-primary/10 hover:scale-110 active:scale-95 transition-all duration-300 w-12 h-12"
+            className="rounded-2xl hover:bg-primary/10 hover:scale-110 active:scale-95 transition-all duration-300 w-12 h-12 shadow-sm"
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
               Hub Logístico
             </h1>
             <div className="flex items-center gap-2 mt-2">
-              <div className="h-1 w-8 bg-primary rounded-full" />
-              <p className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.3em]">
+              <div className="h-1 w-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+              <p className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.3em] opacity-70">
                 Gestão Unificada de WMS e Inventário
               </p>
             </div>
@@ -46,21 +46,22 @@ export default function LogisticsHubPage() {
         </div>
         
         <motion.div 
-          whileHover={{ scale: 1.05 }}
-          className="flex items-center gap-3 p-2 px-4 bg-primary/5 rounded-2xl border border-primary/10 backdrop-blur-sm"
+          whileHover={{ scale: 1.05, translateY: -2 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center gap-3 p-3 px-5 bg-card/40 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl shadow-black/5"
         >
-            <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+            <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-primary/10">
                 <LayoutDashboard className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Operação Centralizada</span>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase">Tempo Real</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Operação Centralizada</span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Monitoramento Tempo Real</span>
             </div>
         </motion.div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-20 rounded-[2rem] p-2 shadow-2xl bg-card/40 backdrop-blur-2xl border border-white/10 relative overflow-hidden">
+        <TabsList className="grid w-full grid-cols-4 h-24 rounded-[2.5rem] p-2.5 shadow-2xl bg-card/40 backdrop-blur-3xl border border-white/10 relative overflow-hidden ring-1 ring-white/5">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
           
           <TabsTrigger 

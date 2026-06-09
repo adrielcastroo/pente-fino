@@ -62,52 +62,52 @@ export function CountingHistoryTable() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-6 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner">
-            <History className="w-6 h-6" />
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col sm:flex-row gap-8 items-center justify-between">
+        <div className="flex items-center gap-5">
+          <div className="p-4 rounded-[1.5rem] bg-primary text-white shadow-2xl shadow-primary/30 ring-4 ring-primary/10">
+            <History className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Registros de contagens finalizadas</p>
+            <h2 className="text-3xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1 opacity-70">Rastreabilidade completa de contagens</p>
           </div>
         </div>
         
-        <div className="relative w-full sm:w-80 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <div className="relative w-full sm:w-96 group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors duration-500" />
           <Input 
-            placeholder="Buscar por conferente ou item..." 
-            className="pl-12 h-14 bg-card/40 border-2 border-border/50 font-black uppercase text-[10px] tracking-widest rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
+            placeholder="BUSCAR CONFERENTE OU ITEM..." 
+            className="pl-16 h-16 bg-card/40 backdrop-blur-xl border-2 border-white/10 font-black uppercase text-[10px] tracking-[0.2em] rounded-[1.5rem] focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-2xl shadow-black/5"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border border-white/5 overflow-hidden bg-card/40 backdrop-blur-xl shadow-2xl">
+      <div className="rounded-[3rem] border border-white/10 overflow-hidden bg-card/40 backdrop-blur-3xl shadow-2xl ring-1 ring-white/5 group transition-all duration-500">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent border-border/10 bg-muted/20 h-16">
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                  <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> Data / Hora</div>
+              <TableRow className="hover:bg-transparent border-white/5 bg-muted/20 h-20">
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                  <div className="flex items-center gap-3"><Calendar className="w-3.5 h-3.5" /> Data / Hora</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                  <div className="flex items-center gap-2"><Package className="w-3 h-3" /> Item / Lote</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                  <div className="flex items-center gap-3"><Package className="w-3.5 h-3.5" /> Item / Lote</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                  <div className="flex items-center gap-2"><User className="w-3 h-3" /> Conferente</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                  <div className="flex items-center gap-3"><User className="w-3.5 h-3.5" /> Conferente</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                  <div className="flex items-center gap-2 justify-end"><Hash className="w-3 h-3" /> Sistema</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                  <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Teórico</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                  <div className="flex items-center gap-2 justify-end"><Hash className="w-3 h-3" /> Contado</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                  <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Real</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-center">Status</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                  <div className="flex items-center gap-2 justify-end"><Settings2 className="w-3 h-3" /> Exportar</div>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-center">Status Auditoria</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                  <div className="flex items-center gap-3 justify-end"><Settings2 className="w-3.5 h-3.5" /> Relatório</div>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -137,55 +137,59 @@ export function CountingHistoryTable() {
                     return (
                       <motion.tr 
                         key={item.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.04, duration: 0.5 }}
+                        className="hover:bg-primary/5 transition-all duration-300 border-white/5 h-24 group"
                       >
-                        <TableCell className="px-8">
+                        <TableCell className="px-10">
                           <div className="flex flex-col">
-                            <span className="font-black text-xs text-foreground tracking-tight">{formatDateBR(item.completed_at)}</span>
-                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{formatTimeBR(item.completed_at)}</span>
+                            <span className="font-black text-sm text-foreground tracking-tighter">{formatDateBR(item.completed_at)}</span>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">{formatTimeBR(item.completed_at)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-8">
+                        <TableCell className="px-10">
                             <div className="flex flex-col">
-                                <span className="font-black text-xs text-foreground uppercase tracking-tight truncate max-w-[200px]">{item.item_name}</span>
-                                <Badge variant="outline" className="w-fit text-[8px] font-black uppercase tracking-[0.2em] py-0 px-2 border-white/10 bg-white/5 mt-1">LOTE: {item.codigo_lote}</Badge>
+                                <span className="font-black text-sm text-foreground uppercase tracking-tight truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
+                                <Badge variant="outline" className="w-fit text-[9px] font-black uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
                             </div>
                         </TableCell>
-                        <TableCell className="px-8 font-black text-xs uppercase text-foreground">{item.conferente_nome || '—'}</TableCell>
-                        <TableCell className="px-8 text-right font-black text-sm tabular-nums text-muted-foreground">{item.expected_qty}</TableCell>
-                        <TableCell className="px-8 text-right font-black text-sm tabular-nums text-foreground">{item.counted_qty}</TableCell>
-                        <TableCell className="px-8 text-center">
+                        <TableCell className="px-10">
+                           <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-white/10 bg-white/5 py-1 px-4">
+                              {item.conferente_nome || '—'}
+                           </Badge>
+                        </TableCell>
+                        <TableCell className="px-10 text-right font-black text-base tabular-nums text-muted-foreground opacity-50">{item.expected_qty}</TableCell>
+                        <TableCell className="px-10 text-right font-black text-lg tabular-nums text-foreground">{item.counted_qty}</TableCell>
+                        <TableCell className="px-10 text-center">
                           <Badge 
                             variant="outline"
                             className={cn(
-                              "font-black text-[9px] uppercase tracking-widest min-w-[120px] justify-center py-1.5 rounded-xl border-2 shadow-sm",
-                              item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/20 bg-emerald-500/5" : 
-                              item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/20 bg-amber-500/5" :
-                              "text-rose-600 border-rose-600/20 bg-rose-500/5 animate-pulse"
+                              "font-black text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-2xl border-2 shadow-sm transition-all duration-500",
+                              item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/30 bg-emerald-500/10" : 
+                              item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/30 bg-amber-500/10" :
+                              "text-rose-600 border-rose-600/30 bg-rose-500/10 animate-pulse"
                             )}
                           >
                             {item.status === 'awaiting_recheck' ? (
-                              <span className="flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> Reconferência</span>
+                              <span className="flex items-center gap-2"><AlertTriangle className="w-3.5 h-3.5" /> RECONFERIR</span>
                             ) : (
                               diff === 0 ? (
-                                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> Conforme</span>
+                                <span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5" /> CONFORME</span>
                               ) : (
-                                <span>Divergência: {diff > 0 ? '+' : ''}{diff}</span>
+                                <span>DIV: {diff > 0 ? '+' : ''}{diff}</span>
                               )
                             )}
                           </Badge>
                         </TableCell>
-                        <TableCell className="px-8 text-right">
+                        <TableCell className="px-10 text-right">
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleExportRow(item)}
-                            className="rounded-xl hover:bg-primary/10 text-primary w-10 h-10 transition-all active:scale-90"
+                            className="rounded-2xl hover:bg-emerald-500 hover:text-white text-emerald-600 w-12 h-12 transition-all duration-300 active:scale-90 border border-transparent hover:border-emerald-500/20 shadow-sm"
                           >
-                            <FileSpreadsheet className="w-5 h-5" />
+                            <FileSpreadsheet className="w-6 h-6" />
                           </Button>
                         </TableCell>
                       </motion.tr>

@@ -164,74 +164,77 @@ export function InventorySuggestionsTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-2xl font-black uppercase tracking-tight">Auditoria Sugerida</h3>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-            {suggestions.length} itens precisam de nova contagem
-          </p>
+        <div className="space-y-2">
+          <h3 className="text-3xl font-black uppercase tracking-tight">Auditoria Sugerida</h3>
+          <div className="flex items-center gap-2">
+             <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">
+               {suggestions.length} itens aguardando conferência
+             </p>
+          </div>
         </div>
         <Button 
           onClick={fetchSuggestions} 
           variant="outline" 
           size="sm" 
-          className="rounded-xl font-black uppercase tracking-widest text-[9px] h-10 px-4 gap-2 transition-all hover:bg-muted"
+          className="rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] h-12 px-6 gap-2.5 transition-all hover:bg-primary hover:text-white border-white/10 shadow-xl"
         >
-          <RefreshCw className={loading ? "w-3 h-3 animate-spin" : "w-3 h-3"} />
-          Atualizar Lista
+          <RefreshCw className={loading ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
+          Sincronizar Sugestões
         </Button>
       </div>
 
       {suggestions.length === 0 ? (
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="p-16 text-center rounded-[2.5rem] border-2 border-dashed border-border/10 bg-card/5 backdrop-blur-sm"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-20 text-center rounded-[3rem] border-2 border-dashed border-white/10 bg-card/40 backdrop-blur-xl shadow-inner"
         >
-          <Package className="w-16 h-16 text-muted-foreground/20 mx-auto mb-6" />
-          <h4 className="text-lg font-black uppercase tracking-tight text-muted-foreground">Tudo em dia!</h4>
-          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] mt-2">Nenhum item em atraso de auditoria.</p>
+          <Package className="w-20 h-20 text-muted-foreground/10 mx-auto mb-6" />
+          <h4 className="text-xl font-black uppercase tracking-tight text-muted-foreground opacity-50">Tudo em dia!</h4>
+          <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] mt-3">Nenhum item com atraso de auditoria detectado.</p>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-5">
           <AnimatePresence>
             {suggestions.map((item, index) => (
               <motion.div 
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: index * 0.05 }}
-                className="p-6 rounded-[2rem] bg-card/40 backdrop-blur-xl border border-white/5 hover:border-primary/30 transition-all flex flex-col md:flex-row items-center justify-between gap-6 group shadow-lg shadow-black/5"
+                exit={{ opacity: 0, scale: 0.9, x: -50 }}
+                transition={{ delay: index * 0.05, duration: 0.5 }}
+                className="p-8 rounded-[2.5rem] bg-card/40 backdrop-blur-3xl border border-white/10 hover:border-primary/50 transition-all flex flex-col md:flex-row items-center justify-between gap-8 group shadow-2xl shadow-black/5 ring-1 ring-white/5"
               >
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-8">
                   <motion.div 
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl text-white shadow-xl ${
-                    item.curva_abc === 'A' ? 'bg-rose-500 shadow-rose-500/20' : 
-                    item.curva_abc === 'B' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-emerald-500 shadow-emerald-500/20'
+                    whileHover={{ scale: 1.15, rotate: 8 }}
+                    className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center font-black text-3xl text-white shadow-2xl transition-all duration-500 ring-8 ring-white/5 ${
+                    item.curva_abc === 'A' ? 'bg-rose-500 shadow-rose-500/30' : 
+                    item.curva_abc === 'B' ? 'bg-amber-500 shadow-amber-500/30' : 'bg-emerald-500 shadow-emerald-500/30'
                   }`}>
                     {item.curva_abc}
                   </motion.div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xl font-black uppercase tracking-tight text-foreground">{item.name}</h4>
-                      <Badge variant="outline" className="text-[8px] font-black uppercase py-0.5 px-2 border-white/10 bg-white/5">
-                        {item.source === 'registros' ? 'TECIDO' : 'GERAL'}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h4 className="text-2xl font-black uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">{item.name}</h4>
+                      <Badge variant="outline" className="text-[9px] font-black uppercase py-1 px-3 border-white/10 bg-white/5 rounded-lg shadow-sm">
+                        {item.source === 'registros' ? 'Estoque Oficial' : 'Cadastro Geral'}
                       </Badge>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                          ÚLTIMA: {formatDateBR(item.ultima_contagem || item.created_at)}
+                    <div className="flex flex-wrap items-center gap-6">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                          Auditoria: {formatDateBR(item.ultima_contagem || item.created_at)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/10">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                          {item.dias_atraso} DIAS DE ATRASO
+                      <div className="flex items-center gap-2.5 text-rose-500 bg-rose-500/10 px-4 py-1.5 rounded-xl border border-rose-500/20 shadow-sm">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span className="text-[11px] font-black uppercase tracking-[0.1em]">
+                          {item.dias_atraso} Dias de Atraso
                         </span>
                       </div>
                     </div>
@@ -241,10 +244,10 @@ export function InventorySuggestionsTab() {
                 <Button 
                   onClick={() => handleCreateTask(item)}
                   disabled={creatingTask === item.id}
-                  className="rounded-2xl h-16 px-8 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-black uppercase tracking-[0.2em] text-[10px] gap-3 border-none shadow-none transition-all duration-300"
+                  className="rounded-2xl h-20 px-10 bg-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-[0.3em] text-[10px] gap-3 border border-primary/20 shadow-lg shadow-primary/5 transition-all duration-500 hover:scale-105 active:scale-95 group-hover:bg-primary group-hover:text-white"
                 >
-                  {creatingTask === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-5 h-5" />}
-                  CRIAR TAREFA
+                  {creatingTask === item.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-6 h-6" />}
+                  Lançar Tarefa
                 </Button>
               </motion.div>
             ))}
