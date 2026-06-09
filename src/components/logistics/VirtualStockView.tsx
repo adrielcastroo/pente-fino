@@ -97,16 +97,30 @@ export function VirtualStockView() {
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Gerenciamento de Itens Provisórios</p>
           </div>
         </div>
-        <Button 
-          onClick={fetchData} 
-          variant="outline" 
-          size="sm" 
-          className="rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 h-10 px-4 border-border/20 hover:bg-muted transition-all"
-        >
-          <RefreshCw className={loading ? 'w-3 h-3 animate-spin' : 'w-3 h-3'} />
-          Atualizar Dados
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {data.length > 0 && (
+            <Button 
+              onClick={handleClearAll} 
+              variant="destructive" 
+              size="sm" 
+              className="rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 h-10 px-4 shadow-lg shadow-destructive/20 hover:scale-105 transition-all"
+            >
+              <Trash2 className="w-3 h-3" />
+              Limpar Tudo
+            </Button>
+          )}
+          <Button 
+            onClick={fetchData} 
+            variant="outline" 
+            size="sm" 
+            className="rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 h-10 px-4 border-border/20 hover:bg-muted transition-all"
+          >
+            <RefreshCw className={loading ? 'w-3 h-3 animate-spin' : 'w-3 h-3'} />
+            Atualizar Dados
+          </Button>
+        </div>
       </div>
+
 
       <Card className="rounded-[2.5rem] border-border/10 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
         <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent p-8 border-b border-white/5">
