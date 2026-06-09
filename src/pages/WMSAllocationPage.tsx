@@ -158,10 +158,12 @@ export default function WMSAllocationPage() {
 
       // 2. Update data_entrada/endereco in the item table
       if (foundItem.id) {
-        const table = foundItem.id.length > 30 ? 'registros' : 'inventory'; // basic heuristic or check source
-        // Since we don't know the source for sure here, let's try both or refine foundItem to include source
-        await supabase.from('registros').update({ endereco: newAddress, data_entrada: now }).eq('id', foundItem.id);
-        await supabase.from('inventory').update({ location: newAddress, data_entrada: now }).eq('id', foundItem.id);
+        const table = foundItem.id.length > 30 ? 'registros' : 'inventory';
+        const updateData = table === 'registros' 
+          ? { endereco: newAddress, data_entrada: now } 
+          : { location: newAddress, data_entrada: now };
+          
+        await (supabase.from(table) as any).update(updateData).eq('id', foundItem.id);
       }
 
 

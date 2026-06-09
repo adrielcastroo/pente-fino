@@ -14,7 +14,7 @@ export function CyclicNotification() {
   useEffect(() => {
     const fetchPendingTasks = async () => {
       const { count, error } = await supabase
-        .from('tarefas_contagem')
+        .from('inventory_tasks')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pendente');
 
@@ -27,8 +27,8 @@ export function CyclicNotification() {
 
     // Optional: set up real-time subscription
     const channel = supabase
-      .channel('tarefas_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas_contagem' }, () => {
+      .channel('inventory_tasks_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_tasks' }, () => {
         fetchPendingTasks();
       })
       .subscribe();
