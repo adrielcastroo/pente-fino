@@ -65,23 +65,33 @@ interface ExportAllocationParams {
     lote: string;
     origem: string;
     destino: string;
-  };
+  } | {
+    timestamp: string;
+    conferente: string;
+    item: string;
+    lote: string;
+    origem: string;
+    destino: string;
+  }[];
 }
 
 export const exportAllocationXLSX = ({ data }: ExportAllocationParams) => {
   const wb = XLSX.utils.book_new();
   
   const headers = ['DATA/HORA', 'CONFERENTE', 'ITEM/DESCRIÇÃO', 'LOTE', 'ENDEREÇO ORIGEM', 'ENDEREÇO DESTINO'];
-  const row = [
-    data.timestamp,
-    data.conferente,
-    data.item,
-    data.lote,
-    data.origem,
-    data.destino
-  ];
   
-  const wsData = [headers, row];
+  const dataArray = Array.isArray(data) ? data : [data];
+  
+  const rows = dataArray.map(item => [
+    item.timestamp,
+    item.conferente,
+    item.item,
+    item.lote,
+    item.origem,
+    item.destino
+  ]);
+  
+  const wsData = [headers, ...rows];
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   
   const wscols = [
@@ -94,11 +104,11 @@ export const exportAllocationXLSX = ({ data }: ExportAllocationParams) => {
   ];
   ws['!cols'] = wscols;
   
-  XLSX.utils.book_append_sheet(wb, ws, 'Alocação');
+  XLSX.utils.book_append_sheet(wb, ws, 'Alocações');
   
   const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   
-  const fileName = `alocacao_${data.lote}_${data.timestamp.replace(/[:/]/g, '-')}.xlsx`;
+  const fileName = `alocacoes_wms_${new Date().getTime()}.xlsx`;
   saveAs(blob, fileName);
 };
