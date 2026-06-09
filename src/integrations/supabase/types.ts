@@ -495,30 +495,42 @@ export type Database = {
           conferente_nome: string
           created_at: string | null
           data_movimentacao: string | null
+          descricao_item: string | null
           endereco_anterior: string | null
           endereco_novo: string
           id: string
           item_id: string | null
+          quantidade: number | null
+          status_integracao: string | null
+          tipo_estoque: string | null
         }
         Insert: {
           codigo_lote: string
           conferente_nome: string
           created_at?: string | null
           data_movimentacao?: string | null
+          descricao_item?: string | null
           endereco_anterior?: string | null
           endereco_novo: string
           id?: string
           item_id?: string | null
+          quantidade?: number | null
+          status_integracao?: string | null
+          tipo_estoque?: string | null
         }
         Update: {
           codigo_lote?: string
           conferente_nome?: string
           created_at?: string | null
           data_movimentacao?: string | null
+          descricao_item?: string | null
           endereco_anterior?: string | null
           endereco_novo?: string
           id?: string
           item_id?: string | null
+          quantidade?: number | null
+          status_integracao?: string | null
+          tipo_estoque?: string | null
         }
         Relationships: []
       }
