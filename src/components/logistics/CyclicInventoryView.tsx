@@ -210,16 +210,16 @@ export function CyclicInventoryView() {
   return (
     <div className="space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full sm:w-auto h-14 rounded-2xl p-1 shadow-inner bg-muted/30 border border-border/5 mb-8">
-          <TabsTrigger value="execution" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 gap-2">
+        <TabsList className="flex w-full sm:w-auto h-16 rounded-[1.5rem] p-1.5 shadow-2xl bg-card/40 backdrop-blur-3xl border border-white/10 mb-10 ring-1 ring-white/5">
+          <TabsTrigger value="execution" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl transition-all duration-500 gap-2.5">
             <PlayCircle className="w-4 h-4" />
             Execução
           </TabsTrigger>
-          <TabsTrigger value="suggestions" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 gap-2">
+          <TabsTrigger value="suggestions" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl transition-all duration-500 gap-2.5">
             <Lightbulb className="w-4 h-4" />
             Sugestões
           </TabsTrigger>
-          <TabsTrigger value="history" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 gap-2">
+          <TabsTrigger value="history" className="rounded-xl font-black uppercase tracking-widest text-[10px] flex-1 sm:flex-none sm:px-10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl transition-all duration-500 gap-2.5">
             <History className="w-4 h-4" />
             Histórico
           </TabsTrigger>
@@ -228,35 +228,41 @@ export function CyclicInventoryView() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <TabsContent value="execution" className="space-y-6 mt-0">
-              <Card className="rounded-[2.5rem] border-border/10 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden border border-white/5">
-                <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent p-8 border-b border-white/5">
-                  <CardTitle className="flex items-center gap-4 text-xl font-black uppercase tracking-tight">
-                    <div className="p-3.5 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+            <TabsContent value="execution" className="space-y-8 mt-0">
+              <Card className="rounded-[3rem] border-white/10 bg-card/40 backdrop-blur-3xl shadow-2xl overflow-hidden ring-1 ring-white/10 group transition-all duration-500">
+                <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-10 border-b border-white/5">
+                  <CardTitle className="flex items-center gap-5 text-2xl font-black uppercase tracking-tight">
+                    <div className="p-4 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20 group-hover:scale-110 transition-transform duration-500">
                       <Barcode className="w-8 h-8" />
                     </div>
-                    {foundItem ? 'Identificar Itens' : 'Início de Inventário'}
+                    <div>
+                      <span className="block text-primary text-[10px] font-black tracking-[0.3em] mb-1">{foundItem ? 'Etapa de Contagem' : 'Abertura de Auditoria'}</span>
+                      {foundItem ? 'Identificar Itens' : 'Início de Inventário'}
+                    </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-8">
+                <CardContent className="p-10">
                   {!foundItem ? (
-                    <form onSubmit={handleItemSearch} className="space-y-6">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Bipar Lote ou SKU</Label>
-                      <div className="relative group">
-                        <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <form onSubmit={handleItemSearch} className="space-y-8">
+                      <div className="flex items-center justify-between ml-1">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Bipar Lote ou SKU para Iniciar</Label>
+                        <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-2 py-0 border-primary/20 text-primary">Operação Ativa</Badge>
+                      </div>
+                      <div className="relative group/input">
+                        <Search className="absolute left-10 top-1/2 -translate-y-1/2 w-8 h-8 text-muted-foreground group-focus-within/input:text-primary transition-colors duration-500" />
                         <Input 
                           ref={lotInputRef}
                           value={lotInput}
                           onChange={(e) => setLotInput(e.target.value)}
                           placeholder="BIPE O CÓDIGO AQUI..." 
-                          className="h-24 pl-20 text-2xl sm:text-3xl font-black uppercase rounded-[2rem] bg-background border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-inner"
+                          className="h-28 pl-24 pr-10 text-3xl sm:text-4xl font-black uppercase rounded-[2.5rem] bg-background/50 border-2 border-border/50 focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-2xl shadow-black/5"
                         />
-                        {isValidating && <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-8 h-8 animate-spin text-primary" />}
+                        {isValidating && <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 w-10 h-10 animate-spin text-primary" />}
                       </div>
                     </form>
                   ) : (
