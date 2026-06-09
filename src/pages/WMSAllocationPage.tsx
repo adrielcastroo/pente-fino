@@ -344,7 +344,7 @@ export default function WMSAllocationPage() {
                  <thead>
                    <tr className="bg-muted/30 border-b border-border/5">
                      <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Item / Lote</th>
-                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">De -> Para</th>
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">De {'>'} Para</th>
                      <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Hora</th>
                    </tr>
                  </thead>
