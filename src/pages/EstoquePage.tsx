@@ -326,81 +326,136 @@ export default function EstoquePage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-7xl mx-auto space-y-8 pb-20 p-4 sm:p-0"
+    >
       {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-[clamp(1.5rem,5vw,3.5rem)] font-black tracking-tight leading-none">Estoque</h1>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate('/dashboard')} 
+            className="rounded-2xl hover:bg-primary/10 hover:scale-110 active:scale-95 transition-all duration-300 w-12 h-12 shadow-sm"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <div>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
+              Gestão de Estoque
+            </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-1 w-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+              <p className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.3em] opacity-70">
+                Monitoramento de Posições e Ocupação
+              </p>
+            </div>
+          </div>
         </div>
+        
         <div className="flex items-center gap-3">
-          <Button onClick={() => setImportOpen(true)} variant="outline" className="shrink-0 h-10 sm:h-11 px-4 font-bold rounded-xl border-primary/30 text-primary hover:bg-primary/10 gap-2">
-            <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Importar</span>
+          <motion.div 
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="hidden sm:flex items-center gap-3 p-3 px-5 bg-card/40 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl shadow-black/5"
+          >
+              <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-primary/10">
+                  <Warehouse className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Estoque Central</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Localização G4</span>
+              </div>
+          </motion.div>
+
+          <Button 
+            onClick={() => setImportOpen(true)} 
+            variant="outline" 
+            className="h-14 px-8 rounded-2xl border-white/10 bg-card/40 backdrop-blur-xl font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 active:scale-95"
+          >
+            <Upload className="w-5 h-5" />
+            Importar
           </Button>
         </div>
       </div>
 
-      {/* Categoria Tabs: Tecido / Madeira */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1 border border-border/30 max-w-md">
-        {([
-          { key: 'tecido', label: 'Tecido', Icon: Shirt },
-          { key: 'madeira', label: 'Madeira', Icon: TreePine },
-        ] as const).map(({ key, label, Icon }) => (
-          <button
-            key={key}
-            onClick={() => setCategory(key)}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 ${
-              category === key
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </button>
-        ))}
+      {/* Categoria Tabs */}
+      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] p-1.5 gap-1.5 border border-white/10 shadow-2xl max-w-md ring-1 ring-white/5">
+        {(['tecido', 'madeira'] as const).map((key) => {
+          const Icon = key === 'tecido' ? Shirt : TreePine;
+          const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
+          return (
+            <button
+              key={key}
+              onClick={() => setCategory(key)}
+              className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-2.5 ${
+                category === key
+                  ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {category === 'madeira' ? (
         <MadeiraEstoque />
       ) : (
         <>
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 custom-scrollbar overscroll-x-contain snap-x">
-        <div className="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-4 min-w-max sm:min-w-0">
+        <div className="flex sm:grid sm:grid-cols-5 gap-4 min-w-max sm:min-w-0">
           {[
-            { key: 'total', label: 'Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40', border: 'border-border/30' } },
-            { key: 'ocupado', label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.ocupado },
-            { key: 'livre', label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' } },
-            { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.bloqueado },
-            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: STATUS_CONFIG.reservado },
+            { key: 'total', label: 'Capacidade Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40 shadow-2xl ring-1 ring-white/10', border: 'border-white/5' } },
+            { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
+            { key: 'livre', label: 'Posições Livres', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5 shadow-primary/5', border: 'border-primary/20' } },
+            { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.bloqueado, bg: 'bg-red-500/10 shadow-red-500/5', border: 'border-red-500/20' } },
+            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.reservado, bg: 'bg-amber-500/10 shadow-amber-500/5', border: 'border-amber-500/20' } },
           ].map((s) => (
-            <Card 
-              key={s.label} 
-              onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-              className={`border ${s.config.border} ${s.config.bg} shadow-none hover:scale-[1.02] transition-all duration-150 cursor-pointer hover:shadow-md shrink-0 w-[120px] sm:w-auto ${
-                selectedStat === s.key ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-background' : ''
-              }`}
+            <motion.div
+              key={s.label}
+              whileHover={{ scale: 1.05, translateY: -5 }}
+              transition={{ duration: 0.3 }}
             >
-              <CardContent className="p-3 sm:p-4 text-center space-y-0.5 sm:space-y-1">
-                <div className={`text-xl sm:text-3xl font-black tabular-nums ${s.config.color}`}>{s.value}</div>
-                <div className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-[0.1em] sm:tracking-[0.15em]">{s.label}</div>
-                <div className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/70">{s.percent}%</div>
-              </CardContent>
-            </Card>
+              <Card 
+                onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
+                className={`rounded-[2rem] border-2 ${s.config.border} ${s.config.bg} backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl shrink-0 w-[160px] sm:w-auto relative overflow-hidden group ${
+                  selectedStat === s.key ? 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background scale-105' : ''
+                }`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                <CardContent className="p-6 text-center space-y-2 relative z-10">
+                  <div className={`text-3xl sm:text-4xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
+                  <div className="flex items-center justify-center gap-1.5 pt-2">
+                    <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
+                       <div className={`h-full ${s.config.color.replace('text', 'bg')}`} style={{ width: `${s.percent}%` }} />
+                    </div>
+                    <span className="text-[10px] font-black text-muted-foreground/80">{s.percent}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-muted/30 rounded-xl p-1 gap-1.5 border border-border/30 overflow-x-auto custom-scrollbar no-scrollbar snap-x -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[2rem] p-1.5 gap-2 border border-white/10 shadow-2xl overflow-x-auto custom-scrollbar no-scrollbar snap-x ring-1 ring-white/5">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[65px] sm:min-w-[80px] py-2.5 sm:py-3 rounded-lg text-[10px] sm:text-xs font-black tracking-wide transition-all duration-200 snap-start ${
+            className={`flex-1 min-w-[75px] sm:min-w-[100px] py-3.5 sm:py-4 rounded-2xl text-[10px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 snap-start ${
               activeTec === tec 
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
             }`}
           >
             {tec}
