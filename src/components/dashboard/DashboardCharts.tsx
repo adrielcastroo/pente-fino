@@ -36,6 +36,12 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
               </span>
             </div>
           ))}
+          {data.inspectors && (
+            <div className="mt-2 pt-2 border-t border-border/10">
+               <span className="text-[10px] font-black uppercase text-foreground/40 block mb-1">Responsáveis:</span>
+               <span className="text-xs font-bold text-primary">{data.inspectors}</span>
+            </div>
+          )}
         </div>
       </div>
     );
