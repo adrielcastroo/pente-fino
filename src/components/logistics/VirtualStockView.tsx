@@ -155,24 +155,24 @@ export function VirtualStockView() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent border-border/5 bg-muted/20 h-16">
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                      <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> Data</div>
+                  <TableRow className="hover:bg-transparent border-white/5 bg-muted/20 h-20">
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                      <div className="flex items-center gap-3"><Calendar className="w-3.5 h-3.5" /> Data</div>
                     </TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                      <div className="flex items-center gap-2"><User className="w-3 h-3" /> Conferente</div>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                      <div className="flex items-center gap-3"><User className="w-3.5 h-3.5" /> Responsável</div>
                     </TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                      <div className="flex items-center gap-2"><Package className="w-3 h-3" /> Lote Bipado</div>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                      <div className="flex items-center gap-3"><Package className="w-3.5 h-3.5" /> Item / Lote</div>
                     </TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                      <div className="flex items-center gap-2"><MapPin className="w-3 h-3" /> Endereço</div>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                      <div className="flex items-center gap-3"><MapPin className="w-3.5 h-3.5" /> Destino</div>
                     </TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8">
-                      <div className="flex items-center gap-2"><Hash className="w-3 h-3" /> Qtd</div>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                      <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Qtd</div>
                     </TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-8 text-right">
-                      <div className="flex items-center gap-2 justify-end"><Settings2 className="w-3 h-3" /> Gestão</div>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                      <div className="flex items-center gap-3 justify-end"><Settings2 className="w-3.5 h-3.5" /> Ações</div>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -181,39 +181,41 @@ export function VirtualStockView() {
                     {data.map((item, index) => (
                       <motion.tr 
                         key={item.id}
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="hover:bg-primary/5 transition-colors border-border/5 h-20 group"
+                        exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                        transition={{ delay: index * 0.04, duration: 0.5 }}
+                        className="hover:bg-primary/5 transition-all duration-300 border-white/5 h-24 group"
                       >
-                        <TableCell className="px-8 text-xs font-bold text-muted-foreground">
+                        <TableCell className="px-10 text-xs font-black tracking-tight text-muted-foreground">
                           {formatDateBR(item.data_movimentacao)}
                         </TableCell>
-                        <TableCell className="px-8 text-xs font-black uppercase">
-                          {item.conferente_nome}
+                        <TableCell className="px-10">
+                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-white/10 bg-white/5 py-1 px-3">
+                            {item.conferente_nome}
+                          </Badge>
                         </TableCell>
-                        <TableCell className="px-8">
+                        <TableCell className="px-10">
                           <div className="flex flex-col">
-                            <span className="text-xs font-black uppercase text-foreground">{item.codigo_lote}</span>
-                            <span className="text-[9px] text-amber-600 font-black uppercase tracking-widest mt-0.5">{item.descricao_item}</span>
+                            <span className="text-sm font-black uppercase text-foreground tracking-tight group-hover:text-primary transition-colors">{item.codigo_lote}</span>
+                            <span className="text-[10px] text-amber-600 font-bold uppercase tracking-[0.1em] mt-1 opacity-70">{item.descricao_item}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-8">
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-lg">
+                        <TableCell className="px-10">
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-black text-[10px] uppercase tracking-[0.2em] px-4 py-1.5 rounded-xl shadow-sm ring-4 ring-emerald-500/5">
                             {item.endereco_novo}
                           </Badge>
                         </TableCell>
-                        <TableCell className="px-8 text-sm font-black text-foreground">
+                        <TableCell className="px-10 text-lg font-black text-foreground tabular-nums text-right">
                           {item.quantidade || '-'}
                         </TableCell>
-                        <TableCell className="px-8 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <TableCell className="px-10 text-right">
+                          <div className="flex items-center justify-end gap-3">
                             <Button 
                               onClick={() => handleRegularize(item.id)}
                               size="sm" 
                               variant="ghost" 
-                              className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-sm"
+                              className="h-12 px-6 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] text-primary hover:bg-primary hover:text-white transition-all duration-500 shadow-sm border border-transparent hover:border-primary/20"
                             >
                               Regularizar
                             </Button>
@@ -221,9 +223,9 @@ export function VirtualStockView() {
                               onClick={() => handleDeleteItem(item.id)}
                               size="icon" 
                               variant="ghost" 
-                              className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 shadow-sm"
+                              className="h-12 w-12 rounded-2xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-sm border border-transparent hover:border-rose-500/20"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-5 h-5" />
                             </Button>
                           </div>
                         </TableCell>
