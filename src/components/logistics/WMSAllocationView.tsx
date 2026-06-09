@@ -11,6 +11,8 @@ import { Barcode, MapPin, CheckCircle2, AlertTriangle, Package, Send, FileSpread
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { exportAllocationXLSX } from '@/lib/xlsx-utils';
+import { motion } from 'framer-motion';
+
 
 export function WMSAllocationView() {
   const { user } = useAuth();
