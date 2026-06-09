@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, Download, Eye, Package } from 'lucide-react';
+import { Activity, Download, Eye, Package, ListChecks } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { usePerformance } from '@/hooks/use-performance';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
@@ -383,6 +384,72 @@ export const OccupationChart = React.memo(({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest text-muted-foreground">Capacidade Total</span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
+OccupationChart.displayName = 'OccupationChart';
+
+export const InventoryTimelineChart = () => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: hist } = await supabase
+        .from('historico_contagens')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (hist) {
+        const grouped = hist.reduce((acc: any, curr: any) => {
+          const date = new Date(curr.created_at).toLocaleDateString('pt-BR');
+          if (!acc[date]) acc[date] = { name: date, divergence: 0, counts: 0 };
+          acc[date].divergence += Math.abs(curr.diferenca);
+          acc[date].counts += 1;
+          acc[date].conferente = curr.conferente_nome;
+          return acc;
+        }, {});
+        setData(Object.values(grouped));
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="h-64 flex items-center justify-center"><Activity className="animate-spin" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-xl bg-primary/10 text-primary">
+          <ListChecks className="w-5 h-5" />
+        </div>
+        <h3 className="text-lg font-black tracking-tight uppercase">Cronologia de Inventários</h3>
+      </div>
+      <div className="h-[300px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
+            <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
+            <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
+            <ChartTooltip content={<CustomTooltip />} />
+            <Legend />
+            <Bar dataKey="counts" name="Total Contagens" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="divergence" name="Volume Divergência" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
                   <span className="text-xs sm:text-sm font-bold text-foreground tabular-nums whitespace-nowrap">{total} {unit}</span>
                 </div>
                 <div className="h-1 sm:h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
