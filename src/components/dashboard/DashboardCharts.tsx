@@ -215,27 +215,32 @@ export const InventoryTimelineChart = () => {
   if (loading) return <div className="h-64 flex items-center justify-center"><Activity className="animate-spin" /></div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-xl bg-primary/10 text-primary">
-          <ListChecks className="w-5 h-5" />
+    <Card className="border-none bg-transparent shadow-none overflow-hidden rounded-[2rem]">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-10 py-8 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
+        <div className="space-y-1">
+          <CardTitle className="text-xl font-extrabold tracking-tight flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <ListChecks className="w-5 h-5" />
+            </div>
+            <span>Cronologia de Inventários</span>
+          </CardTitle>
+          <p className="text-sm text-foreground/60 font-black ml-11">Histórico de acuracidade e divergências</p>
         </div>
-        <h3 className="text-lg font-black tracking-tight uppercase">Cronologia de Inventários</h3>
-      </div>
-      <div className="h-[300px] w-full">
+      </CardHeader>
+      <CardContent className="px-8 pb-12 pt-10 h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
+          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
             <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
             <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
             <ChartTooltip content={<CustomTooltip />} />
-            <Legend />
+            <Legend verticalAlign="top" height={36}/>
             <Bar dataKey="counts" name="Total Contagens" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             <Bar dataKey="divergence" name="Volume Divergência" fill="#f43f5e" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
