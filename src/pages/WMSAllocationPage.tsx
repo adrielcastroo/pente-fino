@@ -189,15 +189,15 @@ export default function WMSAllocationPage() {
         </div>
         <div className="flex items-center gap-2 p-1 bg-muted/30 rounded-2xl border border-border/10">
           <Badge variant="outline" className="px-4 py-1 rounded-xl border-primary/20 text-primary font-black uppercase tracking-widest text-[10px]">WMS Ativo</Badge>
-          {lastAllocated && (
+          {sessionAllocations.length > 0 && (
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => exportAllocationXLSX({ data: lastAllocated })}
+              onClick={handleExportAll}
               className="h-8 rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 text-emerald-500 hover:bg-emerald-500/10"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              Relatório
+              Relatório Geral ({sessionAllocations.length})
             </Button>
           )}
         </div>
