@@ -48,18 +48,18 @@ export default function CyclicInventoryPage() {
     if (!user) return true;
     const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
-      .from('contagens_diarias_limite')
+      .from('inventory_daily_limits')
       .select('*')
       .eq('user_id', user.id)
-      .eq('data', today)
+      .eq('date', today)
       .maybeSingle();
 
     if (data) {
-      if (hasLote && data.contagens_com_lote >= 2) {
+      if (hasLote && data.counts_with_lote >= 2) {
         toast.error('Limite diário atingido: Máximo de 2 contagens com lote por dia.');
         return false;
       }
-      if (!hasLote && data.contagens_sem_lote >= 3) {
+      if (!hasLote && data.counts_without_lote >= 3) {
         toast.error('Limite diário atingido: Máximo de 3 contagens sem lote por dia.');
         return false;
       }
