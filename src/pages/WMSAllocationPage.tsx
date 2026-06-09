@@ -127,7 +127,7 @@ export default function WMSAllocationPage() {
       const { error } = await supabase
         .from('movimentacoes_endereco')
         .insert({
-          item_id: foundItem.id,
+          item_id: foundItem.id, // can be null
           codigo_lote: foundItem.lote,
           endereco_anterior: foundItem.currentAddress,
           endereco_novo: newAddress,
@@ -147,16 +147,16 @@ export default function WMSAllocationPage() {
       };
 
       setLastAllocated(allocationData);
+      setSessionAllocations(prev => [...prev, allocationData]);
       
-      // Auto export
-      exportAllocationXLSX({ data: allocationData });
-      
-      toast.success(`Alocação de ${foundItem.name} concluída com sucesso!`);
+      toast.success(`Alocação de ${foundItem.name} concluída!`);
       
       // Reset
       setLotInput('');
       setAddressInput('');
+      setManualDescription('');
       setFoundItem(null);
+      setIsNewItem(false);
       setStep(1);
     } catch (err) {
       console.error('Submit error:', err);
@@ -164,6 +164,15 @@ export default function WMSAllocationPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleExportAll = () => {
+    if (sessionAllocations.length === 0) {
+      toast.error('Nenhuma movimentação para exportar');
+      return;
+    }
+    exportAllocationXLSX({ data: sessionAllocations });
+    toast.success('Relatório completo exportado!');
   };
 
   return (
