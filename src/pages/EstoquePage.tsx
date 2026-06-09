@@ -325,7 +325,6 @@ export default function EstoquePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 min-w-0">
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
