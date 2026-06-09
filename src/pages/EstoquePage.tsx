@@ -67,6 +67,7 @@ import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
   const { isGuest } = useAuth();
+  const navigate = useNavigate();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
 
   const setFormData = useAppStore(s => s.setFormData);
