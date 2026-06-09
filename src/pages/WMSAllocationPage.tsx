@@ -22,9 +22,12 @@ export default function WMSAllocationPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [lotInput, setLotInput] = useState('');
   const [addressInput, setAddressInput] = useState('');
+  const [manualDescription, setManualDescription] = useState('');
+  const [isNewItem, setIsNewItem] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [foundItem, setFoundItem] = useState<{ id: string, name: string, lote: string, currentAddress: string } | null>(null);
+  const [foundItem, setFoundItem] = useState<{ id: string | null, name: string, lote: string, currentAddress: string } | null>(null);
+  const [sessionAllocations, setSessionAllocations] = useState<any[]>([]);
   const [lastAllocated, setLastAllocated] = useState<any | null>(null);
 
   // Refs
@@ -42,6 +45,7 @@ export default function WMSAllocationPage() {
 
     setIsValidating(true);
     setFoundItem(null);
+    setIsNewItem(false);
 
     try {
       const lot = lotInput.trim();
@@ -80,8 +84,8 @@ export default function WMSAllocationPage() {
           setStep(2);
           toast.success('Item validado! Agora bipe o novo endereço.');
         } else {
-          toast.error('Lote não encontrado no sistema!');
-          lotInputRef.current?.select();
+          setIsNewItem(true);
+          toast.info('Item não cadastrado. Informe uma descrição para continuar.');
         }
       }
     } catch (err) {
@@ -90,6 +94,23 @@ export default function WMSAllocationPage() {
     } finally {
       setIsValidating(false);
     }
+  };
+
+  const handleConfirmNewItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualDescription.trim()) {
+      toast.error('Informe a descrição do item');
+      return;
+    }
+
+    setFoundItem({
+      id: null,
+      name: manualDescription.trim(),
+      lote: lotInput.trim(),
+      currentAddress: 'Não cadastrado'
+    });
+    setStep(2);
+    toast.success('Descrição registrada! Agora bipe o endereço.');
   };
 
   const handleFinalize = async (e?: React.FormEvent) => {
@@ -106,7 +127,7 @@ export default function WMSAllocationPage() {
       const { error } = await supabase
         .from('movimentacoes_endereco')
         .insert({
-          item_id: foundItem.id,
+          item_id: foundItem.id, // can be null
           codigo_lote: foundItem.lote,
           endereco_anterior: foundItem.currentAddress,
           endereco_novo: newAddress,
@@ -126,16 +147,16 @@ export default function WMSAllocationPage() {
       };
 
       setLastAllocated(allocationData);
+      setSessionAllocations(prev => [...prev, allocationData]);
       
-      // Auto export
-      exportAllocationXLSX({ data: allocationData });
-      
-      toast.success(`Alocação de ${foundItem.name} concluída com sucesso!`);
+      toast.success(`Alocação de ${foundItem.name} concluída!`);
       
       // Reset
       setLotInput('');
       setAddressInput('');
+      setManualDescription('');
       setFoundItem(null);
+      setIsNewItem(false);
       setStep(1);
     } catch (err) {
       console.error('Submit error:', err);
@@ -143,6 +164,15 @@ export default function WMSAllocationPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleExportAll = () => {
+    if (sessionAllocations.length === 0) {
+      toast.error('Nenhuma movimentação para exportar');
+      return;
+    }
+    exportAllocationXLSX({ data: sessionAllocations });
+    toast.success('Relatório completo exportado!');
   };
 
   return (
@@ -159,15 +189,15 @@ export default function WMSAllocationPage() {
         </div>
         <div className="flex items-center gap-2 p-1 bg-muted/30 rounded-2xl border border-border/10">
           <Badge variant="outline" className="px-4 py-1 rounded-xl border-primary/20 text-primary font-black uppercase tracking-widest text-[10px]">WMS Ativo</Badge>
-          {lastAllocated && (
+          {sessionAllocations.length > 0 && (
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => exportAllocationXLSX({ data: lastAllocated })}
+              onClick={handleExportAll}
               className="h-8 rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 text-emerald-500 hover:bg-emerald-500/10"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              Relatório
+              Relatório Geral ({sessionAllocations.length})
             </Button>
           )}
         </div>
@@ -188,20 +218,39 @@ export default function WMSAllocationPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 sm:p-8">
-            <form onSubmit={handleLotSearch} className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">CÓDIGO DO LOTE</Label>
-              <div className="relative group">
-                <Input 
-                  ref={lotInputRef}
-                  value={lotInput}
-                  onChange={(e) => setLotInput(e.target.value)}
-                  placeholder="BIPE O LOTE AQUI..." 
-                  className="h-16 sm:h-20 px-6 text-xl sm:text-2xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
-                  disabled={isValidating || step === 2}
-                />
-                {isValidating && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
-              </div>
-            </form>
+            {!isNewItem ? (
+              <form onSubmit={handleLotSearch} className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">CÓDIGO DO LOTE</Label>
+                <div className="relative group">
+                  <Input 
+                    ref={lotInputRef}
+                    value={lotInput}
+                    onChange={(e) => setLotInput(e.target.value)}
+                    placeholder="BIPE O LOTE AQUI..." 
+                    className="h-16 sm:h-20 px-6 text-xl sm:text-2xl font-black tracking-widest uppercase rounded-2xl bg-muted/20 border-border/20 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                    disabled={isValidating || step === 2}
+                  />
+                  {isValidating && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 animate-spin text-primary" />}
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleConfirmNewItem} className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 ml-1">DESCRIÇÃO DO NOVO ITEM</Label>
+                   <Input 
+                     autoFocus
+                     value={manualDescription}
+                     onChange={(e) => setManualDescription(e.target.value)}
+                     placeholder="EX: MOTOR ELÉTRICO 5HP..." 
+                     className="h-16 px-6 text-xl font-black uppercase rounded-2xl bg-amber-500/5 border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5"
+                   />
+                </div>
+                <div className="flex gap-4">
+                   <Button type="button" variant="outline" onClick={() => setIsNewItem(false)} className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]">Cancelar</Button>
+                   <Button type="submit" className="flex-2 h-14 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest px-8">Confirmar Item</Button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
 
@@ -278,31 +327,58 @@ export default function WMSAllocationPage() {
         </Card>
       </div>
 
-      {/* History Log (Optional preview of current session) */}
-      {lastAllocated && (
-        <div className="p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 animate-in fade-in duration-500">
-           <div className="flex items-center gap-3 mb-4">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
-              <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Última Movimentação Registrada</h4>
+      {/* History Log (Session preview) */}
+      {sessionAllocations.length > 0 && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+           <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                 <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                 <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Resumo da Sessão</h4>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSessionAllocations([])} className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Limpar</Button>
            </div>
-           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Item</p>
-                 <p className="text-xs font-black uppercase truncate">{lastAllocated.item}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Lote</p>
-                 <p className="text-xs font-black uppercase">{lastAllocated.lote}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">De</p>
-                 <p className="text-xs font-black uppercase text-amber-500">{lastAllocated.origem}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Para</p>
-                 <p className="text-xs font-black uppercase text-emerald-500">{lastAllocated.destino}</p>
-              </div>
+           
+           <div className="rounded-3xl border border-border/10 bg-card/5 overflow-hidden">
+             <div className="overflow-x-auto">
+               <table className="w-full text-left border-collapse">
+                 <thead>
+                   <tr className="bg-muted/30 border-b border-border/5">
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Item / Lote</th>
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">De {'>'} Para</th>
+                     <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Hora</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-border/5">
+                   {sessionAllocations.slice().reverse().map((alloc, i) => (
+                     <tr key={i} className="hover:bg-muted/20 transition-colors">
+                       <td className="px-4 py-3">
+                         <p className="text-xs font-black uppercase truncate max-w-[150px]">{alloc.item}</p>
+                         <p className="text-[9px] font-bold text-muted-foreground uppercase">{alloc.lote}</p>
+                       </td>
+                       <td className="px-4 py-3">
+                         <div className="flex items-center gap-2">
+                           <span className="text-[10px] font-black text-amber-500">{alloc.origem}</span>
+                           <span className="text-muted-foreground">→</span>
+                           <span className="text-[10px] font-black text-emerald-500">{alloc.destino}</span>
+                         </div>
+                       </td>
+                       <td className="px-4 py-3 text-[9px] font-bold text-muted-foreground">
+                         {alloc.timestamp.split(' ')[1]}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
            </div>
+           
+           <Button 
+             onClick={handleExportAll}
+             className="w-full h-14 rounded-2xl bg-muted border border-border/20 hover:bg-muted/80 text-foreground text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+           >
+             <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+             Exportar Planilha Completa (.xlsx)
+           </Button>
         </div>
       )}
     </div>
