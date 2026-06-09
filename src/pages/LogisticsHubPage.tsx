@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, ClipboardCheck, AlertCircle, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, MapPin, ClipboardCheck, AlertCircle, LayoutDashboard, Grid3X3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WMSAllocationView } from '@/components/logistics/WMSAllocationView';
 import { CyclicInventoryView } from '@/components/logistics/CyclicInventoryView';
 import { VirtualStockView } from '@/components/logistics/VirtualStockView';
+import { WarehouseSlottingView } from '@/components/logistics/WarehouseSlottingView';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LogisticsHubPage() {
@@ -59,21 +60,30 @@ export default function LogisticsHubPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-20 rounded-[2rem] p-2 shadow-2xl bg-card/40 backdrop-blur-2xl border border-white/10 relative overflow-hidden">
+        <TabsList className="grid w-full grid-cols-4 h-20 rounded-[2rem] p-2 shadow-2xl bg-card/40 backdrop-blur-2xl border border-white/10 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
           
           <TabsTrigger 
             value="enderecamento" 
-            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
+            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
           >
             <MapPin className="w-4 h-4" />
             <span className="hidden sm:inline">Endereçamento</span>
             <span className="sm:hidden">WMS</span>
           </TabsTrigger>
+
+          <TabsTrigger 
+            value="slotting" 
+            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
+          >
+            <Grid3X3 className="w-4 h-4" />
+            <span className="hidden sm:inline">Mapa de Ocupação</span>
+            <span className="sm:hidden">Mapa</span>
+          </TabsTrigger>
           
           <TabsTrigger 
             value="inventario" 
-            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
+            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
           >
             <ClipboardCheck className="w-4 h-4" />
             <span className="hidden sm:inline">Inventário Cíclico</span>
@@ -82,7 +92,7 @@ export default function LogisticsHubPage() {
           
           <TabsTrigger 
             value="virtual" 
-            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
+            className="rounded-[1.5rem] font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30 transition-all duration-500 flex flex-col sm:flex-row items-center gap-2 z-10"
           >
             <AlertCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Estoque Virtual</span>
@@ -101,6 +111,10 @@ export default function LogisticsHubPage() {
             >
               <TabsContent value="enderecamento" className="m-0 outline-none">
                   <WMSAllocationView />
+              </TabsContent>
+
+              <TabsContent value="slotting" className="m-0 outline-none">
+                  <WarehouseSlottingView />
               </TabsContent>
               
               <TabsContent value="inventario" className="m-0 outline-none">
