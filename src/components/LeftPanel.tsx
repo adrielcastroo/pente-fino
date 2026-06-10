@@ -1600,35 +1600,43 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         </div>
 
-        {/* Preview Card */}
-        <div className="p-4 rounded-xl bg-card border border-border/50">
-          <div className="grid grid-cols-2 gap-3">
+        {/* Preview Card — Modernized with depth and clarity */}
+        <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+          
+          <div className="grid grid-cols-2 gap-4 relative z-10">
             {isMadeira ? (
               <>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Subtipo</p>
-                  <p className="text-lg font-bold">{madeiraTipo}</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Subtipo</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <p className="text-xl font-black text-foreground">{madeiraTipo}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Quantidade</p>
-                  <p className="text-lg font-bold">{quantidade || madeiraDefaults[madeiraTipo]} <span className="text-xs text-muted-foreground">und</span></p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Quantidade</p>
+                  <p className="text-xl font-black text-foreground">
+                    {quantidade || madeiraDefaults[madeiraTipo]} 
+                    <span className="text-xs font-bold text-muted-foreground/40 ml-1.5">UND</span>
+                  </p>
                 </div>
               </>
             ) : isEtiqPronta ? null : (
               <>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Largura</p>
-                  <p className="text-lg font-bold">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Largura</p>
+                  <p className="text-xl font-black text-foreground">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">M. Linear</p>
-                  <p className="text-lg font-bold">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">M. Linear</p>
+                  <p className="text-xl font-black text-foreground">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
                 </div>
               </>
             )}
-            <div className="col-span-2 pt-2 border-t border-border/30">
-              <p className="text-[10px] font-medium uppercase text-muted-foreground mb-1">Lote Sistema</p>
-              <div className="p-2.5 rounded-lg bg-muted/30 font-mono text-xs font-medium text-foreground/80 break-all border border-border/30">
+            <div className="col-span-2 pt-4 mt-1 border-t border-border/40">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Lote Sistema Gerado</p>
+              <div className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors">
                 {previewLoteSistema}
               </div>
             </div>
