@@ -144,7 +144,7 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8"
+      className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-full mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
     >
       {/* Header - Simple and Clean */}
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-8 no-print">

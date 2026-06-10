@@ -449,7 +449,7 @@ export default function RightPanel() {
       {/* KPI strip — inspired by mockup */}
       {registros.length > 0 && (
         <div className="flex-shrink-0 px-2 xs:px-4 py-3 bg-card/40 border-b border-border/40 overflow-x-auto custom-scrollbar">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 min-w-full lg:min-w-0">
             {[
               { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Total de Registros', value: kpis.total.toString(), sub: 'Registros cadastrados' },
               { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: 'Metragem Total (m²)', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml), sub: kpis.m2 > 0 ? 'Soma de m² conferidos' : 'Total em metros lineares' },
@@ -570,7 +570,7 @@ export default function RightPanel() {
               )}
             </table>
           ) : (
-            <table className="w-full border-separate border-spacing-0 table-auto">
+            <table className="w-full border-separate border-spacing-0 table-auto min-w-[600px] lg:min-w-full">
               <thead>
                 <tr className="bg-muted/30">
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
