@@ -13,7 +13,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick }: StatCardProps) => (
+export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick, className }: StatCardProps) => (
   <motion.button 
     key={id}
     initial={{ opacity: 0, y: 20 }}
@@ -23,7 +23,10 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
     whileHover={{ y: -5, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={() => onClick(id)} 
-    className="group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[8rem] sm:min-h-[10rem] lg:min-h-[12rem]"
+    className={cn(
+      "group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[8rem] sm:min-h-[10rem] lg:min-h-[12rem]",
+      className
+    )}
     role="button"
   >
     <div className="flex items-center justify-between mb-4 sm:mb-8 relative z-10">
