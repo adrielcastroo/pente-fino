@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import LeftPanel from '@/components/LeftPanel';
 import FormPageLayout from '@/components/FormPageLayout';
+import { motion } from 'framer-motion';
 
 export default function TecidoPage() {
   const setMode = useAppStore(s => s.setMode);
@@ -17,8 +18,15 @@ export default function TecidoPage() {
   }, [currentMode, setMode, setFormData]);
 
   return (
-    <FormPageLayout>
-      <LeftPanel />
-    </FormPageLayout>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="h-full w-full"
+    >
+      <FormPageLayout>
+        <LeftPanel />
+      </FormPageLayout>
+    </motion.div>
   );
 }

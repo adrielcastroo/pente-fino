@@ -7,7 +7,7 @@ import { printLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
-// animations removed for lightweight mode
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuth } from '@/hooks/use-auth';
@@ -970,8 +970,12 @@ export const LeftPanel = memo(function LeftPanel() {
         }}
       >
         
-        {/* "Novo registro" hero header — alinhado ao layout de referência */}
-        <div className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm">
+        {/* "Novo registro" hero header */}
+        <motion.div 
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.2 }}
+          className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm"
+        >
           <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             <ScanBarcode className="w-5 h-5" strokeWidth={2.2} />
           </div>
@@ -980,19 +984,20 @@ export const LeftPanel = memo(function LeftPanel() {
             <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">Aponte o leitor ou digite o código do item</p>
           </div>
           {(item || nf || m2 || lote || endereco || processo) && !isAI && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={resetForm}
               className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2 py-1 rounded-md hover:bg-destructive/10"
             >
               Limpar
-            </button>
+            </motion.button>
           )}
-        </div>
+        </motion.div>
 
-        {/* Mode Toggle — flex-wrap para resoluções estreitas (<340px) e
-            min-w-0 para permitir truncamento. Altura mínima 44px (touch target). */}
+        {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-2xl border border-border/40">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -1000,15 +1005,22 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider border ${
+                  className={`relative min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider ${
                     isActive
-                      ? 'bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]'
-                      : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-muted/30'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   aria-pressed={isActive}
                 >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{m.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="mode-bg"
+                      className="absolute inset-0 bg-primary rounded-xl shadow-md"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                    />
+                  )}
+                  <Icon className={`relative z-10 w-3.5 h-3.5 shrink-0 ${isActive ? 'text-primary-foreground' : ''}`} />
+                  <span className="relative z-10 truncate">{m.label}</span>
                 </button>
               );
             })}
@@ -1034,20 +1046,25 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories — Modernized segments */}
+        {/* Diversos categories */}
         {isDiversos && (
-          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
+          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto no-scrollbar">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
-                  diversosTipo === tipo
-                    ? 'bg-primary text-primary-foreground shadow-lg scale-105'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
+                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300`}
               >
-                {tipo}
+                {diversosTipo === tipo && (
+                  <motion.div
+                    layoutId="tipo-bg"
+                    className="absolute inset-0 bg-primary rounded-xl shadow-lg"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                  />
+                )}
+                <span className={`relative z-10 ${diversosTipo === tipo ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                  {tipo}
+                </span>
               </button>
             ))}
           </div>
@@ -1645,16 +1662,28 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Actions */}
         <div className="space-y-3 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
-          <Button
-            onClick={handleAdd}
-            className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 group relative overflow-hidden"
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
-            <span className="relative flex items-center justify-center gap-3">
-              <Plus className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 group-hover:rotate-180" strokeWidth={3} />
-              Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
-            </span>
-          </Button>
+            <Button
+              onClick={handleAdd}
+              className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
+              <span className="relative flex items-center justify-center gap-3">
+                <motion.div
+                  initial={false}
+                  animate={{ rotate: 0 }}
+                  whileHover={{ rotate: 180 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Plus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                </motion.div>
+                Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
+              </span>
+            </Button>
+          </motion.div>
 
           {registros.length > 0 && (
             <Button
@@ -1662,8 +1691,18 @@ export const LeftPanel = memo(function LeftPanel() {
               onClick={() => setShowPreview(!showPreview)}
               className="w-full h-10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40 shadow-sm"
             >
-              {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-              {showPreview ? 'Ocultar Resumo' : `Ver Resumo (${registros.length})`}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={showPreview ? 'hide' : 'show'}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="flex items-center"
+                >
+                  {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                  {showPreview ? 'Ocultar Resumo' : `Ver Resumo (${registros.length})`}
+                </motion.div>
+              </AnimatePresence>
             </Button>
           )}
 
