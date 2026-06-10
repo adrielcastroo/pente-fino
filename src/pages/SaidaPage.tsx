@@ -168,8 +168,8 @@ export default function SaidaPage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+      <div className="p-3 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
           <div className="space-y-0.5 sm:space-y-1 text-left">
             <h1 className="text-[clamp(1.5rem,7vw,3.5rem)] font-black tracking-tight text-foreground leading-none">
               Saídas
@@ -180,19 +180,19 @@ export default function SaidaPage() {
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
-              className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-xs sm:text-sm shrink-0"
+              className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-[10px] sm:text-sm shrink-0"
             >
-               <LogOut className="w-5 h-5" />
+               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Dar saída</span>
             </Button>
 
             <div className="relative group w-full sm:w-64 lg:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Filtrar item, PROC..."
-                className="pl-10 h-11 sm:h-12 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
+                placeholder="Filtrar..."
+                className="pl-9 sm:pl-10 h-11 sm:h-12 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-[10px] sm:text-sm w-full"
               />
             </div>
           </div>
