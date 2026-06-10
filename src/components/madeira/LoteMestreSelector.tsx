@@ -64,9 +64,12 @@ export function LoteMestreSelector({ value, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-        <Palette className="w-3 h-3" /> Lote Mestre (Opcional)
+    <div className="space-y-2">
+      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2 ml-1">
+        <div className="w-4 h-4 rounded bg-primary/10 text-primary flex items-center justify-center">
+          <Palette className="w-2.5 h-2.5" />
+        </div>
+        Tonalidade de Referência
       </Label>
 
       <div className="flex gap-2">
@@ -74,71 +77,91 @@ export function LoteMestreSelector({ value, onChange }: Props) {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex-1 h-11 rounded-lg border border-border/50 bg-muted/20 px-3 text-sm flex items-center justify-between gap-2 hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+              className="flex-1 h-12 rounded-xl border border-border/50 bg-muted/20 px-4 text-sm flex items-center justify-between gap-3 hover:border-primary/40 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all duration-300 group"
             >
-              <span className="flex items-center gap-2 min-w-0">
+              <span className="flex items-center gap-3 min-w-0">
                 {selected ? (
                   <>
-                    <span
-                      className="w-4 h-4 rounded-full border border-border/40 flex-shrink-0"
-                      style={{ backgroundColor: selected.cor_hex }}
-                    />
-                    <span className="truncate font-medium">{selected.nome}</span>
+                    <div className="relative">
+                      <span
+                        className="w-5 h-5 rounded-full border-2 border-white shadow-sm block transition-transform group-hover:scale-110"
+                        style={{ backgroundColor: selected.cor_hex }}
+                      />
+                      <div className="absolute inset-0 rounded-full shadow-inner pointer-events-none" />
+                    </div>
+                    <span className="truncate font-bold text-foreground">{selected.nome}</span>
                   </>
                 ) : (
-                  <span className="text-muted-foreground">Selecionar tonalidade…</span>
+                  <span className="text-muted-foreground/60 font-medium">Selecionar tonalidade…</span>
                 )}
               </span>
-              {selected && (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => { e.stopPropagation(); onChange(null, null); }}
-                  className="text-muted-foreground hover:text-destructive p-0.5"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {selected && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => { e.stopPropagation(); onChange(null, null); }}
+                    className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 p-1 rounded-lg transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </span>
+                )}
+                <div className="w-px h-4 bg-border/40 mx-1" />
+                <Plus className={`w-4 h-4 text-muted-foreground/40 transition-transform duration-300 ${open ? 'rotate-45' : ''}`} />
+              </div>
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-2" align="start">
-            <div className="max-h-[260px] overflow-y-auto space-y-1">
-              {loading && <p className="text-xs text-muted-foreground p-2">Carregando…</p>}
+          <PopoverContent className="w-[300px] p-2 rounded-2xl shadow-2xl border-border/40 animate-in zoom-in-95 duration-200" align="start">
+            <div className="max-h-[260px] overflow-y-auto space-y-1 custom-scrollbar pr-1">
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                </div>
+              )}
               {!loading && lotes.length === 0 && (
-                <p className="text-xs text-muted-foreground p-2">Nenhum lote mestre cadastrado.</p>
+                <div className="text-center py-8 px-4">
+                  <Palette className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground font-medium">Nenhum lote mestre encontrado.</p>
+                </div>
               )}
               {lotes.map(l => (
                 <button
                   key={l.id}
                   type="button"
                   onClick={() => { onChange(l.id, l); setOpen(false); }}
-                  className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm hover:bg-muted/60 transition-colors ${
-                    l.id === value ? 'bg-primary/10 text-primary' : ''
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm transition-all active:scale-[0.98] ${
+                    l.id === value 
+                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
+                      : 'hover:bg-muted/60 text-foreground'
                   }`}
                 >
-                  <span
-                    className="w-5 h-5 rounded-full border border-border/40 flex-shrink-0"
-                    style={{ backgroundColor: l.cor_hex }}
-                  />
+                  <div className="relative">
+                    <span
+                      className={`w-6 h-6 rounded-full border-2 block ${l.id === value ? 'border-white' : 'border-border/40'}`}
+                      style={{ backgroundColor: l.cor_hex }}
+                    />
+                  </div>
                   <span className="flex-1 min-w-0">
-                    <span className="block font-medium truncate">{l.nome}</span>
+                    <span className="block font-bold truncate">{l.nome}</span>
                     {l.descricao && (
-                      <span className="block text-[10px] text-muted-foreground truncate">{l.descricao}</span>
+                      <span className={`block text-[10px] truncate ${l.id === value ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                        {l.descricao}
+                      </span>
                     )}
                   </span>
-                  {l.id === value && <Check className="w-4 h-4 text-primary" />}
+                  {l.id === value && <Check className="w-4 h-4" />}
                 </button>
               ))}
             </div>
             <div className="mt-2 pt-2 border-t border-border/40">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="w-full h-9 text-xs"
+                className="w-full h-10 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/5 rounded-xl"
                 onClick={() => { setOpen(false); setCreateOpen(true); }}
               >
-                <Plus className="w-3.5 h-3.5 mr-1" /> Novo Lote Mestre
+                <Plus className="w-4 h-4 mr-2" /> Novo Lote Mestre
               </Button>
             </div>
           </PopoverContent>
@@ -146,38 +169,82 @@ export function LoteMestreSelector({ value, onChange }: Props) {
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>Novo Lote Mestre</DialogTitle>
-            <DialogDescription>Defina uma tonalidade de referência para classificar lâminas.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="lm-nome" className="text-xs font-semibold">Nome</Label>
-              <Input id="lm-nome" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ex: Branco Gelo" />
+        <DialogContent className="sm:max-w-[420px] rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
+          <div className="bg-primary px-6 py-8 text-primary-foreground relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Palette className="w-32 h-32" />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lm-cor" className="text-xs font-semibold">Cor</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="lm-cor"
-                  type="color"
-                  value={newColor}
-                  onChange={e => setNewColor(e.target.value)}
-                  className="h-10 w-16 rounded-md border border-border/50 cursor-pointer bg-transparent"
+            <DialogTitle className="text-2xl font-black mb-1">Novo Lote Mestre</DialogTitle>
+            <DialogDescription className="text-primary-foreground/70 font-medium">
+              Defina uma tonalidade de referência para classificar as lâminas.
+            </DialogDescription>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="lm-nome" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Nome do Lote</Label>
+              <Input 
+                id="lm-nome" 
+                value={newName} 
+                onChange={e => setNewName(e.target.value)} 
+                placeholder="Ex: Branco Gelo, Carvalho, etc."
+                className="h-12 rounded-xl bg-muted/20 border-border/50 focus:ring-4 focus:ring-primary/5 transition-all font-bold"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="lm-cor" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Cor de Identificação</Label>
+              <div className="flex items-center gap-3">
+                <div className="relative group">
+                  <input
+                    id="lm-cor"
+                    type="color"
+                    value={newColor}
+                    onChange={e => setNewColor(e.target.value)}
+                    className="h-14 w-20 rounded-2xl border border-border/50 cursor-pointer bg-muted/20 p-1.5 transition-all hover:scale-105 active:scale-95"
+                  />
+                </div>
+                <Input 
+                  value={newColor} 
+                  onChange={e => setNewColor(e.target.value)} 
+                  className="h-14 font-mono font-bold uppercase tracking-widest text-center rounded-2xl bg-muted/20 border-border/50" 
+                  maxLength={7} 
                 />
-                <Input value={newColor} onChange={e => setNewColor(e.target.value)} className="font-mono uppercase" maxLength={7} />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lm-desc" className="text-xs font-semibold">Descrição (opcional)</Label>
-              <Input id="lm-desc" value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Detalhes da tonalidade…" />
+            
+            <div className="space-y-2">
+              <Label htmlFor="lm-desc" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Descrição (opcional)</Label>
+              <Input 
+                id="lm-desc" 
+                value={newDesc} 
+                onChange={e => setNewDesc(e.target.value)} 
+                placeholder="Ex: Utilizado para persianas de madeira 50mm..."
+                className="h-12 rounded-xl bg-muted/20 border-border/50 focus:ring-4 focus:ring-primary/5 transition-all"
+              />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>Cancelar</Button>
-            <Button onClick={handleCreate} disabled={creating}>
-              {creating ? 'Criando…' : 'Criar'}
+          
+          <DialogFooter className="p-6 bg-muted/10 flex sm:justify-between items-center gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => setCreateOpen(false)} 
+              disabled={creating}
+              className="rounded-xl font-bold uppercase tracking-wider px-6"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleCreate} 
+              disabled={creating}
+              className="rounded-xl font-black uppercase tracking-widest px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+            >
+              {creating ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Criando…</span>
+                </div>
+              ) : 'Salvar Lote'}
             </Button>
           </DialogFooter>
         </DialogContent>
