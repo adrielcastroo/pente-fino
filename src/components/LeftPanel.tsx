@@ -1616,6 +1616,7 @@ export const LeftPanel = memo(function LeftPanel() {
               </div>
             )}
           </div>
+        </div>
 
         {/* Preview Card */}
         <motion.div 
