@@ -1034,18 +1034,17 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories — 2x2 em mobile estreito (<400px), 4 colunas a partir de xs.
-            min-h 44px garante touch target adequado. */}
+        {/* Diversos categories — Modernized segments */}
         {isDiversos && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`min-h-[44px] rounded-full border px-2 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all truncate ${
+                className={`flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                   diversosTipo === tipo
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
                 {tipo}
@@ -1054,18 +1053,18 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Madeira subtypes */}
+        {/* Madeira subtypes — Modernized segments */}
         {isMadeira && (
           <>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  className={`flex-1 min-h-[44px] rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                     madeiraTipo === tipo
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
                   {tipo}
