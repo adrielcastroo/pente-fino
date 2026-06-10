@@ -1706,30 +1706,43 @@ export const LeftPanel = memo(function LeftPanel() {
             </Button>
           )}
 
-          {showPreview && registros.length > 0 && (
-            <div className="rounded-xl border border-border/50 overflow-hidden">
-              <div className="max-h-[250px] overflow-auto custom-scrollbar">
-                <table className="w-full text-[11px]">
-                  <thead className="sticky top-0 bg-muted/90 z-10">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">#</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Referência</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lote Sistema</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/20">
-                    {registros.slice(-10).reverse().map((r, i) => (
-                      <tr key={r.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-3 py-2 font-mono text-muted-foreground">{registros.length - i}</td>
-                        <td className="px-3 py-2 font-medium">{r.item}</td>
-                        <td className="px-3 py-2 font-mono text-primary/80">{r.loteSistema}</td>
+          <AnimatePresence>
+            {showPreview && registros.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-xl border border-border/50 overflow-hidden bg-muted/10 shadow-inner"
+              >
+                <div className="max-h-[250px] overflow-auto custom-scrollbar p-1">
+                  <table className="w-full text-[11px]">
+                    <thead className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">#</th>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">Referência</th>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">Lote Sistema</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                    </thead>
+                    <tbody className="divide-y divide-border/20">
+                      {registros.slice(-10).reverse().map((r, i) => (
+                        <motion.tr 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          key={r.id} 
+                          className="hover:bg-primary/5 transition-colors group"
+                        >
+                          <td className="px-3 py-2 font-mono text-muted-foreground/60">{registros.length - i}</td>
+                          <td className="px-3 py-2 font-bold text-foreground/80">{r.item}</td>
+                          <td className="px-3 py-2 font-mono text-primary/70 group-hover:text-primary transition-colors">{r.loteSistema}</td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {isDuplicate && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-center gap-2">
