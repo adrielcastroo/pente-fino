@@ -29,3 +29,18 @@ export const useIsTablet = () => {
 
   return isTablet;
 };
+
+export const useIsLandscape = () => {
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  useEffect(() => {
+    const checkLandscape = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    checkLandscape();
+    window.addEventListener('resize', checkLandscape);
+    return () => window.removeEventListener('resize', checkLandscape);
+  }, []);
+
+  return isLandscape;
+};
