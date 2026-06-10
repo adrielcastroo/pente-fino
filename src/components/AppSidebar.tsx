@@ -28,7 +28,7 @@ interface AppSidebarProps {
 
 const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'inicio', label: 'Início', icon: Home, path: '/dashboard' },
-  { key: 'logistics', label: 'Hub Logístico', icon: LayoutDashboard, path: '/logistica/hub' },
+  
   { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
   { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
   { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },

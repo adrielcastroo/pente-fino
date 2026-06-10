@@ -41,7 +41,7 @@ export default function MainLayout() {
     if (p === 'reservas') return 'reservas';
     if (p === 'historico') return 'history';
     if (p === 'configuracoes') return 'settings';
-    if (p === 'inventario-ciclico') return 'ciclico';
+    
     return 'inicio';
 
   };
