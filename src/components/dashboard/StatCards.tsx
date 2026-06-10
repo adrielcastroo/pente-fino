@@ -44,7 +44,7 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
     </div>
     
     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-  </button>
+  </motion.button>
 ));
 
 StatCard.displayName = 'StatCard';
@@ -60,7 +60,7 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
-      {cards.map((s, idx) => (
+      {cards.map((s) => (
         <StatCard 
           key={s.id} 
           id={s.id}
