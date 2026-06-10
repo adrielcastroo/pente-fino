@@ -152,20 +152,20 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
         );
       })}
       {showActions && (
-        <td className="px-2 sm:px-4 py-2 sm:py-3.5">
-          <div className="flex justify-end gap-1 sm:gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+        <td className="px-3 sm:px-5 py-3 sm:py-4">
+          <div className="flex justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 transform lg:translate-x-2 group-hover:translate-x-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => onCopy(r.loteSistema)} 
-                  className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" 
+                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all active:scale-90 shadow-none hover:shadow-sm" 
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-               <TooltipContent>Copiar Lote Sistema</TooltipContent>
+               <TooltipContent className="rounded-lg shadow-xl border-border/40">Copiar Lote Sistema</TooltipContent>
             </Tooltip>
             
             <Tooltip>
@@ -174,12 +174,12 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                   variant="ghost" 
                   size="icon" 
                   onClick={() => onDelete(r.id)} 
-                  className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors" 
+                  className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm" 
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Remover Registro</TooltipContent>
+              <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
             </Tooltip>
           </div>
         </td>
