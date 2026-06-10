@@ -16,10 +16,10 @@ export default function FormPageLayout({ children, showRightPanel = true }: Form
   if (showRightPanel) {
     if (!isMobile) {
       return (
-        <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 2xl:gap-8 overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-x-hidden">
           <div
             className="w-full shrink-0 h-auto lg:h-full min-w-0"
-            style={{ flexBasis: 'clamp(360px, 32vw, 560px)' }}
+            style={{ flexBasis: 'clamp(320px, 35vw, 480px)' }}
           >
             {children}
           </div>
