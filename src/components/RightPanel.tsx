@@ -82,7 +82,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
     content = (
       <Badge 
         variant="outline" 
-        className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed" 
+        className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-xl border-dashed shadow-sm" 
         onClick={() => onCopy(loteSistema || '')}
       >
         {loteSistema || '—'}
@@ -124,8 +124,8 @@ interface TableRowProps {
 const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCopy, isLow, editingCell, editValue, onEditValueChange, onCommitEdit, onCancelEdit, isGuest, showActions }: TableRowProps & { showActions?: boolean }) => {
 
   return (
-    <tr className={`group hover:bg-muted/40 border-b border-border/40 ${r.isNew ? 'bg-primary/5' : ''} transition-colors`}>
-      <td className="px-2 sm:px-4 py-2 sm:py-3.5 text-[9px] sm:text-xs text-muted-foreground/50 font-black tabular-nums">{i + 1}</td>
+    <tr className={`group hover:bg-primary/[0.03] border-b border-border/30 ${r.isNew ? 'bg-primary/[0.08] animate-pulse-subtle' : ''} transition-all duration-300`}>
+      <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-black tabular-nums">{i + 1}</td>
       {columns.map((column: any) => {
         // Critical columns that should always show: item, mLinear, quantidade, loteSistema
         // Less critical: nf, processo, m2, largura, lote, endereco
@@ -523,7 +523,7 @@ export default function RightPanel() {
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-foreground font-bold">
                             <Badge 
                               variant="outline" 
-                              className="cursor-pointer border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-mono py-1 px-2.5 rounded-lg border-dashed"
+                              className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-xl border-dashed shadow-sm"
                               onClick={() => copyText(r.loteSistema)}
                             >
                               {r.loteSistema || '—'}
