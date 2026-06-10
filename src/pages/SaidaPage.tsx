@@ -199,19 +199,19 @@ export default function SaidaPage() {
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-8 pb-12 custom-scrollbar">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-xs">Carregando saídas...</p>
+          <div className="flex flex-col items-center justify-center h-full py-12 sm:py-20 gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-[10px] sm:text-xs">Carregando saídas...</p>
           </div>
         ) : filteredSaidas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center">
-              <Archive className="w-8 h-8 text-muted-foreground/30" />
+          <div className="flex flex-col items-center justify-center py-12 sm:py-20 gap-2 sm:gap-3">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-muted/30 flex items-center justify-center">
+              <Archive className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground/30" />
             </div>
-            <p className="text-muted-foreground text-sm font-medium">
-              Nenhum registro de saída encontrado{search ? ' para sua busca' : ''}.
+            <p className="text-muted-foreground text-xs sm:text-sm font-medium">
+              Nenhum registro encontrado.
             </p>
           </div>
         ) : (
