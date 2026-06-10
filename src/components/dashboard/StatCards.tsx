@@ -59,8 +59,8 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
-      {cards.map((s) => (
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-4 sm:pt-10 relative z-10 w-full">
+      {cards.map((s, idx) => (
         <StatCard 
           key={s.id} 
           id={s.id}
@@ -69,6 +69,7 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
           icon={iconMap[s.icon]} 
           delay={s.delay}
           onClick={onStatClick} 
+          className={idx === 2 ? "col-span-2 lg:col-span-1" : ""}
         />
       ))}
     </div>
