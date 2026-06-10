@@ -320,20 +320,22 @@ function AddHistoryRegistroDialog({
 }
 
 function getConferenceFolderName(conf: Conference): string {
-  if (conf.processo && conf.processo !== 'conferencia_conferencia' && !conf.processo.startsWith('conferencia_NF_')) return conf.processo;
+  if (conf.processo && conf.processo !== 'conferencia_conferencia' && !conf.processo.startsWith('conferencia_NF_')) {
+    return conf.processo.length > 20 ? conf.processo.slice(0, 18) + '...' : conf.processo;
+  }
   
   const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
   if (isMotorControle) {
     const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
-    if (nfs.length > 0) return `NF ${nfs.join(', ')}`;
-    return 'Motores / Controle';
+    if (nfs.length > 0) return `NF ${nfs[0]}${nfs.length > 1 ? '...' : ''}`;
+    return 'Motores';
   }
   const isDiversos = conf.registros.some(r => r.modoOrigem === 'diversos');
   if (isDiversos) {
     const nfs = Array.from(new Set(conf.registros.map(r => (r.nf || '').trim()).filter(Boolean)));
-    if (nfs.length > 0) return `NF ${nfs.join(', ')}`;
+    if (nfs.length > 0) return `NF ${nfs[0]}${nfs.length > 1 ? '...' : ''}`;
   }
-  return conf.name;
+  return conf.name.length > 15 ? conf.name.slice(0, 13) + '...' : conf.name;
 }
 
 function downloadConferenceExcel(conf: Conference) {
