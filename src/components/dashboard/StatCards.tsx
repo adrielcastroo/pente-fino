@@ -1,6 +1,7 @@
 import React, { useMemo, memo } from 'react';
 import { ChevronRight, LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   id: string;
