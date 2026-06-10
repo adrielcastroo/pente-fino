@@ -47,8 +47,8 @@ const ReservasTable = ({ items, onDelete }: ReservasTableProps) => {
   };
 
   return (
-    <div className="overflow-x-auto relative">
-      <Table>
+    <div className="overflow-x-auto relative w-full custom-scrollbar overscroll-x-contain">
+      <Table className="min-w-[800px] lg:min-w-full">
         <TableHeader className="bg-muted/30 sticky top-0 z-10">
           <TableRow className="hover:bg-transparent border-b border-border/60">
             <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 px-6">Código</TableHead>

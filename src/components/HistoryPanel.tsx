@@ -731,7 +731,7 @@ export default function HistoryPanel() {
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-0.5 sm:space-y-1 text-center sm:text-left">
-             <h1 className="text-[clamp(1.25rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-none">
+             <h1 className="text-[clamp(1.5rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-none">
                Histórico de <span className="text-primary italic">Conferências</span>
              </h1>
           </div>

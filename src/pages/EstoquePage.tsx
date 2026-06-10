@@ -330,10 +330,10 @@ export default function EstoquePage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-7xl mx-auto space-y-8 pb-20 p-4 sm:p-0"
+      className="max-w-full mx-auto space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <Button 
             variant="ghost" 
@@ -344,7 +344,7 @@ export default function EstoquePage() {
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 className="text-2xl xs:text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
               Gestão de Estoque
             </h1>
             <div className="flex items-center gap-2 mt-2">

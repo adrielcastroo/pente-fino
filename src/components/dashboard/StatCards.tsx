@@ -21,7 +21,7 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
     whileHover={{ y: -5, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={() => onClick(id)} 
-    className="group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[8rem] sm:min-h-[10rem] lg:min-h-[12rem]"
+    className="group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[7rem] sm:min-h-[10rem] lg:min-h-[12rem]"
     role="button"
   >
     <div className="flex items-center justify-between mb-4 sm:mb-8 relative z-10">
@@ -59,7 +59,7 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
       {cards.map((s) => (
         <StatCard 
           key={s.id} 

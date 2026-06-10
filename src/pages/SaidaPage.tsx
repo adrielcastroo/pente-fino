@@ -169,14 +169,14 @@ export default function SaidaPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-0.5 sm:space-y-1 text-left">
             <h1 className="text-[clamp(1.5rem,7vw,3.5rem)] font-black tracking-tight text-foreground leading-none">
               Saídas
             </h1>
           </div>
           
-          <div className="flex flex-col xs:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
@@ -186,7 +186,7 @@ export default function SaidaPage() {
               <span>Dar saída</span>
             </Button>
 
-            <div className="relative group w-full sm:w-64 lg:w-80">
+            <div className="relative group w-full sm:flex-1 lg:w-80">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
               <Input 
                 value={search} 

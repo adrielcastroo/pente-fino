@@ -1,55 +1,31 @@
-import * as React from "react";
+import { useState, useEffect } from 'react';
 
-const MOBILE_BREAKPOINT = 768;
-const TABLET_BREAKPOINT = 1024;
+export const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  return !!isMobile;
-}
+  return isMobile;
+};
 
-export function useIsTablet() {
-  const [isTablet, setIsTablet] = React.useState(false);
+export const useIsTablet = () => {
+  const [isTablet, setIsTablet] = useState(false);
 
-  React.useEffect(() => {
-    const check = () => {
-      const w = window.innerWidth;
-      setIsTablet(w >= MOBILE_BREAKPOINT && w < TABLET_BREAKPOINT);
+  useEffect(() => {
+    const checkTablet = () => {
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
     };
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    checkTablet();
+    window.addEventListener('resize', checkTablet);
+    return () => window.removeEventListener('resize', checkTablet);
   }, []);
 
   return isTablet;
-}
-
-export function useIsLandscape() {
-  const [isLandscape, setIsLandscape] = React.useState(false);
-
-  React.useEffect(() => {
-    const check = () => {
-      setIsLandscape(window.innerWidth > window.innerHeight);
-    };
-    check();
-    window.addEventListener("resize", check);
-    window.addEventListener("orientationchange", check);
-    return () => {
-      window.removeEventListener("resize", check);
-      window.removeEventListener("orientationchange", check);
-    };
-  }, []);
-
-  return isLandscape;
-}
+};
