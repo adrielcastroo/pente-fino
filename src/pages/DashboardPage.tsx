@@ -35,7 +35,6 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 }
 
 export default function DashboardPage() {
-  const isMobile = useIsMobile();
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const { theme: systemTheme } = useTheme();
   const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
