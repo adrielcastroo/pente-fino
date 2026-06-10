@@ -390,7 +390,7 @@ export default function RightPanel() {
             size="sm"
             variant="secondary"
             onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
-            className="rounded-full px-6 font-black uppercase tracking-wider text-[10px] bg-white text-primary hover:bg-white/90"
+            className="rounded-full px-6 font-black uppercase tracking-[0.15em] text-[10px] bg-white text-primary hover:bg-white/90 hover:scale-105 active:scale-95 transition-all shadow-lg"
           >
             Desfazer Ação
           </Button>
