@@ -95,7 +95,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm transition-colors ${columnKey === 'item' ? 'font-extrabold text-foreground' : 'font-mono text-muted-foreground/90'} ${columnKey === 'loteSistema' ? 'max-w-[120px] sm:max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-black text-foreground scale-100 group-hover:scale-[1.02] origin-left' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${columnKey === 'loteSistema' ? 'max-w-[140px] sm:max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap' : ''} ${className || ''}`}
     >
       {content}
     </td>
