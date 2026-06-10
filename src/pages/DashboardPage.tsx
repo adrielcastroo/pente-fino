@@ -1,13 +1,12 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Moon, Sun, Laptop } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart, InventoryTimelineChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
@@ -15,8 +14,7 @@ import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
-
-
+import { motion } from 'framer-motion';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -34,7 +32,6 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 }
 
 export default function DashboardPage() {
-  const isMobile = useIsMobile();
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const { theme: systemTheme } = useTheme();
   const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
@@ -142,12 +139,23 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="dashboard-content" className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8">
+    <motion.div 
+      id="dashboard-content" 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8"
+    >
       {/* Header - Simple and Clean */}
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-8 no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/10 shadow-inner">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-3 sm:gap-4"
+          >
+            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shadow-inner">
               <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
             </div>
             <div className="flex flex-col">
@@ -158,10 +166,15 @@ export default function DashboardPage() {
                 Monitoramento Logístico & Operacional
               </p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-center">
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-transparent transition-all hover:bg-white/5">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
+          >
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
               <Clock className="w-5 h-5 text-primary/70 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-black text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
@@ -188,16 +201,21 @@ export default function DashboardPage() {
               </TooltipTrigger>
               <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Gerar Relatório Completo de Atividades</TooltipContent>
             </Tooltip>
-          </div>
+          </motion.div>
         </div>
         
-        <div className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-transparent w-fit transition-all hover:bg-white/5">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-card/40 backdrop-blur-md w-fit transition-all hover:bg-card/60"
+        >
           <Clock className="w-4 h-4 text-primary/70 shrink-0" />
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black text-foreground/50 uppercase tracking-widest">Sessão:</span>
             <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
           </div>
-        </div>
+        </motion.div>
       </header>
       
       {/* Cyclic Inventory Notification */}
@@ -209,7 +227,13 @@ export default function DashboardPage() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
-        <div className="lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8"
+        >
           <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} />
           </div>
@@ -244,7 +268,7 @@ export default function DashboardPage() {
               ]}
             />
           </div>
-        </div>
+        </motion.div>
 
         <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
           <SummaryChart 
@@ -345,26 +369,36 @@ export default function DashboardPage() {
           />
         </div>
         
-        <div className="lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]"
+        >
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
-            <div className="relative p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
+            <motion.div 
+              whileHover={{ rotate: 12, scale: 1.1 }}
+              className="relative p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500"
+            >
               <FileText className="w-7 h-7 sm:w-10 sm:h-10" />
-            </div>
+            </motion.div>
           </div>
           <div className="space-y-2 sm:space-y-3">
             <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground">Relatório Executivo</h3>
             <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed max-w-[240px] mx-auto font-bold">Compilado profissional de todas as métricas em formato Excel.</p>
           </div>
-          <Button 
-            className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] bg-foreground text-background hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 group/btn"
-            onClick={handleFullExportExcel}
-            disabled={isExporting}
-          >
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />}
-            {isExporting ? 'Processando' : 'Baixar Relatório'}
-          </Button>
-        </div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
+            <Button 
+              className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 group/btn"
+              onClick={handleFullExportExcel}
+              disabled={isExporting}
+            >
+              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />}
+              {isExporting ? 'Processando' : 'Baixar Relatório'}
+            </Button>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Detail Dialogs */}
@@ -551,6 +585,6 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }
