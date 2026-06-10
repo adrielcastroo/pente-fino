@@ -1034,18 +1034,17 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories — 2x2 em mobile estreito (<400px), 4 colunas a partir de xs.
-            min-h 44px garante touch target adequado. */}
+        {/* Diversos categories — Modernized segments */}
         {isDiversos && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`min-h-[44px] rounded-full border px-2 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all truncate ${
+                className={`flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                   diversosTipo === tipo
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
                 {tipo}
@@ -1054,31 +1053,36 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Madeira subtypes */}
+        {/* Madeira subtypes — Modernized segments */}
         {isMadeira && (
           <>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`rounded-full border py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  className={`flex-1 min-h-[44px] rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                     madeiraTipo === tipo
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
                   {tipo}
                 </button>
               ))}
             </div>
-            {/* Próximo CX preview */}
-            <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <Package className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Próxima Caixa</span>
+            {/* Próximo CX preview — Modernized card */}
+            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner group hover:border-primary/40 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:rotate-12">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">Próxima Caixa</span>
+                  <span className="block text-xs font-medium text-muted-foreground/80">Automático</span>
+                </div>
               </div>
-              <span className="font-mono text-sm font-bold text-primary">
+              <span className="font-mono text-lg font-black text-primary tracking-tighter">
                 {processo.trim()
                   ? (generateLoteSistemaCaixa(processo.trim(), '-', 0, registros).match(/^CX\d+/)?.[0] ?? 'CX01')
                   : 'CX01'}
@@ -1596,35 +1600,43 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         </div>
 
-        {/* Preview Card */}
-        <div className="p-4 rounded-xl bg-card border border-border/50">
-          <div className="grid grid-cols-2 gap-3">
+        {/* Preview Card — Modernized with depth and clarity */}
+        <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+          
+          <div className="grid grid-cols-2 gap-4 relative z-10">
             {isMadeira ? (
               <>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Subtipo</p>
-                  <p className="text-lg font-bold">{madeiraTipo}</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Subtipo</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <p className="text-xl font-black text-foreground">{madeiraTipo}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Quantidade</p>
-                  <p className="text-lg font-bold">{quantidade || madeiraDefaults[madeiraTipo]} <span className="text-xs text-muted-foreground">und</span></p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Quantidade</p>
+                  <p className="text-xl font-black text-foreground">
+                    {quantidade || madeiraDefaults[madeiraTipo]} 
+                    <span className="text-xs font-bold text-muted-foreground/40 ml-1.5">UND</span>
+                  </p>
                 </div>
               </>
             ) : isEtiqPronta ? null : (
               <>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">Largura</p>
-                  <p className="text-lg font-bold">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Largura</p>
+                  <p className="text-xl font-black text-foreground">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground mb-0.5">M. Linear</p>
-                  <p className="text-lg font-bold">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">M. Linear</p>
+                  <p className="text-xl font-black text-foreground">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
                 </div>
               </>
             )}
-            <div className="col-span-2 pt-2 border-t border-border/30">
-              <p className="text-[10px] font-medium uppercase text-muted-foreground mb-1">Lote Sistema</p>
-              <div className="p-2.5 rounded-lg bg-muted/30 font-mono text-xs font-medium text-foreground/80 break-all border border-border/30">
+            <div className="col-span-2 pt-4 mt-1 border-t border-border/40">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Lote Sistema Gerado</p>
+              <div className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors">
                 {previewLoteSistema}
               </div>
             </div>
@@ -1635,10 +1647,13 @@ export const LeftPanel = memo(function LeftPanel() {
         <div className="space-y-3 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <Button
             onClick={handleAdd}
-            className="w-full h-14 sm:h-16 rounded-2xl font-black text-sm sm:text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 group relative overflow-hidden"
           >
-            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-            Adicionar Registro
+            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
+            <span className="relative flex items-center justify-center gap-3">
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 group-hover:rotate-180" strokeWidth={3} />
+              Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
+            </span>
           </Button>
 
           {registros.length > 0 && (

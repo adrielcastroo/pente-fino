@@ -52,13 +52,15 @@ export function AvariaForm({
   };
 
   return (
-    <div className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
-      <div className={`flex items-center justify-between px-3 py-2.5 transition-colors ${enabled ? 'bg-destructive/10' : ''}`}>
-        <div className="flex items-center gap-2">
-          <AlertTriangle className={`w-4 h-4 ${enabled ? 'text-destructive' : 'text-muted-foreground/60'}`} />
+    <div className="rounded-2xl border border-border/50 bg-muted/5 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-destructive/30">
+      <div className={`flex items-center justify-between px-4 py-3.5 transition-all duration-500 ${enabled ? 'bg-destructive/10' : 'bg-background/40'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${enabled ? 'bg-destructive/20 text-destructive' : 'bg-muted/40 text-muted-foreground/60'}`}>
+            <AlertTriangle className="w-4 h-4" />
+          </div>
           <Label 
             htmlFor="avaria-toggle" 
-            className={`text-[11px] font-bold uppercase tracking-wide cursor-pointer transition-colors ${enabled ? 'text-destructive' : ''}`}
+            className={`text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors ${enabled ? 'text-destructive' : 'text-muted-foreground'}`}
           >
             Reportar Avaria
           </Label>
@@ -67,39 +69,39 @@ export function AvariaForm({
           id="avaria-toggle" 
           checked={enabled} 
           onCheckedChange={onEnabledChange}
-          className="data-[state=checked]:bg-destructive"
+          className="data-[state=checked]:bg-destructive transition-transform active:scale-90"
         />
       </div>
 
       {enabled && (
-        <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/40 bg-background/40">
+        <div className="px-4 pb-4 pt-2 space-y-4 border-t border-border/40 bg-background/60 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo (Opcional)</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ml-1">Tipo da Avaria</Label>
             <Select value={tipo ?? ''} onValueChange={(v) => onTipoChange(v as AvariaTipo)}>
-              <SelectTrigger className="h-10 text-sm">
+              <SelectTrigger className="h-11 rounded-xl bg-background border-border/60 text-sm transition-all focus:ring-2 focus:ring-destructive/10 focus:border-destructive/40">
                 <SelectValue placeholder="Selecionar tipo…" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl border-border/40 shadow-xl">
                 {TIPO_OPTIONS.map(o => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  <SelectItem key={o.value} value={o.value} className="rounded-lg my-1">{o.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Descrição (Opcional)</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ml-1">Descrição dos Detalhes</Label>
             <Textarea
               value={descricao}
               onChange={e => onDescricaoChange(e.target.value)}
-              placeholder="Detalhes da avaria…"
+              placeholder="Descreva brevemente o problema encontrado..."
               rows={2}
-              className="text-sm resize-none"
+              className="text-sm rounded-xl bg-background border-border/60 resize-none transition-all focus:ring-2 focus:ring-destructive/10 focus:border-destructive/40 placeholder:text-muted-foreground/30"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Foto (Opcional)</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ml-1">Evidência Fotográfica</Label>
             <input
               ref={fileRef}
               type="file"
@@ -113,14 +115,15 @@ export function AvariaForm({
               }}
             />
             {fotoUrl ? (
-              <div className="relative rounded-lg overflow-hidden border border-border/50">
-                <img src={fotoUrl} alt="Avaria" className="w-full h-32 object-cover" />
+              <div className="relative rounded-xl overflow-hidden border border-border/60 group animate-in zoom-in-95 duration-300">
+                <img src={fotoUrl} alt="Avaria" className="w-full h-40 object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <button
                   type="button"
                   onClick={() => onFotoUrlChange(null)}
-                  className="absolute top-1.5 right-1.5 p-1 rounded-md bg-background/80 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  className="absolute top-2 right-2 p-2 rounded-xl bg-background/90 text-destructive shadow-lg hover:bg-destructive hover:text-white transition-all transform hover:rotate-90 active:scale-90"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
@@ -128,13 +131,16 @@ export function AvariaForm({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  className="flex-1 h-10 text-xs"
+                  className="flex-1 h-12 rounded-xl border-dashed border-border/80 bg-background/40 hover:bg-background hover:border-primary/50 text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98]"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
                 >
-                  {uploading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Camera className="w-3.5 h-3.5 mr-1" />}
-                  {uploading ? 'Enviando…' : 'Câmera / Galeria'}
+                  {uploading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
+                  ) : (
+                    <Camera className="w-4 h-4 mr-2 text-primary" />
+                  )}
+                  {uploading ? 'Enviando...' : 'Câmera ou Galeria'}
                 </Button>
               </div>
             )}
