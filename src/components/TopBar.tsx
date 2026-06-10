@@ -123,23 +123,23 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="flex h-14 sm:h-16 items-center gap-1 sm:gap-4 px-2 sm:px-6 max-w-[2000px] mx-auto">
-        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+      <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-1 sm:gap-4 px-2 sm:px-6 xl:px-8 max-w-[2000px] mx-auto">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-xl shrink-0" />
           {isRegistroRoute ? (
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
-              <div className="hidden xxs:flex w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-primary/10 text-primary items-center justify-center shrink-0">
-                <ScanBarcode className="w-3.5 h-3.5 sm:w-5 sm:h-5" strokeWidth={2.2} />
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="hidden xs:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary items-center justify-center shrink-0">
+                <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
               </div>
-              <div className="flex flex-col leading-tight overflow-hidden">
-                <span className="text-[10px] sm:text-sm font-black text-foreground tracking-tight whitespace-nowrap truncate">Registro &amp; Bipagem</span>
-                <span className="hidden xs:block text-[8px] sm:text-[10px] uppercase tracking-widest text-muted-foreground/70 font-bold truncate">
+              <div className="flex flex-col leading-tight">
+                <span className="text-[11px] sm:text-sm font-black text-foreground tracking-tight whitespace-nowrap">Registro &amp; Bipagem</span>
+                <span className="hidden sm:block text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground/70 font-bold">
                   {path === '/tecido' ? 'Tecido' : path === '/madeira' ? 'Madeira' : 'Motor / Controle'}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="hidden xxs:flex flex-col">
+            <div className="hidden xs:flex flex-col">
               <p className="text-[10px] sm:text-sm font-bold text-foreground tracking-tight">
                 Sistema <span className="text-primary font-black uppercase tracking-widest text-[8px] sm:text-xs">Pente Fino</span>
               </p>
@@ -147,7 +147,7 @@ const TopBar = memo(function TopBar() {
           )}
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-1 sm:gap-3 min-w-0">
+        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-3 min-w-0">
           {isGuest && (
             <div className="relative group w-full max-w-[80px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[340px]">
               <label htmlFor="conferente-input" className="sr-only">Nome do Conferente</label>

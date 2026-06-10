@@ -144,26 +144,26 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto pb-8 sm:pb-16 px-1 sm:px-6 lg:px-8"
+      className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1600px] mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8"
     >
       {/* Header - Simple and Clean */}
-      <header className="flex flex-col gap-4 sm:gap-6 pb-4 sm:pb-8 pt-2 sm:pt-8 no-print">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2 sm:px-6">
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-8 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="flex items-center gap-3 sm:gap-4"
           >
-            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shadow-inner shrink-0">
+            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shadow-inner">
               <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
             </div>
-            <div className="flex flex-col overflow-hidden">
-              <h1 className="text-[clamp(1.5rem,8vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1] truncate">
+            <div className="flex flex-col">
+              <h1 className="text-[clamp(1.5rem,8vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
                 Dashboard
               </h1>
-              <p className="text-[8px] sm:text-xs font-black text-foreground/60 uppercase tracking-[0.1em] sm:tracking-[0.2em] mt-1 sm:mt-2 truncate">
-                Monitoramento Operacional
+              <p className="text-[9px] sm:text-xs font-black text-foreground/60 uppercase tracking-[0.2em] mt-1 sm:mt-2">
+                Monitoramento Logístico & Operacional
               </p>
             </div>
           </motion.div>
@@ -172,13 +172,13 @@ export default function DashboardPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto"
+            className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
           >
-            <div className="hidden xs:flex flex-1 sm:flex-none items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md">
-              <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary/70 shrink-0" />
-              <div className="flex flex-col truncate">
-                <span className="text-[8px] font-black text-foreground/50 uppercase tracking-widest leading-tight truncate">Sessão</span>
-                <span className="text-[10px] sm:text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
+              <Clock className="w-5 h-5 text-primary/70 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
+                <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
               </div>
             </div>
             
@@ -188,15 +188,15 @@ export default function DashboardPage() {
                   variant="default" 
                   size="lg"
                   disabled={isExporting}
-                  className="flex-1 sm:flex-none h-10 sm:h-16 px-4 sm:px-10 rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-4 font-black uppercase tracking-widest text-[9px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap"
+                  className="h-10 sm:h-16 px-4 sm:px-10 rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-4 font-black uppercase tracking-widest text-[10px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap"
                   onClick={handleFullExportExcel}
                 >
                   {isExporting ? (
-                    <Loader2 className="w-3.5 h-3.5 sm:w-6 sm:h-6 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
                   ) : (
-                    <FileText className="w-3.5 h-3.5 sm:w-6 sm:h-6" />
+                    <FileText className="w-4 h-4 sm:w-6 sm:h-6" />
                   )}
-                  {isExporting ? '...' : 'Exportar Excel'}
+                  {isExporting ? 'Processando...' : 'Exportar Excel'}
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Gerar Relatório Completo de Atividades</TooltipContent>

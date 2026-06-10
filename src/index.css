@@ -1,61 +1,289 @@
-/* 
-  Global CSS reset for responsive web app layout.
-  This ensures the application is containerized appropriately on all devices.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Prevent body-level scroll, handled by internal scroll containers */
-  -webkit-tap-highlight-color: transparent;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Fluid typography and spacing */
-:root {
-  --fluid-min-width: 320px;
-  --fluid-max-width: 1920px;
-  --fluid-min-size: 14px;
-  --fluid-max-size: 16px;
-}
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 224 71.4% 4.1%;
 
-body {
-  font-size: var(--fluid-min-size);
-}
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
 
-@media (min-width: 768px) {
-  body {
-    font-size: var(--fluid-max-size);
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 14% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.75rem;
+
+    --navy: 222 47% 11%;
+    --navy-2: 217 33% 17%;
+    --navy-3: 215 20% 65%;
+
+    --surface: 0 0% 100%;
+    --surface-2: 220 20% 98%;
+    --surface-3: 220 13% 91%;
+
+    --sidebar-background: 220 20% 99%;
+    --sidebar-foreground: 220 9% 46%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
+  }
+
+  .dark {
+    --background: 228 14% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 228 14% 9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 228 14% 9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 224 14% 14%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 224 14% 14%;
+    --muted-foreground: 218 11% 60%;
+
+    --accent: 224 14% 14%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 48 96% 53%;
+    --warning-foreground: 222.2 47.4% 11.2%;
+
+    --border: 224 14% 16%;
+    --input: 224 14% 16%;
+    --ring: 224.3 76.3% 48%;
+
+    --navy: 228 14% 7%;
+    --navy-2: 228 14% 9%;
+    --navy-3: 224 14% 22%;
+
+    --surface: 228 14% 9%;
+    --surface-2: 228 14% 11%;
+    --surface-3: 224 14% 14%;
+
+    --sidebar-background: 228 14% 7%;
+    --sidebar-foreground: 218 11% 60%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 224 14% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 224 14% 16%;
+    --sidebar-ring: 224.3 76.3% 48%;
   }
 }
 
-/* Custom Scrollbar for all scrollable containers */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@layer base {
+  * {
+    @apply border-border outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Prevent text selection on long press for mobile except for inputs */
+  *:not(input):not(textarea) {
+    -webkit-touch-callout: none;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary overflow-x-hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+  
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
+  button, input, select, textarea {
+    @apply transition-all duration-75 ease-in-out; /* Reduced duration */
+  }
+
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace !important;
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+@layer components {
+  .glass-card {
+    @apply bg-card/80 border border-border/60;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .glass-input {
+    @apply rounded-xl px-4 py-2 text-sm outline-none bg-muted/50 border border-border/60 text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50 focus:bg-background;
+    transition: none;
+  }
+
+  .glass-btn {
+    @apply flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-muted/50 border border-border/60 text-foreground/80 hover:bg-muted hover:text-foreground;
+  }
+
+  .primary-btn {
+    @apply flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold bg-primary text-primary-foreground;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .secondary-btn {
+    @apply flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .stat-card {
+    @apply relative overflow-hidden rounded-2xl p-6 border border-border/50 bg-card;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold font-mono;
+  }
+
+  .badge-status-teal {
+    @apply bg-primary/10 text-primary border border-primary/20;
+  }
+
+  .scrollbar-thin,
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.12) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar,
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track,
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 6px 0;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb,
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.12);
+    border-radius: 9999px;
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 999px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary));
-}
-
-/* Ensure no horizontal overflow */
-* {
-  box-sizing: border-box;
-  max-width: 100%;
-}
-
+/* App Background Pattern - Simplified */
 .app-bg-pattern {
-  background-image: radial-gradient(circle at 2px 2px, hsl(var(--border) / 0.1) 1px, transparent 0);
-  background-size: 24px 24px;
+  background-color: hsl(var(--background));
+}
+
+/* Performance Mode Optimizations - Professional & Industrial focus */
+.low-perf *, 
+.low-perf {
+  transition: none !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.low-perf .animate-spin {
+  animation: spin 1s linear infinite !important; /* Keep essential animations for UX */
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Accessibility: Focus visible improvements */
+:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Performance Mode Optimizations */
+.low-perf *, 
+.low-perf {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+  animation-iteration-count: 1 !important;
+  box-shadow: none !important;
+}
+
+.low-perf .app-bg-pattern {
+  background-image: none !important;
+}
+
+.low-perf .animate-spin {
+  animation: spin 1s linear infinite !important; /* Keep essential animations */
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
