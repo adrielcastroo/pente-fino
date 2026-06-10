@@ -5,9 +5,10 @@ import { Activity, Download, Eye, Package, ListChecks } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, LabelList, Legend,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend,
 } from 'recharts';
 import { usePerformance } from '@/hooks/use-performance';
+import { motion } from 'framer-motion';
 
 // Premium Color Palette
 const CHART_COLORS = [
@@ -23,14 +24,21 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl p-4 shadow-2xl shadow-black/10 animate-in fade-in zoom-in-95 duration-200">
-        <p className="text-[10px] font-black uppercase tracking-widest text-foreground/50 mb-2 border-b border-border/10 pb-2">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="rounded-2xl border border-white/20 bg-card/60 backdrop-blur-xl p-4 shadow-2xl shadow-black/20"
+      >
+        <p className="text-[10px] font-black uppercase tracking-widest text-foreground/50 mb-3 border-b border-border/10 pb-2">
           {label || data.name}
         </p>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           {payload.map((p: any, i: number) => (
             <div key={i} className="flex items-center justify-between gap-8">
-              <span className="text-xs font-medium text-foreground/70">{p.name}:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                <span className="text-xs font-bold text-foreground/70">{p.name}:</span>
+              </div>
               <span className="text-sm font-black tabular-nums" style={{ color: p.color }}>
                 {prefix}{p.value}{suffix}
               </span>
@@ -39,11 +47,11 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
           {data.inspectors && (
             <div className="mt-2 pt-2 border-t border-border/10">
                <span className="text-[10px] font-black uppercase text-foreground/40 block mb-1">Responsáveis:</span>
-               <span className="text-xs font-bold text-primary">{data.inspectors}</span>
+               <span className="text-xs font-bold text-primary truncate max-w-[200px]">{data.inspectors}</span>
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     );
   }
   return null;
