@@ -4,20 +4,17 @@ import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Packa
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { useDashboard } from '@/hooks/useDashboard';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart, InventoryTimelineChart } from '@/components/dashboard/DashboardCharts';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
-import { formatDateBR } from '@/lib/app-utils';
+import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
-import { motion, AnimatePresence } from 'framer-motion';
-
-function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
-
-
+import { motion } from 'framer-motion';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -590,5 +587,4 @@ export default function DashboardPage() {
       </Dialog>
     </motion.div>
   );
-}
 }
