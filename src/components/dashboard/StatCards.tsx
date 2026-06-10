@@ -10,6 +10,7 @@ interface StatCardProps {
   icon: LucideIcon;
   delay?: number;
   onClick: (id: string) => void;
+  className?: string;
 }
 
 export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick }: StatCardProps) => (
