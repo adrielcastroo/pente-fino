@@ -53,16 +53,16 @@ export default function MainLayout() {
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative app-bg-pattern">
+      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative app-bg-pattern selection:bg-primary/20">
         <AppSidebar activeTab={activeTab} onTabChange={() => {}} />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain">
-            <div className="min-h-full w-full max-w-[2000px] mx-auto">
+          <main className="flex-1 overflow-y-auto bg-background/20 custom-scrollbar relative overscroll-contain">
+            <div className="min-h-full w-full max-w-[2000px] mx-auto transition-all duration-300">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-2 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 3xl:p-16">
+                <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10">
                   <Outlet />
                 </div>
               </Suspense>

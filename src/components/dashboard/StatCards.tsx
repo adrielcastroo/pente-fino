@@ -1,6 +1,7 @@
 import React, { useMemo, memo } from 'react';
 import { ChevronRight, LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   id: string;
@@ -9,9 +10,10 @@ interface StatCardProps {
   icon: LucideIcon;
   delay?: number;
   onClick: (id: string) => void;
+  className?: string;
 }
 
-export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick }: StatCardProps) => (
+export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick, className }: StatCardProps) => (
   <motion.button 
     key={id}
     initial={{ opacity: 0, y: 20 }}
@@ -21,7 +23,10 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
     whileHover={{ y: -5, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={() => onClick(id)} 
-    className="group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[8rem] sm:min-h-[10rem] lg:min-h-[12rem]"
+    className={cn(
+      "group relative cursor-pointer rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/60 backdrop-blur-xl p-4 sm:p-6 lg:p-10 text-left transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[8rem] sm:min-h-[10rem] lg:min-h-[12rem]",
+      className
+    )}
     role="button"
   >
     <div className="flex items-center justify-between mb-4 sm:mb-8 relative z-10">
@@ -59,8 +64,8 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
-      {cards.map((s) => (
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-4 sm:pt-10 relative z-10 w-full">
+      {cards.map((s, idx) => (
         <StatCard 
           key={s.id} 
           id={s.id}
@@ -69,6 +74,7 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
           icon={iconMap[s.icon]} 
           delay={s.delay}
           onClick={onStatClick} 
+          className={idx === 2 ? "col-span-2 lg:col-span-1" : ""}
         />
       ))}
     </div>
