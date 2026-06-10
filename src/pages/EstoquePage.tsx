@@ -382,21 +382,21 @@ export default function EstoquePage() {
       </div>
 
       {/* Categoria Tabs */}
-      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] p-1.5 gap-1.5 border border-white/10 shadow-2xl max-w-md ring-1 ring-white/5">
+      <div className="flex bg-card/40 backdrop-blur-3xl rounded-xl sm:rounded-[1.5rem] p-1 sm:p-1.5 gap-1 sm:gap-1.5 border border-white/10 shadow-2xl max-w-md ring-1 ring-white/5 mx-auto sm:mx-0">
         {(['tecido', 'madeira'] as const).map((key) => {
           const Icon = key === 'tecido' ? Shirt : TreePine;
-          const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
+          const label = key === 'tecido' ? 'Tecidos' : 'Madeira';
           return (
             <button
               key={key}
               onClick={() => setCategory(key)}
-              className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-2.5 ${
+              className={`flex-1 py-2 sm:py-3.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-1.5 sm:gap-2.5 ${
                 category === key
                   ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {label}
             </button>
           );
