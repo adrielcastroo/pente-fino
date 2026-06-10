@@ -1653,12 +1653,15 @@ export const LeftPanel = memo(function LeftPanel() {
             )}
             <div className="col-span-2 pt-4 mt-1 border-t border-border/40">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Lote Sistema Gerado</p>
-              <div className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors"
+              >
                 {previewLoteSistema}
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Actions */}
         <div className="space-y-3 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
