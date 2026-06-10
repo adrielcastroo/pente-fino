@@ -1635,10 +1635,13 @@ export const LeftPanel = memo(function LeftPanel() {
         <div className="space-y-3 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <Button
             onClick={handleAdd}
-            className="w-full h-14 sm:h-16 rounded-2xl font-black text-sm sm:text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 group relative overflow-hidden"
           >
-            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-            Adicionar Registro
+            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
+            <span className="relative flex items-center justify-center gap-3">
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 group-hover:rotate-180" strokeWidth={3} />
+              Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
+            </span>
           </Button>
 
           {registros.length > 0 && (
