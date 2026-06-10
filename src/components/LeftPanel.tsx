@@ -7,7 +7,7 @@ import { printLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
-// animations removed for lightweight mode
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuth } from '@/hooks/use-auth';
@@ -970,8 +970,12 @@ export const LeftPanel = memo(function LeftPanel() {
         }}
       >
         
-        {/* "Novo registro" hero header — alinhado ao layout de referência */}
-        <div className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm">
+        {/* "Novo registro" hero header */}
+        <motion.div 
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.2 }}
+          className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm"
+        >
           <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             <ScanBarcode className="w-5 h-5" strokeWidth={2.2} />
           </div>
@@ -980,19 +984,20 @@ export const LeftPanel = memo(function LeftPanel() {
             <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">Aponte o leitor ou digite o código do item</p>
           </div>
           {(item || nf || m2 || lote || endereco || processo) && !isAI && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={resetForm}
               className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2 py-1 rounded-md hover:bg-destructive/10"
             >
               Limpar
-            </button>
+            </motion.button>
           )}
-        </div>
+        </motion.div>
 
-        {/* Mode Toggle — flex-wrap para resoluções estreitas (<340px) e
-            min-w-0 para permitir truncamento. Altura mínima 44px (touch target). */}
+        {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-2xl border border-border/40">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -1000,15 +1005,22 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider border ${
+                  className={`relative min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider ${
                     isActive
-                      ? 'bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]'
-                      : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-muted/30'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   aria-pressed={isActive}
                 >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{m.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="mode-bg"
+                      className="absolute inset-0 bg-primary rounded-xl shadow-md"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                    />
+                  )}
+                  <Icon className={`relative z-10 w-3.5 h-3.5 shrink-0 ${isActive ? 'text-primary-foreground' : ''}`} />
+                  <span className="relative z-10 truncate">{m.label}</span>
                 </button>
               );
             })}
@@ -1034,20 +1046,25 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories — Modernized segments */}
+        {/* Diversos categories */}
         {isDiversos && (
-          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
+          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto no-scrollbar">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
-                  diversosTipo === tipo
-                    ? 'bg-primary text-primary-foreground shadow-lg scale-105'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
+                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300`}
               >
-                {tipo}
+                {diversosTipo === tipo && (
+                  <motion.div
+                    layoutId="tipo-bg"
+                    className="absolute inset-0 bg-primary rounded-xl shadow-lg"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                  />
+                )}
+                <span className={`relative z-10 ${diversosTipo === tipo ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                  {tipo}
+                </span>
               </button>
             ))}
           </div>
@@ -1172,6 +1189,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Form Fields */}
         <div className="space-y-3">
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
             {/* PROCESSO */}
@@ -1600,8 +1618,11 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         </div>
 
-        {/* Preview Card — Modernized with depth and clarity */}
-        <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
+        {/* Preview Card */}
+        <motion.div 
+          whileHover={{ y: -2 }}
+          className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group"
+        >
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
           
           <div className="grid grid-cols-2 gap-4 relative z-10">
@@ -1636,25 +1657,40 @@ export const LeftPanel = memo(function LeftPanel() {
             )}
             <div className="col-span-2 pt-4 mt-1 border-t border-border/40">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Lote Sistema Gerado</p>
-              <div className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors"
+              >
                 {previewLoteSistema}
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Actions */}
         <div className="space-y-3 pb-6 pt-2 sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
-          <Button
-            onClick={handleAdd}
-            className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 group relative overflow-hidden"
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
-            <span className="relative flex items-center justify-center gap-3">
-              <Plus className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 group-hover:rotate-180" strokeWidth={3} />
-              Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
-            </span>
-          </Button>
+            <Button
+              onClick={handleAdd}
+              className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
+              <span className="relative flex items-center justify-center gap-3">
+                <motion.div
+                  initial={false}
+                  animate={{ rotate: 0 }}
+                  whileHover={{ rotate: 180 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Plus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                </motion.div>
+                Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
+              </span>
+            </Button>
+          </motion.div>
 
           {registros.length > 0 && (
             <Button
@@ -1662,35 +1698,58 @@ export const LeftPanel = memo(function LeftPanel() {
               onClick={() => setShowPreview(!showPreview)}
               className="w-full h-10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40 shadow-sm"
             >
-              {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-              {showPreview ? 'Ocultar Resumo' : `Ver Resumo (${registros.length})`}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={showPreview ? 'hide' : 'show'}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="flex items-center"
+                >
+                  {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                  {showPreview ? 'Ocultar Resumo' : `Ver Resumo (${registros.length})`}
+                </motion.div>
+              </AnimatePresence>
             </Button>
           )}
 
-          {showPreview && registros.length > 0 && (
-            <div className="rounded-xl border border-border/50 overflow-hidden">
-              <div className="max-h-[250px] overflow-auto custom-scrollbar">
-                <table className="w-full text-[11px]">
-                  <thead className="sticky top-0 bg-muted/90 z-10">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">#</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Referência</th>
-                      <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lote Sistema</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/20">
-                    {registros.slice(-10).reverse().map((r, i) => (
-                      <tr key={r.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-3 py-2 font-mono text-muted-foreground">{registros.length - i}</td>
-                        <td className="px-3 py-2 font-medium">{r.item}</td>
-                        <td className="px-3 py-2 font-mono text-primary/80">{r.loteSistema}</td>
+          <AnimatePresence>
+            {showPreview && registros.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-xl border border-border/50 overflow-hidden bg-muted/10 shadow-inner"
+              >
+                <div className="max-h-[250px] overflow-auto custom-scrollbar p-1">
+                  <table className="w-full text-[11px]">
+                    <thead className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">#</th>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">Referência</th>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">Lote Sistema</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                    </thead>
+                    <tbody className="divide-y divide-border/20">
+                      {registros.slice(-10).reverse().map((r, i) => (
+                        <motion.tr 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          key={r.id} 
+                          className="hover:bg-primary/5 transition-colors group"
+                        >
+                          <td className="px-3 py-2 font-mono text-muted-foreground/60">{registros.length - i}</td>
+                          <td className="px-3 py-2 font-bold text-foreground/80">{r.item}</td>
+                          <td className="px-3 py-2 font-mono text-primary/70 group-hover:text-primary transition-colors">{r.loteSistema}</td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {isDuplicate && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-center gap-2">
