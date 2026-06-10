@@ -379,7 +379,7 @@ export default function RightPanel() {
   const showActions = true;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background rounded-2xl border border-border/50">
+    <div className="flex flex-col h-full overflow-hidden bg-background rounded-3xl border border-border/50 shadow-2xl transition-all duration-500">
       {undoStack.length > 0 && (
         <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
           <div className="flex items-center gap-3 text-white font-bold">
@@ -397,14 +397,14 @@ export default function RightPanel() {
         </div>
       )}
 
-      <div className="px-2 xs:px-4 py-3 sm:py-3.5 bg-card/60 border-b border-border/40 flex flex-col gap-3 flex-shrink-0">
-        <div className="flex flex-row items-center gap-2 sm:gap-4">
+      <div className="px-4 xs:px-6 py-4 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
+        <div className="flex flex-row items-center gap-3 sm:gap-5">
           <div className="relative flex-1 group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
             <input 
               value={localSearch} 
               onChange={e => setLocalSearch(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/40" 
+              className="w-full h-12 pl-12 pr-4 rounded-2xl border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-8 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30 shadow-inner" 
               placeholder="Buscar material, lote ou endereço..." 
               autoComplete="off" 
             />
@@ -433,7 +433,7 @@ export default function RightPanel() {
                     variant="outline" 
                     size="icon" 
                     onClick={handleClearAll} 
-                    className="h-11 w-11 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95"
+                    className="h-12 w-12 rounded-2xl border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 hover:rotate-12 transition-all active:scale-95 shadow-sm"
                   >
                     <Trash2 className="w-5 h-5" />
                   </Button>
@@ -458,15 +458,15 @@ export default function RightPanel() {
             ].map((k, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 rounded-xl border border-border/50 bg-background px-3 py-2.5 min-w-[160px] sm:min-w-[180px] hover:border-primary/30 hover:shadow-sm transition-all"
+                className="flex items-center gap-4 rounded-2xl border border-border/50 bg-background px-4 py-3.5 min-w-[170px] sm:min-w-[200px] hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${k.bg} ${k.color} flex items-center justify-center`}>
-                  <k.icon className="w-5 h-5" strokeWidth={2.2} />
+                <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${k.bg} ${k.color} flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}>
+                  <k.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-muted-foreground/80 truncate">{k.label}</span>
-                  <span className="text-base sm:text-lg font-black text-foreground leading-tight font-mono truncate">{k.value}</span>
-                  <span className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-medium truncate">{k.sub}</span>
+                  <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground/50 truncate mb-0.5">{k.label}</span>
+                  <span className="text-lg sm:text-xl font-black text-foreground leading-tight font-mono truncate">{k.value}</span>
+                  <span className="text-[10px] text-muted-foreground/60 font-bold truncate mt-0.5">{k.sub}</span>
                 </div>
               </div>
             ))}
