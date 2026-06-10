@@ -1617,8 +1617,11 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         </div>
 
-        {/* Preview Card — Modernized with depth and clarity */}
-        <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
+        {/* Preview Card */}
+        <motion.div 
+          whileHover={{ y: -2 }}
+          className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group"
+        >
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
           
           <div className="grid grid-cols-2 gap-4 relative z-10">
