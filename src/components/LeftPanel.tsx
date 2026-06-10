@@ -1071,13 +1071,18 @@ export const LeftPanel = memo(function LeftPanel() {
                 </button>
               ))}
             </div>
-            {/* Próximo CX preview */}
-            <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <Package className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Próxima Caixa</span>
+            {/* Próximo CX preview — Modernized card */}
+            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner group hover:border-primary/40 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:rotate-12">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">Próxima Caixa</span>
+                  <span className="block text-xs font-medium text-muted-foreground/80">Automático</span>
+                </div>
               </div>
-              <span className="font-mono text-sm font-bold text-primary">
+              <span className="font-mono text-lg font-black text-primary tracking-tighter">
                 {processo.trim()
                   ? (generateLoteSistemaCaixa(processo.trim(), '-', 0, registros).match(/^CX\d+/)?.[0] ?? 'CX01')
                   : 'CX01'}
