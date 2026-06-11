@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { useTheme } from 'next-themes';
 import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ function formatDuration(start: string | null | undefined, end: string | null | u
   } catch { return '—'; }
 }
 
-export default function DashboardPage() {
+const DashboardPage = () => {
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const { theme: systemTheme } = useTheme();
   const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
