@@ -1120,3 +1120,5 @@ const EstoquePage = () => {
     </motion.div>
   );
 }
+
+export default memo(EstoquePage);
