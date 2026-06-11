@@ -483,18 +483,18 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                       variant="ghost"
                       size="icon"
                       onClick={() => setEditingRegistro(r)}
-                      className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                      className="h-10 w-10 sm:h-8 sm:w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Pencil className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     </Button>
                     {!isGuest && (
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeleteItem(r.id)}
-                        className="h-8 w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+                        className="h-10 w-10 sm:h-8 sm:w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       </Button>
                     )}
                   </div>
