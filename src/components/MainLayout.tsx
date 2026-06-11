@@ -12,20 +12,14 @@ import { AppTab } from '@/types';
 const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = () => (
-  <div className="p-4 sm:p-8 space-y-8 animate-pulse">
-    <div className="flex items-center gap-4">
-       <div className="h-12 w-12 bg-muted rounded-2xl" />
-       <div className="space-y-2">
-         <div className="h-8 bg-muted rounded-xl w-48" />
-         <div className="h-4 bg-muted rounded-lg w-32 opacity-50" />
-       </div>
+  <div className="p-4 sm:p-8 space-y-4">
+    <div className="h-8 bg-muted rounded w-1/4" />
+    <div className="h-32 bg-muted rounded w-full" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div className="h-48 bg-muted rounded-[2rem]" />
-      <div className="h-48 bg-muted rounded-[2rem]" />
-      <div className="h-48 bg-muted rounded-[2rem]" />
-    </div>
-    <div className="h-96 bg-muted rounded-[2rem] w-full" />
   </div>
 );
 
@@ -68,7 +62,7 @@ export default function MainLayout() {
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain">
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10">
+                <div className="p-2 sm:p-4 lg:p-8 xl:p-10 2xl:p-12 3xl:p-16">
                   <Outlet />
                 </div>
               </Suspense>

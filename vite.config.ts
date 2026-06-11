@@ -13,35 +13,27 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: "esnext",
-    minify: "esbuild",
+    target: "esnext", // Modern browsers only
+    minify: "esbuild", // Fast minification
     cssCodeSplit: true,
-    reportCompressedSize: false,
-    chunkSizeWarningLimit: 1000,
+    reportCompressedSize: false, // Performance improvement during build
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor-core';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'vendor-ui';
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
-            }
-            if (id.includes('xlsx') || id.includes('exceljs') || id.includes('jspdf')) {
-              return 'vendor-export';
-            }
-            return 'vendor-utils';
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tooltip',
+          ],
+          'vendor-motion': ['framer-motion'],
+          'vendor-charts': ['recharts'],
+          'vendor-utils': ['date-fns', 'zod', 'zustand', '@tanstack/react-query'],
         },
       },
     },

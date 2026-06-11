@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, memo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -31,7 +31,7 @@ function formatDuration(start: string | null | undefined, end: string | null | u
   } catch { return '—'; }
 }
 
-const DashboardPage = () => {
+export default function DashboardPage() {
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const { theme: systemTheme } = useTheme();
   const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
@@ -67,7 +67,6 @@ const DashboardPage = () => {
 
   // Conference summary list (only 50 recent)
   const conferenceSummary = useMemo(() => {
-    if (!history?.length) return [];
     return history.slice(0, 50).map(conf => ({
       id: conf.id,
       name: conf.processo || conf.name,
@@ -75,24 +74,22 @@ const DashboardPage = () => {
       date: conf.date,
       startedAt: conf.startedAt,
       finishedAt: conf.finishedAt,
-      registros: conf.registros?.length || 0,
+      registros: conf.registros.length,
       duration: formatDuration(conf.startedAt, conf.finishedAt),
     }));
   }, [history]);
 
   // Registros per conference (only top 30)
   const registrosPerConference = useMemo(() => {
-    if (!history?.length) return [];
     return history.slice(0, 30).map(conf => ({
       name: (conf.processo || conf.name || '').slice(0, 20),
-      value: conf.registros?.length || 0,
+      value: conf.registros.length,
     }));
   }, [history]);
 
   const lastOutputs = useMemo(() => {
-    if (!history?.length) return [];
     const allRegistros = history.flatMap(conf => 
-      (conf.registros || []).map((reg, idx) => ({
+      conf.registros.map((reg, idx) => ({
         id: `${conf.id}-${reg.id || idx}`,
         date: conf.date,
         item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
@@ -108,9 +105,8 @@ const DashboardPage = () => {
   }, [history]);
 
   const allRegistrosDetailed = useMemo(() => {
-    if (!history?.length) return [];
     return history.flatMap(conf => 
-      (conf.registros || []).map(reg => ({
+      conf.registros.map(reg => ({
         ...reg,
         conferenceName: conf.processo || conf.name,
         date: conf.date
@@ -120,8 +116,8 @@ const DashboardPage = () => {
 
   if (isHistoryLoading && history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4" key="loading">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
         <p className="text-foreground/70 font-black animate-pulse uppercase tracking-wider text-sm">Carregando dados do dashboard...</p>
       </div>
     );
@@ -178,6 +174,14 @@ const DashboardPage = () => {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
           >
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
+              <Clock className="w-5 h-5 text-primary/70 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
+                <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
+              </div>
+            </div>
+            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -199,23 +203,26 @@ const DashboardPage = () => {
             </Tooltip>
           </motion.div>
         </div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-card/40 backdrop-blur-md w-fit transition-all hover:bg-card/60"
+        >
+          <Clock className="w-4 h-4 text-primary/70 shrink-0" />
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black text-foreground/50 uppercase tracking-widest">Sessão:</span>
+            <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
+          </div>
+        </motion.div>
       </header>
       
       {/* Cyclic Inventory Notification */}
       <CyclicNotification />
 
       {/* Stat Cards - Consolidated and Optimized */}
-      <StatCards stats={stats} onStatClick={(id) => {
-        if (id === 'conferenteDetails') {
-           setDetailChart({ title: 'Top Conferentes', data: stats.topConferentes, type: 'bar' });
-        } else if (id === 'registros') {
-           setDetailChart({ title: 'Volume por Setor', data: stats.categorias, type: 'pie' });
-        } else {
-           setDetailDialog(id);
-        }
-      }} />
-
-      <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
+      <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
 
 
       {/* Charts Grid */}
@@ -581,5 +588,3 @@ const DashboardPage = () => {
     </motion.div>
   );
 }
-
-export default memo(DashboardPage);

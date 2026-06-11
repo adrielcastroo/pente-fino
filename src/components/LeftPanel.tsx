@@ -31,7 +31,7 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
-const LeftPanel = memo(function LeftPanel() {
+export const LeftPanel = memo(function LeftPanel() {
   const {
     currentMode, setMode, processo, setProcesso, conferente, registros,
     addRegistro, undoStack, undo: undoAction,

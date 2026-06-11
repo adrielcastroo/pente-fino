@@ -87,17 +87,11 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
       <CardContent className="px-8 pb-12 pt-10 h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
             <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
             <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
             <ChartTooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#areaGradient)" animationDuration={1000} />
+            <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary) / 0.1)" />
           </AreaChart>
         </ResponsiveContainer>
       </CardContent>
@@ -126,14 +120,14 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
       <CardContent className="px-8 pb-8 h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
-            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={data}>
               <XAxis dataKey="name" fontSize={9} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-              <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} animationDuration={1000} />
+              <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
               <ChartTooltip content={<CustomTooltip />} />
             </BarChart>
           ) : (
             <PieChart>
-              <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent" animationDuration={1000}>
+              <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
                 {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <ChartTooltip content={<CustomTooltip />} />
@@ -169,7 +163,7 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
         <div className="relative w-[240px] h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450} animationDuration={1000}>
+              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450}>
                 {data.map((entry, index) => <Cell key={index} fill={entry.color} />)}
               </Pie>
             </PieChart>
@@ -249,8 +243,8 @@ export const InventoryTimelineChart = () => {
             <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
             <ChartTooltip content={<CustomTooltip />} />
             <Legend verticalAlign="top" height={36}/>
-            <Bar dataKey="counts" name="Total Contagens" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} animationDuration={1000} />
-            <Bar dataKey="divergence" name="Volume Divergência" fill="#f43f5e" radius={[4, 4, 0, 0]} animationDuration={1000} />
+            <Bar dataKey="counts" name="Total Contagens" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="divergence" name="Volume Divergência" fill="#f43f5e" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

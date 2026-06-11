@@ -1,8 +1,6 @@
 import { Conference, AppStats } from '@/types';
 import { TOTAL_SLOTS } from './app-utils';
 
-const DEFAULT_OCCUPATION = { used: 0, total: 0, reserved: 0, blocked: 0 };
-
 export const computeStats = (history: Conference[], stats_estoque: any): AppStats => {
   const totalConferentes = new Set(history.map(h => h.conferente)).size;
   const totalConferencias = history.length;

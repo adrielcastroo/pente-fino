@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
 import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
@@ -626,22 +626,22 @@ export const useAppStore = create<AppState>()(
             return null;
           }
         },
-        setItem: (name, value) => {
-          // Robust debounce for storage persistence
-          const win = window as any;
-          if (win._persisterTimer) {
-            clearTimeout(win._persisterTimer);
-          }
-          win._persisterValue = value;
-          win._persisterTimer = setTimeout(() => {
-            try {
-              localStorage.setItem(name, JSON.stringify(win._persisterValue));
-            } catch (e) {
-              console.error('Error persisting state:', e);
-            }
-            win._persisterTimer = null;
-          }, 2000); // 2s debounce to minimize disk I/O
-        },
+         setItem: (name, value) => {
+           // More robust debounce for storage persistence
+           const global = window as any;
+           if (global._persisterTimer) {
+             clearTimeout(global._persisterTimer);
+           }
+           global._persisterValue = value;
+           global._persisterTimer = setTimeout(() => {
+             try {
+               localStorage.setItem(name, JSON.stringify(global._persisterValue));
+             } catch (e) {
+               console.error('Error persisting state:', e);
+             }
+             global._persisterTimer = null;
+           }, 1000);
+         },
         removeItem: (name) => localStorage.removeItem(name),
       },
       partialize: (state) => ({

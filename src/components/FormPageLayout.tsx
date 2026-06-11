@@ -1,16 +1,15 @@
-import { ReactNode, useState, memo, lazy, Suspense } from 'react';
+import { ReactNode, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import RightPanel from '@/components/RightPanel';
 import { Button } from '@/components/ui/button';
-import { List, ClipboardList, Loader2 } from 'lucide-react';
-
-const RightPanel = lazy(() => import('@/components/RightPanel'));
+import { List, ClipboardList } from 'lucide-react';
 
 interface FormPageLayoutProps {
   children: ReactNode;
   showRightPanel?: boolean;
 }
 
-const FormPageLayout = ({ children, showRightPanel = true }: FormPageLayoutProps) => {
+export default function FormPageLayout({ children, showRightPanel = true }: FormPageLayoutProps) {
   const isMobile = useIsMobile();
   const [showTableMobile, setShowTableMobile] = useState(false);
 
@@ -25,9 +24,7 @@ const FormPageLayout = ({ children, showRightPanel = true }: FormPageLayoutProps
             {children}
           </div>
           <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500">
-            <Suspense fallback={<div className="h-full w-full flex items-center justify-center bg-card/20 rounded-3xl animate-pulse"><Loader2 className="w-10 h-10 animate-spin text-primary/20" /></div>}>
-              <RightPanel />
-            </Suspense>
+            <RightPanel />
           </div>
         </div>
       );
@@ -39,9 +36,7 @@ const FormPageLayout = ({ children, showRightPanel = true }: FormPageLayoutProps
         <div className="flex-1 overflow-y-auto pb-20">
           {showTableMobile ? (
             <div className="animate-in slide-in-from-right-4 duration-300 h-full">
-              <Suspense fallback={<div className="h-full w-full flex items-center justify-center animate-pulse"><Loader2 className="w-10 h-10 animate-spin text-primary/20" /></div>}>
-                <RightPanel />
-              </Suspense>
+              <RightPanel />
             </div>
           ) : (
             <div className="animate-in slide-in-from-left-4 duration-300">
@@ -69,6 +64,4 @@ const FormPageLayout = ({ children, showRightPanel = true }: FormPageLayoutProps
       {children}
     </div>
   );
-};
-
-export default memo(FormPageLayout);
+}

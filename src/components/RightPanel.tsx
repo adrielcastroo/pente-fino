@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
-import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2, FileText, Layers3, Clock, Info, Tag, Loader2 } from 'lucide-react';
+import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2, FileText, Layers3, Clock, Info, Tag } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -190,7 +190,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 
 TableRow.displayName = 'TableRow';
 
-const RightPanel = () => {
+export default function RightPanel() {
   const { isGuest } = useAuth();
   const {
     registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
@@ -582,7 +582,7 @@ const RightPanel = () => {
                         key={column.key} 
                         className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background ${responsiveClass}`}
                       >
-                        {column.label}
+                        {column.shortLabel || column.label}
                       </th>
                     );
                   })}
@@ -635,11 +635,9 @@ const RightPanel = () => {
             </table>
           )}
 
-          {sortedRows.length > 0 && sortedRows.length > visibleCount && (
-            <div className="flex flex-col items-center justify-center py-10 gap-3 border border-dashed border-border/30 rounded-3xl bg-muted/5 opacity-60 m-4">
-              <Loader2 className="w-8 h-8 text-primary/40 animate-spin" />
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest italic">Aguardando mais registros...</p>
-              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6 mt-2">
+          {sortedRows.length > visibleCount && (
+            <div className="p-4 flex justify-center border-t border-border/10 bg-muted/5">
+              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6">
                 Carregar mais registros ({sortedRows.length - visibleCount} restantes)
               </Button>
             </div>
@@ -705,5 +703,3 @@ const RightPanel = () => {
     </div>
   );
 }
-
-export default memo(RightPanel);

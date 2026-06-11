@@ -1,13 +1,11 @@
 
-import { useEffect, memo, lazy, Suspense } from 'react';
+import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import LeftPanel from '@/components/LeftPanel';
+import FormPageLayout from '@/components/FormPageLayout';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
 
-const LeftPanel = lazy(() => import('@/components/LeftPanel'));
-const FormPageLayout = lazy(() => import('@/components/FormPageLayout'));
-
-const TecidoPage = () => {
+export default function TecidoPage() {
   const setMode = useAppStore(s => s.setMode);
   const currentMode = useAppStore(s => s.currentMode);
   const setFormData = useAppStore(s => s.setFormData);
@@ -26,13 +24,9 @@ const TecidoPage = () => {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="h-full w-full"
     >
-      <Suspense fallback={<div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>}>
-        <FormPageLayout>
-          <LeftPanel />
-        </FormPageLayout>
-      </Suspense>
+      <FormPageLayout>
+        <LeftPanel />
+      </FormPageLayout>
     </motion.div>
   );
-};
-
-export default memo(TecidoPage);
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, memo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ const AVARIA_LABELS: Record<string, string> = {
   outro: 'Outro',
 };
 
-const MadeiraEstoque = () => {
+export default function MadeiraEstoque() {
   const [rows, setRows] = useState<MadeiraRow[]>([]);
   const [lotes, setLotes] = useState<LoteMestre[]>([]);
   const [loading, setLoading] = useState(true);
@@ -280,8 +280,6 @@ const MadeiraEstoque = () => {
     </div>
   );
 }
-
-export default memo(MadeiraEstoque);
 
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (

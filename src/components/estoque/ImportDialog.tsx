@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, memo } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -141,7 +141,7 @@ async function downloadTemplate() {
   }
 }
 
-const ImportDialog = ({ open, onOpenChange, onImportComplete }: ImportDialogProps) => {
+export default function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDialogProps) {
   const conferente = useAppStore(s => s.conferente);
   const [step, setStep] = useState<'upload' | 'preview'>('upload');
   const [parsedRows, setParsedRows] = useState<ImportRow[]>([]);
@@ -476,5 +476,3 @@ const ImportDialog = ({ open, onOpenChange, onImportComplete }: ImportDialogProp
     </Dialog>
   );
 }
-
-export default memo(ImportDialog);
