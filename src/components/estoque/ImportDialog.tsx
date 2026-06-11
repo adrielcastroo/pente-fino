@@ -476,3 +476,5 @@ const ImportDialog = ({ open, onOpenChange, onImportComplete }: ImportDialogProp
     </Dialog>
   );
 }
+
+export default memo(ImportDialog);
