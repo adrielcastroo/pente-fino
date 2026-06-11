@@ -602,3 +602,5 @@ const DashboardPage = () => {
     </motion.div>
   );
 }
+
+export default memo(DashboardPage);
