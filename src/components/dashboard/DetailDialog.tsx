@@ -235,14 +235,16 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
     </div>
       
       <div className={cn(
-        "p-4 sm:p-6 border-t flex justify-end flex-none",
-        isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10"
+        "p-6 sm:p-10 border-t flex justify-end flex-none",
+        isDark ? "bg-[#0F172A]/80 border-slate-800" : "bg-slate-50 border-slate-200/40"
       )}>
         <Button 
           variant="outline" 
           className={cn(
-            "rounded-xl font-bold text-sm px-8 h-12 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-[0.97]",
-            isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB] hover:border-[#2563EB]"
+            "rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] px-12 h-14 transition-all duration-300 active:scale-[0.95] border-2",
+            isDark 
+              ? "border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" 
+              : "border-slate-200 text-[#1E40AF] hover:bg-slate-100 hover:border-[#1E40AF]"
           )} 
           onClick={onClose}
         >
