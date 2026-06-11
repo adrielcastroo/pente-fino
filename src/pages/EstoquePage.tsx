@@ -572,6 +572,7 @@ export default function EstoquePage() {
       )}
         </>
       )}
+      </Suspense>
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
