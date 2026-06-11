@@ -67,6 +67,7 @@ export default function DashboardPage() {
 
   // Conference summary list (only 50 recent)
   const conferenceSummary = useMemo(() => {
+    if (!history?.length) return [];
     return history.slice(0, 50).map(conf => ({
       id: conf.id,
       name: conf.processo || conf.name,
@@ -74,22 +75,24 @@ export default function DashboardPage() {
       date: conf.date,
       startedAt: conf.startedAt,
       finishedAt: conf.finishedAt,
-      registros: conf.registros.length,
+      registros: conf.registros?.length || 0,
       duration: formatDuration(conf.startedAt, conf.finishedAt),
     }));
   }, [history]);
 
   // Registros per conference (only top 30)
   const registrosPerConference = useMemo(() => {
+    if (!history?.length) return [];
     return history.slice(0, 30).map(conf => ({
       name: (conf.processo || conf.name || '').slice(0, 20),
-      value: conf.registros.length,
+      value: conf.registros?.length || 0,
     }));
   }, [history]);
 
   const lastOutputs = useMemo(() => {
+    if (!history?.length) return [];
     const allRegistros = history.flatMap(conf => 
-      conf.registros.map((reg, idx) => ({
+      (conf.registros || []).map((reg, idx) => ({
         id: `${conf.id}-${reg.id || idx}`,
         date: conf.date,
         item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
@@ -105,8 +108,9 @@ export default function DashboardPage() {
   }, [history]);
 
   const allRegistrosDetailed = useMemo(() => {
+    if (!history?.length) return [];
     return history.flatMap(conf => 
-      conf.registros.map(reg => ({
+      (conf.registros || []).map(reg => ({
         ...reg,
         conferenceName: conf.processo || conf.name,
         date: conf.date
