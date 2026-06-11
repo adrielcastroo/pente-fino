@@ -808,4 +808,6 @@ export default function HistoryPanel() {
       </Dialog>
     </div>
   );
-}
+};
+
+export default memo(HistoryPanel);
