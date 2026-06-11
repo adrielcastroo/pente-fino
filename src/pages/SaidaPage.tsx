@@ -32,7 +32,7 @@ interface SaidaRegistro {
   observacoes?: string;
 }
 
-export default function SaidaPage() {
+const SaidaPage = () => {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
