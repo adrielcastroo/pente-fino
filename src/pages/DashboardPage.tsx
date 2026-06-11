@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -222,7 +222,9 @@ export default function DashboardPage() {
       <CyclicNotification />
 
       {/* Stat Cards - Consolidated and Optimized */}
-      <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
+      <StatCards stats={stats} onStatClick={setDetailDialog} />
+
+      <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
 
       {/* Charts Grid */}

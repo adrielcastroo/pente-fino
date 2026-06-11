@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { apiService } from '@/services/api';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
 import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
