@@ -356,7 +356,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="lg:col-span-4 h-full">
+        <div className="md:col-span-1 lg:col-span-4 h-full">
           <SummaryChart
             id="chart-sessoes"
             title="Histórico de Sessões"
