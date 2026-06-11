@@ -155,7 +155,11 @@
   }
 
   button, input, select, textarea {
-    @apply transition-all duration-75 ease-in-out; /* Reduced duration */
+    @apply transition-all duration-75 ease-in-out;
+  }
+  
+  img {
+    content-visibility: auto;
   }
 
   .font-mono {
@@ -239,15 +243,16 @@
   text-shadow: none !important;
   filter: none !important;
   backdrop-filter: none !important;
+  transform: none !important;
 }
 
 .low-perf .animate-spin {
-  animation: spin 1s linear infinite !important; /* Keep essential animations for UX */
+  animation: spin 1s linear infinite !important;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.low-perf .framer-motion-content {
+  transform: none !important;
+  opacity: 1 !important;
 }
 
 /* Accessibility: Focus visible improvements */

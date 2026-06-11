@@ -16,19 +16,22 @@ export function useDashboard() {
 
   const fetchDbStats = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from('estoque_posicoes').select('status');
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('status', { count: 'exact', head: false }); // Light query
+      
       if (error) throw error;
       
       const stats = {
         tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
-        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 } // Madeira is usually different, keeping placeholder
+        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 }
       };
 
-      data?.forEach(p => {
+      for (const p of (data || [])) {
         if (p.status === 'ocupado') stats.tecido.used++;
         else if (p.status === 'reservado') stats.tecido.reserved++;
         else if (p.status === 'bloqueado') stats.tecido.blocked++;
-      });
+      }
 
       setDbStats(stats);
     } catch (e) {

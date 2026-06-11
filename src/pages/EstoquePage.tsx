@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine, ArrowLeft, LayoutDashboard, Barcode, Warehouse } from 'lucide-react';
-import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -16,8 +15,10 @@ import { usePerformance } from '@/hooks/use-performance';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
+
+const MadeiraEstoque = lazy(() => import('@/components/estoque/MadeiraEstoque'));
+const ImportDialog = lazy(() => import('@/components/estoque/ImportDialog'));
 
 
 interface Posicao {
@@ -66,7 +67,7 @@ const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => 
 // Reuse centralized formatter
 import { formatDateBR } from '@/lib/app-utils';
 
-export default function EstoquePage() {
+const EstoquePage = () => {
   const { isGuest } = useAuth();
   const navigate = useNavigate();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
@@ -404,10 +405,11 @@ export default function EstoquePage() {
         })}
       </div>
 
-      {category === 'madeira' ? (
-        <MadeiraEstoque />
-      ) : (
-        <>
+      <Suspense fallback={<div className="h-64 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}>
+        {category === 'madeira' ? (
+          <MadeiraEstoque />
+        ) : (
+          <>
       {/* Stats Cards */}
       <div className="w-full pb-4 px-0">
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
@@ -570,6 +572,7 @@ export default function EstoquePage() {
       )}
         </>
       )}
+      </Suspense>
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
@@ -1117,3 +1120,5 @@ export default function EstoquePage() {
     </motion.div>
   );
 }
+
+export default memo(EstoquePage);

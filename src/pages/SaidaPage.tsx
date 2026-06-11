@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
@@ -32,7 +32,7 @@ interface SaidaRegistro {
   observacoes?: string;
 }
 
-export default function SaidaPage() {
+const SaidaPage = () => {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -401,3 +401,5 @@ export default function SaidaPage() {
     </div>
   );
 }
+
+export default memo(SaidaPage);

@@ -1,15 +1,16 @@
-import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect, memo, lazy, Suspense } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock, Package, Hash, Info } from 'lucide-react';
+import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock, Package, Hash, Info, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
-import FormPageLayout from '@/components/FormPageLayout';
 import { parseCoulisseString } from '@/lib/app-utils';
 import { printLabel } from '@/services/printService';
+
+const FormPageLayout = lazy(() => import('@/components/FormPageLayout'));
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
 
@@ -36,7 +37,7 @@ function sanitize(v: string) {
   return v.replace(/[`''']/g, '-');
 }
 
-export default function MotorControlePage() {
+const MotorControlePage = () => {
   const { registros, history, addRegistro, setMode, formData, setFormData, resetMotorFormData, lockMotorModelo, setLockMotorModelo, lockMotorNf, setLockMotorNf, labelSettings } = useAppStore();
   const { isLow } = usePerformance();
   
@@ -211,202 +212,232 @@ export default function MotorControlePage() {
   }, [coulisseModeloProcCx, coulisseLote, isDuplicate, addRegistro, resetMotorFormData, labelSettings]);
 
   return (
-    <FormPageLayout>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col min-h-screen bg-background">
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 space-y-5 pb-24">
-          <motion.div 
-            whileHover={{ scale: 1.01 }}
-            className="rounded-3xl border bg-card/40 backdrop-blur-md p-5 flex items-center gap-5 shadow-xl shadow-black/5 border-white/10"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
-              <ScanBarcode className="w-7 h-7" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-black text-foreground tracking-tight">Novo registro</h2>
-              <p className="text-xs text-muted-foreground/80 font-medium">
-                {subMode === 'coulisse' ? 'Bipe o lote da Coulisse' : `Bipe a série do ${subMode}`}
-              </p>
-            </div>
-            {(modelo || nf || serie || coulisseModeloProcCx) && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={resetFields} 
-                className="text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full"
-              >
-                LIMPAR
-              </Button>
-            )}
-          </motion.div>
-
-          <div className="flex bg-card/50 p-1.5 rounded-[2rem] border border-white/5 shadow-inner">
-            {(['motor', 'controle', 'coulisse'] as SubMode[]).map(mode => (
-              <button 
-                key={mode} 
-                onClick={() => handleSubModeChange(mode)} 
-                className={`flex-1 py-3.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all duration-300 relative ${
-                  subMode === mode 
-                    ? 'text-primary-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {subMode === mode && (
-                  <motion.div 
-                    layoutId="activeSubMode" 
-                    className="absolute inset-0 bg-primary rounded-full shadow-lg shadow-primary/30" 
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10">{mode === 'motor' ? 'Motores' : mode === 'controle' ? 'Controles' : 'Coulisse'}</span>
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
+    <Suspense fallback={<div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>}>
+      <FormPageLayout>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col min-h-screen bg-background">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 space-y-5 pb-24">
             <motion.div 
-              key={subMode}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              className="space-y-4"
+              whileHover={{ scale: 1.01 }}
+              className="rounded-3xl border bg-card/40 backdrop-blur-md p-5 flex items-center gap-5 shadow-xl shadow-black/5 border-white/10"
             >
-              {subMode === 'motor' && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 shadow-sm"
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                <ScanBarcode className="w-7 h-7" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-black text-foreground tracking-tight">Novo registro</h2>
+                <p className="text-xs text-muted-foreground/80 font-medium">
+                  {subMode === 'coulisse' ? 'Bipe o lote da Coulisse' : `Bipe a série do ${subMode}`}
+                </p>
+              </div>
+              {(modelo || nf || serie || coulisseModeloProcCx) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={resetFields} 
+                  className="text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full"
                 >
-                  <Switch 
-                    checked={temCaixa} 
-                    onCheckedChange={setTemCaixa} 
-                    className="data-[state=checked]:bg-primary"
-                  />
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Armazenado em Caixa</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Habilitar controle por caixa</p>
-                  </div>
-                  {temCaixa && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center gap-2 bg-background/80 p-1.5 rounded-xl border border-primary/20"
-                    >
-                      <span className="text-[10px] font-black text-primary px-2">Nº</span>
-                      <input
-                        type="text" inputMode="numeric" value={caixaNum}
-                        onChange={e => setCaixaNum(e.target.value.replace(/\D/g, ''))}
-                        className="w-12 bg-transparent text-center text-sm font-black text-primary outline-none"
-                      />
-                    </motion.div>
-                  )}
-                </motion.div>
+                  LIMPAR
+                </Button>
               )}
+            </motion.div>
 
-              <div className="grid gap-3">
-                {subMode === 'coulisse' ? (
-                  <>
-                    <div className="group space-y-1.5">
-                      <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Proc / Cx</label>
-                        <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
-                          {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                      <input 
-                        value={coulisseModeloProcCx} 
-                        onChange={e => setCoulisseModeloProcCx(sanitize(e.target.value))} 
-                        placeholder="Ex: MOTION CM-01 PROC 1234 CX01" 
-                        className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
-                      />
+            <div className="flex bg-card/50 p-1.5 rounded-[2rem] border border-white/5 shadow-inner">
+              {(['motor', 'controle', 'coulisse'] as SubMode[]).map(mode => (
+                <button 
+                  key={mode} 
+                  onClick={() => handleSubModeChange(mode)} 
+                  className={`flex-1 py-3.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all duration-300 relative ${
+                    subMode === mode 
+                      ? 'text-primary-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {subMode === mode && (
+                    <motion.div 
+                      layoutId="activeSubMode" 
+                      className="absolute inset-0 bg-primary rounded-full shadow-lg shadow-primary/30" 
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">{mode === 'motor' ? 'Motores' : mode === 'controle' ? 'Controles' : 'Coulisse'}</span>
+                </button>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={subMode}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="space-y-4"
+              >
+                {subMode === 'motor' && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 shadow-sm"
+                  >
+                    <Switch 
+                      checked={temCaixa} 
+                      onCheckedChange={setTemCaixa} 
+                      className="data-[state=checked]:bg-primary"
+                    />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground uppercase tracking-wider">Armazenado em Caixa</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Habilitar controle por caixa</p>
                     </div>
-                    {coulisseModeloProcCx.trim() && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-primary/5 border border-primary/10 grid grid-cols-3 gap-3 shadow-inner">
-                        {(() => {
-                          const p = parseCoulisseString(coulisseModeloProcCx);
-                          return [
-                            { label: 'Modelo', val: p.modelo, icon: <Package className="w-3 h-3" /> },
-                            { label: 'Proc', val: p.processo, icon: <Hash className="w-3 h-3" /> },
-                            { label: 'Cx', val: p.cx, icon: <Info className="w-3 h-3" /> }
-                          ].map((item, i) => (
-                            <div key={i} className="bg-background/40 p-2 rounded-xl border border-white/5">
-                              <div className="flex items-center gap-1.5 text-[8px] font-black text-muted-foreground/60 uppercase mb-1">
-                                {item.icon} {item.label}
-                              </div>
-                              <div className="text-[11px] font-black text-foreground truncate">{item.val || '-'}</div>
-                            </div>
-                          ));
-                        })()}
+                    {temCaixa && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-2 bg-background/80 p-1.5 rounded-xl border border-primary/20"
+                      >
+                        <span className="text-[10px] font-black text-primary px-2">Nº</span>
+                        <input
+                          type="text" inputMode="numeric" value={caixaNum}
+                          onChange={e => setCaixaNum(e.target.value.replace(/\D/g, ''))}
+                          className="w-12 bg-transparent text-center text-sm font-black text-primary outline-none"
+                        />
                       </motion.div>
                     )}
-                    <div className="group space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Lote</label>
-                      <input 
-                        ref={serieRef} 
-                        value={coulisseLote} 
-                        onChange={e => setCoulisseLote(e.target.value)} 
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddCoulisse()} 
-                        placeholder="Bipe o lote agora..." 
-                        className="w-full h-14 px-5 rounded-2xl border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="group space-y-1.5">
-                      <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Marca</label>
-                        <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
-                          {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                      <input 
-                        value={modelo} 
-                        onChange={e => setModelo(sanitize(e.target.value))} 
-                        placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'} 
-                        className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
-                      />
-                    </div>
-                    <div className="group space-y-1.5">
-                      <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Nota Fiscal (NFe)</label>
-                        <button onClick={() => setLockMotorNf(!lockMotorNf)} className={`p-1 rounded-md transition-colors ${lockMotorNf ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
-                          {lockMotorNf ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                      <input 
-                        value={nf} 
-                        onChange={e => setNf(sanitize(e.target.value))} 
-                        placeholder="Ex: 146842" 
-                        className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorNf ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
-                      />
-                    </div>
-                    <div className="group space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Série (S/N)</label>
-                      <input 
-                        ref={serieRef} 
-                        value={serie} 
-                        onChange={e => setSerie(e.target.value)} 
-                        onKeyDown={(e) => e.key === 'Enter' && (subMode === 'motor' ? handleAddMotor() : handleAddControle())} 
-                        placeholder="Bipe a série..." 
-                        className="w-full h-14 px-5 rounded-2xl border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
-                      />
-                    </div>
-                  </>
+                  </motion.div>
                 )}
-              </div>
-              
-              <motion.div whileTap={{ scale: 0.98 }} className="pt-4">
-                <Button 
-                  onClick={subMode === 'motor' ? handleAddMotor : subMode === 'controle' ? handleAddControle : handleAddCoulisse} 
-                  className="w-full h-16 rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:shadow-primary/50 transition-all border-t border-white/20"
-                >
-                  <Plus className="w-5 h-5 mr-3" strokeWidth={3} /> ADICIONAR {subMode}
-                </Button>
+
+                <div className="grid gap-3">
+                  {subMode === 'coulisse' ? (
+                    <>
+                      <div className="group space-y-1.5">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Proc / Cx</label>
+                          <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
+                            {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                        <input 
+                          value={coulisseModeloProcCx} 
+                          onChange={e => setCoulisseModeloProcCx(sanitize(e.target.value))} 
+                          placeholder="Ex: MOTION CM-01 PROC 1234 CX01" 
+                          className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        />
+                      </div>
+                      {coulisseModeloProcCx.trim() && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-primary/5 border border-primary/10 grid grid-cols-3 gap-3 shadow-inner">
+                          {(() => {
+                            const p = parseCoulisseString(coulisseModeloProcCx);
+                            return [
+                              { label: 'Modelo', val: p.modelo, icon: <Package className="w-3 h-3" /> },
+                              { label: 'Proc', val: p.processo, icon: <Hash className="w-3 h-3" /> },
+                              { label: 'Cx', val: p.cx, icon: <Info className="w-3 h-3" /> }
+                            ].map((item, i) => (
+                              <div key={i} className="bg-background/40 p-2 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-1.5 text-[8px] font-black text-muted-foreground/60 uppercase mb-1">
+                                  {item.icon} {item.label}
+                                </div>
+                                <div className="text-[11px] font-black text-foreground truncate">{item.val || '-'}</div>
+                              </div>
+                            ));
+                          })()}
+                        </motion.div>
+                      )}
+                      <div className="group space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Lote</label>
+                        <input 
+                          ref={serieRef} 
+                          value={coulisseLote} 
+                          onChange={e => setCoulisseLote(e.target.value)} 
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddCoulisse()} 
+                          placeholder="Bipe o lote agora..." 
+                          className="w-full h-14 px-5 rounded-2xl border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="group space-y-1.5">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Marca</label>
+                          <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
+                            {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                        <input 
+                          value={modelo} 
+                          onChange={e => setModelo(sanitize(e.target.value))} 
+                          placeholder={subMode === 'motor' ? "SI 1 PU" : "Controle SI 1 PU"} 
+                          className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600 font-black' : 'border-white/5'}`} 
+                        />
+                      </div>
+
+                      <div className="group space-y-1.5">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Nota Fiscal</label>
+                          <button onClick={() => setLockMotorNf(!lockMotorNf)} className={`p-1 rounded-md transition-colors ${lockMotorNf ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
+                            {lockMotorNf ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                        <input 
+                          value={nf} 
+                          onChange={e => setNf(e.target.value.toUpperCase())} 
+                          placeholder="NF" 
+                          className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorNf ? 'border-amber-500/30 text-amber-600 font-black' : 'border-white/5'}`} 
+                        />
+                      </div>
+
+                      <div className="group space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Número de Série (Bipagem)</label>
+                        <input 
+                          ref={serieRef} 
+                          value={serie} 
+                          onChange={e => setSerie(e.target.value)} 
+                          onKeyDown={(e) => e.key === 'Enter' && (subMode === 'motor' ? handleAddMotor() : handleAddControle())} 
+                          placeholder="Bipe o QR Code ou Barra..." 
+                          className="w-full h-14 px-5 rounded-2xl border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
+                          autoFocus 
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="pt-4 grid grid-cols-2 gap-3">
+                  <Button 
+                    onClick={subMode === 'motor' ? handleAddMotor : subMode === 'controle' ? handleAddControle : handleAddCoulisse} 
+                    className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs uppercase tracking-widest gap-2 shadow-xl shadow-primary/20 transition-all active:scale-95"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Adicionar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetFields} 
+                    className="h-14 rounded-2xl border-white/10 bg-card hover:bg-muted font-bold text-xs uppercase tracking-widest gap-2 shadow-lg transition-all active:scale-95"
+                  >
+                    <X className="w-5 h-5" />
+                    Limpar
+                  </Button>
+                </div>
               </motion.div>
+            </AnimatePresence>
+
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="p-5 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4"
+            >
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-black text-amber-500 uppercase tracking-wider">Modo Inteligente</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">O sistema limpa o campo de série automaticamente após adicionar, mantendo Modelo e NF para agilizar o processo.</p>
+              </div>
             </motion.div>
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    </FormPageLayout>
+          </div>
+        </motion.div>
+      </FormPageLayout>
+    </Suspense>
   );
-}
+};
+
+export default memo(MotorControlePage);

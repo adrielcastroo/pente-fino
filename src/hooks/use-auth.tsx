@@ -25,7 +25,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setConferente = useAppStore(s => s.setConferente);
 
   useEffect(() => {
-    // Set up auth listener FIRST (before getSession) to avoid race conditions
+    // Then check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email);
+        setIsGuest(false);
+        localStorage.removeItem('isGuest');
+        localStorage.removeItem('guestName');
+        setGuestName('');
+      }
+      setLoading(false);
+    });
+
+    // Set up auth listener SECOND to handle transitions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -37,19 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setGuestName('');
       } else {
         setProfile(null);
-      }
-      setLoading(false);
-    });
-
-    // Then check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id, session.user.email);
-        setIsGuest(false);
-        localStorage.removeItem('isGuest');
-        localStorage.removeItem('guestName');
-        setGuestName('');
       }
       setLoading(false);
     });

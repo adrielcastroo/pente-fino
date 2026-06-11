@@ -1,10 +1,13 @@
 
-import { useEffect } from 'react';
+import { useEffect, memo, lazy, Suspense } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import LeftPanel from '@/components/LeftPanel';
-import FormPageLayout from '@/components/FormPageLayout';
+import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export default function MadeiraPage() {
+const LeftPanel = lazy(() => import('@/components/LeftPanel'));
+const FormPageLayout = lazy(() => import('@/components/FormPageLayout'));
+
+const MadeiraPage = () => {
   const setMode = useAppStore(s => s.setMode);
   const setFormData = useAppStore(s => s.setFormData);
 
@@ -14,8 +17,19 @@ export default function MadeiraPage() {
   }, [setMode, setFormData]);
 
   return (
-    <FormPageLayout>
-      <LeftPanel />
-    </FormPageLayout>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="h-full w-full"
+    >
+      <Suspense fallback={<div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>}>
+        <FormPageLayout>
+          <LeftPanel />
+        </FormPageLayout>
+      </Suspense>
+    </motion.div>
   );
-}
+};
+
+export default memo(MadeiraPage);
