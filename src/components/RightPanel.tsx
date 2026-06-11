@@ -190,7 +190,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 
 TableRow.displayName = 'TableRow';
 
-export default function RightPanel() {
+const RightPanel = () => {
   const { isGuest } = useAuth();
   const {
     registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
@@ -705,3 +705,5 @@ export default function RightPanel() {
     </div>
   );
 }
+
+export default memo(RightPanel);
