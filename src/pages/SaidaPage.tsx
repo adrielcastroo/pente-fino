@@ -401,3 +401,5 @@ const SaidaPage = () => {
     </div>
   );
 }
+
+export default memo(SaidaPage);
