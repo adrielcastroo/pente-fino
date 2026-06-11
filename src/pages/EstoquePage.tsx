@@ -573,7 +573,7 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-500">
           {selectedCell && (
             <>
               {/* Dialog Header */}
@@ -637,7 +637,7 @@ export default function EstoquePage() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-primary/50 hover:bg-primary/5 transition-all duration-500 shadow-xl shadow-black/5 ring-1 ring-white/5"
+                            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-primary/50 hover:bg-primary/5 transition-all duration-500 shadow-xl shadow-black/5 ring-1 ring-white/5 hover:scale-[1.01] hover:-translate-y-1"
                           >
                             <div className="flex-1 min-w-0 space-y-3">
                               <div className="flex items-center gap-3">
@@ -666,9 +666,9 @@ export default function EstoquePage() {
                                 onClick={() => setDetailPos(item)}
                                 variant="ghost"
                                 size="sm"
-                                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20"
-                              >
-                                Ficha Técnica
+                                  className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20 hover:scale-105 active:scale-95"
+                                >
+                                  Ficha Técnica
                               </Button>
                               {!isGuest && (
                                 <Button
@@ -707,7 +707,7 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-500">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             return (
@@ -756,7 +756,7 @@ export default function EstoquePage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: i * 0.05 }}
-                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-lg group hover:border-primary/30 transition-all duration-300"
+                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:shadow-primary/5 hover:-translate-y-1"
                       >
                         <div className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
                         <div className="text-sm sm:text-base font-black text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
@@ -832,7 +832,7 @@ export default function EstoquePage() {
 
       {/* ===== STAT DETAIL DIALOG ===== */}
       <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] ring-1 ring-white/10 shadow-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500">
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string }[] = [
               { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-white/5' },
@@ -916,7 +916,7 @@ export default function EstoquePage() {
                   {/* Summary Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {tecBreakdown.slice(0, 4).map((t, i) => (
-                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-lg text-center group hover:border-primary/30 transition-all duration-300">
+                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-lg text-center group hover:border-primary/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
                          <div className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1 opacity-60">{t.tec}</div>
                          <div className="text-xl font-black text-foreground tracking-tighter tabular-nums">{t.value}</div>
                          <div className="text-[7px] font-black text-primary uppercase mt-1">{t.percent}%</div>
