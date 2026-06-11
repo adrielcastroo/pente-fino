@@ -343,7 +343,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 h-full">
+        <div className="md:col-span-1 lg:col-span-4 h-full">
           <SummaryChart 
             id="chart-materiais"
             title="Tipos de Materiais" 
