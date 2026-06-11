@@ -53,7 +53,7 @@ const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users };
 
 export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick: (id: string) => void }) => {
   const cards = useMemo(() => [
-    { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: 'Users', delay: 1 },
+    { id: 'conferenteDetails', label: 'Conferentes', value: stats.totalConferentes, icon: 'Users', delay: 1 },
     { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: 'BarChart3', delay: 2 },
     { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: 'Layers3', delay: 3 },
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);

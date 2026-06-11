@@ -222,7 +222,15 @@ export default function DashboardPage() {
       <CyclicNotification />
 
       {/* Stat Cards - Consolidated and Optimized */}
-      <StatCards stats={stats} onStatClick={setDetailDialog} />
+      <StatCards stats={stats} onStatClick={(id) => {
+        if (id === 'conferenteDetails') {
+           setDetailChart({ title: 'Top Conferentes', data: stats.topConferentes, type: 'bar' });
+        } else if (id === 'registros') {
+           setDetailChart({ title: 'Volume por Setor', data: stats.categorias, type: 'pie' });
+        } else {
+           setDetailDialog(id);
+        }
+      }} />
 
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
