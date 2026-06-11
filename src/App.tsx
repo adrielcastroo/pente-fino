@@ -7,24 +7,22 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Suspense, lazy } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
-const MainLayout = lazy(() => import("./components/MainLayout.tsx"));
-const DashboardPage = lazy(() => import("./pages/DashboardPage.tsx"));
-const TecidoPage = lazy(() => import("./pages/TecidoPage.tsx"));
-const MadeiraPage = lazy(() => import("./pages/MadeiraPage.tsx"));
-const MotorControlePage = lazy(() => import("./pages/MotorControlePage.tsx"));
-const EstoquePage = lazy(() => import("./pages/EstoquePage.tsx"));
-const SaidaPage = lazy(() => import("./pages/SaidaPage.tsx"));
-const ReservasPage = lazy(() => import("./pages/ReservasPage.tsx"));
-const HistoricoPage = lazy(() => import("./pages/HistoricoPage.tsx"));
-const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
+const MainLayout = lazy(() => import("@/components/MainLayout"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const TecidoPage = lazy(() => import("@/pages/TecidoPage"));
+const MadeiraPage = lazy(() => import("@/pages/MadeiraPage"));
+const MotorControlePage = lazy(() => import("@/pages/MotorControlePage"));
+const EstoquePage = lazy(() => import("@/pages/EstoquePage"));
+const SaidaPage = lazy(() => import("@/pages/SaidaPage"));
+const ReservasPage = lazy(() => import("@/pages/ReservasPage"));
+const HistoricoPage = lazy(() => import("@/pages/HistoricoPage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 
-
-
-const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword.tsx"));
-const VerifyOtp = lazy(() => import("./pages/VerifyOtp.tsx"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
-const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const VerifyOtp = lazy(() => import("@/pages/VerifyOtp"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const LoginRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, isGuest } = useAuth();
