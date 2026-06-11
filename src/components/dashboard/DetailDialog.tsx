@@ -38,26 +38,32 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
   return (
     <Dialog open={!!detailChart} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2rem] sm:rounded-[3rem] border shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500 flex flex-col",
-        isDark ? "bg-[#0F172A] border-slate-800" : "bg-white/95 backdrop-blur-md border-border/10 text-[#2563EB]"
+        "w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2.5rem] sm:rounded-[3.5rem] border p-0 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 flex flex-col transition-all",
+        isDark 
+          ? "bg-[#0A0F1E] border-slate-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)]" 
+          : "bg-white border-slate-200/60 shadow-[0_30px_70px_-20px_rgba(37,99,235,0.15)]"
       )}>
       <DialogHeader className={cn(
-        "p-6 sm:p-8 pb-4 sm:pb-6 border-b flex-none",
-        isDark ? "bg-[#1E293B]/50 border-slate-800" : "bg-slate-50/50 border-border/10"
+        "p-8 sm:p-10 pb-6 sm:pb-8 border-b flex-none transition-colors",
+        isDark ? "bg-[#1E293B]/30 border-slate-800" : "bg-slate-50/50 border-slate-200/40"
       )}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-xl shadow-primary/10 border border-primary/20">
-              {detailChart?.type === 'bar' ? <BarChart3 className="w-6 h-6" /> : detailChart?.type === 'area' ? <Activity className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
+          <div className="flex items-center gap-6">
+            <div className={cn(
+              "p-4 rounded-2xl shadow-2xl transition-all duration-500",
+              isDark ? "bg-primary/20 text-primary border border-primary/30" : "bg-primary/10 text-primary border border-primary/20"
+            )}>
+              {detailChart?.type === 'bar' ? <BarChart3 className="w-8 h-8" /> : detailChart?.type === 'area' ? <Activity className="w-8 h-8" /> : <TrendingUp className="w-8 h-8" />}
             </div>
-            <div className="space-y-1">
-              <DialogTitle className={cn("text-2xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>{detailChart?.title}</DialogTitle>
-              <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/60")}>
-                Visualização detalhada das métricas operacionais
+            <div className="space-y-1.5">
+              <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#1E40AF]")}>
+                {detailChart?.title}
+              </DialogTitle>
+              <DialogDescription className={cn("text-sm font-bold uppercase tracking-[0.1em]", isDark ? "text-slate-400" : "text-slate-500")}>
+                Análise técnica e métricas operacionais
               </DialogDescription>
             </div>
           </div>
-          
         </div>
       </DialogHeader>
       
