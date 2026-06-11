@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
