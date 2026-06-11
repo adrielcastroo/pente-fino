@@ -126,14 +126,14 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
       <CardContent className="px-8 pb-8 h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
-            <BarChart data={data}>
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey="name" fontSize={9} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-              <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+              <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} animationDuration={1000} />
               <ChartTooltip content={<CustomTooltip />} />
             </BarChart>
           ) : (
             <PieChart>
-              <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
+              <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent" animationDuration={1000}>
                 {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <ChartTooltip content={<CustomTooltip />} />
@@ -169,7 +169,7 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
         <div className="relative w-[240px] h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450}>
+              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450} animationDuration={1000}>
                 {data.map((entry, index) => <Cell key={index} fill={entry.color} />)}
               </Pie>
             </PieChart>
@@ -249,8 +249,8 @@ export const InventoryTimelineChart = () => {
             <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
             <ChartTooltip content={<CustomTooltip />} />
             <Legend verticalAlign="top" height={36}/>
-            <Bar dataKey="counts" name="Total Contagens" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="divergence" name="Volume Divergência" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="counts" name="Total Contagens" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} animationDuration={1000} />
+            <Bar dataKey="divergence" name="Volume Divergência" fill="#f43f5e" radius={[4, 4, 0, 0]} animationDuration={1000} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
