@@ -566,6 +566,7 @@ export default function EstoquePage() {
                 })}
               </motion.div>
             ))}
+            </div>
           </div>
         </motion.div>
       )}
