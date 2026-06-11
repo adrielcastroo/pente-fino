@@ -1,5 +1,5 @@
 import React, { useMemo, memo } from 'react';
-import { ChevronRight, LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
+import { ChevronRight, LucideIcon, BarChart3, Layers3, Users, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface StatCardProps {
@@ -49,17 +49,18 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
 
 StatCard.displayName = 'StatCard';
 
-const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users };
+const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users, Clock };
 
 export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick: (id: string) => void }) => {
   const cards = useMemo(() => [
     { id: 'conferenteDetails', label: 'Conferentes', value: stats.totalConferentes, icon: 'Users', delay: 1 },
     { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: 'BarChart3', delay: 2 },
     { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: 'Layers3', delay: 3 },
-  ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
+    { id: 'duration', label: 'Média Sessão', value: stats.avgDuration, icon: 'Clock', delay: 4 },
+  ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes, stats.avgDuration]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8 pt-6 sm:pt-10 relative z-10 w-full overflow-hidden">
       {cards.map((s) => (
         <StatCard 
           key={s.id} 

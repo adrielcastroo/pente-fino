@@ -178,14 +178,6 @@ const DashboardPage = () => {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
           >
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
-              <Clock className="w-5 h-5 text-primary/70 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
-                <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
-              </div>
-            </div>
-            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -207,19 +199,6 @@ const DashboardPage = () => {
             </Tooltip>
           </motion.div>
         </div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-card/40 backdrop-blur-md w-fit transition-all hover:bg-card/60"
-        >
-          <Clock className="w-4 h-4 text-primary/70 shrink-0" />
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black text-foreground/50 uppercase tracking-widest">Sessão:</span>
-            <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
-          </div>
-        </motion.div>
       </header>
       
       {/* Cyclic Inventory Notification */}
