@@ -141,7 +141,7 @@ async function downloadTemplate() {
   }
 }
 
-export const ImportDialog = ({ open, onOpenChange, onImportComplete }: ImportDialogProps) => {
+const ImportDialog = ({ open, onOpenChange, onImportComplete }: ImportDialogProps) => {
   const conferente = useAppStore(s => s.conferente);
   const [step, setStep] = useState<'upload' | 'preview'>('upload');
   const [parsedRows, setParsedRows] = useState<ImportRow[]>([]);
