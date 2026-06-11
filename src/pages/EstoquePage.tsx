@@ -832,16 +832,23 @@ export default function EstoquePage() {
 
       {/* ===== STAT DETAIL DIALOG ===== */}
       <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500">
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500 overflow-y-auto max-h-[95vh]">
           {selectedStat && (() => {
-            const statItems: { label: string; value: number; percent: number; color: string; bg: string }[] = [
-              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-white/5' },
-              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary', bg: 'bg-primary/10' },
+            const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
+              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-white/5', hex: '#ffffff' },
+              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500', bg: 'bg-emerald-500/10', hex: '#10b981' },
+              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500', bg: 'bg-amber-500/10', hex: '#f59e0b' },
+              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-rose-500', bg: 'bg-rose-500/10', hex: '#f43f5e' },
+              { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary', bg: 'bg-primary/10', hex: '#3b82f6' },
             ];
             const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
+
+            const pieData = [
+              { name: 'Ocupado', value: stats.occupied, color: '#10b981' },
+              { name: 'Reservado', value: stats.reserved, color: '#f59e0b' },
+              { name: 'Bloqueado', value: stats.blocked, color: '#f43f5e' },
+              { name: 'Livre', value: stats.free, color: '#3b82f6' },
+            ].filter(d => d.value > 0);
 
             // Per-TEC breakdown
             const tecBreakdown = Object.entries(TEC_CONFIG).map(([tec, cfg]) => {
@@ -857,69 +864,117 @@ export default function EstoquePage() {
 
             return (
               <>
-                <div className="px-10 pt-12 pb-8 border-b border-white/5 bg-gradient-to-br from-white/10 to-transparent">
+                <div className="px-8 sm:px-12 pt-10 sm:pt-14 pb-8 border-b border-white/5 bg-gradient-to-br from-white/10 to-transparent">
                   <div className="flex flex-col sm:flex-row items-center gap-8">
                      <div className={cn("p-6 rounded-[2rem] shadow-2xl ring-4 ring-white/10", current.bg, current.color)}>
                         <LayoutDashboard className="w-10 h-10" />
                      </div>
                      <div className="flex-1 text-center sm:text-left">
-                        <DialogTitle className="text-3xl font-black tracking-tight uppercase leading-none">
-                           Detalhamento de {current.label}
+                        <DialogTitle className="text-3xl sm:text-4xl font-black tracking-tight uppercase leading-none">
+                           {current.label}
                         </DialogTitle>
-                        <DialogDescription className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
-                           {current.value} Itens · {current.percent}% da Capacidade Total
+                        <DialogDescription className="text-xs sm:text-sm font-black text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
+                           {current.value} Itens · {current.percent}% da Capacidade Total do CD
                         </DialogDescription>
                      </div>
                   </div>
                 </div>
                 
-                <div className="p-10 space-y-10 bg-card/20">
-                  {/* Bar Chart Section */}
-                  <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 shadow-xl ring-1 ring-white/5">
-                    <div className="flex items-center justify-between mb-8">
-                       <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Distribuição por Estrutura</h4>
-                       <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-3 border-white/10">Tempo Real</Badge>
+                <div className="p-6 sm:p-10 space-y-8 sm:space-y-12 bg-card/20">
+                  {/* Charts Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+                    {/* General Distribution (Pie Chart) */}
+                    <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 sm:p-8 shadow-xl ring-1 ring-white/5 flex flex-col items-center">
+                      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-8 self-start">Ocupação Geral do CD</h4>
+                      <div className="h-[260px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={70}
+                              outerRadius={95}
+                              paddingAngle={8}
+                              dataKey="value"
+                              animationBegin={200}
+                              animationDuration={1200}
+                            >
+                              {pieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                              ))}
+                            </Pie>
+                            <ChartTooltip 
+                              contentStyle={{ background: 'rgba(0,0,0,0.85)', border: 'none', borderRadius: '16px', color: '#fff', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', padding: '12px' }}
+                              itemStyle={{ color: '#fff' }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {/* Custom Legend */}
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-3 mt-4 w-full px-4">
+                        {pieData.map((d) => (
+                          <div key={d.name} className="flex items-center gap-3">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{d.name}</span>
+                            <span className="text-[10px] font-black ml-auto tabular-nums">{d.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="h-[220px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={tecBreakdown} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                          <XAxis 
-                            dataKey="tec" 
-                            fontSize={9} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
-                          />
-                          <YAxis 
-                            fontSize={9} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
-                          />
-                          <ChartTooltip
-                            cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
-                            contentStyle={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
-                            itemStyle={{ color: '#fff' }}
-                            formatter={(value: number, _name: string, props: any) => [`${value} POSIÇÕES`, `ESTRUTURA ${props.payload.tec}`]}
-                          />
-                          <Bar 
-                            dataKey="value" 
-                            radius={[8, 8, 0, 0]} 
-                            fill="currentColor"
-                            className={current.color}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
+
+                    {/* Per-TEC Breakdown (Bar Chart) */}
+                    <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 sm:p-8 shadow-xl ring-1 ring-white/5">
+                      <div className="flex items-center justify-between mb-8">
+                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Distribuição por Estrutura</h4>
+                         <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-3 border-white/10 opacity-60">Status: {current.label}</Badge>
+                      </div>
+                      <div className="h-[260px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={tecBreakdown} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                            <XAxis 
+                              dataKey="tec" 
+                              fontSize={9} 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
+                            />
+                            <YAxis 
+                              fontSize={9} 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
+                            />
+                            <ChartTooltip
+                              cursor={{ fill: 'rgba(255,255,255,0.03)', radius: 12 }}
+                              contentStyle={{ background: 'rgba(0,0,0,0.85)', border: 'none', borderRadius: '16px', color: '#fff', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', padding: '12px' }}
+                              itemStyle={{ color: '#fff' }}
+                              formatter={(value: number, _name: string, props: any) => [`${value} POSIÇÕES`, `ESTRUTURA ${props.payload.tec}`]}
+                            />
+                            <Bar 
+                              dataKey="value" 
+                              radius={[10, 10, 0, 0]} 
+                              fill={current.hex}
+                              animationDuration={1500}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Summary Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {tecBreakdown.slice(0, 4).map((t, i) => (
-                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-lg text-center group hover:border-primary/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
-                         <div className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1 opacity-60">{t.tec}</div>
-                         <div className="text-xl font-black text-foreground tracking-tighter tabular-nums">{t.value}</div>
-                         <div className="text-[7px] font-black text-primary uppercase mt-1">{t.percent}%</div>
+                  {/* Detailed Summary Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                    {tecBreakdown.map((t) => (
+                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1">
+                         <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 opacity-50 group-hover:opacity-100 transition-opacity">{t.tec}</div>
+                         <div className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter tabular-nums mb-1">{t.value}</div>
+                         <div className="flex items-center gap-2">
+                           <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                              <div className="h-full bg-primary/40" style={{ width: `${t.percent}%` }} />
+                           </div>
+                           <div className="text-[9px] font-black text-primary uppercase">{t.percent}%</div>
+                         </div>
                       </div>
                     ))}
                   </div>
@@ -929,6 +984,7 @@ export default function EstoquePage() {
           })()}
         </DialogContent>
       </Dialog>
+
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
