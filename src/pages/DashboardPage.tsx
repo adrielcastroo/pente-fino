@@ -188,7 +188,7 @@ export default function DashboardPage() {
                   variant="default" 
                   size="lg"
                   disabled={isExporting}
-                  className="h-10 sm:h-16 px-4 sm:px-10 rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2 sm:gap-4 font-black uppercase tracking-widest text-[10px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap"
+                  className="h-12 sm:h-16 px-6 sm:px-12 rounded-2xl sm:rounded-3xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.05] active:scale-[0.95] transition-all duration-500 gap-3 sm:gap-4 font-black uppercase tracking-[0.2em] text-[10px] sm:text-[13px] bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap border-b-4 border-emerald-800"
                   onClick={handleFullExportExcel}
                 >
                   {isExporting ? (
