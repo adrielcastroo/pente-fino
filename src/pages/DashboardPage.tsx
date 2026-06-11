@@ -226,13 +226,13 @@ export default function DashboardPage() {
 
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8"
+          className="md:col-span-2 lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8"
         >
           <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} />
@@ -270,7 +270,7 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
+        <div className="md:col-span-2 lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
           <SummaryChart 
             id="chart-conferentes"
             title="Produção por Conferente" 
@@ -343,7 +343,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 h-full">
+        <div className="md:col-span-1 lg:col-span-4 h-full">
           <SummaryChart 
             id="chart-materiais"
             title="Tipos de Materiais" 
@@ -356,7 +356,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="lg:col-span-4 h-full">
+        <div className="md:col-span-1 lg:col-span-4 h-full">
           <SummaryChart
             id="chart-sessoes"
             title="Histórico de Sessões"
@@ -373,7 +373,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]"
+          className="md:col-span-2 lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]"
         >
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />

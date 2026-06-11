@@ -330,11 +330,11 @@ export default function EstoquePage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-full mx-auto space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden"
+      className="max-w-full mx-auto space-y-4 sm:space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden"
     >
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+        <div className="flex items-center gap-3 sm:gap-5 w-full">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -410,7 +410,7 @@ export default function EstoquePage() {
         <>
       {/* Stats Cards */}
       <div className="w-full pb-4 px-0">
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {[
             { key: 'total', label: 'Capacidade Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40 shadow-2xl ring-1 ring-white/10', border: 'border-white/5' } },
             { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
@@ -431,7 +431,7 @@ export default function EstoquePage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                 <CardContent className="p-4 sm:p-6 text-center space-y-1 sm:space-y-2 relative z-10">
-                  <div className={`text-2xl sm:text-4xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className={`text-[clamp(1.25rem,5vw,2.25rem)] font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
                   <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
                   <div className="flex items-center justify-center gap-1.5 pt-2">
                     <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
@@ -481,7 +481,8 @@ export default function EstoquePage() {
           transition={{ duration: 0.8 }}
           className="w-full pb-6"
         >
-          <div className="w-full space-y-2 sm:space-y-3 p-1">
+          <div className="w-full space-y-2 sm:space-y-3 p-1 overflow-x-auto lg:overflow-x-visible no-scrollbar">
+            <div className="min-w-[600px] lg:min-w-0 space-y-2 sm:space-y-3">
             {/* Column headers */}
             <div className="flex gap-2 sm:gap-3">
               <div className="w-10 sm:w-12 md:w-16 shrink-0" />
@@ -565,6 +566,7 @@ export default function EstoquePage() {
                 })}
               </motion.div>
             ))}
+            </div>
           </div>
         </motion.div>
       )}
