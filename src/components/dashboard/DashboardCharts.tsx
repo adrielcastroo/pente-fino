@@ -102,18 +102,23 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
 export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const { isLow } = usePerformance();
   return (
-    <Card id={id} className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden rounded-[1.5rem]">
+    <Card id={id} className="group border border-border/5 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] hover:-translate-y-1">
       <CardHeader className="px-8 py-8 flex flex-row items-start justify-between">
-        <div className="space-y-1.5">
-          <CardTitle className="text-base font-extrabold flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-primary/5 text-primary">
+        <div className="space-y-2">
+          <CardTitle className="text-base font-black flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
               <Icon className="w-4 h-4" />
             </div>
-            <span>{title}</span>
+            <span className="tracking-tight">{title}</span>
           </CardTitle>
-          <p className="text-[11px] text-foreground/60 font-black uppercase tracking-wider ml-8">{desc}</p>
+          <p className="text-[10px] text-foreground/40 font-black uppercase tracking-[0.2em] ml-10">{desc}</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => onDetailClick({ title, data, type })}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+          onClick={() => onDetailClick({ title, data, type })}
+        >
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
