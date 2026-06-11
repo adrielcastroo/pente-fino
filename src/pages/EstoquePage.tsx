@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
 const MadeiraEstoque = lazy(() => import('@/components/estoque/MadeiraEstoque'));
-const ImportDialog = lazy(() => import('@/components/estoque/ImportDialog').then(module => ({ default: module.default })));
+const ImportDialog = lazy(() => import('@/components/estoque/ImportDialog'));
 
 
 interface Posicao {
