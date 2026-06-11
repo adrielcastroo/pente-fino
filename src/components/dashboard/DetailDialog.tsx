@@ -39,7 +39,7 @@ export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: s
     <Dialog open={!!detailChart} onOpenChange={onClose}>
       <DialogContent className={cn(
         "w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2rem] sm:rounded-[3rem] border shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] p-0 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500 flex flex-col",
-        isDark ? "bg-[#0F172A] border-slate-800" : "bg-white border-border/10 text-[#2563EB]"
+        isDark ? "bg-[#0F172A] border-slate-800" : "bg-white/95 backdrop-blur-md border-border/10 text-[#2563EB]"
       )}>
       <DialogHeader className={cn(
         "p-6 sm:p-8 pb-4 sm:pb-6 border-b flex-none",
