@@ -67,7 +67,7 @@ const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => 
 // Reuse centralized formatter
 import { formatDateBR } from '@/lib/app-utils';
 
-export default function EstoquePage() {
+const EstoquePage = () => {
   const { isGuest } = useAuth();
   const navigate = useNavigate();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
