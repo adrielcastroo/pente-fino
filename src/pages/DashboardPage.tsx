@@ -373,7 +373,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]"
+          className="md:col-span-2 lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]"
         >
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
