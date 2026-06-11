@@ -270,7 +270,7 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
+        <div className="md:col-span-2 lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
           <SummaryChart 
             id="chart-conferentes"
             title="Produção por Conferente" 
