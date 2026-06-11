@@ -635,9 +635,11 @@ export default function RightPanel() {
             </table>
           )}
 
-          {sortedRows.length > visibleCount && (
-            <div className="p-4 flex justify-center border-t border-border/10 bg-muted/5">
-              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6">
+          {sortedRows.length > 0 && sortedRows.length > visibleCount && (
+            <div className="flex flex-col items-center justify-center py-10 gap-3 border border-dashed border-border/30 rounded-3xl bg-muted/5 opacity-60 m-4">
+              <Loader2 className="w-8 h-8 text-primary/40 animate-spin" />
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest italic">Aguardando mais registros...</p>
+              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6 mt-2">
                 Carregar mais registros ({sortedRows.length - visibleCount} restantes)
               </Button>
             </div>
