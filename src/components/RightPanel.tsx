@@ -582,7 +582,7 @@ const RightPanel = () => {
                         key={column.key} 
                         className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background ${responsiveClass}`}
                       >
-                        {column.shortLabel || column.label}
+                        {column.label}
                       </th>
                     );
                   })}

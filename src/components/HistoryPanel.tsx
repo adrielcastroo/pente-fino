@@ -455,7 +455,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         <thead>
           <tr className="bg-muted/30">
             {columns.map(column => (
-              <th key={column.key} className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/20">{column.shortLabel || column.label}</th>
+              <th key={column.key} className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/20">{column.label}</th>
             ))}
             <th className="px-5 py-3 border-b border-border/20 w-[60px]"></th>
           </tr>

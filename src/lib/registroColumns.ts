@@ -5,7 +5,6 @@ export type RegistroColumnKey = keyof Registro | 'processo' | 'quantidade' | 'wa
 export interface RegistroColumn {
   key: RegistroColumnKey;
   label: string;
-  shortLabel: string;
   width: number;
 }
 
@@ -14,23 +13,24 @@ export const getRegistroColumns = (registros: Registro[], mode: string): Registr
 
   if (isMotorControle) {
     return [
-      { key: 'item', label: 'Modelo', shortLabel: 'Mod', width: 25 },
-      { key: 'nf', label: 'NF', shortLabel: 'NF', width: 12 },
-      { key: 'lote', label: 'Série', shortLabel: 'Sér', width: 20 },
-      { key: 'loteSistema', label: 'Lote Final', shortLabel: 'LF', width: 35 },
-      { key: 'quantidade', label: 'UND/CX', shortLabel: 'Qtd', width: 10 },
+      { key: 'item', label: 'Modelo', width: 25 },
+      { key: 'nf', label: 'NF', width: 12 },
+      { key: 'lote', label: 'Série', width: 20 },
+      { key: 'loteSistema', label: 'Lote Final', width: 35 },
+      { key: 'quantidade', label: 'UND/CX', width: 10 },
     ];
   }
 
   return [
-    { key: 'item', label: 'Item/Referência', shortLabel: 'Item', width: 25 },
-    { key: 'nf', label: 'NF', shortLabel: 'NF', width: 12 },
-    { key: 'processo', label: 'PROC', shortLabel: 'PRC', width: 12 },
-    { key: 'm2', label: 'M²', shortLabel: 'M²', width: 10 },
-    { key: 'largura', label: 'L(m)', shortLabel: 'L', width: 10 },
-    { key: 'mLinear', label: 'M.Linear', shortLabel: 'ML', width: 12 },
-    { key: 'lote', label: 'Lote/Batch', shortLabel: 'Lt', width: 15 },
-    { key: 'endereco', label: 'Endereço', shortLabel: 'End', width: 15 },
-    { key: 'loteSistema', label: 'Lote Final', shortLabel: 'LF', width: 35 },
+    { key: 'item', label: 'Item/Referência', width: 25 },
+    { key: 'nf', label: 'NF', width: 12 },
+    { key: 'processo', label: 'PROC', width: 12 },
+    { key: 'm2', label: 'M²', width: 10 },
+    { key: 'largura', label: 'L(m)', width: 10 },
+    { key: 'mLinear', label: 'M.Linear', width: 12 },
+    { key: 'lote', label: 'Lote/Batch', width: 15 },
+    { key: 'endereco', label: 'Endereço', width: 15 },
+    { key: 'loteSistema', label: 'Lote Final', width: 35 },
   ];
 };
+
