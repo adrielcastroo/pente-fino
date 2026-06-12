@@ -238,7 +238,11 @@ export default function EstoquePage() {
     setDetailPos(null);
     
     try {
-      const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+    if (!isAdmin) {
+      toast.error('Somente administradores podem remover posições.');
+      return;
+    }
+    const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
       if (error) throw error;
       
       loadStats();
