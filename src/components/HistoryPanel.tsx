@@ -790,12 +790,20 @@ export default function HistoryPanel() {
 
   if (isHistoryLoading && history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-xs">Sincronizando Histórico...</p>
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-8">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
+          <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl animate-pulse" />
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="font-black text-foreground uppercase tracking-widest text-sm animate-pulse">Sincronizando Histórico</p>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider opacity-60">Carregando dados do servidor...</p>
+        </div>
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
