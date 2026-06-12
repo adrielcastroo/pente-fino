@@ -142,13 +142,23 @@ export function generateLoteSistemaCaixa(
   existingRegistros: Registro[]
 ): string {
   const procNorm = (processo || '').trim().toLowerCase();
+  const itemNorm = (item || '').trim().toLowerCase();
   let maxCx = 0;
+  let countDuplicates = 0;
 
   // Box numbering scopes by PROC: count all scanned items within the same proc.
-  // Resets automatically when proc changes (different proc = different scope).
   for (let i = 0, len = existingRegistros.length; i < len; i++) {
     const r = existingRegistros[i];
-    if ((r.processo || '').trim().toLowerCase() !== procNorm) continue;
+    const rProc = (r.processo || '').trim().toLowerCase();
+    const rItem = (r.item || '').trim().toLowerCase();
+    
+    if (rProc !== procNorm) continue;
+    
+    // Check for identical items (Proc + Item + Metragem) to handle suffixes -1, -2...
+    if (rItem === itemNorm && r.mLinear === mLinear) {
+      countDuplicates++;
+    }
+
     if (!r.loteSistema?.startsWith('CX')) continue;
     const match = r.loteSistema.match(/^CX(\d+)/);
     if (match) {
@@ -160,7 +170,9 @@ export function generateLoteSistemaCaixa(
   const cxLabel = `CX${(maxCx + 1).toString().padStart(2, '0')}`;
   const procTrimmed = (processo || '').trim();
   const mlFormatted = fmtML(mLinear);
-  const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', mlFormatted].filter(Boolean);
+  const suffix = countDuplicates > 0 ? `-${countDuplicates}` : '';
+  
+  const parts = [cxLabel, procTrimmed ? `PROC ${procTrimmed}` : '', `${mlFormatted}${suffix}`].filter(Boolean);
   return parts.join(' ');
 }
 
