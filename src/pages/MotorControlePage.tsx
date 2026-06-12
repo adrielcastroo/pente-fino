@@ -142,7 +142,7 @@ export default function MotorControlePage() {
       largura: 0,
     };
     addRegistro(reg);
-    if (labelSettings.autoPrint) printLabel({ item: reg.item, descricao: 'Motor', lote: reg.lote, nf: reg.nf, processo: '', m_linear: reg.quantidade ? `CX:${reg.quantidade}` : '' }, labelSettings);
+    if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Motor', lote: reg.lote, loteSistema: reg.loteSistema, nf: reg.nf, cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null }, labelSettings);
     toast.success(`Motor adicionado: ${cleaned}`);
     resetMotorFormData();
     serieRef.current?.focus();
