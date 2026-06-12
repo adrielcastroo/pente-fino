@@ -1653,7 +1653,7 @@ export const LeftPanel = memo(function LeftPanel() {
         </motion.div>
 
         {/* Actions */}
-        <div className=\"space-y-3 pb-6 pt-2 px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0\">
+        <div className="space-y-3 pb-6 pt-2 px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
           <motion.div
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
