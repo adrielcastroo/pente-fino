@@ -521,81 +521,111 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 
   const headerContent = (
     <div className="group/header">
-      <button onClick={() => setOpen(!open)} className="w-full px-2.5 sm:px-6 py-4 flex items-center gap-2.5 sm:gap-4 hover:bg-muted/30 transition-all text-left">
-        <div className={`p-2 sm:p-3 rounded-lg sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white' : 'bg-primary/10 text-primary group-hover/header:scale-110'}`}>
-          <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+      <button 
+        onClick={() => setOpen(!open)} 
+        className="w-full px-4 sm:px-6 py-5 flex items-center gap-4 hover:bg-muted/40 transition-all text-left relative overflow-hidden"
+      >
+        <div className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'bg-primary/10 text-primary group-hover/header:bg-primary/20'}`}>
+          <FolderOpen className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 ${open ? 'scale-110' : 'group-hover/header:scale-110'}`} />
         </div>
+        
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <span className="text-xs sm:text-base font-black tracking-tight truncate">{folderName}</span>
-            <div className="flex gap-1 flex-wrap">
-              {modeBadges.map(b => (
-                <Badge key={b} variant="secondary" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-0.5 bg-primary/5 text-primary/80 border-primary/10">{b}</Badge>
-              ))}
-            </div>
-          </div>
-          <div className="text-[9px] sm:text-xs text-muted-foreground font-bold flex items-center gap-1.5 sm:gap-2.5 mt-1 flex-wrap">
-            <span className="flex items-center gap-1"><Calendar className="w-3 h-3 shrink-0" /> {formatDateBR(conf.date)}</span>
-            
-            {/* Start/End timestamps */}
-            {conf.startedAt && (
-              <span className="flex items-center gap-1 text-emerald-500/80">
-                <Clock className="w-3 h-3 shrink-0" /> {formatTimeBR(conf.startedAt)}
-              </span>
-            )}
-            {conf.finishedAt && (
-              <span className="text-muted-foreground/60">→ {formatTimeBR(conf.finishedAt)}</span>
-            )}
-            {conf.startedAt && conf.finishedAt && (
-              <Badge variant="outline" className="text-[7px] sm:text-[8px] font-black px-1.5 py-0 h-4 border-primary/20 text-primary/70 bg-primary/5">
-                {formatDuration(conf.startedAt, conf.finishedAt)}
-              </Badge>
-            )}
-
-            <div className="flex gap-1.5 ml-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => { e.stopPropagation(); setIsAdding(true); }}
-                className="h-8 rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-bold text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3"
-              >
-                <Plus className="w-3 h-3 sm:mr-1" /> <span className="hidden xs:inline">Incluir Item</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-                className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-primary/10 text-primary transition-all border border-border/40"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </Button>
-              {!isGuest && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-destructive/10 text-destructive transition-all border border-border/40"
-                >
-                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </Button>
-              )}
-
-              <div className={`p-1.5 rounded-full transition-transform duration-500 ${open ? 'rotate-180 bg-muted/50' : ''}`}>
-                 <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/50" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm sm:text-lg font-black tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {modeBadges.map(b => (
+                    <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
+                      {b}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 text-[10px] sm:text-xs text-muted-foreground font-bold flex-wrap">
+                <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md"><Calendar className="w-3.5 h-3.5 opacity-60" /> {formatDateBR(conf.date)}</span>
+                
+                {conf.startedAt && (
+                  <span className="flex items-center gap-1.5 text-emerald-600/80 bg-emerald-500/5 px-2 py-0.5 rounded-md">
+                    <Clock className="w-3.5 h-3.5" /> {formatTimeBR(conf.startedAt)}
+                    {conf.finishedAt && <span className="text-muted-foreground/60">→ {formatTimeBR(conf.finishedAt)}</span>}
+                  </span>
+                )}
+                
+                {conf.startedAt && conf.finishedAt && (
+                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black px-2 py-0 h-5 border-primary/10 text-primary/60 bg-primary/5">
+                    {formatDuration(conf.startedAt, conf.finishedAt)}
+                  </Badge>
+                )}
+                
+                <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md">
+                  <Package className="w-3.5 h-3.5 opacity-60" /> {getSmartCount(conf)}
+                </span>
+                
+                {totalML > 0 && (
+                  <span className="font-black text-primary bg-primary/5 px-2 py-0.5 rounded-md">{formatML(totalML)}</span>
+                )}
               </div>
             </div>
-            <div className="hidden xs:flex items-center gap-1.5 sm:gap-2.5 mt-2 flex-wrap">
-              <span className="flex items-center gap-1"><Package className="w-3 h-3 shrink-0" /> {getSmartCount(conf)}</span>
-              {totalML > 0 && <span className="text-primary/90 font-black">{formatML(totalML)}</span>}
-              {conf.conferente && (
-                <span className="hidden sm:flex items-center gap-1"><User className="w-3 h-3 shrink-0" /> {conf.conferente}</span>
-              )}
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 mr-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); setIsAdding(true); }}
+                      className="h-9 sm:h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-black text-[10px] uppercase tracking-wider px-3"
+                    >
+                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Adicionar novo registro</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-primary/10 text-primary transition-all border border-border/40 group/btn"
+                    >
+                      <Download className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Exportar para Excel</TooltipContent>
+                </Tooltip>
+
+                {!isGuest && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
+                      >
+                        <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Excluir Conferência</TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+
+              <div className={`p-2 rounded-full transition-all duration-500 ${open ? 'rotate-180 bg-primary/10 text-primary' : 'bg-muted/50 text-muted-foreground/50'}`}>
+                 <ChevronDown className="w-5 h-5" />
+              </div>
             </div>
           </div>
         </div>
       </button>
     </div>
   );
+
 
   const deleteHistoryRegistro = useAppStore(s => s.deleteHistoryRegistro);
 
