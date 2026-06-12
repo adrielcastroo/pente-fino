@@ -442,7 +442,6 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const [open, setOpen] = useState(false);
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
-  const { isGuest } = useAuth();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -736,7 +735,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 });
 
 export default function HistoryPanel() {
-  const { isGuest } = useAuth();
+  const { isGuest, isAdmin } = useAuth();
   const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory } = useAppStore(useShallow(s => ({
 
     history: s.history,
