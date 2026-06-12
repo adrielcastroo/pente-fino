@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   isGuest: boolean;
   guestName: string;
+  isAdmin: boolean;
   loginAsGuest: (name?: string) => void;
   signOut: () => Promise<void>;
 }
@@ -23,6 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('isGuest') === 'true');
   const [guestName, setGuestName] = useState(() => localStorage.getItem('guestName') || '');
   const setConferente = useAppStore(s => s.setConferente);
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    // Lógica de Admin: Pode ser baseada no e-mail ou em um campo no profile
+    return profile?.role === 'admin' || user.email?.endsWith('@admin.com') || user.email === 'admin@pentefino.com';
+  }, [user, profile]);
 
   useEffect(() => {
     // Set up auth listener FIRST (before getSession) to avoid race conditions
@@ -96,8 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = useMemo(() => ({
-    user, profile, loading, isGuest, guestName, loginAsGuest, signOut
-  }), [user, profile, loading, isGuest, guestName]);
+    user, profile, loading, isGuest, guestName, isAdmin, loginAsGuest, signOut
+  }), [user, profile, loading, isGuest, guestName, isAdmin]);
 
   return (
     <AuthContext.Provider value={value}>
