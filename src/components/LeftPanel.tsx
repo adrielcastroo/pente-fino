@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { estoqueService } from '@/services/estoqueService';
 import { useAppStore, LabelSettings } from '@/store/useAppStore';
-import { printLabel } from '@/services/printService';
+import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
