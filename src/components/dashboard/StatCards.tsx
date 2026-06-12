@@ -21,14 +21,14 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
     whileHover={{ y: -8, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={() => onClick(id)} 
-    className="group relative cursor-pointer rounded-[1.75rem] sm:rounded-[2.25rem] border border-border/10 bg-card/40 backdrop-blur-xl p-6 sm:p-10 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/70 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[9rem] sm:min-h-[14rem]"
+    className="group relative cursor-pointer rounded-[2rem] border border-border/10 bg-card/40 backdrop-blur-xl p-6 sm:p-8 text-left transition-all duration-500 hover:border-primary/40 hover:bg-card/70 hover:shadow-[0_30px_60px_-15px_rgba(var(--primary-rgb),0.15)] overflow-hidden shadow-sm flex flex-col justify-between min-h-[9rem] sm:min-h-[12rem]"
     role="button"
   >
     <div className="flex items-center justify-between mb-6 sm:mb-10 relative z-10">
       <div className="p-3 sm:p-5 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-xl shadow-primary/5">
         <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
       </div>
-      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0">
+      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
         <span className="text-[10px] sm:text-[11px] font-black text-primary uppercase tracking-widest">Detalhes</span>
         <ChevronRight className="w-4 h-4 text-primary" />
       </div>

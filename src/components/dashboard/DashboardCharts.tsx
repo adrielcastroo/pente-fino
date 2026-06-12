@@ -62,7 +62,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
   return (
-    <Card id={id} className="md:col-span-3 border-none bg-transparent shadow-none overflow-hidden rounded-[2rem]">
+    <Card id={id} className="md:col-span-3 border border-border/10 bg-card/20 backdrop-blur-xl overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/20">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-10 py-8 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
           <CardTitle className="text-xl font-extrabold tracking-tight flex items-center gap-3">
@@ -102,7 +102,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
 export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const { isLow } = usePerformance();
   return (
-    <Card id={id} className="group border border-border/5 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.03] hover:-translate-y-1">
+    <Card id={id} className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/30 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-2">
       <CardHeader className="px-8 py-8 flex flex-row items-start justify-between">
         <div className="space-y-2">
           <CardTitle className="text-base font-black flex items-center gap-3">
@@ -155,7 +155,7 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
   ];
 
   return (
-    <Card id={id} className="border-none bg-card/10 backdrop-blur-md overflow-hidden rounded-[2rem]">
+    <Card id={id} className="border border-border/10 bg-card/20 backdrop-blur-md overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/20 hover:shadow-xl">
       <CardHeader className="px-10 py-8 border-b border-border/10">
         <CardTitle className="text-xl font-extrabold flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -228,7 +228,7 @@ export const InventoryTimelineChart = () => {
   if (loading) return <div className="h-64 flex items-center justify-center"><Activity className="animate-spin" /></div>;
 
   return (
-    <Card className="border-none bg-transparent shadow-none overflow-hidden rounded-[2rem]">
+    <Card className="border border-border/10 bg-card/20 backdrop-blur-xl overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/20">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-10 py-8 gap-6 bg-muted/5 backdrop-blur-xl border-b border-border/10">
         <div className="space-y-1">
           <CardTitle className="text-xl font-extrabold tracking-tight flex items-center gap-3">

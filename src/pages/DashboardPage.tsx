@@ -147,7 +147,7 @@ export default function DashboardPage() {
       className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-full mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
     >
       {/* Header - Simple and Clean */}
-      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-8 no-print">
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                   variant="default" 
                   size="lg"
                   disabled={isExporting}
-                  className="h-12 sm:h-16 px-6 sm:px-12 rounded-2xl sm:rounded-3xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.05] active:scale-[0.95] transition-all duration-500 gap-3 sm:gap-4 font-black uppercase tracking-[0.2em] text-[10px] sm:text-[13px] bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap border-b-4 border-emerald-800"
+                  className="h-12 sm:h-14 px-6 sm:px-10 rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:translate-y-[-4px] active:translate-y-[0px] transition-all duration-300 gap-3 sm:gap-4 font-black uppercase tracking-[0.2em] text-[10px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap border-b-4 border-emerald-800"
                   onClick={handleFullExportExcel}
                 >
                   {isExporting ? (
@@ -234,11 +234,11 @@ export default function DashboardPage() {
           transition={{ duration: 0.5 }}
           className="md:col-span-2 lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8"
         >
-          <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+          <div className="overflow-hidden">
             <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} />
           </div>
           
-          <div className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/10 backdrop-blur-md p-1 overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+          <div className="overflow-hidden">
             <InventoryTimelineChart />
           </div>
           
@@ -306,7 +306,11 @@ export default function DashboardPage() {
               <div className="divide-y divide-border/5">
                 {lastOutputs.length > 0 ? (
                   lastOutputs.map((output) => (
-                    <div key={output.id} className="p-4 sm:p-5 flex items-center justify-between hover:bg-primary/[0.02] transition-colors group">
+                    <motion.div 
+                      key={output.id} 
+                      whileHover={{ x: 5 }}
+                      className="p-4 sm:p-5 flex items-center justify-between hover:bg-primary/[0.04] transition-colors group cursor-default"
+                    >
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-bold text-foreground/90 group-hover:text-primary transition-colors truncate max-w-[150px] sm:max-w-[200px]">
                           {output.item}
@@ -323,7 +327,7 @@ export default function DashboardPage() {
                           {output.quantity} {output.unit}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 ) : (
                   <div className="p-8 text-center">
@@ -373,7 +377,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="md:col-span-2 lg:col-span-4 relative group rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/[0.05]"
+          className="md:col-span-2 lg:col-span-4 relative group rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-[0_40px_80px_-20px_rgba(var(--primary-rgb),0.15)]"
         >
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
