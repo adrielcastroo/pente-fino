@@ -79,16 +79,18 @@ function EditRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[1.5rem] sm:rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="p-8 bg-muted/30">
-          <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-xl">
+        <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-4 relative">
+             <div className="p-3 rounded-2xl bg-primary shadow-lg shadow-primary/20 text-white animate-in zoom-in duration-500"><Pencil className="w-5 h-5" /></div>
              Editar Registro
           </DialogTitle>
-          <DialogDescription className="text-sm font-medium mt-1">
+          <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
             {form?.modoOrigem ? `${form.modoOrigem === 'motor' ? 'Motor' : form.modoOrigem === 'controle' ? 'Controle' : form.tipoTecido || ''} • ` : ''}Ajuste as especificações deste item no histórico.
           </DialogDescription>
         </DialogHeader>
+
 
         {form && (
           <div className="p-8 space-y-6">
@@ -241,16 +243,18 @@ function AddHistoryRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[1.5rem] sm:rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="p-8 bg-muted/30">
-          <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Plus className="w-5 h-5" /></div>
-             Novo Registro Histórico
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-xl">
+        <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-4 relative">
+             <div className="p-3 rounded-2xl bg-primary shadow-lg shadow-primary/20 text-white animate-in zoom-in duration-500"><Plus className="w-5 h-5" /></div>
+             Novo Registro
           </DialogTitle>
-          <DialogDescription className="text-sm font-medium mt-1">
-            Adicione um item esquecido a esta conferência.
+          <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
+            Adicione um item esquecido a esta conferência de forma rápida e precisa.
           </DialogDescription>
         </DialogHeader>
+
 
         <div className="p-8 space-y-6">
           <div className="space-y-2">
@@ -452,9 +456,10 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
   const tableContent = (
-    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4">
-      <div className="rounded-xl overflow-hidden border border-border/30 shadow-inner bg-background/50 backdrop-blur-md">
+    <div className="overflow-x-auto custom-scrollbar p-3 sm:p-6 lg:p-8">
+      <div className="rounded-2xl lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
         <table className="w-full text-xs min-w-full sm:min-w-[800px] border-separate border-spacing-0">
+
           <thead>
             <tr className="bg-muted/40">
               {columns.map(column => (
@@ -663,22 +668,25 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="border border-border/40 rounded-2xl overflow-hidden bg-card/50 shadow-sm hover:border-primary/30 transition-colors duration-300 backdrop-blur-sm"
+        whileHover={{ y: -2 }}
+        className="border border-border/40 rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/40 transition-all duration-500 backdrop-blur-sm group/card"
       >
         {headerContent}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {open && (
             <motion.div 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-border/20 bg-muted/20"
+              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+              className="overflow-hidden border-t border-border/10 bg-muted/10"
             >
               {tableContent}
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
+
 
 
       <EditRegistroDialog
@@ -783,12 +791,20 @@ export default function HistoryPanel() {
 
   if (isHistoryLoading && history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-xs">Sincronizando Histórico...</p>
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-8">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
+          <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl animate-pulse" />
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="font-black text-foreground uppercase tracking-widest text-sm animate-pulse">Sincronizando Histórico</p>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider opacity-60">Carregando dados do servidor...</p>
+        </div>
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
@@ -874,14 +890,26 @@ export default function HistoryPanel() {
           </div>
 
         ) : (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-24 h-24 rounded-[2.5rem] bg-muted/10 flex items-center justify-center mb-6 rotate-6 transition-all duration-500">
-              <FolderOpen className="w-12 h-12 text-muted-foreground/20" />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-32 text-center"
+          >
+            <div className="relative mb-8">
+              <div className="absolute inset-0 bg-primary/10 rounded-[3rem] blur-2xl animate-pulse" />
+              <div className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-card to-muted border border-border/40 flex items-center justify-center relative shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500">
+                <FolderOpen className="w-12 h-12 text-primary/40" />
+              </div>
             </div>
-            <h3 className="text-xl font-black text-foreground mb-2">Histórico Vazio</h3>
-            <p className="text-muted-foreground text-sm font-medium max-w-xs">Nenhuma conferência encontrada {localSearch ? 'para sua busca' : 'no banco de dados'}.</p>
-          </div>
+            <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight">O histórico está pronto.</h3>
+            <p className="text-muted-foreground text-base font-medium max-w-xs leading-relaxed">
+              {localSearch 
+                ? `Nenhum registro encontrado para "${localSearch}". Tente outro termo.` 
+                : 'Suas conferências finalizadas aparecerão aqui organizadas por data e conferente.'}
+            </p>
+          </motion.div>
         )}
+
       </div>
 
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
