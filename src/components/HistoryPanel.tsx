@@ -452,72 +452,90 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
   const tableContent = (
-    <div className="overflow-x-auto bg-muted/5 custom-scrollbar">
-      <table className="w-full text-xs min-w-full sm:min-w-[700px] border-separate border-spacing-0">
-        <thead>
-          <tr className="bg-muted/30">
-            {columns.map(column => (
-              <th key={column.key} className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/20">{column.shortLabel || column.label}</th>
-            ))}
-            <th className="px-5 py-3 border-b border-border/20 w-[60px]"></th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border/20">
-          {conf.registros.map((r, i) => (
-            <tr key={r.id} className="group/row hover:bg-white/50 dark:hover:bg-black/20 transition-colors">
+    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4">
+      <div className="rounded-xl overflow-hidden border border-border/30 shadow-inner bg-background/50 backdrop-blur-md">
+        <table className="w-full text-xs min-w-full sm:min-w-[800px] border-separate border-spacing-0">
+          <thead>
+            <tr className="bg-muted/40">
               {columns.map(column => (
-                <td key={column.key} className={`px-2 sm:px-5 py-2 sm:py-3.5 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
-                  {column.key === 'item' ? (
-                    <div className="flex flex-col gap-1">
-                      <span>{r.item || '—'}</span>
-                      {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-1.5 h-4 w-fit bg-muted/20 border-border/50">{r.tipoTecido}</Badge>}
-                    </div>
-                  ) : column.key === 'mLinear' ? formatML(r.mLinear) 
-                  : column.key === 'm2' ? (r.m2 > 0 ? r.m2.toFixed(1) : '—')
-                  : column.key === 'largura' ? (r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—')
-                  : ((r as any)[column.key] || '—')}
-                </td>
+                <th key={column.key} className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
               ))}
-              <td className="px-5 py-3.5">
-                <div className="flex flex-col items-end gap-1.5 opacity-100 group-hover/row:opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity">
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditingRegistro(r)}
-                      className="h-10 w-10 sm:h-8 sm:w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
-                    >
-                      <Pencil className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                    </Button>
-                    {!isGuest && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteItem(r.id)}
-                        className="h-10 w-10 sm:h-8 sm:w-8 rounded-lg border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
-                      >
-                        <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      </Button>
+              <th className="px-6 py-4 border-b border-border/20 w-[100px]"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/10">
+            {conf.registros.map((r, i) => (
+              <tr key={r.id} className="group/row hover:bg-primary/5 transition-colors">
+                {columns.map(column => (
+                  <td key={column.key} className={`px-6 py-4 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
+                    {column.key === 'item' ? (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-sm tracking-tight">{r.item || '—'}</span>
+                        {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-1.5 h-4 w-fit bg-primary/5 border-primary/10 text-primary/60">{r.tipoTecido}</Badge>}
+                      </div>
+                    ) : column.key === 'mLinear' ? (
+                      <span className="font-black text-foreground/80">{formatML(r.mLinear)}</span>
+                    ) : column.key === 'm2' ? (
+                      <span className="font-bold">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</span>
+                    ) : column.key === 'largura' ? (
+                      <span className="font-bold opacity-70">{r.largura > 0 ? `${r.largura.toFixed(2)}m` : '—'}</span>
+                    ) : (
+                      <span className="opacity-80">{(r as any)[column.key] || '—'}</span>
                     )}
-                  </div>
-                  {r.wasEdited && (
+                  </td>
+                ))}
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter text-primary/60">
-                          <CheckCircle2 className="w-3 h-3" /> EDITADO
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingRegistro(r)}
+                          className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
+                      <TooltipContent>Editar registro</TooltipContent>
                     </Tooltip>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    
+                    {!isGuest && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteItem(r.id)}
+                            className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Excluir item</TooltipContent>
+                      </Tooltip>
+                    )}
+
+                    {r.wasEdited && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-1 p-1.5 rounded-full bg-primary/10 text-primary cursor-help">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
+
 
   const headerContent = (
     <div className="group/header">
