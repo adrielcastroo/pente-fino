@@ -147,7 +147,7 @@ export default function DashboardPage() {
       className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-full mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
     >
       {/* Header - Simple and Clean */}
-      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-8 no-print">
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                   variant="default" 
                   size="lg"
                   disabled={isExporting}
-                  className="h-12 sm:h-16 px-6 sm:px-12 rounded-2xl sm:rounded-3xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.05] active:scale-[0.95] transition-all duration-500 gap-3 sm:gap-4 font-black uppercase tracking-[0.2em] text-[10px] sm:text-[13px] bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap border-b-4 border-emerald-800"
+                  className="h-12 sm:h-14 px-6 sm:px-10 rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:translate-y-[-4px] active:translate-y-[0px] transition-all duration-300 gap-3 sm:gap-4 font-black uppercase tracking-[0.2em] text-[10px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap border-b-4 border-emerald-800"
                   onClick={handleFullExportExcel}
                 >
                   {isExporting ? (
