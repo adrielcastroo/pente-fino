@@ -67,7 +67,7 @@ const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => 
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
-  const { isGuest } = useAuth();
+  const { isGuest, isAdmin } = useAuth();
   const navigate = useNavigate();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
 
@@ -233,12 +233,20 @@ export default function EstoquePage() {
     const previousPosicoes = [...posicoesForActiveTec];
     const previousAll = [...allPosicoes];
     
+    if (!isAdmin) {
+      toast.error('Somente administradores podem realizar saídas forçadas.');
+      return;
+    }
     setPosicoesForActiveTec(prev => prev.filter(p => p.id !== pos.id));
     setAllPosicoes(prev => prev.filter(p => p.id !== pos.id));
     setDetailPos(null);
     
     try {
-      const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
+    if (!isAdmin) {
+      toast.error('Somente administradores podem remover posições.');
+      return;
+    }
+    const { error } = await supabase.from('estoque_posicoes').delete().eq('id', pos.id);
       if (error) throw error;
       
       loadStats();

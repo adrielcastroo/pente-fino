@@ -440,8 +440,8 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 
 const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: () => void }) => {
   const [open, setOpen] = useState(false);
+  const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
-  const { isGuest } = useAuth();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -491,21 +491,23 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                 ))}
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingRegistro(r)}
-                          className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Editar registro</TooltipContent>
-                    </Tooltip>
+                    {isAdmin && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingRegistro(r)}
+                            className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Editar registro</TooltipContent>
+                      </Tooltip>
+                    )}
                     
-                    {!isGuest && (
+                    {isAdmin && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -599,7 +601,14 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={(e) => { e.stopPropagation(); setIsAdding(true); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (!isAdmin) {
+                          toast.error('Somente administradores podem incluir itens no histórico.');
+                          return;
+                        }
+                        setIsAdding(true); 
+                      }}
                       className="h-9 sm:h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-black text-[10px] uppercase tracking-wider px-3"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
@@ -622,7 +631,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
                   <TooltipContent>Exportar para Excel</TooltipContent>
                 </Tooltip>
 
-                {!isGuest && (
+                {isAdmin && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -726,7 +735,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 });
 
 export default function HistoryPanel() {
-  const { isGuest } = useAuth();
+  const { isGuest, isAdmin } = useAuth();
   const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory } = useAppStore(useShallow(s => ({
 
     history: s.history,
