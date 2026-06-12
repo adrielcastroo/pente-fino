@@ -79,16 +79,18 @@ function EditRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[1.5rem] sm:rounded-[2rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="p-8 bg-muted/30">
-          <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-xl">
+        <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-4 relative">
+             <div className="p-3 rounded-2xl bg-primary shadow-lg shadow-primary/20 text-white animate-in zoom-in duration-500"><Pencil className="w-5 h-5" /></div>
              Editar Registro
           </DialogTitle>
-          <DialogDescription className="text-sm font-medium mt-1">
+          <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
             {form?.modoOrigem ? `${form.modoOrigem === 'motor' ? 'Motor' : form.modoOrigem === 'controle' ? 'Controle' : form.tipoTecido || ''} • ` : ''}Ajuste as especificações deste item no histórico.
           </DialogDescription>
         </DialogHeader>
+
 
         {form && (
           <div className="p-8 space-y-6">
