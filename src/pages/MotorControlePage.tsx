@@ -204,7 +204,7 @@ export default function MotorControlePage() {
       largura: 0,
     };
     addRegistro(reg);
-    if (labelSettings.autoPrint) printLabel({ item: reg.item, descricao: 'Coulisse', lote: reg.lote, processo: reg.processo, m_linear: `CX:${reg.quantidade}` }, labelSettings);
+    if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Coulisse', lote: reg.lote, loteSistema: reg.loteSistema, cx: parsed.cx || null }, labelSettings);
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
     serieRef.current?.focus();
