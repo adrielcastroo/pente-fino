@@ -697,12 +697,12 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <h4 className="text-sm font-bold flex items-center gap-2">
-                              Impressão Automática PPLA
+                              Impressão Automática (PNG)
                               <Badge variant="outline" className={labelSettings.autoPrint ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
                                 {labelSettings.autoPrint ? "Ativa" : "Desativada"}
                               </Badge>
                             </h4>
-                            <p className="text-xs text-muted-foreground">Dispara etiqueta para n8n local ao bipar.</p>
+                            <p className="text-xs text-muted-foreground">Renderiza a etiqueta como imagem PNG e envia para o n8n, que repassa para a impressora.</p>
                           </div>
                           <Switch 
                             checked={labelSettings.autoPrint} 

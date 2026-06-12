@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { estoqueService } from '@/services/estoqueService';
 import { useAppStore, LabelSettings } from '@/store/useAppStore';
-import { printLabel } from '@/services/printService';
+import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
@@ -792,14 +792,16 @@ export const LeftPanel = memo(function LeftPanel() {
       addRegistro(reg);
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
 
-      // Impressão Automática (PPLA)
+      // Impressão Automática (PNG → n8n)
       if (labelSettings.autoPrint) {
-        printLabel({
+        printTecidoLabel({
           item: reg.item,
           descricao: reg.tipoTecido || '',
-          lote: reg.loteSistema,
+          lote: reg.lote,
+          loteSistema: reg.loteSistema,
           processo: reg.processo,
-          endereco: reg.endereco
+          endereco: reg.endereco,
+          mLinear: reg.mLinear,
         }, labelSettings);
       }
 
@@ -872,16 +874,17 @@ export const LeftPanel = memo(function LeftPanel() {
     addRegistro(reg);
     toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
 
-    // Impressão Automática (PPLA)
+    // Impressão Automática (PNG → n8n)
     if (labelSettings.autoPrint) {
-      printLabel({
+      printTecidoLabel({
         item: reg.item,
         descricao: reg.tipoTecido || '',
-        lote: reg.loteSistema,
+        lote: reg.lote,
+        loteSistema: reg.loteSistema,
         processo: reg.processo,
         nf: reg.nf,
-        m_linear: reg.mLinear.toFixed(2),
-        endereco: reg.endereco
+        mLinear: reg.mLinear,
+        endereco: reg.endereco,
       }, labelSettings);
     }
 

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
 import { parseCoulisseString } from '@/lib/app-utils';
-import { printLabel } from '@/services/printService';
+import { printMotorLabel } from '@/services/printService';
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
 
@@ -142,7 +142,7 @@ export default function MotorControlePage() {
       largura: 0,
     };
     addRegistro(reg);
-    if (labelSettings.autoPrint) printLabel({ item: reg.item, descricao: 'Motor', lote: reg.lote, nf: reg.nf, processo: '', m_linear: reg.quantidade ? `CX:${reg.quantidade}` : '' }, labelSettings);
+    if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Motor', lote: reg.lote, loteSistema: reg.loteSistema, nf: reg.nf, cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null }, labelSettings);
     toast.success(`Motor adicionado: ${cleaned}`);
     resetMotorFormData();
     serieRef.current?.focus();
@@ -175,7 +175,7 @@ export default function MotorControlePage() {
       largura: 0,
     };
     addRegistro(reg);
-    if (labelSettings.autoPrint) printLabel({ item: reg.item, descricao: 'Controle', lote: reg.lote, nf: reg.nf, processo: '', m_linear: `SEQ:${seq}` }, labelSettings);
+    if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Controle', lote: reg.lote, loteSistema: reg.loteSistema, nf: reg.nf, sequencial: seq, cx: null }, labelSettings);
     toast.success(`Controle #${seq} adicionado`);
     resetMotorFormData();
     serieRef.current?.focus();
@@ -204,7 +204,7 @@ export default function MotorControlePage() {
       largura: 0,
     };
     addRegistro(reg);
-    if (labelSettings.autoPrint) printLabel({ item: reg.item, descricao: 'Coulisse', lote: reg.lote, processo: reg.processo, m_linear: `CX:${reg.quantidade}` }, labelSettings);
+    if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Coulisse', lote: reg.lote, loteSistema: reg.loteSistema, cx: parsed.cx || null }, labelSettings);
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
     serieRef.current?.focus();
