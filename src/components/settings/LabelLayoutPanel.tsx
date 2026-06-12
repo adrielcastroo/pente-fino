@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog } from 'lucide-react';
 import { toast } from 'sonner';
-import { QRCodeSVG } from 'qrcode.react';
+import { TecidoPreview, MotorPreview } from '@/components/labels/LabelTemplates';
 
 type LabelKind = 'tecido' | 'motor';
 
