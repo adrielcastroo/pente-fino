@@ -379,7 +379,7 @@ export default function RightPanel() {
   const showActions = true;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background rounded-3xl border border-border/50 shadow-2xl transition-all duration-500">
+    <div className="flex flex-col h-full overflow-hidden bg-background rounded-3xl border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
       {undoStack.length > 0 && (
         <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
           <div className="flex items-center gap-3 text-white font-bold">
@@ -474,7 +474,7 @@ export default function RightPanel() {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto bg-background/20 custom-scrollbar relative">
+      <div className="flex-1 overflow-y-auto overflow-x-auto bg-background/20 custom-scrollbar relative min-h-0">
         <div className="min-w-full inline-block align-middle">
           {isMotorControle ? (
             <table className="w-full border-separate border-spacing-0 table-auto">
