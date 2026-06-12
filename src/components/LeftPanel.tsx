@@ -792,14 +792,16 @@ export const LeftPanel = memo(function LeftPanel() {
       addRegistro(reg);
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
 
-      // Impressão Automática (PPLA)
+      // Impressão Automática (PNG → n8n)
       if (labelSettings.autoPrint) {
-        printLabel({
+        printTecidoLabel({
           item: reg.item,
           descricao: reg.tipoTecido || '',
-          lote: reg.loteSistema,
+          lote: reg.lote,
+          loteSistema: reg.loteSistema,
           processo: reg.processo,
-          endereco: reg.endereco
+          endereco: reg.endereco,
+          mLinear: reg.mLinear,
         }, labelSettings);
       }
 
