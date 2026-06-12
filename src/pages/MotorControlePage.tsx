@@ -175,7 +175,7 @@ export default function MotorControlePage() {
       largura: 0,
     };
     addRegistro(reg);
-    if (labelSettings.autoPrint) printLabel({ item: reg.item, descricao: 'Controle', lote: reg.lote, nf: reg.nf, processo: '', m_linear: `SEQ:${seq}` }, labelSettings);
+    if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Controle', lote: reg.lote, loteSistema: reg.loteSistema, nf: reg.nf, sequencial: seq, cx: null }, labelSettings);
     toast.success(`Controle #${seq} adicionado`);
     resetMotorFormData();
     serieRef.current?.focus();
