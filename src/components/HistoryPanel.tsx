@@ -855,15 +855,24 @@ export default function HistoryPanel() {
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 max-w-[1400px] mx-auto">
-            {filtered.map(conf => (
-              <ConferenceCard 
-                key={conf.id} 
-                conf={conf} 
-                onDelete={() => deleteConference(conf.id)} 
-              />
-            ))}
+          <div className="grid grid-cols-1 gap-5 max-w-[1400px] mx-auto pb-8">
+            <AnimatePresence mode="popLayout">
+              {filtered.map((conf, index) => (
+                <motion.div
+                  key={conf.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                >
+                  <ConferenceCard 
+                    conf={conf} 
+                    onDelete={() => deleteConference(conf.id)} 
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
+
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="w-24 h-24 rounded-[2.5rem] bg-muted/10 flex items-center justify-center mb-6 rotate-6 transition-all duration-500">
