@@ -667,22 +667,25 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="border border-border/40 rounded-2xl overflow-hidden bg-card/50 shadow-sm hover:border-primary/30 transition-colors duration-300 backdrop-blur-sm"
+        whileHover={{ y: -2 }}
+        className="border border-border/40 rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/40 transition-all duration-500 backdrop-blur-sm group/card"
       >
         {headerContent}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {open && (
             <motion.div 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-border/20 bg-muted/20"
+              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+              className="overflow-hidden border-t border-border/10 bg-muted/10"
             >
               {tableContent}
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
+
 
 
       <EditRegistroDialog
