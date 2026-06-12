@@ -21,8 +21,8 @@ export default function TecidoPage() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="h-full w-full"
+      transition={{ duration: 0.4, ease: \"easeOut\" }}
+      className=\"h-full w-full overflow-hidden\"
     >
       <FormPageLayout>
         <LeftPanel />
