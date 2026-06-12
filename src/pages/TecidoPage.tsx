@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import LeftPanel from '@/components/LeftPanel';
@@ -21,8 +20,8 @@ export default function TecidoPage() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: \"easeOut\" }}
-      className=\"h-full w-full overflow-hidden\"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="h-full w-full overflow-hidden"
     >
       <FormPageLayout>
         <LeftPanel />
