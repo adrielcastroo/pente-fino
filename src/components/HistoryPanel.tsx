@@ -878,14 +878,26 @@ export default function HistoryPanel() {
           </div>
 
         ) : (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-24 h-24 rounded-[2.5rem] bg-muted/10 flex items-center justify-center mb-6 rotate-6 transition-all duration-500">
-              <FolderOpen className="w-12 h-12 text-muted-foreground/20" />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-32 text-center"
+          >
+            <div className="relative mb-8">
+              <div className="absolute inset-0 bg-primary/10 rounded-[3rem] blur-2xl animate-pulse" />
+              <div className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-card to-muted border border-border/40 flex items-center justify-center relative shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500">
+                <FolderOpen className="w-12 h-12 text-primary/40" />
+              </div>
             </div>
-            <h3 className="text-xl font-black text-foreground mb-2">Histórico Vazio</h3>
-            <p className="text-muted-foreground text-sm font-medium max-w-xs">Nenhuma conferência encontrada {localSearch ? 'para sua busca' : 'no banco de dados'}.</p>
-          </div>
+            <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight">O histórico está pronto.</h3>
+            <p className="text-muted-foreground text-base font-medium max-w-xs leading-relaxed">
+              {localSearch 
+                ? `Nenhum registro encontrado para "${localSearch}". Tente outro termo.` 
+                : 'Suas conferências finalizadas aparecerão aqui organizadas por data e conferente.'}
+            </p>
+          </motion.div>
         )}
+
       </div>
 
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
