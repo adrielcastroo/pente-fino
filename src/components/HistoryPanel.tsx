@@ -456,9 +456,10 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
   const tableContent = (
-    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4">
-      <div className="rounded-xl overflow-hidden border border-border/30 shadow-inner bg-background/50 backdrop-blur-md">
+    <div className="overflow-x-auto custom-scrollbar p-3 sm:p-6 lg:p-8">
+      <div className="rounded-2xl lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
         <table className="w-full text-xs min-w-full sm:min-w-[800px] border-separate border-spacing-0">
+
           <thead>
             <tr className="bg-muted/40">
               {columns.map(column => (
