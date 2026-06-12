@@ -792,37 +792,56 @@ export default function HistoryPanel() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-0.5 sm:space-y-1 text-center sm:text-left">
-             <h1 className="text-[clamp(1.5rem,6vw,3.5rem)] font-black tracking-tight text-foreground leading-none">
-               Histórico de <span className="text-primary italic">Conferências</span>
+      <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-1.5 text-center lg:text-left"
+          >
+             <h1 className="text-[clamp(1.75rem,5vw,3.5rem)] font-black tracking-tight text-foreground leading-tight">
+               Histórico de <span className="text-primary italic relative">
+                 Conferências
+                 <svg className="absolute -bottom-2 left-0 w-full h-2 text-primary/20" viewBox="0 0 100 10" preserveAspectRatio="none">
+                   <path d="M0 5 Q 25 0, 50 5 T 100 5" fill="none" stroke="currentColor" strokeWidth="4" />
+                 </svg>
+               </span>
              </h1>
-          </div>
+             <p className="text-muted-foreground font-medium text-sm sm:text-base">Acompanhe e gerencie todos os registros de conferência realizados.</p>
+          </motion.div>
           
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-             <div className="relative group flex-1 w-full sm:w-64 lg:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 w-full lg:w-auto"
+          >
+             <div className="relative group flex-1 w-full sm:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-all duration-300 group-focus-within:scale-110" />
                 <Input 
                   value={localSearch} 
                   onChange={e => setLocalSearch(e.target.value)}
-                  placeholder="Buscar no histórico..."
-                  className="pl-10 h-10 sm:h-11 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm"
+                  placeholder="Pesquisar por item, conferente ou NF..."
+                  className="pl-11 h-12 rounded-2xl border-border/40 bg-card/40 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm shadow-sm"
                 />
              </div>
              {history.length > 0 && !isGuest && (
-               <Button 
-                 variant="outline" 
-                 size="icon" 
-                 onClick={() => setShowClearConfirm(true)}
-                 className="h-11 w-11 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/40 transition-all"
-               >
-                 <Trash2 className="w-5 h-5" />
-               </Button>
+               <Tooltip>
+                 <TooltipTrigger asChild>
+                   <Button 
+                     variant="outline" 
+                     size="icon" 
+                     onClick={() => setShowClearConfirm(true)}
+                     className="h-12 w-12 rounded-2xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/40 transition-all shadow-sm group"
+                   >
+                     <Trash2 className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                   </Button>
+                 </TooltipTrigger>
+                 <TooltipContent>Limpar todo o histórico</TooltipContent>
+               </Tooltip>
              )}
-
-          </div>
+          </motion.div>
         </header>
+
 
         {historyError && (
           <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
