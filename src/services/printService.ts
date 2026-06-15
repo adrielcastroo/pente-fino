@@ -5,8 +5,15 @@ import type { LabelSettings } from '@/store/useAppStore';
 
 export interface PrintConfig {
   autoPrint: boolean;
-  webhookUrl: string;
+  /** Mantido por compatibilidade — o webhook real é fixo em PRINT_WEBHOOK_URL. */
+  webhookUrl?: string;
 }
+
+/**
+ * Webhook fixo do n8n local. Não pode ser alterado pelo usuário —
+ * o n8n se encarrega de repassar a imagem para a impressora correta.
+ */
+export const PRINT_WEBHOOK_URL = 'http://localhost:5678/webhook/imprimir-etiqueta';
 
 export interface TecidoPrintInput {
   item: string;
