@@ -172,7 +172,7 @@ export const useAppStore = create<AppState>()(
       labelSettings: {
         width: 100,
         height: 60,
-        fields: ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote', 'somfy'],
+        fields: ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'],
         motorFields: ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'],
         motorWidth: 60,
         motorHeight: 50,
