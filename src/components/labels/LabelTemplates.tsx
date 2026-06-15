@@ -188,7 +188,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
       </div>
 
       <div className="border border-black flex flex-1 overflow-hidden">
-        <div className="flex-1 p-1 flex flex-col justify-center gap-1 border-r border-black overflow-hidden">
+        <div className="flex-1 p-1 flex flex-col justify-center gap-1 border-r-4 border-black overflow-hidden">
           {has("rnp") && (
             <div style={{ fontSize: `${fs * 0.9}px` }} className="truncate">
               <span className="font-bold">RNP: </span>
