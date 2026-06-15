@@ -37,7 +37,7 @@ const MOTOR_FIELDS = [
   { id: 'qr_lote_sku', label: 'QR Code Lote+SKU' },
 ];
 
-const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote', 'somfy'];
+const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
 const MOTOR_DEFAULT = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
 export default function LabelLayoutPanel() {
