@@ -48,6 +48,9 @@ export default function LabelLayoutPanel() {
   const fields = isMotor ? (labelSettings.motorFields ?? MOTOR_DEFAULT) : labelSettings.fields;
   const w = isMotor ? (labelSettings.motorWidth ?? 90) : labelSettings.width;
   const h = isMotor ? (labelSettings.motorHeight ?? 80) : labelSettings.height;
+  const offsetMm = isMotor
+    ? (labelSettings.motorPrintOffsetXMm ?? 4)
+    : (labelSettings.printOffsetXMm ?? 4);
   const availableFields = isMotor ? MOTOR_FIELDS : TECIDO_FIELDS;
   const has = (id: string) => fields.includes(id);
 
@@ -57,6 +60,8 @@ export default function LabelLayoutPanel() {
     setLabelSettings(isMotor
       ? { motorWidth: patch.w ?? w, motorHeight: patch.h ?? h }
       : { width: patch.w ?? w, height: patch.h ?? h });
+  const updateOffset = (value: number) =>
+    setLabelSettings(isMotor ? { motorPrintOffsetXMm: value } : { printOffsetXMm: value });
 
   const handleToggleField = (fieldId: string) => {
     updateFields(fields.includes(fieldId) ? fields.filter(f => f !== fieldId) : [...fields, fieldId]);
