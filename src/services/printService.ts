@@ -64,7 +64,7 @@ export async function printTecidoLabel(
   input: TecidoPrintInput,
   labelSettings: LabelSettings & PrintConfig,
 ) {
-  if (!labelSettings.autoPrint || !labelSettings.webhookUrl) return;
+  if (!labelSettings.autoPrint) return;
   try {
     const loteText = input.loteSistema || (input.nf ? `NFe ${input.nf}` : '') || input.lote || '';
     const qtdText = typeof input.mLinear === 'number' && input.mLinear > 0
@@ -102,7 +102,7 @@ export async function printTecidoLabel(
       endereco: input.endereco,
       mLinear: input.mLinear,
       timestamp: new Date().toISOString(),
-    }, labelSettings.webhookUrl);
+    }, PRINT_WEBHOOK_URL);
 
     toast.success('Etiqueta enviada para impressão!');
   } catch (error) {
@@ -118,7 +118,7 @@ export async function printMotorLabel(
   input: MotorPrintInput,
   labelSettings: LabelSettings & PrintConfig,
 ) {
-  if (!labelSettings.autoPrint || !labelSettings.webhookUrl) return;
+  if (!labelSettings.autoPrint) return;
   try {
     const cxText = input.cx != null && input.cx !== ''
       ? (typeof input.cx === 'number' ? `CX${String(input.cx).padStart(2, '0')}` : String(input.cx))
@@ -157,7 +157,7 @@ export async function printMotorLabel(
       sequencial: input.sequencial,
       endereco: input.endereco,
       timestamp: new Date().toISOString(),
-    }, labelSettings.webhookUrl);
+    }, PRINT_WEBHOOK_URL);
 
     toast.success('Etiqueta enviada para impressão!');
   } catch (error) {
