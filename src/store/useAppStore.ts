@@ -19,6 +19,8 @@ export interface LabelSettings {
   orientation: 'portrait' | 'landscape';
   autoPrint: boolean;
   webhookUrl: string;
+  printOffsetXMm?: number;
+  motorPrintOffsetXMm?: number;
 }
 
 export interface AppState {
@@ -181,7 +183,9 @@ export const useAppStore = create<AppState>()(
         showQRCode: true,
         orientation: 'landscape',
         autoPrint: true,
-        webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta'
+        webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta',
+        printOffsetXMm: 4,
+        motorPrintOffsetXMm: 4
       },
       
       isArchiving: false,

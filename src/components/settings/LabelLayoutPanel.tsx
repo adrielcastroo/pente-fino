@@ -48,6 +48,9 @@ export default function LabelLayoutPanel() {
   const fields = isMotor ? (labelSettings.motorFields ?? MOTOR_DEFAULT) : labelSettings.fields;
   const w = isMotor ? (labelSettings.motorWidth ?? 90) : labelSettings.width;
   const h = isMotor ? (labelSettings.motorHeight ?? 80) : labelSettings.height;
+  const offsetMm = isMotor
+    ? (labelSettings.motorPrintOffsetXMm ?? 4)
+    : (labelSettings.printOffsetXMm ?? 4);
   const availableFields = isMotor ? MOTOR_FIELDS : TECIDO_FIELDS;
   const has = (id: string) => fields.includes(id);
 
@@ -57,6 +60,8 @@ export default function LabelLayoutPanel() {
     setLabelSettings(isMotor
       ? { motorWidth: patch.w ?? w, motorHeight: patch.h ?? h }
       : { width: patch.w ?? w, height: patch.h ?? h });
+  const updateOffset = (value: number) =>
+    setLabelSettings(isMotor ? { motorPrintOffsetXMm: value } : { printOffsetXMm: value });
 
   const handleToggleField = (fieldId: string) => {
     updateFields(fields.includes(fieldId) ? fields.filter(f => f !== fieldId) : [...fields, fieldId]);
@@ -79,6 +84,8 @@ export default function LabelLayoutPanel() {
   const wPx = (labelSettings.orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
   const hPx = (labelSettings.orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
   const fs = labelSettings.fontSize;
+  const offsetPx = Math.min(Math.max(0, offsetMm) * LABEL_PX_PER_MM, wPx - 1);
+  const innerWpx = wPx - offsetPx;
 
   const previewBoxRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(1);
@@ -149,6 +156,20 @@ export default function LabelLayoutPanel() {
                       </Button>
                     </div>
                   </div>
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-xs font-bold">Offset de impressão X (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={offsetMm}
+                      onChange={(e) => updateOffset(Number(e.target.value))}
+                      className="h-9 w-24"
+                    />
+                    <p className="text-[10px] opacity-60 leading-tight">
+                      Compensa o deslocamento da impressora (faixa branca à esquerda). Padrão: 4 mm.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -206,11 +227,14 @@ export default function LabelLayoutPanel() {
                     transform: `scale(${fit})`,
                     transformOrigin: 'center center',
                     flexShrink: 0,
+                    display: 'flex',
+                    background: '#fff',
                   }}
                 >
+                  <div style={{ width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' }} />
                   {isMotor
-                    ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
-                    : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
+                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
+                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
                   }
                 </div>
               </div>
