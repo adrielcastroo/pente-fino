@@ -86,7 +86,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       </div>
       {has("nfe") && (
         <div className="border-b-4 border-black px-2 py-1 flex items-center gap-2 flex-[0.6] overflow-hidden">
-          <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 2.8}px` }}>
+          <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 1.3}px` }}>
             LOTE
           </span>
           <span className="font-black tracking-wide truncate" style={{ fontSize: `${fs * 1.5}px` }}>
