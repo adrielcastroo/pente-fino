@@ -22,7 +22,7 @@ const TECIDO_FIELDS = [
   { id: 'data', label: 'Data' },
   { id: 'qr_sku', label: 'QR Code SKU' },
   { id: 'qr_lote', label: 'QR Code Lote' },
-  { id: 'somfy', label: 'Marca Somfy' },
+  
 ];
 
 const MOTOR_FIELDS = [
