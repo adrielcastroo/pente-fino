@@ -78,8 +78,8 @@ export async function printTecidoLabel(
       qtd: qtdText,
       rnp: input.endereco || '',
       data: today(),
-      qrSku: `SKU:${input.item}`,
-      qrLote: `LOTE:${loteText}`,
+      qrSku: input.item,
+      qrLote: loteText,
     };
 
     const rendered = await renderTecidoLabel(data, labelSettings);
@@ -134,7 +134,7 @@ export async function printMotorLabel(
       nt: ntText,
       rnp: input.endereco || '',
       data: today(),
-      qrLoteSku: `LOTE:${input.lote};SKU:${input.item}`,
+      qrLoteSku: `${input.lote};${input.item}`,
     };
 
     const rendered = await renderMotorLabel(data, labelSettings);
