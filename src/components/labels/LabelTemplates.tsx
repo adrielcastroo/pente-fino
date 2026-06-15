@@ -1,5 +1,10 @@
 import { QRCodeSVG } from "qrcode.react";
 
+// Escala física compartilhada entre preview e PNG final (≈ 203 dpi = 8 px/mm).
+// Usar a mesma constante garante que o preview seja pixel-a-pixel idêntico
+// ao PNG enviado para a impressora.
+export const LABEL_PX_PER_MM = 8;
+
 export type LabelHas = (id: string) => boolean;
 
 export interface TecidoLabelData {
