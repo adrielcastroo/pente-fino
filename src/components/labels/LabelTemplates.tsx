@@ -60,15 +60,15 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
       className="bg-white text-black shadow-2xl border border-black/80 flex flex-col font-mono"
     >
-      <div className="flex border-b-2 border-black flex-[1.1]">
-        <div className="flex-1 p-2 flex flex-col justify-start overflow-hidden border-r-2 border-black">
+      <div className="flex border-b-4 border-black flex-[1.1]">
+        <div className="flex-1 p-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
           {has("sku") && (
-            <div className="font-black tracking-tight leading-none truncate" style={{ fontSize: `${fs * 3.2}px` }}>
+            <div className="font-black tracking-tight leading-none truncate" style={{ fontSize: `${fs * 3}px` }}>
               {data.sku}
             </div>
           )}
           {has("descricao") && (
-            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 2.2}px` }}>
+            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 2}px` }}>
               {descLines.map((l, i) => (
                 <div key={i}>{l}</div>
               ))}
@@ -85,7 +85,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
         )}
       </div>
       {has("nfe") && (
-        <div className="border-b-2 border-black px-2 py-1 flex items-center gap-2 flex-[0.6] overflow-hidden">
+        <div className="border-b-4 border-black px-2 py-1 flex items-center gap-2 flex-[0.6] overflow-hidden">
           <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 2.8}px` }}>
             LOTE
           </span>
@@ -96,7 +96,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       )}
       <div className="flex flex-[1.3]">
         {has("qtd") && (
-          <div className="w-[28%] border-r-2 border-black p-2 flex items-center gap-1.5 overflow-hidden">
+          <div className="w-[28%] border-r-4 border-black p-2 flex items-center gap-1.5 overflow-hidden">
             <div style={{ fontSize: `${fs * 1.3}px` }} className="font-bold shrink-0">
               QTD:
             </div>
@@ -105,15 +105,15 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
             </div>
           </div>
         )}
-        <div className="flex-1 border-r-2 border-black p-2 flex flex-col justify-around overflow-hidden">
+        <div className="flex-1 border-r-4 border-black p-2 flex flex-col justify-around overflow-hidden">
           {has("rnp") && (
-            <div style={{ fontSize: `${fs * 2.6}px` }} className="truncate">
+            <div style={{ fontSize: `${fs * 2.2}px` }} className="truncate">
               <span className="font-bold">RNP: </span>
               <span className="font-black">{data.rnp}</span>
             </div>
           )}
           {has("data") && (
-            <div style={{ fontSize: `${fs * 3.5}px` }} className="truncate">
+            <div style={{ fontSize: `${fs * 2.2}px` }} className="truncate">
               <span className="font-bold">DATA:</span> {data.data}
             </div>
           )}
@@ -190,7 +190,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
       <div className="border border-black flex flex-1 overflow-hidden">
         <div className="flex-1 p-1 flex flex-col justify-center gap-1 border-r border-black overflow-hidden">
           {has("rnp") && (
-            <div style={{ fontSize: `${fs * 1.05}px` }} className="truncate">
+            <div style={{ fontSize: `${fs * 0.9}px` }} className="truncate">
               <span className="font-bold">RNP: </span>
               <span className="font-black">{data.rnp}</span>
             </div>
