@@ -94,18 +94,18 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
           <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 4.5}px` }}>
             LOTE
           </span>
-          <span className="font-black tracking-wide truncate" style={{ fontSize: `${fs * 4}px` }}>
+          <span className="font-black tracking-wide truncate" style={{ fontSize: `${fs * 2.7}px` }}>
             {data.lote}
           </span>
         </div>
       )}
       <div className="flex flex-[1.3]">
         {has("qtd") && (
-          <div className="w-[28%] border-r-4 border-black p-1 flex items-center gap-1.5 overflow-hidden">
-            <div style={{ fontSize: `${fs * 2.2}px` }} className="font-bold shrink-0">
+          <div className="w-[28%] border-r-4 border-black p-1 flex flex-col items-center gap-1.5 overflow-hidden">
+            <div style={{ fontSize: `${fs * 3.2}px` }} className="font-bold shrink-0">
               QTD:
             </div>
-            <div className="font-black leading-none truncate" style={{ fontSize: `${fs * 6}px` }}>
+            <div className="font-black leading-none truncate mt-1" style={{ fontSize: `${fs * 4}px` }}>
               {data.qtd}
             </div>
           </div>
