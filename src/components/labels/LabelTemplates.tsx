@@ -99,7 +99,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
           </span>
         </div>
       )}
-      <div className="flex flex-[1.3]">
+      <div className="flex flex-[1.2]">
         {has("qtd") && (
           <div className="w-[28%] border-r-4 border-black p-1 flex flex-col items-center gap-1.5 overflow-hidden">
             <div style={{ fontSize: `${fs * 3}px` }} className="font-bold shrink-0">
