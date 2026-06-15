@@ -711,16 +711,19 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">URL do Webhook (n8n)</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Webhook do n8n (fixo)</Label>
                           <div className="relative">
                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input 
-                              value={labelSettings.webhookUrl}
-                              onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
-                              className="pl-9 text-sm bg-muted/20 font-mono"
-                              placeholder="http://172.18.224.1:5678/webhook-test/..."
+                            <Input
+                              value="http://localhost:5678/webhook/imprimir-etiqueta"
+                              readOnly
+                              disabled
+                              className="pl-9 text-sm bg-muted/20 font-mono cursor-not-allowed"
                             />
                           </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Endereço fixo do n8n local responsável por receber o PNG e encaminhar para a impressora.
+                          </p>
                         </div>
                       </div>
                     </div>

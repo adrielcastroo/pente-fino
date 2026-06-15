@@ -22,7 +22,7 @@ const TECIDO_FIELDS = [
   { id: 'data', label: 'Data' },
   { id: 'qr_sku', label: 'QR Code SKU' },
   { id: 'qr_lote', label: 'QR Code Lote' },
-  { id: 'somfy', label: 'Marca Somfy' },
+  
 ];
 
 const MOTOR_FIELDS = [
@@ -37,7 +37,7 @@ const MOTOR_FIELDS = [
   { id: 'qr_lote_sku', label: 'QR Code Lote+SKU' },
 ];
 
-const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote', 'somfy'];
+const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
 const MOTOR_DEFAULT = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
 export default function LabelLayoutPanel() {
@@ -122,7 +122,7 @@ export default function LabelLayoutPanel() {
                     <CardTitle className="text-sm font-black uppercase tracking-wider">Dimensões (mm)</CardTitle>
                   </div>
                   <CardDescription>
-                    {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos Somfy: 100mm × 60mm.'}
+                    {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -219,8 +219,8 @@ export default function LabelLayoutPanel() {
                 <Layout className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-[10px] leading-tight text-primary/80 font-medium">
                   {isMotor
-                    ? 'Layout fiel ao modelo Motor Somfy: SKU + descrição, faixa SERIE (CX/NF/NT), RNP + DATA e QR Code "Lote+SKU".'
-                    : 'Layout fiel ao modelo Tecido Somfy: SKU + descrição, NFe/Lote, QTD, RNP, DATA e QR Codes (SKU e Lote).'}
+                    ? 'Layout fiel ao modelo Motor: SKU + descrição, faixa SERIE (CX/NF/NT), RNP + DATA e QR Code "Lote+SKU".'
+                    : 'Layout fiel ao modelo Tecido: SKU + descrição, NFe/Lote, QTD, RNP, DATA e QR Codes (SKU e Lote).'}
                   Valores são exemplos — na impressão real serão substituídos pelos dados do registro.
                 </p>
               </div>

@@ -63,7 +63,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
   return (
     <div
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
-      className="bg-white text-black shadow-2xl border border-black/80 flex flex-col font-mono"
+      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono"
     >
       <div className="flex border-b-4 border-black flex-[1.1]">
         <div className="flex-1 p-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
@@ -122,11 +122,6 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
               <span className="font-bold">DATA:</span> {data.data}
             </div>
           )}
-          {has("somfy") && (
-            <div className="text-center opacity-60 italic truncate" style={{ fontSize: `${fs * 0.7}px` }}>
-              HOME MOTION BY <span className="font-black not-italic">somfy.</span>
-            </div>
-          )}
         </div>
         {has("qr_lote") && (
           <div className="w-[22%] flex flex-col items-center justify-center p-1">
@@ -146,9 +141,9 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
   return (
     <div
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
-      className="bg-white text-black shadow-2xl border border-black/80 flex flex-col font-mono p-1 gap-1"
+      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono p-1 gap-1"
     >
-      <div className="border border-black p-1 flex flex-col overflow-hidden">
+      <div className="border-4 border-black p-1 flex flex-col overflow-hidden">
         {has("sku") && (
           <div
             className="font-black tracking-tight leading-none text-center truncate"
@@ -169,7 +164,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         )}
       </div>
 
-      <div className="border border-black p-1 flex flex-col gap-0.5 overflow-hidden">
+      <div className="border-4 border-black p-1 flex flex-col gap-0.5 overflow-hidden">
         {has("serie") && (
           <span
             className="bg-black text-white font-bold px-1.5 py-0.5 w-fit shrink-0"
@@ -192,7 +187,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         )}
       </div>
 
-      <div className="border border-black flex flex-1 overflow-hidden">
+      <div className="border-4 border-black flex flex-1 overflow-hidden">
         <div className="flex-1 p-1 flex flex-col justify-center gap-1 border-r-4 border-black overflow-hidden">
           {has("rnp") && (
             <div style={{ fontSize: `${fs * 0.9}px` }} className="truncate">

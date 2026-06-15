@@ -172,7 +172,7 @@ export const useAppStore = create<AppState>()(
       labelSettings: {
         width: 100,
         height: 60,
-        fields: ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote', 'somfy'],
+        fields: ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'],
         motorFields: ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'],
         motorWidth: 60,
         motorHeight: 50,
@@ -181,7 +181,7 @@ export const useAppStore = create<AppState>()(
         showQRCode: true,
         orientation: 'landscape',
         autoPrint: true,
-        webhookUrl: 'http://localhost:5678/webhook-test/imprimir-etiqueta'
+        webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta'
       },
       
       isArchiving: false,
