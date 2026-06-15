@@ -122,11 +122,6 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
               <span className="font-bold">DATA:</span> {data.data}
             </div>
           )}
-          {has("somfy") && (
-            <div className="text-center opacity-60 italic truncate" style={{ fontSize: `${fs * 0.7}px` }}>
-              HOME MOTION BY <span className="font-black not-italic">somfy.</span>
-            </div>
-          )}
         </div>
         {has("qr_lote") && (
           <div className="w-[22%] flex flex-col items-center justify-center p-1">
