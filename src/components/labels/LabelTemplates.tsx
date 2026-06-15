@@ -68,12 +68,12 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       <div className="flex border-b-4 border-black flex-[1.1]">
         <div className="flex-1 p-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
           {has("sku") && (
-            <div className="font-black tracking-tight leading-none truncate" style={{ fontSize: `${fs * 3}px` }}>
+            <div className="font-black tracking-tight leading-none truncate" style={{ fontSize: `${fs * 5}px` }}>
               {data.sku}
             </div>
           )}
           {has("descricao") && (
-            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 2}px` }}>
+            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 4}px` }}>
               {descLines.map((l, i) => (
                 <div key={i}>{l}</div>
               ))}
@@ -83,7 +83,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
         {has("qr_sku") && (
           <div className="w-[22%] flex flex-col items-center justify-end p-2">
             <QRCodeSVG value={data.qrSku} size={hPx * 0.22} level="M" />
-            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.2}px` }}>
+            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.8}px` }}>
               SKU
             </div>
           </div>
@@ -91,10 +91,10 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       </div>
       {has("nfe") && (
         <div className="border-b-4 border-black px-2 py-1 flex items-center gap-2 flex-[0.6] overflow-hidden">
-          <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 2.2}px` }}>
+          <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 4.5}px` }}>
             LOTE
           </span>
-          <span className="font-black tracking-wide truncate" style={{ fontSize: `${fs * 2.2}px` }}>
+          <span className="font-black tracking-wide truncate" style={{ fontSize: `${fs * 4}px` }}>
             {data.lote}
           </span>
         </div>
@@ -105,7 +105,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
             <div style={{ fontSize: `${fs * 2.2}px` }} className="font-bold shrink-0">
               QTD:
             </div>
-            <div className="font-black leading-none truncate" style={{ fontSize: `${fs * 3}px` }}>
+            <div className="font-black leading-none truncate" style={{ fontSize: `${fs * 6}px` }}>
               {data.qtd}
             </div>
           </div>
