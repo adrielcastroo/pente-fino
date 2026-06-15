@@ -66,7 +66,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono"
     >
       <div className="flex border-b-4 border-black flex-[1.1]">
-        <div className="flex-1 p-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
+        <div className="flex-1 pt-4 pb-2 px-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
           {has("sku") && (
             <div className="font-black tracking-tight leading-none truncate" style={{ fontSize: `${fs * 5}px` }}>
               {data.sku}
@@ -81,7 +81,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
           )}
         </div>
         {has("qr_sku") && (
-          <div className="w-[22%] flex flex-col items-center justify-end p-2">
+          <div className="w-[22%] flex flex-col items-center justify-end pt-4 pb-2 px-2">
             <QRCodeSVG value={data.qrSku} size={hPx * 0.22} level="M" />
             <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.8}px` }}>
               SKU
@@ -90,7 +90,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
         )}
       </div>
       {has("nfe") && (
-        <div className="border-b-4 border-black px-2 py-1 flex items-center gap-2 flex-[0.6] overflow-hidden">
+        <div className="border-b-4 border-black px-2 py-0.5 flex items-center gap-2 flex-[0.4] overflow-hidden">
           <span className="bg-black text-white font-bold px-1.5 py-0.5 shrink-0" style={{ fontSize: `${fs * 4}px` }}>
             LOTE
           </span>
