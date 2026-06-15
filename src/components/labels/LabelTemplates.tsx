@@ -62,7 +62,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
   const descLines = data.descricao.split("\n");
   return (
     <div
-      style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
+      style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px`, margin: "0 auto" }}
       className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono"
     >
       <div className="flex border-b-4 border-black flex-[1.1]">
