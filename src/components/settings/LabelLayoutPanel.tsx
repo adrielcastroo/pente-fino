@@ -156,6 +156,20 @@ export default function LabelLayoutPanel() {
                       </Button>
                     </div>
                   </div>
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-xs font-bold">Offset de impressão X (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={offsetMm}
+                      onChange={(e) => updateOffset(Number(e.target.value))}
+                      className="h-9 w-24"
+                    />
+                    <p className="text-[10px] opacity-60 leading-tight">
+                      Compensa o deslocamento da impressora (faixa branca à esquerda). Padrão: 4 mm.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
 
