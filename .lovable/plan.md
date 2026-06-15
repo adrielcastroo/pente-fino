@@ -1,24 +1,17 @@
-## Ajuste do Layout do Título "LOTE" na Etiqueta Tecido
+## Ajustes na Etiqueta Tecido
 
 ### Objetivo
-Alterar a seção de lote da etiqueta Tecido para que o título "LOTE" fique posicionado acima do valor (ex: "NFe 148551"), com fonte menor, replicando fielmente o layout da imagem de referência.
+Reduzir a altura da seção "LOTE" e descer levemente o conteúdo da seção superior (SKU + QR SKU).
 
-### Alterações
+### Alterações em `src/components/labels/LabelTemplates.tsx`
 
-**Arquivo:** `src/components/labels/LabelTemplates.tsx`
+1. **Reduzir altura da seção LOTE**
+   - Mudar `flex-[0.6]` para `flex-[0.4]` na linha 93.
+   - Isso diminui a proporção vertical dedicada ao lote, liberando espaço para as demais seções.
 
-Na seção `TecidoPreview`, no bloco `{has("nfe") && (...)}`:
+2. **Descer levemente SKU e QR SKU**
+   - Aumentar o padding-top da coluna SKU (esquerda): `p-2` → `py-3 px-2` (linha 69).
+   - Aumentar o padding-top da coluna QR SKU (direita): `p-2` → `py-3 px-2` (linha 84).
+   - Ambos descem uniformemente, mantendo o alinhamento entre si.
 
-1. **Layout vertical**: Mudar de `flex items-center gap-2` para `flex flex-col justify-center gap-1`
-2. **Título menor**: Reduzir `fontSize` do badge "LOTE" de `${fs * 4.5}px` para `${fs * 2.5}px`
-3. **Valor abaixo**: O valor do lote permanece grande (`${fs * 4.5}px`) e fica posicionado abaixo do badge
-4. **Ajuste de padding**: Reduzir `px-2 py-1` se necessário para manter proporção compacta
-
-### Resultado Esperado
-- Badge "LOTE" pequeno, preto com texto branco, posicionado no topo da seção
-- Valor do lote (ex: "NFe 148551") abaixo, em fonte grande
-- Layout 1:1 com a imagem de referência fornecida
-
-### Fora de Escopo
-- Alterações em MotorPreview
-- Alterações em bordas, fontes de outros elementos, ou webhook
+Nenhuma outra alteração necessária.
