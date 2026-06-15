@@ -227,11 +227,14 @@ export default function LabelLayoutPanel() {
                     transform: `scale(${fit})`,
                     transformOrigin: 'center center',
                     flexShrink: 0,
+                    display: 'flex',
+                    background: '#fff',
                   }}
                 >
+                  <div style={{ width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' }} />
                   {isMotor
-                    ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
-                    : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
+                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
+                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
                   }
                 </div>
               </div>
