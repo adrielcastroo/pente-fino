@@ -73,10 +73,32 @@ export default function LabelLayoutPanel() {
 
   const handleSave = () => toast.success('Configurações de etiqueta salvas!');
 
-  const scale = isMotor ? 5.2 : 3.2;
-  const wPx = (labelSettings.orientation === 'landscape' ? w : h) * scale;
-  const hPx = (labelSettings.orientation === 'landscape' ? h : w) * scale;
+  // Render do preview na MESMA escala do PNG final (8 px/mm).
+  // Um transform: scale(...) responsivo encolhe para caber no container,
+  // garantindo fidelidade pixel-a-pixel com o PNG impresso.
+  const wPx = (labelSettings.orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
+  const hPx = (labelSettings.orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
   const fs = labelSettings.fontSize;
+
+  const previewBoxRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = previewBoxRef.current;
+    if (!el) return;
+    const recalc = () => {
+      const padding = 32; // p-4 nas duas direções
+      const availW = Math.max(0, el.clientWidth - padding);
+      const availH = Math.max(0, el.clientHeight - padding);
+      if (availW <= 0 || availH <= 0) return;
+      const next = Math.min(availW / wPx, availH / hPx, 1);
+      setFit(next > 0 ? next : 1);
+    };
+    recalc();
+    const ro = new ResizeObserver(recalc);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [wPx, hPx]);
 
   return (
     <div className="space-y-6">
