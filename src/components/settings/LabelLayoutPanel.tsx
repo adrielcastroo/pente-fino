@@ -187,14 +187,32 @@ export default function LabelLayoutPanel() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-xs font-black uppercase tracking-widest opacity-60">
-                Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
-              </Label>
-              <div className="flex items-center justify-center p-6 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 min-h-[420px] overflow-auto">
-                {isMotor
-                  ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
-                  : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
-                }
+              <div className="flex items-baseline justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-60">
+                  Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
+                </Label>
+                <span className="text-[10px] font-mono opacity-60">
+                  {w}×{h}mm · zoom {Math.round(fit * 100)}%
+                </span>
+              </div>
+              <div
+                ref={previewBoxRef}
+                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 min-h-[420px] overflow-hidden"
+              >
+                <div
+                  style={{
+                    width: `${wPx}px`,
+                    height: `${hPx}px`,
+                    transform: `scale(${fit})`,
+                    transformOrigin: 'center center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {isMotor
+                    ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
+                    : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
+                  }
+                </div>
               </div>
 
               <div className="flex items-center gap-2 p-3 rounded-2xl bg-primary/5 border border-primary/10">
