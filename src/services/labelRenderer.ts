@@ -4,6 +4,7 @@ import { toPng } from 'html-to-image';
 import {
   TecidoPreview,
   MotorPreview,
+  LABEL_PX_PER_MM,
   type TecidoLabelData,
   type MotorLabelData,
   type LabelHas,
@@ -14,8 +15,8 @@ const TECIDO_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 
 const MOTOR_DEFAULT_FIELDS = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
 // 203 dpi (impressoras térmicas comuns) ≈ 8 px/mm. Limitamos para evitar canvas gigante.
-const TARGET_PX_PER_MM = 8;
-const PREVIEW_SCALE = 5.2; // mesma escala usada no LabelLayoutPanel para garantir layout fiel
+const TARGET_PX_PER_MM = LABEL_PX_PER_MM;
+const PREVIEW_SCALE = LABEL_PX_PER_MM; // mesma escala usada no LabelLayoutPanel (1:1 com o PNG)
 
 export interface RenderedLabel {
   dataUrl: string;       // "data:image/png;base64,..."
