@@ -1,17 +1,21 @@
 ## Ajustes na Etiqueta Tecido
 
 ### Objetivo
-Reduzir a altura da seção "LOTE" e descer levemente o conteúdo da seção superior (SKU + QR SKU).
+Aumentar levemente a seção "LOTE", diminuir as seções inferiores, e aplicar layout vertical no título "LOTE" com o valor abaixo e visível por completo.
 
 ### Alterações em `src/components/labels/LabelTemplates.tsx`
 
-1. **Reduzir altura da seção LOTE**
-   - Mudar `flex-[0.6]` para `flex-[0.4]` na linha 93.
-   - Isso diminui a proporção vertical dedicada ao lote, liberando espaço para as demais seções.
+1. **Aumentar altura da seção LOTE**
+   - Mudar `flex-[0.4]` para `flex-[0.5]` na linha 93.
+   - Isso aumenta a proporção vertical dedicada ao lote, garantindo espaço para o valor aparecer completamente.
 
-2. **Descer levemente SKU e QR SKU**
-   - Aumentar o padding-top da coluna SKU (esquerda): `p-2` → `py-3 px-2` (linha 69).
-   - Aumentar o padding-top da coluna QR SKU (direita): `p-2` → `py-3 px-2` (linha 84).
-   - Ambos descem uniformemente, mantendo o alinhamento entre si.
+2. **Aplicar layout vertical no título LOTE**
+   - Container: `flex flex-col justify-start gap-0.5` (coluna, grudado no topo).
+   - Badge "LOTE": fonte reduzida para `${fs * 1.8}px`, sem `shrink-0`, com `w-fit leading-none`.
+   - Valor do lote: posicionado abaixo do badge, fonte `${fs * 3.5}px`, com `whitespace-normal leading-tight` para exibir o valor completo sem corte.
+
+3. **Diminuir seções inferiores**
+   - Mudar `flex-[1.3]` para `flex-[1.2]` na linha 102.
+   - Compensa o aumento da seção LOTE mantendo o total equilibrado.
 
 Nenhuma outra alteração necessária.
