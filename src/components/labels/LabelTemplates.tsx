@@ -36,8 +36,8 @@ export const TECIDO_SAMPLE: TecidoLabelData = {
   qtd: "1,00 M",
   rnp: "G4.C10.C10",
   data: "29/05/2026",
-  qrSku: "SKU-002001002000323",
-  qrLote: "LOTE-NFe-148551",
+  qrSku: "002.001.002.000.323",
+  qrLote: "NFe 148551",
 };
 
 export const MOTOR_SAMPLE: MotorLabelData = {
@@ -48,7 +48,7 @@ export const MOTOR_SAMPLE: MotorLabelData = {
   nt: "NT725284000424",
   rnp: "G2.C01.A01/2 B01/2 -IS",
   data: "21/05/2026",
-  qrLoteSku: "LOTE-SKU-002001002000834-CX01-NF148362",
+  qrLoteSku: "NT725284000424;002.001.002.000.83.4",
 };
 
 interface PreviewProps {
