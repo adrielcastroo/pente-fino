@@ -19,6 +19,8 @@ export interface LabelSettings {
   orientation: 'portrait' | 'landscape';
   autoPrint: boolean;
   webhookUrl: string;
+  printOffsetXMm?: number;
+  motorPrintOffsetXMm?: number;
 }
 
 export interface AppState {
