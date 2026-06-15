@@ -76,7 +76,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
           )}
         </div>
         {has("qr_sku") && (
-          <div className="w-[22%] flex flex-col items-center justify-center p-1">
+          <div className="w-[22%] flex flex-col items-center justify-end p-2">
             <QRCodeSVG value={data.qrSku} size={hPx * 0.22} level="M" />
             <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.2}px` }}>
               SKU
@@ -96,7 +96,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       )}
       <div className="flex flex-[1.3]">
         {has("qtd") && (
-          <div className="w-[28%] border-r-4 border-black p-2 flex items-center gap-1.5 overflow-hidden">
+          <div className="w-[28%] border-r-4 border-black p-1 flex items-center gap-1.5 overflow-hidden">
             <div style={{ fontSize: `${fs * 1.3}px` }} className="font-bold shrink-0">
               QTD:
             </div>
