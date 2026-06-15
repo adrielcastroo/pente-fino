@@ -11,7 +11,7 @@ import {
 } from '@/components/labels/LabelTemplates';
 import type { LabelSettings } from '@/store/useAppStore';
 
-const TECIDO_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote', 'somfy'];
+const TECIDO_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
 const MOTOR_DEFAULT_FIELDS = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
 // 203 dpi (impressoras térmicas comuns) ≈ 8 px/mm. Limitamos para evitar canvas gigante.
