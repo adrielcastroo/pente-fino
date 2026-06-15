@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog } from 'lucide-react';
 import { toast } from 'sonner';
-import { TecidoPreview, MotorPreview } from '@/components/labels/LabelTemplates';
+import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 type LabelKind = 'tecido' | 'motor';
 
@@ -73,10 +73,32 @@ export default function LabelLayoutPanel() {
 
   const handleSave = () => toast.success('Configurações de etiqueta salvas!');
 
-  const scale = isMotor ? 5.2 : 3.2;
-  const wPx = (labelSettings.orientation === 'landscape' ? w : h) * scale;
-  const hPx = (labelSettings.orientation === 'landscape' ? h : w) * scale;
+  // Render do preview na MESMA escala do PNG final (8 px/mm).
+  // Um transform: scale(...) responsivo encolhe para caber no container,
+  // garantindo fidelidade pixel-a-pixel com o PNG impresso.
+  const wPx = (labelSettings.orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
+  const hPx = (labelSettings.orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
   const fs = labelSettings.fontSize;
+
+  const previewBoxRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = previewBoxRef.current;
+    if (!el) return;
+    const recalc = () => {
+      const padding = 32; // p-4 nas duas direções
+      const availW = Math.max(0, el.clientWidth - padding);
+      const availH = Math.max(0, el.clientHeight - padding);
+      if (availW <= 0 || availH <= 0) return;
+      const next = Math.min(availW / wPx, availH / hPx, 1);
+      setFit(next > 0 ? next : 1);
+    };
+    recalc();
+    const ro = new ResizeObserver(recalc);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [wPx, hPx]);
 
   return (
     <div className="space-y-6">
@@ -165,14 +187,32 @@ export default function LabelLayoutPanel() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-xs font-black uppercase tracking-widest opacity-60">
-                Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
-              </Label>
-              <div className="flex items-center justify-center p-6 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 min-h-[420px] overflow-auto">
-                {isMotor
-                  ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
-                  : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
-                }
+              <div className="flex items-baseline justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-60">
+                  Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
+                </Label>
+                <span className="text-[10px] font-mono opacity-60">
+                  {w}×{h}mm · zoom {Math.round(fit * 100)}%
+                </span>
+              </div>
+              <div
+                ref={previewBoxRef}
+                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 min-h-[420px] overflow-hidden"
+              >
+                <div
+                  style={{
+                    width: `${wPx}px`,
+                    height: `${hPx}px`,
+                    transform: `scale(${fit})`,
+                    transformOrigin: 'center center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {isMotor
+                    ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
+                    : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} />
+                  }
+                </div>
               </div>
 
               <div className="flex items-center gap-2 p-3 rounded-2xl bg-primary/5 border border-primary/10">
