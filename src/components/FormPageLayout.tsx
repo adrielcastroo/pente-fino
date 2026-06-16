@@ -18,12 +18,10 @@ export default function FormPageLayout({ children, showRightPanel = true }: Form
       return (
         <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 2xl:gap-8 overflow-hidden">
           <div
-            className="w-full shrink-0 h-full min-w-0 overflow-y-auto custom-scrollbar"
+            className="w-full shrink-0 h-full min-w-0 overflow-hidden"
             style={{ flexBasis: 'clamp(360px, 32vw, 560px)' }}
           >
-            <div className="h-fit">
-              {children}
-            </div>
+            {children}
           </div>
           <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
             <RightPanel />
