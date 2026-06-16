@@ -36,7 +36,7 @@ const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
   { key: 'reservas', label: 'Reservas Estoque', icon: Table, path: '/reservas' },
   { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
-  { key: 'cadastros' as AppTab, label: 'Cadastros', icon: Package, path: '/cadastros' },
+  { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros' },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
