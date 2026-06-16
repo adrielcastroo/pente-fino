@@ -1,22 +1,7 @@
 import { toast } from 'sonner';
 import { Registro, Conference } from '@/types';
-import { useAppStore } from '@/store/useAppStore';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-
-const triggerAutoArchive = async (fileName: string) => {
-  try {
-    const store = useAppStore.getState();
-    if (store.registros.length > 0) {
-      await store.archiveAndClear(fileName, true);
-      store.resetFormData();
-      store.resetMotorFormData();
-      toast.info('Dados arquivados em histórico e campos limpos.');
-    }
-  } catch (error) {
-    console.error('Erro no arquivamento automático após exportação:', error);
-  }
-};
 
 const BLUE_CORP = '0F172A';
 const WHITE = 'FFFFFF';
@@ -274,7 +259,6 @@ export async function exportToExcel(data: any[], fileName: string) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
     XLSX.writeFile(wb, `${fileName}.xlsx`);
-    triggerAutoArchive(fileName);
     toast.dismiss(toastId);
     toast.success('Relatório exportado com sucesso!');
   } catch (error) {
@@ -485,12 +469,12 @@ export async function exportConferenceToExcel(headers: string[], data: any[][], 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Conferência');
     XLSX.writeFile(wb, `${fileName}.xlsx`);
-    triggerAutoArchive(fileName);
     toast.dismiss(toastId);
     toast.success('Conferência exportada com sucesso!');
   } catch (error) {
     console.error('Erro ao exportar conferência:', error);
     toast.error('Erro ao gerar o arquivo Excel.');
+    throw error;
   }
 }
 
@@ -555,12 +539,12 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Motores');
     XLSX.writeFile(wb, `${fileName}.xlsx`);
-    triggerAutoArchive(fileName);
     toast.dismiss(toastId);
     toast.success('Conferência exportada com sucesso!');
   } catch (error) {
     console.error('Erro ao exportar motores:', error);
     toast.error('Erro ao gerar o arquivo Excel.');
+    throw error;
   }
 }
 
