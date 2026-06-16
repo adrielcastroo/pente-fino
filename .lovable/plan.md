@@ -1,47 +1,25 @@
-## Objetivo
+## Problema
 
-Liberar leitura pública (anon + authenticated) de todas as tabelas que alimentam as páginas do app, mantendo escrita (insert/update/delete) restrita a usuários autenticados. Isso inclui a página `/historico` (que hoje só carrega quando o usuário está logado por causa das policies em `conferences` e `registros`).
+Ao exportar como visitante (não logado) ou com sessão expirada:
+1. `archiveAndClear` no store chama `apiService.archiveConference` → `insertConference` → `ensureAuthenticatedSession()` lança `SessionExpiredError`.
+2. O `catch` em `archiveAndClear` trata o erro, mostra um toast, agenda redirect para `/login`, mas faz `return` em vez de re-lançar.
+3. No `TopBar.exportExcel`, o `await archiveAndClear(...)` resolve normalmente, então o Excel é baixado e aparece o toast verde "Exportação concluída! X registros alocados…" — mesmo sem ter salvo nada.
 
-## O que será alterado
+## Correção
 
-Migração única ajustando RLS + GRANTs nas tabelas de dados do app:
+**1. `src/components/TopBar.tsx` — `exportExcel`**
+- Antes de chamar `archiveAndClear`, validar autenticação localmente via `useAuth` (já importado). Se `isGuest` ou `!user`, abortar com toast claro: "Faça login para exportar e salvar no histórico" + botão "Entrar" que navega para `/login`.
+- Depois do `await archiveAndClear(...)`, checar `useAppStore.getState().archiveError`. Se preenchido, abortar (não baixar Excel, não mostrar toast de sucesso). O toast de erro já é exibido pelo próprio store.
 
-**Leitura liberada para anon + authenticated, escrita só authenticated:**
-- `conferences` (histórico)
-- `registros` (itens bipados do histórico)
-- `estoque_posicoes` (mapa 2D)
-- `estoque_saidas`
-- `inventory`, `inventory_configs`, `inventory_tasks`, `inventory_task_items`, `inventory_daily_limits`
-- `contagem_itens_bipados`, `contagens_diarias_limite`, `historico_contagens`, `tarefas_contagem`
-- `itens_cadastro` (cadastros)
-- `lotes_mestres`
-- `madeira_quadrantes`
-- `movimentacoes_endereco`
-- `operation_logs`
-- `reservas`, `independent_reservations`
-- `configuracoes_inventario`
-- `report_logs`, `report_settings`
+**2. `src/store/useAppStore.ts` — `archiveAndClear`**
+- No branch `SessionExpiredError`: manter o toast/redirect, mas também garantir que `archiveError` fique preenchido (já está) e **não** limpar `registros` (já está correto). Apenas confirmar que `lastArchivedConferenceId` permanece `null` nesse caminho.
+- Limpar `archiveError` no início (`set({ isArchiving: true, archiveError: null })` — já está).
 
-**NÃO alteradas (continuam privadas — contêm dados pessoais/sensíveis):**
-- `profiles` (dados de usuário)
-- `auth_audit_logs` (logs de autenticação)
-- `ai_chat_history` (conversas privadas)
-
-## Detalhes técnicos
-
-Para cada tabela do grupo "leitura pública":
-1. `DROP` das policies de SELECT existentes que limitam a authenticated.
-2. `CREATE POLICY ... FOR SELECT TO anon, authenticated USING (true)`.
-3. Manter (ou recriar) policies de INSERT/UPDATE/DELETE restritas a `authenticated`.
-4. `GRANT SELECT ON public.<tabela> TO anon` (necessário no Lovable Cloud — RLS sozinho não basta).
-5. Manter `GRANT SELECT, INSERT, UPDATE, DELETE TO authenticated` e `GRANT ALL TO service_role`.
-
-## Impacto no frontend
-
-Nenhuma mudança de código é necessária — o cliente Supabase já usa a chave anônima quando o usuário não está logado, então as queries de leitura passarão a funcionar para convidados automaticamente. As páginas continuam mostrando os mesmos dados; apenas botões de edição/exclusão devem permanecer escondidos para visitantes (a UI já trata isso via `useAuth`).
+**3. Botão de exportar (TopBar)**
+- Desabilitar quando `isGuest || !user`, com tooltip: "Entre na sua conta para exportar e salvar no histórico".
 
 ## Fora de escopo
 
-- Nenhuma mudança em `profiles`, `auth_audit_logs`, `ai_chat_history`.
-- Nenhuma mudança em código de UI/serviços.
-- Nenhuma mudança nas regras de export/importação.
+- Não permitir que visitantes salvem no histórico (a política definida foi: leitura pública, escrita só autenticados).
+- Nenhuma mudança de schema/RLS — as policies estão corretas; o bug é puramente de fluxo no frontend.
+- Nenhuma mudança em `/historico` ou em `loadHistory`.
