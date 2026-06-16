@@ -209,7 +209,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   // Cortina now uses manual largura (cortinaLargura), not extracted from item
   const usesLarguraFromItem = !isAI && isRolo;
-  const requiresEndereco = !isPVT && !isCelular && currentMode !== 'manual' && currentMode !== 'etiq_pronta';
+  const requiresEndereco = !isPVT && !isCelular && currentMode !== 'etiq_pronta';
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
@@ -963,9 +963,10 @@ export const LeftPanel = memo(function LeftPanel() {
      */
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
       <div
-        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain"
+        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain pb-28 lg:pb-16"
         style={{
           padding: 'clamp(0.75rem, 3vw, 1.5rem)',
+          paddingBottom: 'clamp(6rem, 12vw, 8rem)',
           rowGap: 'clamp(0.75rem, 2.5vw, 1.25rem)',
           display: 'flex',
           flexDirection: 'column',
