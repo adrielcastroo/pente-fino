@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
+import { buildAuditPayload } from '@/lib/audit';
 
 export interface ItemCadastro {
   id: string;
@@ -9,6 +10,10 @@ export interface ItemCadastro {
   codigo_fornecedor_normalizado: string;
   created_at: string;
   updated_at: string;
+  updated_by?: string | null;
+  updated_by_name?: string | null;
+  last_edited_field?: string | null;
+  last_edited_at?: string | null;
 }
 
 export interface ItemCadastroInput {
@@ -46,8 +51,13 @@ export const itensCadastroService = {
     return (data as ItemCadastro) || null;
   },
 
-  async upsert(input: ItemCadastroInput): Promise<ItemCadastro> {
-    const payload = prepare(input);
+  async upsert(input: ItemCadastroInput, opts?: { changedField?: string | null; isEdit?: boolean }): Promise<ItemCadastro> {
+    const base = prepare(input);
+    const payload: any = { ...base };
+    if (opts?.isEdit) {
+      const audit = await buildAuditPayload(opts.changedField ?? null);
+      Object.assign(payload, audit);
+    }
     const { data, error } = await supabase
       .from('itens_cadastro')
       .upsert(payload, { onConflict: 'codigo_interno' })

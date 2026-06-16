@@ -14,7 +14,13 @@ export function useItensCadastro() {
 export function useUpsertItemCadastro() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: ItemCadastroInput) => itensCadastroService.upsert(input),
+    mutationFn: (vars: { input: ItemCadastroInput; opts?: { isEdit?: boolean; changedField?: string | null } } | ItemCadastroInput) => {
+      // backward compatible: accept bare input or { input, opts }
+      const isWrapped = (vars as any)?.input != null;
+      const input = isWrapped ? (vars as any).input : (vars as ItemCadastroInput);
+      const opts = isWrapped ? (vars as any).opts : undefined;
+      return itensCadastroService.upsert(input, opts);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

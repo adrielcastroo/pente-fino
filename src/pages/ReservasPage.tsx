@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { Package, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,27 +9,22 @@ import { ReservasTable } from '@/components/estoque/ReservasTable';
 import { ReservaFormDialog } from '@/components/estoque/ReservaFormDialog';
 import { filterReservas, ReservaFormData } from '@/components/estoque/reservas-utils';
 import { useReservas } from '@/hooks/useReservas';
+import { Reserva } from '@/types';
+import { diffFields } from '@/lib/audit';
 
-/**
- * ReservasPage - High-performance inventory management view.
- * 
- * Architecture Decisions:
- * 1. TanStack Query (via useReservas): Handles server state synchronization,
- *    caching, and polling, reducing TBT and network overhead.
- * 2. Memoization: useMemo and memoized sub-components prevent unnecessary re-renders.
- * 3. Atomic Design: Logic extracted to custom hooks and utility functions.
- */
 const ReservasPage = () => {
   const { reservas, addReserva, deleteReserva, clearReservas } = useReservas();
   const [searchTerm, setSearchTerm] = useState('');
+  const [editing, setEditing] = useState<Reserva | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
-  const filteredReservas = useMemo(() => 
-    filterReservas(reservas, searchTerm), 
+  const filteredReservas = useMemo(() =>
+    filterReservas(reservas, searchTerm),
     [reservas, searchTerm]
   );
 
   const handleAddReserva = async (formData: ReservaFormData) => {
-    const newReserva = {
+    const newReserva: Reserva = {
       id: crypto.randomUUID(),
       codigo: formData.codigo.trim(),
       descricao: formData.descricao.trim(),
@@ -41,8 +36,57 @@ const ReservasPage = () => {
       createdAt: new Date().toISOString(),
     };
 
-    await addReserva(newReserva);
+    await addReserva({ reserva: newReserva });
   };
+
+  const handleUpdateReserva = async (formData: ReservaFormData) => {
+    if (!editing) return;
+    const updated: Reserva = {
+      ...editing,
+      codigo: formData.codigo.trim(),
+      descricao: formData.descricao.trim(),
+      endereco: formData.endereco.trim(),
+      quantidade: Number(formData.quantidade),
+      caixaNum: formData.caixaNum.trim(),
+      quantidadeCx: formData.quantidadeCx ? parseInt(formData.quantidadeCx, 10) : undefined,
+      observacao: formData.observacao.trim(),
+    };
+
+    const before = {
+      codigo: editing.codigo,
+      descricao: editing.descricao ?? '',
+      endereco: editing.endereco,
+      quantidade: editing.quantidade,
+      caixaNum: editing.caixaNum ?? '',
+      quantidadeCx: editing.quantidadeCx ?? '',
+      observacao: editing.observacao ?? '',
+    };
+    const after = {
+      codigo: updated.codigo,
+      descricao: updated.descricao ?? '',
+      endereco: updated.endereco,
+      quantidade: updated.quantidade,
+      caixaNum: updated.caixaNum ?? '',
+      quantidadeCx: updated.quantidadeCx ?? '',
+      observacao: updated.observacao ?? '',
+    };
+    const changed = diffFields(before, after, Object.keys(after) as any);
+    // Map camelCase to db column for last_edited_field
+    const fieldMap: Record<string, string> = {
+      caixaNum: 'caixa_num',
+      quantidadeCx: 'quantidade_cx',
+    };
+    const changedField = changed[0] ? (fieldMap[changed[0]] || changed[0]) : null;
+
+    await addReserva({ reserva: updated, opts: { isEdit: true, changedField } });
+    setEditing(null);
+    setEditOpen(false);
+  };
+
+  const handleEdit = useCallback((reserva: Reserva) => {
+    setEditing(reserva);
+    setEditOpen(true);
+  }, []);
 
   const handleClearAll = async () => {
     if (window.confirm('Tem certeza que deseja limpar todas as reservas?')) {
@@ -66,10 +110,10 @@ const ReservasPage = () => {
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <ReservaFormDialog onAdd={handleAddReserva} />
-            
+
             {reservas.length > 0 && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleClearAll}
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 font-bold"
               >
@@ -90,8 +134,8 @@ const ReservasPage = () => {
               </CardTitle>
               <div className="relative w-full md:w-80 group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                <Input 
-                  placeholder="Filtrar por código, endereço ou OBS..." 
+                <Input
+                  placeholder="Filtrar por código, endereço ou OBS..."
                   className="pl-9 bg-background/50 border-border/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
@@ -101,13 +145,21 @@ const ReservasPage = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ReservasTable items={filteredReservas} onDelete={deleteReserva} />
+            <ReservasTable items={filteredReservas} onDelete={deleteReserva} onEdit={handleEdit} />
           </CardContent>
         </Card>
+
+        {/* Hidden controlled edit dialog */}
+        <ReservaFormDialog
+          mode="edit"
+          open={editOpen}
+          onOpenChange={(o) => { setEditOpen(o); if (!o) setEditing(null); }}
+          initial={editing}
+          onAdd={handleUpdateReserva}
+        />
       </div>
     </TooltipProvider>
   );
 };
 
 export default memo(ReservasPage);
-

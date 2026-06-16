@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Pencil, Trash2, Package } from 'lucide-react';
+import { Plus, Upload, Search, Pencil, Trash2, Package, History } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { fieldLabel } from '@/lib/audit';
+import { cn } from '@/lib/utils';
 
 export default function CadastrosPage() {
   const { data: itens = [], isLoading } = useItensCadastro();
@@ -90,6 +93,7 @@ export default function CadastrosPage() {
         <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
       </div>
 
+      <TooltipProvider>
       <div className="flex-1 overflow-auto border rounded-lg bg-card">
         <Table>
           <TableHeader className="sticky top-0 bg-card z-10">
@@ -98,31 +102,70 @@ export default function CadastrosPage() {
               <TableHead>Descrição</TableHead>
               <TableHead className="w-[200px]">Código fornecedor</TableHead>
               <TableHead className="w-[140px]">Atualizado</TableHead>
+              <TableHead className="w-[110px] text-center">Edição</TableHead>
               <TableHead className="w-[100px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
             )}
             {!isLoading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                   {itens.length === 0 ? 'Nenhum item cadastrado. Importe uma planilha ou crie manualmente.' : 'Nenhum resultado para a busca.'}
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((item) => (
+            {filtered.map((item) => {
+              const lf = item.last_edited_field || null;
+              const wasEdited = !!item.last_edited_at;
+              const editedCol = (k: string) => lf === k;
+              return (
               <TableRow key={item.id}>
-                <TableCell className="font-mono text-xs">{item.codigo_interno}</TableCell>
-                <TableCell className="text-xs max-w-xl">
-                  <div className="line-clamp-2" title={item.descricao}>{item.descricao}</div>
+                <TableCell className={cn('font-mono text-xs', editedCol('codigo_interno') && 'bg-amber-500/5')}>
+                  <span className="inline-flex items-center gap-1.5">
+                    {editedCol('codigo_interno') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                    {item.codigo_interno}
+                  </span>
                 </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
+                <TableCell className={cn('text-xs max-w-xl', editedCol('descricao') && 'bg-amber-500/5')}>
+                  <div className="line-clamp-2 inline-flex items-start gap-1.5" title={item.descricao}>
+                    {editedCol('descricao') && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />}
+                    <span>{item.descricao}</span>
+                  </div>
+                </TableCell>
+                <TableCell className={cn(editedCol('codigo_fornecedor') && 'bg-amber-500/5')}>
+                  <span className="inline-flex items-center gap-1.5">
+                    {editedCol('codigo_fornecedor') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                    <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
+                  </span>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {new Date(item.updated_at).toLocaleDateString('pt-BR')}
+                </TableCell>
+                <TableCell className="text-center">
+                  {wasEdited ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 font-medium text-[10px] cursor-help">
+                          <History className="w-3 h-3" />
+                          editado
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs">
+                        <div className="font-semibold">{item.updated_by_name || 'Usuário'}</div>
+                        <div className="text-muted-foreground">
+                          alterou <span className="font-medium text-foreground">{fieldLabel(lf) || '—'}</span>
+                        </div>
+                        <div className="text-muted-foreground mt-1">
+                          {item.last_edited_at ? new Date(item.last_edited_at).toLocaleString('pt-BR') : ''}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <span className="text-muted-foreground/40 text-[10px]">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -135,10 +178,11 @@ export default function CadastrosPage() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </div>
+      </TooltipProvider>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
       <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />

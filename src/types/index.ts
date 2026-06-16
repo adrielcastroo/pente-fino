@@ -57,6 +57,11 @@ export interface Reserva {
   quantidadeCx?: number;
   observacao?: string;
   createdAt: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  updatedByName?: string | null;
+  lastEditedField?: string | null;
+  lastEditedAt?: string | null;
 }
 
 export interface FormData {

@@ -415,10 +415,14 @@ export type Database = {
           descricao: string | null
           endereco: string
           id: string
+          last_edited_at: string | null
+          last_edited_field: string | null
           observacao: string | null
           quantidade: number
           quantidade_cx: number | null
           updated_at: string | null
+          updated_by: string | null
+          updated_by_name: string | null
         }
         Insert: {
           caixa_num?: string | null
@@ -427,10 +431,14 @@ export type Database = {
           descricao?: string | null
           endereco: string
           id?: string
+          last_edited_at?: string | null
+          last_edited_field?: string | null
           observacao?: string | null
           quantidade?: number
           quantidade_cx?: number | null
           updated_at?: string | null
+          updated_by?: string | null
+          updated_by_name?: string | null
         }
         Update: {
           caixa_num?: string | null
@@ -439,10 +447,14 @@ export type Database = {
           descricao?: string | null
           endereco?: string
           id?: string
+          last_edited_at?: string | null
+          last_edited_field?: string | null
           observacao?: string | null
           quantidade?: number
           quantidade_cx?: number | null
           updated_at?: string | null
+          updated_by?: string | null
+          updated_by_name?: string | null
         }
         Relationships: []
       }
@@ -625,7 +637,11 @@ export type Database = {
           created_by: string | null
           descricao: string
           id: string
+          last_edited_at: string | null
+          last_edited_field: string | null
           updated_at: string
+          updated_by: string | null
+          updated_by_name: string | null
         }
         Insert: {
           codigo_fornecedor: string
@@ -635,7 +651,11 @@ export type Database = {
           created_by?: string | null
           descricao: string
           id?: string
+          last_edited_at?: string | null
+          last_edited_field?: string | null
           updated_at?: string
+          updated_by?: string | null
+          updated_by_name?: string | null
         }
         Update: {
           codigo_fornecedor?: string
@@ -645,7 +665,11 @@ export type Database = {
           created_by?: string | null
           descricao?: string
           id?: string
+          last_edited_at?: string | null
+          last_edited_field?: string | null
           updated_at?: string
+          updated_by?: string | null
+          updated_by_name?: string | null
         }
         Relationships: []
       }
@@ -1014,9 +1038,14 @@ export type Database = {
           descricao: string | null
           endereco: string
           id: string
+          last_edited_at: string | null
+          last_edited_field: string | null
           observacao: string | null
           quantidade: number
           quantidade_cx: number | null
+          updated_at: string
+          updated_by: string | null
+          updated_by_name: string | null
         }
         Insert: {
           caixa_num?: string | null
@@ -1025,9 +1054,14 @@ export type Database = {
           descricao?: string | null
           endereco: string
           id?: string
+          last_edited_at?: string | null
+          last_edited_field?: string | null
           observacao?: string | null
           quantidade: number
           quantidade_cx?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_name?: string | null
         }
         Update: {
           caixa_num?: string | null
@@ -1036,9 +1070,14 @@ export type Database = {
           descricao?: string | null
           endereco?: string
           id?: string
+          last_edited_at?: string | null
+          last_edited_field?: string | null
           observacao?: string | null
           quantidade?: number
           quantidade_cx?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_name?: string | null
         }
         Relationships: []
       }

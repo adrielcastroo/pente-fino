@@ -56,8 +56,8 @@ export const apiService = {
     return independentReservaService.fetchReservas();
   },
 
-  async addReserva(reserva: any) {
-    return independentReservaService.addReserva(reserva);
+  async addReserva(reserva: any, opts?: { isEdit?: boolean; changedField?: string | null }) {
+    return independentReservaService.addReserva(reserva, opts);
   },
 
   async deleteReserva(id: string) {
