@@ -188,15 +188,32 @@ export default function CadastrosPage() {
                     <span>{item.descricao}</span>
                   </div>
                 </TableCell>
-                <TableCell className={cn(editedCol('codigo_fornecedor') && 'bg-amber-500/5')}>
-                  <span className="inline-flex items-center gap-1.5">
-                    {editedCol('codigo_fornecedor') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-                    {item.codigo_fornecedor && item.codigo_fornecedor.trim() ? (
-                      <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>
+                <TableCell className={cn((editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
+                  <div className="inline-flex items-start gap-1.5 flex-wrap max-w-[240px]">
+                    {(editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && (
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
                     )}
-                  </span>
+                    {(() => {
+                      const codigos = getCodigos(item);
+                      if (!codigos.length) {
+                        return <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>;
+                      }
+                      const visiveis = codigos.slice(0, 3);
+                      const extras = codigos.length - visiveis.length;
+                      return (
+                        <>
+                          {visiveis.map((c, i) => (
+                            <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[10px]">{c}</Badge>
+                          ))}
+                          {extras > 0 && (
+                            <Badge variant="secondary" className="text-[10px]" title={codigos.slice(3).join(', ')}>
+                              +{extras}
+                            </Badge>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {new Date(item.updated_at).toLocaleDateString('pt-BR')}
