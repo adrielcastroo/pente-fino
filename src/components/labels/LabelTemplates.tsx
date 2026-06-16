@@ -73,7 +73,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
             </div>
           )}
           {has("descricao") && (
-            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 2.5}px` }}>
+            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 2}px` }}>
               {descLines.map((l, i) => (
                 <div key={i}>{l}</div>
               ))}
@@ -91,10 +91,16 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
       </div>
       {has("nfe") && (
         <div className="border-b-4 border-black px-2 py-0.5 flex flex-col justify-start gap-0.5 flex-[0.5] overflow-hidden">
-          <span className="bg-black text-white font-bold px-1.5 py-0 w-fit leading-none" style={{ fontSize: `${fs * 1.8}px` }}>
+          <span
+            className="bg-black text-white font-bold px-1.5 py-0 w-fit leading-none"
+            style={{ fontSize: `${fs * 1.8}px` }}
+          >
             LOTE
           </span>
-          <span className="font-black tracking-wide whitespace-normal leading-tight" style={{ fontSize: `${fs * 3.5}px` }}>
+          <span
+            className="font-black tracking-wide whitespace-normal leading-tight"
+            style={{ fontSize: `${fs * 3.5}px` }}
+          >
             {data.lote}
           </span>
         </div>
