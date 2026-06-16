@@ -59,9 +59,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
-import LotesMestresPanel from '@/components/settings/LotesMestresPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
-import InventorySettingsPanel from '@/components/settings/InventorySettingsPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
 const categories = [
