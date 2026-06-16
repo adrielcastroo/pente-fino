@@ -1,31 +1,32 @@
-## Ajuste de layout do campo QTD na etiqueta de tecido
+# Correção do "PROC" duplicado na exportação XLSX
 
-### Objetivo
-Permitir que o campo **QTD** da etiqueta de tecido exiba valores como `30,00 M` e `30,00 M-1` (formato sequencial) sem truncar ou quebrar o texto, mantendo o tamanho atual da fonte.
+## Problema
+No XLSX exportado (Motor/Controle), a coluna "Lote Final (Sistema)" sai com `PROC` duplicado, por vezes em capitalizações diferentes:
 
-### Arquivo a alterar
-`src/components/labels/LabelTemplates.tsx`
+```
+TEC00.A.N04 PROC Proc29863/26 27M
+```
 
-### Alterações propostas
+## Solução
+Antes de gravar cada célula que contém o `loteSistema` no XLSX, normalizar a string:
 
-1. **Aumentar largura da coluna QTD**
-   - Atual: `w-[28%]`
-   - Novo: `w-[36%]` (ou equivalente que acomode `30,00 M-1` com `fs * 3.2`)
+1. Detectar ocorrências da palavra `proc` (qualquer capitalização: `proc`, `Proc`, `PROC`) usando regex case-insensitive.
+2. Se aparecer mais de uma vez consecutiva (com espaço/colado), colapsar para uma única ocorrência.
+3. Forçar sempre a forma maiúscula `PROC`.
+4. Aplicar também quando o token `Proc` vier colado ao número (ex.: `Proc29863/26` → `PROC29863/26`), mantendo só um `PROC`.
 
-2. **Reduzir padding interno da coluna QTD**
-   - Atual: `p-1`
-   - Novo: `px-1 py-0.5` (ou `p-0.5`) para maximizar espaço horizontal interno
+Resultado esperado para o exemplo:
+```
+TEC00.A.N04 PROC 29863/26 27M
+```
 
-3. **Garantir exibição em uma única linha**
-   - Substituir `truncate` por `whitespace-nowrap` no valor do QTD, evitando corte com `...` e garantindo que o texto completo seja visível
+## Onde alterar
 
-4. **Compensar largura na coluna do meio (RNP/DATA)**
-   - A coluna do meio usa `flex-1` e deve se ajustar automaticamente
-   - Reduzir a largura da coluna do QR Code de `w-[22%]` para `w-[20%]` se necessário para equilibrar o layout, ou manter se o espaço for suficiente
+Arquivo: `src/lib/export-utils.ts`
 
-5. **Manter tamanhos de fonte inalterados**
-   - `QTD:` label continua em `fs * 3`
-   - Valor continua em `fs * 3.2`
+- Criar helper local `normalizeProcToken(value: string): string` que:
+  - Substitui qualquer sequência `(PROC\s*)+` (case-insensitive) por um único `PROC ` .
+  - Garante espaço entre `PROC` e o número seguinte.
+- Aplicar no `exportMotorControleToExcel` em todas as linhas onde `r.loteSistema` é escrito (motor, controle e coulisse) e também no header `[`${cx} ${firstItem}`]` se aplicável.
 
-### Exemplo de resultado esperado
-O layout continua com a mesma estrutura, mas o campo QTD tem espaço suficiente para exibir `30,00 M-1` completo, sem quebras ou truncamento, mantendo a legibilidade e o tamanho da fonte atual.
+Nenhuma outra exportação ou lógica de negócio é alterada.
