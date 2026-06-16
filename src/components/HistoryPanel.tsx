@@ -736,7 +736,7 @@ const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: (
 
 export default function HistoryPanel() {
   const { isGuest, isAdmin } = useAuth();
-  const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory } = useAppStore(useShallow(s => ({
+  const { history, isHistoryLoading, historyError, deleteConference, clearHistory, loadHistory, lastArchivedConferenceId, setLastArchivedConferenceId } = useAppStore(useShallow(s => ({
 
     history: s.history,
     isHistoryLoading: s.isHistoryLoading,
@@ -744,15 +744,28 @@ export default function HistoryPanel() {
     deleteConference: s.deleteConference,
     clearHistory: s.clearHistory,
     loadHistory: s.loadHistory,
+    lastArchivedConferenceId: s.lastArchivedConferenceId,
+    setLastArchivedConferenceId: s.setLastArchivedConferenceId,
   })));
   const [localSearch, setLocalSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
+
+  useEffect(() => {
+    if (lastArchivedConferenceId) {
+      setHighlightId(lastArchivedConferenceId);
+      setLastArchivedConferenceId(null);
+      const t = setTimeout(() => setHighlightId(null), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [lastArchivedConferenceId, setLastArchivedConferenceId]);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
