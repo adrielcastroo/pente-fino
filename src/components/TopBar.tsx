@@ -11,12 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
+
   const { user, isGuest, guestName, signOut, profile } = useAuth();
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
@@ -46,28 +48,27 @@ const TopBar = memo(function TopBar() {
   const exportExcel = async () => {
     if (isArchiving) return;
     const currentRegistros = [...useAppStore.getState().registros];
-    if (!currentRegistros.length) { 
-      toast.warning('Nenhum registro para exportar.'); 
-      return; 
+    if (!currentRegistros.length) {
+      toast.warning('Nenhum item bipado nesta sessão para exportar.');
+      return;
     }
-
-    // 1. Process Stock Allocation and saving
-    const toastId = toast.loading('Alocando tecidos e preparando arquivo...');
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
-    const requiresProcesso = !isMotorControle && 
-      (currentRegistros.some(r => r.modoOrigem !== 'diversos' && r.modoOrigem !== 'etiq_pronta') || 
-       (currentMode !== 'diversos' && currentMode !== 'etiq_pronta'));
-    
-    if (requiresProcesso && !processo.trim()) { 
-      toast.warning('Preencha o campo PROCESSO para continuar.'); 
-      return; 
+    const requiresProcesso = !isMotorControle &&
+      currentRegistros.some(r => r.modoOrigem !== 'diversos' && r.modoOrigem !== 'etiq_pronta' && r.modoOrigem !== 'motor' && r.modoOrigem !== 'controle');
+
+    // Validate BEFORE opening loading toast
+    if (!conferente.trim()) {
+      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.');
+      return;
     }
-    
-    if (!conferente.trim()) { 
-      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.'); 
-      return; 
+    if (requiresProcesso && !processo.trim()) {
+      toast.warning('Preencha o campo PROCESSO para continuar.');
+      return;
     }
+
+    const toastId = toast.loading('Alocando tecidos e preparando arquivo...');
+
 
     const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
