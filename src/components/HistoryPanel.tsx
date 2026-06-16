@@ -912,7 +912,9 @@ export default function HistoryPanel() {
                   <ConferenceCard 
                     conf={conf} 
                     onDelete={() => deleteConference(conf.id)} 
+                    highlight={conf.id === highlightId}
                   />
+
                 </motion.div>
               ))}
             </AnimatePresence>
