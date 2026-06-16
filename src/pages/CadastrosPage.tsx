@@ -11,28 +11,49 @@ import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fieldLabel } from '@/lib/audit';
 import { cn } from '@/lib/utils';
+
+type FornFilter = 'todos' | 'com' | 'sem';
+type SortKey = 'codigo_interno' | 'descricao' | 'updated_at';
 
 export default function CadastrosPage() {
   const { data: itens = [], isLoading } = useItensCadastro();
   const del = useDeleteItemCadastro();
   const [search, setSearch] = useState('');
+  const [fornFilter, setFornFilter] = useState<FornFilter>('todos');
+  const [sortKey, setSortKey] = useState<SortKey>('codigo_interno');
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
 
+  const semFornecedorCount = useMemo(
+    () => itens.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim()).length,
+    [itens],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return itens;
-    return itens.filter(
-      (i) =>
-        i.codigo_interno.toLowerCase().includes(q) ||
-        i.descricao.toLowerCase().includes(q) ||
-        i.codigo_fornecedor.toLowerCase().includes(q),
-    );
-  }, [itens, search]);
+    let out = itens;
+    if (fornFilter === 'com') out = out.filter((i) => !!i.codigo_fornecedor && !!i.codigo_fornecedor.trim());
+    else if (fornFilter === 'sem') out = out.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim());
+    if (q) {
+      out = out.filter(
+        (i) =>
+          i.codigo_interno.toLowerCase().includes(q) ||
+          i.descricao.toLowerCase().includes(q) ||
+          (i.codigo_fornecedor || '').toLowerCase().includes(q),
+      );
+    }
+    const sorted = [...out].sort((a, b) => {
+      if (sortKey === 'updated_at') return (b.updated_at || '').localeCompare(a.updated_at || '');
+      if (sortKey === 'descricao') return a.descricao.localeCompare(b.descricao);
+      return a.codigo_interno.localeCompare(b.codigo_interno);
+    });
+    return sorted;
+  }, [itens, search, fornFilter, sortKey]);
 
   const handleEdit = (item: ItemCadastro) => {
     setEditing(item);
