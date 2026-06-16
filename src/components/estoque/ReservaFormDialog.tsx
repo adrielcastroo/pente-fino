@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,31 +11,56 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Info } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { ReservaFormData, initialReservaForm } from './reservas-utils';
+import { Reserva } from '@/types';
 
 interface ReservaFormDialogProps {
   onAdd: (data: ReservaFormData) => Promise<void>;
+  mode?: 'create' | 'edit';
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  initial?: Reserva | null;
 }
 
-/**
- * ReservaFormDialog - Optimized form with input validation and UX enhancements.
- */
-export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function ReservaFormDialog({ onAdd, mode = 'create', open, onOpenChange, initial }: ReservaFormDialogProps) {
+  const controlled = mode === 'edit';
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlled ? !!open : internalOpen;
+  const setIsOpen = (v: boolean) => {
+    if (controlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
+
   const [form, setForm] = useState<ReservaFormData>(initialReservaForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (controlled && isOpen && initial) {
+      setForm({
+        codigo: initial.codigo || '',
+        descricao: initial.descricao || '',
+        endereco: initial.endereco || '',
+        quantidade: String(initial.quantidade ?? ''),
+        caixaNum: initial.caixaNum || '',
+        quantidadeCx: initial.quantidadeCx != null ? String(initial.quantidadeCx) : '',
+        observacao: initial.observacao || '',
+      });
+    } else if (!isOpen && !controlled) {
+      setForm(initialReservaForm);
+    }
+  }, [controlled, isOpen, initial]);
+
   const isFormValid = useMemo(() => {
-    return form.codigo.trim().length > 0 && 
-           form.endereco.trim().length > 0 && 
+    return form.codigo.trim().length > 0 &&
+           form.endereco.trim().length > 0 &&
            form.quantidade.trim().length > 0;
   }, [form.codigo, form.endereco, form.quantidade]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid) {
       toast.error('Preencha todos os campos obrigatórios (Código, Endereço e Quantidade).');
       return;
@@ -44,10 +69,10 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
     setIsSubmitting(true);
     try {
       await onAdd(form);
-      setForm(initialReservaForm);
+      if (!controlled) setForm(initialReservaForm);
       setIsOpen(false);
     } catch (error) {
-      // Error handled by parent/mutation
+      // handled by parent
     } finally {
       setIsSubmitting(false);
     }
@@ -58,7 +83,6 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
   }, []);
 
   const handleNumericInput = useCallback((field: keyof ReservaFormData, value: string) => {
-    // Only allow positive integers
     if (value === '' || /^\d+$/.test(value)) {
       updateField(field, value);
     }
@@ -66,17 +90,19 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="font-bold gap-2 w-full sm:w-auto shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4" />
-          Adicionar Item
-        </Button>
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button className="font-bold gap-2 w-full sm:w-auto shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 bg-primary hover:bg-primary/90">
+            <Plus className="w-4 h-4" />
+            Adicionar Item
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px] overflow-hidden border-border/40 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-black">
-            <Plus className="w-5 h-5 text-primary" />
-            Nova Reserva
+            {controlled ? <Pencil className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+            {controlled ? 'Editar Reserva' : 'Nova Reserva'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-5 py-4">
@@ -84,24 +110,24 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
             <Label htmlFor="codigo" className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               Código <span className="text-destructive">*</span>
             </Label>
-            <Input 
-              id="codigo" 
-              value={form.codigo} 
-              onChange={e => updateField('codigo', e.target.value)} 
+            <Input
+              id="codigo"
+              value={form.codigo}
+              onChange={e => updateField('codigo', e.target.value)}
               placeholder="Ex: PROD-123"
               className="bg-muted/30 border-border/60 focus:bg-background transition-all font-mono"
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="endereco" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
               Endereço <span className="text-destructive">*</span>
             </Label>
-            <Input 
-              id="endereco" 
-              value={form.endereco} 
-              onChange={e => updateField('endereco', e.target.value)} 
+            <Input
+              id="endereco"
+              value={form.endereco}
+              onChange={e => updateField('endereco', e.target.value)}
               placeholder="Ex: A-12-3"
               className="bg-muted/30 border-border/60 focus:bg-background transition-all"
               required
@@ -113,12 +139,12 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
               <Label htmlFor="quantidade" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
                 Qtd Unid. <span className="text-destructive">*</span>
               </Label>
-              <Input 
-                id="quantidade" 
+              <Input
+                id="quantidade"
                 type="text"
                 inputMode="numeric"
-                value={form.quantidade} 
-                onChange={e => handleNumericInput('quantidade', e.target.value)} 
+                value={form.quantidade}
+                onChange={e => handleNumericInput('quantidade', e.target.value)}
                 placeholder="0"
                 className="bg-muted/30 border-border/60 focus:bg-background transition-all font-mono"
                 required
@@ -128,12 +154,12 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
               <Label htmlFor="quantidadeCx" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
                 Qtd por CX
               </Label>
-              <Input 
-                id="quantidadeCx" 
+              <Input
+                id="quantidadeCx"
                 type="text"
                 inputMode="numeric"
-                value={form.quantidadeCx} 
-                onChange={e => handleNumericInput('quantidadeCx', e.target.value)} 
+                value={form.quantidadeCx}
+                onChange={e => handleNumericInput('quantidadeCx', e.target.value)}
                 placeholder="Ex: 5"
                 className="bg-muted/30 border-border/60 focus:bg-background transition-all font-mono"
               />
@@ -145,10 +171,10 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
               <Label htmlFor="caixa" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
                 Nº da Caixa
               </Label>
-              <Input 
-                id="caixa" 
-                value={form.caixaNum} 
-                onChange={e => updateField('caixaNum', e.target.value)} 
+              <Input
+                id="caixa"
+                value={form.caixaNum}
+                onChange={e => updateField('caixaNum', e.target.value)}
                 placeholder="Opcional"
                 className="bg-muted/10 border-border/40 focus:bg-background transition-all"
               />
@@ -157,10 +183,10 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
               <Label htmlFor="descricao" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
                 Descrição
               </Label>
-              <Input 
-                id="descricao" 
-                value={form.descricao} 
-                onChange={e => updateField('descricao', e.target.value)} 
+              <Input
+                id="descricao"
+                value={form.descricao}
+                onChange={e => updateField('descricao', e.target.value)}
                 placeholder="Opcional"
                 className="bg-muted/10 border-border/40 focus:bg-background transition-all"
               />
@@ -171,22 +197,22 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
             <Label htmlFor="observacao" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
               Observação
             </Label>
-            <Textarea 
-              id="observacao" 
-              value={form.observacao} 
-              onChange={e => updateField('observacao', e.target.value)} 
+            <Textarea
+              id="observacao"
+              value={form.observacao}
+              onChange={e => updateField('observacao', e.target.value)}
               placeholder="Informações adicionais sobre a reserva..."
               className="min-h-[80px] resize-none bg-muted/10 border-border/40 focus:bg-background transition-all text-xs"
             />
           </div>
 
           <DialogFooter className="mt-2">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full font-black text-sm uppercase tracking-widest h-11"
               disabled={!isFormValid || isSubmitting}
             >
-              {isSubmitting ? 'Salvando...' : 'Confirmar Reserva'}
+              {isSubmitting ? 'Salvando...' : controlled ? 'Salvar alterações' : 'Confirmar Reserva'}
             </Button>
           </DialogFooter>
         </form>
@@ -194,4 +220,3 @@ export function ReservaFormDialog({ onAdd }: ReservaFormDialogProps) {
     </Dialog>
   );
 }
-
