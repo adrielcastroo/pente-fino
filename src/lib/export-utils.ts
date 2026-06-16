@@ -530,7 +530,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         for (const r of regs) {
           const seqMatch = r.loteSistema.match(/\*(\d+)$/);
           const seqLabel = seqMatch ? `*${seqMatch[1]}` : '';
-          rows.push([r.lote, seqLabel, r.loteSistema]);
+          rows.push([r.lote, seqLabel, normalizeProcToken(r.loteSistema)]);
         }
         rows.push(['', '', '']);
       }
