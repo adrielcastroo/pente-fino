@@ -155,9 +155,11 @@ export async function printMotorLabel(
     const nfText = input.nf ? `NF ${input.nf}` : '';
     const ntText = input.loteSistema || input.lote;
 
+    const descricaoFinal = await validarItem(input.item, input.lote || input.loteSistema || '', input.descricao || '');
+
     const data: MotorLabelData = {
       sku: input.item,
-      descricao: input.descricao || '',
+      descricao: descricaoFinal,
       cx: cxText,
       nf: nfText,
       nt: ntText,
