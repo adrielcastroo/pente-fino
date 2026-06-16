@@ -209,7 +209,7 @@ export const LeftPanel = memo(function LeftPanel() {
   const usesM2Input = !isMadeira && !isAI && !isPVT && !coulisseUsesMLinear && !cortinaUsesMLinear && (isRolo || isCortina || isCoulisse || isCelular);
   // Cortina now uses manual largura (cortinaLargura), not extracted from item
   const usesLarguraFromItem = !isAI && isRolo;
-  const requiresEndereco = !isPVT && !isCelular && currentMode !== 'manual' && currentMode !== 'etiq_pronta';
+  const requiresEndereco = !isPVT && !isCelular && currentMode !== 'etiq_pronta';
 
   const madeiraDefaults: Record<string, number> = { 'Lâmina': 100, 'Base': 24, 'Bandô': 24 };
 
