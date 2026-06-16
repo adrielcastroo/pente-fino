@@ -481,6 +481,15 @@ export async function exportConferenceToExcel(headers: string[], data: any[][], 
 /**
  * Exports Motor/Controle registros in the specific grouped format.
  */
+function normalizeProcToken(value: string): string {
+  if (!value) return value;
+  // Colapsa sequências de PROC (qualquer caixa, com ou sem espaço entre si) em um único "PROC "
+  let out = value.replace(/(?:proc\s*){1,}/gi, 'PROC ');
+  // Remove espaço duplicado e trim
+  out = out.replace(/\s{2,}/g, ' ').trim();
+  return out;
+}
+
 export async function exportMotorControleToExcel(registros: Registro[], fileName: string) {
   try {
     const toastId = toast.loading('Preparando arquivo Excel...');
@@ -501,7 +510,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         const firstItem = regs[0]?.item || '';
         rows.push([`${cx} ${firstItem}`, '', 'séries']);
         for (const r of regs) {
-          rows.push([`${r.item} ${r.lote}`, '', r.loteSistema]);
+          rows.push([`${r.item} ${r.lote}`, '', normalizeProcToken(r.loteSistema)]);
         }
         rows.push(['', '', '']);
       }
@@ -521,7 +530,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         for (const r of regs) {
           const seqMatch = r.loteSistema.match(/\*(\d+)$/);
           const seqLabel = seqMatch ? `*${seqMatch[1]}` : '';
-          rows.push([r.lote, seqLabel, r.loteSistema]);
+          rows.push([r.lote, seqLabel, normalizeProcToken(r.loteSistema)]);
         }
         rows.push(['', '', '']);
       }
@@ -529,7 +538,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
     if (coulisseRegs.length > 0) {
       rows.push(['COULISSE', 'Proc', 'Cx', 'Lote', 'Lote Final']);
       for (const r of coulisseRegs) {
-        rows.push([r.item, r.processo, r.quantidade, r.lote, r.loteSistema]);
+        rows.push([r.item, r.processo, r.quantidade, r.lote, normalizeProcToken(r.loteSistema)]);
       }
       rows.push(['', '', '', '', '']);
     }
