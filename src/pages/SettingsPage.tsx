@@ -59,9 +59,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
-import LotesMestresPanel from '@/components/settings/LotesMestresPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
-import InventorySettingsPanel from '@/components/settings/InventorySettingsPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
 const categories = [
@@ -70,10 +68,8 @@ const categories = [
   { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
   { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.' },
   { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
-  { id: 'lotes-mestres', name: 'Lotes Mestres', icon: Palette, description: 'Tonalidades de referência para classificar lâminas de madeira.' },
   { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
   { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
-  { id: 'inventory-cyclic', name: 'Inventário Cíclico', icon: RefreshCw, description: 'Configure as frequências das curvas ABC.' },
 ];
 
 export default function SettingsPage() {
@@ -733,9 +729,8 @@ export default function SettingsPage() {
                     <LabelLayoutPanel />
                   )}
 
-                  {activeCategory === 'inventory-cyclic' && (
-                    <InventorySettingsPanel />
-                  )}
+
+
 
                   {activeCategory === 'security' && (
                     <div className="space-y-8">
@@ -1021,11 +1016,7 @@ export default function SettingsPage() {
                     </SettingsErrorBoundary>
                   )}
 
-                  {activeCategory === 'lotes-mestres' && (
-                    <LotesMestresPanel />
-                  )}
-
-                  {!['profile', 'appearance', 'performance', 'integrations', 'security', 'preferences', 'users', 'label-layout', 'lotes-mestres'].includes(activeCategory) && (
+                  {!['profile', 'appearance', 'performance', 'integrations', 'security', 'preferences', 'users', 'label-layout'].includes(activeCategory) && (
                     <div className="py-20 text-center space-y-4">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto opacity-50">
                         <Settings className="w-8 h-8 text-muted-foreground" />
