@@ -16,10 +16,11 @@ export function useReservas() {
   });
 
   const addMutation = useMutation({
-    mutationFn: (newReserva: Reserva) => apiService.addReserva(newReserva),
-    onSuccess: () => {
+    mutationFn: ({ reserva, opts }: { reserva: Reserva; opts?: { isEdit?: boolean; changedField?: string | null } }) =>
+      apiService.addReserva(reserva, opts),
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: RESERVAS_QUERY_KEY });
-      toast.success('Item adicionado com sucesso!');
+      toast.success(vars.opts?.isEdit ? 'Reserva atualizada!' : 'Item adicionado com sucesso!');
     },
     onError: () => {
       toast.error('Erro ao salvar item no banco de dados.');
