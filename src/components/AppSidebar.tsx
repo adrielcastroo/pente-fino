@@ -1,5 +1,5 @@
 
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard, Package } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
@@ -36,6 +36,7 @@ const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
   { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
   { key: 'reservas', label: 'Reservas Estoque', icon: Table, path: '/reservas' },
   { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
+  { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros' },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
