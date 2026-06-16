@@ -186,7 +186,11 @@ export default function CadastrosPage() {
                 <TableCell className={cn(editedCol('codigo_fornecedor') && 'bg-amber-500/5')}>
                   <span className="inline-flex items-center gap-1.5">
                     {editedCol('codigo_fornecedor') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-                    <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
+                    {item.codigo_fornecedor && item.codigo_fornecedor.trim() ? (
+                      <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>
+                    )}
                   </span>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
