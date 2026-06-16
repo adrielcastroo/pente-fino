@@ -4,7 +4,9 @@ import { ensureAuthenticatedSession, isSessionExpiredError, SessionExpiredError 
 
 export const conferenceService = {
   async insertConference(processo: string, conferente: string, startedAt: string, finishedAt: string) {
-    const userId = await ensureAuthenticatedSession();
+    // Visitantes podem arquivar conferências; usuários logados mantêm o vínculo via created_by
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id ?? null;
 
     const { data, error } = await supabase
       .from('conferences')
