@@ -21,9 +21,12 @@ async function resolverItem(
     // 1. é o nosso código interno?
     const porInterno = await itensCadastroService.findByCodigoInterno(codigoBipadoOuInterno);
     if (porInterno) {
-      if (porInterno.codigo_fornecedor && !codigoBate(codigoBipadoOriginal, porInterno.codigo_fornecedor)) {
+      const codigos = (porInterno.codigos_fornecedor && porInterno.codigos_fornecedor.length)
+        ? porInterno.codigos_fornecedor
+        : (porInterno.codigo_fornecedor ? [porInterno.codigo_fornecedor] : []);
+      if (codigos.length && !codigos.some((c) => codigoBate(codigoBipadoOriginal, c))) {
         toast.warning(
-          `Código bipado "${codigoBipadoOriginal}" não confere com fornecedor "${porInterno.codigo_fornecedor}"`,
+          `Código bipado "${codigoBipadoOriginal}" não confere com nenhum fornecedor cadastrado (${codigos.join(', ')})`,
           { duration: 5000 },
         );
       }
