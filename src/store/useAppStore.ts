@@ -70,6 +70,8 @@ export interface AppState {
   archiveError: string | null;
   isHistoryLoading: boolean;
   historyError: string | null;
+  lastArchivedConferenceId: string | null;
+
 
   setMode: (mode: AppMode) => void;
   updateRegistro: (id: string, updates: Partial<Registro>) => void;
@@ -120,6 +122,8 @@ export interface AppState {
   updateHistoryRegistro: (conferenceId: string, registroId: string, updates: Partial<Registro>) => Promise<void>;
   deleteHistoryRegistro: (conferenceId: string, registroId: string) => Promise<void>;
   addHistoryRegistro: (conferenceId: string, reg: Omit<Registro, 'id'>) => Promise<void>;
+  setLastArchivedConferenceId: (id: string | null) => void;
+
 }
 
 const INITIAL_FORM_DATA: FormData = {
@@ -194,6 +198,8 @@ export const useAppStore = create<AppState>()(
       archiveError: null,
       isHistoryLoading: false,
       historyError: null,
+      lastArchivedConferenceId: null,
+
 
       setMode: (mode) => set({ currentMode: mode }),
       updateRegistro: (id, updates) => set(state => {
@@ -414,7 +420,7 @@ export const useAppStore = create<AppState>()(
         const startedAt = state.sessionStartedAt || finishedAt;
         
         try {
-          await apiService.archiveConference(
+          const conf = await apiService.archiveConference(
             state.processo.trim() || name,
             state.conferente,
             startedAt,
@@ -425,11 +431,13 @@ export const useAppStore = create<AppState>()(
             registros: [], 
             undoStack: [], 
             sessionStartedAt: null, 
-            isArchiving: false 
+            isArchiving: false,
+            lastArchivedConferenceId: (conf as any)?.id ?? null,
           });
           get().resetFormData();
           get().resetMotorFormData();
           await get().loadHistory();
+
         } catch (e: any) {
           console.error('Error archiving:', e);
           if (isSessionExpiredError(e)) {
