@@ -233,7 +233,7 @@ const TopBar = memo(function TopBar() {
                 <Button
                   onClick={exportExcel}
                   size="sm"
-                  disabled={isArchiving || registroCount === 0}
+                  disabled={isArchiving || registroCount === 0 || isGuest || !user}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 sm:px-5 h-9 sm:h-10 xl:h-11 rounded-xl shadow-md shadow-primary/15 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs group/btn relative overflow-hidden shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isArchiving ? (
@@ -252,7 +252,9 @@ const TopBar = memo(function TopBar() {
             </TooltipTrigger>
             <TooltipContent className="font-semibold">
               <p>
-                {registroCount === 0
+                {isGuest || !user
+                  ? 'Entre na sua conta para exportar e salvar no histórico'
+                  : registroCount === 0
                   ? 'Sem itens bipados nesta sessão'
                   : `Exportar ${registroCount} itens para Excel e enviar ao histórico`}
               </p>
