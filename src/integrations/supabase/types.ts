@@ -616,6 +616,39 @@ export type Database = {
         }
         Relationships: []
       }
+      itens_cadastro: {
+        Row: {
+          codigo_fornecedor: string
+          codigo_fornecedor_normalizado: string
+          codigo_interno: string
+          created_at: string
+          created_by: string | null
+          descricao: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          codigo_fornecedor: string
+          codigo_fornecedor_normalizado: string
+          codigo_interno: string
+          created_at?: string
+          created_by?: string | null
+          descricao: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          codigo_fornecedor?: string
+          codigo_fornecedor_normalizado?: string
+          codigo_interno?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lotes_mestres: {
         Row: {
           cor_hex: string
