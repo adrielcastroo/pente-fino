@@ -538,7 +538,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
     if (coulisseRegs.length > 0) {
       rows.push(['COULISSE', 'Proc', 'Cx', 'Lote', 'Lote Final']);
       for (const r of coulisseRegs) {
-        rows.push([r.item, r.processo, r.quantidade, r.lote, r.loteSistema]);
+        rows.push([r.item, r.processo, r.quantidade, r.lote, normalizeProcToken(r.loteSistema)]);
       }
       rows.push(['', '', '', '', '']);
     }
