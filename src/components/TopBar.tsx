@@ -54,16 +54,7 @@ const TopBar = memo(function TopBar() {
       return;
     }
 
-    // Bloqueia visitantes — escrita no histórico exige usuário autenticado
-    if (isGuest || !user) {
-      toast.error('Faça login para exportar e salvar no histórico.', {
-        action: {
-          label: 'Entrar',
-          onClick: () => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`),
-        },
-      });
-      return;
-    }
+    // Visitantes também podem exportar e arquivar no histórico
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
     const requiresProcesso = !isMotorControle &&
