@@ -1,8 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Conference } from '@/types';
+import { ensureAuthenticatedSession, isSessionExpiredError, SessionExpiredError } from './authGuard';
 
 export const conferenceService = {
   async insertConference(processo: string, conferente: string, startedAt: string, finishedAt: string) {
+    const userId = await ensureAuthenticatedSession();
+
     const { data, error } = await supabase
       .from('conferences')
       .insert({
@@ -10,10 +13,14 @@ export const conferenceService = {
         conferente: conferente,
         started_at: startedAt,
         finished_at: finishedAt,
+        created_by: userId,
       } as any)
       .select().single();
-      
-    if (error) throw error;
+
+    if (error) {
+      if (isSessionExpiredError(error)) throw new SessionExpiredError();
+      throw error;
+    }
     return data;
   },
 
