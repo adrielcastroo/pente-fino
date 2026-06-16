@@ -1,81 +1,46 @@
+## Situação atual
 
-# Cadastro de Itens + Validação Fornecedor
+Sim, seus dados estão salvos no banco — **306 itens cadastrados** em `itens_cadastro`. Exemplos dos mais recentes:
 
-Nova página `/cadastros` para manter a base de itens (código interno + descrição + código fornecedor), alimentar a geração de etiquetas e validar se o código bipado corresponde ao fornecedor cadastrado.
+- `003.003.155.024.2` → Screen 05 Platinum (fornecedor `3005-08-250E-B2`)
+- `003.003.183.001.3` → Napoles Branco (fornecedor `YM-5301`)
+- `003.003.185.001.1.1` → Blackout Napoles Branco (fornecedor `YM5301`)
+- … +303 outros
 
-## 1. Banco de dados
+## Problema
 
-Nova tabela `public.itens_cadastro`:
+Hoje as políticas de leitura de `itens_cadastro`, `reservas` e `independent_reservations` exigem usuário **autenticado**. Por isso, quem não está logado não consegue ver nada — não atende ao seu pedido de "visível para todos".
 
-- `id` (uuid, pk)
-- `codigo_interno` (text, unique, not null) — nosso código, ex.: `002.001.002.000.323`
-- `descricao` (text, not null) — descrição limpa para a etiqueta
-- `codigo_fornecedor` (text, not null, indexado) — código bruto extraído/informado
-- `codigo_fornecedor_normalizado` (text, indexado) — versão upper + sem espaços/pontuação, usada para matching
-- `created_at`, `updated_at`, `created_by`
+## O que vou ajustar
 
-RLS: leitura/escrita para `authenticated`. GRANTs + service_role conforme padrão do projeto. Trigger `update_updated_at_column`.
+Tudo é mudança de permissão no banco, sem mexer na UI.
 
-## 2. Página `/cadastros`
+### 1. Permitir leitura pública (anon + authenticated)
 
-Rota nova em `App.tsx` + item na sidebar (`AppSidebar.tsx`) com ícone `Package`.
+Migração que, para cada uma das 3 tabelas (`itens_cadastro`, `reservas`, `independent_reservations`):
 
-Layout (padrão visual do projeto — dark navy, glassmorphism, IBM Plex, PT-BR):
+- Substitui a policy de `SELECT` por uma permissiva: `USING (true)` para `anon` e `authenticated`.
+- Adiciona `GRANT SELECT ... TO anon` (necessário no Lovable Cloud — sem isso a API rejeita mesmo com policy aberta).
 
-- **Header**: título "Cadastro de Itens", botão "Importar planilha", botão "Novo item", busca por código/descrição.
-- **Tabela** (shadcn `Table`): Código Interno · Descrição · Código Fornecedor · Atualizado em · Ações (editar / excluir).
-- **Dialog de Importação**: aceita `.xlsx`/`.csv` com colunas `codigo_interno`, `descricao_completa` (e opcional `codigo_fornecedor`).
-  - Pré-visualização das primeiras 20 linhas mostrando o código fornecedor extraído automaticamente da descrição (com destaque) e a descrição final.
-  - Usuário pode editar/sobrescrever o código fornecedor antes de confirmar.
-  - Resumo: novos, atualizados (mesmo `codigo_interno`), ignorados (erro).
-  - Upsert em lote por `codigo_interno`.
-- **Dialog de edição manual**: 3 campos, validação de unicidade.
+### 2. Manter edição restrita a usuários logados
 
-## 3. Extração do código fornecedor a partir da descrição
+Policies de `INSERT`/`UPDATE`/`DELETE` continuam exigindo `auth.uid() IS NOT NULL`. Ou seja:
 
-Função pura `extractCodigoFornecedor(descricao: string): { codigo: string | null; descricaoLimpa: string }` em `src/lib/codigoFornecedor.ts` + testes.
+- Visitantes deslogados: **só visualizam**.
+- Usuários logados: visualizam **e** editam, com o rastro de auditoria já implementado (quem editou, qual campo, badge âmbar na célula).
 
-Heurística em ordem de prioridade (primeiro match vence):
+### 3. Sem mudança de código de frontend
 
-1. Conteúdo entre parênteses cujo miolo seja um código alfanumérico válido — regex `\(([A-Z0-9][A-Z0-9\-\/\.]{2,})\)` (ex.: `(RF-BASIC-BO-03-0)`, `(3001-05-250)`, `(1800492)`).
-2. Token alfanumérico com letras + dígitos colados (sem parênteses), ex.: `YM4202`, `RF-MOMBASSA5600` — regex `\b([A-Z]{2,}[A-Z0-9\-]*\d+[A-Z0-9\-]*)\b`.
-3. Última sequência numérica longa (≥6 dígitos) ao final da descrição.
+Os hooks e páginas já fazem `SELECT *` direto via Supabase client; quando a policy abrir, eles passam a retornar dados também para sessões anônimas, sem alteração.
 
-Filtros para evitar falsos positivos: ignorar tokens em uma blacklist (`PCT1`, `NF`, `NFE`, `RR`, `M2`, `ML`, unidades, números curtos < 3 chars).
-Normalização para matching: `value.toUpperCase().replace(/[^A-Z0-9]/g, '')`.
+## Tabelas afetadas
 
-A `descricaoLimpa` mantém a descrição original (não removemos o código — ele continua visível no texto exibido na etiqueta), apenas isolamos a referência para comparar.
+| Tabela                    | SELECT          | INSERT/UPDATE/DELETE |
+| ------------------------- | --------------- | -------------------- |
+| `itens_cadastro`          | público (anon+auth) | só logados        |
+| `reservas`                | público (anon+auth) | só logados        |
+| `independent_reservations`| público (anon+auth) | só logados        |
 
-## 4. Validação na geração de etiqueta
+## Observação de segurança
 
-Local: `src/services/labelRenderer.ts` (e/ou no fluxo do botão "Gerar etiqueta" em `TecidoPage` e `MotorControlePage`).
-
-Fluxo:
-
-1. Antes de imprimir, buscar o item em `itens_cadastro` por `codigo_interno` do registro.
-2. Se encontrado, comparar `codigo_fornecedor_normalizado` cadastrado com o código bipado normalizado (vindo do registro/lote/série).
-3. Resultado:
-   - **Match**: gera normalmente. Etiqueta usa `codigo_interno` (campo COD) + `descricao` do cadastro (com fornecedor embutido).
-   - **Sem match**: dialog de confirmação em PT-BR ("O código bipado `X` não confere com o fornecedor cadastrado `Y` para o item `Z`. Imprimir mesmo assim?") — botões "Cancelar" / "Imprimir assim mesmo". Não bloqueia, apenas avisa, como solicitado.
-   - **Item não cadastrado**: toast warning "Item não está na base de cadastros — etiqueta usará dados do registro" + opção rápida "Cadastrar agora" abrindo o dialog pré-preenchido.
-
-Logs de divergência salvos em `operation_logs` para auditoria.
-
-## 5. Detalhes técnicos
-
-- `src/services/itensCadastroService.ts`: `listItens`, `upsertItem`, `bulkUpsert`, `deleteItem`, `findByCodigoInterno`, `findByFornecedor`.
-- Hook `useItensCadastro` (React Query) com cache 5 min.
-- Reuso de `src/lib/xlsx-utils.ts` para leitura da planilha.
-- Atualização do `mem://index.md` adicionando referência a `mem://features/itens-cadastro`.
-
-## Arquivos previstos
-
-- Migration SQL nova
-- `src/lib/codigoFornecedor.ts` + `.test.ts`
-- `src/services/itensCadastroService.ts`
-- `src/hooks/useItensCadastro.ts`
-- `src/pages/CadastrosPage.tsx`
-- `src/components/cadastros/ItemFormDialog.tsx`
-- `src/components/cadastros/ImportItensDialog.tsx`
-- `src/components/cadastros/ValidacaoEtiquetaDialog.tsx`
-- Edições: `src/App.tsx`, `src/components/AppSidebar.tsx`, `src/services/labelRenderer.ts`, `src/pages/TecidoPage.tsx`, `src/pages/MotorControlePage.tsx`, `mem://index.md`
+Tornar essas tabelas legíveis por `anon` significa que qualquer pessoa com a chave pública do app (que já é exposta no frontend) pode ler todo o catálogo de itens e reservas. Como você pediu explicitamente que "todas as informações sejam visíveis para todos os usuários", sigo com isso — mas é bom você confirmar que está ciente.
