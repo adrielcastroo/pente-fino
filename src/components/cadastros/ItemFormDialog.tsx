@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, KeyboardEvent } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { extractCodigoFornecedor } from '@/lib/codigoFornecedor';
+import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { useUpsertItemCadastro } from '@/hooks/useItensCadastro';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Plus, X } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -17,11 +17,19 @@ interface Props {
   initial?: Partial<ItemCadastro> | null;
 }
 
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const na = a.map(normalizarCodigo).sort();
+  const nb = b.map(normalizarCodigo).sort();
+  return na.every((v, i) => v === nb[i]);
+}
+
 export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
   const [codigoInterno, setCodigoInterno] = useState('');
   const [descricao, setDescricao] = useState('');
-  const [codigoFornecedor, setCodigoFornecedor] = useState('');
-  const [touchedFornecedor, setTouchedFornecedor] = useState(false);
+  const [codigos, setCodigos] = useState<string[]>([]);
+  const [novoCodigo, setNovoCodigo] = useState('');
+  const [autoApplied, setAutoApplied] = useState(false);
 
   const upsert = useUpsertItemCadastro();
 
@@ -29,24 +37,55 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
     if (open) {
       setCodigoInterno(initial?.codigo_interno || '');
       setDescricao(initial?.descricao || '');
-      setCodigoFornecedor(initial?.codigo_fornecedor || '');
-      setTouchedFornecedor(!!initial?.codigo_fornecedor);
+      const init = initial?.codigos_fornecedor && initial.codigos_fornecedor.length
+        ? initial.codigos_fornecedor
+        : (initial?.codigo_fornecedor ? [initial.codigo_fornecedor] : []);
+      setCodigos(init);
+      setNovoCodigo('');
+      setAutoApplied(!!init.length);
     }
   }, [open, initial]);
 
-  // Auto-extrair quando descrição muda e o usuário não digitou manualmente
+  // Auto-sugerir o 1º código a partir da descrição quando ainda não há nenhum
   useEffect(() => {
-    if (!touchedFornecedor && descricao) {
+    if (!autoApplied && !codigos.length && descricao) {
       const r = extractCodigoFornecedor(descricao);
-      if (r) setCodigoFornecedor(r.codigo);
+      if (r) {
+        setCodigos([r.codigo]);
+        setAutoApplied(true);
+      }
     }
-  }, [descricao, touchedFornecedor]);
+  }, [descricao, codigos.length, autoApplied]);
+
+  const addCodigo = (raw: string) => {
+    const v = raw.trim();
+    if (!v) return;
+    const norm = normalizarCodigo(v);
+    if (!norm) return;
+    if (codigos.some((c) => normalizarCodigo(c) === norm)) {
+      toast.info('Esse código já está na lista');
+      return;
+    }
+    setCodigos((cs) => [...cs, v]);
+    setNovoCodigo('');
+    setAutoApplied(true);
+  };
+
+  const removeCodigo = (idx: number) => {
+    setCodigos((cs) => cs.filter((_, i) => i !== idx));
+  };
+
+  const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
+      e.preventDefault();
+      addCodigo(novoCodigo);
+    }
+  };
 
   const handleAutoExtract = () => {
     const r = extractCodigoFornecedor(descricao);
     if (r) {
-      setCodigoFornecedor(r.codigo);
-      setTouchedFornecedor(true);
+      addCodigo(r.codigo);
       toast.success(`Código identificado: ${r.codigo}`);
     } else {
       toast.warning('Nenhum código identificado na descrição');
@@ -58,19 +97,32 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
       toast.error('Preencha código interno e descrição');
       return;
     }
+    // se houver texto pendente no input, anexa antes de salvar
+    const finalCodigos = [...codigos];
+    if (novoCodigo.trim()) {
+      const norm = normalizarCodigo(novoCodigo);
+      if (norm && !finalCodigos.some((c) => normalizarCodigo(c) === norm)) {
+        finalCodigos.push(novoCodigo.trim());
+      }
+    }
     try {
       const isEdit = !!initial?.id;
       let changedField: string | null = null;
       if (isEdit) {
         if ((initial?.codigo_interno || '').trim() !== codigoInterno.trim()) changedField = 'codigo_interno';
         else if ((initial?.descricao || '').trim() !== descricao.trim()) changedField = 'descricao';
-        else if ((initial?.codigo_fornecedor || '').trim() !== codigoFornecedor.trim()) changedField = 'codigo_fornecedor';
+        else {
+          const prev = (initial?.codigos_fornecedor && initial.codigos_fornecedor.length)
+            ? initial.codigos_fornecedor
+            : (initial?.codigo_fornecedor ? [initial.codigo_fornecedor] : []);
+          if (!arraysEqual(prev, finalCodigos)) changedField = 'codigos_fornecedor';
+        }
       }
       await upsert.mutateAsync({
         input: {
           codigo_interno: codigoInterno,
           descricao,
-          codigo_fornecedor: codigoFornecedor,
+          codigos_fornecedor: finalCodigos,
         },
         opts: { isEdit, changedField },
       });
@@ -87,7 +139,7 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
         <DialogHeader>
           <DialogTitle>{initial?.id ? 'Editar item' : 'Novo item'}</DialogTitle>
           <DialogDescription>
-            Cadastre o código interno, descrição e o código do fornecedor que será validado na geração da etiqueta.
+            Cadastre código interno, descrição e os códigos de fornecedor (pode ter mais de um — o sistema reconhece qualquer um deles).
           </DialogDescription>
         </DialogHeader>
 
@@ -116,24 +168,47 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <Label htmlFor="codigo_fornecedor">Código do fornecedor <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Label>
+                Códigos de fornecedor <span className="text-muted-foreground font-normal">(opcional · pode ter vários)</span>
+              </Label>
               <Button type="button" size="sm" variant="ghost" onClick={handleAutoExtract} className="h-7 text-xs gap-1">
                 <Sparkles className="h-3 w-3" />
                 Auto-detectar
               </Button>
             </div>
-            <Input
-              id="codigo_fornecedor"
-              value={codigoFornecedor}
-              onChange={(e) => { setCodigoFornecedor(e.target.value); setTouchedFornecedor(true); }}
-              placeholder="YM4202"
-              className="h-11 font-mono"
-            />
-            {codigoFornecedor && (
-              <Badge variant="secondary" className="mt-2 font-mono text-[10px]">
-                Comparação: {codigoFornecedor.toUpperCase().replace(/[^A-Z0-9]/g, '')}
-              </Badge>
-            )}
+
+            <div className="flex flex-wrap items-center gap-1.5 p-2 min-h-[44px] border rounded-md bg-background">
+              {codigos.length === 0 && !novoCodigo && (
+                <span className="text-xs text-muted-foreground italic px-1">Nenhum código — adicione abaixo ou deixe vazio</span>
+              )}
+              {codigos.map((c, i) => (
+                <Badge key={`${c}-${i}`} variant="secondary" className="font-mono text-[11px] gap-1 pr-1">
+                  {c}
+                  <button
+                    type="button"
+                    onClick={() => removeCodigo(i)}
+                    className="hover:bg-destructive/20 rounded-sm p-0.5"
+                    aria-label={`Remover ${c}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 mt-2">
+              <Input
+                value={novoCodigo}
+                onChange={(e) => setNovoCodigo(e.target.value)}
+                onKeyDown={handleKey}
+                placeholder="Ex: YM4202  (Enter ou vírgula para adicionar)"
+                className="h-10 font-mono"
+              />
+              <Button type="button" variant="outline" size="sm" onClick={() => addCodigo(novoCodigo)} className="gap-1 h-10">
+                <Plus className="h-3.5 w-3.5" />
+                Adicionar
+              </Button>
+            </div>
           </div>
         </div>
 
