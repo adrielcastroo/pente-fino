@@ -51,8 +51,8 @@ export function diffFields<T extends Record<string, any>>(before: T | null | und
   for (const k of keys) {
     const b = before[k];
     const a = after[k];
-    const bs = (b ?? '').toString().trim();
-    const as = (a ?? '').toString().trim();
+    const bs = String(b ?? '').trim();
+    const as = String(a ?? '').trim();
     if (bs !== as) changed.push(String(k));
   }
   return changed;
