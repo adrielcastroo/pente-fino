@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
+import { isSessionExpiredError } from '@/services/authGuard';
+import { toast } from 'sonner';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
 import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
 
