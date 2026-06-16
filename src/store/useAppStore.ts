@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
+import { isSessionExpiredError } from '@/services/authGuard';
+import { toast } from 'sonner';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
 import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
 
@@ -430,9 +432,26 @@ export const useAppStore = create<AppState>()(
           await get().loadHistory();
         } catch (e: any) {
           console.error('Error archiving:', e);
-          set({ 
-            isArchiving: false, 
-            archiveError: e.message || 'Falha ao arquivar conferência' 
+          if (isSessionExpiredError(e)) {
+            set({
+              isArchiving: false,
+              archiveError: 'Sessão expirada. Faça login novamente para finalizar a conferência.'
+            });
+            toast.error('Sessão expirada — faça login para finalizar a conferência.', {
+              description: 'Seus registros foram preservados.',
+              duration: 8000,
+            });
+            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+            setTimeout(() => {
+              if (typeof window !== 'undefined') {
+                window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+              }
+            }, 1500);
+            return;
+          }
+          set({
+            isArchiving: false,
+            archiveError: e.message || 'Falha ao arquivar conferência'
           });
           throw e;
         }
