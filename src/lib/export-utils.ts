@@ -481,6 +481,15 @@ export async function exportConferenceToExcel(headers: string[], data: any[][], 
 /**
  * Exports Motor/Controle registros in the specific grouped format.
  */
+function normalizeProcToken(value: string): string {
+  if (!value) return value;
+  // Colapsa sequências de PROC (qualquer caixa, com ou sem espaço entre si) em um único "PROC "
+  let out = value.replace(/(?:proc\s*){1,}/gi, 'PROC ');
+  // Remove espaço duplicado e trim
+  out = out.replace(/\s{2,}/g, ' ').trim();
+  return out;
+}
+
 export async function exportMotorControleToExcel(registros: Registro[], fileName: string) {
   try {
     const toastId = toast.loading('Preparando arquivo Excel...');
