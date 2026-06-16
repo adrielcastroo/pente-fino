@@ -53,6 +53,17 @@ const TopBar = memo(function TopBar() {
       return;
     }
 
+    // Bloqueia visitantes — escrita no histórico exige usuário autenticado
+    if (isGuest || !user) {
+      toast.error('Faça login para exportar e salvar no histórico.', {
+        action: {
+          label: 'Entrar',
+          onClick: () => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`),
+        },
+      });
+      return;
+    }
+
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
     const requiresProcesso = !isMotorControle &&
       currentRegistros.some(r => r.modoOrigem !== 'diversos' && r.modoOrigem !== 'etiq_pronta' && r.modoOrigem !== 'motor' && r.modoOrigem !== 'controle');
