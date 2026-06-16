@@ -59,10 +59,20 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
       return;
     }
     try {
+      const isEdit = !!initial?.id;
+      let changedField: string | null = null;
+      if (isEdit) {
+        if ((initial?.codigo_interno || '').trim() !== codigoInterno.trim()) changedField = 'codigo_interno';
+        else if ((initial?.descricao || '').trim() !== descricao.trim()) changedField = 'descricao';
+        else if ((initial?.codigo_fornecedor || '').trim() !== codigoFornecedor.trim()) changedField = 'codigo_fornecedor';
+      }
       await upsert.mutateAsync({
-        codigo_interno: codigoInterno,
-        descricao,
-        codigo_fornecedor: codigoFornecedor,
+        input: {
+          codigo_interno: codigoInterno,
+          descricao,
+          codigo_fornecedor: codigoFornecedor,
+        },
+        opts: { isEdit, changedField },
       });
       toast.success('Item salvo');
       onOpenChange(false);
