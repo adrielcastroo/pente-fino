@@ -116,6 +116,17 @@ const TopBar = memo(function TopBar() {
       // We do this BEFORE downloading the Excel to ensure data is safe in DB first
       await archiveAndClear(archiveName);
       
+      // 2. Archive and Clear (This includes saving to DB and allocating stock)
+      // We do this BEFORE downloading the Excel to ensure data is safe in DB first
+      await archiveAndClear(archiveName);
+
+      // Se houve erro no archive (ex.: sessão expirada), abortar — sem baixar Excel nem toast de sucesso
+      const archiveError = useAppStore.getState().archiveError;
+      if (archiveError) {
+        toast.dismiss(toastId);
+        return;
+      }
+
       // 3. Download the Excel file
       if (isMotorControle) {
         await exportMotorControleToExcel(currentRegistros, fileName);
