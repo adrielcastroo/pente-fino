@@ -209,14 +209,14 @@ const TopBar = memo(function TopBar() {
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
-          {registroCount > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
                   onClick={exportExcel}
                   size="sm"
-                  disabled={isArchiving}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 sm:px-5 h-9 sm:h-10 xl:h-11 rounded-xl shadow-md shadow-primary/15 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs group/btn relative overflow-hidden shrink-0"
+                  disabled={isArchiving || registroCount === 0}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 sm:px-5 h-9 sm:h-10 xl:h-11 rounded-xl shadow-md shadow-primary/15 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs group/btn relative overflow-hidden shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isArchiving ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -230,19 +230,17 @@ const TopBar = memo(function TopBar() {
                     </Badge>
                   )}
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent className="font-semibold">
-                <p>Exportar {registroCount} registros para Excel</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="font-semibold">
+              <p>
+                {registroCount === 0
+                  ? 'Sem itens bipados nesta sessão'
+                  : `Exportar ${registroCount} itens para Excel e enviar ao histórico`}
+              </p>
+            </TooltipContent>
+          </Tooltip>
 
-          {registroCount === 0 && (
-            <Badge variant="outline" className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-dashed border-border/40 bg-transparent text-muted-foreground/50 font-medium flex gap-1.5 shrink-0">
-              <Archive className="w-3.5 h-3.5 opacity-50" />
-              <span className="text-[10px] sm:text-xs whitespace-nowrap">Vazio</span>
-            </Badge>
-          )}
         </div>
       </div>
     </header>
