@@ -630,8 +630,8 @@ export type Database = {
       }
       itens_cadastro: {
         Row: {
-          codigo_fornecedor: string
-          codigo_fornecedor_normalizado: string
+          codigo_fornecedor: string | null
+          codigo_fornecedor_normalizado: string | null
           codigo_interno: string
           created_at: string
           created_by: string | null
@@ -644,8 +644,8 @@ export type Database = {
           updated_by_name: string | null
         }
         Insert: {
-          codigo_fornecedor: string
-          codigo_fornecedor_normalizado: string
+          codigo_fornecedor?: string | null
+          codigo_fornecedor_normalizado?: string | null
           codigo_interno: string
           created_at?: string
           created_by?: string | null
@@ -658,8 +658,8 @@ export type Database = {
           updated_by_name?: string | null
         }
         Update: {
-          codigo_fornecedor?: string
-          codigo_fornecedor_normalizado?: string
+          codigo_fornecedor?: string | null
+          codigo_fornecedor_normalizado?: string | null
           codigo_interno?: string
           created_at?: string
           created_by?: string | null
