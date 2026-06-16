@@ -21,6 +21,9 @@ export const apiService = {
     
     // 2. Insert Registros
     const insertedRegs = await registroService.insertRegistros(conf.id, registros, currentMode);
+    if (!insertedRegs || insertedRegs.length !== registros.length) {
+      throw new Error('Nem todos os registros foram salvos no histórico. A conferência foi preservada na sessão atual.');
+    }
     
     // 3. Process Estoque
     await estoqueService.processEstoque(insertedRegs, registros, processo, conferente);
