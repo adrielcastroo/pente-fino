@@ -510,7 +510,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         const firstItem = regs[0]?.item || '';
         rows.push([`${cx} ${firstItem}`, '', 'séries']);
         for (const r of regs) {
-          rows.push([`${r.item} ${r.lote}`, '', r.loteSistema]);
+          rows.push([`${r.item} ${r.lote}`, '', normalizeProcToken(r.loteSistema)]);
         }
         rows.push(['', '', '']);
       }
