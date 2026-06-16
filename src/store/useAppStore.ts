@@ -644,7 +644,10 @@ export const useAppStore = create<AppState>()(
           throw e;
         }
       },
+
+      setLastArchivedConferenceId: (id) => set({ lastArchivedConferenceId: id }),
     }),
+
     {
       name: 'cft4-registros',
       storage: {
