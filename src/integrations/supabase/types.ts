@@ -72,6 +72,7 @@ export type Database = {
         Row: {
           conferente: string
           created_at: string
+          created_by: string | null
           finished_at: string | null
           id: string
           processo: string
@@ -80,6 +81,7 @@ export type Database = {
         Insert: {
           conferente?: string
           created_at?: string
+          created_by?: string | null
           finished_at?: string | null
           id?: string
           processo: string
@@ -88,6 +90,7 @@ export type Database = {
         Update: {
           conferente?: string
           created_at?: string
+          created_by?: string | null
           finished_at?: string | null
           id?: string
           processo?: string
