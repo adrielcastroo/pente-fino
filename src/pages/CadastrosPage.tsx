@@ -101,7 +101,7 @@ export default function CadastrosPage() {
         </div>
       </header>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row md:items-center gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -111,7 +111,34 @@ export default function CadastrosPage() {
             className="pl-9 h-10"
           />
         </div>
-        <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
+        <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
+          <SelectTrigger className="w-[180px] h-10">
+            <SelectValue placeholder="Mostrar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os itens</SelectItem>
+            <SelectItem value="com">Com cód. fornecedor</SelectItem>
+            <SelectItem value="sem">Sem cód. fornecedor</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+          <SelectTrigger className="w-[180px] h-10">
+            <SelectValue placeholder="Ordenar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="codigo_interno">Código interno</SelectItem>
+            <SelectItem value="descricao">Descrição</SelectItem>
+            <SelectItem value="updated_at">Atualizado recente</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 md:ml-auto">
+          <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
+          {semFornecedorCount > 0 && (
+            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30">
+              {semFornecedorCount} sem fornecedor
+            </Badge>
+          )}
+        </div>
       </div>
 
       <TooltipProvider>
