@@ -438,8 +438,9 @@ function formatDuration(start: string | null | undefined, end: string | null | u
   } catch { return '—'; }
 }
 
-const ConferenceCard = memo(({ conf, onDelete }: { conf: Conference; onDelete: () => void }) => {
-  const [open, setOpen] = useState(false);
+const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
+  const [open, setOpen] = useState(highlight);
+
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
