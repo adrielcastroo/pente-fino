@@ -679,9 +679,15 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         whileHover={{ y: -2 }}
-        className="border border-border/40 rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/40 transition-all duration-500 backdrop-blur-sm group/card"
+        className={`border rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 backdrop-blur-sm group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30 shadow-lg shadow-primary/10' : 'border-border/40 hover:border-primary/40'}`}
       >
+        {highlight && (
+          <div className="bg-primary/10 text-primary px-4 py-1.5 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border-b border-primary/20">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Exportado agora
+          </div>
+        )}
         {headerContent}
+
         <AnimatePresence mode="wait">
           {open && (
             <motion.div 
