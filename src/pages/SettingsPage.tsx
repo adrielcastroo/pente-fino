@@ -729,9 +729,8 @@ export default function SettingsPage() {
                     <LabelLayoutPanel />
                   )}
 
-                  {activeCategory === 'inventory-cyclic' && (
-                    <InventorySettingsPanel />
-                  )}
+
+
 
                   {activeCategory === 'security' && (
                     <div className="space-y-8">
