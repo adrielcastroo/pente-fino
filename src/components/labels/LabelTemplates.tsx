@@ -73,7 +73,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
             </div>
           )}
           {has("descricao") && (
-            <div className="mt-1 leading-tight line-clamp-2 overflow-hidden" style={{ fontSize: `${fs * 2.2}px` }}>
+            <div className="mt-1 leading-tight line-clamp-3 overflow-hidden" style={{ fontSize: `${fs * 2.2}px` }}>
               {descLines.map((l, i) => (
                 <div key={i}>{l}</div>
               ))}
@@ -160,7 +160,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         )}
         {has("descricao") && (
           <div
-            className="mt-1 leading-tight text-center line-clamp-2 overflow-hidden"
+            className="mt-1 leading-tight text-center line-clamp-3 overflow-hidden"
             style={{ fontSize: `${fs * 1.05}px` }}
           >
             {descLines.map((l, i) => (
