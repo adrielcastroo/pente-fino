@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
-import { Download, User, Archive, CheckCircle2, LogOut, ScanBarcode, Plus } from 'lucide-react';
+import { Download, User, CheckCircle2, LogOut, ScanBarcode, Plus } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 
 const TopBar = memo(function TopBar() {
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
+
   const { user, isGuest, guestName, signOut, profile } = useAuth();
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
@@ -46,28 +48,27 @@ const TopBar = memo(function TopBar() {
   const exportExcel = async () => {
     if (isArchiving) return;
     const currentRegistros = [...useAppStore.getState().registros];
-    if (!currentRegistros.length) { 
-      toast.warning('Nenhum registro para exportar.'); 
-      return; 
+    if (!currentRegistros.length) {
+      toast.warning('Nenhum item bipado nesta sessão para exportar.');
+      return;
     }
-
-    // 1. Process Stock Allocation and saving
-    const toastId = toast.loading('Alocando tecidos e preparando arquivo...');
 
     const isMotorControle = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
-    const requiresProcesso = !isMotorControle && 
-      (currentRegistros.some(r => r.modoOrigem !== 'diversos' && r.modoOrigem !== 'etiq_pronta') || 
-       (currentMode !== 'diversos' && currentMode !== 'etiq_pronta'));
-    
-    if (requiresProcesso && !processo.trim()) { 
-      toast.warning('Preencha o campo PROCESSO para continuar.'); 
-      return; 
+    const requiresProcesso = !isMotorControle &&
+      currentRegistros.some(r => r.modoOrigem !== 'diversos' && r.modoOrigem !== 'etiq_pronta' && r.modoOrigem !== 'motor' && r.modoOrigem !== 'controle');
+
+    // Validate BEFORE opening loading toast
+    if (!conferente.trim()) {
+      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.');
+      return;
     }
-    
-    if (!conferente.trim()) { 
-      toast.warning('Identifique-se preenchendo o nome do CONFERENTE.'); 
-      return; 
+    if (requiresProcesso && !processo.trim()) {
+      toast.warning('Preencha o campo PROCESSO para continuar.');
+      return;
     }
+
+    const toastId = toast.loading('Alocando tecidos e preparando arquivo...');
+
 
     const columns = getRegistroColumns(currentRegistros, currentMode);
     const headers = columns.map(column => column.label);
@@ -114,7 +115,12 @@ const TopBar = memo(function TopBar() {
       toast.dismiss(toastId);
       toast.success(`Exportação concluída! ${count} registros alocados no estoque e arquivados.`, {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
+        action: {
+          label: 'Ver no histórico',
+          onClick: () => navigate('/historico'),
+        },
       });
+
     } catch (error: any) {
       toast.dismiss(toastId);
       toast.error(error.message || 'Falha ao exportar e arquivar registros.');
@@ -203,14 +209,14 @@ const TopBar = memo(function TopBar() {
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
-          {registroCount > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
                   onClick={exportExcel}
                   size="sm"
-                  disabled={isArchiving}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 sm:px-5 h-9 sm:h-10 xl:h-11 rounded-xl shadow-md shadow-primary/15 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs group/btn relative overflow-hidden shrink-0"
+                  disabled={isArchiving || registroCount === 0}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 sm:px-5 h-9 sm:h-10 xl:h-11 rounded-xl shadow-md shadow-primary/15 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs group/btn relative overflow-hidden shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isArchiving ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -224,19 +230,17 @@ const TopBar = memo(function TopBar() {
                     </Badge>
                   )}
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent className="font-semibold">
-                <p>Exportar {registroCount} registros para Excel</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="font-semibold">
+              <p>
+                {registroCount === 0
+                  ? 'Sem itens bipados nesta sessão'
+                  : `Exportar ${registroCount} itens para Excel e enviar ao histórico`}
+              </p>
+            </TooltipContent>
+          </Tooltip>
 
-          {registroCount === 0 && (
-            <Badge variant="outline" className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-dashed border-border/40 bg-transparent text-muted-foreground/50 font-medium flex gap-1.5 shrink-0">
-              <Archive className="w-3.5 h-3.5 opacity-50" />
-              <span className="text-[10px] sm:text-xs whitespace-nowrap">Vazio</span>
-            </Badge>
-          )}
         </div>
       </div>
     </header>
