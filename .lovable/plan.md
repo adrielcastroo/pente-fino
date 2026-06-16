@@ -1,46 +1,73 @@
-## Situação atual
 
-Sim, seus dados estão salvos no banco — **306 itens cadastrados** em `itens_cadastro`. Exemplos dos mais recentes:
+## Objetivo
 
-- `003.003.155.024.2` → Screen 05 Platinum (fornecedor `3005-08-250E-B2`)
-- `003.003.183.001.3` → Napoles Branco (fornecedor `YM-5301`)
-- `003.003.185.001.1.1` → Blackout Napoles Branco (fornecedor `YM5301`)
-- … +303 outros
+Hoje o app valida etiqueta assumindo que o campo "Item" bipado é o **código interno**. O usuário quer o inverso: o operador bipa o **código do fornecedor** (que vem na etiqueta original do fornecedor), e o sistema:
 
-## Problema
+1. Procura esse código na base `/cadastros`
+2. Substitui pelo **código interno** na etiqueta gerada
+3. Usa a **descrição cadastrada** na etiqueta
 
-Hoje as políticas de leitura de `itens_cadastro`, `reservas` e `independent_reservations` exigem usuário **autenticado**. Por isso, quem não está logado não consegue ver nada — não atende ao seu pedido de "visível para todos".
+Além disso, em `/cadastros`:
+- Adicionar filtros (com/sem código fornecedor, ordenação)
+- Permitir cadastrar/editar itens **sem código do fornecedor** (campo opcional)
 
-## O que vou ajustar
+---
 
-Tudo é mudança de permissão no banco, sem mexer na UI.
+## Mudanças
 
-### 1. Permitir leitura pública (anon + authenticated)
+### 1. Banco — tornar `codigo_fornecedor` opcional
+Migration:
+- `itens_cadastro.codigo_fornecedor` → permitir `NULL` / string vazia
+- `codigo_fornecedor_normalizado` → permitir `NULL`
+- Manter índice único em `codigo_interno`; adicionar índice (não único) em `codigo_fornecedor_normalizado` para lookup rápido por fornecedor
 
-Migração que, para cada uma das 3 tabelas (`itens_cadastro`, `reservas`, `independent_reservations`):
+### 2. Lookup por código de fornecedor
+Em `src/services/itensCadastroService.ts`, novo método:
+```
+findByCodigoFornecedor(codigoBipado): Promise<ItemCadastro | null>
+```
+Estratégia (em ordem):
+1. Match exato pelo `codigo_fornecedor_normalizado` (normalizado via `normalizarCodigo`)
+2. Se nada, busca parcial (`ilike`) para tolerar prefixos/sufixos
+3. Fallback: olhar dentro da `descricao` cadastrada usando `extractCodigoFornecedor` + `codigoBate`
 
-- Substitui a policy de `SELECT` por uma permissiva: `USING (true)` para `anon` e `authenticated`.
-- Adiciona `GRANT SELECT ... TO anon` (necessário no Lovable Cloud — sem isso a API rejeita mesmo com policy aberta).
+### 3. Resolução automática no `printService`
+Em `src/services/printService.ts`, refatorar `validarItem` → `resolverItem(codigoBipado, fallbackDescricao)`:
+- Tenta `findByCodigoInterno(codigoBipado)` (compatibilidade)
+- Se não achar, tenta `findByCodigoFornecedor(codigoBipado)`
+- Se achar via fornecedor: **substitui** `data.sku` pelo `codigo_interno` cadastrado e usa a `descricao` cadastrada
+- Se não achar nada: mantém comportamento atual + toast de aviso
+- Aplica em `printTecidoLabel` e `printMotorLabel`
 
-### 2. Manter edição restrita a usuários logados
+Retorno: `{ codigoInternoFinal, descricaoFinal, matched: boolean, matchedBy: 'interno'|'fornecedor'|null }`.
 
-Policies de `INSERT`/`UPDATE`/`DELETE` continuam exigindo `auth.uid() IS NOT NULL`. Ou seja:
+### 4. `/cadastros` — campo opcional + filtros
+**`ItemFormDialog.tsx`**: tornar `codigo_fornecedor` opcional (remover `required`, label "Código fornecedor (opcional)"); aceitar vazio no submit (envia `null`).
 
-- Visitantes deslogados: **só visualizam**.
-- Usuários logados: visualizam **e** editam, com o rastro de auditoria já implementado (quem editou, qual campo, badge âmbar na célula).
+**`CadastrosPage.tsx`**: adicionar barra de filtros ao lado da busca:
+- Select "Mostrar": Todos / Com fornecedor / **Sem fornecedor**
+- Select "Ordenar por": Código interno / Descrição / Atualizado recente
+- Badge contador "X sem fornecedor" para visibilidade
 
-### 3. Sem mudança de código de frontend
+Na tabela, quando `codigo_fornecedor` estiver vazio, exibir badge cinza `— sem código —` em vez de badge vazio.
 
-Os hooks e páginas já fazem `SELECT *` direto via Supabase client; quando a policy abrir, eles passam a retornar dados também para sessões anônimas, sem alteração.
+### 5. Tipos
+- `ItemCadastro.codigo_fornecedor`: `string | null`
+- `ItemCadastroInput.codigo_fornecedor`: `string` (vazio permitido; service converte para `null`)
+- `prepare()` no service: se vazio → `null` em ambos os campos normalizados
 
-## Tabelas afetadas
+---
 
-| Tabela                    | SELECT          | INSERT/UPDATE/DELETE |
-| ------------------------- | --------------- | -------------------- |
-| `itens_cadastro`          | público (anon+auth) | só logados        |
-| `reservas`                | público (anon+auth) | só logados        |
-| `independent_reservations`| público (anon+auth) | só logados        |
+## Fora do escopo
+- Não mexer em `/reservas` nem no fluxo de auditoria.
+- Não alterar o template visual da etiqueta — apenas os dados que a alimentam.
+- Não criar UI de "merge" de duplicatas de fornecedor (se houver dois itens internos com mesmo fornecedor, o primeiro encontrado vence; aviso via toast).
 
-## Observação de segurança
-
-Tornar essas tabelas legíveis por `anon` significa que qualquer pessoa com a chave pública do app (que já é exposta no frontend) pode ler todo o catálogo de itens e reservas. Como você pediu explicitamente que "todas as informações sejam visíveis para todos os usuários", sigo com isso — mas é bom você confirmar que está ciente.
+## Arquivos afetados
+- `supabase/migrations/*` (nova)
+- `src/services/itensCadastroService.ts`
+- `src/services/printService.ts`
+- `src/components/cadastros/ItemFormDialog.tsx`
+- `src/components/cadastros/ImportItensDialog.tsx` (aceitar fornecedor vazio na importação)
+- `src/pages/CadastrosPage.tsx`
+- `src/lib/codigoFornecedor.ts` (sem mudanças; já cobre extração)

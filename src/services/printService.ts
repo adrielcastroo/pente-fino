@@ -6,26 +6,51 @@ import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelT
 import type { LabelSettings } from '@/store/useAppStore';
 
 /**
- * Valida o item contra a base de cadastros e devolve a descrição que deve ir na etiqueta.
- * Não bloqueia a impressão — apenas avisa via toast.
+ * Resolve o item a partir do que foi bipado.
+ *  - Se o bipado já é um código interno cadastrado → usa esse.
+ *  - Senão, tenta encontrar pelo código do fornecedor → substitui pelo código interno cadastrado.
+ *  - Caso nada bata, segue com os dados do registro (apenas avisa).
  */
-async function validarItem(codigoInterno: string, codigoBipado: string, fallbackDescricao: string): Promise<string> {
+async function resolverItem(
+  codigoBipadoOuInterno: string,
+  codigoBipadoOriginal: string,
+  fallbackDescricao: string,
+): Promise<{ codigoInterno: string; descricao: string }> {
+  const fallback = { codigoInterno: codigoBipadoOuInterno, descricao: fallbackDescricao };
   try {
-    const item = await itensCadastroService.findByCodigoInterno(codigoInterno);
-    if (!item) {
-      toast.warning(`Item ${codigoInterno} não está cadastrado — etiqueta usará dados do registro`);
-      return fallbackDescricao;
+    // 1. é o nosso código interno?
+    const porInterno = await itensCadastroService.findByCodigoInterno(codigoBipadoOuInterno);
+    if (porInterno) {
+      if (porInterno.codigo_fornecedor && !codigoBate(codigoBipadoOriginal, porInterno.codigo_fornecedor)) {
+        toast.warning(
+          `Código bipado "${codigoBipadoOriginal}" não confere com fornecedor "${porInterno.codigo_fornecedor}"`,
+          { duration: 5000 },
+        );
+      }
+      return {
+        codigoInterno: porInterno.codigo_interno,
+        descricao: porInterno.descricao || fallbackDescricao,
+      };
     }
-    if (!codigoBate(codigoBipado, item.codigo_fornecedor)) {
-      toast.warning(
-        `Código bipado "${codigoBipado}" não confere com fornecedor "${item.codigo_fornecedor}" (item ${codigoInterno})`,
-        { duration: 5000 },
+
+    // 2. é um código de fornecedor cadastrado?
+    const porFornecedor = await itensCadastroService.findByCodigoFornecedor(codigoBipadoOriginal);
+    if (porFornecedor) {
+      toast.success(
+        `Fornecedor "${codigoBipadoOriginal}" → ${porFornecedor.codigo_interno}`,
+        { duration: 3000 },
       );
+      return {
+        codigoInterno: porFornecedor.codigo_interno,
+        descricao: porFornecedor.descricao || fallbackDescricao,
+      };
     }
-    return item.descricao || fallbackDescricao;
+
+    toast.warning(`Código "${codigoBipadoOriginal}" não encontrado nos cadastros — etiqueta usará dados do registro`);
+    return fallback;
   } catch (e) {
-    console.warn('Validação de cadastro falhou:', e);
-    return fallbackDescricao;
+    console.warn('Resolução de cadastro falhou:', e);
+    return fallback;
   }
 }
 
@@ -98,16 +123,16 @@ export async function printTecidoLabel(
       ? `${input.mLinear.toFixed(2).replace('.', ',')} M`
       : '';
 
-    const descricaoFinal = await validarItem(input.item, input.lote || input.loteSistema || '', input.descricao || '');
+    const resolved = await resolverItem(input.item, input.item, input.descricao || '');
 
     const data: TecidoLabelData = {
-      sku: input.item,
-      descricao: descricaoFinal,
+      sku: resolved.codigoInterno,
+      descricao: resolved.descricao,
       lote: loteText,
       qtd: qtdText,
       rnp: input.endereco || '',
       data: today(),
-      qrSku: input.item,
+      qrSku: resolved.codigoInterno,
       qrLote: loteText,
     };
 
@@ -155,17 +180,17 @@ export async function printMotorLabel(
     const nfText = input.nf ? `NF ${input.nf}` : '';
     const ntText = input.loteSistema || input.lote;
 
-    const descricaoFinal = await validarItem(input.item, input.lote || input.loteSistema || '', input.descricao || '');
+    const resolved = await resolverItem(input.item, input.item, input.descricao || '');
 
     const data: MotorLabelData = {
-      sku: input.item,
-      descricao: descricaoFinal,
+      sku: resolved.codigoInterno,
+      descricao: resolved.descricao,
       cx: cxText,
       nf: nfText,
       nt: ntText,
       rnp: input.endereco || '',
       data: today(),
-      qrLoteSku: `${input.lote};${input.item}`,
+      qrLoteSku: `${input.lote};${resolved.codigoInterno}`,
     };
 
     const rendered = await renderMotorLabel(data, labelSettings);

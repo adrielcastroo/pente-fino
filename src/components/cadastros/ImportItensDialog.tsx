@@ -95,9 +95,9 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
   };
 
   const handleImport = async () => {
-    const validRows = rows.filter((r) => r.codigo_interno && r.descricao && r.codigo_fornecedor);
+    const validRows = rows.filter((r) => r.codigo_interno && r.descricao);
     if (!validRows.length) {
-      toast.error('Nenhuma linha válida (preencha o código do fornecedor)');
+      toast.error('Nenhuma linha válida');
       return;
     }
     try {
@@ -148,7 +148,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           {rows.length > 0 && (
             <div className="ml-auto flex gap-2 text-xs">
               <Badge variant="secondary">{rows.length} linhas</Badge>
-              {semCodigo > 0 && <Badge variant="destructive">{semCodigo} sem código</Badge>}
+              {semCodigo > 0 && <Badge variant="outline">{semCodigo} sem código</Badge>}
             </div>
           )}
         </div>

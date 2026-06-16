@@ -11,28 +11,49 @@ import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fieldLabel } from '@/lib/audit';
 import { cn } from '@/lib/utils';
+
+type FornFilter = 'todos' | 'com' | 'sem';
+type SortKey = 'codigo_interno' | 'descricao' | 'updated_at';
 
 export default function CadastrosPage() {
   const { data: itens = [], isLoading } = useItensCadastro();
   const del = useDeleteItemCadastro();
   const [search, setSearch] = useState('');
+  const [fornFilter, setFornFilter] = useState<FornFilter>('todos');
+  const [sortKey, setSortKey] = useState<SortKey>('codigo_interno');
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
 
+  const semFornecedorCount = useMemo(
+    () => itens.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim()).length,
+    [itens],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return itens;
-    return itens.filter(
-      (i) =>
-        i.codigo_interno.toLowerCase().includes(q) ||
-        i.descricao.toLowerCase().includes(q) ||
-        i.codigo_fornecedor.toLowerCase().includes(q),
-    );
-  }, [itens, search]);
+    let out = itens;
+    if (fornFilter === 'com') out = out.filter((i) => !!i.codigo_fornecedor && !!i.codigo_fornecedor.trim());
+    else if (fornFilter === 'sem') out = out.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim());
+    if (q) {
+      out = out.filter(
+        (i) =>
+          i.codigo_interno.toLowerCase().includes(q) ||
+          i.descricao.toLowerCase().includes(q) ||
+          (i.codigo_fornecedor || '').toLowerCase().includes(q),
+      );
+    }
+    const sorted = [...out].sort((a, b) => {
+      if (sortKey === 'updated_at') return (b.updated_at || '').localeCompare(a.updated_at || '');
+      if (sortKey === 'descricao') return a.descricao.localeCompare(b.descricao);
+      return a.codigo_interno.localeCompare(b.codigo_interno);
+    });
+    return sorted;
+  }, [itens, search, fornFilter, sortKey]);
 
   const handleEdit = (item: ItemCadastro) => {
     setEditing(item);
@@ -80,7 +101,7 @@ export default function CadastrosPage() {
         </div>
       </header>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row md:items-center gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -90,7 +111,34 @@ export default function CadastrosPage() {
             className="pl-9 h-10"
           />
         </div>
-        <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
+        <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
+          <SelectTrigger className="w-[180px] h-10">
+            <SelectValue placeholder="Mostrar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os itens</SelectItem>
+            <SelectItem value="com">Com cód. fornecedor</SelectItem>
+            <SelectItem value="sem">Sem cód. fornecedor</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+          <SelectTrigger className="w-[180px] h-10">
+            <SelectValue placeholder="Ordenar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="codigo_interno">Código interno</SelectItem>
+            <SelectItem value="descricao">Descrição</SelectItem>
+            <SelectItem value="updated_at">Atualizado recente</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 md:ml-auto">
+          <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
+          {semFornecedorCount > 0 && (
+            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30">
+              {semFornecedorCount} sem fornecedor
+            </Badge>
+          )}
+        </div>
       </div>
 
       <TooltipProvider>
@@ -138,7 +186,11 @@ export default function CadastrosPage() {
                 <TableCell className={cn(editedCol('codigo_fornecedor') && 'bg-amber-500/5')}>
                   <span className="inline-flex items-center gap-1.5">
                     {editedCol('codigo_fornecedor') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-                    <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
+                    {item.codigo_fornecedor && item.codigo_fornecedor.trim() ? (
+                      <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>
+                    )}
                   </span>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">

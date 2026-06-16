@@ -54,8 +54,8 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
   };
 
   const handleSave = async () => {
-    if (!codigoInterno.trim() || !descricao.trim() || !codigoFornecedor.trim()) {
-      toast.error('Preencha todos os campos');
+    if (!codigoInterno.trim() || !descricao.trim()) {
+      toast.error('Preencha código interno e descrição');
       return;
     }
     try {
@@ -116,7 +116,7 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <Label htmlFor="codigo_fornecedor">Código do fornecedor</Label>
+              <Label htmlFor="codigo_fornecedor">Código do fornecedor <span className="text-muted-foreground font-normal">(opcional)</span></Label>
               <Button type="button" size="sm" variant="ghost" onClick={handleAutoExtract} className="h-7 text-xs gap-1">
                 <Sparkles className="h-3 w-3" />
                 Auto-detectar

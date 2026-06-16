@@ -1,13 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
-import { normalizarCodigo } from '@/lib/codigoFornecedor';
+import { normalizarCodigo, extractCodigoFornecedor, codigoBate } from '@/lib/codigoFornecedor';
 import { buildAuditPayload } from '@/lib/audit';
 
 export interface ItemCadastro {
   id: string;
   codigo_interno: string;
   descricao: string;
-  codigo_fornecedor: string;
-  codigo_fornecedor_normalizado: string;
+  codigo_fornecedor: string | null;
+  codigo_fornecedor_normalizado: string | null;
   created_at: string;
   updated_at: string;
   updated_by?: string | null;
@@ -23,11 +23,13 @@ export interface ItemCadastroInput {
 }
 
 function prepare(input: ItemCadastroInput) {
+  const forn = (input.codigo_fornecedor || '').trim();
+  const normalized = normalizarCodigo(forn);
   return {
     codigo_interno: input.codigo_interno.trim(),
     descricao: input.descricao.trim(),
-    codigo_fornecedor: input.codigo_fornecedor.trim(),
-    codigo_fornecedor_normalizado: normalizarCodigo(input.codigo_fornecedor),
+    codigo_fornecedor: forn || null,
+    codigo_fornecedor_normalizado: normalized || null,
   };
 }
 
@@ -49,6 +51,63 @@ export const itensCadastroService = {
       .maybeSingle();
     if (error) throw error;
     return (data as ItemCadastro) || null;
+  },
+
+  /**
+   * Procura um item cujo código de fornecedor casa com o valor bipado.
+   * Estratégia:
+   *  1. Match exato pelo normalizado
+   *  2. Match parcial (ilike contém) no normalizado
+   *  3. Fallback: extrai código embutido na descrição cadastrada e compara
+   */
+  async findByCodigoFornecedor(codigoBipado: string): Promise<ItemCadastro | null> {
+    const norm = normalizarCodigo(codigoBipado);
+    if (!norm || norm.length < 3) return null;
+
+    // 1. exato
+    {
+      const { data, error } = await supabase
+        .from('itens_cadastro')
+        .select('*')
+        .eq('codigo_fornecedor_normalizado', norm)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return data as ItemCadastro;
+    }
+
+    // 2. parcial (um contém o outro)
+    {
+      const { data, error } = await supabase
+        .from('itens_cadastro')
+        .select('*')
+        .or(`codigo_fornecedor_normalizado.ilike.%${norm}%,codigo_fornecedor_normalizado.eq.${norm}`)
+        .limit(5);
+      if (error) throw error;
+      const match = (data || []).find((d: any) =>
+        codigoBate(codigoBipado, d.codigo_fornecedor) ||
+        (d.codigo_fornecedor_normalizado && norm.includes(d.codigo_fornecedor_normalizado)),
+      );
+      if (match) return match as ItemCadastro;
+    }
+
+    // 3. fallback: olhar dentro da descrição cadastrada
+    {
+      const { data, error } = await supabase
+        .from('itens_cadastro')
+        .select('*')
+        .or('codigo_fornecedor.is.null,codigo_fornecedor.eq.')
+        .ilike('descricao', `%${codigoBipado.trim()}%`)
+        .limit(5);
+      if (error) throw error;
+      const match = (data || []).find((d: any) => {
+        const ext = extractCodigoFornecedor(d.descricao);
+        return ext && codigoBate(codigoBipado, ext.codigo);
+      });
+      if (match) return match as ItemCadastro;
+    }
+
+    return null;
   },
 
   async upsert(input: ItemCadastroInput, opts?: { changedField?: string | null; isEdit?: boolean }): Promise<ItemCadastro> {
