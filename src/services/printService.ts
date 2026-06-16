@@ -123,16 +123,16 @@ export async function printTecidoLabel(
       ? `${input.mLinear.toFixed(2).replace('.', ',')} M`
       : '';
 
-    const descricaoFinal = await validarItem(input.item, input.lote || input.loteSistema || '', input.descricao || '');
+    const resolved = await resolverItem(input.item, input.item, input.descricao || '');
 
     const data: TecidoLabelData = {
-      sku: input.item,
-      descricao: descricaoFinal,
+      sku: resolved.codigoInterno,
+      descricao: resolved.descricao,
       lote: loteText,
       qtd: qtdText,
       rnp: input.endereco || '',
       data: today(),
-      qrSku: input.item,
+      qrSku: resolved.codigoInterno,
       qrLote: loteText,
     };
 
@@ -180,17 +180,17 @@ export async function printMotorLabel(
     const nfText = input.nf ? `NF ${input.nf}` : '';
     const ntText = input.loteSistema || input.lote;
 
-    const descricaoFinal = await validarItem(input.item, input.lote || input.loteSistema || '', input.descricao || '');
+    const resolved = await resolverItem(input.item, input.item, input.descricao || '');
 
     const data: MotorLabelData = {
-      sku: input.item,
-      descricao: descricaoFinal,
+      sku: resolved.codigoInterno,
+      descricao: resolved.descricao,
       cx: cxText,
       nf: nfText,
       nt: ntText,
       rnp: input.endereco || '',
       data: today(),
-      qrLoteSku: `${input.lote};${input.item}`,
+      qrLoteSku: `${input.lote};${resolved.codigoInterno}`,
     };
 
     const rendered = await renderMotorLabel(data, labelSettings);
