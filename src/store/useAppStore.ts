@@ -414,25 +414,34 @@ export const useAppStore = create<AppState>()(
       archiveAndClear: async (name: string, bypassLengthCheck = false) => {
         const state = get();
         if ((!state.registros.length && !bypassLengthCheck) || state.isArchiving) return;
+        const registrosToArchive = [...state.registros];
+        const processoToArchive = state.processo.trim() || name;
+        const conferenteToArchive = state.conferente;
+        const currentModeToArchive = state.currentMode;
         
-        set({ isArchiving: true, archiveError: null });
+        set({ isArchiving: true, archiveError: null, lastArchivedConferenceId: null });
         const finishedAt = new Date().toISOString();
         const startedAt = state.sessionStartedAt || finishedAt;
         
         try {
           const conf = await apiService.archiveConference(
-            state.processo.trim() || name,
-            state.conferente,
+            processoToArchive,
+            conferenteToArchive,
             startedAt,
-            state.registros,
-            state.currentMode
+            registrosToArchive,
+            currentModeToArchive
           );
+          const archivedId = (conf as any)?.id ?? null;
+          if (!archivedId) {
+            throw new Error('Conferência arquivada sem confirmação do histórico.');
+          }
           set({ 
             registros: [], 
             undoStack: [], 
             sessionStartedAt: null, 
             isArchiving: false,
-            lastArchivedConferenceId: (conf as any)?.id ?? null,
+            archiveError: null,
+            lastArchivedConferenceId: archivedId,
           });
           get().resetFormData();
           get().resetMotorFormData();
