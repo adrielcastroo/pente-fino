@@ -115,7 +115,12 @@ const TopBar = memo(function TopBar() {
       toast.dismiss(toastId);
       toast.success(`Exportação concluída! ${count} registros alocados no estoque e arquivados.`, {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
+        action: {
+          label: 'Ver no histórico',
+          onClick: () => navigate('/historico'),
+        },
       });
+
     } catch (error: any) {
       toast.dismiss(toastId);
       toast.error(error.message || 'Falha ao exportar e arquivar registros.');
