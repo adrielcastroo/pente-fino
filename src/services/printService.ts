@@ -1,7 +1,34 @@
 import { toast } from 'sonner';
 import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
+import { itensCadastroService } from './itensCadastroService';
+import { codigoBate } from '@/lib/codigoFornecedor';
 import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelTemplates';
 import type { LabelSettings } from '@/store/useAppStore';
+
+/**
+ * Valida o item contra a base de cadastros e devolve a descrição que deve ir na etiqueta.
+ * Não bloqueia a impressão — apenas avisa via toast.
+ */
+async function validarItem(codigoInterno: string, codigoBipado: string, fallbackDescricao: string): Promise<string> {
+  try {
+    const item = await itensCadastroService.findByCodigoInterno(codigoInterno);
+    if (!item) {
+      toast.warning(`Item ${codigoInterno} não está cadastrado — etiqueta usará dados do registro`);
+      return fallbackDescricao;
+    }
+    if (!codigoBate(codigoBipado, item.codigo_fornecedor)) {
+      toast.warning(
+        `Código bipado "${codigoBipado}" não confere com fornecedor "${item.codigo_fornecedor}" (item ${codigoInterno})`,
+        { duration: 5000 },
+      );
+    }
+    return item.descricao || fallbackDescricao;
+  } catch (e) {
+    console.warn('Validação de cadastro falhou:', e);
+    return fallbackDescricao;
+  }
+}
+
 
 export interface PrintConfig {
   autoPrint: boolean;
@@ -71,9 +98,11 @@ export async function printTecidoLabel(
       ? `${input.mLinear.toFixed(2).replace('.', ',')} M`
       : '';
 
+    const descricaoFinal = await validarItem(input.item, input.lote || input.loteSistema || '', input.descricao || '');
+
     const data: TecidoLabelData = {
       sku: input.item,
-      descricao: input.descricao || '',
+      descricao: descricaoFinal,
       lote: loteText,
       qtd: qtdText,
       rnp: input.endereco || '',
