@@ -29,22 +29,27 @@ export default function CadastrosPage() {
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
 
+  const getCodigos = (i: ItemCadastro): string[] => {
+    if (i.codigos_fornecedor && i.codigos_fornecedor.length) return i.codigos_fornecedor;
+    return i.codigo_fornecedor ? [i.codigo_fornecedor] : [];
+  };
+
   const semFornecedorCount = useMemo(
-    () => itens.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim()).length,
+    () => itens.filter((i) => getCodigos(i).length === 0).length,
     [itens],
   );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let out = itens;
-    if (fornFilter === 'com') out = out.filter((i) => !!i.codigo_fornecedor && !!i.codigo_fornecedor.trim());
-    else if (fornFilter === 'sem') out = out.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim());
+    if (fornFilter === 'com') out = out.filter((i) => getCodigos(i).length > 0);
+    else if (fornFilter === 'sem') out = out.filter((i) => getCodigos(i).length === 0);
     if (q) {
       out = out.filter(
         (i) =>
           i.codigo_interno.toLowerCase().includes(q) ||
           i.descricao.toLowerCase().includes(q) ||
-          (i.codigo_fornecedor || '').toLowerCase().includes(q),
+          getCodigos(i).some((c) => c.toLowerCase().includes(q)),
       );
     }
     const sorted = [...out].sort((a, b) => {
