@@ -65,6 +65,7 @@ export const FIELD_LABELS: Record<string, string> = {
   codigo_interno: 'Código interno',
   descricao: 'Descrição',
   codigo_fornecedor: 'Código fornecedor',
+  codigos_fornecedor: 'Códigos de fornecedor',
   codigo: 'Código',
   endereco: 'Endereço',
   quantidade: 'Quantidade',

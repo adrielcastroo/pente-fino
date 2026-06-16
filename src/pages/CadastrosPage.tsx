@@ -29,22 +29,27 @@ export default function CadastrosPage() {
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
 
+  const getCodigos = (i: ItemCadastro): string[] => {
+    if (i.codigos_fornecedor && i.codigos_fornecedor.length) return i.codigos_fornecedor;
+    return i.codigo_fornecedor ? [i.codigo_fornecedor] : [];
+  };
+
   const semFornecedorCount = useMemo(
-    () => itens.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim()).length,
+    () => itens.filter((i) => getCodigos(i).length === 0).length,
     [itens],
   );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let out = itens;
-    if (fornFilter === 'com') out = out.filter((i) => !!i.codigo_fornecedor && !!i.codigo_fornecedor.trim());
-    else if (fornFilter === 'sem') out = out.filter((i) => !i.codigo_fornecedor || !i.codigo_fornecedor.trim());
+    if (fornFilter === 'com') out = out.filter((i) => getCodigos(i).length > 0);
+    else if (fornFilter === 'sem') out = out.filter((i) => getCodigos(i).length === 0);
     if (q) {
       out = out.filter(
         (i) =>
           i.codigo_interno.toLowerCase().includes(q) ||
           i.descricao.toLowerCase().includes(q) ||
-          (i.codigo_fornecedor || '').toLowerCase().includes(q),
+          getCodigos(i).some((c) => c.toLowerCase().includes(q)),
       );
     }
     const sorted = [...out].sort((a, b) => {
@@ -183,15 +188,32 @@ export default function CadastrosPage() {
                     <span>{item.descricao}</span>
                   </div>
                 </TableCell>
-                <TableCell className={cn(editedCol('codigo_fornecedor') && 'bg-amber-500/5')}>
-                  <span className="inline-flex items-center gap-1.5">
-                    {editedCol('codigo_fornecedor') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-                    {item.codigo_fornecedor && item.codigo_fornecedor.trim() ? (
-                      <Badge variant="outline" className="font-mono text-[10px]">{item.codigo_fornecedor}</Badge>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>
+                <TableCell className={cn((editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
+                  <div className="inline-flex items-start gap-1.5 flex-wrap max-w-[240px]">
+                    {(editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && (
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
                     )}
-                  </span>
+                    {(() => {
+                      const codigos = getCodigos(item);
+                      if (!codigos.length) {
+                        return <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>;
+                      }
+                      const visiveis = codigos.slice(0, 3);
+                      const extras = codigos.length - visiveis.length;
+                      return (
+                        <>
+                          {visiveis.map((c, i) => (
+                            <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[10px]">{c}</Badge>
+                          ))}
+                          {extras > 0 && (
+                            <Badge variant="secondary" className="text-[10px]" title={codigos.slice(3).join(', ')}>
+                              +{extras}
+                            </Badge>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {new Date(item.updated_at).toLocaleDateString('pt-BR')}

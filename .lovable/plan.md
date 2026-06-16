@@ -1,73 +1,75 @@
 
 ## Objetivo
 
-Hoje o app valida etiqueta assumindo que o campo "Item" bipado é o **código interno**. O usuário quer o inverso: o operador bipa o **código do fornecedor** (que vem na etiqueta original do fornecedor), e o sistema:
-
-1. Procura esse código na base `/cadastros`
-2. Substitui pelo **código interno** na etiqueta gerada
-3. Usa a **descrição cadastrada** na etiqueta
-
-Além disso, em `/cadastros`:
-- Adicionar filtros (com/sem código fornecedor, ordenação)
-- Permitir cadastrar/editar itens **sem código do fornecedor** (campo opcional)
+Permitir que cada item em `/cadastros` tenha **vários códigos de fornecedor** (não só um), para que o sistema reconheça o item independentemente de qual fornecedor enviou. Hoje há apenas um campo único `codigo_fornecedor`.
 
 ---
 
 ## Mudanças
 
-### 1. Banco — tornar `codigo_fornecedor` opcional
-Migration:
-- `itens_cadastro.codigo_fornecedor` → permitir `NULL` / string vazia
-- `codigo_fornecedor_normalizado` → permitir `NULL`
-- Manter índice único em `codigo_interno`; adicionar índice (não único) em `codigo_fornecedor_normalizado` para lookup rápido por fornecedor
+### 1. Banco — array de códigos de fornecedor
 
-### 2. Lookup por código de fornecedor
-Em `src/services/itensCadastroService.ts`, novo método:
-```
-findByCodigoFornecedor(codigoBipado): Promise<ItemCadastro | null>
-```
-Estratégia (em ordem):
-1. Match exato pelo `codigo_fornecedor_normalizado` (normalizado via `normalizarCodigo`)
-2. Se nada, busca parcial (`ilike`) para tolerar prefixos/sufixos
-3. Fallback: olhar dentro da `descricao` cadastrada usando `extractCodigoFornecedor` + `codigoBate`
+Migration em `itens_cadastro`:
+- Adicionar `codigos_fornecedor TEXT[]` (lista de códigos originais, ex: `['YM4202', 'RF-MOMBASSA5600']`)
+- Adicionar `codigos_fornecedor_normalizado TEXT[]` (mesma lista normalizada para busca)
+- **Backfill**: copiar `codigo_fornecedor` atual para o array (1 elemento) em todos os 306 registros
+- Criar índice GIN em `codigos_fornecedor_normalizado` para busca rápida com operador `@>` / `&&`
+- **Manter** `codigo_fornecedor` e `codigo_fornecedor_normalizado` (singular) por compatibilidade — preenchidos sempre com o **primeiro** elemento do array (via trigger ou no service). Assim código legado e a coluna singular continuam funcionando, e a tabela continua mostrando o "principal".
 
-### 3. Resolução automática no `printService`
-Em `src/services/printService.ts`, refatorar `validarItem` → `resolverItem(codigoBipado, fallbackDescricao)`:
-- Tenta `findByCodigoInterno(codigoBipado)` (compatibilidade)
-- Se não achar, tenta `findByCodigoFornecedor(codigoBipado)`
-- Se achar via fornecedor: **substitui** `data.sku` pelo `codigo_interno` cadastrado e usa a `descricao` cadastrada
-- Se não achar nada: mantém comportamento atual + toast de aviso
-- Aplica em `printTecidoLabel` e `printMotorLabel`
+### 2. Service — `itensCadastroService.ts`
 
-Retorno: `{ codigoInternoFinal, descricaoFinal, matched: boolean, matchedBy: 'interno'|'fornecedor'|null }`.
+- `ItemCadastro.codigos_fornecedor: string[]` (e normalizado)
+- `ItemCadastroInput.codigos_fornecedor: string[]`
+- `prepare()`: limpa, normaliza, deduplica e ordena; define o singular como `array[0] || null`
+- `findByCodigoFornecedor(bipado)`:
+  1. Exato: `.contains('codigos_fornecedor_normalizado', [norm])`
+  2. Parcial: busca onde algum elemento do array contém/é contido pelo bipado (fetch + filtro client-side, igual hoje)
+  3. Fallback descrição: igual hoje
+- `bulkUpsert` (importação): aceita 1+ códigos por linha (ver passo 4)
 
-### 4. `/cadastros` — campo opcional + filtros
-**`ItemFormDialog.tsx`**: tornar `codigo_fornecedor` opcional (remover `required`, label "Código fornecedor (opcional)"); aceitar vazio no submit (envia `null`).
+### 3. UI — `ItemFormDialog.tsx`
 
-**`CadastrosPage.tsx`**: adicionar barra de filtros ao lado da busca:
-- Select "Mostrar": Todos / Com fornecedor / **Sem fornecedor**
-- Select "Ordenar por": Código interno / Descrição / Atualizado recente
-- Badge contador "X sem fornecedor" para visibilidade
+Substituir o input único por um **gerenciador de tags**:
+- Input + botão "Adicionar" (ou tecla Enter) que empilha o código como chip removível
+- Botão "Auto-detectar" continua sugerindo a partir da descrição e adiciona como novo chip se ainda não existir
+- Validação: deduplicação automática (normalizado), aviso se o código já existe em outro item
+- Continua opcional (lista pode ficar vazia)
+- Auditoria: `changedField` = `'codigos_fornecedor'` quando a lista muda
 
-Na tabela, quando `codigo_fornecedor` estiver vazio, exibir badge cinza `— sem código —` em vez de badge vazio.
+### 4. UI — `/cadastros` (`CadastrosPage.tsx`)
 
-### 5. Tipos
-- `ItemCadastro.codigo_fornecedor`: `string | null`
-- `ItemCadastroInput.codigo_fornecedor`: `string` (vazio permitido; service converte para `null`)
-- `prepare()` no service: se vazio → `null` em ambos os campos normalizados
+- Coluna "Código fornecedor" passa a mostrar **todos** os chips (com truncamento "+N" se passar de 3)
+- Filtros existentes continuam: "com / sem fornecedor" agora olham o array (vazio = sem)
+- Busca: estender para procurar em qualquer elemento do array (além de código interno e descrição)
+- Contador "X sem fornecedor" usa `array_length = 0`
+
+### 5. Importação — `ImportItensDialog.tsx`
+
+- Aceitar coluna `codigo_fornecedor` com **múltiplos códigos separados por `;` ou `|`** (ex: `YM4202;RF-MOMBASSA`)
+- Documentar no texto de ajuda do dialog
+- Se a planilha tiver várias linhas com mesmo `codigo_interno`, **mesclar** os fornecedores no upsert (não sobrescrever)
+
+### 6. `printService.ts` — `resolverItem`
+
+Sem mudanças de lógica: já chama `findByCodigoFornecedor`, que passa a varrer o array. Sucesso transparente.
+
+### 7. Tipos — `src/types/index.ts` e `supabase/types.ts`
+
+Atualizados após a migration. Manter campo singular como `string | null` (derivado).
 
 ---
 
-## Fora do escopo
-- Não mexer em `/reservas` nem no fluxo de auditoria.
-- Não alterar o template visual da etiqueta — apenas os dados que a alimentam.
-- Não criar UI de "merge" de duplicatas de fornecedor (se houver dois itens internos com mesmo fornecedor, o primeiro encontrado vence; aviso via toast).
+## Compatibilidade
+
+- Registros antigos continuam funcionando: o backfill garante que cada item tenha pelo menos 1 elemento no array quando já existia código.
+- O campo singular `codigo_fornecedor` continua na tabela (sincronizado com `array[0]`) para qualquer consumidor externo / export antigo.
+- Nenhuma mudança em `/reservas`, auditoria, ou template de etiqueta.
 
 ## Arquivos afetados
-- `supabase/migrations/*` (nova)
+
+- `supabase/migrations/*` (nova: array + backfill + índice GIN)
 - `src/services/itensCadastroService.ts`
-- `src/services/printService.ts`
 - `src/components/cadastros/ItemFormDialog.tsx`
-- `src/components/cadastros/ImportItensDialog.tsx` (aceitar fornecedor vazio na importação)
+- `src/components/cadastros/ImportItensDialog.tsx`
 - `src/pages/CadastrosPage.tsx`
-- `src/lib/codigoFornecedor.ts` (sem mudanças; já cobre extração)
+- `src/types/index.ts`

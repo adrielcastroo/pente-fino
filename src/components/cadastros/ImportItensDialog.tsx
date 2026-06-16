@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { extractCodigoFornecedor } from '@/lib/codigoFornecedor';
+import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { useBulkUpsertItensCadastro } from '@/hooks/useItensCadastro';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet } from 'lucide-react';
@@ -13,7 +13,7 @@ import { Upload, FileSpreadsheet } from 'lucide-react';
 interface Row {
   codigo_interno: string;
   descricao: string;
-  codigo_fornecedor: string;
+  codigos_fornecedor: string[];
   detectado: boolean;
 }
 
@@ -25,7 +25,7 @@ interface Props {
 const HEADER_ALIASES: Record<string, string[]> = {
   codigo_interno: ['codigo_interno', 'codigo interno', 'cod interno', 'codigo', 'cod', 'sku'],
   descricao: ['descricao', 'descrição', 'descricao_completa', 'descrição do item', 'descricao do item', 'descricao completa'],
-  codigo_fornecedor: ['codigo_fornecedor', 'codigo fornecedor', 'cod fornecedor', 'codigo do fornecedor', 'referencia', 'referência'],
+  codigo_fornecedor: ['codigo_fornecedor', 'codigo fornecedor', 'cod fornecedor', 'codigo do fornecedor', 'codigos_fornecedor', 'codigos fornecedor', 'referencia', 'referência'],
 };
 
 function findKey(headers: string[], aliases: string[]): string | null {
@@ -34,6 +34,26 @@ function findKey(headers: string[], aliases: string[]): string | null {
     if (aliases.includes(norm(h))) return h;
   }
   return null;
+}
+
+function splitCodes(raw: string): string[] {
+  if (!raw) return [];
+  return raw
+    .split(/[;|,/]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function dedupeCodes(list: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const c of list) {
+    const n = normalizarCodigo(c);
+    if (!n || seen.has(n)) continue;
+    seen.add(n);
+    out.push(c);
+  }
+  return out;
 }
 
 export default function ImportItensDialog({ open, onOpenChange }: Props) {
@@ -64,30 +84,48 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
       return;
     }
 
-    const parsed: Row[] = json
-      .map((r) => {
-        const codigo_interno = String(r[kInterno] ?? '').trim();
-        const descricao = String(r[kDesc] ?? '').trim();
-        if (!codigo_interno || !descricao) return null;
-        let codigo_fornecedor = kForn ? String(r[kForn] ?? '').trim() : '';
-        let detectado = false;
-        if (!codigo_fornecedor) {
-          const ext = extractCodigoFornecedor(descricao);
-          if (ext) {
-            codigo_fornecedor = ext.codigo;
-            detectado = true;
-          }
+    // Mescla múltiplas linhas com mesmo codigo_interno
+    const byInterno = new Map<string, Row>();
+    for (const r of json) {
+      const codigo_interno = String(r[kInterno] ?? '').trim();
+      const descricao = String(r[kDesc] ?? '').trim();
+      if (!codigo_interno || !descricao) continue;
+      const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
+      let codigos = splitCodes(fornRaw);
+      let detectado = false;
+      if (!codigos.length) {
+        const ext = extractCodigoFornecedor(descricao);
+        if (ext) {
+          codigos = [ext.codigo];
+          detectado = true;
         }
-        return { codigo_interno, descricao, codigo_fornecedor, detectado };
-      })
-      .filter(Boolean) as Row[];
+      }
+      const existing = byInterno.get(codigo_interno);
+      if (existing) {
+        existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
+      } else {
+        byInterno.set(codigo_interno, {
+          codigo_interno,
+          descricao,
+          codigos_fornecedor: dedupeCodes(codigos),
+          detectado,
+        });
+      }
+    }
 
+    const parsed = Array.from(byInterno.values());
     setRows(parsed);
-    toast.success(`${parsed.length} linhas carregadas`);
+    toast.success(`${parsed.length} itens carregados`);
   };
 
-  const updateRow = (idx: number, patch: Partial<Row>) => {
-    setRows((rs) => rs.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+  const updateCodigosText = (idx: number, text: string) => {
+    setRows((rs) =>
+      rs.map((r, i) =>
+        i === idx
+          ? { ...r, codigos_fornecedor: dedupeCodes(splitCodes(text)), detectado: false }
+          : r,
+      ),
+    );
   };
 
   const removeRow = (idx: number) => {
@@ -101,7 +139,13 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
       return;
     }
     try {
-      const res = await bulk.mutateAsync(validRows);
+      const res = await bulk.mutateAsync(
+        validRows.map((r) => ({
+          codigo_interno: r.codigo_interno,
+          descricao: r.descricao,
+          codigos_fornecedor: r.codigos_fornecedor,
+        })),
+      );
       toast.success(`${res.count} itens importados`);
       setRows([]);
       setFileName('');
@@ -111,7 +155,8 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
     }
   };
 
-  const semCodigo = rows.filter((r) => !r.codigo_fornecedor).length;
+  const semCodigo = rows.filter((r) => !r.codigos_fornecedor.length).length;
+  const comMultiplos = rows.filter((r) => r.codigos_fornecedor.length > 1).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -119,8 +164,9 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Importar planilha de itens</DialogTitle>
           <DialogDescription>
-            Aceita .xlsx ou .csv. Colunas esperadas: <code>codigo_interno</code>, <code>descricao</code> e
-            opcionalmente <code>codigo_fornecedor</code>. Quando ausente, será extraído da descrição.
+            Aceita .xlsx ou .csv. Colunas esperadas: <code>codigo_interno</code>, <code>descricao</code> e opcionalmente <code>codigo_fornecedor</code>.
+            Para vários códigos no mesmo item, separe por <code>;</code> ou <code>|</code> (ex.: <code>YM4202;RF-MOMBASSA</code>).
+            Linhas duplicadas pelo mesmo código interno são mescladas automaticamente.
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +193,8 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           )}
           {rows.length > 0 && (
             <div className="ml-auto flex gap-2 text-xs">
-              <Badge variant="secondary">{rows.length} linhas</Badge>
+              <Badge variant="secondary">{rows.length} itens</Badge>
+              {comMultiplos > 0 && <Badge variant="outline">{comMultiplos} com múltiplos</Badge>}
               {semCodigo > 0 && <Badge variant="outline">{semCodigo} sem código</Badge>}
             </div>
           )}
@@ -160,7 +207,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
                 <TableRow>
                   <TableHead className="w-[180px]">Código interno</TableHead>
                   <TableHead>Descrição</TableHead>
-                  <TableHead className="w-[200px]">Código fornecedor</TableHead>
+                  <TableHead className="w-[260px]">Códigos fornecedor (; ou |)</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -174,8 +221,8 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Input
-                          value={r.codigo_fornecedor}
-                          onChange={(e) => updateRow(idx, { codigo_fornecedor: e.target.value, detectado: false })}
+                          value={r.codigos_fornecedor.join('; ')}
+                          onChange={(e) => updateCodigosText(idx, e.target.value)}
                           className="h-8 font-mono text-xs"
                           placeholder="—"
                         />
