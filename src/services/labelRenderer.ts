@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { createElement } from 'react';
-import { toPng } from 'html-to-image';
+import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
   TecidoPreview,
   MotorPreview,
