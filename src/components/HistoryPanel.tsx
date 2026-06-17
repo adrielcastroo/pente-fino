@@ -633,7 +633,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   <TooltipContent>Exportar para Excel</TooltipContent>
                 </Tooltip>
 
-                {isAdmin && (
+                {!isGuest && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
