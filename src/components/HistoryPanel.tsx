@@ -493,7 +493,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 ))}
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
-                    {isAdmin && (
+                    {!isGuest && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
