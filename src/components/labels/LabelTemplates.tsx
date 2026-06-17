@@ -173,8 +173,8 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
       <div className="border-4 border-black p-1 flex flex-col gap-0.5 overflow-hidden">
         {has("serie") && (
           <span
-            className="bg-black text-white font-bold px-1.5 py-0.5 w-fit shrink-0"
-            style={{ fontSize: `${fs * 0.8}px` }}
+            className="bg-black text-white font-bold px-2 py-0.5 w-fit shrink-0 tracking-wider"
+            style={{ fontSize: `${fs * 0.95}px`, letterSpacing: '0.05em' }}
           >
             SERIE
           </span>
