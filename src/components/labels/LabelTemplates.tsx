@@ -147,7 +147,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
   return (
     <div
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
-      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono p-1 gap-1"
+      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] p-1 gap-1"
     >
       <div className="border-4 border-black p-1 flex flex-col overflow-hidden">
         {has("sku") && (
