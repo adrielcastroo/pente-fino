@@ -1,32 +1,43 @@
-# Correção do "PROC" duplicado na exportação XLSX
+# Reconhecimento de código do fornecedor com largura no final
 
 ## Problema
-No XLSX exportado (Motor/Controle), a coluna "Lote Final (Sistema)" sai com `PROC` duplicado, por vezes em capitalizações diferentes:
+Hoje o sistema casa o código bipado com o cadastrado via `normalizarCodigo` + `codigoBate` (contains tolerante). Funciona quando há separadores diferentes (`-`, `/`, espaço) no meio.
 
-```
-TEC00.A.N04 PROC Proc29863/26 27M
-```
+Mas alguns fornecedores anexam no **final** do código um número curto (ex.: `200`, `20`, `140`) representando a largura — às vezes com separador, às vezes colado. Isso quebra o match:
+
+- Cadastrado: `RF-MOMBASSA-5600`
+- Bipado: `RFMOMBASSA-5600-200` → casa (contains funciona)
+- Bipado: `RFMOMBASSA200-5600` → **não casa** hoje
+- Bipado: `RFMOMBASSA5600200` → casa por contains, mas ambíguo
+
+Queremos: reconhecer o código nesses cenários, **sem calcular largura nem preencher campo** (apenas casar com o cadastro).
 
 ## Solução
-Antes de gravar cada célula que contém o `loteSistema` no XLSX, normalizar a string:
+Ampliar a heurística de comparação em `src/lib/codigoFornecedor.ts` (`codigoBate`) para tolerar um sufixo numérico curto (2–4 dígitos) no código bipado, tratado como possível largura embutida.
 
-1. Detectar ocorrências da palavra `proc` (qualquer capitalização: `proc`, `Proc`, `PROC`) usando regex case-insensitive.
-2. Se aparecer mais de uma vez consecutiva (com espaço/colado), colapsar para uma única ocorrência.
-3. Forçar sempre a forma maiúscula `PROC`.
-4. Aplicar também quando o token `Proc` vier colado ao número (ex.: `Proc29863/26` → `PROC29863/26`), mantendo só um `PROC`.
+### Algoritmo de match (case-insensitive, ignora separadores)
+1. Normalizar ambos os lados (já existe).
+2. Match exato → ok.
+3. `a.includes(b)` ou `b.includes(a)` → ok (já existe).
+4. **Novo:** se `a` (bipado) termina em um grupo numérico de 2 a 4 dígitos, tentar de novo os passos 2–3 com esse sufixo removido. Se casar, retorna true.
+5. **Novo (fallback opcional):** se a borda entre "código base" e "sufixo de largura" estiver com separador (`-`, `_`, `/`, `.`), também tentar remover o último segmento puro-numérico curto antes da normalização.
 
-Resultado esperado para o exemplo:
-```
-TEC00.A.N04 PROC 29863/26 27M
-```
+O sufixo removido é descartado — **não vira largura, não preenche nada**.
 
-## Onde alterar
+### Onde aplica
+- `src/lib/codigoFornecedor.ts` → função `codigoBate` ganha a nova heurística.
+- `src/services/itensCadastroService.ts` → `findByCodigoFornecedor` já usa `codigoBate` no passo 2 (parcial), então passa a aproveitar a nova lógica automaticamente. Sem mudanças adicionais.
+- `src/services/printService.ts` → continua chamando `codigoBate` para validar bipado vs cadastrado; passa a aceitar os novos casos sem mudança.
 
-Arquivo: `src/lib/export-utils.ts`
+### Testes
+Atualizar `src/lib/codigoFornecedor.test.ts` com casos:
+- `codigoBate('RFMOMBASSA-5600-200', 'RF-MOMBASSA-5600')` → true
+- `codigoBate('RFMOMBASSA-5600200', 'RF-MOMBASSA-5600')` → true
+- `codigoBate('RFMOMBASSA-5600-20', 'RF-MOMBASSA-5600')` → true
+- `codigoBate('OUTROCODIGO-200', 'RF-MOMBASSA-5600')` → false
+- Manter os casos atuais passando.
 
-- Criar helper local `normalizeProcToken(value: string): string` que:
-  - Substitui qualquer sequência `(PROC\s*)+` (case-insensitive) por um único `PROC ` .
-  - Garante espaço entre `PROC` e o número seguinte.
-- Aplicar no `exportMotorControleToExcel` em todas as linhas onde `r.loteSistema` é escrito (motor, controle e coulisse) e também no header `[`${cx} ${firstItem}`]` se aplicável.
-
-Nenhuma outra exportação ou lógica de negócio é alterada.
+## Fora de escopo
+- Não calcular nem preencher Largura a partir do número detectado.
+- Não alterar regras de PROC, NF, divisor Celular/HC-45.
+- Não alterar a UI da tela de cadastros.
