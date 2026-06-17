@@ -605,8 +605,8 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       size="sm"
                       onClick={(e) => { 
                         e.stopPropagation(); 
-                        if (!isAdmin) {
-                          toast.error('Somente administradores podem incluir itens no histórico.');
+                        if (isGuest) {
+                          toast.error('Convidados não podem incluir itens no histórico.');
                           return;
                         }
                         setIsAdding(true); 
