@@ -509,7 +509,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       </Tooltip>
                     )}
                     
-                    {isAdmin && (
+                    {!isGuest && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
