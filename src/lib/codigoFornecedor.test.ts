@@ -53,4 +53,15 @@ describe('codigoBate', () => {
   it('vazio retorna false', () => {
     expect(codigoBate('', 'YM4202')).toBe(false);
   });
+  it('bate ignorando sufixo de largura colado', () => {
+    expect(codigoBate('RFMOMBASSA-5600200', 'RF-MOMBASSA-5600')).toBe(true);
+  });
+  it('bate ignorando sufixo de largura com separador', () => {
+    expect(codigoBate('RFMOMBASSA-5600-200', 'RF-MOMBASSA-5600')).toBe(true);
+    expect(codigoBate('RFMOMBASSA-5600-20', 'RF-MOMBASSA-5600')).toBe(true);
+  });
+  it('não bate quando código base é diferente mesmo com sufixo', () => {
+    expect(codigoBate('OUTROCODIGO-200', 'RF-MOMBASSA-5600')).toBe(false);
+  });
 });
+
