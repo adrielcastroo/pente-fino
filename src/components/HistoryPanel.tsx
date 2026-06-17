@@ -493,7 +493,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 ))}
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
-                    {isAdmin && (
+                    {!isGuest && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -509,7 +509,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       </Tooltip>
                     )}
                     
-                    {isAdmin && (
+                    {!isGuest && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -605,8 +605,8 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       size="sm"
                       onClick={(e) => { 
                         e.stopPropagation(); 
-                        if (!isAdmin) {
-                          toast.error('Somente administradores podem incluir itens no histórico.');
+                        if (isGuest) {
+                          toast.error('Convidados não podem incluir itens no histórico.');
                           return;
                         }
                         setIsAdding(true); 
@@ -633,7 +633,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   <TooltipContent>Exportar para Excel</TooltipContent>
                 </Tooltip>
 
-                {isAdmin && (
+                {!isGuest && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
