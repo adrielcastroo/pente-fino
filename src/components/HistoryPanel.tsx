@@ -515,7 +515,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteItem(r.id)}
+                            onClick={() => setConfirmDeleteItem(r)}
                             className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
                           >
                             <X className="w-4 h-4" />
