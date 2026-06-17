@@ -444,6 +444,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState<Registro | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const { isLow } = usePerformance();
@@ -514,7 +515,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteItem(r.id)}
+                            onClick={() => setConfirmDeleteItem(r)}
                             className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
                           >
                             <X className="w-4 h-4" />
@@ -734,6 +735,37 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
             <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
             <Button variant="destructive" className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!confirmDeleteItem} onOpenChange={(o) => { if (!o) setConfirmDeleteItem(null); }}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader>
+            <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <Trash2 className="w-8 h-8" />
+            </div>
+            <DialogTitle className="text-2xl font-black tracking-tight text-center">Excluir Item?</DialogTitle>
+            <DialogDescription className="text-center text-sm font-medium mt-2 leading-relaxed">
+              Esta ação removerá permanentemente o registro{' '}
+              <span className="text-foreground font-black">
+                "{confirmDeleteItem?.item || confirmDeleteItem?.lote || confirmDeleteItem?.id || ''}"
+              </span>{' '}
+              desta conferência. Não é possível desfazer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
+            <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDeleteItem(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20"
+              onClick={() => {
+                if (confirmDeleteItem) handleDeleteItem(confirmDeleteItem.id);
+                setConfirmDeleteItem(null);
+              }}
+            >
+              Excluir Agora
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
