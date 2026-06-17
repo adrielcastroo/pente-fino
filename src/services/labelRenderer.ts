@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { createElement } from 'react';
-import { toPng } from 'html-to-image';
+import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
   TecidoPreview,
   MotorPreview,
@@ -40,12 +40,22 @@ async function renderToPng(opts: {
   // Aguarda layout + QR codes (qrcode.react é síncrono, mas damos um tick para o React commitar)
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
+  // Embute @font-face (IBM Plex Mono) no PNG para evitar fallback do SO/impressora
+  // que renderiza glifos errados (ex.: "SERIE" virando caracteres aleatórios).
+  let fontEmbedCSS = '';
+  try {
+    fontEmbedCSS = await getFontEmbedCSS(node);
+  } catch (e) {
+    console.warn('Falha ao embutir fontes na etiqueta:', e);
+  }
+
   const dataUrl = await toPng(node, {
     pixelRatio,
     cacheBust: true,
     backgroundColor: '#ffffff',
     width: basePx.w,
     height: basePx.h,
+    fontEmbedCSS,
   });
 
   const imageBase64 = dataUrl.split(',')[1] ?? '';

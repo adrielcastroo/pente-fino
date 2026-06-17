@@ -63,7 +63,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
   return (
     <div
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px`, margin: "0 auto" }}
-      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono"
+      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace]"
     >
       <div className="flex border-b-4 border-black flex-[1.1]">
         <div className="flex-1 pt-4 pb-2 px-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
@@ -147,7 +147,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
   return (
     <div
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px` }}
-      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-mono p-1 gap-1"
+      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] p-1 gap-1"
     >
       <div className="border-4 border-black p-1 flex flex-col overflow-hidden">
         {has("sku") && (
@@ -173,8 +173,8 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
       <div className="border-4 border-black p-1 flex flex-col gap-0.5 overflow-hidden">
         {has("serie") && (
           <span
-            className="bg-black text-white font-bold px-1.5 py-0.5 w-fit shrink-0"
-            style={{ fontSize: `${fs * 0.8}px` }}
+            className="bg-black text-white font-bold px-2 py-0.5 w-fit shrink-0 tracking-wider"
+            style={{ fontSize: `${fs * 0.95}px`, letterSpacing: '0.05em' }}
           >
             SERIE
           </span>

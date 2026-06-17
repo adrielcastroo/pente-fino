@@ -1,26 +1,38 @@
-## Objetivo
+# Corrigir etiqueta de motor (60×50 mm)
 
-Garantir que tanto a exclusão de **itens** quanto de **conferências** na página `/historico` exija confirmação explícita do usuário (admin).
+## O que vou mudar
 
-## Situação atual
+A imagem mostra que o layout atual já está praticamente correto — o único bug visível é o badge **"SERIE"** que está sendo impresso como caracteres aleatórios (parecem Devanagari) por causa de fallback de fonte. Tamanho fica em **60×50 mm** (default já é esse).
 
-- **Excluir conferência** (`ConferenceCard` em `src/components/HistoryPanel.tsx`, linhas ~635-649 e 723-739): já existe botão e já abre um `Dialog` de confirmação ("Excluir Histórico?"). Mantém como está.
-- **Excluir item** (linhas ~511-525 e `handleDeleteItem` em 665-672): hoje o clique no botão `X` dispara `deleteHistoryRegistro` **imediatamente, sem confirmação**. É o que falta.
+### 1. Corrigir o "SERIE" corrompido (causa raiz: fonte)
 
-## Mudanças
+Os templates usam `font-mono` do Tailwind, que resolve para `ui-monospace, SFMono-Regular, Menlo, ...` — todas fontes do sistema. Quando `html-to-image` serializa o DOM para PNG, o navegador headless cai num fallback que renderiza glifos errados para o texto pequeno do badge.
 
-Arquivo único: `src/components/HistoryPanel.tsx`
+Solução:
+- Em `src/components/labels/LabelTemplates.tsx`: trocar `font-mono` por `font-['IBM_Plex_Mono',_ui-monospace,_monospace]` em `MotorPreview` e `TecidoPreview` (IBM Plex Mono já é a fonte do projeto).
+- Em `src/services/labelRenderer.ts`: passar `fontEmbedCSS` para o `toPng()` chamando `getFontEmbedCSS(node)` do `html-to-image` antes do render, garantindo que a fonte seja embutida no PNG final (não depende mais do que a impressora/SO tem instalado).
+- Confirmar que `index.html` já carrega IBM Plex Mono via Google Fonts; se não, adicionar o `<link>`.
 
-1. Adicionar estado `confirmDeleteItem: Registro | null` no `ConferenceCard`.
-2. No botão `X` da linha do registro, trocar `onClick={() => handleDeleteItem(r.id)}` por `onClick={() => setConfirmDeleteItem(r)}`.
-3. Adicionar um segundo `Dialog` de confirmação ao lado do atual ("Excluir Histórico?"), no mesmo estilo visual (rounded-[2rem], ícone destructive, botões Cancelar / Excluir Agora), com texto identificando o item (ex.: `"item — lote"` ou descrição curta do registro) e avisando que a ação é permanente.
-4. Ao confirmar, chamar `handleDeleteItem(confirmDeleteItem.id)` e fechar o diálogo. Cancelar apenas fecha.
-5. Manter o toast de sucesso/erro existente em `handleDeleteItem`.
+### 2. Pequenos refinamentos de proporção (mantendo o desenho)
 
-Nenhuma alteração em store, serviços ou banco — `deleteHistoryRegistro` e `deleteConference` já existem e funcionam.
+Mantendo exatamente os 3 blocos da imagem:
+- Aumentar levemente o badge "SERIE" para `fs * 0.95` (hoje `0.8`) + padding maior, para garantir legibilidade mesmo em 60×50.
+- Garantir que SKU (`fs * 1.7`), CX/NF (`fs * 1.3`), NT (`fs * 1.2`), RNP/DATA (`fs * 0.9` / `1.05`) — mantidos como na imagem.
 
-## Fora do escopo
+### 3. QA
 
-- Permissões (continua restrito a `isAdmin`).
-- Bulk delete / seleção múltipla.
-- Undo após exclusão.
+Após as mudanças:
+- Abrir **Configurações → Layout de Etiqueta**, alternar para Motor e tirar screenshot do preview.
+- Verificar que "SERIE" aparece corretamente em Latin e que o restante bate com a foto.
+
+## Arquivos tocados
+
+- `src/components/labels/LabelTemplates.tsx` — swap de fonte + ajuste do badge "SERIE".
+- `src/services/labelRenderer.ts` — adicionar `fontEmbedCSS` no `toPng`.
+- `index.html` — adicionar `<link>` IBM Plex Mono apenas se ainda não existir.
+
+## Fora de escopo
+
+- Mudar dimensões (continua 60×50 mm).
+- Mudar conteúdo dos campos.
+- Mudar o layout estrutural (segue exatamente o desenho da imagem).
