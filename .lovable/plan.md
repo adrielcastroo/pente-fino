@@ -1,43 +1,26 @@
-# Reconhecimento de código do fornecedor com largura no final
+## Objetivo
 
-## Problema
-Hoje o sistema casa o código bipado com o cadastrado via `normalizarCodigo` + `codigoBate` (contains tolerante). Funciona quando há separadores diferentes (`-`, `/`, espaço) no meio.
+Garantir que tanto a exclusão de **itens** quanto de **conferências** na página `/historico` exija confirmação explícita do usuário (admin).
 
-Mas alguns fornecedores anexam no **final** do código um número curto (ex.: `200`, `20`, `140`) representando a largura — às vezes com separador, às vezes colado. Isso quebra o match:
+## Situação atual
 
-- Cadastrado: `RF-MOMBASSA-5600`
-- Bipado: `RFMOMBASSA-5600-200` → casa (contains funciona)
-- Bipado: `RFMOMBASSA200-5600` → **não casa** hoje
-- Bipado: `RFMOMBASSA5600200` → casa por contains, mas ambíguo
+- **Excluir conferência** (`ConferenceCard` em `src/components/HistoryPanel.tsx`, linhas ~635-649 e 723-739): já existe botão e já abre um `Dialog` de confirmação ("Excluir Histórico?"). Mantém como está.
+- **Excluir item** (linhas ~511-525 e `handleDeleteItem` em 665-672): hoje o clique no botão `X` dispara `deleteHistoryRegistro` **imediatamente, sem confirmação**. É o que falta.
 
-Queremos: reconhecer o código nesses cenários, **sem calcular largura nem preencher campo** (apenas casar com o cadastro).
+## Mudanças
 
-## Solução
-Ampliar a heurística de comparação em `src/lib/codigoFornecedor.ts` (`codigoBate`) para tolerar um sufixo numérico curto (2–4 dígitos) no código bipado, tratado como possível largura embutida.
+Arquivo único: `src/components/HistoryPanel.tsx`
 
-### Algoritmo de match (case-insensitive, ignora separadores)
-1. Normalizar ambos os lados (já existe).
-2. Match exato → ok.
-3. `a.includes(b)` ou `b.includes(a)` → ok (já existe).
-4. **Novo:** se `a` (bipado) termina em um grupo numérico de 2 a 4 dígitos, tentar de novo os passos 2–3 com esse sufixo removido. Se casar, retorna true.
-5. **Novo (fallback opcional):** se a borda entre "código base" e "sufixo de largura" estiver com separador (`-`, `_`, `/`, `.`), também tentar remover o último segmento puro-numérico curto antes da normalização.
+1. Adicionar estado `confirmDeleteItem: Registro | null` no `ConferenceCard`.
+2. No botão `X` da linha do registro, trocar `onClick={() => handleDeleteItem(r.id)}` por `onClick={() => setConfirmDeleteItem(r)}`.
+3. Adicionar um segundo `Dialog` de confirmação ao lado do atual ("Excluir Histórico?"), no mesmo estilo visual (rounded-[2rem], ícone destructive, botões Cancelar / Excluir Agora), com texto identificando o item (ex.: `"item — lote"` ou descrição curta do registro) e avisando que a ação é permanente.
+4. Ao confirmar, chamar `handleDeleteItem(confirmDeleteItem.id)` e fechar o diálogo. Cancelar apenas fecha.
+5. Manter o toast de sucesso/erro existente em `handleDeleteItem`.
 
-O sufixo removido é descartado — **não vira largura, não preenche nada**.
+Nenhuma alteração em store, serviços ou banco — `deleteHistoryRegistro` e `deleteConference` já existem e funcionam.
 
-### Onde aplica
-- `src/lib/codigoFornecedor.ts` → função `codigoBate` ganha a nova heurística.
-- `src/services/itensCadastroService.ts` → `findByCodigoFornecedor` já usa `codigoBate` no passo 2 (parcial), então passa a aproveitar a nova lógica automaticamente. Sem mudanças adicionais.
-- `src/services/printService.ts` → continua chamando `codigoBate` para validar bipado vs cadastrado; passa a aceitar os novos casos sem mudança.
+## Fora do escopo
 
-### Testes
-Atualizar `src/lib/codigoFornecedor.test.ts` com casos:
-- `codigoBate('RFMOMBASSA-5600-200', 'RF-MOMBASSA-5600')` → true
-- `codigoBate('RFMOMBASSA-5600200', 'RF-MOMBASSA-5600')` → true
-- `codigoBate('RFMOMBASSA-5600-20', 'RF-MOMBASSA-5600')` → true
-- `codigoBate('OUTROCODIGO-200', 'RF-MOMBASSA-5600')` → false
-- Manter os casos atuais passando.
-
-## Fora de escopo
-- Não calcular nem preencher Largura a partir do número detectado.
-- Não alterar regras de PROC, NF, divisor Celular/HC-45.
-- Não alterar a UI da tela de cadastros.
+- Permissões (continua restrito a `isAdmin`).
+- Bulk delete / seleção múltipla.
+- Undo após exclusão.

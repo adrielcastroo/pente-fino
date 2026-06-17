@@ -444,6 +444,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState<Registro | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const { isLow } = usePerformance();
