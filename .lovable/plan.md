@@ -1,29 +1,66 @@
-## Problema
+# Impressão direta no navegador (remover n8n)
 
-A tabela `estoque_posicoes` tem o check constraint `posicao BETWEEN 1 AND 30` (cada célula `estrutura.coluna.nivel` comporta no máximo 30 posições — consistente com `TOTAL_SLOTS` em `app-utils.ts`, que usa `* 30`).
+## Objetivo
+Substituir o envio da etiqueta (PNG via webhook `http://localhost:5678/...` do n8n) por impressão direta no navegador, mantendo **exatamente o mesmo layout** atual (templates `TecidoPreview` / `MotorPreview` em `LabelTemplates.tsx`).
 
-Porém, em `src/services/estoqueService.ts`, a busca pela próxima posição livre usa o limite **100**:
+## Como vai funcionar
 
-- `getNextAvailablePosition`: `while (pos <= 100 && occupiedSet.has(pos)) pos++;` → retorna `pos <= 100`
-- `processEstoque`: idem `while (pos <= 100 ...)` e depois `if (pos && pos <= 100)`
+O `labelRenderer.ts` já gera um PNG em alta resolução (8 px/mm, com fonte IBM Plex Mono embutida) com a dimensão real em mm da etiqueta. Vamos reaproveitar esse PNG e mandar para a impressora pelo diálogo nativo do navegador.
 
-Quando uma célula passa de 30 ocupações, o serviço devolve `pos` entre 31 e 100, o `upsert` em `estoque_posicoes` viola `estoque_posicoes_posicao_check` e a exportação/salvamento da conferência quebra na página `/historico`.
+Fluxo:
+1. Usuário conclui um registro (Tecido ou Motor/Controle).
+2. `printTecidoLabel` / `printMotorLabel` renderizam o PNG (igual hoje).
+3. Em vez de `fetch` para o n8n, abrimos uma janela oculta (`iframe` invisível no `document`) contendo apenas:
+   - `@page { size: <w>mm <h>mm; margin: 0 }`
+   - `<img>` com o PNG ocupando 100% da página.
+4. Disparamos `iframe.contentWindow.print()`.
+5. Diálogo de impressão do navegador abre já com o tamanho certo — usuário escolhe a impressora térmica (uma vez, depois pode ativar "imprimir sem prévia" no Chrome via `--kiosk-printing` se quiser silencioso).
+6. Após `afterprint` (ou timeout), removemos o iframe.
 
-## Correção
+## Arquivos alterados
 
-Em `src/services/estoqueService.ts`, alinhar o limite ao constraint do banco (30):
+### `src/services/printService.ts`
+- Remover `sendToWebhook()` e a constante `PRINT_WEBHOOK_URL`.
+- Remover o `fetch` para o n8n em `printTecidoLabel` e `printMotorLabel`.
+- Criar helper `printImageInBrowser(dataUrl, widthMm, heightMm, filename)`:
+  - Cria `<iframe>` invisível (`position:fixed; left:-9999px; width:0; height:0; border:0`).
+  - Escreve HTML com `@page` no tamanho exato em mm, margens 0, e `<img src="data:..." style="width:100%;height:100%;display:block">`.
+  - Aguarda `img.onload` → `iframe.contentWindow.focus()` + `print()`.
+  - Remove o iframe em `afterprint` (com fallback `setTimeout` ~60s).
+- Mensagens de toast atualizadas: "Enviando para impressora..." / "Etiqueta enviada para impressão" / em caso de erro, "Falha ao abrir diálogo de impressão".
+- Manter `autoPrint` como gate (se desligado, não imprime — comportamento atual).
+- Manter `resolverItem()` e toda a lógica de resolução de código de fornecedor.
+- Manter assinatura pública (`PrintConfig`, `TecidoPrintInput`, `MotorPrintInput`) para não quebrar chamadores. Campo `webhookUrl` em `PrintConfig` vira opcional/ignorado (mantido por compatibilidade — não removo do tipo neste passo).
 
-1. `getNextAvailablePosition`: trocar `while (pos <= 100 …)` por `while (pos <= 30 …)` e `return pos <= 30 ? pos : null`.
-2. `processEstoque`:
-   - Trocar `while (pos <= 100 …)` por `while (pos <= 30 …)`.
-   - Trocar `if (pos && pos <= 100)` por `if (pos && pos <= 30)`.
-   - Manter o `skippedRegs.push(...)` + toast `Atenção: N itens não couberam no endereço...` (já existe) para o usuário saber que a célula encheu.
+### `src/services/labelRenderer.ts`
+- Sem mudanças. Continua gerando o PNG igual.
 
-Nada mais é alterado — sem migração de schema, sem mudar layout. Só os dois limites numéricos no serviço.
+### `src/components/labels/LabelTemplates.tsx`
+- Sem mudanças. Layout preservado.
+
+### Configurações (`useAppStore` / painel de Label)
+- Sem mudanças funcionais. Se houver UI mostrando a URL do webhook, deixo a flag `autoPrint` significar agora "imprimir automaticamente no navegador". (Posso esconder o campo "webhook" em um passo seguinte se você quiser — não incluído neste plano para manter o escopo enxuto.)
+
+## Detalhes técnicos
+
+HTML injetado no iframe:
+
+```text
+<!doctype html>
+<html><head><style>
+  @page { size: {W}mm {H}mm; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  img { width: {W}mm; height: {H}mm; display: block; }
+</style></head>
+<body><img src="{dataUrl}"></body></html>
+```
+
+- `size: Wmm Hmm` força o navegador a usar exatamente o tamanho da etiqueta (60×50, 100×60, etc., respeitando `orientation`).
+- `pixelRatio` do PNG já é calculado para ~8 px/mm → impressão térmica 203 dpi fica nítida.
+- A primeira impressão exigirá que o usuário escolha a impressora térmica no diálogo do Chrome; para silenciar, basta marcar a impressora como padrão e ativar "Print preview disabled" (ou rodar Chrome com `--kiosk-printing`).
 
 ## Validação
-
-- Repetir o fluxo que originou o erro (salvar conferência cuja célula já tem 30 itens) e confirmar:
-  - Nenhum erro 23514 do Postgres.
-  - Toast informa quantos itens não couberam.
-  - Os demais itens (que cabem) são gravados normalmente e aparecem em `/historico`.
+1. Conferir uma etiqueta de Tecido → diálogo de impressão abre com tamanho correto e PNG idêntico ao preview.
+2. Conferir uma etiqueta de Motor 60×50 → "SERIE" e demais textos íntegros (fonte embutida).
+3. Desligar `autoPrint` → nada acontece (igual hoje).
+4. Verificar console: nenhum `fetch` para `localhost:5678`.
