@@ -59,10 +59,84 @@ async function resolverItem(
 }
 
 
+export type PrintMethod = 'browser' | 'webhook' | 'both';
+
 export interface PrintConfig {
   autoPrint: boolean;
-  /** Mantido por compatibilidade — não é mais usado (impressão direta no navegador). */
+  /** 'browser' (padrão), 'webhook' (n8n) ou 'both'. */
+  printMethod?: PrintMethod;
+  /** URL do webhook (n8n) — usado quando printMethod inclui webhook. */
   webhookUrl?: string;
+}
+
+async function sendToWebhook(
+  webhookUrl: string,
+  payload: {
+    type: 'tecido' | 'motor';
+    title: string;
+    dataUrl: string;
+    widthMm: number;
+    heightMm: number;
+    data: Record<string, any>;
+  },
+): Promise<void> {
+  const res = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, sentAt: new Date().toISOString() }),
+  });
+  if (!res.ok) throw new Error(`Webhook respondeu ${res.status}`);
+}
+
+async function dispatchPrint(
+  cfg: PrintConfig,
+  payload: {
+    type: 'tecido' | 'motor';
+    title: string;
+    dataUrl: string;
+    widthMm: number;
+    heightMm: number;
+    data: Record<string, any>;
+  },
+): Promise<void> {
+  const method: PrintMethod = cfg.printMethod || 'browser';
+  const wantBrowser = method === 'browser' || method === 'both';
+  const wantWebhook = (method === 'webhook' || method === 'both') && !!cfg.webhookUrl;
+
+  const tasks: Promise<{ k: 'browser' | 'webhook'; ok: boolean }>[] = [];
+  if (wantBrowser) {
+    tasks.push(
+      printImageInBrowser(payload.dataUrl, payload.widthMm, payload.heightMm, payload.title)
+        .then(() => ({ k: 'browser' as const, ok: true }))
+        .catch((e) => { console.error('Browser print falhou:', e); return { k: 'browser' as const, ok: false }; })
+    );
+  }
+  if (wantWebhook) {
+    tasks.push(
+      sendToWebhook(cfg.webhookUrl!, payload)
+        .then(() => ({ k: 'webhook' as const, ok: true }))
+        .catch((e) => { console.error('Webhook falhou:', e); return { k: 'webhook' as const, ok: false }; })
+    );
+  }
+
+  const results = await Promise.all(tasks);
+  const browserOk = results.find(r => r.k === 'browser')?.ok;
+  const webhookOk = results.find(r => r.k === 'webhook')?.ok;
+
+  if (method === 'both') {
+    if (browserOk && webhookOk) toast.success('Etiqueta enviada (navegador + n8n)');
+    else if (browserOk) toast.warning('Etiqueta impressa no navegador, mas webhook falhou');
+    else if (webhookOk) toast.warning('Webhook enviado, mas impressão no navegador falhou');
+    else toast.error('Falha em ambos os métodos de impressão');
+  } else if (wantBrowser) {
+    if (browserOk) toast.success('Etiqueta enviada para impressão!');
+    else toast.error('Falha ao abrir diálogo de impressão.');
+  } else if (wantWebhook) {
+    if (webhookOk) toast.success('Etiqueta enviada para o n8n');
+    else toast.error('Falha ao enviar etiqueta para o webhook');
+  } else {
+    toast.warning('Nenhum método de impressão configurado');
+  }
 }
 
 export interface TecidoPrintInput {
