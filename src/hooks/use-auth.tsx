@@ -24,11 +24,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('isGuest') === 'true');
   const [guestName, setGuestName] = useState(() => localStorage.getItem('guestName') || '');
   const setConferente = useAppStore(s => s.setConferente);
-  const isAdmin = useMemo(() => {
-    if (!user) return false;
-    // Lógica de Admin: Pode ser baseada no e-mail ou em um campo no profile
-    return profile?.role === 'admin' || user.email?.endsWith('@admin.com') || user.email === 'admin@pentefino.com';
-  }, [user, profile]);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase
+        .from('user_roles' as any)
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle() as any);
+      if (!cancelled) setIsAdmin(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   useEffect(() => {
     // Set up auth listener FIRST (before getSession) to avoid race conditions
