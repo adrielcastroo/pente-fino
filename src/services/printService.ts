@@ -72,7 +72,9 @@ export interface TecidoPrintInput {
   loteSistema?: string;
   nf?: string;
   processo?: string;
+  m2?: number;
   mLinear?: number;
+  largura?: number;
   endereco?: string;
 }
 
@@ -171,12 +173,15 @@ export async function printTecidoLabel(
   if (!labelSettings.autoPrint) return;
   try {
     const loteText = input.loteSistema || (input.nf ? `NFe ${input.nf}` : '') || input.lote || '';
-    const largura = extractLarguraFromItem(input.item);
-    const m2 = typeof input.mLinear === 'number' && input.mLinear > 0 && largura > 0
-      ? input.mLinear * largura
-      : 0;
-    const qtdText = m2 > 0
-      ? `${m2.toFixed(2).replace('.', ',')} M²`
+    const largura = typeof input.largura === 'number' && input.largura > 0
+      ? input.largura
+      : extractLarguraFromItem(input.item);
+    const m2Informado = typeof input.m2 === 'number' && input.m2 > 0 ? input.m2 : 0;
+    const mLinear = typeof input.mLinear === 'number' && input.mLinear > 0 ? input.mLinear : 0;
+    const m2Calculado = mLinear > 0 && largura > 0 ? mLinear * largura : 0;
+    const qtdM2 = m2Informado > 0 ? m2Informado : m2Calculado;
+    const qtdText = qtdM2 > 0
+      ? `${qtdM2.toFixed(2).replace('.', ',')} M²`
       : '';
 
     const resolved = await resolverItem(input.item, input.item, input.descricao || '');
