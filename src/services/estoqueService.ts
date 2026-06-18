@@ -34,11 +34,11 @@ export const estoqueService = {
       }
     });
 
-    // 3. Find first available (1-100)
+    // 3. Find first available (1-30, conforme check constraint do banco)
     let pos = 1;
-    while (pos <= 100 && occupiedSet.has(pos)) pos++;
+    while (pos <= 30 && occupiedSet.has(pos)) pos++;
 
-    return pos <= 100 ? pos : null;
+    return pos <= 30 ? pos : null;
   },
 
   async processEstoque(insertedRegs: any[], registros: any[], processo: string, conferente: string) {

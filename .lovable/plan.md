@@ -1,38 +1,29 @@
-# Corrigir etiqueta de motor (60×50 mm)
+## Problema
 
-## O que vou mudar
+A tabela `estoque_posicoes` tem o check constraint `posicao BETWEEN 1 AND 30` (cada célula `estrutura.coluna.nivel` comporta no máximo 30 posições — consistente com `TOTAL_SLOTS` em `app-utils.ts`, que usa `* 30`).
 
-A imagem mostra que o layout atual já está praticamente correto — o único bug visível é o badge **"SERIE"** que está sendo impresso como caracteres aleatórios (parecem Devanagari) por causa de fallback de fonte. Tamanho fica em **60×50 mm** (default já é esse).
+Porém, em `src/services/estoqueService.ts`, a busca pela próxima posição livre usa o limite **100**:
 
-### 1. Corrigir o "SERIE" corrompido (causa raiz: fonte)
+- `getNextAvailablePosition`: `while (pos <= 100 && occupiedSet.has(pos)) pos++;` → retorna `pos <= 100`
+- `processEstoque`: idem `while (pos <= 100 ...)` e depois `if (pos && pos <= 100)`
 
-Os templates usam `font-mono` do Tailwind, que resolve para `ui-monospace, SFMono-Regular, Menlo, ...` — todas fontes do sistema. Quando `html-to-image` serializa o DOM para PNG, o navegador headless cai num fallback que renderiza glifos errados para o texto pequeno do badge.
+Quando uma célula passa de 30 ocupações, o serviço devolve `pos` entre 31 e 100, o `upsert` em `estoque_posicoes` viola `estoque_posicoes_posicao_check` e a exportação/salvamento da conferência quebra na página `/historico`.
 
-Solução:
-- Em `src/components/labels/LabelTemplates.tsx`: trocar `font-mono` por `font-['IBM_Plex_Mono',_ui-monospace,_monospace]` em `MotorPreview` e `TecidoPreview` (IBM Plex Mono já é a fonte do projeto).
-- Em `src/services/labelRenderer.ts`: passar `fontEmbedCSS` para o `toPng()` chamando `getFontEmbedCSS(node)` do `html-to-image` antes do render, garantindo que a fonte seja embutida no PNG final (não depende mais do que a impressora/SO tem instalado).
-- Confirmar que `index.html` já carrega IBM Plex Mono via Google Fonts; se não, adicionar o `<link>`.
+## Correção
 
-### 2. Pequenos refinamentos de proporção (mantendo o desenho)
+Em `src/services/estoqueService.ts`, alinhar o limite ao constraint do banco (30):
 
-Mantendo exatamente os 3 blocos da imagem:
-- Aumentar levemente o badge "SERIE" para `fs * 0.95` (hoje `0.8`) + padding maior, para garantir legibilidade mesmo em 60×50.
-- Garantir que SKU (`fs * 1.7`), CX/NF (`fs * 1.3`), NT (`fs * 1.2`), RNP/DATA (`fs * 0.9` / `1.05`) — mantidos como na imagem.
+1. `getNextAvailablePosition`: trocar `while (pos <= 100 …)` por `while (pos <= 30 …)` e `return pos <= 30 ? pos : null`.
+2. `processEstoque`:
+   - Trocar `while (pos <= 100 …)` por `while (pos <= 30 …)`.
+   - Trocar `if (pos && pos <= 100)` por `if (pos && pos <= 30)`.
+   - Manter o `skippedRegs.push(...)` + toast `Atenção: N itens não couberam no endereço...` (já existe) para o usuário saber que a célula encheu.
 
-### 3. QA
+Nada mais é alterado — sem migração de schema, sem mudar layout. Só os dois limites numéricos no serviço.
 
-Após as mudanças:
-- Abrir **Configurações → Layout de Etiqueta**, alternar para Motor e tirar screenshot do preview.
-- Verificar que "SERIE" aparece corretamente em Latin e que o restante bate com a foto.
+## Validação
 
-## Arquivos tocados
-
-- `src/components/labels/LabelTemplates.tsx` — swap de fonte + ajuste do badge "SERIE".
-- `src/services/labelRenderer.ts` — adicionar `fontEmbedCSS` no `toPng`.
-- `index.html` — adicionar `<link>` IBM Plex Mono apenas se ainda não existir.
-
-## Fora de escopo
-
-- Mudar dimensões (continua 60×50 mm).
-- Mudar conteúdo dos campos.
-- Mudar o layout estrutural (segue exatamente o desenho da imagem).
+- Repetir o fluxo que originou o erro (salvar conferência cuja célula já tem 30 itens) e confirmar:
+  - Nenhum erro 23514 do Postgres.
+  - Toast informa quantos itens não couberam.
+  - Os demais itens (que cabem) são gravados normalmente e aparecem em `/historico`.
