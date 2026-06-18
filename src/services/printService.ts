@@ -60,15 +60,9 @@ async function resolverItem(
 
 export interface PrintConfig {
   autoPrint: boolean;
-  /** Mantido por compatibilidade — o webhook real é fixo em PRINT_WEBHOOK_URL. */
+  /** Mantido por compatibilidade — não é mais usado (impressão direta no navegador). */
   webhookUrl?: string;
 }
-
-/**
- * Webhook fixo do n8n local. Não pode ser alterado pelo usuário —
- * o n8n se encarrega de repassar a imagem para a impressora correta.
- */
-export const PRINT_WEBHOOK_URL = 'http://localhost:5678/webhook/imprimir-etiqueta';
 
 export interface TecidoPrintInput {
   item: string;
@@ -97,23 +91,77 @@ function today(): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
-function safeFilename(s: string): string {
-  return (s || 'etiqueta').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(0, 80);
-}
+/**
+ * Imprime a imagem da etiqueta diretamente pelo navegador, usando um iframe
+ * oculto com @page no tamanho exato em mm. Substitui o envio para o n8n.
+ */
+async function printImageInBrowser(
+  dataUrl: string,
+  widthMm: number,
+  heightMm: number,
+  title: string,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
 
-async function sendToWebhook(payload: Record<string, unknown>, webhookUrl: string) {
-  const response = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      try { iframe.remove(); } catch { /* noop */ }
+    };
+
+    const safeTitle = title.replace(/[<>&"']/g, '');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
+      @page { size: ${widthMm}mm ${heightMm}mm; margin: 0; }
+      html, body { margin: 0; padding: 0; background: #fff; }
+      img { width: ${widthMm}mm; height: ${heightMm}mm; display: block; }
+    </style></head><body><img id="lbl" src="${dataUrl}"></body></html>`;
+
+    const doc = iframe.contentDocument;
+    if (!doc) { cleanup(); reject(new Error('iframe sem contentDocument')); return; }
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    const win = iframe.contentWindow;
+    if (!win) { cleanup(); reject(new Error('iframe sem contentWindow')); return; }
+
+    const triggerPrint = () => {
+      try {
+        win.focus();
+        win.print();
+        win.addEventListener('afterprint', cleanup, { once: true });
+        setTimeout(cleanup, 60_000);
+        resolve();
+      } catch (e) {
+        cleanup();
+        reject(e);
+      }
+    };
+
+    const img = doc.getElementById('lbl') as HTMLImageElement | null;
+    if (img && !img.complete) {
+      img.onload = triggerPrint;
+      img.onerror = () => { cleanup(); reject(new Error('Falha ao carregar imagem da etiqueta')); };
+    } else {
+      setTimeout(triggerPrint, 50);
+    }
   });
-  if (!response.ok) {
-    throw new Error(`n8n respondeu ${response.status} ${response.statusText}`);
-  }
 }
 
 /**
- * Renderiza a etiqueta de tecido como PNG e envia para o webhook do n8n.
+ * Renderiza a etiqueta de tecido como PNG e envia para o diálogo de impressão do navegador.
  */
 export async function printTecidoLabel(
   input: TecidoPrintInput,
@@ -140,36 +188,21 @@ export async function printTecidoLabel(
     };
 
     const rendered = await renderTecidoLabel(data, labelSettings);
-
-    await sendToWebhook({
-      kind: 'tecido',
-      format: 'png',
-      filename: `etiqueta-${safeFilename(input.item)}-${safeFilename(input.lote)}.png`,
-      widthMm: rendered.widthMm,
-      heightMm: rendered.heightMm,
-      widthPx: rendered.widthPx,
-      heightPx: rendered.heightPx,
-      imageBase64: rendered.imageBase64,
-      dataUrl: rendered.dataUrl,
-      item: input.item,
-      lote: input.lote,
-      loteSistema: input.loteSistema,
-      nf: input.nf,
-      processo: input.processo,
-      endereco: input.endereco,
-      mLinear: input.mLinear,
-      timestamp: new Date().toISOString(),
-    }, PRINT_WEBHOOK_URL);
-
+    await printImageInBrowser(
+      rendered.dataUrl,
+      rendered.widthMm,
+      rendered.heightMm,
+      `Etiqueta ${input.item}`,
+    );
     toast.success('Etiqueta enviada para impressão!');
   } catch (error) {
     console.error('Erro ao imprimir etiqueta (tecido):', error);
-    toast.error('Falha ao enviar etiqueta para o n8n.');
+    toast.error('Falha ao abrir diálogo de impressão.');
   }
 }
 
 /**
- * Renderiza a etiqueta de motor/controle/coulisse como PNG e envia para o webhook do n8n.
+ * Renderiza a etiqueta de motor/controle/coulisse como PNG e envia para o diálogo de impressão do navegador.
  */
 export async function printMotorLabel(
   input: MotorPrintInput,
@@ -197,30 +230,15 @@ export async function printMotorLabel(
     };
 
     const rendered = await renderMotorLabel(data, labelSettings);
-
-    await sendToWebhook({
-      kind: 'motor',
-      format: 'png',
-      filename: `etiqueta-${safeFilename(input.item)}-${safeFilename(input.lote)}.png`,
-      widthMm: rendered.widthMm,
-      heightMm: rendered.heightMm,
-      widthPx: rendered.widthPx,
-      heightPx: rendered.heightPx,
-      imageBase64: rendered.imageBase64,
-      dataUrl: rendered.dataUrl,
-      item: input.item,
-      lote: input.lote,
-      loteSistema: input.loteSistema,
-      nf: input.nf,
-      cx: input.cx,
-      sequencial: input.sequencial,
-      endereco: input.endereco,
-      timestamp: new Date().toISOString(),
-    }, PRINT_WEBHOOK_URL);
-
+    await printImageInBrowser(
+      rendered.dataUrl,
+      rendered.widthMm,
+      rendered.heightMm,
+      `Etiqueta ${input.item}`,
+    );
     toast.success('Etiqueta enviada para impressão!');
   } catch (error) {
     console.error('Erro ao imprimir etiqueta (motor):', error);
-    toast.error('Falha ao enviar etiqueta para o n8n.');
+    toast.error('Falha ao abrir diálogo de impressão.');
   }
 }
