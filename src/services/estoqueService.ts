@@ -34,11 +34,11 @@ export const estoqueService = {
       }
     });
 
-    // 3. Find first available (1-100)
+    // 3. Find first available (1-30, conforme check constraint do banco)
     let pos = 1;
-    while (pos <= 100 && occupiedSet.has(pos)) pos++;
+    while (pos <= 30 && occupiedSet.has(pos)) pos++;
 
-    return pos <= 100 ? pos : null;
+    return pos <= 30 ? pos : null;
   },
 
   async processEstoque(insertedRegs: any[], registros: any[], processo: string, conferente: string) {
@@ -83,13 +83,13 @@ export const estoqueService = {
         const original = regMap.get(r.id);
         let pos = original?.posicao;
         
-        // If not already allocated in the frontend, find next available (up to 100)
+        // If not already allocated in the frontend, find next available (up to 30)
         if (!pos) {
           pos = 1;
-          while (pos <= 100 && occupiedSet.has(pos)) pos++;
+          while (pos <= 30 && occupiedSet.has(pos)) pos++;
         }
         
-        if (pos && pos <= 100) {
+        if (pos && pos <= 30) {
           occupiedSet.add(pos);
           const original = regMap.get(r.id);
           estoqueRows.push({
