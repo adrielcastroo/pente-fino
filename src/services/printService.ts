@@ -315,15 +315,16 @@ export async function printMotorLabel(
     };
 
     const rendered = await renderMotorLabel(data, labelSettings);
-    await printImageInBrowser(
-      rendered.dataUrl,
-      rendered.widthMm,
-      rendered.heightMm,
-      `Etiqueta ${input.item}`,
-    );
-    toast.success('Etiqueta enviada para impressão!');
+    await dispatchPrint(labelSettings, {
+      type: 'motor',
+      title: `Etiqueta ${input.item}`,
+      dataUrl: rendered.dataUrl,
+      widthMm: rendered.widthMm,
+      heightMm: rendered.heightMm,
+      data: { ...data, input },
+    });
   } catch (error) {
     console.error('Erro ao imprimir etiqueta (motor):', error);
-    toast.error('Falha ao abrir diálogo de impressão.');
+    toast.error('Falha ao processar etiqueta.');
   }
 }
