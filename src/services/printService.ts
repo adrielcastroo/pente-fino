@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
 import { itensCadastroService } from './itensCadastroService';
 import { codigoBate } from '@/lib/codigoFornecedor';
+import { extractLarguraFromItem } from '@/lib/app-utils';
 import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelTemplates';
 import type { LabelSettings } from '@/store/useAppStore';
 
@@ -170,8 +171,12 @@ export async function printTecidoLabel(
   if (!labelSettings.autoPrint) return;
   try {
     const loteText = input.loteSistema || (input.nf ? `NFe ${input.nf}` : '') || input.lote || '';
-    const qtdText = typeof input.mLinear === 'number' && input.mLinear > 0
-      ? `${input.mLinear.toFixed(2).replace('.', ',')} M`
+    const largura = extractLarguraFromItem(input.item);
+    const m2 = typeof input.mLinear === 'number' && input.mLinear > 0 && largura > 0
+      ? input.mLinear * largura
+      : 0;
+    const qtdText = m2 > 0
+      ? `${m2.toFixed(2).replace('.', ',')} M²`
       : '';
 
     const resolved = await resolverItem(input.item, input.item, input.descricao || '');
