@@ -110,6 +110,7 @@ export interface AppState {
   addRegistro: (reg: Registro) => void;
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
+  clearLastDeleted: () => void;
   clearAll: () => void;
   addReserva: (res: Reserva) => Promise<void>;
   deleteReserva: (id: string) => Promise<void>;
