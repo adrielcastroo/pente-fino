@@ -964,7 +964,8 @@ export default function EstoquePage() {
                             <Bar 
                               dataKey="value" 
                               radius={[10, 10, 0, 0]} 
-                              fill={current.hex}
+                              fill={current.hex === '#ffffff' ? 'hsl(var(--primary))' : current.hex}
+                              minPointSize={4}
                               animationDuration={1500}
                             />
                           </BarChart>
