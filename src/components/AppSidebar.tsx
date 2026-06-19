@@ -6,6 +6,8 @@ import logoComb from '@/assets/logo-comb.png';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { prefetchRoute } from '@/lib/route-prefetch';
+
 
 import {
   Sidebar,
