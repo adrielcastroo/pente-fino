@@ -96,18 +96,18 @@ export default function CadastrosPage() {
             </p>
           </div>
         </div>
-        <div className="md:ml-auto flex items-center gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
-            <Upload className="h-4 w-4" /> Importar planilha
+        <div className="md:ml-auto flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2 flex-1 md:flex-none min-w-[150px]">
+            <Upload className="h-4 w-4" /> <span className="truncate">Importar planilha</span>
           </Button>
-          <Button onClick={handleNew} className="gap-2">
+          <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none min-w-[130px]">
             <Plus className="h-4 w-4" /> Novo item
           </Button>
         </div>
       </header>
 
       <div className="flex flex-col md:flex-row md:items-center gap-3">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative w-full md:flex-1 md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
@@ -116,8 +116,9 @@ export default function CadastrosPage() {
             className="pl-9 h-10"
           />
         </div>
+        <div className="flex flex-wrap items-center gap-2 md:contents">
         <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
-          <SelectTrigger className="w-[180px] h-10">
+          <SelectTrigger className="flex-1 min-w-[140px] md:w-[180px] md:flex-none h-10">
             <SelectValue placeholder="Mostrar" />
           </SelectTrigger>
           <SelectContent>
@@ -127,7 +128,7 @@ export default function CadastrosPage() {
           </SelectContent>
         </Select>
         <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-          <SelectTrigger className="w-[180px] h-10">
+          <SelectTrigger className="flex-1 min-w-[140px] md:w-[180px] md:flex-none h-10">
             <SelectValue placeholder="Ordenar" />
           </SelectTrigger>
           <SelectContent>
@@ -143,6 +144,7 @@ export default function CadastrosPage() {
               {semFornecedorCount} sem fornecedor
             </Badge>
           )}
+        </div>
         </div>
       </div>
 
