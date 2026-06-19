@@ -169,7 +169,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         )}
         {has("descricao") && (
           <div
-            className="mt-1.5 leading-tight line-clamp-2 overflow-hidden font-semibold"
+            className="mt-1.5 leading-tight line-clamp-3 overflow-hidden font-semibold"
             style={{ fontSize: `${fs * 1.85}px` }}
           >
             {descLines.map((l, i) => (
