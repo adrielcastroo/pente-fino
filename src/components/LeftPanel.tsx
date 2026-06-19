@@ -1729,6 +1729,7 @@ export const LeftPanel = memo(function LeftPanel() {
                         <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50 w-10">#</th>
                         <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50">Referência</th>
                         <th className="px-3 py-2 text-right font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50">Lote Sistema</th>
+                        <th className="px-2 py-2 text-center font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50 w-10"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1754,6 +1755,16 @@ export const LeftPanel = memo(function LeftPanel() {
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 font-mono text-[10px] font-semibold text-primary group-hover:bg-primary/15 group-hover:border-primary/30 transition-colors tabular-nums">
                                 {r.loteSistema}
                               </span>
+                            </td>
+                            <td className="px-2 py-2 align-middle text-center">
+                              <button
+                                type="button"
+                                onClick={() => deleteRegistro(r.id)}
+                                aria-label={`Remover ${r.item}`}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all shadow-sm hover:shadow-md hover:shadow-destructive/30 active:scale-95"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+                              </button>
                             </td>
                           </motion.tr>
                         );
