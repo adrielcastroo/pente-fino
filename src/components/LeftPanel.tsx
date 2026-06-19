@@ -34,7 +34,7 @@ Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<
 export const LeftPanel = memo(function LeftPanel() {
   const {
     currentMode, setMode, processo, setProcesso, conferente, registros,
-    addRegistro, undoStack, undo: undoAction,
+    addRegistro, deleteRegistro, undoStack, undo: undoAction,
     lockProcesso, setLockProcesso, lockedProcesso, setLockedProcesso,
     lockNf, setLockNf, lockedNf, setLockedNf,
     lockEndereco, setLockEndereco, lockedEndereco, setLockedEndereco,
