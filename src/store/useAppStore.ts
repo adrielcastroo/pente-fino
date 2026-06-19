@@ -368,6 +368,7 @@ export const useAppStore = create<AppState>()(
         set({ registros: newRegs, undoStack: state.undoStack.slice(0, -1), lastDeletedAt: null });
         return last.reg;
       },
+      clearLastDeleted: () => set({ lastDeletedAt: null }),
       
       clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null }),
       
