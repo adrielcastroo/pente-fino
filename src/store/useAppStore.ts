@@ -355,7 +355,7 @@ export const useAppStore = create<AppState>()(
         const reg = state.registros[idx];
         const newRegs = [...state.registros];
         newRegs.splice(idx, 1);
-        return { registros: newRegs, undoStack: [...state.undoStack, { reg, idx }] };
+        return { registros: newRegs, undoStack: [...state.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
       }),
       
       undo: () => {
@@ -364,7 +364,7 @@ export const useAppStore = create<AppState>()(
         const last = state.undoStack[state.undoStack.length - 1];
         const newRegs = [...state.registros];
         newRegs.splice(last.idx, 0, last.reg);
-        set({ registros: newRegs, undoStack: state.undoStack.slice(0, -1) });
+        set({ registros: newRegs, undoStack: state.undoStack.slice(0, -1), lastDeletedAt: null });
         return last.reg;
       },
       
