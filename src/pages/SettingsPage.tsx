@@ -96,6 +96,11 @@ export default function SettingsPage() {
     if (profile?.display_name) {
       setDisplayName(profile.display_name);
     }
+    const remotePref = (profile as any)?.preferences?.disable_browser_print;
+    if (typeof remotePref === 'boolean') {
+      setPrefDisableBrowserPrint(remotePref);
+      localStorage.setItem('pref_disable_browser_print', String(remotePref));
+    }
   }, [profile]);
 
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
@@ -318,6 +323,19 @@ export default function SettingsPage() {
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
         localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
+        if (!isGuest && user) {
+          const currentPrefs = ((profile as any)?.preferences && typeof (profile as any).preferences === 'object')
+            ? (profile as any).preferences
+            : {};
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              preferences: { ...currentPrefs, disable_browser_print: prefDisableBrowserPrint },
+              updated_at: new Date().toISOString(),
+            } as any)
+            .eq('id', user.id);
+          if (error) throw error;
+        }
       }
       
       toast.success('Configurações salvas com sucesso!');
