@@ -54,7 +54,7 @@ export default function MainLayout() {
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <div className="h-[100dvh] flex w-full bg-background overflow-hidden relative app-bg-pattern flex-col lg:flex-row">
+      <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
         <AppSidebar activeTab={activeTab} onTabChange={() => {}} />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
