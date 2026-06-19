@@ -1,3 +1,4 @@
+import type React from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 // Escala física compartilhada entre preview e PNG final (≈ 203 dpi = 8 px/mm).
