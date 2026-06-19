@@ -1710,31 +1710,53 @@ export const LeftPanel = memo(function LeftPanel() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="rounded-xl border border-border/50 overflow-hidden bg-muted/10 shadow-inner"
+                className="rounded-xl border border-border/60 overflow-hidden bg-gradient-to-b from-muted/20 to-muted/5 shadow-inner"
               >
-                <div className="max-h-[250px] overflow-auto custom-scrollbar p-1">
-                  <table className="w-full text-[11px]">
-                    <thead className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-                      <tr>
-                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">#</th>
-                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">Referência</th>
-                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-wider text-muted-foreground">Lote Sistema</th>
+                <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 bg-background/40 backdrop-blur-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/80">Itens Conferidos</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
+                    {Math.min(10, registros.length)} de {registros.length}
+                  </span>
+                </div>
+                <div className="max-h-[260px] overflow-auto custom-scrollbar">
+                  <table className="w-full text-[11px] border-separate border-spacing-0">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-gradient-to-b from-background/95 to-background/80 backdrop-blur-md">
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50 w-10">#</th>
+                        <th className="px-3 py-2 text-left font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50">Referência</th>
+                        <th className="px-3 py-2 text-right font-bold uppercase text-[9px] tracking-[0.08em] text-muted-foreground/80 border-b border-border/50">Lote Sistema</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/20">
-                      {registros.slice(-10).reverse().map((r, i) => (
-                        <motion.tr 
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          key={r.id} 
-                          className="hover:bg-primary/5 transition-colors group"
-                        >
-                          <td className="px-3 py-2 font-mono text-muted-foreground/60">{registros.length - i}</td>
-                          <td className="px-3 py-2 font-bold text-foreground/80">{r.item}</td>
-                          <td className="px-3 py-2 font-mono text-primary/70 group-hover:text-primary transition-colors">{r.loteSistema}</td>
-                        </motion.tr>
-                      ))}
+                    <tbody>
+                      {registros.slice(-10).reverse().map((r, i) => {
+                        const num = registros.length - i;
+                        return (
+                          <motion.tr
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.04, duration: 0.2 }}
+                            key={r.id}
+                            className={`group transition-colors ${i % 2 === 0 ? 'bg-transparent' : 'bg-muted/15'} hover:bg-primary/8`}
+                          >
+                            <td className="px-3 py-2 align-middle">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-muted/60 group-hover:bg-primary/15 text-[10px] font-bold font-mono text-muted-foreground group-hover:text-primary tabular-nums transition-colors">
+                                {num}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 align-middle font-semibold text-foreground tracking-tight truncate max-w-[140px]">
+                              {r.item}
+                            </td>
+                            <td className="px-3 py-2 align-middle text-right">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 font-mono text-[10px] font-semibold text-primary group-hover:bg-primary/15 group-hover:border-primary/30 transition-colors tabular-nums">
+                                {r.loteSistema}
+                              </span>
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
