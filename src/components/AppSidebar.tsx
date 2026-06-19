@@ -124,9 +124,12 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                     <SidebarMenuButton
                       size="lg"
                       onClick={() => handleTabClick(item.key, item.path)}
+                      onMouseEnter={() => prefetchRoute(item.path)}
+                      onFocus={() => prefetchRoute(item.path)}
                       tooltip={item.label}
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
+
                       className={`
                         relative h-10 rounded-lg transition-all duration-150 active:scale-[0.97]
                         group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
