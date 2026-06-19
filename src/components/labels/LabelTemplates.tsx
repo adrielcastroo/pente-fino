@@ -222,7 +222,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         {has("qr_lote_sku") && (
           <div className="w-[46%] flex flex-col items-center justify-center p-1">
             <QRCodeSVG value={data.qrLoteSku} size={Math.min(hPx * 0.46, wPx * 0.42)} level="M" />
-            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.15}px` }}>
+            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.4}px` }}>
               Lote+SKU
             </div>
           </div>
