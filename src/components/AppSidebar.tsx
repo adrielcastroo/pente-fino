@@ -183,9 +183,12 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
             <SidebarMenuButton
               size="lg"
               onClick={() => handleTabClick('settings', '/configuracoes')}
+              onMouseEnter={() => prefetchRoute('/configuracoes')}
+              onFocus={() => prefetchRoute('/configuracoes')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"
+
               className={`
                 relative h-10 rounded-lg transition-colors duration-150
                 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
