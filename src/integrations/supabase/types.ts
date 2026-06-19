@@ -833,6 +833,7 @@ export type Database = {
           email_notifications: boolean | null
           id: string
           opt_out_reports: boolean | null
+          preferences: Json
           updated_at: string
         }
         Insert: {
@@ -844,6 +845,7 @@ export type Database = {
           email_notifications?: boolean | null
           id: string
           opt_out_reports?: boolean | null
+          preferences?: Json
           updated_at?: string
         }
         Update: {
@@ -855,6 +857,7 @@ export type Database = {
           email_notifications?: boolean | null
           id?: string
           opt_out_reports?: boolean | null
+          preferences?: Json
           updated_at?: string
         }
         Relationships: []
