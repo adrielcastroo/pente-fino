@@ -150,19 +150,19 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
       className="bg-white text-black shadow-2xl border-[3px] border-black rounded-xl flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden"
     >
       {/* Top: SKU + descrição (left-aligned) */}
-      <div className="border-b-[3px] border-black px-3 py-2 flex flex-col overflow-hidden flex-[1.1]">
+      <div className="border-b-[3px] border-black px-3 py-2 flex flex-col justify-center overflow-hidden flex-[1.1]">
         {has("sku") && (
           <div
             className="font-black tracking-tight leading-none truncate"
-            style={{ fontSize: `${fs * 1.9}px` }}
+            style={{ fontSize: `${fs * 2.4}px` }}
           >
             {data.sku}
           </div>
         )}
         {has("descricao") && (
           <div
-            className="mt-1 leading-tight line-clamp-2 overflow-hidden"
-            style={{ fontSize: `${fs * 1.1}px` }}
+            className="mt-1.5 leading-tight line-clamp-2 overflow-hidden font-semibold"
+            style={{ fontSize: `${fs * 1.5}px` }}
           >
             {descLines.map((l, i) => (
               <div key={i}>{l}</div>
@@ -176,20 +176,20 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         {has("serie") && (
           <span
             className="bg-black text-white font-bold px-2 py-0.5 w-fit shrink-0"
-            style={{ fontSize: `${fs * 0.95}px`, letterSpacing: '0.1em' }}
+            style={{ fontSize: `${fs * 1.1}px`, letterSpacing: '0.1em' }}
           >
             SÉRIE
           </span>
         )}
         <div
           className="flex items-center gap-3 font-black tracking-wide truncate"
-          style={{ fontSize: `${fs * 1.5}px` }}
+          style={{ fontSize: `${fs * 2}px` }}
         >
           {has("cx") && <span className="shrink-0">{data.cx}</span>}
           {has("nf") && <span className="truncate">{data.nf}</span>}
         </div>
         {has("nt") && (
-          <div className="font-black tracking-tight truncate" style={{ fontSize: `${fs * 1.4}px` }}>
+          <div className="font-black tracking-tight truncate" style={{ fontSize: `${fs * 1.9}px` }}>
             {data.nt}
           </div>
         )}
@@ -197,23 +197,23 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
 
       {/* Bottom: RNP/DATA + QR Lote+SKU */}
       <div className="flex flex-[1.1] overflow-hidden">
-        <div className="flex-1 px-3 py-2 flex flex-col justify-center gap-2 overflow-hidden">
+        <div className="flex-1 px-3 py-2 flex flex-col justify-center gap-2 border-r-[3px] border-black overflow-hidden">
           {has("rnp") && (
-            <div style={{ fontSize: `${fs * 1.05}px` }} className="truncate">
+            <div style={{ fontSize: `${fs * 1.4}px` }} className="truncate">
               <span className="font-bold">RNP: </span>
               <span className="font-black">{data.rnp}</span>
             </div>
           )}
           {has("data") && (
-            <div style={{ fontSize: `${fs * 1.05}px` }} className="truncate">
+            <div style={{ fontSize: `${fs * 1.4}px` }} className="truncate">
               <span className="font-bold">DATA:</span> {data.data}
             </div>
           )}
         </div>
         {has("qr_lote_sku") && (
           <div className="w-[38%] flex flex-col items-center justify-center p-1">
-            <QRCodeSVG value={data.qrLoteSku} size={Math.min(hPx * 0.32, wPx * 0.3)} level="M" />
-            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 0.8}px` }}>
+            <QRCodeSVG value={data.qrLoteSku} size={Math.min(hPx * 0.34, wPx * 0.32)} level="M" />
+            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 0.9}px` }}>
               Lote+SKU
             </div>
           </div>
