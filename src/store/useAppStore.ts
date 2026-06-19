@@ -147,6 +147,7 @@ export const useAppStore = create<AppState>()(
       registros: [],
       reservas: [],
       undoStack: [],
+      lastDeletedAt: null,
       currentMode: 'manual',
       processo: '',
       conferente: '',
