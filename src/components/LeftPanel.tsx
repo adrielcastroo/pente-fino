@@ -56,6 +56,7 @@ export const LeftPanel = memo(function LeftPanel() {
     conferente: s.conferente,
     registros: s.registros,
     addRegistro: s.addRegistro,
+    deleteRegistro: s.deleteRegistro,
     undoStack: s.undoStack,
     undo: s.undo,
     lockProcesso: s.lockProcesso,
