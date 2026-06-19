@@ -6,8 +6,6 @@ import logoComb from '@/assets/logo-comb.png';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { prefetchRoute } from '@/lib/route-prefetch';
-
 
 import {
   Sidebar,
@@ -124,12 +122,9 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
                     <SidebarMenuButton
                       size="lg"
                       onClick={() => handleTabClick(item.key, item.path)}
-                      onMouseEnter={() => prefetchRoute(item.path)}
-                      onFocus={() => prefetchRoute(item.path)}
                       tooltip={item.label}
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
-
                       className={`
                         relative h-10 rounded-lg transition-all duration-150 active:scale-[0.97]
                         group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
@@ -183,12 +178,9 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
             <SidebarMenuButton
               size="lg"
               onClick={() => handleTabClick('settings', '/configuracoes')}
-              onMouseEnter={() => prefetchRoute('/configuracoes')}
-              onFocus={() => prefetchRoute('/configuracoes')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"
-
               className={`
                 relative h-10 rounded-lg transition-colors duration-150
                 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
