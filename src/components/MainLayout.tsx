@@ -71,7 +71,7 @@ export default function MainLayout() {
           </main>
         </div>
       </div>
-      <UndoBanner />
+      {!['/tecido', '/madeira', '/motor'].includes(location.pathname) && <UndoBanner />}
 
 
     </SidebarProvider>
