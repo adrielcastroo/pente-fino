@@ -29,6 +29,7 @@ export interface AppState {
   registros: Registro[];
   reservas: Reserva[];
   undoStack: UndoEntry[];
+  lastDeletedAt: number | null;
   currentMode: AppMode;
   processo: string;
   conferente: string;
