@@ -92,7 +92,7 @@ export default function TeamPanel() {
   return (
     <div className="space-y-5">
       {/* Status summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {(['online', 'away', 'offline'] as PresenceStatus[]).map((s) => (
           <div
             key={s}

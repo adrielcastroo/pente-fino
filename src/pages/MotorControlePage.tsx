@@ -320,7 +320,7 @@ export default function MotorControlePage() {
                       />
                     </div>
                     {coulisseModeloProcCx.trim() && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-primary/5 border border-primary/10 grid grid-cols-3 gap-3 shadow-inner">
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-primary/5 border border-primary/10 grid grid-cols-1 sm:grid-cols-3 gap-3 shadow-inner">
                         {(() => {
                           const p = parseCoulisseString(coulisseModeloProcCx);
                           return [
