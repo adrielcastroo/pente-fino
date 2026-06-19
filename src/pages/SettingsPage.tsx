@@ -96,6 +96,11 @@ export default function SettingsPage() {
     if (profile?.display_name) {
       setDisplayName(profile.display_name);
     }
+    const remotePref = (profile as any)?.preferences?.disable_browser_print;
+    if (typeof remotePref === 'boolean') {
+      setPrefDisableBrowserPrint(remotePref);
+      localStorage.setItem('pref_disable_browser_print', String(remotePref));
+    }
   }, [profile]);
 
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
