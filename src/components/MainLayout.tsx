@@ -71,10 +71,7 @@ export default function MainLayout() {
         </div>
       </div>
 
-      <Suspense fallback={null}>
-        {/* We might need a way to trigger shortcuts modal, but for now just include it */}
-        <ShortcutsModal open={false} onClose={() => {}} />
-      </Suspense>
+
     </SidebarProvider>
   );
 }
