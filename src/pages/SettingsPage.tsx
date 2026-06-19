@@ -120,6 +120,7 @@ export default function SettingsPage() {
   const [prefSoundFeedback, setPrefSoundFeedback] = useState(localStorage.getItem('pref_sound_feedback') === 'true');
   const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
   const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
+  const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
 
   // MFA state
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
@@ -316,6 +317,7 @@ export default function SettingsPage() {
         localStorage.setItem('pref_sound_feedback', String(prefSoundFeedback));
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
+        localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
       }
       
       toast.success('Configurações salvas com sucesso!');
@@ -511,7 +513,15 @@ export default function SettingsPage() {
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Arquivamento Automático</Label>
                           <p className="text-xs text-muted-foreground">Arquiva conferências automaticamente ao trocar de processo/NF.</p>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Desabilitar Impressão pelo Navegador</Label>
+                          <p className="text-xs text-muted-foreground">Bloqueia o diálogo de impressão do navegador. O disparo via n8n (webhook) continua funcionando normalmente.</p>
                         </div>
+                        <Switch checked={prefDisableBrowserPrint} onCheckedChange={(v) => { setPrefDisableBrowserPrint(v); setHasUnsavedChanges(true); }} />
+                      </div>
                         <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
                       </div>
 
