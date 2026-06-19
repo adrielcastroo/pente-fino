@@ -664,42 +664,6 @@ export default function RightPanel() {
         </div>
       </div>
 
-      {/* Legend / Tips footer — inspired by mockup */}
-      <div className="flex-shrink-0 border-t border-border/40 bg-card/40 px-3 sm:px-4 py-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-          <div className="flex items-start gap-2.5 min-w-0">
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Info className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-primary mb-0.5">Dica</div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug">Use a busca e a ordenação acima para refinar e encontrar registros rapidamente.</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2.5 min-w-0">
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-success/10 text-success flex items-center justify-center">
-              <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-success mb-0.5">Status</div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug">
-                <span className="font-bold">Novo:</span> recém-bipado · <span className="font-bold">Conferido:</span> arquivado via exportar
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2.5 min-w-0">
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
-              <Tag className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-purple-500 mb-0.5">Legenda</div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug">
-                <span className="font-bold">M²:</span> metragem quadrada · <span className="font-bold">M. Linear:</span> metragem linear
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
