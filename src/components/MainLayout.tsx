@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from 'react';
+import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
@@ -9,7 +9,6 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { AppTab } from '@/types';
 
-const ShortcutsModal = lazy(() => import('@/components/ShortcutsModal'));
 
 const PageSkeleton = () => (
   <div className="p-4 sm:p-8 space-y-4">
@@ -72,10 +71,7 @@ export default function MainLayout() {
         </div>
       </div>
 
-      <Suspense fallback={null}>
-        {/* We might need a way to trigger shortcuts modal, but for now just include it */}
-        <ShortcutsModal open={false} onClose={() => {}} />
-      </Suspense>
+
     </SidebarProvider>
   );
 }
