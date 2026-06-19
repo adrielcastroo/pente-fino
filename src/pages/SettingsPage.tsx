@@ -317,6 +317,7 @@ export default function SettingsPage() {
         localStorage.setItem('pref_sound_feedback', String(prefSoundFeedback));
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
+        localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
       }
       
       toast.success('Configurações salvas com sucesso!');
