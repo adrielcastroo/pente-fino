@@ -29,6 +29,7 @@ export interface AppState {
   registros: Registro[];
   reservas: Reserva[];
   undoStack: UndoEntry[];
+  lastDeletedAt: number | null;
   currentMode: AppMode;
   processo: string;
   conferente: string;
@@ -109,6 +110,7 @@ export interface AppState {
   addRegistro: (reg: Registro) => void;
   deleteRegistro: (id: string) => void;
   undo: () => Registro | null;
+  clearLastDeleted: () => void;
   clearAll: () => void;
   addReserva: (res: Reserva) => Promise<void>;
   deleteReserva: (id: string) => Promise<void>;
@@ -146,6 +148,7 @@ export const useAppStore = create<AppState>()(
       registros: [],
       reservas: [],
       undoStack: [],
+      lastDeletedAt: null,
       currentMode: 'manual',
       processo: '',
       conferente: '',
@@ -353,7 +356,7 @@ export const useAppStore = create<AppState>()(
         const reg = state.registros[idx];
         const newRegs = [...state.registros];
         newRegs.splice(idx, 1);
-        return { registros: newRegs, undoStack: [...state.undoStack, { reg, idx }] };
+        return { registros: newRegs, undoStack: [...state.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
       }),
       
       undo: () => {
@@ -362,9 +365,10 @@ export const useAppStore = create<AppState>()(
         const last = state.undoStack[state.undoStack.length - 1];
         const newRegs = [...state.registros];
         newRegs.splice(last.idx, 0, last.reg);
-        set({ registros: newRegs, undoStack: state.undoStack.slice(0, -1) });
+        set({ registros: newRegs, undoStack: state.undoStack.slice(0, -1), lastDeletedAt: null });
         return last.reg;
       },
+      clearLastDeleted: () => set({ lastDeletedAt: null }),
       
       clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null }),
       
