@@ -151,7 +151,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         width: `${wPx}px`,
         height: `${hPx}px`,
         fontSize: `${fs}px`,
-        transform: 'rotate(180deg)',
+        
         WebkitFontSmoothing: 'antialiased',
         textRendering: 'geometricPrecision',
       } as React.CSSProperties}
