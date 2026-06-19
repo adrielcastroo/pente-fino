@@ -169,7 +169,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         )}
         {has("descricao") && (
           <div
-            className="mt-1.5 leading-tight line-clamp-2 overflow-hidden font-semibold"
+            className="mt-1.5 leading-tight line-clamp-3 overflow-hidden font-semibold"
             style={{ fontSize: `${fs * 1.85}px` }}
           >
             {descLines.map((l, i) => (
@@ -184,7 +184,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         {has("serie") && (
           <span
             className="bg-black text-white font-bold px-2 w-fit shrink-0 leading-tight"
-            style={{ fontSize: `${fs * 1.25}px`, letterSpacing: '0.1em' }}
+            style={{ fontSize: `${fs * 1.55}px`, letterSpacing: '0.1em' }}
           >
             SÉRIE
           </span>
@@ -222,7 +222,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         {has("qr_lote_sku") && (
           <div className="w-[46%] flex flex-col items-center justify-center p-1">
             <QRCodeSVG value={data.qrLoteSku} size={Math.min(hPx * 0.46, wPx * 0.42)} level="M" />
-            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.15}px` }}>
+            <div className="font-bold mt-0.5" style={{ fontSize: `${fs * 1.4}px` }}>
               Lote+SKU
             </div>
           </div>
