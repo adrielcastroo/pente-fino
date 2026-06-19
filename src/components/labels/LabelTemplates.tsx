@@ -151,11 +151,11 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         width: `${wPx}px`,
         height: `${hPx}px`,
         fontSize: `${fs}px`,
-        transform: 'rotate(180deg)',
+        boxSizing: 'border-box',
         WebkitFontSmoothing: 'antialiased',
         textRendering: 'geometricPrecision',
       } as React.CSSProperties}
-      className="bg-white text-black shadow-2xl border-[3px] border-black rounded-xl flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
+      className="bg-white text-black border-2 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
     >
       {/* Top: SKU + descrição */}
       <div className="border-b-[3px] border-black px-3 py-2 flex flex-col justify-center overflow-hidden flex-[1.15]">
