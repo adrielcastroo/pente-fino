@@ -323,6 +323,19 @@ export default function SettingsPage() {
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
         localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
+        if (!isGuest && user) {
+          const currentPrefs = ((profile as any)?.preferences && typeof (profile as any).preferences === 'object')
+            ? (profile as any).preferences
+            : {};
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              preferences: { ...currentPrefs, disable_browser_print: prefDisableBrowserPrint },
+              updated_at: new Date().toISOString(),
+            } as any)
+            .eq('id', user.id);
+          if (error) throw error;
+        }
       }
       
       toast.success('Configurações salvas com sucesso!');
