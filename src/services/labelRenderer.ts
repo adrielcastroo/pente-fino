@@ -35,7 +35,8 @@ async function renderToPng(opts: {
 }): Promise<RenderedLabel> {
   const { node, widthMm, heightMm, basePx } = opts;
   const targetPxW = widthMm * TARGET_PX_PER_MM;
-  const pixelRatio = Math.max(1, Math.min(4, targetPxW / basePx.w));
+  // Força pixelRatio >= 2 para melhorar nitidez de fontes pequenas no PNG.
+  const pixelRatio = Math.max(2, Math.min(4, targetPxW / basePx.w));
 
   // Aguarda layout + QR codes (qrcode.react é síncrono, mas damos um tick para o React commitar)
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
