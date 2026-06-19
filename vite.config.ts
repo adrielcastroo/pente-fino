@@ -19,22 +19,22 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false, // Performance improvement during build
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tooltip',
-          ],
-          'vendor-motion': ['framer-motion'],
-          'vendor-charts': ['recharts'],
-          'vendor-utils': ['date-fns', 'zod', 'zustand', '@tanstack/react-query'],
+        manualChunks: (id) => {
+          if (!id.includes('node_modules')) return;
+          if (/[\\/]react(-dom|-router-dom)?[\\/]/.test(id)) return 'vendor-react';
+          if (id.includes('@radix-ui') || id.includes('cmdk') || id.includes('vaul')) return 'vendor-ui';
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
+          if (id.includes('exceljs') || id.includes('xlsx-chart') || id.includes('xml-xlsx-lite') || id.includes('/xlsx/')) return 'vendor-excel';
+          if (id.includes('jspdf') || id.includes('jspdf-autotable')) return 'vendor-pdf';
+          if (id.includes('html2canvas') || id.includes('html-to-image')) return 'vendor-canvas';
+          if (id.includes('html5-qrcode') || id.includes('qrcode.react')) return 'vendor-qr';
+          if (id.includes('@supabase')) return 'vendor-supabase';
+          if (id.includes('@tanstack')) return 'vendor-query';
+          if (id.includes('date-fns') || id.includes('zod') || id.includes('zustand')) return 'vendor-utils';
+          if (id.includes('lucide-react')) return 'vendor-icons';
         },
+
       },
     },
   },
