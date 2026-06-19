@@ -100,7 +100,9 @@ async function dispatchPrint(
   },
 ): Promise<void> {
   const method: PrintMethod = cfg.printMethod || 'browser';
-  const wantBrowser = method === 'browser' || method === 'both';
+  const browserDisabled = typeof localStorage !== 'undefined'
+    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  const wantBrowser = (method === 'browser' || method === 'both') && !browserDisabled;
   const wantWebhook = (method === 'webhook' || method === 'both') && !!cfg.webhookUrl;
 
   const tasks: Promise<{ k: 'browser' | 'webhook'; ok: boolean }>[] = [];
