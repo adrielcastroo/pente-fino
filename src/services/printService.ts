@@ -201,10 +201,36 @@ async function printImageInBrowser(
     };
 
     const safeTitle = title.replace(/[<>&"']/g, '');
+    // Renderização "driver-only": tamanho fixo em mm via @page, sem margem,
+    // cores exatas (sem ajuste do navegador) e imagem ocupando 100% da página
+    // — assim "Ajustar à página", margens e escala do diálogo do navegador
+    // não afetam o resultado; quem manda é o driver da impressora.
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
       @page { size: ${widthMm}mm ${heightMm}mm; margin: 0; }
-      html, body { margin: 0; padding: 0; background: #fff; }
-      img { width: ${widthMm}mm; height: ${heightMm}mm; display: block; }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff;
+        width: ${widthMm}mm;
+        height: ${heightMm}mm;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      img#lbl {
+        width: ${widthMm}mm !important;
+        height: ${heightMm}mm !important;
+        display: block;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        image-rendering: pixelated;
+        transform: none !important;
+      }
+      @media print {
+        html, body { margin: 0 !important; padding: 0 !important; }
+        img#lbl { width: ${widthMm}mm !important; height: ${heightMm}mm !important; }
+      }
     </style></head><body><img id="lbl" src="${dataUrl}"></body></html>`;
 
     const doc = iframe.contentDocument;
