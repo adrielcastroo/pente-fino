@@ -23,6 +23,18 @@ export interface LabelSettings {
   webhookUrl: string;
   printOffsetXMm?: number;
   motorPrintOffsetXMm?: number;
+  // Aparência (Tecido)
+  borderWidth?: number;        // px
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;       // px
+  padding?: number;            // px (espaçamento interno)
+  margin?: number;             // px (margem visual na pré-visualização)
+  // Aparência (Motor)
+  motorBorderWidth?: number;
+  motorBorderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  motorBorderRadius?: number;
+  motorPadding?: number;
+  motorMargin?: number;
 }
 
 export interface AppState {
