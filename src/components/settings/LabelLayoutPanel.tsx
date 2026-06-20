@@ -338,7 +338,7 @@ export default function LabelLayoutPanel() {
               </Card>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 xl:col-span-2 order-1 xl:order-2 xl:sticky xl:top-4">
               <div className="flex items-baseline justify-between">
                 <Label className="text-xs font-black uppercase tracking-widest opacity-60">
                   Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
