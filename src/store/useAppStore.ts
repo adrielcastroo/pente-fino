@@ -202,7 +202,7 @@ export const useAppStore = create<AppState>()(
         fields: ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'],
         motorFields: ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'],
         motorWidth: 60,
-        motorHeight: 42,
+        motorHeight: 48,
         fontSize: 10,
         showLogo: true,
         showQRCode: true,
