@@ -323,8 +323,8 @@ export default function LabelLayoutPanel() {
                 >
                   <div style={{ width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' }} />
                   {isMotor
-                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
-                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
+                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} />
+                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} />
                   }
                 </div>
               </div>
