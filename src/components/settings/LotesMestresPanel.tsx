@@ -125,7 +125,7 @@ export default function LotesMestresPanel() {
               <Label className="text-[11px] font-semibold uppercase">Descrição</Label>
               <Input value={draft.descricao} onChange={e => setDraft(d => ({ ...d, descricao: e.target.value }))} placeholder="Detalhes…" />
             </div>
-            <Button onClick={handleCreate} disabled={creating} className="h-10">
+            <Button onClick={handleCreate} disabled={creating} className="settings-primary-btn h-10">
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               <span className="ml-1.5">Adicionar</span>
             </Button>
