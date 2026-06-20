@@ -69,6 +69,32 @@ export interface PrintConfig {
   webhookUrl?: string;
 }
 
+/**
+ * Limpa um dataURL/base64 e devolve apenas a string base64 pura.
+ * Remove prefixo data:..;base64, aspas extras e qualquer whitespace.
+ * Valida o formato antes de retornar.
+ */
+function cleanBase64(input: string): { base64: string; mimeType: string } {
+  if (!input) throw new Error('Imagem vazia');
+  let cleaned = String(input).trim();
+  // remover aspas externas que alguns runtimes (ex.: PowerShell) podem reintroduzir
+  cleaned = cleaned.replace(/^["']+|["']+$/g, '');
+
+  let mimeType = 'image/png';
+  if (cleaned.startsWith('data:')) {
+    const match = cleaned.match(/^data:([^;]+);base64,(.*)$/);
+    if (!match) throw new Error('dataURL inválido');
+    mimeType = match[1];
+    cleaned = match[2];
+  }
+  // remover qualquer whitespace/quebra de linha
+  cleaned = cleaned.replace(/\s/g, '');
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(cleaned)) {
+    throw new Error('Base64 inválido após limpeza');
+  }
+  return { base64: cleaned, mimeType };
+}
+
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -80,10 +106,22 @@ async function sendToWebhook(
     data: Record<string, any>;
   },
 ): Promise<void> {
+  const { base64, mimeType } = cleanBase64(payload.dataUrl);
+  // Enviamos múltiplos formatos para máxima compatibilidade com o agente n8n:
+  //  - imageBase64: base64 PURO (sem prefixo, sem aspas) → use este no agente
+  //  - mimeType: tipo MIME (geralmente image/png)
+  //  - dataUrl: mantido por retrocompatibilidade
+  const body = {
+    ...payload,
+    imageBase64: base64,
+    mimeType,
+    imageSize: base64.length,
+    sentAt: new Date().toISOString(),
+  };
   const res = await fetch(webhookUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, sentAt: new Date().toISOString() }),
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Webhook respondeu ${res.status}`);
 }
