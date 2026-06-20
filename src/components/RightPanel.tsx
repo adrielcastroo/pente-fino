@@ -380,22 +380,6 @@ export default function RightPanel() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-3xl border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
-      {undoStack.length > 0 && (
-        <div className="bg-primary/95 px-6 py-3 text-sm flex items-center justify-between gap-4 flex-shrink-0 shadow-sm z-20 border-b border-white/10">
-          <div className="flex items-center gap-3 text-white font-bold">
-            <Undo2 className="w-5 h-5" />
-            <span>Você removeu um registro. Deseja restaurar?</span>
-          </div>
-          <Button 
-            size="sm"
-            variant="secondary"
-            onClick={() => { const r = undo(); if (r) toast.success('Registro restaurado com sucesso.', { icon: <CheckCircle2 className="w-4 h-4 text-primary" /> }); }}
-            className="rounded-full px-6 font-black uppercase tracking-[0.15em] text-[10px] bg-white text-primary hover:bg-white/90 hover:scale-105 active:scale-95 transition-all shadow-lg"
-          >
-            Desfazer Ação
-          </Button>
-        </div>
-      )}
 
       <div className="px-4 xs:px-6 py-4 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
         <div className="flex flex-row items-center gap-3 sm:gap-5">
