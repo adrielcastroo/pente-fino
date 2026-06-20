@@ -429,10 +429,10 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="border-border/40 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden rounded-3xl">
+              <Card className="settings-card rounded-3xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <div className="settings-icon-pill">
                       {categories.find(c => c.id === activeCategory)?.icon && 
                        (() => {
                          const Icon = categories.find(c => c.id === activeCategory)!.icon;
