@@ -206,7 +206,17 @@ export const useAppStore = create<AppState>()(
         autoPrint: true,
         webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta',
         printOffsetXMm: 4,
-        motorPrintOffsetXMm: 4
+        motorPrintOffsetXMm: 4,
+        borderWidth: 4,
+        borderStyle: 'solid',
+        borderRadius: 0,
+        padding: 0,
+        margin: 0,
+        motorBorderWidth: 2,
+        motorBorderStyle: 'solid',
+        motorBorderRadius: 0,
+        motorPadding: 0,
+        motorMargin: 0,
       },
       
       isArchiving: false,
