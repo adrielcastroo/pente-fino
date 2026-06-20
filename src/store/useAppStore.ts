@@ -28,13 +28,17 @@ export interface LabelSettings {
   borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
   borderRadius?: number;       // px
   padding?: number;            // px (espaçamento interno)
-  margin?: number;             // px (margem visual na pré-visualização)
+  margin?: number;             // px (legado — margem uniforme)
+  marginY?: number;            // px (margem vertical do preview, pode ser negativa)
+  offsetX?: number;            // px (deslocamento horizontal, negativo = esquerda)
   // Aparência (Motor)
   motorBorderWidth?: number;
   motorBorderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
   motorBorderRadius?: number;
   motorPadding?: number;
   motorMargin?: number;
+  motorMarginY?: number;
+  motorOffsetX?: number;
 }
 
 export interface AppState {
@@ -212,11 +216,15 @@ export const useAppStore = create<AppState>()(
         borderRadius: 0,
         padding: 0,
         margin: 0,
+        marginY: -4,
+        offsetX: -8,
         motorBorderWidth: 2,
         motorBorderStyle: 'solid',
         motorBorderRadius: 0,
         motorPadding: 0,
         motorMargin: 0,
+        motorMarginY: -4,
+        motorOffsetX: -8,
       },
       
       isArchiving: false,

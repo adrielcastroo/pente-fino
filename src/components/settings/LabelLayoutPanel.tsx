@@ -62,8 +62,10 @@ export default function LabelLayoutPanel() {
   const borderRadius = isMotor ? (labelSettings.motorBorderRadius ?? 0) : (labelSettings.borderRadius ?? 0);
   const padding = isMotor ? (labelSettings.motorPadding ?? 0) : (labelSettings.padding ?? 0);
   const margin = isMotor ? (labelSettings.motorMargin ?? 0) : (labelSettings.margin ?? 0);
+  const marginY = isMotor ? (labelSettings.motorMarginY ?? -4) : (labelSettings.marginY ?? -4);
+  const offsetX = isMotor ? (labelSettings.motorOffsetX ?? -8) : (labelSettings.offsetX ?? -8);
 
-  const updateAppearance = (patch: Partial<{ borderWidth: number; borderStyle: typeof borderStyle; borderRadius: number; padding: number; margin: number; }>) => {
+  const updateAppearance = (patch: Partial<{ borderWidth: number; borderStyle: typeof borderStyle; borderRadius: number; padding: number; margin: number; marginY: number; offsetX: number; }>) => {
     if (isMotor) {
       setLabelSettings({
         ...(patch.borderWidth !== undefined ? { motorBorderWidth: patch.borderWidth } : {}),
@@ -71,6 +73,8 @@ export default function LabelLayoutPanel() {
         ...(patch.borderRadius !== undefined ? { motorBorderRadius: patch.borderRadius } : {}),
         ...(patch.padding !== undefined ? { motorPadding: patch.padding } : {}),
         ...(patch.margin !== undefined ? { motorMargin: patch.margin } : {}),
+        ...(patch.marginY !== undefined ? { motorMarginY: patch.marginY } : {}),
+        ...(patch.offsetX !== undefined ? { motorOffsetX: patch.offsetX } : {}),
       });
     } else {
       setLabelSettings({
@@ -79,6 +83,8 @@ export default function LabelLayoutPanel() {
         ...(patch.borderRadius !== undefined ? { borderRadius: patch.borderRadius } : {}),
         ...(patch.padding !== undefined ? { padding: patch.padding } : {}),
         ...(patch.margin !== undefined ? { margin: patch.margin } : {}),
+        ...(patch.marginY !== undefined ? { marginY: patch.marginY } : {}),
+        ...(patch.offsetX !== undefined ? { offsetX: patch.offsetX } : {}),
       });
     }
   };
@@ -288,10 +294,18 @@ export default function LabelLayoutPanel() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-bold flex justify-between">
-                      <span>Margem externa (preview)</span><span className="font-mono opacity-70">{margin}px</span>
+                      <span>Margem vertical (altura)</span><span className="font-mono opacity-70">{marginY}px</span>
                     </Label>
-                    <Slider value={[margin]} min={0} max={40} step={1}
-                      onValueChange={([v]) => updateAppearance({ margin: v })} />
+                    <Slider value={[marginY]} min={-40} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ marginY: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Deslocamento horizontal (← →)</span><span className="font-mono opacity-70">{offsetX}px</span>
+                    </Label>
+                    <Slider value={[offsetX]} min={-60} max={60} step={1}
+                      onValueChange={([v]) => updateAppearance({ offsetX: v })} />
+                    <p className="text-[10px] opacity-60 leading-tight">Negativo desloca para a esquerda; positivo para a direita.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -323,8 +337,8 @@ export default function LabelLayoutPanel() {
                 >
                   <div style={{ width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' }} />
                   {isMotor
-                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} />
-                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} />
+                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
+                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
                   }
                 </div>
               </div>
