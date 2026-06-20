@@ -217,13 +217,16 @@ export default function LabelLayoutPanel() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/30 bg-background/50">
+              <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Layout className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                      <Layout className="w-4 h-4" />
+                    </div>
                     <CardTitle className="text-sm font-black uppercase tracking-wider">Blocos da Etiqueta</CardTitle>
                   </div>
-                  <CardDescription>Habilite ou desabilite cada elemento.</CardDescription>
+                  <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
