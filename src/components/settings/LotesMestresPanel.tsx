@@ -105,7 +105,7 @@ export default function LotesMestresPanel() {
       </div>
 
       {/* Create row */}
-      <Card className="border-dashed">
+      <Card className="settings-card border-dashed rounded-2xl">
         <CardContent className="pt-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto] gap-3 items-end">
             <div className="space-y-1.5">
