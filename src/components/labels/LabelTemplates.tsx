@@ -57,6 +57,11 @@ interface PreviewProps {
   hPx: number;
   fs: number;
   has: LabelHas;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  margin?: number;
 }
 
 export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: PreviewProps & { data?: TecidoLabelData }) {
