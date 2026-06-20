@@ -143,27 +143,36 @@ export default function LabelLayoutPanel() {
   }, [wPx, hPx]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <Tabs value={kind} onValueChange={(v) => setKind(v as LabelKind)}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 h-11">
-          <TabsTrigger value="tecido" className="gap-2 font-bold">
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-2xl bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
+          <TabsTrigger
+            value="tecido"
+            className="gap-2 font-bold rounded-xl transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
+          >
             <Shirt className="w-4 h-4" /> Tecidos
           </TabsTrigger>
-          <TabsTrigger value="motor" className="gap-2 font-bold">
+          <TabsTrigger
+            value="motor"
+            className="gap-2 font-bold rounded-xl transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
+          >
             <Cog className="w-4 h-4" /> Motores / Controles
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={kind} className="mt-6">
+        <TabsContent value={kind} className="mt-6 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <Card className="border-border/30 bg-background/50">
+              <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Maximize className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                      <Maximize className="w-4 h-4" />
+                    </div>
                     <CardTitle className="text-sm font-black uppercase tracking-wider">Dimensões (mm)</CardTitle>
                   </div>
-                  <CardDescription>
+                  <CardDescription className="pl-12">
                     {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
                   </CardDescription>
                 </CardHeader>
