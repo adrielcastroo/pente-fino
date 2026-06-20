@@ -64,12 +64,24 @@ interface PreviewProps {
   margin?: number;
 }
 
-export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: PreviewProps & { data?: TecidoLabelData }) {
+export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderWidth = 4, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0 }: PreviewProps & { data?: TecidoLabelData }) {
   const descLines = data.descricao.split("\n");
   return (
     <div
-      style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px`, margin: "0 auto" }}
-      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace]"
+      style={{
+        width: `${wPx}px`,
+        height: `${hPx}px`,
+        fontSize: `${fs}px`,
+        margin: `${margin}px auto`,
+        padding: `${padding}px`,
+        borderWidth: `${borderWidth}px`,
+        borderStyle,
+        borderColor: '#000',
+        borderRadius: `${borderRadius}px`,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+      }}
+      className="bg-white text-black shadow-2xl flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace]"
     >
       <div className="flex border-b-4 border-black flex-[1.1]">
         <div className="flex-1 pt-4 pb-2 px-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
