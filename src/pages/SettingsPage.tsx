@@ -368,7 +368,7 @@ export default function SettingsPage() {
               Alterações pendentes
             </Badge>
           )}
-          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="gap-1.5 sm:gap-2 shadow-lg shadow-primary/20 font-bold px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm">
+          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="settings-primary-btn px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg">
             <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Salvar
           </Button>
