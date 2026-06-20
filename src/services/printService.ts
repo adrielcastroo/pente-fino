@@ -99,47 +99,76 @@ async function dispatchPrint(
     data: Record<string, any>;
   },
 ): Promise<void> {
-  const method: PrintMethod = cfg.printMethod || 'browser';
   const browserDisabled = typeof localStorage !== 'undefined'
     && localStorage.getItem('pref_disable_browser_print') === 'true';
-  const wantBrowser = (method === 'browser' || method === 'both') && !browserDisabled;
-  const wantWebhook = (method === 'webhook' || method === 'both') && !!cfg.webhookUrl;
 
-  const tasks: Promise<{ k: 'browser' | 'webhook'; ok: boolean }>[] = [];
-  if (wantBrowser) {
-    tasks.push(
-      printImageInBrowser(payload.dataUrl, payload.widthMm, payload.heightMm, payload.title)
-        .then(() => ({ k: 'browser' as const, ok: true }))
-        .catch((e) => { console.error('Browser print falhou:', e); return { k: 'browser' as const, ok: false }; })
-    );
-  }
-  if (wantWebhook) {
-    tasks.push(
-      sendToWebhook(cfg.webhookUrl!, payload)
-        .then(() => ({ k: 'webhook' as const, ok: true }))
-        .catch((e) => { console.error('Webhook falhou:', e); return { k: 'webhook' as const, ok: false }; })
-    );
-  }
+  // Preferência: SEMPRE n8n (webhook) primeiro, navegador apenas como fallback.
+  const hasWebhook = !!cfg.webhookUrl;
+  const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
 
-  const results = await Promise.all(tasks);
-  const browserOk = results.find(r => r.k === 'browser')?.ok;
-  const webhookOk = results.find(r => r.k === 'webhook')?.ok;
+  const tryBrowser = async () => {
+    if (browserDisabled) {
+      toast.warning('Impressão pelo navegador está desabilitada nas configurações');
+      return false;
+    }
+    try {
+      await printImageInBrowser(payload.dataUrl, payload.widthMm, payload.heightMm, payload.title);
+      return true;
+    } catch (e) {
+      console.error('Browser print falhou:', e);
+      return false;
+    }
+  };
 
-  if (method === 'both') {
-    if (browserOk && webhookOk) toast.success('Etiqueta enviada (navegador + n8n)');
-    else if (browserOk) toast.warning('Etiqueta impressa no navegador, mas webhook falhou');
-    else if (webhookOk) toast.warning('Webhook enviado, mas impressão no navegador falhou');
+  const tryWebhook = async () => {
+    if (!hasWebhook) return false;
+    try {
+      await sendToWebhook(cfg.webhookUrl!, payload);
+      return true;
+    } catch (e) {
+      console.error('Webhook falhou:', e);
+      return false;
+    }
+  };
+
+  // Modo 'both': dispara os dois em paralelo (respeitando preferência de desabilitar navegador).
+  if (explicitMethod === 'both') {
+    const [webhookOk, browserOk] = await Promise.all([tryWebhook(), tryBrowser()]);
+    if (webhookOk && browserOk) toast.success('Etiqueta enviada (n8n + navegador)');
+    else if (webhookOk) toast.success('Etiqueta enviada para o n8n');
+    else if (browserOk) toast.success('Etiqueta enviada para impressão!');
     else toast.error('Falha em ambos os métodos de impressão');
-  } else if (wantBrowser) {
-    if (browserOk) toast.success('Etiqueta enviada para impressão!');
-    else toast.error('Falha ao abrir diálogo de impressão.');
-  } else if (wantWebhook) {
-    if (webhookOk) toast.success('Etiqueta enviada para o n8n');
-    else toast.error('Falha ao enviar etiqueta para o webhook');
-  } else {
-    toast.warning('Nenhum método de impressão configurado');
+    return;
   }
+
+  // Preferência padrão: tenta webhook (n8n) primeiro; se falhar, cai para navegador.
+  if (hasWebhook) {
+    const webhookOk = await tryWebhook();
+    if (webhookOk) {
+      toast.success('Etiqueta enviada para o n8n');
+      return;
+    }
+    if (browserDisabled) {
+      toast.error('Webhook (n8n) falhou e impressão pelo navegador está desabilitada');
+      return;
+    }
+    toast.warning('Webhook (n8n) falhou — tentando impressão pelo navegador…');
+    const browserOk = await tryBrowser();
+    if (browserOk) toast.success('Etiqueta enviada para impressão (fallback navegador)');
+    else toast.error('Falha ao imprimir etiqueta');
+    return;
+  }
+
+  // Sem webhook configurado: usa navegador (se permitido).
+  if (browserDisabled) {
+    toast.error('Nenhum método disponível: configure o webhook (n8n) ou habilite a impressão pelo navegador');
+    return;
+  }
+  const browserOk = await tryBrowser();
+  if (browserOk) toast.success('Etiqueta enviada para impressão!');
+  else toast.error('Falha ao abrir diálogo de impressão.');
 }
+
 
 export interface TecidoPrintInput {
   item: string;

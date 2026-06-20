@@ -531,6 +531,8 @@ export default function SettingsPage() {
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Arquivamento Automático</Label>
                           <p className="text-xs text-muted-foreground">Arquiva conferências automaticamente ao trocar de processo/NF.</p>
+                        </div>
+                        <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
                       </div>
 
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
@@ -540,8 +542,7 @@ export default function SettingsPage() {
                         </div>
                         <Switch checked={prefDisableBrowserPrint} onCheckedChange={(v) => { setPrefDisableBrowserPrint(v); setHasUnsavedChanges(true); }} />
                       </div>
-                        <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
-                      </div>
+
 
                       <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-2">
                         <Label className="text-sm font-bold">Tela Inicial</Label>
