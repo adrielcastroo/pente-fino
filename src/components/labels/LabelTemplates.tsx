@@ -191,7 +191,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         )}
         <div
           className="flex items-center gap-3 font-black tracking-wide truncate leading-tight"
-          style={{ fontSize: `${fs * 1.8}px` }}
+          style={{ fontSize: `${fs * 2.1}px` }}
         >
           {has("cx") && <span className="shrink-0">{data.cx}</span>}
           {has("nf") && <span className="truncate">{data.nf}</span>}
@@ -205,7 +205,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
           }
           if (!ntNorm) return null;
           return (
-            <div className="font-black tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 1.7}px` }}>
+            <div className="font-black tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 2.0}px` }}>
               {ntNorm}
             </div>
           );
