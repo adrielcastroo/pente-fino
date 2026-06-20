@@ -196,11 +196,16 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
           {has("cx") && <span className="shrink-0">{data.cx}</span>}
           {has("nf") && <span className="truncate">{data.nf}</span>}
         </div>
-        {has("nt") && (
-          <div className="font-black tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 1.7}px` }}>
-            {data.nt}
-          </div>
-        )}
+        {has("nt") && (() => {
+          const cxNf = `${has("cx") ? data.cx : ''} ${has("nf") ? data.nf : ''}`.trim().replace(/\s+/g, ' ');
+          const ntNorm = (data.nt || '').trim().replace(/\s+/g, ' ');
+          if (!ntNorm || ntNorm === cxNf) return null;
+          return (
+            <div className="font-black tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 1.7}px` }}>
+              {data.nt}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Bottom: RNP/DATA + QR Lote+SKU */}
