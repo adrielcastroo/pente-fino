@@ -7,7 +7,9 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
@@ -53,6 +55,33 @@ export default function LabelLayoutPanel() {
     : (labelSettings.printOffsetXMm ?? 4);
   const availableFields = isMotor ? MOTOR_FIELDS : TECIDO_FIELDS;
   const has = (id: string) => fields.includes(id);
+
+  // Aparência (com fallback seguro)
+  const borderWidth = isMotor ? (labelSettings.motorBorderWidth ?? 2) : (labelSettings.borderWidth ?? 4);
+  const borderStyle = (isMotor ? labelSettings.motorBorderStyle : labelSettings.borderStyle) ?? 'solid';
+  const borderRadius = isMotor ? (labelSettings.motorBorderRadius ?? 0) : (labelSettings.borderRadius ?? 0);
+  const padding = isMotor ? (labelSettings.motorPadding ?? 0) : (labelSettings.padding ?? 0);
+  const margin = isMotor ? (labelSettings.motorMargin ?? 0) : (labelSettings.margin ?? 0);
+
+  const updateAppearance = (patch: Partial<{ borderWidth: number; borderStyle: typeof borderStyle; borderRadius: number; padding: number; margin: number; }>) => {
+    if (isMotor) {
+      setLabelSettings({
+        ...(patch.borderWidth !== undefined ? { motorBorderWidth: patch.borderWidth } : {}),
+        ...(patch.borderStyle !== undefined ? { motorBorderStyle: patch.borderStyle } : {}),
+        ...(patch.borderRadius !== undefined ? { motorBorderRadius: patch.borderRadius } : {}),
+        ...(patch.padding !== undefined ? { motorPadding: patch.padding } : {}),
+        ...(patch.margin !== undefined ? { motorMargin: patch.margin } : {}),
+      });
+    } else {
+      setLabelSettings({
+        ...(patch.borderWidth !== undefined ? { borderWidth: patch.borderWidth } : {}),
+        ...(patch.borderStyle !== undefined ? { borderStyle: patch.borderStyle } : {}),
+        ...(patch.borderRadius !== undefined ? { borderRadius: patch.borderRadius } : {}),
+        ...(patch.padding !== undefined ? { padding: patch.padding } : {}),
+        ...(patch.margin !== undefined ? { margin: patch.margin } : {}),
+      });
+    }
+  };
 
   const updateFields = (newFields: string[]) =>
     setLabelSettings(isMotor ? { motorFields: newFields } : { fields: newFields });
@@ -197,11 +226,72 @@ export default function LabelLayoutPanel() {
                   <Separator className="my-2" />
                   <div className="space-y-2 pt-1">
                     <Label className="text-xs font-bold flex items-center gap-2">
-                      <Type className="w-3.5 h-3.5" /> Tamanho Base da Fonte (pt)
+                      <Type className="w-3.5 h-3.5" /> Tamanho da Fonte: <span className="font-mono opacity-70">{labelSettings.fontSize}pt</span>
                     </Label>
-                    <Input type="number" value={labelSettings.fontSize}
-                      onChange={(e) => setLabelSettings({ fontSize: Number(e.target.value) })}
-                      className="h-9 w-24" />
+                    <div className="flex items-center gap-3">
+                      <Slider
+                        value={[labelSettings.fontSize]}
+                        min={6} max={24} step={1}
+                        onValueChange={([v]) => setLabelSettings({ fontSize: v })}
+                        className="flex-1"
+                      />
+                      <Input type="number" min={6} max={24} value={labelSettings.fontSize}
+                        onChange={(e) => setLabelSettings({ fontSize: Number(e.target.value) })}
+                        className="h-9 w-20" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/30 bg-background/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Square className="w-4 h-4 text-primary" />
+                    <CardTitle className="text-sm font-black uppercase tracking-wider">Aparência</CardTitle>
+                  </div>
+                  <CardDescription>Bordas, cantos, padding e margem da etiqueta.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Espessura da borda</span><span className="font-mono opacity-70">{borderWidth}px</span>
+                    </Label>
+                    <Slider value={[borderWidth]} min={0} max={12} step={1}
+                      onValueChange={([v]) => updateAppearance({ borderWidth: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold">Estilo da borda</Label>
+                    <Select value={borderStyle} onValueChange={(v) => updateAppearance({ borderStyle: v as typeof borderStyle })}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="solid">Sólida</SelectItem>
+                        <SelectItem value="dashed">Tracejada</SelectItem>
+                        <SelectItem value="dotted">Pontilhada</SelectItem>
+                        <SelectItem value="double">Dupla</SelectItem>
+                        <SelectItem value="none">Sem borda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Raio dos cantos</span><span className="font-mono opacity-70">{borderRadius}px</span>
+                    </Label>
+                    <Slider value={[borderRadius]} min={0} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ borderRadius: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Espaçamento interno (padding)</span><span className="font-mono opacity-70">{padding}px</span>
+                    </Label>
+                    <Slider value={[padding]} min={0} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ padding: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Margem externa (preview)</span><span className="font-mono opacity-70">{margin}px</span>
+                    </Label>
+                    <Slider value={[margin]} min={0} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ margin: v })} />
                   </div>
                 </CardContent>
               </Card>
@@ -233,8 +323,8 @@ export default function LabelLayoutPanel() {
                 >
                   <div style={{ width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' }} />
                   {isMotor
-                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
-                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} />
+                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} />
+                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} />
                   }
                 </div>
               </div>

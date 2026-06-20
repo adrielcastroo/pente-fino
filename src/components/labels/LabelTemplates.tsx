@@ -57,14 +57,31 @@ interface PreviewProps {
   hPx: number;
   fs: number;
   has: LabelHas;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  margin?: number;
 }
 
-export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: PreviewProps & { data?: TecidoLabelData }) {
+export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderWidth = 4, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0 }: PreviewProps & { data?: TecidoLabelData }) {
   const descLines = data.descricao.split("\n");
   return (
     <div
-      style={{ width: `${wPx}px`, height: `${hPx}px`, fontSize: `${fs}px`, margin: "0 auto" }}
-      className="bg-white text-black shadow-2xl border-4 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace]"
+      style={{
+        width: `${wPx}px`,
+        height: `${hPx}px`,
+        fontSize: `${fs}px`,
+        margin: `${margin}px auto`,
+        padding: `${padding}px`,
+        borderWidth: `${borderWidth}px`,
+        borderStyle,
+        borderColor: '#000',
+        borderRadius: `${borderRadius}px`,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+      }}
+      className="bg-white text-black shadow-2xl flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace]"
     >
       <div className="flex border-b-4 border-black flex-[1.1]">
         <div className="flex-1 pt-4 pb-2 px-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
@@ -143,7 +160,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE }: Previ
   );
 }
 
-export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: PreviewProps & { data?: MotorLabelData }) {
+export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWidth = 2, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0 }: PreviewProps & { data?: MotorLabelData }) {
   const descLines = data.descricao.split("\n");
   return (
     <div
@@ -154,8 +171,14 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         boxSizing: 'border-box',
         WebkitFontSmoothing: 'antialiased',
         textRendering: 'geometricPrecision',
+        margin: `${margin}px auto`,
+        padding: `${padding}px`,
+        borderWidth: `${borderWidth}px`,
+        borderStyle,
+        borderColor: '#000',
+        borderRadius: `${borderRadius}px`,
       } as React.CSSProperties}
-      className="bg-white text-black border-2 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
+      className="bg-white text-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
     >
       {/* Top: SKU + descrição */}
       <div className="border-b-[3px] border-black px-3 py-2 flex flex-col justify-center overflow-hidden flex-[1.15]">

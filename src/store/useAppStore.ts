@@ -23,6 +23,18 @@ export interface LabelSettings {
   webhookUrl: string;
   printOffsetXMm?: number;
   motorPrintOffsetXMm?: number;
+  // Aparência (Tecido)
+  borderWidth?: number;        // px
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;       // px
+  padding?: number;            // px (espaçamento interno)
+  margin?: number;             // px (margem visual na pré-visualização)
+  // Aparência (Motor)
+  motorBorderWidth?: number;
+  motorBorderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  motorBorderRadius?: number;
+  motorPadding?: number;
+  motorMargin?: number;
 }
 
 export interface AppState {
@@ -194,7 +206,17 @@ export const useAppStore = create<AppState>()(
         autoPrint: true,
         webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta',
         printOffsetXMm: 4,
-        motorPrintOffsetXMm: 4
+        motorPrintOffsetXMm: 4,
+        borderWidth: 4,
+        borderStyle: 'solid',
+        borderRadius: 0,
+        padding: 0,
+        margin: 0,
+        motorBorderWidth: 2,
+        motorBorderStyle: 'solid',
+        motorBorderRadius: 0,
+        motorPadding: 0,
+        motorMargin: 0,
       },
       
       isArchiving: false,
