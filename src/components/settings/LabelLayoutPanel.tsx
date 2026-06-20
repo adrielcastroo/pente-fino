@@ -56,6 +56,33 @@ export default function LabelLayoutPanel() {
   const availableFields = isMotor ? MOTOR_FIELDS : TECIDO_FIELDS;
   const has = (id: string) => fields.includes(id);
 
+  // Aparência (com fallback seguro)
+  const borderWidth = isMotor ? (labelSettings.motorBorderWidth ?? 2) : (labelSettings.borderWidth ?? 4);
+  const borderStyle = (isMotor ? labelSettings.motorBorderStyle : labelSettings.borderStyle) ?? 'solid';
+  const borderRadius = isMotor ? (labelSettings.motorBorderRadius ?? 0) : (labelSettings.borderRadius ?? 0);
+  const padding = isMotor ? (labelSettings.motorPadding ?? 0) : (labelSettings.padding ?? 0);
+  const margin = isMotor ? (labelSettings.motorMargin ?? 0) : (labelSettings.margin ?? 0);
+
+  const updateAppearance = (patch: Partial<{ borderWidth: number; borderStyle: typeof borderStyle; borderRadius: number; padding: number; margin: number; }>) => {
+    if (isMotor) {
+      setLabelSettings({
+        ...(patch.borderWidth !== undefined ? { motorBorderWidth: patch.borderWidth } : {}),
+        ...(patch.borderStyle !== undefined ? { motorBorderStyle: patch.borderStyle } : {}),
+        ...(patch.borderRadius !== undefined ? { motorBorderRadius: patch.borderRadius } : {}),
+        ...(patch.padding !== undefined ? { motorPadding: patch.padding } : {}),
+        ...(patch.margin !== undefined ? { motorMargin: patch.margin } : {}),
+      });
+    } else {
+      setLabelSettings({
+        ...(patch.borderWidth !== undefined ? { borderWidth: patch.borderWidth } : {}),
+        ...(patch.borderStyle !== undefined ? { borderStyle: patch.borderStyle } : {}),
+        ...(patch.borderRadius !== undefined ? { borderRadius: patch.borderRadius } : {}),
+        ...(patch.padding !== undefined ? { padding: patch.padding } : {}),
+        ...(patch.margin !== undefined ? { margin: patch.margin } : {}),
+      });
+    }
+  };
+
   const updateFields = (newFields: string[]) =>
     setLabelSettings(isMotor ? { motorFields: newFields } : { fields: newFields });
   const updateDim = (patch: { w?: number; h?: number }) =>
