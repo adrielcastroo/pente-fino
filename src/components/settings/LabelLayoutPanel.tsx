@@ -226,11 +226,72 @@ export default function LabelLayoutPanel() {
                   <Separator className="my-2" />
                   <div className="space-y-2 pt-1">
                     <Label className="text-xs font-bold flex items-center gap-2">
-                      <Type className="w-3.5 h-3.5" /> Tamanho Base da Fonte (pt)
+                      <Type className="w-3.5 h-3.5" /> Tamanho da Fonte: <span className="font-mono opacity-70">{labelSettings.fontSize}pt</span>
                     </Label>
-                    <Input type="number" value={labelSettings.fontSize}
-                      onChange={(e) => setLabelSettings({ fontSize: Number(e.target.value) })}
-                      className="h-9 w-24" />
+                    <div className="flex items-center gap-3">
+                      <Slider
+                        value={[labelSettings.fontSize]}
+                        min={6} max={24} step={1}
+                        onValueChange={([v]) => setLabelSettings({ fontSize: v })}
+                        className="flex-1"
+                      />
+                      <Input type="number" min={6} max={24} value={labelSettings.fontSize}
+                        onChange={(e) => setLabelSettings({ fontSize: Number(e.target.value) })}
+                        className="h-9 w-20" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/30 bg-background/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Square className="w-4 h-4 text-primary" />
+                    <CardTitle className="text-sm font-black uppercase tracking-wider">Aparência</CardTitle>
+                  </div>
+                  <CardDescription>Bordas, cantos, padding e margem da etiqueta.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Espessura da borda</span><span className="font-mono opacity-70">{borderWidth}px</span>
+                    </Label>
+                    <Slider value={[borderWidth]} min={0} max={12} step={1}
+                      onValueChange={([v]) => updateAppearance({ borderWidth: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold">Estilo da borda</Label>
+                    <Select value={borderStyle} onValueChange={(v) => updateAppearance({ borderStyle: v as typeof borderStyle })}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="solid">Sólida</SelectItem>
+                        <SelectItem value="dashed">Tracejada</SelectItem>
+                        <SelectItem value="dotted">Pontilhada</SelectItem>
+                        <SelectItem value="double">Dupla</SelectItem>
+                        <SelectItem value="none">Sem borda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Raio dos cantos</span><span className="font-mono opacity-70">{borderRadius}px</span>
+                    </Label>
+                    <Slider value={[borderRadius]} min={0} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ borderRadius: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Espaçamento interno (padding)</span><span className="font-mono opacity-70">{padding}px</span>
+                    </Label>
+                    <Slider value={[padding]} min={0} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ padding: v })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex justify-between">
+                      <span>Margem externa (preview)</span><span className="font-mono opacity-70">{margin}px</span>
+                    </Label>
+                    <Slider value={[margin]} min={0} max={40} step={1}
+                      onValueChange={([v]) => updateAppearance({ margin: v })} />
                   </div>
                 </CardContent>
               </Card>
