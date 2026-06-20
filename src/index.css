@@ -171,7 +171,7 @@
 
   /* Settings module — unified card visual language */
   .settings-card {
-    @apply group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm transition-all duration-500;
+    @apply relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm transition-all duration-500;
   }
   .settings-card:hover {
     @apply shadow-xl border-primary/30 -translate-y-0.5;
