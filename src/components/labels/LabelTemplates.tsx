@@ -160,7 +160,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderW
   );
 }
 
-export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: PreviewProps & { data?: MotorLabelData }) {
+export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWidth = 2, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0 }: PreviewProps & { data?: MotorLabelData }) {
   const descLines = data.descricao.split("\n");
   return (
     <div
@@ -171,8 +171,14 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         boxSizing: 'border-box',
         WebkitFontSmoothing: 'antialiased',
         textRendering: 'geometricPrecision',
+        margin: `${margin}px auto`,
+        padding: `${padding}px`,
+        borderWidth: `${borderWidth}px`,
+        borderStyle,
+        borderColor: '#000',
+        borderRadius: `${borderRadius}px`,
       } as React.CSSProperties}
-      className="bg-white text-black border-2 border-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
+      className="bg-white text-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
     >
       {/* Top: SKU + descrição */}
       <div className="border-b-[3px] border-black px-3 py-2 flex flex-col justify-center overflow-hidden flex-[1.15]">
