@@ -229,17 +229,29 @@ export default function LabelLayoutPanel() {
                   <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                    {availableFields.map((field) => (
-                      <div key={field.id} className="flex items-center justify-between gap-2">
-                        <Label htmlFor={`f-${kind}-${field.id}`} className="text-xs font-medium cursor-pointer">
-                          {field.label}
-                        </Label>
-                        <Switch id={`f-${kind}-${field.id}`}
-                          checked={fields.includes(field.id)}
-                          onCheckedChange={() => handleToggleField(field.id)} />
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    {availableFields.map((field) => {
+                      const active = fields.includes(field.id);
+                      return (
+                        <div
+                          key={field.id}
+                          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-all duration-200 cursor-pointer hover:border-primary/40 hover:bg-primary/5 ${
+                            active ? 'border-primary/30 bg-primary/5' : 'border-border/40 bg-background/40'
+                          }`}
+                          onClick={() => handleToggleField(field.id)}
+                        >
+                          <Label htmlFor={`f-${kind}-${field.id}`} className="text-xs font-medium cursor-pointer flex-1">
+                            {field.label}
+                          </Label>
+                          <Switch
+                            id={`f-${kind}-${field.id}`}
+                            checked={active}
+                            onCheckedChange={() => handleToggleField(field.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                   <Separator className="my-2" />
                   <div className="space-y-2 pt-1">
