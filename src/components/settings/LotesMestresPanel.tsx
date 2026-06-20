@@ -105,7 +105,7 @@ export default function LotesMestresPanel() {
       </div>
 
       {/* Create row */}
-      <Card className="border-dashed">
+      <Card className="settings-card border-dashed rounded-2xl">
         <CardContent className="pt-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto] gap-3 items-end">
             <div className="space-y-1.5">
@@ -125,7 +125,7 @@ export default function LotesMestresPanel() {
               <Label className="text-[11px] font-semibold uppercase">Descrição</Label>
               <Input value={draft.descricao} onChange={e => setDraft(d => ({ ...d, descricao: e.target.value }))} placeholder="Detalhes…" />
             </div>
-            <Button onClick={handleCreate} disabled={creating} className="h-10">
+            <Button onClick={handleCreate} disabled={creating} className="settings-primary-btn h-10">
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               <span className="ml-1.5">Adicionar</span>
             </Button>
@@ -148,7 +148,7 @@ export default function LotesMestresPanel() {
         {items.map(l => {
           const isEditing = editingId === l.id;
           return (
-            <Card key={l.id} className="overflow-hidden">
+            <Card key={l.id} className="settings-card rounded-2xl">
               <CardContent className="py-3">
                 {isEditing ? (
                   <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto_auto] gap-3 items-end">

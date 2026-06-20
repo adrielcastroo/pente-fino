@@ -71,7 +71,7 @@ export default function InventorySettingsPanel() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {configs.map((config) => (
-          <Card key={config.id} className="border-border/40 bg-card/30 backdrop-blur-sm overflow-hidden rounded-2xl">
+          <Card key={config.id} className="settings-card rounded-2xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-black flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${

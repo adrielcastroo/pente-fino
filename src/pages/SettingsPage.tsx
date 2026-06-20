@@ -368,7 +368,7 @@ export default function SettingsPage() {
               Alterações pendentes
             </Badge>
           )}
-          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="gap-1.5 sm:gap-2 shadow-lg shadow-primary/20 font-bold px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm">
+          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="settings-primary-btn px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg">
             <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Salvar
           </Button>
@@ -429,10 +429,10 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="border-border/40 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden rounded-3xl">
+              <Card className="settings-card rounded-3xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <div className="settings-icon-pill">
                       {categories.find(c => c.id === activeCategory)?.icon && 
                        (() => {
                          const Icon = categories.find(c => c.id === activeCategory)!.icon;
