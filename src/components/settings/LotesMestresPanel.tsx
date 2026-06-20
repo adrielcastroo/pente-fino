@@ -148,7 +148,7 @@ export default function LotesMestresPanel() {
         {items.map(l => {
           const isEditing = editingId === l.id;
           return (
-            <Card key={l.id} className="overflow-hidden">
+            <Card key={l.id} className="settings-card rounded-2xl">
               <CardContent className="py-3">
                 {isEditing ? (
                   <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto_auto] gap-3 items-end">
