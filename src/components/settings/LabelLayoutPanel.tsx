@@ -381,10 +381,17 @@ export default function LabelLayoutPanel() {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={handleReset} variant="outline" className="flex-1 gap-2 font-bold border-dashed">
-                  <RefreshCw className="w-4 h-4" /> Resetar Padrão
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                  className="flex-1 gap-2 font-bold border-dashed h-11 rounded-xl transition-all duration-300 hover:bg-destructive/5 hover:border-destructive/40 hover:text-destructive hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <RefreshCw className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" /> Resetar Padrão
                 </Button>
-                <Button onClick={handleSave} className="flex-[2] gap-2 font-bold shadow-lg shadow-primary/20">
+                <Button
+                  onClick={handleSave}
+                  className="flex-[2] gap-2 font-bold h-11 rounded-xl bg-gradient-to-r from-primary to-primary/85 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
+                >
                   <Save className="w-4 h-4" /> Salvar Preferências
                 </Button>
               </div>
