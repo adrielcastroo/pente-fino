@@ -198,11 +198,15 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE }: Preview
         </div>
         {has("nt") && (() => {
           const cxNf = `${has("cx") ? data.cx : ''} ${has("nf") ? data.nf : ''}`.trim().replace(/\s+/g, ' ');
-          const ntNorm = (data.nt || '').trim().replace(/\s+/g, ' ');
-          if (!ntNorm || ntNorm === cxNf) return null;
+          let ntNorm = (data.nt || '').trim().replace(/\s+/g, ' ');
+          // Remove duplicação: se nt começa com "CX/NF", remove esse prefixo
+          if (cxNf && ntNorm.toLowerCase().startsWith(cxNf.toLowerCase())) {
+            ntNorm = ntNorm.slice(cxNf.length).trim();
+          }
+          if (!ntNorm) return null;
           return (
             <div className="font-black tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 1.7}px` }}>
-              {data.nt}
+              {ntNorm}
             </div>
           );
         })()}
