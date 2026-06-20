@@ -62,17 +62,21 @@ interface PreviewProps {
   borderRadius?: number;
   padding?: number;
   margin?: number;
+  marginY?: number;
+  offsetX?: number;
 }
 
-export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderWidth = 4, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0 }: PreviewProps & { data?: TecidoLabelData }) {
+export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderWidth = 4, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0, marginY, offsetX = 0 }: PreviewProps & { data?: TecidoLabelData }) {
   const descLines = data.descricao.split("\n");
+  const my = marginY ?? margin;
   return (
     <div
       style={{
         width: `${wPx}px`,
         height: `${hPx}px`,
         fontSize: `${fs}px`,
-        margin: `${margin}px auto`,
+        margin: `${my}px auto`,
+        transform: offsetX ? `translateX(${offsetX}px)` : undefined,
         padding: `${padding}px`,
         borderWidth: `${borderWidth}px`,
         borderStyle,
@@ -160,8 +164,9 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderW
   );
 }
 
-export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWidth = 2, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0 }: PreviewProps & { data?: MotorLabelData }) {
+export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWidth = 2, borderStyle = 'solid', borderRadius = 0, padding = 0, margin = 0, marginY, offsetX = 0 }: PreviewProps & { data?: MotorLabelData }) {
   const descLines = data.descricao.split("\n");
+  const my = marginY ?? margin;
   return (
     <div
       style={{
@@ -171,7 +176,8 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
         boxSizing: 'border-box',
         WebkitFontSmoothing: 'antialiased',
         textRendering: 'geometricPrecision',
-        margin: `${margin}px auto`,
+        margin: `${my}px auto`,
+        transform: offsetX ? `translateX(${offsetX}px)` : undefined,
         padding: `${padding}px`,
         borderWidth: `${borderWidth}px`,
         borderStyle,
