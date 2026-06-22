@@ -492,7 +492,7 @@ export default function EstoquePage() {
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[60px] sm:min-w-[100px] py-2.5 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 ${
+            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
