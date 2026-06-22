@@ -2,6 +2,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 
 const shortcuts = [
+  { key: 'B', label: 'Focar campo de bipagem' },
+  { key: '/', label: 'Focar busca da página' },
+  { key: '?', label: 'Abrir esta lista de atalhos' },
+  { key: 'CTRL + N', label: 'Nova conferência (Tecido)' },
+  { key: 'CTRL + K', label: 'Paleta de atalhos' },
+  { key: 'CTRL + ,', label: 'Configurações' },
+  { key: 'CTRL + Z', label: 'Desfazer último registro' },
+  { key: 'CTRL + F', label: 'Focar filtro' },
   { key: 'ALT + T', label: 'Modo Tecido' },
   { key: 'ALT + M', label: 'Modo Madeira' },
   { key: 'ALT + K', label: 'Modo Motor' },
@@ -10,8 +18,7 @@ const shortcuts = [
   { key: 'ALT + H', label: 'Histórico' },
   { key: 'ALT + I', label: 'Dashboard' },
   { key: 'ALT + C', label: 'Configurações' },
-  { key: 'ALT + Z', label: 'Desfazer último registro' },
-  { key: 'ESC', label: 'Fechar Modais / Parar Câmera' },
+  { key: 'ESC', label: 'Fechar modais / parar câmera' },
 ];
 
 export default function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () => void }) {

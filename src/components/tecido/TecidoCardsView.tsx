@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { motion } from 'framer-motion';
 import { Trash2, Copy, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +33,11 @@ const TecidoCardsView = memo(({ rows, onDelete, onCopy, isGuest, showActions }: 
       className="flex flex-col gap-3 p-3"
     >
       {rows.map((r, i) => (
-        <li
+        <motion.li
           key={r.id}
+          initial={r.isNew ? { opacity: 0, y: -8, scale: 0.98 } : false}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
           className={`rounded-xl border border-border/50 bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md ${
             r.isNew ? 'ring-2 ring-primary/30 bg-primary/5' : ''
           }`}
@@ -121,7 +125,7 @@ const TecidoCardsView = memo(({ rows, onDelete, onCopy, isGuest, showActions }: 
               <Copy className="w-3.5 h-3.5 shrink-0" aria-hidden />
             </button>
           )}
-        </li>
+        </motion.li>
       ))}
     </ul>
   );
