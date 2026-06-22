@@ -144,7 +144,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-3xl h-[90vh] sm:h-[85vh] flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-3xl lg:max-w-4xl p-0 gap-0 overflow-hidden rounded-3xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] flex flex-col">
         <DialogHeader className="px-6 sm:px-8 pt-6 pb-4 border-b border-border/10 flex-none">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
