@@ -209,8 +209,11 @@ export const DetailDialog = ({ detailChart, onClose }: DetailDialogProps) => {
           )}
         </div>
 
-        <DialogFooter className="p-4 sm:p-6 border-t bg-muted/30 flex-none sm:justify-end">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+        <DialogFooter className="p-4 sm:p-6 border-t bg-muted/20 flex-none sm:justify-between sm:items-center gap-3">
+          <p className="hidden sm:block text-xs text-muted-foreground">
+            Dados atualizados em tempo real
+          </p>
+          <Button variant="default" onClick={onClose} className="w-full sm:w-auto font-medium">
             Fechar
           </Button>
         </DialogFooter>
