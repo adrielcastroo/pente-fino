@@ -33,20 +33,21 @@ export const computeStats = (
   const totalConferencias = history.length;
   const totalRegistros = history.reduce((acc, h) => acc + h.registros.length, 0);
   
-  // Calculate real average duration
-  const durations = history
+  // Calculate average duration — filter outliers (sessions > 12h are almost
+  // always forgotten/abandoned ones that inflate the mean).
+  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+  const allDurations = history
     .filter(h => h.startedAt && h.finishedAt)
-    .map(h => {
-      const start = new Date(h.startedAt!).getTime();
-      const end = new Date(h.finishedAt!).getTime();
-      return Math.abs(end - start);
-    });
-  
+    .map(h => Math.abs(new Date(h.finishedAt!).getTime() - new Date(h.startedAt!).getTime()));
+  const durations = allDurations.filter(d => d > 0 && d <= TWELVE_HOURS_MS);
+
   const avgMs = durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
   const avgMinsTotal = Math.floor(avgMs / 60000);
   const avgHours = Math.floor(avgMinsTotal / 60);
   const avgMins = avgMinsTotal % 60;
-  const avgDurationStr = avgHours > 0 ? `${avgHours}h ${avgMins}min` : `${avgMins}min`;
+  const avgDurationStr = avgMs === 0
+    ? '—'
+    : avgHours > 0 ? `${avgHours}h ${avgMins}min` : avgMinsTotal < 1 ? '< 1min' : `${avgMins}min`;
 
   // Timeline (last 7 sessions) — include date + conferente for richer cards
   const timeline = history.slice(0, 7).reverse().map(h => {
