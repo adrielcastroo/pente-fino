@@ -73,27 +73,39 @@ export const computeStats = (
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
-  // Setores — carga de trabalho = nº de registros por setor (não conferências)
+  // Setores — mapeia modo_origem real do banco para os 3 setores operacionais.
+  // Tecidos: manual + diversos + etiq_pronta + openrouter (sub-modos da bipagem de Tecido).
+  // Madeira: madeira. Motor/Controle: motor + controle.
+  const TECIDO_MODES = new Set(['manual', 'diversos', 'etiq_pronta', 'openrouter', 'tecido']);
+  const MADEIRA_MODES = new Set(['madeira']);
+  const MOTOR_MODES = new Set(['motor', 'controle']);
   let regTecido = 0, regMadeira = 0, regMotor = 0;
   history.forEach(h => h.registros.forEach(r => {
-    if (r.modoOrigem === 'tecido') regTecido++;
-    else if (r.modoOrigem === 'madeira') regMadeira++;
-    else if (r.modoOrigem === 'motor') regMotor++;
+    const m = String(r.modoOrigem || '').toLowerCase();
+    if (TECIDO_MODES.has(m)) regTecido++;
+    else if (MADEIRA_MODES.has(m)) regMadeira++;
+    else if (MOTOR_MODES.has(m)) regMotor++;
   }));
   const categorias = [
     { name: `Tecidos (${regTecido})`, value: regTecido },
     { name: `Madeira (${regMadeira})`, value: regMadeira },
-    { name: `Motores (${regMotor})`, value: regMotor },
+    { name: `Motor/Controle (${regMotor})`, value: regMotor },
   ];
 
-  // Tipos de Materiais — resolve código → descrição quando disponível
+  // Tipos de Materiais — resolve código → descrição (codigo_interno, codigo_fornecedor
+  // ou codigos_fornecedor[]). Quando não houver match, mostra o código truncado
+  // marcado como "(sem cadastro)" para evidenciar a lacuna de cadastro.
+  const truncate = (s: string, n = 32) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
   const tiposMap = new Map<string, number>();
   history.flatMap(h => h.registros).forEach(r => {
     const codigo = (r.item || '').trim();
+    if (!codigo) {
+      tiposMap.set('Sem item', (tiposMap.get('Sem item') || 0) + 1);
+      return;
+    }
     const descricao = cadastroMap.get(codigo) || cadastroMap.get(codigo.toUpperCase());
-    const display = descricao ? `${descricao}` : (codigo || 'Outros');
-    const current = tiposMap.get(display) || 0;
-    tiposMap.set(display, current + 1);
+    const display = descricao ? truncate(descricao) : `${truncate(codigo, 24)} (sem cadastro)`;
+    tiposMap.set(display, (tiposMap.get(display) || 0) + 1);
   });
 
   const tipos = Array.from(tiposMap.entries())
