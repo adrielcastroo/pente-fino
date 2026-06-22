@@ -1177,6 +1177,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_at_least: {
+        Args: { _min: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
       log_auth_event: {
         Args: {
           p_email?: string
