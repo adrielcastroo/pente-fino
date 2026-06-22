@@ -73,7 +73,7 @@ export default function CommandPalette() {
     setLoading(true);
     try {
       const [matRes, posRes, confRes] = await Promise.all([
-        supabase.from('itens_cadastro').select('id, descricao, codigo').limit(500),
+        supabase.from('itens_cadastro').select('id, descricao, codigo_interno').limit(500),
         supabase
           .from('estoque_posicoes')
           .select('id, estrutura, coluna, nivel, posicao, item')
@@ -81,7 +81,7 @@ export default function CommandPalette() {
           .limit(500),
         supabase
           .from('conferences')
-          .select('id, nf, conferente, created_at')
+          .select('id, processo, conferente, created_at')
           .order('created_at', { ascending: false })
           .limit(200),
       ]);
@@ -145,14 +145,14 @@ export default function CommandPalette() {
               {materiais.slice(0, 50).map((m) => (
                 <CommandItem
                   key={m.id}
-                  value={`${m.codigo ?? ''} ${m.descricao ?? ''}`}
+                  value={`${m.codigo_interno ?? ''} ${m.descricao ?? ''}`}
                   onSelect={() => go(`/cadastros?id=${m.id}`)}
                 >
                   <Package className="mr-2 h-4 w-4 text-muted-foreground" />
                   <div className="flex flex-col min-w-0">
                     <span className="truncate">{m.descricao || '(sem descrição)'}</span>
-                    {m.codigo && (
-                      <span className="text-[10px] text-muted-foreground/70 font-mono">{m.codigo}</span>
+                    {m.codigo_interno && (
+                      <span className="text-[10px] text-muted-foreground/70 font-mono">{m.codigo_interno}</span>
                     )}
                   </div>
                 </CommandItem>
@@ -189,13 +189,13 @@ export default function CommandPalette() {
               {conferencias.slice(0, 50).map((c) => (
                 <CommandItem
                   key={c.id}
-                  value={`${c.nf ?? ''} ${c.conferente ?? ''}`}
+                  value={`${c.processo ?? ''} ${c.conferente ?? ''}`}
                   onSelect={() => go(`/historico?conf=${c.id}`)}
                 >
                   <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
                   <div className="flex flex-col min-w-0">
                     <span className="truncate">
-                      NF {c.nf || '—'} {c.conferente ? `· ${c.conferente}` : ''}
+                      NF {c.processo || '—'} {c.conferente ? `· ${c.conferente}` : ''}
                     </span>
                     <span className="text-[10px] text-muted-foreground/70">
                       {new Date(c.created_at).toLocaleString('pt-BR')}
