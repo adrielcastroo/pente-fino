@@ -569,8 +569,9 @@ export default function EstoquePage() {
                         : { bg: 'bg-rose-500/10', border: 'border-rose-500/30', bar: 'bg-rose-500/40' };
                   
                   return (
+                    <HoverCard key={col} openDelay={250} closeDelay={80}>
+                      <HoverCardTrigger asChild>
                     <motion.div 
-                      key={col} 
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
@@ -615,6 +616,34 @@ export default function EstoquePage() {
                         </div>
                       </div>
                     </motion.div>
+                      </HoverCardTrigger>
+                      {hasItems && (
+                        <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-white/10 bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl">
+                          <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{selectedEstrutura}.{col}.N{String(nivel).padStart(2,'0')}</div>
+                            <div className="text-[10px] font-black text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
+                          </div>
+                          <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+                            {items.slice(0, 6).sort((a,b) => a.posicao - b.posicao).map((it) => {
+                              const statusColor = it.status === 'bloqueado' ? 'bg-red-500' : it.status === 'reservado' ? 'bg-amber-500' : 'bg-emerald-500';
+                              return (
+                                <div key={it.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
+                                  <div className="text-[10px] font-black text-muted-foreground/70 shrink-0 w-7">P{String(it.posicao).padStart(2,'0')}</div>
+                                  <div className="text-xs font-bold text-foreground truncate flex-1">{it.item || '—'}</div>
+                                </div>
+                              );
+                            })}
+                            {items.length > 6 && (
+                              <div className="text-[10px] font-black text-muted-foreground/60 text-center py-1">+ {items.length - 6} itens</div>
+                            )}
+                          </div>
+                          <div className="px-4 py-2 border-t border-white/5 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 text-center">
+                            Clique para abrir
+                          </div>
+                        </HoverCardContent>
+                      )}
+                    </HoverCard>
                   );
                 })}
               </motion.div>
