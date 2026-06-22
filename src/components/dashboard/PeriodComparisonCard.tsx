@@ -95,101 +95,93 @@ export function PeriodComparisonCard({ history }: Props) {
   }, [history, days]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card className="border-border/40 bg-card/60 backdrop-blur-md">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
-              <CalendarRange className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-base sm:text-lg font-black tracking-tight">
-                Comparação período a período
-              </CardTitle>
-              <p className="text-[10px] sm:text-xs font-bold text-foreground/50 uppercase tracking-widest mt-1">
-                {currentRange} <span className="text-foreground/30">vs</span> {previousRange}
-              </p>
-            </div>
+    <Card className="border-border/40 bg-card/50 shadow-none">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+            <CalendarRange className="w-4 h-4" strokeWidth={1.75} />
           </div>
+          <div>
+            <CardTitle className="text-sm font-medium tracking-tight">
+              Comparação período a período
+            </CardTitle>
+            <p className="text-xs text-muted-foreground tabular-nums mt-0.5">
+              {currentRange} <span className="text-muted-foreground/60">vs</span> {previousRange}
+            </p>
+          </div>
+        </div>
 
-          <div role="tablist" aria-label="Selecionar período" className="flex gap-1 p-1 rounded-xl bg-muted/50 border border-border/30 self-start sm:self-auto">
-            {([7, 30, 90] as PeriodDays[]).map(d => (
-              <Button
-                key={d}
-                role="tab"
-                aria-selected={days === d}
-                variant={days === d ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setDays(d)}
-                className={cn(
-                  'h-8 px-3 text-xs font-bold rounded-lg',
-                  days === d ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                )}
+        <div role="tablist" aria-label="Selecionar período" className="flex gap-0.5 p-0.5 rounded-md bg-muted/40 border border-border/30 self-start sm:self-auto">
+          {([7, 30, 90] as PeriodDays[]).map(d => (
+            <Button
+              key={d}
+              role="tab"
+              aria-selected={days === d}
+              variant={days === d ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setDays(d)}
+              className={cn(
+                'h-7 px-2.5 text-xs font-medium rounded',
+                days === d ? '' : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {d}d
+            </Button>
+          ))}
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          {METRICS.map(m => {
+            const curr = current[m.key];
+            const prev = previous[m.key];
+            const { pct, trend } = formatDelta(curr, prev);
+            const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
+
+            const isPositive = m.isDuration ? trend === 'down' : trend === 'up';
+            const isNegative = m.isDuration ? trend === 'up' : trend === 'down';
+            const trendColor =
+              trend === 'flat'
+                ? 'bg-muted text-muted-foreground'
+                : isPositive
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : isNegative
+                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                : 'bg-muted text-muted-foreground';
+
+            const Icon = m.icon;
+            const display = m.isDuration ? fmtDuration(curr) : curr.toLocaleString('pt-BR');
+            const prevDisplay = m.isDuration ? fmtDuration(prev) : prev.toLocaleString('pt-BR');
+
+            return (
+              <div
+                key={m.key}
+                className="rounded-md border border-border/30 bg-background/40 p-3 hover:border-border/60 transition-colors"
               >
-                {d}d
-              </Button>
-            ))}
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {METRICS.map(m => {
-              const curr = current[m.key];
-              const prev = previous[m.key];
-              const { pct, trend } = formatDelta(curr, prev);
-              const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-
-              // For duration, "down" is good (faster); for others, "up" is good
-              const isPositive = m.isDuration ? trend === 'down' : trend === 'up';
-              const isNegative = m.isDuration ? trend === 'up' : trend === 'down';
-              const trendColor =
-                trend === 'flat'
-                  ? 'bg-muted text-muted-foreground'
-                  : isPositive
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : isNegative
-                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                  : 'bg-muted text-muted-foreground';
-
-              const Icon = m.icon;
-              const display = m.isDuration ? fmtDuration(curr) : curr.toLocaleString('pt-BR');
-              const prevDisplay = m.isDuration ? fmtDuration(prev) : prev.toLocaleString('pt-BR');
-
-              return (
-                <div
-                  key={m.key}
-                  className="rounded-xl border border-border/40 bg-background/40 p-3 sm:p-4 hover:border-primary/30 hover:bg-background/60 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      <Icon className="w-3.5 h-3.5" />
-                      <span className="truncate">{m.label}</span>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className={cn('gap-1 font-bold text-[10px] px-1.5 py-0 h-5 border-none', trendColor)}
-                    >
-                      <TrendIcon className="w-3 h-3" />
-                      {trend === 'flat' ? '—' : `${pct}%`}
-                    </Badge>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+                    <span className="truncate">{m.label}</span>
                   </div>
-                  <p className="text-xl sm:text-2xl font-black text-foreground tracking-tight">{display}</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-semibold">
-                    Anterior: <span className="text-foreground/70">{prevDisplay}</span>
-                  </p>
+                  <Badge
+                    variant="secondary"
+                    className={cn('gap-0.5 font-medium text-[10px] px-1.5 py-0 h-4 border-none rounded', trendColor)}
+                  >
+                    <TrendIcon className="w-3 h-3" strokeWidth={2} />
+                    {trend === 'flat' ? '—' : `${pct}%`}
+                  </Badge>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+                <p className="text-xl font-semibold text-foreground tracking-tight tabular-nums">{display}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Anterior: <span className="text-foreground/70 tabular-nums">{prevDisplay}</span>
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
