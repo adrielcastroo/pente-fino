@@ -11,8 +11,10 @@ import { filterReservas, ReservaFormData } from '@/components/estoque/reservas-u
 import { useReservas } from '@/hooks/useReservas';
 import { Reserva } from '@/types';
 import { diffFields } from '@/lib/audit';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const ReservasPage = () => {
+  useDocumentTitle('Reservas');
   const { reservas, addReserva, deleteReserva, clearReservas } = useReservas();
   const [searchTerm, setSearchTerm] = useState('');
   const [editing, setEditing] = useState<Reserva | null>(null);

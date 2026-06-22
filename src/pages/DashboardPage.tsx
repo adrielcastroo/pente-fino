@@ -16,6 +16,7 @@ import { cn, formatQty } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
 import { motion } from 'framer-motion';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -33,6 +34,7 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 }
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard');
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const { theme: systemTheme } = useTheme();
   const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
