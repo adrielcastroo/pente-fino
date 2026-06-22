@@ -356,50 +356,39 @@ export default function EstoquePage() {
       className="max-w-full mx-auto space-y-4 sm:space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden"
     >
       {/* Header */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
-        <div className="flex items-center gap-3 sm:gap-5 w-full">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/dashboard')} 
-            className="rounded-2xl hover:bg-primary/10 hover:scale-110 active:scale-95 transition-all duration-300 w-12 h-12 shadow-sm"
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 w-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/dashboard')}
+            className="rounded-md hover:bg-muted/50 transition-colors w-9 h-9"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
           </Button>
-          <div>
-            <h1 className="text-2xl xs:text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
-              Gestão de Estoque
-            </h1>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="h-1 w-8 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
-              <p className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.3em] opacity-70">
-                Monitoramento de Posições e Ocupação
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
+              <Warehouse className="w-5 h-5" strokeWidth={1.75} />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+                Gestão de estoque
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Monitoramento de posições e ocupação
               </p>
             </div>
           </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <motion.div 
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="hidden sm:flex items-center gap-3 p-3 px-5 bg-card/40 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl shadow-black/5"
-          >
-              <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-primary/10">
-                  <Warehouse className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Estoque Central</span>
-                <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Localização G4</span>
-              </div>
-          </motion.div>
 
-          <Button 
-            onClick={() => setImportOpen(true)} 
-            variant="outline" 
-            className="h-14 px-8 rounded-2xl border-white/10 bg-card/40 backdrop-blur-xl font-black uppercase tracking-widest text-[10px] gap-3 shadow-xl hover:bg-primary hover:text-white transition-all duration-300 hover:scale-105 active:scale-95"
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setImportOpen(true)}
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2"
           >
-            <Upload className="w-5 h-5" />
+            <Upload className="w-4 h-4" strokeWidth={1.75} />
             Importar
           </Button>
         </div>
