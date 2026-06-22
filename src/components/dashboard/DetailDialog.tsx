@@ -50,7 +50,7 @@ export const DetailDialog = ({ detailChart, onClose }: DetailDialogProps) => {
 
   return (
     <Dialog open={!!detailChart} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-5xl h-[90dvh] sm:h-[85dvh] p-0 overflow-hidden flex flex-col gap-0">
+      <DialogContent className="w-[95vw] max-w-5xl md:max-w-3xl lg:max-w-5xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] p-0 overflow-hidden flex flex-col gap-0">
         <DialogHeader className="p-4 sm:p-6 border-b bg-gradient-to-br from-muted/40 via-muted/20 to-transparent space-y-0 flex-none">
           <div className="flex items-start gap-3 sm:gap-4">
             <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary border border-primary/20 flex-none shadow-sm">
