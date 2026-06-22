@@ -449,14 +449,28 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-1 sm:px-0 pb-24">
-      <header className="flex flex-col gap-2 border-b border-border/10 pb-4 sm:pb-6">
-        <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-bold">
-          <span>Configurações</span>
-          <ChevronRight className="w-3 h-3 opacity-50" />
-          <span className="text-foreground">{activeMeta?.name ?? '—'}</span>
-        </nav>
+    <div className="flex flex-col h-full space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 pb-24">
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center gap-3 sm:gap-4"
+        >
+          <div className="p-2 rounded-md bg-primary/10 border border-primary/20">
+            <Settings className="w-5 h-5 text-primary" strokeWidth={1.75} />
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+              Configurações
+            </h1>
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-medium mt-1">
+              <span>Configurações</span>
+              <ChevronRight className="w-3 h-3 opacity-50" />
+              <span className="text-foreground/80">{activeMeta?.name ?? '—'}</span>
+            </nav>
+          </div>
+        </motion.div>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
