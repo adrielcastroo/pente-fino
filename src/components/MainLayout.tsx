@@ -53,8 +53,14 @@ export default function MainLayout() {
   const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
   const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
 
+  const handleOpenChange = (open: boolean) => {
+    try {
+      localStorage.setItem('pref_sidebar_collapsed', open ? 'false' : 'true');
+    } catch { /* ignore */ }
+  };
+
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
+    <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
         {/* Sidebar: desktop sempre, tablet/celular apenas em landscape (colapsada como rail) */}
         <div className="hidden lg:contents md:landscape:contents">
