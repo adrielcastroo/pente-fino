@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Maximize2, Minimize2 } from 'lucide-react';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Maximize2, Minimize2, FileDown, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -89,6 +89,44 @@ export default function DashboardPage() {
       document.body.classList.remove('presentation-mode');
     };
   }, [presentationMode]);
+
+  // Real-time: auto-refresh a cada 30s (pausa em background)
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => {
+      if (!document.hidden) loadHistory();
+    }, 30000);
+    return () => clearInterval(id);
+  }, [autoRefresh, loadHistory]);
+
+  // Pop-out: abre o dashboard em janela separada (multi-monitor)
+  const handlePopOut = () => {
+    window.open('/dashboard', 'pente-fino-dashboard', 'width=1400,height=900,noopener');
+  };
+
+  // Export PDF do dashboard via html2canvas + jspdf
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const node = document.getElementById('dashboard-content');
+      if (!node) return;
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(node, { scale: 2, backgroundColor: null, logging: false });
+      const img = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+      pdf.addImage(img, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`dashboard_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e) {
+      console.error('Erro ao exportar PDF', e);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
   const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
   const compareConference = useMemo(
     () => history.find(c => c.id === compareConferenceId) ?? null,
@@ -243,6 +281,37 @@ export default function DashboardPage() {
               </div>
             </div>
             
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setAutoRefresh(v => !v)}
+              className="hidden lg:inline-flex h-14 w-14 rounded-2xl"
+              title={autoRefresh ? 'Pausar atualização automática (30s)' : 'Ativar atualização automática (30s)'}
+            >
+              <RefreshCw className={cn('w-5 h-5', autoRefresh && 'text-primary animate-spin-slow')} />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              className="hidden lg:inline-flex h-14 w-14 rounded-2xl"
+              title="Exportar dashboard como PDF"
+            >
+              {isExportingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePopOut}
+              className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
+              title="Abrir em janela separada (multi-monitor)"
+            >
+              <ExternalLink className="w-5 h-5" />
+            </Button>
+
             <Button
               variant="outline"
               size="icon"

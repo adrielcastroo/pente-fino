@@ -6,6 +6,7 @@ import { usePresenceTracker } from '@/hooks/use-presence';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
@@ -69,6 +70,7 @@ export default function MainLayout() {
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
+          <Breadcrumbs />
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 lg:pb-0 md:landscape:pb-0">
             <div className="min-h-full w-full max-w-full mx-auto">
