@@ -77,7 +77,7 @@ export default function MainLayout() {
           <TopBar />
           <Breadcrumbs />
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 xl:pb-0">
+          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 min-[1366px]:pb-0">
 
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
