@@ -729,9 +729,9 @@ export const LeftPanel = memo(function LeftPanel() {
   };
 
   const processOpenRouter = async () => {
-    if (!fotoB64) { toast.warning('Adicione uma foto primeiro.'); return; }
+    if (!fotoB64) { bipError(); toast.warning('Adicione uma foto primeiro.'); return; }
     const key = localStorage.getItem('cft4_or_key') || '';
-    if (!key) { toast.warning('Configure a chave OpenRouter em ⚙️ API.'); return; }
+    if (!key) { bipError(); toast.warning('Configure a chave OpenRouter em ⚙️ API.'); return; }
     const model = localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku';
     setAiLoading(true); setProgress(30); setAiStatus(null);
     try {
