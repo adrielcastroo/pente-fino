@@ -438,7 +438,7 @@ export default function DashboardPage() {
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
               <thead className={cn("sticky top-0 z-20", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
                   <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Nome</th>
@@ -457,7 +457,7 @@ export default function DashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
           <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
             <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-6 h-10 hover:bg-[#2563EB] hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>Fechar</Button>
@@ -488,7 +488,7 @@ export default function DashboardPage() {
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
               <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
                    <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Processo</th>
@@ -513,7 +513,7 @@ export default function DashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
           <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
             <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-8 h-12 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] transition-all active:scale-[0.97]", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>
@@ -547,7 +547,7 @@ export default function DashboardPage() {
             </div>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
               <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
                   <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Item / NF</th>
@@ -587,7 +587,7 @@ export default function DashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
           <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
             <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-8 h-12 hover:bg-[#2563EB] hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>
