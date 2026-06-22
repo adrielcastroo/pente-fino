@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import RightPanel from '@/components/RightPanel';
 import { Button } from '@/components/ui/button';
 import { List, ClipboardList } from 'lucide-react';
@@ -11,46 +11,52 @@ interface FormPageLayoutProps {
 
 export default function FormPageLayout({ children, showRightPanel = true }: FormPageLayoutProps) {
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  // Tablet (<1024px) trata o RightPanel como oculto (hidden lg:block),
+  // então usamos o mesmo padrão fullscreen-com-toggle do mobile para
+  // evitar o bug de flex-basis virar altura em flex-col.
+  const isNarrow = isMobile || isTablet;
   const [showTableMobile, setShowTableMobile] = useState(false);
 
   if (showRightPanel) {
-    if (!isMobile) {
+    if (!isNarrow) {
       return (
-        <div className="flex flex-col lg:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-hidden">
+        <div className="flex flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-hidden">
           <div
-            className="w-full shrink-0 h-full min-w-0 overflow-hidden"
+            className="shrink-0 h-full min-w-0 overflow-hidden"
             style={{ flexBasis: 'clamp(380px, 30vw, 520px)' }}
           >
             {children}
           </div>
-          <div className="flex-1 min-w-0 h-full hidden lg:block animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
+          <div className="flex-1 min-w-0 h-full animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
             <RightPanel />
           </div>
         </div>
       );
     }
 
-    // Mobile specific layout with toggle
+    // Mobile/tablet layout with floating toggle between form and table
     return (
       <div className="h-full w-full max-w-full min-w-0 flex flex-col relative animate-in fade-in duration-300">
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="flex-1 min-h-0 overflow-y-auto pb-20">
           {showTableMobile ? (
             <div className="animate-in slide-in-from-right-4 duration-300 h-full">
               <RightPanel />
             </div>
           ) : (
-            <div className="animate-in slide-in-from-left-4 duration-300">
+            <div className="animate-in slide-in-from-left-4 duration-300 h-full">
               {children}
             </div>
           )}
         </div>
 
-        {/* Floating Mobile Toggle Button */}
+        {/* Floating Mobile/Tablet Toggle Button */}
         <div className="fixed bottom-6 right-6 z-50 lg:hidden">
           <Button
             size="lg"
             onClick={() => setShowTableMobile(!showTableMobile)}
             className="rounded-full h-14 w-14 shadow-2xl shadow-primary/40 border-2 border-white/20 active:scale-90 transition-transform bg-primary text-primary-foreground"
+            aria-label={showTableMobile ? 'Voltar ao formulário' : 'Ver itens bipados'}
           >
             {showTableMobile ? <ClipboardList className="w-6 h-6" /> : <List className="w-6 h-6" />}
           </Button>
