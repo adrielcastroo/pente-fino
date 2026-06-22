@@ -452,7 +452,7 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-    <div className="flex flex-col h-full space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 pb-24">
+    <div className="flex flex-col h-full space-y-4 sm:space-y-6 animate-in fade-in duration-500 w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pb-24">
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
