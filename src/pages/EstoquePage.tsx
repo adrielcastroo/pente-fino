@@ -158,6 +158,17 @@ export default function EstoquePage() {
     return map;
   }, [posicoes]);
 
+  const matchingCells = useMemo(() => {
+    const q = locateQuery.trim().toLowerCase();
+    if (!q) return null;
+    const set = new Set<string>();
+    for (const p of posicoes) {
+      const hay = `${p.item ?? ''} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
+      if (hay.includes(q)) set.add(`${p.coluna}-${p.nivel}`);
+    }
+    return set;
+  }, [locateQuery, posicoes]);
+
 
   const handleStatusChange = useCallback(async (pos: Posicao, newStatus: string) => {
     if (newStatus === 'saida') {
