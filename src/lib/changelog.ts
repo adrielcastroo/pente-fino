@@ -1,0 +1,52 @@
+export interface ChangelogEntry {
+  version: string;
+  date: string; // YYYY-MM-DD
+  highlights: { type: 'feature' | 'fix' | 'improvement'; text: string }[];
+}
+
+// Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
+export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.6.0',
+    date: '2026-06-22',
+    highlights: [
+      { type: 'feature', text: 'Changelog in-app acessível pelo ícone 🔔 no topo.' },
+      { type: 'feature', text: 'Comparação período a período (7d/30d/90d) no Dashboard.' },
+      { type: 'feature', text: 'Glossário de abreviações com busca em tempo real.' },
+      { type: 'improvement', text: 'Acessibilidade: aria-labels e respeito a prefers-reduced-motion.' },
+    ],
+  },
+  {
+    version: '2.5.0',
+    date: '2026-06-21',
+    highlights: [
+      { type: 'feature', text: 'Multi-seleção e ações em lote em Cadastros.' },
+      { type: 'feature', text: 'Paginação real (Anterior/Próximo) substituindo "Carregar mais".' },
+      { type: 'feature', text: 'Página "Minha Atividade" com KPIs diários e timeline.' },
+      { type: 'feature', text: 'Deep linking para itens via /cadastros?id=UUID.' },
+    ],
+  },
+  {
+    version: '2.4.0',
+    date: '2026-06-20',
+    highlights: [
+      { type: 'feature', text: 'Command Palette (Ctrl+K) para navegação rápida.' },
+      { type: 'improvement', text: 'Confirmação destrutiva ao deletar registros com referência a Ctrl+Z.' },
+      { type: 'fix', text: 'Badge "Exportar 0" não aparece mais quando não há registros.' },
+      { type: 'fix', text: 'Durações curtas exibem "< 1min" em vez de "0min".' },
+    ],
+  },
+  {
+    version: '2.3.0',
+    date: '2026-06-18',
+    highlights: [
+      { type: 'fix', text: 'Dashboard: ocupação de tecidos calculada corretamente.' },
+      { type: 'improvement', text: 'Normalização automática de texto (TRIM/INITCAP/UPPER) em todas as inserções.' },
+      { type: 'feature', text: 'Error Boundary global com botão "Tentar novamente".' },
+      { type: 'feature', text: 'Monitor de conexão com toast on/offline.' },
+    ],
+  },
+];
+
+export const LATEST_VERSION = CHANGELOG[0]?.version ?? '0.0.0';
+export const CHANGELOG_STORAGE_KEY = 'pente-fino:last-seen-changelog';
