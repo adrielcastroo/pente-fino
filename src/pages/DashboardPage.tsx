@@ -353,6 +353,9 @@ export default function DashboardPage() {
       {/* Alertas Operacionais */}
       <AlertsCard stats={stats} />
 
+      {/* Comparação período a período */}
+      <PeriodComparisonCard history={history} />
+
       {/* Stat Cards - Consolidated and Optimized */}
       <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
 
