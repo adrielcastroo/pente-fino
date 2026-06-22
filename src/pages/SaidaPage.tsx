@@ -33,10 +33,14 @@ interface SaidaRegistro {
   observacoes?: string;
 }
 
+type Periodo = 'todos' | '7' | '30' | '90';
+
 export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [periodo, setPeriodo] = useState<Periodo>('30');
+  const [pageSize, setPageSize] = useState(20);
   const { isLow } = usePerformance();
 
   // Barcode scanning state
@@ -179,16 +183,25 @@ export default function SaidaPage() {
 
   const filteredSaidas = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return saidas;
-    return saidas.filter(s => 
-      s.item.toLowerCase().includes(q) ||
-      (s.proc || '').toLowerCase().includes(q) ||
-      (s.lote || '').toLowerCase().includes(q) ||
-      (s.lote_sistema || '').toLowerCase().includes(q) ||
-      (s.conferente_saida || '').toLowerCase().includes(q) ||
-      (s.conferente_entrada || '').toLowerCase().includes(q)
-    );
-  }, [saidas, search]);
+    const now = Date.now();
+    const cutoff = periodo === 'todos' ? 0 : now - Number(periodo) * 24 * 60 * 60 * 1000;
+    return saidas.filter(s => {
+      if (cutoff && new Date(s.data_saida).getTime() < cutoff) return false;
+      if (!q) return true;
+      return (
+        s.item.toLowerCase().includes(q) ||
+        (s.proc || '').toLowerCase().includes(q) ||
+        (s.lote || '').toLowerCase().includes(q) ||
+        (s.lote_sistema || '').toLowerCase().includes(q) ||
+        (s.conferente_saida || '').toLowerCase().includes(q) ||
+        (s.conferente_entrada || '').toLowerCase().includes(q)
+      );
+    });
+  }, [saidas, search, periodo]);
+
+  const visibleSaidas = useMemo(() => filteredSaidas.slice(0, pageSize), [filteredSaidas, pageSize]);
+
+  useEffect(() => { setPageSize(20); }, [search, periodo]);
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
