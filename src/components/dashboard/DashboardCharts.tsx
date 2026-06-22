@@ -87,15 +87,23 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
         </div>
       </CardHeader>
       <CardContent className="px-8 pb-12 pt-10 h-[400px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
-            <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-            <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-            <ChartTooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary) / 0.1)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        {processedData.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center gap-2 text-foreground/50">
+            <Activity className="w-10 h-10 opacity-30" />
+            <p className="text-sm font-bold">Nenhuma conferência no período</p>
+            <p className="text-xs text-foreground/40">Os dados aparecerão aqui após as primeiras bipagens</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
+              <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} interval="preserveStartEnd" />
+              <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} allowDecimals={false} />
+              <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
+              <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary) / 0.1)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
