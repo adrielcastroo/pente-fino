@@ -48,7 +48,12 @@ export default function BottomTabBar() {
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Icon className={cn('w-6 h-6', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')} strokeWidth={active ? 2.5 : 2} />
+              <Icon
+                className={cn('w-6 h-6', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')}
+                strokeWidth={active ? 2.4 : 1.75}
+                fill={active ? 'currentColor' : 'none'}
+                fillOpacity={active ? 0.18 : 0}
+              />
               <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
             </NavLink>
           );
@@ -80,7 +85,12 @@ export default function BottomTabBar() {
                       active && 'ring-2 ring-primary bg-primary/5'
                     )}
                   >
-                    <Icon className="w-6 h-6 text-foreground/80" />
+                    <Icon
+                      className="w-6 h-6 text-foreground/80"
+                      strokeWidth={active ? 2.4 : 1.75}
+                      fill={active ? 'currentColor' : 'none'}
+                      fillOpacity={active ? 0.18 : 0}
+                    />
                     <span className="text-[11px] font-black uppercase tracking-wider text-foreground/80 text-center leading-tight">{label}</span>
                   </button>
                 );
