@@ -114,7 +114,7 @@ export default function InventorySettingsPanel() {
           <History className="w-5 h-5" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-sm font-semibold uppercase tracking-tight">Como funciona o cálculo?</h4>
+          <h4 className="text-sm font-semibold">Como funciona o cálculo?</h4>
           <p className="text-xs font-medium text-muted-foreground leading-relaxed">
             O sistema sugere itens para contagem quando o tempo decorrido desde a última contagem (ou desde a entrada no estoque) for maior que o intervalo definido para a curva do item.
           </p>

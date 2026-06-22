@@ -208,7 +208,7 @@ export function ReservaFormDialog({ onAdd, mode = 'create', open, onOpenChange, 
           <DialogFooter className="mt-2">
             <Button
               type="submit"
-              className="w-full font-semibold text-sm uppercase tracking-widest h-11"
+              className="w-full font-semibold text-sm h-11"
               disabled={!isFormValid || isSubmitting}
             >
               {isSubmitting ? 'Salvando...' : controlled ? 'Salvar alterações' : 'Confirmar Reserva'}

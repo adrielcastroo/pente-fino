@@ -927,7 +927,7 @@ export default function HistoryPanel() {
           <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl animate-pulse" />
         </div>
         <div className="space-y-2 text-center">
-          <p className="font-semibold text-foreground uppercase tracking-widest text-sm animate-pulse">Sincronizando Histórico</p>
+          <p className="font-semibold text-foreground text-sm animate-pulse">Sincronizando Histórico</p>
           <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider opacity-60">Carregando dados do servidor...</p>
         </div>
       </div>

@@ -218,7 +218,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-foreground/70 font-semibold animate-pulse uppercase tracking-wider text-sm">Carregando dados do dashboard...</p>
+        <p className="text-foreground/70 font-semibold animate-pulse text-sm">Carregando dados do dashboard...</p>
       </div>
     );
   }

@@ -170,7 +170,7 @@ export default function LabelLayoutPanel() {
                     <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Maximize className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold uppercase tracking-wider">Dimensões (mm)</CardTitle>
+                    <CardTitle className="text-sm font-semibold">Dimensões (mm)</CardTitle>
                   </div>
                   <CardDescription className="pl-12">
                     {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
@@ -224,7 +224,7 @@ export default function LabelLayoutPanel() {
                     <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Layout className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold uppercase tracking-wider">Blocos da Etiqueta</CardTitle>
+                    <CardTitle className="text-sm font-semibold">Blocos da Etiqueta</CardTitle>
                   </div>
                   <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
@@ -280,7 +280,7 @@ export default function LabelLayoutPanel() {
                     <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Square className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold uppercase tracking-wider">Aparência</CardTitle>
+                    <CardTitle className="text-sm font-semibold">Aparência</CardTitle>
                   </div>
                   <CardDescription className="pl-12">Bordas, cantos, padding e margem da etiqueta.</CardDescription>
                 </CardHeader>

@@ -497,7 +497,7 @@ export default function EstoquePage() {
               <Warehouse className="w-6 h-6 text-primary animate-pulse" />
             </div>
           </div>
-          <span className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
+          <span className="text-sm font-semibold tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
         </div>
       ) : (
         <motion.div 
@@ -718,7 +718,7 @@ export default function EstoquePage() {
                                    <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
                                 </div>
                               </div>
-                              <h3 className="font-semibold text-foreground text-lg sm:text-xl tracking-tight uppercase group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
+                              <h3 className="font-semibold text-foreground text-lg sm:text-xl group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
                               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                                 <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
                                 <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
