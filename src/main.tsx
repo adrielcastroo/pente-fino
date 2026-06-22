@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import GlobalErrorBoundary from "./components/GlobalErrorBoundary";
+import { registerAppServiceWorker } from "./pwa/registerSW";
 
 // Check performance early to set a global class if needed
 const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
@@ -19,4 +20,5 @@ if (rootElement) {
       <App />
     </GlobalErrorBoundary>
   );
+  registerAppServiceWorker();
 }
