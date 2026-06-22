@@ -13,12 +13,23 @@ export function formatPeriodLabel(days: number, end: Date = new Date()): string 
   return `Últimos ${days} dias (${fmt(start)} – ${fmt(end)})`;
 }
 
+// Normaliza nome do conferente: trim, colapsa espaços, Title Case sensível a acentos
+const normalizeConferente = (raw: string | null | undefined): string => {
+  const cleaned = (raw || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return 'Anônimo';
+  return cleaned
+    .toLocaleLowerCase('pt-BR')
+    .split(' ')
+    .map(w => w.charAt(0).toLocaleUpperCase('pt-BR') + w.slice(1))
+    .join(' ');
+};
+
 export const computeStats = (
   history: Conference[],
   stats_estoque: any,
   cadastroMap: Map<string, string> = new Map()
 ): AppStats => {
-  const totalConferentes = new Set(history.map(h => h.conferente)).size;
+  const totalConferentes = new Set(history.map(h => normalizeConferente(h.conferente))).size;
   const totalConferencias = history.length;
   const totalRegistros = history.reduce((acc, h) => acc + h.registros.length, 0);
   
@@ -41,7 +52,7 @@ export const computeStats = (
   const timeline = history.slice(0, 7).reverse().map(h => {
     const d = h.date ? new Date(h.date) : null;
     const dStr = d ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` : '';
-    const conf = (h.conferente || '').split(' ')[0] || '—';
+    const conf = normalizeConferente(h.conferente).split(' ')[0] || '—';
     const proc = (h.processo || h.name || '').slice(0, 8);
     return {
       name: `${dStr} ${conf} ${proc}`.trim(),
@@ -49,11 +60,11 @@ export const computeStats = (
     };
   });
 
-  // Top Conferentes (sorted)
+  // Top Conferentes (sorted) — usa nome normalizado para deduplicar
   const conferenteMap = new Map<string, number>();
   history.forEach(h => {
-    const current = conferenteMap.get(h.conferente || 'Anônimo') || 0;
-    conferenteMap.set(h.conferente || 'Anônimo', current + h.registros.length);
+    const key = normalizeConferente(h.conferente);
+    conferenteMap.set(key, (conferenteMap.get(key) || 0) + h.registros.length);
   });
 
   const topConferentes = Array.from(conferenteMap.entries())
@@ -89,9 +100,9 @@ export const computeStats = (
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
-  // Conferente Details
+  // Conferente Details — chaveia pelo nome normalizado
   const conferenteDetails = Array.from(conferenteMap.entries()).map(([name, total]) => {
-    const sessions = history.filter(h => h.conferente === name);
+    const sessions = history.filter(h => normalizeConferente(h.conferente) === name);
     return {
       name,
       total,

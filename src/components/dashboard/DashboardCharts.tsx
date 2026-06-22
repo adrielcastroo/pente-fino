@@ -87,15 +87,23 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
         </div>
       </CardHeader>
       <CardContent className="px-8 pb-12 pt-10 h-[400px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
-            <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-            <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-            <ChartTooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary) / 0.1)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        {processedData.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center gap-2 text-foreground/50">
+            <Activity className="w-10 h-10 opacity-30" />
+            <p className="text-sm font-bold">Nenhuma conferência no período</p>
+            <p className="text-xs text-foreground/40">Os dados aparecerão aqui após as primeiras bipagens</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
+              <XAxis dataKey="name" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} interval="preserveStartEnd" />
+              <YAxis fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} allowDecimals={false} />
+              <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
+              <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={3} fill="hsl(var(--primary) / 0.1)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
@@ -125,23 +133,31 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
         </Button>
       </CardHeader>
       <CardContent className="px-8 pb-8 h-[260px]">
-        <ResponsiveContainer width="100%" height="100%">
-          {type === 'bar' ? (
-            <BarChart data={data}>
-              <XAxis dataKey="name" fontSize={9} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-              <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              <ChartTooltip content={<CustomTooltip />} />
-            </BarChart>
-          ) : (
-            <PieChart>
-              <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
-                {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-              </Pie>
-              <ChartTooltip content={<CustomTooltip />} />
-              <Legend />
-            </PieChart>
-          )}
-        </ResponsiveContainer>
+        {(!data || data.length === 0) ? (
+          <div className="h-full flex flex-col items-center justify-center gap-2 text-foreground/50">
+            <Icon className="w-8 h-8 opacity-30" />
+            <p className="text-sm font-bold">Sem dados ainda</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            {type === 'bar' ? (
+              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <XAxis type="number" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} allowDecimals={false} />
+                <YAxis type="category" dataKey="name" fontSize={11} tick={{ fill: 'hsl(var(--foreground) / 0.7)', fontWeight: 800 }} width={90} />
+                <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} label={{ position: 'right', fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 800 }} />
+                <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
+              </BarChart>
+            ) : (
+              <PieChart>
+                <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
+                  {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <ChartTooltip content={<CustomTooltip />} />
+                <Legend />
+              </PieChart>
+            )}
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
@@ -149,12 +165,16 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 
 export const OccupationChart = React.memo(({ title, used, total, reserved = 0, blocked = 0, unit = 'alocações', id }: any) => {
   const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
-  const data = [
+  const isEmpty = total === 0 || (used === 0 && reserved === 0 && blocked === 0);
+  // Cores semafóricas via tokens semânticos
+  const rawData = [
     { name: 'Ocupado', value: used, color: 'hsl(var(--primary))' },
-    { name: 'Reservado', value: reserved, color: '#D97706' },
-    { name: 'Bloqueado', value: blocked, color: '#DC2626' },
+    { name: 'Reservado', value: reserved, color: 'hsl(38 92% 50%)' },   // amber
+    { name: 'Bloqueado', value: blocked, color: 'hsl(var(--destructive))' },
     { name: 'Livre', value: Math.max(0, total - used - reserved - blocked), color: 'hsl(var(--muted) / 0.3)' }
   ];
+  // Oculta segmentos sempre-zero (mantém Ocupado e Livre)
+  const data = rawData.filter(d => d.name === 'Ocupado' || d.name === 'Livre' || d.value > 0);
 
   return (
     <Card id={id} className="border border-border/10 bg-card/20 backdrop-blur-md overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/20 hover:shadow-xl">
@@ -170,21 +190,34 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
         <div className="relative w-[240px] h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450}>
+              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450} isAnimationActive>
                 {data.map((entry, index) => <Cell key={index} fill={entry.color} />)}
               </Pie>
+              <ChartTooltip content={<CustomTooltip suffix={` ${unit}`} />} />
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-4xl font-black text-foreground">{percentage}%</span>
-            <span className="text-[10px] font-black uppercase text-foreground/50">Ocupado</span>
+            {isEmpty ? (
+              <>
+                <span className="text-2xl font-black text-foreground/40">Sem uso</span>
+                <span className="text-[10px] font-black uppercase text-foreground/30 mt-1">setor inativo</span>
+              </>
+            ) : (
+              <>
+                <span className="text-4xl font-black text-foreground">{percentage}%</span>
+                <span className="text-[10px] font-black uppercase text-foreground/50">Ocupado</span>
+              </>
+            )}
           </div>
         </div>
         <div className="w-full space-y-4">
            {data.map((d, i) => (
              <div key={i} className="flex items-center justify-between text-xs font-bold uppercase tracking-widest">
-               <span className="text-muted-foreground">{d.name}</span>
-               <span className="text-foreground">{d.value} {unit}</span>
+               <span className="flex items-center gap-2 text-muted-foreground">
+                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                 {d.name}
+               </span>
+               <span className="text-foreground tabular-nums">{d.value} {unit}</span>
              </div>
            ))}
         </div>
