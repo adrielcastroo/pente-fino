@@ -57,8 +57,8 @@ const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users };
 export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick: (id: string) => void }) => {
   const cards = useMemo(() => [
     { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, subtitle: 'Acumulado', icon: 'Users', delay: 1 },
-    { id: 'conferences', label: 'Sessões de Conferência', value: stats.totalConferencias, subtitle: 'Total no histórico', icon: 'BarChart3', delay: 2 },
-    { id: 'registros', label: 'Registros', value: stats.totalRegistros, subtitle: 'Total no histórico', icon: 'Layers3', delay: 3 },
+    { id: 'conferences', label: 'Sessões de Conferência', value: stats.totalConferencias, subtitle: 'Acumulado geral', icon: 'BarChart3', delay: 2 },
+    { id: 'registros', label: 'Registros', value: stats.totalRegistros, subtitle: 'Acumulado geral', icon: 'Layers3', delay: 3 },
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (

@@ -263,7 +263,7 @@ export default function DashboardPage() {
                 Dashboard
               </h1>
               <p className="text-[9px] sm:text-xs font-black text-foreground/60 uppercase tracking-[0.2em] mt-1 sm:mt-2">
-                Monitoramento Logístico & Operacional
+                
               </p>
             </div>
           </motion.div>
@@ -420,7 +420,7 @@ export default function DashboardPage() {
           <SummaryChart 
             id="chart-conferentes"
             title={stats.topConferentes.length > 0 ? `Top ${stats.topConferentes.length} Conferentes` : 'Conferentes'}
-            desc="Maiores volumes de registros" 
+            desc="Por volume de registros" 
             data={stats.topConferentes} 
             type="bar" 
             icon={Users} 
@@ -456,7 +456,7 @@ export default function DashboardPage() {
                   className="text-[9px] font-black uppercase tracking-wider text-foreground/60 hover:text-primary h-7 px-2"
                   title={showEmptyOutputs ? 'Ocultar saídas vazias' : 'Mostrar saídas vazias'}
                 >
-                  {showEmptyOutputs ? 'Ocultar vazias' : 'Mostrar vazias'}
+                  {showEmptyOutputs ? 'Ocultar conferências sem itens' : 'Incluir conferências sem itens'}
                 </Button>
               </div>
             </CardHeader>
@@ -552,7 +552,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-2 sm:space-y-3">
             <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground">Relatório Executivo</h3>
-            <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed max-w-[240px] mx-auto font-bold">Compilado profissional de todas as métricas em formato Excel.</p>
+            <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed max-w-[240px] mx-auto font-bold">Relatório consolidado em Excel.</p>
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
             <Button 

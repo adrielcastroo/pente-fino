@@ -649,7 +649,7 @@ export default function RightPanel() {
               <div className="h-24 w-24 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 transition-transform hover:rotate-0 duration-500">
                 <Package className="w-12 h-12 text-primary/30" />
               </div>
-              <h3 className="text-xl font-black tracking-tight text-foreground mb-2">Sua conferência está vazia</h3>
+              <h3 className="text-xl font-black tracking-tight text-foreground mb-2">Nenhum item registrado</h3>
               <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed font-medium">
                 Os materiais bipados ou registrados manualmente aparecerão nesta lista detalhada para conferência.
               </p>
@@ -658,7 +658,7 @@ export default function RightPanel() {
                 className="mt-8 rounded-2xl px-10 h-12 font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 text-primary transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/5"
                 onClick={() => useAppStore.getState().setFormData({ activeTab: 'tecido' })}
               >
-                Começar agora
+                Iniciar bipagem
               </Button>
             </div>
           )}

@@ -188,7 +188,7 @@ export default function MinhaAtividadePage() {
           {!loading && timeline.length === 0 && (
             <p className="text-sm text-muted-foreground py-8 text-center">
               Nenhuma atividade registrada hoje.
-              <Link to="/tecido" className="text-primary hover:underline ml-1 font-bold">Começar agora →</Link>
+              <Link to="/tecido" className="text-primary hover:underline ml-1 font-bold">Iniciar bipagem →</Link>
             </p>
           )}
           {!loading && timeline.length > 0 && (

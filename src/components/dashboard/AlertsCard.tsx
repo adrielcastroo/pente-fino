@@ -72,8 +72,8 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
           <CheckCircle2 className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-black text-foreground tracking-tight">Tudo sob controle</span>
-          <span className="text-[11px] font-bold text-foreground/50 uppercase tracking-wider">Nenhum alerta operacional ativo</span>
+          <span className="text-sm font-black text-foreground tracking-tight">Nenhum alerta ativo</span>
+          <span className="text-[11px] font-bold text-foreground/50 uppercase tracking-wider">0 alertas</span>
         </div>
       </motion.div>
     );
