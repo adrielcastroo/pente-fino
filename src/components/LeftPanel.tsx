@@ -820,14 +820,14 @@ export const LeftPanel = memo(function LeftPanel() {
       return;
     }
 
-    if (isAI && aiLarguraNum <= 0) { toast.warning('Preencha a Largura.'); return; }
-    if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
-    if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
-    if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { toast.warning('Preencha o campo Lote Final.'); return; }
+    if (isAI && aiLarguraNum <= 0) { warn('Preencha a Largura.'); return; }
+    if (usesM2Input && m2Num > 0 && largura <= 0) { warn('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
+    if (isCortina && largura <= 0) { warn('Preencha a Largura do tecido.'); return; }
+    if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { warn('Preencha o campo Lote Final.'); return; }
     
-    if (mLinear <= 0 && !isEtiqPronta) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
-    if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
-    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
+    if (mLinear <= 0 && !isEtiqPronta) { warn(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
+    if (requiresEndereco && !endereco) { warn('Preencha o Endereço.'); return; }
+    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { warn('Endereço inválido. Use: TEC01.A.N03'); return; }
 
     const resolvedEndereco = isEtiqPronta ? endereco : requiresEndereco ? endereco : '';
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
