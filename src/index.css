@@ -292,6 +292,26 @@
   .bg-card.shadow-lg {
     box-shadow: none !important;
   }
+
+  /* Phase F — Global focus-visible polish for interactive elements
+     that may have lost their ring via custom className overrides. */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="menuitem"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  /* Uniform hover affordance for cards used as clickable targets */
+  .card-interactive {
+    @apply transition-colors cursor-pointer;
+  }
+  .card-interactive:hover {
+    @apply border-primary/40 bg-card/80;
+  }
 }
 
 /* App Background Pattern - Simplified */

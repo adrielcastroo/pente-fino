@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -174,10 +175,12 @@ export default function MadeiraEstoque() {
         </div>
       ) : filtered.length === 0 ? (
         <Card className="border border-dashed border-border/40 bg-transparent">
-          <CardContent className="p-10 text-center text-muted-foreground space-y-2">
-            <TreePine className="w-10 h-10 mx-auto opacity-40" />
-            <p className="text-sm font-semibold">Nenhum item de madeira encontrado</p>
-            <p className="text-xs">Registre lâminas, bases ou bandôs na aba Madeira.</p>
+          <CardContent className="p-2">
+            <EmptyState
+              icon={TreePine}
+              title="Nenhum item de madeira encontrado"
+              description="Registre lâminas, bases ou bandôs pela aba Madeira para visualizá-los aqui."
+            />
           </CardContent>
         </Card>
       ) : (

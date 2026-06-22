@@ -10,6 +10,7 @@ import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import { EmptyState } from '@/components/ui/empty-state';
 
 
 export function CountingHistoryTable() {
@@ -124,10 +125,11 @@ export function CountingHistoryTable() {
               ) : filteredHistory.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center gap-4 opacity-30">
-                      <History className="w-12 h-12" />
-                      <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-widest">Nenhum registro encontrado</span>
-                    </div>
+                    <EmptyState
+                      icon={History}
+                      title="Nenhum registro encontrado"
+                      description="Ajuste os filtros ou aguarde novas contagens cíclicas serem registradas."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
