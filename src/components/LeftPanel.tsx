@@ -758,13 +758,14 @@ export const LeftPanel = memo(function LeftPanel() {
   };
 
   const handleAdd = async () => {
+    const warn = (msg: string) => { bipError(); toast.warning(msg); };
     // Basic validations that apply to all modes
-    if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
-    if (!item) { toast.warning('Preencha o campo Item.'); return; }
+    if (!effectiveConferente.trim()) { warn('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!item) { warn('Preencha o campo Item.'); return; }
     
     // Processo is required for Madeira and some other modes
-    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+    if (requiresProcesso && !processo.trim()) { warn('Preencha o campo PROCESSO.'); return; }
+    if (requiresNF && !nf.trim()) { warn('Preencha o campo NF.'); return; }
 
     const proc = processo.trim();
 
