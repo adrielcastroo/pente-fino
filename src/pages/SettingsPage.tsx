@@ -505,7 +505,7 @@ export default function SettingsPage() {
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 group ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${
                       activeCategory === cat.id
                         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10'
                         : 'hover:bg-muted text-muted-foreground hover:text-foreground'
