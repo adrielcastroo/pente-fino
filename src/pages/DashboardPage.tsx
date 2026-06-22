@@ -255,16 +255,13 @@ export default function DashboardPage() {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-3 sm:gap-4"
           >
-            <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 shadow-inner">
-              <Activity className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
+            <div className="p-2 rounded-md bg-primary/10 border border-primary/20">
+              <Activity className="w-5 h-5 text-primary" strokeWidth={1.75} />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-[clamp(1.5rem,8vw,3.5rem)] font-black tracking-tight text-foreground leading-[1.1]">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
                 Dashboard
               </h1>
-              <p className="text-[9px] sm:text-xs font-black text-foreground/60 uppercase tracking-[0.2em] mt-1 sm:mt-2">
-                
-              </p>
             </div>
           </motion.div>
 
