@@ -1,18 +1,36 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Warehouse, Archive, MoreHorizontal, Waves, TreePine, Settings2, FolderOpen, Table, Package, ShieldAlert, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { Home, Warehouse, Archive, MoreHorizontal, Waves, TreePine, Settings2, FolderOpen, Table, Package, ShieldAlert, Settings as SettingsIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { atLeast } from '@/lib/permissions';
 
-const primary = [
-  { to: '/dashboard', label: 'Início', icon: Home },
+type Tab = { to: string; label: string; icon: any };
+
+const primaryOperacao: Tab[] = [
+  { to: '/operacao', label: 'Início', icon: Home },
+  { to: '/saida', label: 'Saída', icon: Archive },
+  { to: '/estoque', label: 'Estoque', icon: Warehouse },
+  { to: '/historico', label: 'Histórico', icon: FolderOpen },
+];
+
+const primaryGestao: Tab[] = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/tecido', label: 'Conferência', icon: Waves },
   { to: '/estoque', label: 'Estoque', icon: Warehouse },
   { to: '/saida', label: 'Saída', icon: Archive },
 ];
 
-const overflow = [
+const overflowOperacao: Tab[] = [
+  { to: '/tecido', label: 'Tecido', icon: Waves },
+  { to: '/madeira', label: 'Madeira', icon: TreePine },
+  { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
+  { to: '/reservas', label: 'Reservas', icon: Table },
+  { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
+];
+
+const overflowGestao: Tab[] = [
   { to: '/madeira', label: 'Madeira', icon: TreePine },
   { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
   { to: '/reservas', label: 'Reservas', icon: Table },
@@ -26,9 +44,15 @@ export default function BottomTabBar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { signOut } = useAuth() as any;
+  const { signOut, role } = useAuth() as any;
 
-  const isActive = (to: string) => pathname === to || (to === '/tecido' && pathname === '/');
+  const isGestao = atLeast(role, 'supervisor');
+  const primary = useMemo(() => (isGestao ? primaryGestao : primaryOperacao), [isGestao]);
+  const overflow = useMemo(() => (isGestao ? overflowGestao : overflowOperacao), [isGestao]);
+
+  const isActive = (to: string) =>
+    pathname === to || (to === '/operacao' && pathname === '/');
+
 
   return (
     <nav
