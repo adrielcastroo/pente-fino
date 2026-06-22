@@ -22,7 +22,9 @@ function formatDurationMs(ms: number): string {
   if (!ms || ms <= 0) return '—';
   const mins = Math.floor(ms / 60000);
   const h = Math.floor(mins / 60);
-  return h > 0 ? `${h}h ${mins % 60}min` : `${mins}min`;
+  if (h > 0) return `${h}h ${mins % 60}min`;
+  if (mins < 1) return '< 1min';
+  return `${mins}min`;
 }
 
 export function ConferenteProfileDialog({ conferente, history, onClose }: Props) {
