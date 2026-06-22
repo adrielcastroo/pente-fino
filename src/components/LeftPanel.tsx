@@ -1502,7 +1502,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
                 {isRolo && (
                   <div className="space-y-1.5">
-                    <label htmlFor="largura-rolo" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
+                    <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-rolo" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label></div>
                     <input
                       id="largura-rolo"
                       ref={manualLarguraRef}
