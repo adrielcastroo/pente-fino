@@ -1,5 +1,6 @@
 import { useState, memo } from 'react';
 import { Reserva } from '@/types';
+import { EmptyState } from '@/components/ui/empty-state';
 import { calculateTotal } from './reservas-utils';
 import {
   Table,
