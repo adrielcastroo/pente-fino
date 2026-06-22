@@ -151,7 +151,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               <Scale className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight truncate">
+              <DialogTitle className="text-xl sm:text-2xl font-semibold tracking-tight truncate">
                 NF × Físico — {conference.processo || conference.name}
               </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm font-bold text-muted-foreground mt-0.5">
@@ -163,20 +163,20 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
             <div className="rounded-xl bg-muted/40 border border-border/30 p-3">
-              <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bipado</div>
-              <div className="text-lg font-black tabular-nums">{formatQty(totals.bipado)}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bipado</div>
+              <div className="text-lg font-semibold tabular-nums">{formatQty(totals.bipado)}</div>
             </div>
             <div className="rounded-xl bg-muted/40 border border-border/30 p-3">
-              <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Esperado</div>
-              <div className="text-lg font-black tabular-nums">{totals.esperado > 0 ? formatQty(totals.esperado) : '—'}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Esperado</div>
+              <div className="text-lg font-semibold tabular-nums">{totals.esperado > 0 ? formatQty(totals.esperado) : '—'}</div>
             </div>
             <div className={cn(
               "rounded-xl border p-3",
               totals.divergentNfs > 0 ? "bg-destructive/10 border-destructive/30" : "bg-emerald-500/10 border-emerald-500/30"
             )}>
-              <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">NFs divergentes</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">NFs divergentes</div>
               <div className={cn(
-                "text-lg font-black tabular-nums",
+                "text-lg font-semibold tabular-nums",
                 totals.divergentNfs > 0 ? "text-destructive" : "text-emerald-600"
               )}>
                 {totals.divergentNfs}
@@ -186,9 +186,9 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               "rounded-xl border p-3",
               totals.duplicateItems > 0 ? "bg-amber-500/10 border-amber-500/30" : "bg-muted/40 border-border/30"
             )}>
-              <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Itens repetidos</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Itens repetidos</div>
               <div className={cn(
-                "text-lg font-black tabular-nums",
+                "text-lg font-semibold tabular-nums",
                 totals.duplicateItems > 0 ? "text-amber-600" : ""
               )}>
                 {totals.duplicateItems}
@@ -222,34 +222,34 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               >
                 <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-border/20">
                   <div className="flex items-center gap-3 min-w-0">
-                    <Badge variant="outline" className="font-black text-xs px-3 py-1 rounded-full">{g.nf}</Badge>
+                    <Badge variant="outline" className="font-semibold text-xs px-3 py-1 rounded-full">{g.nf}</Badge>
                     <div className="text-xs font-bold text-muted-foreground">
                       {g.registroCount} registros · {g.items.length} itens
                     </div>
                     {g.items.some(it => it.duplicate) && (
-                      <Badge variant="outline" className="text-[10px] font-black bg-amber-500/10 text-amber-700 border-amber-500/30">
+                      <Badge variant="outline" className="text-[10px] font-semibold bg-amber-500/10 text-amber-700 border-amber-500/30">
                         <FileWarning className="w-3 h-3 mr-1" /> repetidos
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="text-right">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bipado</div>
-                      <div className="font-black tabular-nums text-primary">{formatQty(g.totalQty)} {g.unit}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bipado</div>
+                      <div className="font-semibold tabular-nums text-primary">{formatQty(g.totalQty)} {g.unit}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Esperado</label>
+                      <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Esperado</label>
                       <Input
                         inputMode="decimal"
                         placeholder="0"
                         value={expected[g.nf] ?? ''}
                         onChange={(e) => handleExpectedChange(g.nf, e.target.value)}
-                        className="h-9 w-24 text-right font-black tabular-nums"
+                        className="h-9 w-24 text-right font-semibold tabular-nums"
                       />
                     </div>
                     {hasExp && (
                       <div className={cn(
-                        "min-w-[80px] text-right font-black tabular-nums px-3 py-1.5 rounded-lg",
+                        "min-w-[80px] text-right font-semibold tabular-nums px-3 py-1.5 rounded-lg",
                         isDivergent ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-600"
                       )}>
                         {isDivergent ? (
@@ -279,10 +279,10 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
                       <span className="font-bold truncate">
                         {it.item}
                         {it.occurrences > 1 && (
-                          <span className="ml-2 text-[10px] font-black uppercase text-amber-600">×{it.occurrences}</span>
+                          <span className="ml-2 text-[10px] font-semibold uppercase text-amber-600">×{it.occurrences}</span>
                         )}
                       </span>
-                      <span className="font-black tabular-nums shrink-0">
+                      <span className="font-semibold tabular-nums shrink-0">
                         {formatQty(it.qty)} {it.unit}
                       </span>
                     </div>
@@ -305,7 +305,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
             <Button
               onClick={approveWithDivergence}
               disabled={submitting || totals.divergentNfs === 0}
-              className="rounded-xl font-black bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              className="rounded-xl font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               title={totals.divergentNfs === 0 ? 'Sem divergência para registrar' : 'Registra a aprovação no log'}
             >
               {submitting ? 'Registrando…' : 'Aprovar com divergência'}

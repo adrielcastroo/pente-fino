@@ -165,7 +165,7 @@ export default function LoginPage() {
           <div className={`p-4 bg-white dark:bg-card border border-border/50 rounded-3xl shadow-xl mb-8 ${!isLow ? 'transform hover:scale-105 transition-transform duration-300' : ''}`}>
             <img src={logoComb} alt="Logo" className="w-16 h-16 object-contain" />
           </div>
-          <h1 className="text-5xl font-black tracking-tight text-foreground mb-8 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
+          <h1 className="text-5xl font-semibold tracking-tight text-foreground mb-8 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
             Sistema Pente Fino
           </h1>
           

@@ -170,7 +170,7 @@ export default function LabelLayoutPanel() {
                     <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Maximize className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-black uppercase tracking-wider">Dimensões (mm)</CardTitle>
+                    <CardTitle className="text-sm font-semibold uppercase tracking-wider">Dimensões (mm)</CardTitle>
                   </div>
                   <CardDescription className="pl-12">
                     {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
@@ -224,7 +224,7 @@ export default function LabelLayoutPanel() {
                     <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Layout className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-black uppercase tracking-wider">Blocos da Etiqueta</CardTitle>
+                    <CardTitle className="text-sm font-semibold uppercase tracking-wider">Blocos da Etiqueta</CardTitle>
                   </div>
                   <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
@@ -280,7 +280,7 @@ export default function LabelLayoutPanel() {
                     <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Square className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-black uppercase tracking-wider">Aparência</CardTitle>
+                    <CardTitle className="text-sm font-semibold uppercase tracking-wider">Aparência</CardTitle>
                   </div>
                   <CardDescription className="pl-12">Bordas, cantos, padding e margem da etiqueta.</CardDescription>
                 </CardHeader>
@@ -340,7 +340,7 @@ export default function LabelLayoutPanel() {
 
             <div className="space-y-3 lg:col-span-2 order-1 lg:order-2 lg:sticky lg:top-4">
               <div className="flex items-baseline justify-between">
-                <Label className="text-xs font-black uppercase tracking-widest opacity-60">
+                <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">
                   Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
                 </Label>
                 <span className="text-[10px] font-mono opacity-60">

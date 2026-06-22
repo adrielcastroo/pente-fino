@@ -218,7 +218,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-foreground/70 font-black animate-pulse uppercase tracking-wider text-sm">Carregando dados do dashboard...</p>
+        <p className="text-foreground/70 font-semibold animate-pulse uppercase tracking-wider text-sm">Carregando dados do dashboard...</p>
       </div>
     );
   }
@@ -274,7 +274,7 @@ export default function DashboardPage() {
             <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
               <Clock className="w-5 h-5 text-primary/70 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] font-black text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
+                <span className="text-[9px] font-semibold text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
                 <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
               </div>
             </div>
@@ -569,7 +569,7 @@ export default function DashboardPage() {
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>Conferentes</DialogTitle>
+                  <DialogTitle className={cn("text-3xl font-semibold tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>Conferentes</DialogTitle>
                   <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>Desempenho individual por conferente</DialogDescription>
                 </div>
               </div>
@@ -579,10 +579,10 @@ export default function DashboardPage() {
             <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
               <thead className={cn("sticky top-0 z-20", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Nome</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferências</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Última Ativ.</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Nome</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferências</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Última Ativ.</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
@@ -595,7 +595,7 @@ export default function DashboardPage() {
                   >
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 font-bold group-hover:text-[#2563EB] transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-[#2563EB]/90")}>{c.name}</td>
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>{c.conferences}</td>
-                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-black text-lg sm:text-xl">{c.total}</td>
+                    <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-semibold text-lg sm:text-xl">{c.total}</td>
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-[11px] sm:text-[12px] font-bold hidden xs:table-cell", isDark ? "text-slate-500" : "text-[#2563EB]/50")}>{formatDateBR(c.lastDate)}</td>
                   </tr>
                 ))}
@@ -624,7 +624,7 @@ export default function DashboardPage() {
                   <BarChart3 className="w-6 h-6" />
                 </div>
                 <div>
-                  <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>Histórico de Conferências</DialogTitle>
+                  <DialogTitle className={cn("text-3xl font-semibold tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>Histórico de Conferências</DialogTitle>
                   <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>Linha do tempo detalhada das sessões operacionais</DialogDescription>
                 </div>
               </div>
@@ -634,13 +634,13 @@ export default function DashboardPage() {
             <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
               <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
-                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Processo</th>
-                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferente</th>
-                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Início</th>
-                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Fim</th>
-                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Duração</th>
-                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
-                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Análise</th>
+                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-semibold text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Processo</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-semibold text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferente</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-semibold text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Início</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-semibold text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Fim</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-semibold text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Duração</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-semibold text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-semibold text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Análise</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
@@ -653,12 +653,12 @@ export default function DashboardPage() {
                     <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center">
                       <Badge variant="outline" className={cn("text-[10px] font-bold px-4 py-1 rounded-full border-[#2563EB]/20 text-[#2563EB] bg-[#2563EB]/5")}>{c.duration}</Badge>
                     </td>
-                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-mono text-primary font-black text-xl">{c.registros}</td>
+                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-mono text-primary font-semibold text-xl">{c.registros}</td>
                     <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="rounded-lg font-black text-[10px] uppercase tracking-wider h-8 px-3"
+                        className="rounded-lg font-semibold text-[10px] uppercase tracking-wider h-8 px-3"
                         onClick={() => setCompareConferenceId(c.id)}
                         title="Comparar NF × Físico"
                       >
@@ -694,7 +694,7 @@ export default function DashboardPage() {
                   <Layers3 className="w-6 h-6" />
                 </div>
                 <div>
-                  <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>Histórico de Registros</DialogTitle>
+                  <DialogTitle className={cn("text-3xl font-semibold tracking-tight", isDark ? "text-slate-100" : "text-[#2563EB]")}>Histórico de Registros</DialogTitle>
                   <DialogDescription className={cn("text-sm font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>Listagem completa de todos os itens registrados</DialogDescription>
                 </div>
               </div>
@@ -705,11 +705,11 @@ export default function DashboardPage() {
             <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
               <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Item / NF</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferência</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Qtd / Medida</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Endereço</th>
-                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Data</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Item / NF</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferência</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Qtd / Medida</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Endereço</th>
+                  <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Data</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
@@ -729,7 +729,7 @@ export default function DashboardPage() {
                       {reg.conferenceName}
                     </td>
                     <td className="px-6 sm:px-10 py-4 sm:py-6 text-right">
-                      <div className="text-sm font-black text-primary tabular-nums">
+                      <div className="text-sm font-semibold text-primary tabular-nums">
                         {formatQty(reg.quantidade || reg.mLinear || reg.m2 || 0)} {reg.modoOrigem === 'madeira' ? 'm' : 'un'}
                       </div>
                     </td>

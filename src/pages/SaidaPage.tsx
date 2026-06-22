@@ -270,7 +270,7 @@ export default function SaidaPage() {
               <div key={saida.id} className="bg-card/60 border border-border/40 rounded-2xl p-4 sm:p-5 hover:border-border/60 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">
-                    <h3 className="font-black text-foreground text-base sm:text-lg tracking-tight truncate">{saida.item}</h3>
+                    <h3 className="font-semibold text-foreground text-base sm:text-lg tracking-tight truncate">{saida.item}</h3>
                     <div className="flex items-center gap-2 mt-1.5">
                       <Badge variant="outline" className="text-[10px] sm:text-[9px] font-bold uppercase tracking-wider border-primary/20 bg-primary/5 text-primary rounded-lg px-2 py-0.5">
                         {saida.proc || 'Sem PROC'}
@@ -339,7 +339,7 @@ export default function SaidaPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Exibindo {visibleSaidas.length} de {filteredSaidas.length}
                 </p>
-                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-xl font-black text-xs uppercase tracking-wider h-10 px-6">
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-xl font-semibold text-xs uppercase tracking-wider h-10 px-6">
                   Carregar mais
                 </Button>
               </div>
@@ -357,7 +357,7 @@ export default function SaidaPage() {
                 <LogOut className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-black tracking-tight">Dar saída</DialogTitle>
+                <DialogTitle className="text-lg font-semibold tracking-tight">Dar saída</DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
                   Bipe ou digite o <strong>Lote Final</strong> do tecido para dar saída
                 </DialogDescription>
@@ -367,7 +367,7 @@ export default function SaidaPage() {
 
           <div className="p-6 space-y-4">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
+              <label className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
               <div className="flex gap-2">
                 <Input
                   ref={scanRef}
@@ -381,7 +381,7 @@ export default function SaidaPage() {
                 <Button
                   onClick={handleScanSubmit}
                   disabled={scanning || !scanInput.trim()}
-                  className="h-14 px-6 rounded-xl font-black bg-violet-600 hover:bg-violet-700 shrink-0 text-base"
+                  className="h-14 px-6 rounded-xl font-semibold bg-violet-600 hover:bg-violet-700 shrink-0 text-base"
                 >
                   {scanning ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Buscar'}
                 </Button>
@@ -419,7 +419,7 @@ export default function SaidaPage() {
       }}>
         <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-black">Confirmar saída</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-semibold">Confirmar saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-4">
               {confirmScan && (
                 <>
@@ -434,7 +434,7 @@ export default function SaidaPage() {
                   </div>
 
                   <div className="space-y-2 bg-muted/10 p-4 rounded-xl border border-border/20">
-                    <label className="text-xs font-black uppercase tracking-widest text-violet-500 flex items-center gap-2 mb-1">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-violet-500 flex items-center gap-2 mb-1">
                       <Truck className="w-3.5 h-3.5" />
                       Destino <span className="text-red-400">*</span>
                     </label>
@@ -445,7 +445,7 @@ export default function SaidaPage() {
                       className="h-10 rounded-lg border-border/50 bg-background/50 focus:bg-background font-bold text-xs"
                       required
                     />
-                    <label className="text-xs font-black uppercase tracking-widest text-violet-500 flex items-center gap-2 mt-3 mb-1">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-violet-500 flex items-center gap-2 mt-3 mb-1">
                       <User className="w-3.5 h-3.5" />
                       Saída por {conferente || <span className="text-red-400">— defina o conferente</span>}
                     </label>

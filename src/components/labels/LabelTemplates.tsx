@@ -90,7 +90,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderW
       <div className="flex border-b-4 border-black flex-[1.1]">
         <div className="flex-1 pt-4 pb-2 px-2 flex flex-col justify-start overflow-hidden border-r-4 border-black">
           {has("sku") && (
-            <div className="font-black tracking-tight leading-none truncate" style={{ fontSize: `${fs * 5}px` }}>
+            <div className="font-semibold tracking-tight leading-none truncate" style={{ fontSize: `${fs * 5}px` }}>
               {data.sku}
             </div>
           )}
@@ -120,7 +120,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderW
             LOTE
           </span>
           <span
-            className="font-black tracking-wide whitespace-normal leading-tight"
+            className="font-semibold tracking-wide whitespace-normal leading-tight"
             style={{ fontSize: `${fs * 3.5}px` }}
           >
             {data.lote}
@@ -133,7 +133,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderW
             <div style={{ fontSize: `${fs * 3}px` }} className="font-bold shrink-0">
               QTD:
             </div>
-            <div className="font-black leading-none truncate mt-1" style={{ fontSize: `${fs * 3.2}px` }}>
+            <div className="font-semibold leading-none truncate mt-1" style={{ fontSize: `${fs * 3.2}px` }}>
               {data.qtd}
             </div>
           </div>
@@ -142,7 +142,7 @@ export function TecidoPreview({ wPx, hPx, fs, has, data = TECIDO_SAMPLE, borderW
           {has("rnp") && (
             <div style={{ fontSize: `${fs * 3.2}px` }} className="truncate">
               <span className="font-bold">RNP: </span>
-              <span className="font-black">{data.rnp}</span>
+              <span className="font-semibold">{data.rnp}</span>
             </div>
           )}
           {has("data") && (
@@ -190,7 +190,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
       <div className="border-b-[3px] border-black px-3 py-2 flex flex-col justify-center overflow-hidden flex-[1.15]">
         {has("sku") && (
           <div
-            className="font-black tracking-tight leading-none truncate"
+            className="font-semibold tracking-tight leading-none truncate"
             style={{ fontSize: `${fs * 2.4}px` }}
           >
             {data.sku}
@@ -219,7 +219,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
           </span>
         )}
         <div
-          className="flex items-center gap-3 font-black tracking-wide truncate leading-tight"
+          className="flex items-center gap-3 font-semibold tracking-wide truncate leading-tight"
           style={{ fontSize: `${fs * 2.1}px` }}
         >
           {has("cx") && <span className="shrink-0">{data.cx}</span>}
@@ -234,7 +234,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
           }
           if (!ntNorm) return null;
           return (
-            <div className="font-black tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 2.0}px` }}>
+            <div className="font-semibold tracking-tight truncate leading-tight" style={{ fontSize: `${fs * 2.0}px` }}>
               {ntNorm}
             </div>
           );
@@ -247,13 +247,13 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
           {has("rnp") && (
             <div style={{ fontSize: `${fs * 1.75}px` }} className="truncate">
               <span className="font-bold">RNP: </span>
-              <span className="font-black">{data.rnp}</span>
+              <span className="font-semibold">{data.rnp}</span>
             </div>
           )}
           {has("data") && (
             <div style={{ fontSize: `${fs * 1.75}px` }} className="truncate">
               <span className="font-bold">DATA: </span>
-              <span className="font-black">{data.data}</span>
+              <span className="font-semibold">{data.data}</span>
             </div>
           )}
         </div>

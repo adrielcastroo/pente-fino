@@ -76,7 +76,7 @@ export function ChangelogDialog() {
           {CHANGELOG.map((entry, idx) => (
             <article key={entry.version} className="relative">
               <header className="flex items-baseline gap-3 mb-3 pb-2 border-b border-border/40">
-                <h3 className="text-lg font-black text-foreground">v{entry.version}</h3>
+                <h3 className="text-lg font-semibold text-foreground">v{entry.version}</h3>
                 {idx === 0 && (
                   <Badge className="bg-primary text-primary-foreground font-bold text-[10px] uppercase tracking-wider">
                     Mais recente

@@ -158,7 +158,7 @@ export function InventorySuggestionsTab() {
     return (
       <div className="flex flex-col items-center justify-center p-20 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Analisando histórico de estoque...</p>
+        <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Analisando histórico de estoque...</p>
       </div>
     );
   }
@@ -167,10 +167,10 @@ export function InventorySuggestionsTab() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h3 className="text-3xl font-black uppercase tracking-tight">Auditoria Sugerida</h3>
+          <h3 className="text-3xl font-semibold uppercase tracking-tight">Auditoria Sugerida</h3>
           <div className="flex items-center gap-2">
              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">
+             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em]">
                {suggestions.length} itens aguardando conferência
              </p>
           </div>
@@ -179,7 +179,7 @@ export function InventorySuggestionsTab() {
           onClick={fetchSuggestions} 
           variant="outline" 
           size="sm" 
-          className="rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] h-12 px-6 gap-2.5 transition-all hover:bg-primary hover:text-white border-white/10 shadow-xl"
+          className="rounded-2xl font-semibold uppercase tracking-[0.2em] text-[10px] h-12 px-6 gap-2.5 transition-all hover:bg-primary hover:text-white border-white/10 shadow-xl"
         >
           <RefreshCw className={loading ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
           Sincronizar Sugestões
@@ -193,8 +193,8 @@ export function InventorySuggestionsTab() {
           className="p-20 text-center rounded-[3rem] border-2 border-dashed border-white/10 bg-card/40 backdrop-blur-xl shadow-inner"
         >
           <Package className="w-20 h-20 text-muted-foreground/10 mx-auto mb-6" />
-          <h4 className="text-xl font-black uppercase tracking-tight text-muted-foreground opacity-50">Tudo em dia!</h4>
-          <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] mt-3">Nenhum item com atraso de auditoria detectado.</p>
+          <h4 className="text-xl font-semibold uppercase tracking-tight text-muted-foreground opacity-50">Tudo em dia!</h4>
+          <p className="text-[10px] font-semibold text-muted-foreground/30 uppercase tracking-[0.3em] mt-3">Nenhum item com atraso de auditoria detectado.</p>
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 gap-5">
@@ -211,7 +211,7 @@ export function InventorySuggestionsTab() {
                 <div className="flex items-center gap-8">
                   <motion.div 
                     whileHover={{ scale: 1.15, rotate: 8 }}
-                    className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center font-black text-3xl text-white shadow-2xl transition-all duration-500 ring-8 ring-white/5 ${
+                    className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center font-semibold text-3xl text-white shadow-2xl transition-all duration-500 ring-8 ring-white/5 ${
                     item.curva_abc === 'A' ? 'bg-rose-500 shadow-rose-500/30' : 
                     item.curva_abc === 'B' ? 'bg-amber-500 shadow-amber-500/30' : 'bg-emerald-500 shadow-emerald-500/30'
                   }`}>
@@ -219,21 +219,21 @@ export function InventorySuggestionsTab() {
                   </motion.div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <h4 className="text-2xl font-black uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">{item.name}</h4>
-                      <Badge variant="outline" className="text-[9px] font-black uppercase py-1 px-3 border-white/10 bg-white/5 rounded-lg shadow-sm">
+                      <h4 className="text-2xl font-semibold uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">{item.name}</h4>
+                      <Badge variant="outline" className="text-[9px] font-semibold uppercase py-1 px-3 border-white/10 bg-white/5 rounded-lg shadow-sm">
                         {item.source === 'registros' ? 'Estoque Oficial' : 'Cadastro Geral'}
                       </Badge>
                     </div>
                     <div className="flex flex-wrap items-center gap-6">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest opacity-60">
                           Auditoria: {formatDateBR(item.ultima_contagem || item.created_at)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2.5 text-rose-500 bg-rose-500/10 px-4 py-1.5 rounded-xl border border-rose-500/20 shadow-sm">
                         <AlertTriangle className="w-4 h-4" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.1em]">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
                           {item.dias_atraso} Dias de Atraso
                         </span>
                       </div>
@@ -244,7 +244,7 @@ export function InventorySuggestionsTab() {
                 <Button 
                   onClick={() => handleCreateTask(item)}
                   disabled={creatingTask === item.id}
-                  className="rounded-2xl h-20 px-10 bg-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-[0.3em] text-[10px] gap-3 border border-primary/20 shadow-lg shadow-primary/5 transition-all duration-500 hover:scale-105 active:scale-95 group-hover:bg-primary group-hover:text-white"
+                  className="rounded-2xl h-20 px-10 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold uppercase tracking-[0.3em] text-[10px] gap-3 border border-primary/20 shadow-lg shadow-primary/5 transition-all duration-500 hover:scale-105 active:scale-95 group-hover:bg-primary group-hover:text-white"
                 >
                   {creatingTask === item.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-6 h-6" />}
                   Lançar Tarefa

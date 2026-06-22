@@ -69,8 +69,8 @@ export function CountingHistoryTable() {
             <History className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-3xl font-black uppercase tracking-tight">Histórico de Auditoria</h2>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1 opacity-70">Rastreabilidade completa de contagens</p>
+            <h2 className="text-3xl font-semibold uppercase tracking-tight">Histórico de Auditoria</h2>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] mt-1 opacity-70">Rastreabilidade completa de contagens</p>
           </div>
         </div>
         
@@ -78,7 +78,7 @@ export function CountingHistoryTable() {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors duration-500" />
           <Input 
             placeholder="BUSCAR CONFERENTE OU ITEM..." 
-            className="pl-16 h-16 bg-card/40 backdrop-blur-xl border-2 border-white/10 font-black uppercase text-[10px] tracking-[0.2em] rounded-[1.5rem] focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-2xl shadow-black/5"
+            className="pl-16 h-16 bg-card/40 backdrop-blur-xl border-2 border-white/10 font-semibold uppercase text-[10px] tracking-[0.2em] rounded-[1.5rem] focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-2xl shadow-black/5"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -90,23 +90,23 @@ export function CountingHistoryTable() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-white/5 bg-muted/20 h-20">
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10">
                   <div className="flex items-center gap-3"><Calendar className="w-3.5 h-3.5" /> Data / Hora</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10">
                   <div className="flex items-center gap-3"><Package className="w-3.5 h-3.5" /> Item / Lote</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10">
                   <div className="flex items-center gap-3"><User className="w-3.5 h-3.5" /> Conferente</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10 text-right">
                   <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Teórico</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10 text-right">
                   <div className="flex items-center gap-3 justify-end"><Hash className="w-3.5 h-3.5" /> Real</div>
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-center">Status Auditoria</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.3em] px-10 text-right">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10 text-center">Status Auditoria</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-[0.3em] px-10 text-right">
                   <div className="flex items-center gap-3 justify-end"><Settings2 className="w-3.5 h-3.5" /> Relatório</div>
                 </TableHead>
               </TableRow>
@@ -117,7 +117,7 @@ export function CountingHistoryTable() {
                   <TableCell colSpan={7} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                      <span className="font-black text-muted-foreground uppercase text-[10px] tracking-widest">Carregando histórico...</span>
+                      <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-widest">Carregando histórico...</span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -126,7 +126,7 @@ export function CountingHistoryTable() {
                   <TableCell colSpan={7} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-4 opacity-30">
                       <History className="w-12 h-12" />
-                      <span className="font-black text-muted-foreground uppercase text-[10px] tracking-widest">Nenhum registro encontrado</span>
+                      <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-widest">Nenhum registro encontrado</span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -144,28 +144,28 @@ export function CountingHistoryTable() {
                       >
                         <TableCell className="px-10">
                           <div className="flex flex-col">
-                            <span className="font-black text-sm text-foreground tracking-tighter">{formatDateBR(item.completed_at)}</span>
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">{formatTimeBR(item.completed_at)}</span>
+                            <span className="font-semibold text-sm text-foreground tracking-tighter">{formatDateBR(item.completed_at)}</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">{formatTimeBR(item.completed_at)}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-10">
                             <div className="flex flex-col">
-                                <span className="font-black text-sm text-foreground uppercase tracking-tight truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
-                                <Badge variant="outline" className="w-fit text-[9px] font-black uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
+                                <span className="font-semibold text-sm text-foreground uppercase tracking-tight truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
+                                <Badge variant="outline" className="w-fit text-[9px] font-semibold uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
                             </div>
                         </TableCell>
                         <TableCell className="px-10">
-                           <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-white/10 bg-white/5 py-1 px-4">
+                           <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-widest border-white/10 bg-white/5 py-1 px-4">
                               {item.conferente_nome || '—'}
                            </Badge>
                         </TableCell>
-                        <TableCell className="px-10 text-right font-black text-base tabular-nums text-muted-foreground opacity-50">{item.expected_qty}</TableCell>
-                        <TableCell className="px-10 text-right font-black text-lg tabular-nums text-foreground">{item.counted_qty}</TableCell>
+                        <TableCell className="px-10 text-right font-semibold text-base tabular-nums text-muted-foreground opacity-50">{item.expected_qty}</TableCell>
+                        <TableCell className="px-10 text-right font-semibold text-lg tabular-nums text-foreground">{item.counted_qty}</TableCell>
                         <TableCell className="px-10 text-center">
                           <Badge 
                             variant="outline"
                             className={cn(
-                              "font-black text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-2xl border-2 shadow-sm transition-all duration-500",
+                              "font-semibold text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-2xl border-2 shadow-sm transition-all duration-500",
                               item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/30 bg-emerald-500/10" : 
                               item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/30 bg-amber-500/10" :
                               "text-rose-600 border-rose-600/30 bg-rose-500/10 animate-pulse"

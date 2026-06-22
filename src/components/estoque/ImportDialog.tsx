@@ -322,7 +322,7 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
               <Upload className="w-5 h-5" />
             </div>
             <div>
-              <DialogTitle className="text-lg sm:text-xl font-black tracking-tight">
+              <DialogTitle className="text-lg sm:text-xl font-semibold tracking-tight">
                 Importar Tecidos
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -404,15 +404,15 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-muted/30 border-b border-border/20">
-                      <th className="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">Status</th>
-                      <th className="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">Item</th>
-                      <th className="px-3 py-2.5 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">M²</th>
-                      <th className="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">PROC</th>
-                      <th className="px-3 py-2.5 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">Largura</th>
-                      <th className="px-3 py-2.5 text-right font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">M Linear</th>
-                      <th className="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">Lote</th>
-                      <th className="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">Endereço</th>
-                      <th className="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider text-muted-foreground/70">Lote Final</th>
+                      <th className="px-3 py-2.5 text-left font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">Status</th>
+                      <th className="px-3 py-2.5 text-left font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">Item</th>
+                      <th className="px-3 py-2.5 text-right font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">M²</th>
+                      <th className="px-3 py-2.5 text-left font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">PROC</th>
+                      <th className="px-3 py-2.5 text-right font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">Largura</th>
+                      <th className="px-3 py-2.5 text-right font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">M Linear</th>
+                      <th className="px-3 py-2.5 text-left font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">Lote</th>
+                      <th className="px-3 py-2.5 text-left font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">Endereço</th>
+                      <th className="px-3 py-2.5 text-left font-semibold text-[10px] uppercase tracking-wider text-muted-foreground/70">Lote Final</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -454,7 +454,7 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
                 <Button
                   onClick={handleImport}
                   disabled={importing || validRows.length === 0}
-                  className="flex-1 h-11 rounded-xl font-black bg-primary shadow-lg shadow-primary/20"
+                  className="flex-1 h-11 rounded-xl font-semibold bg-primary shadow-lg shadow-primary/20"
                 >
                   {importing ? (
                     <div className="flex items-center gap-2">

@@ -112,7 +112,7 @@ function AuditoriaContent() {
             <ShieldAlert className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight">Auditoria</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Auditoria</h1>
             <p className="text-xs text-muted-foreground">
               Trilha imutável de todas as alterações no sistema. Visível para Gerente e Admin.
             </p>

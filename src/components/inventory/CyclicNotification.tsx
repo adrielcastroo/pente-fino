@@ -48,15 +48,15 @@ export function CyclicNotification() {
             <Bell className="w-5 h-5 animate-bounce" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">Inventário Cíclico</h3>
+            <h3 className="text-lg font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-tight">Inventário Cíclico</h3>
             <p className="text-sm font-bold text-foreground/70">
-              Você possui <span className="text-amber-600 dark:text-amber-400 font-black">{pendingCount}</span> contagens cíclicas pendentes para hoje.
+              Você possui <span className="text-amber-600 dark:text-amber-400 font-semibold">{pendingCount}</span> contagens cíclicas pendentes para hoje.
             </p>
           </div>
         </div>
         <Button 
           onClick={() => navigate('/inventario-ciclico')}
-          className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-xs py-6 px-8 rounded-xl shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 gap-3"
+          className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-semibold uppercase tracking-widest text-xs py-6 px-8 rounded-xl shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 gap-3"
         >
           Iniciar Conferência
           <ArrowRight className="w-4 h-4" />

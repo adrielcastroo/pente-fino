@@ -114,7 +114,7 @@ export default function MadeiraEstoque() {
           ].map((s) => (
             <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none shrink-0 w-[120px] sm:w-auto">
               <CardContent className="p-4 text-center space-y-1">
-                <div className={`text-2xl sm:text-3xl font-black tabular-nums ${s.color}`}>{s.value}</div>
+                <div className={`text-2xl sm:text-3xl font-semibold tabular-nums ${s.color}`}>{s.value}</div>
                 <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{s.label}</div>
               </CardContent>
             </Card>
@@ -125,7 +125,7 @@ export default function MadeiraEstoque() {
       {/* Legenda Lotes Mestres */}
       {lotes.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border border-border/30 bg-muted/20">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-1">Tonalidades:</span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mr-1">Tonalidades:</span>
           <button
             onClick={() => setFilterLote(null)}
             className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border transition ${!filterLote ? 'border-primary bg-primary/10 text-primary' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}

@@ -991,7 +991,7 @@ export const LeftPanel = memo(function LeftPanel() {
             <ScanBarcode className="w-5 h-5" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] sm:text-sm font-black text-foreground leading-tight">Novo registro</div>
+            <div className="text-[13px] sm:text-sm font-semibold text-foreground leading-tight">Novo registro</div>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">Aponte o leitor ou digite o código do item</p>
           </div>
           {(item || nf || m2 || lote || endereco || processo) && !isAI && (
@@ -1064,7 +1064,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300`}
+                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300`}
               >
                 {diversosTipo === tipo && (
                   <motion.div
@@ -1089,7 +1089,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`flex-1 min-h-[44px] rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
+                  className={`flex-1 min-h-[44px] rounded-xl py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                     madeiraTipo === tipo
                       ? 'bg-primary text-primary-foreground shadow-lg scale-105'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -1110,7 +1110,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   <span className="block text-xs font-medium text-muted-foreground/80">Automático</span>
                 </div>
               </div>
-              <span className="font-mono text-lg font-black text-primary tracking-tighter">
+              <span className="font-mono text-lg font-semibold text-primary tracking-tighter">
                 {processo.trim()
                   ? (generateLoteSistemaCaixa(processo.trim(), '-', 0, registros).match(/^CX\d+/)?.[0] ?? 'CX01')
                   : 'CX01'}
@@ -1631,12 +1631,12 @@ export const LeftPanel = memo(function LeftPanel() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Subtipo</p>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <p className="text-xl font-black text-foreground">{madeiraTipo}</p>
+                    <p className="text-xl font-semibold text-foreground">{madeiraTipo}</p>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Quantidade</p>
-                  <p className="text-xl font-black text-foreground">
+                  <p className="text-xl font-semibold text-foreground">
                     {quantidade || madeiraDefaults[madeiraTipo]} 
                     <span className="text-xs font-bold text-muted-foreground/40 ml-1.5">UND</span>
                   </p>
@@ -1646,11 +1646,11 @@ export const LeftPanel = memo(function LeftPanel() {
               <>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Largura</p>
-                  <p className="text-xl font-black text-foreground">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
+                  <p className="text-xl font-semibold text-foreground">{largura > 0 ? largura.toFixed(2) + 'm' : '—'}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">M. Linear</p>
-                  <p className="text-xl font-black text-foreground">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
+                  <p className="text-xl font-semibold text-foreground">{mLinear > 0 ? formatML(mLinear) : '—'}</p>
                 </div>
               </>
             )}
@@ -1658,7 +1658,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Lote Sistema Gerado</p>
               <motion.div 
                 whileHover={{ scale: 1.02 }}
-                className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-black text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors"
+                className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-semibold text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors"
               >
                 {previewLoteSistema}
               </motion.div>
@@ -1674,7 +1674,7 @@ export const LeftPanel = memo(function LeftPanel() {
           >
             <Button
               onClick={handleAdd}
-              className="w-full h-14 sm:h-16 rounded-2xl font-black uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
+              className="w-full h-14 sm:h-16 rounded-2xl font-semibold uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
               <span className="relative flex items-center justify-center gap-3">

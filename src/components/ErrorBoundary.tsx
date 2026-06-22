@@ -28,7 +28,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-8 h-8" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-xl font-black tracking-tight">Algo deu errado</h2>
+            <h2 className="text-xl font-semibold tracking-tight">Algo deu errado</h2>
             <p className="text-sm text-muted-foreground mt-2">
               Ocorreu um erro inesperado. Você pode tentar novamente ou voltar ao início.
             </p>

@@ -86,11 +86,11 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
       <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] p-0 gap-0 overflow-hidden flex flex-col">
         <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b border-border/20 flex-none space-y-0">
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-lg font-black border border-primary/20 flex-none">
+            <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold border border-primary/20 flex-none">
               {data ? getInitials(data.name) : <User className="w-6 h-6" />}
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <DialogTitle className="text-xl font-black tracking-tight truncate">
+              <DialogTitle className="text-xl font-semibold tracking-tight truncate">
                 {data?.name || 'Conferente'}
               </DialogTitle>
               <DialogDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -114,7 +114,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
             {/* Sparkline 14d */}
             <div className="rounded-2xl border border-border/40 bg-muted/20 p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Produção · 14 dias</span>
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Produção · 14 dias</span>
                 <span className="text-xs font-bold text-primary tabular-nums">
                   {data.sparkline.reduce((a, b) => a + b.total, 0)} registros
                 </span>
@@ -137,7 +137,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
             {/* Últimas sessões */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Últimas sessões</span>
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Últimas sessões</span>
                 {data.anomaliesCount > 0 && (
                   <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/5 text-[10px] font-bold gap-1">
                     <AlertTriangle className="w-3 h-3" /> {data.anomaliesCount} anormais
@@ -168,7 +168,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
                       <Badge variant="outline" className="text-[10px] font-bold font-mono">
                         {formatDurationMs(s.durationMs)}
                       </Badge>
-                      <span className="text-lg font-black text-primary tabular-nums min-w-[2.5rem] text-right">
+                      <span className="text-lg font-semibold text-primary tabular-nums min-w-[2.5rem] text-right">
                         {s.registros.length}
                       </span>
                     </div>
@@ -195,9 +195,9 @@ function KpiCard({ icon: Icon, label, value }: { icon: any; label: string; value
     <div className="rounded-2xl border border-border/40 bg-muted/20 p-3 flex flex-col gap-1">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <Icon className="w-3.5 h-3.5" />
-        <span className="text-[9px] font-black uppercase tracking-wider">{label}</span>
+        <span className="text-[9px] font-semibold uppercase tracking-wider">{label}</span>
       </div>
-      <span className="text-lg font-black tabular-nums truncate">{value}</span>
+      <span className="text-lg font-semibold tabular-nums truncate">{value}</span>
     </div>
   );
 }

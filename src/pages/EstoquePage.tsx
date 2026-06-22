@@ -444,13 +444,13 @@ export default function EstoquePage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                 <CardContent className="p-4 sm:p-6 text-center space-y-1 sm:space-y-2 relative z-10">
-                  <div className={`text-xl sm:text-2xl lg:text-3xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
-                  <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
+                  <div className={`text-xl sm:text-2xl lg:text-3xl font-semibold tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
                   <div className="flex items-center justify-center gap-1.5 pt-2">
                     <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
                        <div className={`h-full ${s.config.color.replace('text', 'bg')}`} style={{ width: `${s.percent}%` }} />
                     </div>
-                    <span className="text-[10px] font-black text-muted-foreground/80">{s.percent}%</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground/80">{s.percent}%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -469,10 +469,10 @@ export default function EstoquePage() {
         />
         {locateQuery && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider">
+            <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider">
               {matchingCells?.size ?? 0} células
             </Badge>
-            <button onClick={() => setLocateQuery('')} className="text-muted-foreground hover:text-foreground text-xs font-black">×</button>
+            <button onClick={() => setLocateQuery('')} className="text-muted-foreground hover:text-foreground text-xs font-semibold">×</button>
           </div>
         )}
       </div>
@@ -483,7 +483,7 @@ export default function EstoquePage() {
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 ${
+            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
@@ -503,7 +503,7 @@ export default function EstoquePage() {
               <Warehouse className="w-6 h-6 text-primary animate-pulse" />
             </div>
           </div>
-          <span className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
+          <span className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
         </div>
       ) : (
         <motion.div 
@@ -518,7 +518,7 @@ export default function EstoquePage() {
             <div className="flex gap-2 sm:gap-3">
               <div className="w-10 sm:w-12 md:w-16 shrink-0" />
               {config.cols.map(col => (
-                <div key={col} className="flex-1 text-center text-[8px] sm:text-[10px] md:text-xs font-black text-primary uppercase tracking-[0.3em] py-2 bg-primary/5 rounded-xl border border-primary/10 mb-2">
+                <div key={col} className="flex-1 text-center text-[8px] sm:text-[10px] md:text-xs font-semibold text-primary uppercase tracking-[0.3em] py-2 bg-primary/5 rounded-xl border border-primary/10 mb-2">
                   {col}
                 </div>
               ))}
@@ -531,7 +531,7 @@ export default function EstoquePage() {
                 transition={{ delay: idx * 0.05 }}
                 className="flex gap-2 sm:gap-3"
               >
-                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-black text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-2xl shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
+                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-semibold text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-2xl shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
@@ -591,18 +591,18 @@ export default function EstoquePage() {
                               it.status === 'reservado' ? 'bg-amber-500' : 'bg-emerald-500'
                             }`} />
                          ))}
-                         {items.length > 3 && <div className="text-[6px] font-black text-muted-foreground/50">+</div>}
+                         {items.length > 3 && <div className="text-[6px] font-semibold text-muted-foreground/50">+</div>}
                       </div>
 
                       <div className="relative z-10 h-full flex flex-col justify-between">
-                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary transition-colors">
+                        <div className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 group-hover:text-primary transition-colors">
                           {col}N{nivel}
                         </div>
                         <div className="flex items-end gap-1">
-                          <span className="text-lg sm:text-2xl font-black text-foreground tracking-tighter leading-none">
+                          <span className="text-lg sm:text-2xl font-semibold text-foreground tracking-tighter leading-none">
                             {items.length}
                           </span>
-                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/40 font-black uppercase mb-0.5">/30</span>
+                          <span className="text-[8px] sm:text-[10px] text-muted-foreground/40 font-semibold uppercase mb-0.5">/30</span>
                         </div>
                       </div>
                     </motion.div>
@@ -610,8 +610,8 @@ export default function EstoquePage() {
                       {hasItems && (
                         <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-white/10 bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl">
                           <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activeTec}.{col}.N{String(nivel).padStart(2,'0')}</div>
-                            <div className="text-[10px] font-black text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{activeTec}.{col}.N{String(nivel).padStart(2,'0')}</div>
+                            <div className="text-[10px] font-semibold text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
                           </div>
                           <div className="max-h-64 overflow-y-auto p-2 space-y-1">
                             {items.slice(0, 6).sort((a,b) => a.posicao - b.posicao).map((it) => {
@@ -619,16 +619,16 @@ export default function EstoquePage() {
                               return (
                                 <div key={it.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
-                                  <div className="text-[10px] font-black text-muted-foreground/70 shrink-0 w-7">P{String(it.posicao).padStart(2,'0')}</div>
+                                  <div className="text-[10px] font-semibold text-muted-foreground/70 shrink-0 w-7">P{String(it.posicao).padStart(2,'0')}</div>
                                   <div className="text-xs font-bold text-foreground truncate flex-1">{it.item || '—'}</div>
                                 </div>
                               );
                             })}
                             {items.length > 6 && (
-                              <div className="text-[10px] font-black text-muted-foreground/60 text-center py-1">+ {items.length - 6} itens</div>
+                              <div className="text-[10px] font-semibold text-muted-foreground/60 text-center py-1">+ {items.length - 6} itens</div>
                             )}
                           </div>
-                          <div className="px-4 py-2 border-t border-white/5 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 text-center">
+                          <div className="px-4 py-2 border-t border-white/5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 text-center">
                             Clique para abrir
                           </div>
                         </HoverCardContent>
@@ -661,13 +661,13 @@ export default function EstoquePage() {
                       <DialogTitle className="text-xl font-semibold tracking-tight">
                         {activeTec} · {selectedCell.col}N{String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-xs text-muted-foreground font-black uppercase tracking-[0.2em] mt-1 opacity-60">
+                      <DialogDescription className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-1 opacity-60">
                          Monitoramento de Célula · {occupiedCount} de 30 Posições
                       </DialogDescription>
                     </div>
                   </div>
                   <Badge className={cn(
-                    "text-[10px] font-black px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest",
+                    "text-[10px] font-semibold px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest",
                     occupiedCount === 0 ? "bg-primary text-primary-foreground ring-primary/10" :
                     occupiedCount >= 25 ? "bg-rose-500 text-white ring-rose-500/10" :
                     "bg-emerald-500 text-white ring-emerald-500/10"
@@ -712,7 +712,7 @@ export default function EstoquePage() {
                             <div className="flex-1 min-w-0 space-y-3">
                               <div className="flex items-center gap-3">
                                 <Badge variant="outline" className={cn(
-                                  "text-[9px] font-black px-3 py-1 rounded-xl border-2 uppercase tracking-widest",
+                                  "text-[9px] font-semibold px-3 py-1 rounded-xl border-2 uppercase tracking-widest",
                                   statusCfg.color,
                                   statusCfg.border,
                                   statusCfg.bg
@@ -721,11 +721,11 @@ export default function EstoquePage() {
                                 </Badge>
                                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
                                    <Barcode className="w-3 h-3 text-muted-foreground/50" />
-                                   <span className="text-[10px] font-black text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
+                                   <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
                                 </div>
                               </div>
-                              <h3 className="font-black text-foreground text-lg sm:text-xl tracking-tight uppercase group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
-                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                              <h3 className="font-semibold text-foreground text-lg sm:text-xl tracking-tight uppercase group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
+                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                                 <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
                                 <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
                                 <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(item.data_registro)}</span>
@@ -736,7 +736,7 @@ export default function EstoquePage() {
                                 onClick={() => setDetailPos(item)}
                                 variant="ghost"
                                 size="sm"
-                                  className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20 hover:scale-105 active:scale-95"
+                                  className="h-14 px-8 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20 hover:scale-105 active:scale-95"
                                 >
                                   Ficha Técnica
                               </Button>
@@ -747,7 +747,7 @@ export default function EstoquePage() {
                                     handleStatusChange(item, 'saida');
                                   }}
                                   size="sm"
-                                  className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
+                                  className="h-14 px-8 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
                                 >
                                   <LogOut className="w-4 h-4" />
                                   Dar Saída
@@ -765,9 +765,9 @@ export default function EstoquePage() {
                 <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-60">{occupiedCount} Itens encontrados nesta célula</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] opacity-60">{occupiedCount} Itens encontrados nesta célula</span>
                   </div>
-                  <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">* Célula do Galpão G4</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground/30 uppercase tracking-widest">* Célula do Galpão G4</p>
                 </div>
               </div>
             </>
@@ -792,12 +792,12 @@ export default function EstoquePage() {
                       <DialogTitle className="text-xl font-semibold tracking-tight">
                         {detailPos.item || 'Item sem identificação'}
                       </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-black uppercase tracking-[0.2em] mt-2 opacity-60">
+                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-2 opacity-60">
                         {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
                       </DialogDescription>
                     </div>
                     <Badge className={cn(
-                      "text-[10px] font-black px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest border-2",
+                      "text-[10px] font-semibold px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest border-2",
                       statusCfg.bg,
                       statusCfg.border,
                       statusCfg.color,
@@ -828,15 +828,15 @@ export default function EstoquePage() {
                         transition={{ delay: i * 0.05 }}
                         className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:shadow-primary/5 hover:-translate-y-1"
                       >
-                        <div className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
-                        <div className="text-sm sm:text-base font-black text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
+                        <div className="text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
+                        <div className="text-sm sm:text-base font-semibold text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
                       </motion.div>
                     ))}
                   </div>
 
                   {/* Status Actions */}
                   <div className="space-y-4">
-                    <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] text-center mb-4">Gerenciamento de Status</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground/40 uppercase tracking-[0.3em] text-center mb-4">Gerenciamento de Status</div>
                     <div className="grid grid-cols-2 gap-3">
                       {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
                         const cfg = STATUS_CONFIG[st];
@@ -851,7 +851,7 @@ export default function EstoquePage() {
                             onClick={() => handleStatusChange(detailPos, st)} 
                             variant="outline"
                             className={cn(
-                              "h-14 font-black uppercase tracking-widest text-[10px] rounded-2xl border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
+                              "h-14 font-semibold uppercase tracking-widest text-[10px] rounded-2xl border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
                               isActive 
                                 ? `${activeBg} text-white border-transparent ring-4 ring-white/10 scale-105 z-10` 
                                 : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/20 active:scale-95"
@@ -871,7 +871,7 @@ export default function EstoquePage() {
                         <Button 
                           onClick={() => handleStatusChange(detailPos, 'saida')} 
                           variant="outline"
-                          className="h-14 font-black uppercase tracking-widest text-[10px] rounded-2xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
+                          className="h-14 font-semibold uppercase tracking-widest text-[10px] rounded-2xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
                         >
                           <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                           Confirmar Saída
@@ -885,7 +885,7 @@ export default function EstoquePage() {
                       <Button 
                         variant="ghost" 
                         onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
+                        className="w-full h-14 rounded-2xl font-semibold uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
                       >
                         <Trash2 className="w-5 h-5 mr-3" />
                         Remover do Sistema Permanentemente
@@ -943,7 +943,7 @@ export default function EstoquePage() {
                         <DialogTitle className="text-2xl font-semibold tracking-tight leading-none">
                            {current.label}
                         </DialogTitle>
-                        <DialogDescription className="text-xs sm:text-sm font-black text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
+                        <DialogDescription className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
                            {current.value} Itens · {current.percent}% da Capacidade Total do CD
                         </DialogDescription>
                      </div>
@@ -955,7 +955,7 @@ export default function EstoquePage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
                     {/* General Distribution (Pie Chart) */}
                     <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 sm:p-8 shadow-xl ring-1 ring-white/5 flex flex-col items-center">
-                      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-8 self-start">Ocupação Geral do CD</h4>
+                      <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] mb-8 self-start">Ocupação Geral do CD</h4>
                       <div className="h-[260px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
@@ -986,8 +986,8 @@ export default function EstoquePage() {
                         {pieData.map((d) => (
                           <div key={d.name} className="flex items-center gap-3">
                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{d.name}</span>
-                            <span className="text-[10px] font-black ml-auto tabular-nums">{d.value}</span>
+                            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{d.name}</span>
+                            <span className="text-[10px] font-semibold ml-auto tabular-nums">{d.value}</span>
                           </div>
                         ))}
                       </div>
@@ -996,8 +996,8 @@ export default function EstoquePage() {
                     {/* Per-TEC Breakdown (Bar Chart) */}
                     <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 sm:p-8 shadow-xl ring-1 ring-white/5">
                       <div className="flex items-center justify-between mb-8">
-                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Distribuição por Estrutura</h4>
-                         <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-3 border-white/10 opacity-60">Status: {current.label}</Badge>
+                         <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em]">Distribuição por Estrutura</h4>
+                         <Badge variant="outline" className="text-[8px] font-semibold uppercase tracking-widest px-3 border-white/10 opacity-60">Status: {current.label}</Badge>
                       </div>
                       <div className="h-[260px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -1038,13 +1038,13 @@ export default function EstoquePage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                     {tecBreakdown.map((t) => (
                       <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1">
-                         <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 opacity-50 group-hover:opacity-100 transition-opacity">{t.tec}</div>
-                         <div className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter tabular-nums mb-1">{t.value}</div>
+                         <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-2 opacity-50 group-hover:opacity-100 transition-opacity">{t.tec}</div>
+                         <div className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tighter tabular-nums mb-1">{t.value}</div>
                          <div className="flex items-center gap-2">
                            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
                               <div className="h-full bg-primary/40" style={{ width: `${t.percent}%` }} />
                            </div>
-                           <div className="text-[9px] font-black text-primary uppercase">{t.percent}%</div>
+                           <div className="text-[9px] font-semibold text-primary uppercase">{t.percent}%</div>
                          </div>
                       </div>
                     ))}
@@ -1061,7 +1061,7 @@ export default function EstoquePage() {
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
         <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-black">Confirmar Saída</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-semibold">Confirmar Saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
               Isso removerá o item do estoque e arquivará o registro. Deseja continuar?
             </AlertDialogDescription>
@@ -1079,7 +1079,7 @@ export default function EstoquePage() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-black">Excluir Item</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-semibold">Excluir Item</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
               Deseja excluir este item do espaço? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
@@ -1126,7 +1126,7 @@ export default function EstoquePage() {
                 <Button
                   onClick={handleScanSubmit}
                   disabled={scanning || !scanInput.trim()}
-                  className="h-12 px-6 rounded-xl font-black bg-violet-600 hover:bg-violet-700 shrink-0"
+                  className="h-12 px-6 rounded-xl font-semibold bg-violet-600 hover:bg-violet-700 shrink-0"
                 >
                   {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
                 </Button>
@@ -1158,7 +1158,7 @@ export default function EstoquePage() {
       <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
         <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-black">Confirmar Saída por Bipagem</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-semibold">Confirmar Saída por Bipagem</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">
               {confirmScan && (
                 <>
