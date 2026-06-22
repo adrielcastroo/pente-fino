@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks } from 'lucide-react';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -61,6 +61,34 @@ export default function DashboardPage() {
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
   const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
   const [showMobileExtras, setShowMobileExtras] = useState(false);
+  const [presentationMode, setPresentationMode] = useState(false);
+
+  const togglePresentation = async () => {
+    const next = !presentationMode;
+    setPresentationMode(next);
+    try {
+      if (next && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen?.();
+      } else if (!next && document.fullscreenElement) {
+        await document.exitFullscreen?.();
+      }
+    } catch { /* ignore */ }
+    document.body.classList.toggle('presentation-mode', next);
+  };
+
+  useEffect(() => {
+    const onFsChange = () => {
+      if (!document.fullscreenElement && presentationMode) {
+        setPresentationMode(false);
+        document.body.classList.remove('presentation-mode');
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.body.classList.remove('presentation-mode');
+    };
+  }, [presentationMode]);
   const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
   const compareConference = useMemo(
     () => history.find(c => c.id === compareConferenceId) ?? null,
@@ -215,6 +243,16 @@ export default function DashboardPage() {
               </div>
             </div>
             
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={togglePresentation}
+              className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
+              title={presentationMode ? 'Sair do modo apresentação (Esc)' : 'Modo apresentação (F11)'}
+            >
+              {presentationMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </Button>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 

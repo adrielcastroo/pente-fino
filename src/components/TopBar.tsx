@@ -142,7 +142,7 @@ const TopBar = memo(function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
+    <header className="app-topbar sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-1 sm:gap-4 px-2 sm:px-6 xl:px-8 max-w-full mx-auto">
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-xl shrink-0" />
