@@ -12,6 +12,7 @@ import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashb
 import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
+import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
