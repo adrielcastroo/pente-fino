@@ -500,9 +500,21 @@ export default function SettingsPage() {
                             {profile?.display_name || "Usuário"}
                           </h4>
                           <p className="text-xs text-muted-foreground truncate">{user?.email || "Sessão local"}</p>
-                          <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider">
-                            {isGuest ? "Guest" : "Member"}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider cursor-help">
+                                {isGuest ? 'Visitante' : roleLabel}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs text-xs">
+                              {isGuest
+                                ? 'Sessão local sem persistência. Faça login para acessar todas as funcionalidades.'
+                                : role === 'admin' ? 'Acesso total: gerenciar usuários, sistema, auditoria, e todas as operações.'
+                                : role === 'gerente' ? 'Acesso a relatórios executivos, auditoria e operações de supervisão.'
+                                : role === 'supervisor' ? 'Pode editar registros antigos, excluir e gerenciar cadastros/estoque.'
+                                : 'Acesso operacional: criar registros e dar saída em estoque.'}
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
 
@@ -517,7 +529,15 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">E-mail (Não alterável)</Label>
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60 flex items-center gap-1.5">
+                            E-mail
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-muted-foreground cursor-help">(?)</span>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">Usado para login — não editável.</TooltipContent>
+                            </Tooltip>
+                          </Label>
                           <Input 
                             value={user?.email || ''} 
                             disabled
