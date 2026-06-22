@@ -10,6 +10,7 @@ import { getRegistroColumns } from '@/lib/registroColumns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { Registro } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -168,19 +169,35 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                <TooltipContent className="rounded-lg shadow-xl border-border/40">Copiar Lote Sistema</TooltipContent>
             </Tooltip>
             
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => onDelete(r.id)} 
-                  className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm" 
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
-            </Tooltip>
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remover registro"
+                      className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover registro?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação remove o registro <span className="font-mono font-bold">{r.item || '(sem item)'}</span> desta sessão. Você pode desfazer com Ctrl+Z.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(r.id)} className="bg-destructive hover:bg-destructive/90">Remover</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </td>
       )}

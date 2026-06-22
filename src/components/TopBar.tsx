@@ -238,7 +238,7 @@ const TopBar = memo(function TopBar() {
                     <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   )}
                   <span className="hidden sm:inline font-bold">{isArchiving || isExporting ? 'Aguarde...' : 'Exportar'}</span>
-                  {!isArchiving && !isExporting && (
+                  {!isArchiving && !isExporting && registroCount > 0 && (
                     <Badge variant="secondary" className="bg-white/20 text-white border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
                       {registroCount}
                     </Badge>
