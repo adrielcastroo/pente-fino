@@ -23,7 +23,6 @@ import {
   Palette, 
   Cpu, 
   Users,
-  Search,
   Check,
   ChevronRight,
   Save,
@@ -52,26 +51,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
+import { ROLE_LABEL, atLeast, type Role } from '@/lib/permissions';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
-const categories = [
-  { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
-  { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
-  { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
-  { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.' },
-  { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
-  { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
-  { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
+type Category = {
+  id: string;
+  name: string;
+  icon: any;
+  description: string;
+  minRole?: Role;
+};
+
+const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role; items: Category[] }[] = [
+  {
+    id: 'account',
+    label: 'Minha Conta',
+    items: [
+      { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
+      { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
+      { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'Sistema',
+    minRole: 'supervisor',
+    items: [
+      { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.', minRole: 'supervisor' },
+      { id: 'security', name: 'Segurança', icon: Shield, description: 'Senha, autenticação de dois fatores e sessões.' },
+      { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.', minRole: 'supervisor' },
+      { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', minRole: 'supervisor' },
+    ],
+  },
 ];
+
+// Compatibilidade com referências antigas a `categories`
+const categories: Category[] = CATEGORY_GROUPS.flatMap(g => g.items);
 
 export default function SettingsPage() {
   useDocumentTitle('Configurações');
