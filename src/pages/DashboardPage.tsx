@@ -508,7 +508,7 @@ export default function DashboardPage() {
           <SummaryChart 
             id="chart-setores"
             title="Setores Operacionais" 
-            desc="Carga de trabalho por setor (ordenado)" 
+            desc="Registros por setor (Tecido = manual + diversos + etiq. pronta)" 
             data={[...stats.categorias].sort((a, b) => (b.value || 0) - (a.value || 0))} 
             type="bar" 
             icon={Layers3} 
