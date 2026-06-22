@@ -160,9 +160,9 @@ export default function LabelLayoutPanel() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={kind} className="mt-6 animate-fade-in">
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 items-start">
-            <div className="space-y-6 xl:col-span-3 order-2 xl:order-1">
+        <TabsContent value={kind} className="mt-4 animate-fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 items-start">
+            <div className="space-y-4 lg:col-span-3 order-2 lg:order-1">
               <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
@@ -338,7 +338,7 @@ export default function LabelLayoutPanel() {
               </Card>
             </div>
 
-            <div className="space-y-4 xl:col-span-2 order-1 xl:order-2 xl:sticky xl:top-4">
+            <div className="space-y-3 lg:col-span-2 order-1 lg:order-2 lg:sticky lg:top-4">
               <div className="flex items-baseline justify-between">
                 <Label className="text-xs font-black uppercase tracking-widest opacity-60">
                   Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
@@ -349,7 +349,7 @@ export default function LabelLayoutPanel() {
               </div>
               <div
                 ref={previewBoxRef}
-                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 min-h-[420px] overflow-hidden"
+                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 h-[280px] lg:h-[360px] overflow-hidden"
               >
                 <div
                   style={{
