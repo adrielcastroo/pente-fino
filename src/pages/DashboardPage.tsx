@@ -115,13 +115,14 @@ export default function DashboardPage() {
       });
     });
     return Array.from(grouped.values())
+      .filter(o => showEmptyOutputs || o.quantity > 0)
       .sort((a, b) => {
         const timeA = new Date(a.date).getTime();
         const timeB = new Date(b.date).getTime();
         return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
       })
       .slice(0, 5);
-  }, [history]);
+  }, [history, showEmptyOutputs]);
 
   const allRegistrosDetailed = useMemo(() => {
     return history.flatMap(conf => 
