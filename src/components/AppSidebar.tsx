@@ -27,8 +27,10 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-type MenuItem = { key: AppTab; label: string; icon: any; path: string };
-type MenuGroup = { label: string; items: MenuItem[] };
+import { atLeast, type Role } from '@/lib/permissions';
+
+type MenuItem = { key: AppTab; label: string; icon: any; path: string; minRole?: Role };
+type MenuGroup = { label: string; items: MenuItem[]; minRole?: Role };
 
 const menuGroups: MenuGroup[] = [
   {
@@ -51,18 +53,22 @@ const menuGroups: MenuGroup[] = [
   },
   {
     label: 'Admin',
+    minRole: 'supervisor',
     items: [
-      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros' },
+      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros', minRole: 'supervisor' },
     ],
   },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
-  const { signOut } = useAuth();
+  const { signOut, role } = useAuth();
   const navigate = useNavigate();
   const registroCount = useAppStore(s => s.registros.length);
   const reservasCount = useAppStore(s => s.reservas.length);
+  const visibleGroups = menuGroups
+    .map(g => ({ ...g, items: g.items.filter(i => !i.minRole || atLeast(role, i.minRole)) }))
+    .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole)));
 
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -125,7 +131,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       </SidebarHeader>
 
       <SidebarContent className="px-3 group-data-[state=collapsed]:px-0 custom-scrollbar">
-        {menuGroups.map(group => (
+        {visibleGroups.map(group => (
           <SidebarGroup key={group.label} className="p-0 mb-2">
             <SidebarGroupLabel className="px-2 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-data-[state=collapsed]:hidden">
               {group.label}

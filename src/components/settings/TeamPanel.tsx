@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamPresence, type PresenceMeta, type PresenceStatus } from '@/hooks/use-presence';
-import { Users, Circle, Search } from 'lucide-react';
+import { Users, Circle, Search, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/use-auth';
+import { ROLE_LABEL, normalizeRole, type Role } from '@/lib/permissions';
+import { toast } from 'sonner';
 
 interface ProfileRow {
   id: string;
@@ -29,12 +34,24 @@ const STATUS_BADGE: Record<PresenceStatus, string> = {
   offline: 'bg-muted/40 text-muted-foreground border-border/40',
 };
 
+const ROLE_BADGE: Record<Role, string> = {
+  admin: 'bg-primary/15 text-primary border-primary/30',
+  gerente: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  supervisor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  operador: 'bg-muted/40 text-muted-foreground border-border/40',
+};
+
+const ASSIGNABLE_ROLES: Role[] = ['operador', 'supervisor', 'gerente', 'admin'];
+
 export default function TeamPanel() {
+  const { user, isAdmin } = useAuth();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [rolesByUser, setRolesByUser] = useState<Record<string, Role>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [presence, setPresence] = useState<Record<string, PresenceMeta>>({});
   const [query, setQuery] = useState('');
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useTeamPresence(setPresence);
 
@@ -44,17 +61,23 @@ export default function TeamPanel() {
       setLoading(true);
       setLoadError(null);
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, display_name, avatar_url')
-          .order('display_name', { ascending: true });
+        const [{ data: profilesData, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all([
+          supabase.from('profiles').select('id, display_name, avatar_url').order('display_name', { ascending: true }),
+          (supabase.from('user_roles' as any).select('user_id, role') as any),
+        ]);
         if (cancelled) return;
-        if (error) {
-          setLoadError(error.message);
-          setProfiles([]);
-        } else {
-          setProfiles((data ?? []) as ProfileRow[]);
+        if (pErr) throw pErr;
+        setProfiles((profilesData ?? []) as ProfileRow[]);
+        const map: Record<string, Role> = {};
+        if (!rErr && rolesData) {
+          (rolesData as any[]).forEach((r) => {
+            const next = normalizeRole(r.role);
+            const prev = map[r.user_id];
+            // keep highest role per user
+            if (!prev || rolePriority(next) < rolePriority(prev)) map[r.user_id] = next;
+          });
         }
+        setRolesByUser(map);
       } catch (err: any) {
         if (!cancelled) setLoadError(err?.message || 'Erro ao carregar membros.');
       } finally {
@@ -63,6 +86,23 @@ export default function TeamPanel() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const changeRole = async (userId: string, newRole: Role) => {
+    setSavingId(userId);
+    try {
+      // Replace all rows for this user with a single new role row
+      const { error: delErr } = await (supabase.from('user_roles' as any).delete().eq('user_id', userId) as any);
+      if (delErr) throw delErr;
+      const { error: insErr } = await (supabase.from('user_roles' as any).insert({ user_id: userId, role: newRole }) as any);
+      if (insErr) throw insErr;
+      setRolesByUser((m) => ({ ...m, [userId]: newRole }));
+      toast.success(`Perfil atualizado para ${ROLE_LABEL[newRole]}.`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Falha ao atualizar perfil.');
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   const members = useMemo(() => {
     const list = profiles.map((p) => {
@@ -73,6 +113,7 @@ export default function TeamPanel() {
         name: p.display_name || 'Sem nome',
         avatar: p.avatar_url,
         status,
+        role: rolesByUser[p.id] ?? 'operador',
         lastSeen: pres?.online_at ?? null,
       };
     });
@@ -81,7 +122,7 @@ export default function TeamPanel() {
       : list;
     const order: Record<PresenceStatus, number> = { online: 0, away: 1, offline: 2 };
     return filtered.sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name));
-  }, [profiles, presence, query]);
+  }, [profiles, presence, rolesByUser, query]);
 
   const counts = useMemo(() => {
     const c = { online: 0, away: 0, offline: 0 };
@@ -94,10 +135,7 @@ export default function TeamPanel() {
       {/* Status summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {(['online', 'away', 'offline'] as PresenceStatus[]).map((s) => (
-          <div
-            key={s}
-            className={`flex items-center gap-3 p-4 rounded-2xl border ${STATUS_BADGE[s]}`}
-          >
+          <div key={s} className={`flex items-center gap-3 p-4 rounded-2xl border ${STATUS_BADGE[s]}`}>
             <Circle className={`w-2.5 h-2.5 fill-current ${s === 'online' ? 'text-emerald-500' : s === 'away' ? 'text-amber-500' : 'text-muted-foreground'}`} />
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{STATUS_LABEL[s]}</span>
@@ -106,6 +144,16 @@ export default function TeamPanel() {
           </div>
         ))}
       </div>
+
+      {isAdmin && (
+        <div className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs">
+          <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <span className="text-muted-foreground">
+            Como <strong className="text-foreground">Admin</strong>, você pode alterar o perfil de cada membro.
+            Mudanças são aplicadas imediatamente e refletem nas permissões do banco.
+          </span>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -121,9 +169,7 @@ export default function TeamPanel() {
       {/* Members list */}
       <div className="space-y-2">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-2xl" />
-          ))
+          Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-16 rounded-2xl" />))
         ) : loadError ? (
           <div className="text-center py-10 rounded-2xl border border-destructive/20 bg-destructive/5 text-destructive">
             <p className="text-sm font-bold">Não foi possível carregar os membros.</p>
@@ -135,46 +181,58 @@ export default function TeamPanel() {
             <p className="text-sm font-medium">Nenhum membro encontrado.</p>
           </div>
         ) : (
-          members.map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center gap-4 p-3.5 rounded-2xl bg-muted/20 border border-border/20 hover:border-border/40 transition-colors"
-            >
-              {/* Avatar with status indicator */}
-              <div className="relative">
-                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-                  {m.avatar ? (
-                    <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-sm font-bold text-primary">
-                      {m.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+          members.map((m) => {
+            const isSelf = user?.id === m.id;
+            return (
+              <div key={m.id} className="flex flex-wrap items-center gap-3 sm:gap-4 p-3.5 rounded-2xl bg-muted/20 border border-border/20 hover:border-border/40 transition-colors">
+                <div className="relative">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+                    {m.avatar ? (
+                      <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-bold text-primary">{m.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background ${STATUS_DOT[m.status]}`} aria-label={STATUS_LABEL[m.status]} />
                 </div>
-                <span
-                  className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background ${STATUS_DOT[m.status]}`}
-                  aria-label={STATUS_LABEL[m.status]}
-                />
-              </div>
 
-              {/* Name + status */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{m.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {m.status === 'online' && 'Ativo agora'}
-                  {m.status === 'away' && 'Ausente temporariamente'}
-                  {m.status === 'offline' && (m.lastSeen ? 'Desconectado' : 'Nunca conectou')}
-                </p>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {m.name}
+                    {isSelf && <span className="ml-2 text-[10px] font-medium text-muted-foreground">(você)</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {m.status === 'online' && 'Ativo agora'}
+                    {m.status === 'away' && 'Ausente temporariamente'}
+                    {m.status === 'offline' && (m.lastSeen ? 'Desconectado' : 'Nunca conectou')}
+                  </p>
+                </div>
 
-              {/* Status badge */}
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${STATUS_BADGE[m.status]}`}>
-                {STATUS_LABEL[m.status]}
-              </span>
-            </div>
-          ))
+                {isAdmin && !isSelf ? (
+                  <Select value={m.role} onValueChange={(v) => changeRole(m.id, v as Role)} disabled={savingId === m.id}>
+                    <SelectTrigger className="h-9 w-[140px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ASSIGNABLE_ROLES.map((r) => (
+                        <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${ROLE_BADGE[m.role]}`}>
+                    {ROLE_LABEL[m.role]}
+                  </Badge>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </div>
   );
+}
+
+function rolePriority(r: Role): number {
+  return ({ admin: 1, gerente: 2, supervisor: 3, operador: 4 } as const)[r];
 }
