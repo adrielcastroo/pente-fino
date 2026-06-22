@@ -157,7 +157,61 @@ export default function CadastrosPage() {
       </div>
 
       <TooltipProvider>
-      <div className="flex-1 overflow-auto border rounded-lg bg-card">
+      {/* Mobile: cards empilhados */}
+      <div className="md:hidden flex-1 overflow-auto space-y-2">
+        {isLoading && <p className="text-center text-muted-foreground py-8 text-sm">Carregando...</p>}
+        {!isLoading && filtered.length === 0 && (
+          <p className="text-center text-muted-foreground py-12 text-sm">
+            {itens.length === 0 ? 'Nenhum item cadastrado.' : 'Nenhum resultado.'}
+          </p>
+        )}
+        {paged.map((item) => {
+          const codigos = getCodigos(item);
+          return (
+            <div key={item.id} className="rounded-lg border bg-card p-3 flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-xs text-primary font-bold">{item.codigo_interno}</div>
+                  <div className="text-sm font-medium mt-0.5 line-clamp-2">{item.descricao}</div>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => handleEdit(item)} aria-label="Editar">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {codigos.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {codigos.slice(0, 4).map((c, i) => (
+                    <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[10px]">{c}</Badge>
+                  ))}
+                  {codigos.length > 4 && <Badge variant="secondary" className="text-[10px]">+{codigos.length - 4}</Badge>}
+                </div>
+              ) : (
+                <span className="text-[10px] text-muted-foreground italic">sem código fornecedor</span>
+              )}
+              <div className="text-[10px] text-muted-foreground">
+                Atualizado em {new Date(item.updated_at).toLocaleDateString('pt-BR')}
+                {item.last_edited_at && <span className="ml-2 text-amber-600 dark:text-amber-400">• editado</span>}
+              </div>
+            </div>
+          );
+        })}
+        {filtered.length > paged.length && (
+          <div className="flex flex-col items-center gap-2 py-4">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {paged.length} de {filtered.length}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => setPageSize(p => p + 50)}>Carregar mais 50</Button>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop/tablet: tabela */}
+      <div className="hidden md:block flex-1 overflow-auto border rounded-lg bg-card">
         <Table>
           <TableHeader className="sticky top-0 bg-card z-10">
             <TableRow>

@@ -8,7 +8,9 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend,
 } from 'recharts';
 import { usePerformance } from '@/hooks/use-performance';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 // Premium Color Palette
 const CHART_COLORS = [
@@ -111,6 +113,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
 
 export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const { isLow } = usePerformance();
+  const isMobile = useIsMobile();
   return (
     <Card id={id} className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/30 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-2">
       <CardHeader className="px-8 py-8 flex flex-row items-start justify-between">
@@ -132,12 +135,36 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-8 pb-8 h-[260px]">
+      <CardContent className={cn("px-4 sm:px-8 pb-6 sm:pb-8", isMobile ? "min-h-[120px]" : "h-[260px]")}>
         {(!data || data.length === 0) ? (
-          <div className="h-full flex flex-col items-center justify-center gap-2 text-foreground/50">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center gap-2 text-foreground/50">
             <Icon className="w-8 h-8 opacity-30" />
             <p className="text-sm font-bold">Sem dados ainda</p>
           </div>
+        ) : isMobile ? (
+          (() => {
+            const max = Math.max(...data.map((d: any) => Number(d[chartKey]) || 0), 1);
+            return (
+              <ul className="flex flex-col gap-2.5 py-2">
+                {data.slice(0, 6).map((d: any, i: number) => {
+                  const v = Number(d[chartKey]) || 0;
+                  const pct = Math.round((v / max) * 100);
+                  const color = CHART_COLORS[i % CHART_COLORS.length];
+                  return (
+                    <li key={i} className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="truncate text-foreground/80">{d.name}</span>
+                        <span className="tabular-nums text-foreground/60">{v}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {type === 'bar' ? (
@@ -166,6 +193,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 export const OccupationChart = React.memo(({ title, used, total, reserved = 0, blocked = 0, unit = 'alocações', id }: any) => {
   const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
   const isEmpty = total === 0 || (used === 0 && reserved === 0 && blocked === 0);
+  const isMobile = useIsMobile();
   // Cores semafóricas via tokens semânticos
   const rawData = [
     { name: 'Ocupado', value: used, color: 'hsl(var(--primary))' },
@@ -178,15 +206,33 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
 
   return (
     <Card id={id} className="border border-border/10 bg-card/20 backdrop-blur-md overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/20 hover:shadow-xl">
-      <CardHeader className="px-10 py-8 border-b border-border/10">
-        <CardTitle className="text-xl font-extrabold flex items-center gap-3">
+      <CardHeader className="px-5 sm:px-10 py-5 sm:py-8 border-b border-border/10">
+        <CardTitle className="text-base sm:text-xl font-extrabold flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10 text-primary">
             <Package className="w-5 h-5" />
           </div>
           <span>{title}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-12 flex flex-col items-center gap-8">
+      <CardContent className={cn("flex flex-col items-center gap-6", isMobile ? "p-5" : "p-12 gap-8")}>
+        {isMobile ? (
+          <div className="w-full space-y-3">
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-black tabular-nums text-foreground">
+                {isEmpty ? '—' : `${percentage}%`}
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-foreground/50">
+                {isEmpty ? 'setor inativo' : 'ocupado'}
+              </span>
+            </div>
+            <div className="h-3 rounded-full bg-muted/40 overflow-hidden flex">
+              {data.filter(d => d.name !== 'Livre').map((d, i) => {
+                const pct = total > 0 ? (d.value / total) * 100 : 0;
+                return <div key={i} className="h-full transition-all" style={{ width: `${pct}%`, backgroundColor: d.color }} />;
+              })}
+            </div>
+          </div>
+        ) : (
         <div className="relative w-[240px] h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -210,6 +256,7 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
             )}
           </div>
         </div>
+        )}
         <div className="w-full space-y-4">
            {data.map((d, i) => (
              <div key={i} className="flex items-center justify-between text-xs font-bold uppercase tracking-widest">

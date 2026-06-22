@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
   const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
+  const [showMobileExtras, setShowMobileExtras] = useState(false);
   const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
   const compareConference = useMemo(
     () => history.find(c => c.id === compareConferenceId) ?? null,
@@ -249,7 +250,21 @@ export default function DashboardPage() {
 
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
+      {/* Toggle mobile para revelar gráficos pesados */}
+      <button
+        type="button"
+        onClick={() => setShowMobileExtras(v => !v)}
+        className="md:hidden w-full rounded-xl border border-border/30 bg-card/40 backdrop-blur py-3 px-4 flex items-center justify-between text-xs font-black uppercase tracking-wider text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
+      >
+        <span>{showMobileExtras ? 'Ocultar gráficos detalhados' : 'Ver mais gráficos e detalhes'}</span>
+        <ChevronRight className={cn("w-4 h-4 transition-transform", showMobileExtras && "rotate-90")} />
+      </button>
+
+      {/* Charts Grid */}
+      <div className={cn(
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden",
+        !showMobileExtras && "hidden md:grid"
+      )}>
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
