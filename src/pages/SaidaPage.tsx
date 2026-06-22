@@ -256,12 +256,12 @@ export default function SaidaPage() {
             <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-xs">Carregando saídas...</p>
           </div>
         ) : filteredSaidas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center">
-              <Archive className="w-8 h-8 text-muted-foreground/30" />
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-muted/30 flex items-center justify-center">
+              <Archive className="w-6 h-6 text-muted-foreground/40" />
             </div>
-            <p className="text-muted-foreground text-sm font-medium">
-              Nenhum registro de saída encontrado{search ? ' para sua busca' : ''}.
+            <p className="text-muted-foreground text-sm">
+              Nenhuma saída encontrada{search ? ' para a busca.' : '.'}
             </p>
           </div>
         ) : (
