@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useItensCadastro, useDeleteItemCadastro } from '@/hooks/useItensCadastro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ export default function CadastrosPage() {
   const [search, setSearch] = useState('');
   const [fornFilter, setFornFilter] = useState<FornFilter>('todos');
   const [sortKey, setSortKey] = useState<SortKey>('codigo_interno');
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
@@ -61,6 +62,11 @@ export default function CadastrosPage() {
     });
     return sorted;
   }, [itens, search, fornFilter, sortKey]);
+
+  const paged = useMemo(() => filtered.slice(0, pageSize), [filtered, pageSize]);
+
+  // Reset pagination when filters change
+  useEffect(() => { setPageSize(50); }, [search, fornFilter, sortKey]);
 
   const handleEdit = (item: ItemCadastro) => {
     setEditing(item);
@@ -174,7 +180,7 @@ export default function CadastrosPage() {
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((item) => {
+            {paged.map((item) => {
               const lf = item.last_edited_field || null;
               const wasEdited = !!item.last_edited_at;
               const editedCol = (k: string) => lf === k;
@@ -259,6 +265,16 @@ export default function CadastrosPage() {
             );})}
           </TableBody>
         </Table>
+        {filtered.length > paged.length && (
+          <div className="flex flex-col items-center gap-2 py-6 border-t border-border/40">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Exibindo {paged.length} de {filtered.length}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => setPageSize(p => p + 50)} className="gap-2">
+              Carregar mais 50
+            </Button>
+          </div>
+        )}
       </div>
       </TooltipProvider>
 

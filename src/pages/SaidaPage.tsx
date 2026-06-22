@@ -6,6 +6,7 @@ import { Search, Archive, Calendar, User, Clock, FileText, ScanBarcode, Loader2,
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { usePerformance } from '@/hooks/use-performance';
@@ -33,10 +34,14 @@ interface SaidaRegistro {
   observacoes?: string;
 }
 
+type Periodo = 'todos' | '7' | '30' | '90';
+
 export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [periodo, setPeriodo] = useState<Periodo>('30');
+  const [pageSize, setPageSize] = useState(20);
   const { isLow } = usePerformance();
 
   // Barcode scanning state
@@ -179,16 +184,25 @@ export default function SaidaPage() {
 
   const filteredSaidas = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return saidas;
-    return saidas.filter(s => 
-      s.item.toLowerCase().includes(q) ||
-      (s.proc || '').toLowerCase().includes(q) ||
-      (s.lote || '').toLowerCase().includes(q) ||
-      (s.lote_sistema || '').toLowerCase().includes(q) ||
-      (s.conferente_saida || '').toLowerCase().includes(q) ||
-      (s.conferente_entrada || '').toLowerCase().includes(q)
-    );
-  }, [saidas, search]);
+    const now = Date.now();
+    const cutoff = periodo === 'todos' ? 0 : now - Number(periodo) * 24 * 60 * 60 * 1000;
+    return saidas.filter(s => {
+      if (cutoff && new Date(s.data_saida).getTime() < cutoff) return false;
+      if (!q) return true;
+      return (
+        s.item.toLowerCase().includes(q) ||
+        (s.proc || '').toLowerCase().includes(q) ||
+        (s.lote || '').toLowerCase().includes(q) ||
+        (s.lote_sistema || '').toLowerCase().includes(q) ||
+        (s.conferente_saida || '').toLowerCase().includes(q) ||
+        (s.conferente_entrada || '').toLowerCase().includes(q)
+      );
+    });
+  }, [saidas, search, periodo]);
+
+  const visibleSaidas = useMemo(() => filteredSaidas.slice(0, pageSize), [filteredSaidas, pageSize]);
+
+  useEffect(() => { setPageSize(20); }, [search, periodo]);
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
@@ -215,10 +229,22 @@ export default function SaidaPage() {
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Filtrar item, PROC..."
+                placeholder="Filtrar item, PROC, conferente..."
                 className="pl-10 h-11 sm:h-12 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
               />
             </div>
+
+            <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
+              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-xl border-border/40 font-bold text-xs sm:text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+                <SelectItem value="todos">Todo o período</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </header>
       </div>
@@ -240,7 +266,7 @@ export default function SaidaPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 max-w-[1400px] mx-auto">
-            {filteredSaidas.map((saida) => (
+            {visibleSaidas.map((saida) => (
               <div key={saida.id} className="bg-card/60 border border-border/40 rounded-2xl p-4 sm:p-5 hover:border-border/60 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">
@@ -308,6 +334,16 @@ export default function SaidaPage() {
                 </div>
               </div>
             ))}
+            {filteredSaidas.length > visibleSaidas.length && (
+              <div className="flex flex-col items-center gap-2 py-6">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Exibindo {visibleSaidas.length} de {filteredSaidas.length}
+                </p>
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-xl font-black text-xs uppercase tracking-wider h-10 px-6">
+                  Carregar mais
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -582,6 +582,11 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm sm:text-lg font-black tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
+                {!conf.finishedAt && (
+                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
+                    Aberta
+                  </Badge>
+                )}
                 <div className="flex gap-1.5 flex-wrap">
                   {modeBadges.map(b => (
                     <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
@@ -593,6 +598,12 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
               
               <div className="flex items-center gap-3 text-[10px] sm:text-xs text-muted-foreground font-bold flex-wrap">
                 <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md"><Calendar className="w-3.5 h-3.5 opacity-60" /> {formatDateBR(conf.date)}</span>
+                
+                {conf.conferente && (
+                  <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-md">
+                    <User className="w-3.5 h-3.5" /> {conf.conferente}
+                  </span>
+                )}
                 
                 {conf.startedAt && (
                   <span className="flex items-center gap-1.5 text-emerald-600/80 bg-emerald-500/5 px-2 py-0.5 rounded-md">
@@ -821,6 +832,8 @@ export default function HistoryPanel() {
   const [localSearch, setLocalSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showTestData, setShowTestData] = useState(false);
+  const [periodo, setPeriodo] = useState<'todos' | '7' | '30' | '90'>('30');
+  const [pageSize, setPageSize] = useState(20);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
@@ -849,15 +862,21 @@ export default function HistoryPanel() {
   const { visibleHistory, testCount } = useMemo(() => {
     let testCount = 0;
     const visible: Conference[] = [];
+    const now = Date.now();
+    const cutoff = periodo === 'todos' ? 0 : now - Number(periodo) * 24 * 60 * 60 * 1000;
     for (const c of history) {
       if (isTestConference(c)) {
         testCount++;
         if (!showTestData) continue;
       }
+      if (cutoff) {
+        const ref = c.finishedAt || c.startedAt || c.date;
+        if (ref && new Date(ref).getTime() < cutoff) continue;
+      }
       visible.push(c);
     }
     return { visibleHistory: visible, testCount };
-  }, [history, showTestData]);
+  }, [history, showTestData, periodo]);
 
   const filtered = useMemo(() => {
     const q = debouncedSearch.toLowerCase().trim();
@@ -885,6 +904,10 @@ export default function HistoryPanel() {
     }
     return result;
   }, [visibleHistory, debouncedSearch]);
+
+  const paged = useMemo(() => filtered.slice(0, pageSize), [filtered, pageSize]);
+
+  useEffect(() => { setPageSize(20); }, [debouncedSearch, periodo, showTestData]);
 
   const handleClear = async () => {
     try {
@@ -947,6 +970,16 @@ export default function HistoryPanel() {
                   className="pl-11 h-12 rounded-2xl border-border/40 bg-card/40 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm shadow-sm"
                 />
              </div>
+             <select
+               value={periodo}
+               onChange={e => setPeriodo(e.target.value as any)}
+               className="h-12 rounded-2xl border border-border/40 bg-card/40 px-3 text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/20"
+             >
+               <option value="7">Últimos 7 dias</option>
+               <option value="30">Últimos 30 dias</option>
+               <option value="90">Últimos 90 dias</option>
+               <option value="todos">Todo período</option>
+             </select>
              {testCount > 0 && (
                <Tooltip>
                  <TooltipTrigger asChild>
@@ -995,7 +1028,7 @@ export default function HistoryPanel() {
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 max-w-[1400px] mx-auto pb-8">
             <AnimatePresence mode="popLayout">
-              {filtered.map((conf, index) => (
+              {paged.map((conf, index) => (
                 <motion.div
                   key={conf.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -1011,6 +1044,16 @@ export default function HistoryPanel() {
                 </motion.div>
               ))}
             </AnimatePresence>
+            {filtered.length > paged.length && (
+              <div className="flex flex-col items-center gap-2 py-6">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Exibindo {paged.length} de {filtered.length}
+                </p>
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-2xl font-black text-xs uppercase tracking-wider h-11 px-6">
+                  Carregar mais
+                </Button>
+              </div>
+            )}
           </div>
 
         ) : (
