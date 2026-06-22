@@ -752,6 +752,7 @@ export const LeftPanel = memo(function LeftPanel() {
     } catch (e: any) {
       setProgress(0);
       setAiStatus({ msg: '❌ ' + e.message, type: 'err' });
+      bipError();
       toast.error('Erro OpenRouter: ' + e.message);
     }
     setAiLoading(false);
