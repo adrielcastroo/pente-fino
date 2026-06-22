@@ -209,7 +209,7 @@ export default function SaidaPage() {
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-0.5 sm:space-y-1 text-left">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-foreground leading-none">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-none">
               Saídas
             </h1>
           </div>
@@ -218,7 +218,7 @@ export default function SaidaPage() {
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
-              className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-6 font-black rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-xs sm:text-sm shrink-0"
+              className="w-full sm:w-auto h-12 px-6 font-bold rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-base shrink-0"
             >
                <LogOut className="w-5 h-5" />
               <span>Dar saída</span>
@@ -367,7 +367,7 @@ export default function SaidaPage() {
 
           <div className="p-6 space-y-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
+              <label className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
               <div className="flex gap-2">
                 <Input
                   ref={scanRef}
@@ -375,15 +375,15 @@ export default function SaidaPage() {
                   onChange={e => setScanInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
                   placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
-                  className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
+                  className="h-14 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-lg"
                   autoFocus
                 />
                 <Button
                   onClick={handleScanSubmit}
                   disabled={scanning || !scanInput.trim()}
-                  className="h-12 px-6 rounded-xl font-black bg-violet-600 hover:bg-violet-700 shrink-0"
+                  className="h-14 px-6 rounded-xl font-black bg-violet-600 hover:bg-violet-700 shrink-0 text-base"
                 >
-                  {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
+                  {scanning ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Buscar'}
                 </Button>
               </div>
             </div>
