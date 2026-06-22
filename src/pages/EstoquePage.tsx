@@ -91,6 +91,7 @@ export default function EstoquePage() {
   const [scanResult, setScanResult] = useState<{ item: Posicao | null; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<Posicao | null>(null);
   const scanRef = useRef<HTMLInputElement>(null);
+  const [locateQuery, setLocateQuery] = useState('');
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
