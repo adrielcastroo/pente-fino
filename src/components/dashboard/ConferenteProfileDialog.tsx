@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { User, Clock, ListChecks, Calendar, AlertTriangle, Activity } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RTooltip, XAxis } from 'recharts';
@@ -82,13 +83,13 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
 
   return (
     <Dialog open={!!conferente} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b border-border/20 flex-none space-y-0">
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-lg font-black border border-primary/20">
+            <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-lg font-black border border-primary/20 flex-none">
               {data ? getInitials(data.name) : <User className="w-6 h-6" />}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <DialogTitle className="text-xl font-black tracking-tight truncate">
                 {data?.name || 'Conferente'}
               </DialogTitle>
@@ -99,8 +100,9 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
           </div>
         </DialogHeader>
 
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
         {data && (
-          <div className="space-y-6 pt-2">
+          <div className="space-y-6">
             {/* KPIs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <KpiCard icon={ListChecks} label="Registros" value={data.totalRegistros} />
@@ -176,6 +178,13 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
             </div>
           </div>
         )}
+        </div>
+
+        <DialogFooter className="px-4 sm:px-6 py-3 border-t border-border/20 bg-muted/20 flex-none">
+          <Button variant="default" onClick={onClose} className="w-full sm:w-auto font-bold">
+            Fechar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
