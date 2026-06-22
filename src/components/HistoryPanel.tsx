@@ -1028,7 +1028,7 @@ export default function HistoryPanel() {
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 max-w-[1400px] mx-auto pb-8">
             <AnimatePresence mode="popLayout">
-              {filtered.map((conf, index) => (
+              {paged.map((conf, index) => (
                 <motion.div
                   key={conf.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -1044,6 +1044,16 @@ export default function HistoryPanel() {
                 </motion.div>
               ))}
             </AnimatePresence>
+            {filtered.length > paged.length && (
+              <div className="flex flex-col items-center gap-2 py-6">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Exibindo {paged.length} de {filtered.length}
+                </p>
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-2xl font-black text-xs uppercase tracking-wider h-11 px-6">
+                  Carregar mais
+                </Button>
+              </div>
+            )}
           </div>
 
         ) : (
