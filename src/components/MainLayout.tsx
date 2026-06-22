@@ -33,6 +33,7 @@ export default function MainLayout() {
   const isTablet = useIsTablet();
   const location = useLocation();
   usePresenceTracker();
+  useNetworkStatus();
 
   // Map path to active tab
   const getActiveTab = (path: string): AppTab => {
