@@ -27,8 +27,10 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-type MenuItem = { key: AppTab; label: string; icon: any; path: string };
-type MenuGroup = { label: string; items: MenuItem[] };
+import { atLeast, type Role } from '@/lib/permissions';
+
+type MenuItem = { key: AppTab; label: string; icon: any; path: string; minRole?: Role };
+type MenuGroup = { label: string; items: MenuItem[]; minRole?: Role };
 
 const menuGroups: MenuGroup[] = [
   {
@@ -51,8 +53,9 @@ const menuGroups: MenuGroup[] = [
   },
   {
     label: 'Admin',
+    minRole: 'supervisor',
     items: [
-      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros' },
+      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros', minRole: 'supervisor' },
     ],
   },
 ];
