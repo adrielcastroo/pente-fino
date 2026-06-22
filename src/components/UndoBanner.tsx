@@ -45,7 +45,7 @@ export default function UndoBanner() {
           transition={{ type: 'spring', damping: 22, stiffness: 280 }}
           className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[min(92vw,520px)]"
         >
-          <div className="relative overflow-hidden rounded-xl border border-destructive/30 bg-card/95 backdrop-blur-md shadow-2xl shadow-destructive/10">
+          <div className="relative overflow-hidden rounded-md border border-destructive/30 bg-card/95 backdrop-blur-md shadow-2xl shadow-destructive/10">
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-destructive/15 text-destructive flex items-center justify-center">
                 <AlertCircle className="w-4 h-4" strokeWidth={2.5} />

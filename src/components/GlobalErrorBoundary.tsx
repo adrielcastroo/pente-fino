@@ -38,7 +38,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-destructive/10 flex items-center justify-center mb-8 animate-in zoom-in-95 duration-500">
+          <div className="w-20 h-20 rounded-md bg-destructive/10 flex items-center justify-center mb-8 animate-in zoom-in-95 duration-500">
             <AlertCircle className="w-10 h-10 text-destructive" />
           </div>
           
@@ -51,7 +51,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             Isso pode ser um problema temporário de conexão ou um erro no sistema.
           </p>
 
-          <div className="bg-muted/30 border border-border/50 rounded-2xl p-6 mb-10 w-full max-w-lg text-left overflow-auto max-h-[200px]">
+          <div className="bg-muted/30 border border-border/50 rounded-md p-6 mb-10 w-full max-w-lg text-left overflow-auto max-h-[200px]">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Detalhes do erro:</p>
             <code className="text-xs font-mono text-destructive font-bold break-all">
               {this.state.error?.name}: {this.state.error?.message}
@@ -61,7 +61,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
             <Button 
               onClick={this.handleReset} 
-              className="flex-1 h-12 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20"
+              className="flex-1 h-12 rounded-md font-bold gap-2 shadow-lg shadow-primary/20"
             >
               <RefreshCw className="w-4 h-4" />
               Recarregar Página
@@ -70,7 +70,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <Button 
               variant="outline" 
               onClick={this.handleGoHome} 
-              className="flex-1 h-12 rounded-xl font-bold gap-2"
+              className="flex-1 h-12 rounded-md font-bold gap-2"
             >
               <Home className="w-4 h-4" />
               Voltar ao Início

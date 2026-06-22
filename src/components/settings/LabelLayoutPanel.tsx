@@ -145,16 +145,16 @@ export default function LabelLayoutPanel() {
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={kind} onValueChange={(v) => setKind(v as LabelKind)}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-2xl bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-md bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
           <TabsTrigger
             value="tecido"
-            className="gap-2 font-bold rounded-xl transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
+            className="gap-2 font-bold rounded-md transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
           >
             <Shirt className="w-4 h-4" /> Tecidos
           </TabsTrigger>
           <TabsTrigger
             value="motor"
-            className="gap-2 font-bold rounded-xl transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
+            className="gap-2 font-bold rounded-md transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
           >
             <Cog className="w-4 h-4" /> Motores / Controles
           </TabsTrigger>
@@ -167,7 +167,7 @@ export default function LabelLayoutPanel() {
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Maximize className="w-4 h-4" />
                     </div>
                     <CardTitle className="text-sm font-semibold uppercase tracking-wider">Dimensões (mm)</CardTitle>
@@ -221,7 +221,7 @@ export default function LabelLayoutPanel() {
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Layout className="w-4 h-4" />
                     </div>
                     <CardTitle className="text-sm font-semibold uppercase tracking-wider">Blocos da Etiqueta</CardTitle>
@@ -277,7 +277,7 @@ export default function LabelLayoutPanel() {
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <Square className="w-4 h-4" />
                     </div>
                     <CardTitle className="text-sm font-semibold uppercase tracking-wider">Aparência</CardTitle>
@@ -349,7 +349,7 @@ export default function LabelLayoutPanel() {
               </div>
               <div
                 ref={previewBoxRef}
-                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-3xl border-2 border-dashed border-border/30 h-[280px] lg:h-[360px] overflow-hidden"
+                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-md border-2 border-dashed border-border/30 h-[280px] lg:h-[360px] overflow-hidden"
               >
                 <div
                   style={{
@@ -370,7 +370,7 @@ export default function LabelLayoutPanel() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 p-3 rounded-2xl bg-primary/5 border border-primary/10">
+              <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10">
                 <Layout className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-[10px] leading-tight text-primary/80 font-medium">
                   {isMotor
@@ -384,13 +384,13 @@ export default function LabelLayoutPanel() {
                 <Button
                   onClick={handleReset}
                   variant="outline"
-                  className="flex-1 gap-2 font-bold border-dashed h-11 rounded-xl transition-all duration-300 hover:bg-destructive/5 hover:border-destructive/40 hover:text-destructive hover:-translate-y-0.5 hover:shadow-md"
+                  className="flex-1 gap-2 font-bold border-dashed h-11 rounded-md transition-all duration-300 hover:bg-destructive/5 hover:border-destructive/40 hover:text-destructive hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <RefreshCw className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" /> Resetar Padrão
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="flex-[2] gap-2 font-bold h-11 rounded-xl bg-gradient-to-r from-primary to-primary/85 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
+                  className="flex-[2] gap-2 font-bold h-11 rounded-md bg-gradient-to-r from-primary to-primary/85 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
                 >
                   <Save className="w-4 h-4" /> Salvar Preferências
                 </Button>

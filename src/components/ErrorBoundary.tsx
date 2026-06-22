@@ -23,8 +23,8 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div role="alert" className="min-h-[60vh] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-card/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl text-center space-y-5">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-destructive/15 text-destructive flex items-center justify-center">
+        <div className="max-w-md w-full bg-card/60 backdrop-blur-xl border border-white/10 rounded-md p-8 shadow-2xl text-center space-y-5">
+          <div className="mx-auto w-16 h-16 rounded-md bg-destructive/15 text-destructive flex items-center justify-center">
             <AlertTriangle className="w-8 h-8" aria-hidden="true" />
           </div>
           <div>

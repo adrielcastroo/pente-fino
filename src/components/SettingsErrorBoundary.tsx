@@ -33,8 +33,8 @@ export class SettingsErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center space-y-4">
-        <div className="mx-auto w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+      <div className="rounded-md border border-destructive/20 bg-destructive/5 p-6 text-center space-y-4">
+        <div className="mx-auto w-12 h-12 rounded-md bg-destructive/10 flex items-center justify-center">
           <AlertTriangle className="w-6 h-6 text-destructive" />
         </div>
         <div className="space-y-1">
@@ -45,7 +45,7 @@ export class SettingsErrorBoundary extends Component<Props, State> {
             {this.state.error?.message || 'Ocorreu um erro inesperado.'}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={this.reset} className="gap-2 rounded-xl">
+        <Button variant="outline" size="sm" onClick={this.reset} className="gap-2 rounded-md">
           <RefreshCw className="w-3.5 h-3.5" />
           Tentar novamente
         </Button>

@@ -533,9 +533,9 @@ export default function SettingsPage() {
                 <CardContent className="pt-6 space-y-6">
                   {activeCategory === 'profile' && (
                     <div className="space-y-6">
-                      <div className="flex items-center gap-5 p-4 rounded-2xl bg-muted/30 border border-border/20">
+                      <div className="flex items-center gap-5 p-4 rounded-md bg-muted/30 border border-border/20">
                         <div className="relative group">
-                          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
+                          <div className="w-16 h-16 rounded-md bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
                             {avatarUrl ? (
                               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
@@ -545,7 +545,7 @@ export default function SettingsPage() {
                           {!isGuest && (
                             <label
                               htmlFor="avatar-upload"
-                              className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                              className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                               title="Alterar avatar"
                             >
                               {uploadingAvatar ? (
@@ -657,7 +657,7 @@ export default function SettingsPage() {
 
                   {activeCategory === 'preferences' && (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Iniciar com Sidebar Recolhida</Label>
                           <p className="text-xs text-muted-foreground">O menu lateral abrirá fechado por padrão. Maximiza a área de trabalho.</p>
@@ -665,7 +665,7 @@ export default function SettingsPage() {
                         <Switch checked={prefSidebarCollapsed} onCheckedChange={(v) => { setPrefSidebarCollapsed(v); setHasUnsavedChanges(true); }} />
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Tabelas Compactas</Label>
                           <p className="text-xs text-muted-foreground">Reduz espaçamento das tabelas para exibir mais dados por tela.</p>
@@ -673,7 +673,7 @@ export default function SettingsPage() {
                         <Switch checked={prefCompactTables} onCheckedChange={(v) => { setPrefCompactTables(v); setHasUnsavedChanges(true); }} />
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Confirmar Exclusões</Label>
                           <p className="text-xs text-muted-foreground">Exibe diálogo de confirmação antes de excluir registros.</p>
@@ -681,7 +681,7 @@ export default function SettingsPage() {
                         <Switch checked={prefConfirmDelete} onCheckedChange={(v) => { setPrefConfirmDelete(v); setHasUnsavedChanges(true); }} />
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Feedback Sonoro de Bipagem</Label>
                           <p className="text-xs text-muted-foreground">Emite som ao bipar códigos com sucesso ou erro.</p>
@@ -690,7 +690,7 @@ export default function SettingsPage() {
                       </div>
 
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Arquivamento Automático</Label>
                           <p className="text-xs text-muted-foreground">Arquiva conferências automaticamente ao trocar de processo/NF.</p>
@@ -698,7 +698,7 @@ export default function SettingsPage() {
                         <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Desabilitar Impressão pelo Navegador</Label>
                           <p className="text-xs text-muted-foreground">Bloqueia o diálogo de impressão do navegador. O disparo via n8n (webhook) continua funcionando normalmente.</p>
@@ -707,7 +707,7 @@ export default function SettingsPage() {
                       </div>
 
 
-                      <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-2">
+                      <div className="p-4 rounded-md bg-muted/20 border border-border/10 space-y-2">
                         <Label className="text-sm font-bold">Tela Inicial</Label>
                         <p className="text-xs text-muted-foreground">Aba aberta ao iniciar o aplicativo.</p>
                         <Select value={prefDefaultTab} onValueChange={(v) => { setPrefDefaultTab(v); setHasUnsavedChanges(true); }}>
@@ -734,13 +734,13 @@ export default function SettingsPage() {
                           <button
                             key={t}
                             onClick={() => { setTheme(t); setHasUnsavedChanges(true); }}
-                            className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-3 ${
+                            className={`p-4 rounded-md border transition-all duration-300 flex flex-col items-center gap-3 ${
                               theme === t 
                                 ? 'bg-primary/5 border-primary shadow-sm shadow-primary/5' 
                                 : 'bg-muted/30 border-border/40 hover:border-border'
                             }`}
                           >
-                            <div className={`p-2 rounded-xl ${theme === t ? 'bg-primary text-white' : 'bg-background text-muted-foreground'}`}>
+                            <div className={`p-2 rounded-md ${theme === t ? 'bg-primary text-white' : 'bg-background text-muted-foreground'}`}>
                               {t === 'light' && <Sun className="w-5 h-5" />}
                               {t === 'dark' && <Moon className="w-5 h-5" />}
                               {t === 'system' && <Laptop className="w-5 h-5" />}
@@ -752,13 +752,13 @@ export default function SettingsPage() {
                         ))}
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-muted/20 border border-border/10 space-y-4 mt-6">
+                      <div className="p-4 rounded-md bg-muted/20 border border-border/10 space-y-4 mt-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="space-y-0.5">
                             <Label className="text-sm font-bold">Tema dos Diálogos do Dashboard</Label>
                             <p className="text-xs text-muted-foreground">Escolha o tema para os popups detalhados do Dashboard.</p>
                           </div>
-                          <div className="flex bg-background/50 p-1 rounded-xl border border-border/20 self-start sm:self-center">
+                          <div className="flex bg-background/50 p-1 rounded-md border border-border/20 self-start sm:self-center">
                             <button 
                               onClick={() => { setDashboardDialogTheme('light'); setHasUnsavedChanges(true); }}
                               title="Modo Claro"
@@ -800,7 +800,7 @@ export default function SettingsPage() {
 
                   {activeCategory === 'performance' && (
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Modo Lite (Performance)</Label>
                           <p className="text-xs text-muted-foreground">
@@ -824,7 +824,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Reduzir Animações</Label>
                           <p className="text-xs text-muted-foreground">Melhora a fluidez em dispositivos lentos.</p>
@@ -835,7 +835,7 @@ export default function SettingsPage() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Modo de Baixo Consumo</Label>
                           <p className="text-xs text-muted-foreground">Otimiza o carregamento de dados e gráficos.</p>
@@ -846,7 +846,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       
-                      <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex gap-4">
+                      <div className="p-4 rounded-md bg-amber-500/5 border border-amber-500/10 flex gap-4">
                         <Activity className="w-5 h-5 text-amber-500 shrink-0" />
                         <div className="space-y-1">
                           <h5 className="text-xs font-bold text-amber-500 uppercase">Dica de Performance</h5>
@@ -953,7 +953,7 @@ export default function SettingsPage() {
                     <div className="space-y-8">
                       {isGuest ? (
                         <div className="py-12 text-center space-y-3">
-                          <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mx-auto">
+                          <div className="w-14 h-14 bg-muted rounded-md flex items-center justify-center mx-auto">
                             <Shield className="w-7 h-7 text-muted-foreground" />
                           </div>
                           <h4 className="font-bold">Acesso Restrito</h4>
@@ -967,7 +967,7 @@ export default function SettingsPage() {
                               <Mail className="w-4 h-4 text-primary" />
                               <h4 className="text-sm font-semibold text-foreground">Alterar E-mail</h4>
                             </div>
-                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                            <div className="space-y-3 p-5 rounded-md bg-muted/20 border border-border/20">
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium text-muted-foreground">E-mail Atual</Label>
                                 <Input value={user?.email || ''} disabled className="bg-muted/10 border-border/20 opacity-60 h-11" />
@@ -999,7 +999,7 @@ export default function SettingsPage() {
                               <User className="w-4 h-4 text-primary" />
                               <h4 className="text-sm font-semibold text-foreground">Alterar Nome de Exibição</h4>
                             </div>
-                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                            <div className="space-y-3 p-5 rounded-md bg-muted/20 border border-border/20">
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium text-muted-foreground">Nome de Exibição</Label>
                                 <Input
@@ -1034,7 +1034,7 @@ export default function SettingsPage() {
                               <KeyRound className="w-4 h-4 text-primary" />
                               <h4 className="text-sm font-semibold text-foreground">Alterar Senha</h4>
                             </div>
-                            <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
+                            <div className="space-y-3 p-5 rounded-md bg-muted/20 border border-border/20">
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium text-muted-foreground">Nova Senha</Label>
                                 <div className="relative">
@@ -1085,7 +1085,7 @@ export default function SettingsPage() {
                               <ShieldCheck className="w-4 h-4 text-primary" />
                               <h4 className="text-sm font-semibold text-foreground">Autenticação em Dois Fatores (2FA)</h4>
                             </div>
-                            <div className="p-5 rounded-2xl bg-muted/20 border border-border/20 space-y-4">
+                            <div className="p-5 rounded-md bg-muted/20 border border-border/20 space-y-4">
                               {mfaLoading ? (
                                 <div className="flex items-center justify-center py-4">
                                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -1093,7 +1093,7 @@ export default function SettingsPage() {
                               ) : mfaFactors.filter(f => f.status === 'verified').length > 0 ? (
                                 <div className="space-y-3">
                                   {mfaFactors.filter(f => f.status === 'verified').map(factor => (
-                                    <div key={factor.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                                    <div key={factor.id} className="flex items-center justify-between p-3 rounded-md bg-emerald-500/5 border border-emerald-500/20">
                                       <div className="flex items-center gap-3">
                                         <ShieldCheck className="w-5 h-5 text-emerald-500" />
                                         <div>
@@ -1112,7 +1112,7 @@ export default function SettingsPage() {
                                   <p className="text-xs text-muted-foreground">
                                     Escaneie o QR Code com seu app autenticador (Google Authenticator, Authy, 1Password, etc.) e digite o código de 6 dígitos abaixo.
                                   </p>
-                                  <div className="flex justify-center p-4 bg-white rounded-xl">
+                                  <div className="flex justify-center p-4 bg-white rounded-md">
                                     <div dangerouslySetInnerHTML={{ __html: mfaQrCode }} />
                                   </div>
                                   {mfaSecret && (
@@ -1173,7 +1173,7 @@ export default function SettingsPage() {
                               <h4 className="text-sm font-semibold text-foreground">Sessões</h4>
                             </div>
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="flex items-center justify-between p-5 rounded-md bg-muted/20 border border-border/20">
                                 <div className="space-y-0.5">
                                   <Label className="text-sm font-bold">Encerrar Sessão Atual</Label>
                                   <p className="text-xs text-muted-foreground">Sair desta conta neste dispositivo.</p>
@@ -1183,7 +1183,7 @@ export default function SettingsPage() {
                                   Sair
                                 </Button>
                               </div>
-                              <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
+                              <div className="flex items-center justify-between p-5 rounded-md bg-muted/20 border border-border/20">
                                 <div className="space-y-0.5">
                                   <Label className="text-sm font-bold">Encerrar Todas as Sessões</Label>
                                   <p className="text-xs text-muted-foreground">Desconectar de todos os dispositivos.</p>
@@ -1202,7 +1202,7 @@ export default function SettingsPage() {
                               <AlertTriangle className="w-4 h-4 text-destructive" />
                               <h4 className="text-sm font-semibold text-destructive">Zona de Perigo</h4>
                             </div>
-                            <div className="p-5 rounded-2xl bg-destructive/5 border border-destructive/20 space-y-4">
+                            <div className="p-5 rounded-md bg-destructive/5 border border-destructive/20 space-y-4">
                               <div className="flex items-start gap-3">
                                 <Trash2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                                 <div className="space-y-1">
@@ -1292,7 +1292,7 @@ export default function SettingsPage() {
       </AlertDialog>
 
       {hasUnsavedChanges && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/40 shadow-2xl">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-md bg-card/95 backdrop-blur-xl border border-border/40 shadow-2xl">
           <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
             Alterações pendentes
           </Badge>

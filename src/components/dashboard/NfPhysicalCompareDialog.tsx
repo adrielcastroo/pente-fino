@@ -144,10 +144,10 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-3xl lg:max-w-4xl p-0 gap-0 overflow-hidden rounded-3xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-3xl lg:max-w-4xl p-0 gap-0 overflow-hidden rounded-md h-[92dvh] md:h-[88dvh] lg:h-[85dvh] flex flex-col">
         <DialogHeader className="px-6 sm:px-8 pt-6 pb-4 border-b border-border/10 flex-none">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+            <div className="p-2.5 rounded-md bg-primary/10 text-primary border border-primary/20">
               <Scale className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -162,16 +162,16 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
 
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-            <div className="rounded-xl bg-muted/40 border border-border/30 p-3">
+            <div className="rounded-md bg-muted/40 border border-border/30 p-3">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bipado</div>
               <div className="text-lg font-semibold tabular-nums">{formatQty(totals.bipado)}</div>
             </div>
-            <div className="rounded-xl bg-muted/40 border border-border/30 p-3">
+            <div className="rounded-md bg-muted/40 border border-border/30 p-3">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Esperado</div>
               <div className="text-lg font-semibold tabular-nums">{totals.esperado > 0 ? formatQty(totals.esperado) : '—'}</div>
             </div>
             <div className={cn(
-              "rounded-xl border p-3",
+              "rounded-md border p-3",
               totals.divergentNfs > 0 ? "bg-destructive/10 border-destructive/30" : "bg-emerald-500/10 border-emerald-500/30"
             )}>
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">NFs divergentes</div>
@@ -183,7 +183,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               </div>
             </div>
             <div className={cn(
-              "rounded-xl border p-3",
+              "rounded-md border p-3",
               totals.duplicateItems > 0 ? "bg-amber-500/10 border-amber-500/30" : "bg-muted/40 border-border/30"
             )}>
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Itens repetidos</div>
@@ -216,7 +216,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               <div
                 key={g.nf}
                 className={cn(
-                  "rounded-2xl border bg-card/60 backdrop-blur-sm transition-all",
+                  "rounded-md border bg-card/60 backdrop-blur-sm transition-all",
                   isDivergent ? "border-destructive/40 shadow-[0_0_0_1px_hsl(var(--destructive)/0.2)]" : "border-border/30",
                 )}
               >
@@ -299,13 +299,13 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
             Limpar esperados
           </Button>
           <div className="flex items-center gap-2 ml-auto">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl font-bold">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-md font-bold">
               Fechar
             </Button>
             <Button
               onClick={approveWithDivergence}
               disabled={submitting || totals.divergentNfs === 0}
-              className="rounded-xl font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              className="rounded-md font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               title={totals.divergentNfs === 0 ? 'Sem divergência para registrar' : 'Registra a aprovação no log'}
             >
               {submitting ? 'Registrando…' : 'Aprovar com divergência'}

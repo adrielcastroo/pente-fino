@@ -969,7 +969,7 @@ export const LeftPanel = memo(function LeftPanel() {
      * - Espaçamento interno também via clamp() para preservar densidade
      *   em telas pequenas e respiro em telas grandes.
      */
-    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-2xl border border-border/50 lg:border-none lg:rounded-none">
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-md border border-border/50 lg:border-none lg:rounded-none">
       <div
         className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain pb-28 lg:pb-16"
         style={{
@@ -985,9 +985,9 @@ export const LeftPanel = memo(function LeftPanel() {
         <motion.div 
           whileHover={{ y: -2 }}
           transition={{ duration: 0.2 }}
-          className="rounded-2xl border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm"
+          className="rounded-md border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm"
         >
-          <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+          <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-md bg-primary/10 text-primary flex items-center justify-center">
             <ScanBarcode className="w-5 h-5" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
@@ -1008,7 +1008,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-2xl border border-border/40">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -1016,7 +1016,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`relative min-w-0 min-h-[44px] py-3 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider ${
+                  className={`relative min-w-0 min-h-[44px] py-3 px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider ${
                     isActive
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -1026,7 +1026,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   {isActive && (
                     <motion.div
                       layoutId="mode-bg"
-                      className="absolute inset-0 bg-primary rounded-xl shadow-md"
+                      className="absolute inset-0 bg-primary rounded-md shadow-md"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
@@ -1059,17 +1059,17 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Diversos categories */}
         {isDiversos && (
-          <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1 overflow-x-auto no-scrollbar">
+          <div className="flex p-1 rounded-md bg-muted/20 border border-border/40 gap-1 overflow-x-auto no-scrollbar">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
               <button
                 key={tipo}
                 onClick={() => setDiversosTipo(tipo)}
-                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-xl px-2 py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300`}
+                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-md px-2 py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300`}
               >
                 {diversosTipo === tipo && (
                   <motion.div
                     layoutId="tipo-bg"
-                    className="absolute inset-0 bg-primary rounded-xl shadow-lg"
+                    className="absolute inset-0 bg-primary rounded-md shadow-lg"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                   />
                 )}
@@ -1084,12 +1084,12 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Madeira subtypes — Modernized segments */}
         {isMadeira && (
           <>
-            <div className="flex p-1 rounded-2xl bg-muted/20 border border-border/40 gap-1">
+            <div className="flex p-1 rounded-md bg-muted/20 border border-border/40 gap-1">
               {(['Lâmina', 'Base', 'Bandô'] as const).map(tipo => (
                 <button
                   key={tipo}
                   onClick={() => setMadeiraTipo(tipo)}
-                  className={`flex-1 min-h-[44px] rounded-xl py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
+                  className={`flex-1 min-h-[44px] rounded-md py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300 transform active:scale-95 ${
                     madeiraTipo === tipo
                       ? 'bg-primary text-primary-foreground shadow-lg scale-105'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -1100,7 +1100,7 @@ export const LeftPanel = memo(function LeftPanel() {
               ))}
             </div>
             {/* Próximo CX preview — Modernized card */}
-            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner group hover:border-primary/40 transition-all">
+            <div className="flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner group hover:border-primary/40 transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:rotate-12">
                   <Package className="w-4 h-4" />
@@ -1123,7 +1123,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {showDropzone && (
           <div className="space-y-3">
             <div
-              className={`border rounded-xl transition-all overflow-hidden relative ${preview ? 'border-primary/40' : 'border-dashed border-border/60 hover:border-primary/30'}`}
+              className={`border rounded-md transition-all overflow-hidden relative ${preview ? 'border-primary/40' : 'border-dashed border-border/60 hover:border-primary/30'}`}
               onDragOver={e => e.preventDefault()}
               onDrop={handleDrop}
               style={{ height: preview || cameraActive ? 200 : 140 }}
@@ -1620,7 +1620,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Preview Card */}
         <motion.div 
           whileHover={{ y: -2 }}
-          className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group"
+          className="p-5 rounded-md bg-card border border-border/50 shadow-sm relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
           
@@ -1658,7 +1658,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Lote Sistema Gerado</p>
               <motion.div 
                 whileHover={{ scale: 1.02 }}
-                className="px-3 py-2.5 rounded-xl bg-muted/30 font-mono text-[11px] font-semibold text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors"
+                className="px-3 py-2.5 rounded-md bg-muted/30 font-mono text-[11px] font-semibold text-primary/80 break-all border border-border/40 shadow-inner group-hover:bg-muted/50 transition-colors"
               >
                 {previewLoteSistema}
               </motion.div>
@@ -1674,7 +1674,7 @@ export const LeftPanel = memo(function LeftPanel() {
           >
             <Button
               onClick={handleAdd}
-              className="w-full h-14 sm:h-16 rounded-2xl font-semibold uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
+              className="w-full h-14 sm:h-16 rounded-md font-semibold uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
               <span className="relative flex items-center justify-center gap-3">
@@ -1695,7 +1695,7 @@ export const LeftPanel = memo(function LeftPanel() {
             <Button
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className="w-full h-10 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40 shadow-sm"
+              className="w-full h-10 rounded-md text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border-border/40 shadow-sm"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -1718,7 +1718,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="rounded-xl border border-border/60 overflow-hidden bg-gradient-to-b from-muted/20 to-muted/5 shadow-inner"
+                className="rounded-md border border-border/60 overflow-hidden bg-gradient-to-b from-muted/20 to-muted/5 shadow-inner"
               >
                 <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 bg-background/40 backdrop-blur-sm">
                   <div className="flex items-center gap-2">

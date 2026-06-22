@@ -74,7 +74,7 @@ export default function ShortcutsModal({ open, onClose }: { open: boolean; onClo
   if (isLow) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-        <div className="bg-card w-full max-w-md rounded-2xl p-6 border border-border">
+        <div className="bg-card w-full max-w-md rounded-md p-6 border border-border">
           <h2 className="text-xl font-bold mb-4">Atalhos do Sistema</h2>
           <ShortcutList />
 
@@ -99,7 +99,7 @@ export default function ShortcutsModal({ open, onClose }: { open: boolean; onClo
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-card w-full max-w-md rounded-2xl p-6 border border-border shadow-2xl"
+            className="bg-card w-full max-w-md rounded-md p-6 border border-border shadow-2xl"
           >
             <h2 className="text-xl font-bold mb-4">Atalhos do Sistema</h2>
             <ShortcutList />

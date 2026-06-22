@@ -315,10 +315,10 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetState(); onOpenChange(v); }}>
-      <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-md max-h-[90vh] overflow-y-auto">
         <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-border/20 bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary">
+            <div className="p-2.5 rounded-md bg-primary/10 border border-primary/20 text-primary">
               <Upload className="w-5 h-5" />
             </div>
             <div>
@@ -335,7 +335,7 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
         <div className="p-5 sm:p-8 space-y-5">
           {step === 'upload' && (
             <>
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-2">
+              <div className="bg-primary/5 border border-primary/20 rounded-md p-4 space-y-2">
                 <div className="flex items-center gap-2 text-primary font-bold text-sm">
                   <Info className="w-4 h-4" />
                   Formato Esperado
@@ -357,7 +357,7 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
                 onClick={() => fileRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-                className="border-2 border-dashed border-border/40 rounded-2xl p-8 sm:p-12 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all"
+                className="border-2 border-dashed border-border/40 rounded-md p-8 sm:p-12 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all"
               >
                 <FileSpreadsheet className="w-10 h-10 text-muted-foreground/40" />
                 <div className="text-center">
@@ -400,7 +400,7 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
                 )}
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-border/30">
+              <div className="overflow-x-auto rounded-md border border-border/30">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-muted/30 border-b border-border/20">
@@ -447,14 +447,14 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button variant="outline" onClick={resetState} className="flex-1 h-11 rounded-xl font-bold">
+                <Button variant="outline" onClick={resetState} className="flex-1 h-11 rounded-md font-bold">
                   <X className="w-4 h-4 mr-2" />
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleImport}
                   disabled={importing || validRows.length === 0}
-                  className="flex-1 h-11 rounded-xl font-semibold bg-primary shadow-lg shadow-primary/20"
+                  className="flex-1 h-11 rounded-md font-semibold bg-primary shadow-lg shadow-primary/20"
                 >
                   {importing ? (
                     <div className="flex items-center gap-2">

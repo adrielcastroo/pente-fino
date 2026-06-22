@@ -271,7 +271,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
           >
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-2xl border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-md border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
               <Clock className="w-5 h-5 text-primary/70 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-semibold text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
@@ -364,7 +364,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => setShowMobileExtras(v => !v)}
-        className="md:hidden w-full rounded-xl border border-border/30 bg-card/40 backdrop-blur py-3 px-4 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
+        className="md:hidden w-full rounded-md border border-border/30 bg-card/40 backdrop-blur py-3 px-4 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
       >
         <span>{showMobileExtras ? 'Ocultar gráficos detalhados' : 'Ver mais gráficos e detalhes'}</span>
         <ChevronRight className={cn("w-4 h-4 transition-transform", showMobileExtras && "rotate-90")} />
@@ -565,7 +565,7 @@ export default function DashboardPage() {
           )}>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                <div className="p-3 rounded-md bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
@@ -603,7 +603,7 @@ export default function DashboardPage() {
             </table></div>
           </div>
           <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
-            <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-6 h-10 hover:bg-[#2563EB] hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>Fechar</Button>
+            <Button variant="outline" className={cn("rounded-md font-bold text-sm px-6 h-10 hover:bg-[#2563EB] hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>Fechar</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -620,7 +620,7 @@ export default function DashboardPage() {
           )}>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                <div className="p-3 rounded-md bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                   <BarChart3 className="w-6 h-6" />
                 </div>
                 <div>
@@ -671,7 +671,7 @@ export default function DashboardPage() {
             </table></div>
           </div>
           <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
-            <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-8 h-12 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] transition-all active:scale-[0.97]", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>
+            <Button variant="outline" className={cn("rounded-md font-bold text-sm px-8 h-12 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] transition-all active:scale-[0.97]", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>
               Fechar Histórico
             </Button>
           </div>
@@ -690,7 +690,7 @@ export default function DashboardPage() {
           )}>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
+                <div className="p-3 rounded-md bg-primary/10 text-primary border border-primary/20 shadow-xl shadow-primary/10">
                   <Layers3 className="w-6 h-6" />
                 </div>
                 <div>
@@ -745,7 +745,7 @@ export default function DashboardPage() {
             </table></div>
           </div>
           <div className={cn("p-6 border-t flex justify-end flex-none", isDark ? "bg-slate-900/50 border-slate-800" : "bg-muted/5 border-border/10")}>
-            <Button variant="outline" className={cn("rounded-xl font-bold text-sm px-8 h-12 hover:bg-[#2563EB] hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>
+            <Button variant="outline" className={cn("rounded-md font-bold text-sm px-8 h-12 hover:bg-[#2563EB] hover:text-white transition-all", isDark ? "border-slate-700 text-slate-300 hover:border-primary" : "border-[#2563EB]/20 text-[#2563EB]")} onClick={() => setDetailDialog(null)}>
               Fechar Registros
             </Button>
           </div>

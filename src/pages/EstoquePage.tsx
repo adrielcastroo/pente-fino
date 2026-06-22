@@ -465,7 +465,7 @@ export default function EstoquePage() {
           value={locateQuery}
           onChange={(e) => setLocateQuery(e.target.value)}
           placeholder="Onde está? Buscar por item, lote, processo ou endereço..."
-          className="h-11 sm:h-12 rounded-2xl bg-card/40 backdrop-blur-xl border-white/10 pl-4 pr-24 text-xs sm:text-sm"
+          className="h-11 sm:h-12 rounded-md bg-card/40 backdrop-blur-xl border-white/10 pl-4 pr-24 text-xs sm:text-sm"
         />
         {locateQuery && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -483,7 +483,7 @@ export default function EstoquePage() {
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
+            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-md sm:rounded-md text-[9px] sm:text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
@@ -518,7 +518,7 @@ export default function EstoquePage() {
             <div className="flex gap-2 sm:gap-3">
               <div className="w-10 sm:w-12 md:w-16 shrink-0" />
               {config.cols.map(col => (
-                <div key={col} className="flex-1 text-center text-[8px] sm:text-[10px] md:text-xs font-semibold text-primary uppercase tracking-[0.3em] py-2 bg-primary/5 rounded-xl border border-primary/10 mb-2">
+                <div key={col} className="flex-1 text-center text-[8px] sm:text-[10px] md:text-xs font-semibold text-primary uppercase tracking-[0.3em] py-2 bg-primary/5 rounded-md border border-primary/10 mb-2">
                   {col}
                 </div>
               ))}
@@ -531,7 +531,7 @@ export default function EstoquePage() {
                 transition={{ delay: idx * 0.05 }}
                 className="flex gap-2 sm:gap-3"
               >
-                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-semibold text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-2xl shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
+                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-semibold text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-md shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
@@ -565,7 +565,7 @@ export default function EstoquePage() {
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-xl sm:rounded-3xl cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border backdrop-blur-xl shadow-lg hover:shadow-primary/10 ${fillTone.bg} ${fillTone.border} ${
+                      className={`flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border backdrop-blur-xl shadow-lg hover:shadow-primary/10 ${fillTone.bg} ${fillTone.border} ${
                         !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : ''
                       } ${
                         isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.03] z-10' : ''
@@ -608,7 +608,7 @@ export default function EstoquePage() {
                     </motion.div>
                       </HoverCardTrigger>
                       {hasItems && (
-                        <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-white/10 bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl">
+                        <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-white/10 bg-card/95 backdrop-blur-2xl rounded-md shadow-2xl">
                           <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                             <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{activeTec}.{col}.N{String(nivel).padStart(2,'0')}</div>
                             <div className="text-[10px] font-semibold text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
@@ -667,7 +667,7 @@ export default function EstoquePage() {
                     </div>
                   </div>
                   <Badge className={cn(
-                    "text-[10px] font-semibold px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest",
+                    "text-[10px] font-semibold px-5 py-2 rounded-md shadow-lg ring-4 uppercase tracking-widest",
                     occupiedCount === 0 ? "bg-primary text-primary-foreground ring-primary/10" :
                     occupiedCount >= 25 ? "bg-rose-500 text-white ring-rose-500/10" :
                     "bg-emerald-500 text-white ring-emerald-500/10"
@@ -692,7 +692,7 @@ export default function EstoquePage() {
               {/* Positions List/Grid */}
               <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar bg-card/20">
                 {occupiedCount === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-3 border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
+                  <div className="flex flex-col items-center justify-center py-12 gap-3 border border-dashed border-white/10 rounded-md bg-white/[0.02]">
                     <Box className="w-8 h-8 text-muted-foreground/30" />
                     <p className="text-xs font-medium text-muted-foreground/60">Célula disponível</p>
                   </div>
@@ -712,14 +712,14 @@ export default function EstoquePage() {
                             <div className="flex-1 min-w-0 space-y-3">
                               <div className="flex items-center gap-3">
                                 <Badge variant="outline" className={cn(
-                                  "text-[9px] font-semibold px-3 py-1 rounded-xl border-2 uppercase tracking-widest",
+                                  "text-[9px] font-semibold px-3 py-1 rounded-md border-2 uppercase tracking-widest",
                                   statusCfg.color,
                                   statusCfg.border,
                                   statusCfg.bg
                                 )}>
                                   POS {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
                                 </Badge>
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
+                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10">
                                    <Barcode className="w-3 h-3 text-muted-foreground/50" />
                                    <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
                                 </div>
@@ -736,7 +736,7 @@ export default function EstoquePage() {
                                 onClick={() => setDetailPos(item)}
                                 variant="ghost"
                                 size="sm"
-                                  className="h-14 px-8 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20 hover:scale-105 active:scale-95"
+                                  className="h-14 px-8 rounded-md font-semibold text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20 hover:scale-105 active:scale-95"
                                 >
                                   Ficha Técnica
                               </Button>
@@ -747,7 +747,7 @@ export default function EstoquePage() {
                                     handleStatusChange(item, 'saida');
                                   }}
                                   size="sm"
-                                  className="h-14 px-8 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
+                                  className="h-14 px-8 rounded-md font-semibold text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
                                 >
                                   <LogOut className="w-4 h-4" />
                                   Dar Saída
@@ -797,7 +797,7 @@ export default function EstoquePage() {
                       </DialogDescription>
                     </div>
                     <Badge className={cn(
-                      "text-[10px] font-semibold px-5 py-2 rounded-2xl shadow-lg ring-4 uppercase tracking-widest border-2",
+                      "text-[10px] font-semibold px-5 py-2 rounded-md shadow-lg ring-4 uppercase tracking-widest border-2",
                       statusCfg.bg,
                       statusCfg.border,
                       statusCfg.color,
@@ -826,7 +826,7 @@ export default function EstoquePage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: i * 0.05 }}
-                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:shadow-primary/5 hover:-translate-y-1"
+                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-md p-5 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:shadow-primary/5 hover:-translate-y-1"
                       >
                         <div className="text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
                         <div className="text-sm sm:text-base font-semibold text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
@@ -851,7 +851,7 @@ export default function EstoquePage() {
                             onClick={() => handleStatusChange(detailPos, st)} 
                             variant="outline"
                             className={cn(
-                              "h-14 font-semibold uppercase tracking-widest text-[10px] rounded-2xl border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
+                              "h-14 font-semibold uppercase tracking-widest text-[10px] rounded-md border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
                               isActive 
                                 ? `${activeBg} text-white border-transparent ring-4 ring-white/10 scale-105 z-10` 
                                 : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/20 active:scale-95"
@@ -871,7 +871,7 @@ export default function EstoquePage() {
                         <Button 
                           onClick={() => handleStatusChange(detailPos, 'saida')} 
                           variant="outline"
-                          className="h-14 font-semibold uppercase tracking-widest text-[10px] rounded-2xl border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
+                          className="h-14 font-semibold uppercase tracking-widest text-[10px] rounded-md border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
                         >
                           <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                           Confirmar Saída
@@ -885,7 +885,7 @@ export default function EstoquePage() {
                       <Button 
                         variant="ghost" 
                         onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-14 rounded-2xl font-semibold uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
+                        className="w-full h-14 rounded-md font-semibold uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
                       >
                         <Trash2 className="w-5 h-5 mr-3" />
                         Remover do Sistema Permanentemente
@@ -1037,7 +1037,7 @@ export default function EstoquePage() {
                   {/* Detailed Summary Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                     {tecBreakdown.map((t) => (
-                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1">
+                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-md p-6 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1">
                          <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-2 opacity-50 group-hover:opacity-100 transition-opacity">{t.tec}</div>
                          <div className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tighter tabular-nums mb-1">{t.value}</div>
                          <div className="flex items-center gap-2">
@@ -1059,7 +1059,7 @@ export default function EstoquePage() {
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent className="border-border/40 bg-card rounded-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Confirmar Saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
@@ -1067,8 +1067,8 @@ export default function EstoquePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700" onClick={() => { if (detailPos) executeSaida(detailPos); }}>
+            <AlertDialogCancel className="rounded-md">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-md bg-violet-600 hover:bg-violet-700" onClick={() => { if (detailPos) executeSaida(detailPos); }}>
               Confirmar Saída
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1077,7 +1077,7 @@ export default function EstoquePage() {
 
       {/* Confirmação Excluir */}
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent className="border-border/40 bg-card rounded-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Excluir Item</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
@@ -1085,8 +1085,8 @@ export default function EstoquePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-xl bg-destructive hover:bg-destructive/90" onClick={() => { if (detailPos) executeDelete(detailPos); }}>
+            <AlertDialogCancel className="rounded-md">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-md bg-destructive hover:bg-destructive/90" onClick={() => { if (detailPos) executeDelete(detailPos); }}>
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1095,10 +1095,10 @@ export default function EstoquePage() {
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-md max-h-[90vh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
+              <div className="p-2.5 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-500">
                 <ScanBarcode className="w-5 h-5" />
               </div>
               <div>
@@ -1120,13 +1120,13 @@ export default function EstoquePage() {
                   onChange={e => setScanInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
                   placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
-                  className="h-12 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
+                  className="h-12 rounded-md border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm"
                   autoFocus
                 />
                 <Button
                   onClick={handleScanSubmit}
                   disabled={scanning || !scanInput.trim()}
-                  className="h-12 px-6 rounded-xl font-semibold bg-violet-600 hover:bg-violet-700 shrink-0"
+                  className="h-12 px-6 rounded-md font-semibold bg-violet-600 hover:bg-violet-700 shrink-0"
                 >
                   {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
                 </Button>
@@ -1134,7 +1134,7 @@ export default function EstoquePage() {
             </div>
 
             {scanResult && (
-              <div className={`p-4 rounded-xl border ${
+              <div className={`p-4 rounded-md border ${
                 scanResult.success 
                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
                   : 'bg-red-500/10 border-red-500/20 text-red-400'
@@ -1156,7 +1156,7 @@ export default function EstoquePage() {
 
       {/* Confirm Scan Saida */}
       <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent className="border-border/40 bg-card rounded-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Confirmar Saída por Bipagem</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">
@@ -1175,8 +1175,8 @@ export default function EstoquePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700" onClick={executeScanSaida}>
+            <AlertDialogCancel className="rounded-md">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="rounded-md bg-violet-600 hover:bg-violet-700" onClick={executeScanSaida}>
               Confirmar Saída
             </AlertDialogAction>
           </AlertDialogFooter>

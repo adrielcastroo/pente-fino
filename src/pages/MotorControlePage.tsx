@@ -218,9 +218,9 @@ export default function MotorControlePage() {
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 space-y-5 pb-24">
           <motion.div 
             whileHover={{ scale: 1.01 }}
-            className="rounded-3xl border bg-card/40 backdrop-blur-md p-5 flex items-center gap-5 shadow-xl shadow-black/5 border-white/10"
+            className="rounded-md border bg-card/40 backdrop-blur-md p-5 flex items-center gap-5 shadow-xl shadow-black/5 border-white/10"
           >
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-14 h-14 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
               <ScanBarcode className="w-7 h-7" />
             </div>
             <div className="flex-1 min-w-0">
@@ -276,7 +276,7 @@ export default function MotorControlePage() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 shadow-sm"
+                  className="flex items-center gap-4 p-4 rounded-md bg-primary/5 border border-primary/10 shadow-sm"
                 >
                   <Switch 
                     checked={temCaixa} 
@@ -291,7 +291,7 @@ export default function MotorControlePage() {
                     <motion.div 
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center gap-2 bg-background/80 p-1.5 rounded-xl border border-primary/20"
+                      className="flex items-center gap-2 bg-background/80 p-1.5 rounded-md border border-primary/20"
                     >
                       <span className="text-[10px] font-semibold text-primary px-2">Nº</span>
                       <input
@@ -318,11 +318,11 @@ export default function MotorControlePage() {
                         value={coulisseModeloProcCx} 
                         onChange={e => setCoulisseModeloProcCx(sanitize(e.target.value))} 
                         placeholder="Ex: MOTION CM-01 PROC 1234 CX01" 
-                        className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
                       />
                     </div>
                     {coulisseModeloProcCx.trim() && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-primary/5 border border-primary/10 grid grid-cols-1 sm:grid-cols-3 gap-3 shadow-inner">
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-md bg-primary/5 border border-primary/10 grid grid-cols-1 sm:grid-cols-3 gap-3 shadow-inner">
                         {(() => {
                           const p = parseCoulisseString(coulisseModeloProcCx);
                           return [
@@ -330,7 +330,7 @@ export default function MotorControlePage() {
                             { label: 'Proc', val: p.processo, icon: <Hash className="w-3 h-3" /> },
                             { label: 'Cx', val: p.cx, icon: <Info className="w-3 h-3" /> }
                           ].map((item, i) => (
-                            <div key={i} className="bg-background/40 p-2 rounded-xl border border-white/5">
+                            <div key={i} className="bg-background/40 p-2 rounded-md border border-white/5">
                               <div className="flex items-center gap-1.5 text-[8px] font-semibold text-muted-foreground/60 uppercase mb-1">
                                 {item.icon} {item.label}
                               </div>
@@ -348,7 +348,7 @@ export default function MotorControlePage() {
                         onChange={e => setCoulisseLote(e.target.value)} 
                         onKeyDown={(e) => e.key === 'Enter' && handleAddCoulisse()} 
                         placeholder="Bipe o lote agora..." 
-                        className="w-full h-14 px-5 rounded-2xl border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
+                        className="w-full h-14 px-5 rounded-md border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
                       />
                     </div>
                   </>
@@ -365,7 +365,7 @@ export default function MotorControlePage() {
                         value={modelo} 
                         onChange={e => setModelo(sanitize(e.target.value))} 
                         placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'} 
-                        className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
                       />
                     </div>
                     <div className="group space-y-1.5">
@@ -379,7 +379,7 @@ export default function MotorControlePage() {
                         value={nf} 
                         onChange={e => setNf(sanitize(e.target.value))} 
                         placeholder="Ex: 146842" 
-                        className={`w-full h-14 px-5 rounded-2xl border bg-card/50 text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorNf ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorNf ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
                       />
                     </div>
                     <div className="group space-y-1.5">
@@ -390,7 +390,7 @@ export default function MotorControlePage() {
                         onChange={e => setSerie(e.target.value)} 
                         onKeyDown={(e) => e.key === 'Enter' && (subMode === 'motor' ? handleAddMotor() : handleAddControle())} 
                         placeholder="Bipe a série..." 
-                        className="w-full h-14 px-5 rounded-2xl border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
+                        className="w-full h-14 px-5 rounded-md border border-white/5 bg-card text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/20" 
                       />
                     </div>
                   </>

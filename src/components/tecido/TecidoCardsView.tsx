@@ -55,7 +55,7 @@ const TecidoCardsView = memo(({ rows, onDelete, onCopy, isGuest, showActions }: 
           initial={r.isNew ? { opacity: 0, y: -8, scale: 0.98 } : false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
-          className={`group relative rounded-xl border bg-card p-4 shadow-sm transition-all hover:shadow-md ${
+          className={`group relative rounded-md border bg-card p-4 shadow-sm transition-all hover:shadow-md ${
             r.isNew
               ? 'border-primary/40 ring-2 ring-primary/20 bg-gradient-to-br from-primary/[0.06] to-transparent'
               : 'border-border/50 hover:border-primary/30'

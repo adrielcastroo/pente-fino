@@ -179,7 +179,7 @@ export function InventorySuggestionsTab() {
           onClick={fetchSuggestions} 
           variant="outline" 
           size="sm" 
-          className="rounded-2xl font-semibold uppercase tracking-[0.2em] text-[10px] h-12 px-6 gap-2.5 transition-all hover:bg-primary hover:text-white border-white/10 shadow-xl"
+          className="rounded-md font-semibold uppercase tracking-[0.2em] text-[10px] h-12 px-6 gap-2.5 transition-all hover:bg-primary hover:text-white border-white/10 shadow-xl"
         >
           <RefreshCw className={loading ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
           Sincronizar Sugestões
@@ -231,7 +231,7 @@ export function InventorySuggestionsTab() {
                           Auditoria: {formatDateBR(item.ultima_contagem || item.created_at)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2.5 text-rose-500 bg-rose-500/10 px-4 py-1.5 rounded-xl border border-rose-500/20 shadow-sm">
+                      <div className="flex items-center gap-2.5 text-rose-500 bg-rose-500/10 px-4 py-1.5 rounded-md border border-rose-500/20 shadow-sm">
                         <AlertTriangle className="w-4 h-4" />
                         <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
                           {item.dias_atraso} Dias de Atraso
@@ -244,7 +244,7 @@ export function InventorySuggestionsTab() {
                 <Button 
                   onClick={() => handleCreateTask(item)}
                   disabled={creatingTask === item.id}
-                  className="rounded-2xl h-20 px-10 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold uppercase tracking-[0.3em] text-[10px] gap-3 border border-primary/20 shadow-lg shadow-primary/5 transition-all duration-500 hover:scale-105 active:scale-95 group-hover:bg-primary group-hover:text-white"
+                  className="rounded-md h-20 px-10 bg-primary/10 text-primary hover:bg-primary hover:text-white font-semibold uppercase tracking-[0.3em] text-[10px] gap-3 border border-primary/20 shadow-lg shadow-primary/5 transition-all duration-500 hover:scale-105 active:scale-95 group-hover:bg-primary group-hover:text-white"
                 >
                   {creatingTask === item.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-6 h-6" />}
                   Lançar Tarefa
