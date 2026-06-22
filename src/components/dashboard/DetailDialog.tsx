@@ -1,256 +1,216 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useTheme } from 'next-themes';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, Activity } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAppStore } from '@/store/useAppStore';
-
-import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid
+  PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid,
 } from 'recharts';
 
-// Premium Color Palette - Jewel Tones synced with DashboardCharts
+// Paleta alinhada ao design system (tokens HSL via CSS vars + variantes do chart)
 const CHART_COLORS = [
-  '#2563EB', // Blue 600 (Pente Fino Blue)
-  '#0D9488', // Teal 600
-  '#7C3AED', // Violet 600
-  '#D97706', // Amber 600
-  '#DC2626', // Red 600
-  '#2563EB', // Blue 600
+  'hsl(var(--primary))',
+  'hsl(var(--chart-2, var(--primary)))',
+  'hsl(var(--chart-3, var(--accent)))',
+  'hsl(var(--chart-4, var(--secondary)))',
+  'hsl(var(--chart-5, var(--muted-foreground)))',
+  'hsl(var(--destructive))',
 ];
 
-export const DetailDialog = ({ detailChart, onClose }: { detailChart: { title: string, data: any[], type: 'pie' | 'bar' | 'area' } | null, onClose: () => void }) => {
+type DetailChart = {
+  title: string;
+  data: any[];
+  type: 'pie' | 'bar' | 'area';
+} | null;
+
+interface DetailDialogProps {
+  detailChart: DetailChart;
+  onClose: () => void;
+}
+
+const tooltipContentStyle: React.CSSProperties = {
+  borderRadius: '12px',
+  border: '1px solid hsl(var(--border))',
+  background: 'hsl(var(--popover))',
+  color: 'hsl(var(--popover-foreground))',
+  fontWeight: 600,
+  boxShadow: 'var(--shadow-lg, 0 10px 25px -10px hsl(var(--foreground) / 0.15))',
+};
+
+const axisTickStyle = { fontWeight: 600, fill: 'hsl(var(--muted-foreground))' } as const;
+const axisStroke = 'hsl(var(--border))';
+const gridStroke = 'hsl(var(--border) / 0.5)';
+
+export const DetailDialog = ({ detailChart, onClose }: DetailDialogProps) => {
   const isMobile = useIsMobile();
-  const theme = useAppStore(s => s.dashboardDialogTheme);
-  const { theme: systemTheme } = useTheme();
-  
-  // Se o tema for 'system', usamos o tema do sistema, caso contrário usamos o tema fixo ('light' ou 'dark')
-  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
-  
-  const axisStroke = isDark ? 'rgba(255,255,255,0.4)' : 'hsl(var(--foreground) / 0.4)';
-  const tooltipBg = isDark ? '#1E293B' : 'hsl(var(--card) / 0.9)';
-  const tooltipBorder = isDark ? '#334155' : 'hsl(var(--border) / 0.5)';
-  const gridStroke = isDark ? 'rgba(255,255,255,0.1)' : 'hsl(var(--border) / 0.3)';
-  const pieStroke = isDark ? '#0F172A' : 'hsl(var(--background))';
-  
+
+  const Icon = detailChart?.type === 'bar' ? BarChart3
+    : detailChart?.type === 'area' ? Activity
+    : TrendingUp;
+
   return (
     <Dialog open={!!detailChart} onOpenChange={onClose}>
-      <DialogContent className={cn(
-        "w-[95vw] max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2.5rem] sm:rounded-[3.5rem] border p-0 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 flex flex-col transition-all",
-        isDark 
-          ? "bg-[#0A0F1E] border-slate-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)]" 
-          : "bg-white border-slate-200/60 shadow-[0_30px_70px_-20px_rgba(37,99,235,0.15)]"
-      )}>
-      <DialogHeader className={cn(
-        "p-8 sm:p-10 pb-6 sm:pb-8 border-b flex-none transition-colors",
-        isDark ? "bg-[#1E293B]/30 border-slate-800" : "bg-slate-50/50 border-slate-200/40"
-      )}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className={cn(
-              "p-4 rounded-2xl shadow-2xl transition-all duration-500",
-              isDark ? "bg-primary/20 text-primary border border-primary/30" : "bg-primary/10 text-primary border border-primary/20"
-            )}>
-              {detailChart?.type === 'bar' ? <BarChart3 className="w-8 h-8" /> : detailChart?.type === 'area' ? <Activity className="w-8 h-8" /> : <TrendingUp className="w-8 h-8" />}
+      <DialogContent className="w-[95vw] max-w-5xl h-[90dvh] sm:h-[85dvh] p-0 overflow-hidden flex flex-col gap-0">
+        <DialogHeader className="p-4 sm:p-6 border-b bg-muted/30 space-y-0 flex-none">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary border border-primary/20 flex-none">
+              <Icon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
             </div>
-            <div className="space-y-1.5">
-              <DialogTitle className={cn("text-3xl font-black tracking-tight", isDark ? "text-slate-100" : "text-[#1E40AF]")}>
+            <div className="min-w-0 flex-1 space-y-1">
+              <DialogTitle className="text-lg sm:text-xl font-semibold tracking-tight truncate">
                 {detailChart?.title}
               </DialogTitle>
-              <DialogDescription className={cn("text-sm font-bold uppercase tracking-[0.1em]", isDark ? "text-slate-400" : "text-slate-500")}>
+              <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
                 Análise técnica e métricas operacionais
               </DialogDescription>
             </div>
           </div>
-        </div>
-      </DialogHeader>
-      
-      <div className="flex-1 relative w-full overflow-hidden" key={detailChart?.title}>
-        {detailChart && (
-          <div className="absolute inset-0 p-4 sm:p-10">
-            <ResponsiveContainer width="100%" height="100%" debounce={50}>
-              {detailChart.type === 'bar' ? (
-                <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
-                <defs>
-                  <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  </linearGradient>
-                </defs>
-                <XAxis 
-                  dataKey="name" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  interval={0} 
-                  fontSize={11} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  stroke={axisStroke}
-                  tick={{ fontWeight: 800 }}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  fontSize={11} 
-                  stroke={axisStroke}
-                  tick={{ fontWeight: 800 }}
-                  dx={-5}
-                />
-                <ChartTooltip 
-                  cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: `1px solid ${tooltipBorder}`, 
-                    background: tooltipBg, 
+        </DialogHeader>
 
-
-                    backdropFilter: 'blur(10px)',
-                    fontWeight: 'bold',
-                    boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
-                  }} 
-                  formatter={(val: any) => [val, 'Quantidade']} 
-                />
-                <Bar 
-                  dataKey="value" 
-                  fill="url(#detailBarGradient)" 
-                  radius={[8, 8, 2, 2]} 
-                  maxBarSize={64}
-                  animationDuration={1500}
-                />
-              </BarChart>
-            ) : detailChart.type === 'area' ? (
-              <AreaChart data={detailChart.data} margin={{ bottom: 40, top: 20, left: 10, right: 20 }}>
-                <defs>
-                  <linearGradient id="detailAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
-                <XAxis 
-                  dataKey="name" 
-                  fontSize={11} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  stroke={axisStroke}
-                  tick={{ fontWeight: 800 }}
-                  dy={15}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  fontSize={11} 
-                  stroke={axisStroke}
-                  tick={{ fontWeight: 800 }}
-                  dx={-5}
-                />
-                <ChartTooltip 
-                  cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }} 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: `1px solid ${tooltipBorder}`, 
-                    background: tooltipBg, 
-
-
-                    backdropFilter: 'blur(10px)',
-                    fontWeight: 'bold',
-                    boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
-                  }} 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="total" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={4}
-                  fillOpacity={1} 
-                  fill="url(#detailAreaGradient)" 
-                  animationDuration={1500}
-                  name="Registros"
-                />
-              </AreaChart>
-            ) : (
-              <PieChart margin={{ top: 20, right: isMobile ? 20 : 80, left: isMobile ? 20 : 80, bottom: 60 }}>
-                <Pie 
-                  data={detailChart.data} 
-                  dataKey="value" 
-                  nameKey="name" 
-                  cx="50%"
-                  cy="45%"
-                  outerRadius={isMobile ? "70%" : "80%"} 
-                  innerRadius={isMobile ? "40%" : "48%"} 
-                  label={({ name, percent }: any) => {
-                    if (percent < (isMobile ? 0.08 : 0.05)) return null; 
-                    const displayName = name.length > 12 ? `${name.substring(0, 10)}...` : name;
-                    return isMobile ? `${(percent * 100).toFixed(0)}%` : `${displayName} (${(percent * 100).toFixed(0)}%)`;
-                  }}
-
-
-                  paddingAngle={4} 
-                  stroke={pieStroke} 
-                  strokeWidth={2}
-                  animationDuration={1500}
-                >
-                  {detailChart.data.map((_: any, i: number) => (
-                    <Cell 
-                      key={i} 
-                      fill={CHART_COLORS[i % CHART_COLORS.length]} 
-                      className="hover:opacity-80 transition-opacity cursor-pointer" 
+        <div className="flex-1 relative w-full overflow-hidden" key={detailChart?.title}>
+          {detailChart && (
+            <div className="absolute inset-0 p-3 sm:p-6">
+              <ResponsiveContainer width="100%" height="100%" debounce={50}>
+                {detailChart.type === 'bar' ? (
+                  <BarChart data={detailChart.data} margin={{ bottom: 80, top: 10, left: 10, right: 10 }}>
+                    <defs>
+                      <linearGradient id="detailBarGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      interval={0}
+                      fontSize={11}
+                      axisLine={false}
+                      tickLine={false}
+                      stroke={axisStroke}
+                      tick={axisTickStyle}
                     />
-                  ))}
-                </Pie>
-                <ChartTooltip 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: `1px solid ${tooltipBorder}`, 
-                    background: tooltipBg, 
-
-
-                    backdropFilter: 'blur(10px)',
-                    fontWeight: 'bold',
-                    boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
-                  }} 
-                  formatter={(val: any) => [val, 'Quantidade']} 
-                />
-                <Legend 
-                  iconType="circle" 
-                  verticalAlign="bottom"
-                  align="center"
-                  wrapperStyle={{ 
-                    paddingTop: isMobile ? '10px' : '20px', 
-                    fontWeight: 'bold', 
-                    fontSize: isMobile ? '10px' : '11px',
-                    width: '100%',
-                    left: 0,
-                    bottom: 0
-                  }} 
-                />
-
-              </PieChart>
-            )}
-          </ResponsiveContainer>
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={11}
+                      stroke={axisStroke}
+                      tick={axisTickStyle}
+                      dx={-5}
+                    />
+                    <ChartTooltip
+                      cursor={{ fill: 'hsl(var(--primary) / 0.08)' }}
+                      contentStyle={tooltipContentStyle}
+                      formatter={(val: any) => [val, 'Quantidade']}
+                    />
+                    <Bar
+                      dataKey="value"
+                      fill="url(#detailBarGradient)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={64}
+                      animationDuration={900}
+                    />
+                  </BarChart>
+                ) : detailChart.type === 'area' ? (
+                  <AreaChart data={detailChart.data} margin={{ bottom: 40, top: 20, left: 10, right: 20 }}>
+                    <defs>
+                      <linearGradient id="detailAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+                    <XAxis
+                      dataKey="name"
+                      fontSize={11}
+                      axisLine={false}
+                      tickLine={false}
+                      stroke={axisStroke}
+                      tick={axisTickStyle}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={11}
+                      stroke={axisStroke}
+                      tick={axisTickStyle}
+                      dx={-5}
+                    />
+                    <ChartTooltip
+                      cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: '4 4' }}
+                      contentStyle={tooltipContentStyle}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#detailAreaGradient)"
+                      animationDuration={900}
+                      name="Registros"
+                    />
+                  </AreaChart>
+                ) : (
+                  <PieChart margin={{ top: 20, right: isMobile ? 16 : 64, left: isMobile ? 16 : 64, bottom: 60 }}>
+                    <Pie
+                      data={detailChart.data}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="45%"
+                      outerRadius={isMobile ? '70%' : '80%'}
+                      innerRadius={isMobile ? '42%' : '50%'}
+                      label={({ name, percent }: any) => {
+                        if (percent < (isMobile ? 0.08 : 0.05)) return null;
+                        const displayName = name.length > 12 ? `${name.substring(0, 10)}…` : name;
+                        return isMobile ? `${(percent * 100).toFixed(0)}%` : `${displayName} (${(percent * 100).toFixed(0)}%)`;
+                      }}
+                      paddingAngle={3}
+                      stroke="hsl(var(--background))"
+                      strokeWidth={2}
+                      animationDuration={900}
+                    >
+                      {detailChart.data.map((_: any, i: number) => (
+                        <Cell
+                          key={i}
+                          fill={CHART_COLORS[i % CHART_COLORS.length]}
+                          className="hover:opacity-80 transition-opacity cursor-pointer"
+                        />
+                      ))}
+                    </Pie>
+                    <ChartTooltip
+                      contentStyle={tooltipContentStyle}
+                      formatter={(val: any) => [val, 'Quantidade']}
+                    />
+                    <Legend
+                      iconType="circle"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{
+                        paddingTop: isMobile ? '8px' : '16px',
+                        fontWeight: 600,
+                        fontSize: isMobile ? '10px' : '11px',
+                        color: 'hsl(var(--muted-foreground))',
+                        width: '100%',
+                        left: 0,
+                        bottom: 0,
+                      }}
+                    />
+                  </PieChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-      
-      <div className={cn(
-        "p-6 sm:p-10 border-t flex justify-end flex-none",
-        isDark ? "bg-[#0F172A]/80 border-slate-800" : "bg-slate-50 border-slate-200/40"
-      )}>
-        <Button 
-          variant="outline" 
-          className={cn(
-            "rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] px-12 h-14 transition-all duration-300 active:scale-[0.95] border-2",
-            isDark 
-              ? "border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" 
-              : "border-slate-200 text-[#1E40AF] hover:bg-slate-100 hover:border-[#1E40AF]"
-          )} 
-          onClick={onClose}
-        >
-          Fechar Visualização
-        </Button>
-      </div>
+
+        <DialogFooter className="p-4 sm:p-6 border-t bg-muted/30 flex-none sm:justify-end">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Fechar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
