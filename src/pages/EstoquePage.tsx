@@ -794,7 +794,7 @@ export default function EstoquePage() {
 
                 {/* Info Grid */}
                 <div className="p-8 space-y-8 bg-card/20">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                       { label: 'Lote Fábrica', value: detailPos.lote || '—' },
                       { label: 'Lote Sistema (Final)', value: detailPos.lote_sistema || '—' },
