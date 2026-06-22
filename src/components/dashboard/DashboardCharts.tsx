@@ -165,12 +165,16 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
 
 export const OccupationChart = React.memo(({ title, used, total, reserved = 0, blocked = 0, unit = 'alocações', id }: any) => {
   const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
-  const data = [
+  const isEmpty = total === 0 || (used === 0 && reserved === 0 && blocked === 0);
+  // Cores semafóricas via tokens semânticos
+  const rawData = [
     { name: 'Ocupado', value: used, color: 'hsl(var(--primary))' },
-    { name: 'Reservado', value: reserved, color: '#D97706' },
-    { name: 'Bloqueado', value: blocked, color: '#DC2626' },
+    { name: 'Reservado', value: reserved, color: 'hsl(38 92% 50%)' },   // amber
+    { name: 'Bloqueado', value: blocked, color: 'hsl(var(--destructive))' },
     { name: 'Livre', value: Math.max(0, total - used - reserved - blocked), color: 'hsl(var(--muted) / 0.3)' }
   ];
+  // Oculta segmentos sempre-zero (mantém Ocupado e Livre)
+  const data = rawData.filter(d => d.name === 'Ocupado' || d.name === 'Livre' || d.value > 0);
 
   return (
     <Card id={id} className="border border-border/10 bg-card/20 backdrop-blur-md overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/20 hover:shadow-xl">
@@ -186,21 +190,34 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
         <div className="relative w-[240px] h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450}>
+              <Pie data={data} innerRadius="68%" outerRadius="95%" dataKey="value" startAngle={90} endAngle={450} isAnimationActive>
                 {data.map((entry, index) => <Cell key={index} fill={entry.color} />)}
               </Pie>
+              <ChartTooltip content={<CustomTooltip suffix={` ${unit}`} />} />
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-4xl font-black text-foreground">{percentage}%</span>
-            <span className="text-[10px] font-black uppercase text-foreground/50">Ocupado</span>
+            {isEmpty ? (
+              <>
+                <span className="text-2xl font-black text-foreground/40">Sem uso</span>
+                <span className="text-[10px] font-black uppercase text-foreground/30 mt-1">setor inativo</span>
+              </>
+            ) : (
+              <>
+                <span className="text-4xl font-black text-foreground">{percentage}%</span>
+                <span className="text-[10px] font-black uppercase text-foreground/50">Ocupado</span>
+              </>
+            )}
           </div>
         </div>
         <div className="w-full space-y-4">
            {data.map((d, i) => (
              <div key={i} className="flex items-center justify-between text-xs font-bold uppercase tracking-widest">
-               <span className="text-muted-foreground">{d.name}</span>
-               <span className="text-foreground">{d.value} {unit}</span>
+               <span className="flex items-center gap-2 text-muted-foreground">
+                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                 {d.name}
+               </span>
+               <span className="text-foreground tabular-nums">{d.value} {unit}</span>
              </div>
            ))}
         </div>
