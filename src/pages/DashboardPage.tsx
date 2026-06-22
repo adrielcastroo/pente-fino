@@ -244,7 +244,7 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="space-y-10 lg:space-y-12 max-w-full mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
+      className="space-y-8 xl:space-y-10 max-w-[1536px] mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
     >
       {/* Header - Simple and Clean */}
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
@@ -430,9 +430,9 @@ export default function DashboardPage() {
           <SummaryChart 
             id="chart-setores"
             title="Setores Operacionais" 
-            desc="Carga de trabalho por setor" 
-            data={stats.categorias} 
-            type="pie" 
+            desc="Carga de trabalho por setor (ordenado)" 
+            data={[...stats.categorias].sort((a, b) => (b.value || 0) - (a.value || 0))} 
+            type="bar" 
             icon={Layers3} 
             chartKey="value"
             onDetailClick={setDetailChart} 
@@ -521,9 +521,9 @@ export default function DashboardPage() {
           <SummaryChart 
             id="chart-materiais"
             title="Tipos de Materiais" 
-            desc="Classificação de itens" 
-            data={stats.tipos} 
-            type="pie" 
+            desc="Classificação de itens (ordenado)" 
+            data={[...stats.tipos].sort((a, b) => (b.value || 0) - (a.value || 0))} 
+            type="bar" 
             icon={TrendingUp} 
             chartKey="value"
             onDetailClick={setDetailChart} 
