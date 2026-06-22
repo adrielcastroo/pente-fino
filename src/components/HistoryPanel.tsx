@@ -832,6 +832,8 @@ export default function HistoryPanel() {
   const [localSearch, setLocalSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showTestData, setShowTestData] = useState(false);
+  const [periodo, setPeriodo] = useState<'todos' | '7' | '30' | '90'>('30');
+  const [pageSize, setPageSize] = useState(20);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
@@ -860,15 +862,21 @@ export default function HistoryPanel() {
   const { visibleHistory, testCount } = useMemo(() => {
     let testCount = 0;
     const visible: Conference[] = [];
+    const now = Date.now();
+    const cutoff = periodo === 'todos' ? 0 : now - Number(periodo) * 24 * 60 * 60 * 1000;
     for (const c of history) {
       if (isTestConference(c)) {
         testCount++;
         if (!showTestData) continue;
       }
+      if (cutoff) {
+        const ref = c.finishedAt || c.startedAt || c.date;
+        if (ref && new Date(ref).getTime() < cutoff) continue;
+      }
       visible.push(c);
     }
     return { visibleHistory: visible, testCount };
-  }, [history, showTestData]);
+  }, [history, showTestData, periodo]);
 
   const filtered = useMemo(() => {
     const q = debouncedSearch.toLowerCase().trim();
@@ -896,6 +904,10 @@ export default function HistoryPanel() {
     }
     return result;
   }, [visibleHistory, debouncedSearch]);
+
+  const paged = useMemo(() => filtered.slice(0, pageSize), [filtered, pageSize]);
+
+  useEffect(() => { setPageSize(20); }, [debouncedSearch, periodo, showTestData]);
 
   const handleClear = async () => {
     try {
