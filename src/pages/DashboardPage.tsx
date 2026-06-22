@@ -52,6 +52,7 @@ export default function DashboardPage() {
 
   const [isExporting, setIsExporting] = useState(false);
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
+  const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
 
   const handleFullExportExcel = async () => {
     setIsExporting(true);
