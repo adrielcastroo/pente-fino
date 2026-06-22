@@ -99,6 +99,7 @@ const App = () => (
                   <Route path="/configuracoes" element={<SettingsPage />} />
                   <Route path="/cadastros" element={<CadastrosPage />} />
                   <Route path="/auditoria" element={<AuditoriaPage />} />
+                  <Route path="/minha-atividade" element={<MinhaAtividadePage />} />
                   
                 </Route>
 
