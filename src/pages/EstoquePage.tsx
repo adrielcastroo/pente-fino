@@ -468,6 +468,24 @@ export default function EstoquePage() {
         </div>
       </div>
 
+      {/* Locate search */}
+      <div className="relative">
+        <Input
+          value={locateQuery}
+          onChange={(e) => setLocateQuery(e.target.value)}
+          placeholder="Onde está? Buscar por item, lote, processo ou endereço..."
+          className="h-11 sm:h-12 rounded-2xl bg-card/40 backdrop-blur-xl border-white/10 pl-4 pr-24 text-xs sm:text-sm"
+        />
+        {locateQuery && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider">
+              {matchingCells?.size ?? 0} células
+            </Badge>
+            <button onClick={() => setLocateQuery('')} className="text-muted-foreground hover:text-foreground text-xs font-black">×</button>
+          </div>
+        )}
+      </div>
+
       {/* TEC Tabs */}
       <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] p-1.5 gap-1.5 sm:gap-2 border border-white/10 shadow-2xl flex-wrap sm:flex-nowrap ring-1 ring-white/5">
         {Object.keys(TEC_CONFIG).map(tec => (
