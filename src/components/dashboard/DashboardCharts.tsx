@@ -59,18 +59,13 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
   return (
     <Card id={id} className="md:col-span-3 border border-border/40 bg-card/50 shadow-none overflow-hidden rounded-lg">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-3 border-b border-border/30">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-            <Activity className="w-4 h-4" strokeWidth={1.75} />
-          </div>
-          <div>
-            <CardTitle className="text-sm font-medium tracking-tight">
-              Volume de operações
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {periodLabel || 'Histórico de conferências por período'}
-            </p>
-          </div>
+        <div>
+          <CardTitle className="text-sm font-semibold tracking-tight">
+            Volume de operações
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {periodLabel || 'Histórico de conferências por período'}
+          </p>
         </div>
         <div className="flex items-center gap-1.5">
           {onDetailClick && (
@@ -111,14 +106,9 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
   return (
     <Card id={id} className="border border-border/40 bg-card/50 shadow-none overflow-hidden rounded-lg">
       <CardHeader className="px-5 py-4 flex flex-row items-start justify-between border-b border-border/30">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-            <Icon className="w-4 h-4" strokeWidth={1.75} />
-          </div>
-          <div>
-            <CardTitle className="text-sm font-medium tracking-tight">{title}</CardTitle>
-            {desc && <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>}
-          </div>
+        <div>
+          <CardTitle className="text-sm font-semibold tracking-tight">{title}</CardTitle>
+          {desc && <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>}
         </div>
         <Button
           variant="ghost"

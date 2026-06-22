@@ -65,10 +65,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
 
   return (
     <div className="space-y-2">
-      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2 ml-1">
-        <div className="w-4 h-4 rounded bg-primary/10 text-primary flex items-center justify-center">
-          <Palette className="w-2.5 h-2.5" />
-        </div>
+      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 ml-1">
         Tonalidade de Referência
       </Label>
 

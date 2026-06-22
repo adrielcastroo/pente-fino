@@ -366,18 +366,13 @@ export default function EstoquePage() {
           >
             <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
           </Button>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-primary/10 text-primary">
-              <Warehouse className="w-5 h-5" strokeWidth={1.75} />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
-                Gestão de estoque
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Monitoramento de posições e ocupação
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+              Gestão de estoque
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Monitoramento de posições e ocupação
+            </p>
           </div>
         </div>
 
@@ -386,9 +381,8 @@ export default function EstoquePage() {
             onClick={() => setImportOpen(true)}
             variant="outline"
             size="sm"
-            className="h-9 gap-2"
+            className="h-9"
           >
-            <Upload className="w-4 h-4" strokeWidth={1.75} />
             Importar
           </Button>
         </div>

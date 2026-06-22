@@ -148,15 +148,15 @@ export default function LabelLayoutPanel() {
         <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-md bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
           <TabsTrigger
             value="tecido"
-            className="gap-2 font-bold rounded-md transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
+            className="font-medium rounded-md transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary"
           >
-            <Shirt className="w-4 h-4" /> Tecidos
+            Tecidos
           </TabsTrigger>
           <TabsTrigger
             value="motor"
-            className="gap-2 font-bold rounded-md transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:bg-background data-[state=active]:text-primary"
+            className="font-medium rounded-md transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary"
           >
-            <Cog className="w-4 h-4" /> Motores / Controles
+            Motores / Controles
           </TabsTrigger>
         </TabsList>
 

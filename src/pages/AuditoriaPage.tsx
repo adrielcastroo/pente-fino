@@ -107,16 +107,11 @@ function AuditoriaContent() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1400px] mx-auto">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <ShieldAlert className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Auditoria</h1>
-            <p className="text-xs text-muted-foreground">
-              Trilha imutável de todas as alterações no sistema. Visível para Gerente e Admin.
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Auditoria</h1>
+          <p className="text-xs text-muted-foreground">
+            Trilha imutável de todas as alterações no sistema. Visível para Gerente e Admin.
+          </p>
         </div>
         <Button onClick={load} variant="outline" size="sm" disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />

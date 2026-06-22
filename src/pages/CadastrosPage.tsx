@@ -171,20 +171,15 @@ export default function CadastrosPage() {
   return (
     <div className="flex flex-col h-full p-4 md:p-6 gap-4 overflow-hidden">
       <header className="flex flex-col md:flex-row md:items-center gap-3">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-            <Package className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Cadastro de Itens</h1>
-            <p className="text-xs text-muted-foreground">
-              Base usada para validar etiquetas: código interno + descrição + código fornecedor
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
+          <p className="text-xs text-muted-foreground">
+            Base usada para validar etiquetas: código interno + descrição + código fornecedor
+          </p>
         </div>
         <div className="md:ml-auto flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2 flex-1 md:flex-none min-w-[150px]" aria-label="Importar planilha">
-            <Upload className="h-4 w-4" /> <span className="truncate">Importar planilha</span>
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none min-w-[150px]" aria-label="Importar planilha">
+            <span className="truncate">Importar planilha</span>
           </Button>
           <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none min-w-[130px]" aria-label="Novo item">
             <Plus className="h-4 w-4" /> Novo item

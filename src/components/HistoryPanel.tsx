@@ -83,9 +83,8 @@ function EditRegistroDialog({
       <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-          <DialogTitle className="text-lg font-semibold tracking-tight flex items-center gap-3">
-             <div className="p-2 rounded-md bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
-             Editar Registro
+          <DialogTitle className="text-lg font-semibold tracking-tight">
+            Editar Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
             {form?.modoOrigem ? `${form.modoOrigem === 'motor' ? 'Motor' : form.modoOrigem === 'controle' ? 'Controle' : form.tipoTecido || ''} • ` : ''}Ajuste as especificações deste item no histórico.
@@ -247,9 +246,8 @@ function AddHistoryRegistroDialog({
       <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-          <DialogTitle className="text-lg font-semibold tracking-tight flex items-center gap-3">
-             <div className="p-2 rounded-md bg-primary/10 text-primary"><Plus className="w-5 h-5" /></div>
-             Novo Registro
+          <DialogTitle className="text-lg font-semibold tracking-tight">
+            Novo Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
             Adicione um item esquecido a esta conferência de forma rápida e precisa.

@@ -99,18 +99,13 @@ export function PeriodComparisonCard({ history }: Props) {
   return (
     <Card className="border-border/40 bg-card/50 shadow-none">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-            <CalendarRange className="w-4 h-4" strokeWidth={1.75} />
-          </div>
-          <div>
-            <CardTitle className="text-sm font-medium tracking-tight">
-              Comparação período a período
-            </CardTitle>
-            <p className="text-xs text-muted-foreground tabular-nums mt-0.5">
-              {currentRange} <span className="text-muted-foreground/60">vs</span> {previousRange}
-            </p>
-          </div>
+        <div>
+          <CardTitle className="text-sm font-semibold tracking-tight">
+            Comparação período a período
+          </CardTitle>
+          <p className="text-xs text-muted-foreground tabular-nums mt-0.5">
+            {currentRange} <span className="text-muted-foreground/60">vs</span> {previousRange}
+          </p>
         </div>
 
         <div role="tablist" aria-label="Selecionar período" className="flex gap-0.5 p-0.5 rounded-md bg-muted/40 border border-border/30 self-start sm:self-auto">

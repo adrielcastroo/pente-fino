@@ -218,9 +218,8 @@ export default function SaidaPage() {
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
-              className="w-full sm:w-auto h-12 px-6 font-bold rounded-md border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-base shrink-0"
+              className="w-full sm:w-auto h-12 px-6 font-semibold rounded-md border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-95 text-base shrink-0"
             >
-               <LogOut className="w-5 h-5" />
               <span>Dar saída</span>
             </Button>
 
