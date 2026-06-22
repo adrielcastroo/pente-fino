@@ -446,6 +446,12 @@ export default function DashboardPage() {
       {/* Detail Dialogs */}
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
+      <ConferenteProfileDialog
+        conferente={selectedConferente}
+        history={history}
+        onClose={() => setSelectedConferente(null)}
+      />
+
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className={cn(
