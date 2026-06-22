@@ -620,7 +620,7 @@ export default function EstoquePage() {
                       {hasItems && (
                         <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-white/10 bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl">
                           <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{selectedEstrutura}.{col}.N{String(nivel).padStart(2,'0')}</div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activeTec}.{col}.N{String(nivel).padStart(2,'0')}</div>
                             <div className="text-[10px] font-black text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
                           </div>
                           <div className="max-h-64 overflow-y-auto p-2 space-y-1">
