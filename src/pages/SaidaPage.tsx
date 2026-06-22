@@ -428,7 +428,11 @@ export default function SaidaPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
             <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-xl bg-violet-600 hover:bg-violet-700 font-bold" onClick={executeScanSaida}>
+            <AlertDialogAction
+              className="rounded-xl bg-violet-600 hover:bg-violet-700 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!destino.trim() || !(conferente || '').trim()}
+              onClick={executeScanSaida}
+            >
               Confirmar Saída
             </AlertDialogAction>
           </AlertDialogFooter>
