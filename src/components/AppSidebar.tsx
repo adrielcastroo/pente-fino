@@ -131,7 +131,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       </SidebarHeader>
 
       <SidebarContent className="px-3 group-data-[state=collapsed]:px-0 custom-scrollbar">
-        {menuGroups.map(group => (
+        {visibleGroups.map(group => (
           <SidebarGroup key={group.label} className="p-0 mb-2">
             <SidebarGroupLabel className="px-2 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-data-[state=collapsed]:hidden">
               {group.label}
