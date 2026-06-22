@@ -51,7 +51,7 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full items-stretch">
       {cards.map((s) => (
         <StatCard
           key={s.id}
