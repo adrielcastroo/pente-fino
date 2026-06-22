@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import LeftPanel from '@/components/LeftPanel';
+import TecidoOperationalPanel from '@/components/tecido/TecidoOperationalPanel';
 import FormPageLayout from '@/components/FormPageLayout';
 import { motion } from 'framer-motion';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -26,7 +26,7 @@ export default function TecidoPage() {
       className="h-full w-full overflow-hidden"
     >
       <FormPageLayout>
-        <LeftPanel />
+        <TecidoOperationalPanel />
       </FormPageLayout>
     </motion.div>
   );
