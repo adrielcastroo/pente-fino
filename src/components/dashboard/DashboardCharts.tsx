@@ -78,7 +78,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-6 pt-6 h-[360px]">
+      <CardContent className="px-4 pb-6 pt-6 h-[360px] min-h-[300px]">
         {processedData.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Activity className="w-8 h-8 opacity-30" strokeWidth={1.5} />
