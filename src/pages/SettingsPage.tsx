@@ -191,7 +191,9 @@ export default function SettingsPage() {
   const [prefSidebarCollapsed, setPrefSidebarCollapsed] = useState(localStorage.getItem('pref_sidebar_collapsed') === 'true');
   const [prefDefaultTab, setPrefDefaultTab] = useState(localStorage.getItem('pref_default_tab') || 'inicio');
   const [prefConfirmDelete, setPrefConfirmDelete] = useState(localStorage.getItem('pref_confirm_delete') !== 'false');
-  const [prefSoundFeedback, setPrefSoundFeedback] = useState(localStorage.getItem('pref_sound_feedback') === 'true');
+  const [prefSoundFeedback, setPrefSoundFeedback] = useState(() => {
+    try { return isBipSoundEnabled(); } catch { return true; }
+  });
   const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
   const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
