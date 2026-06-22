@@ -20,34 +20,37 @@ interface Props {
 export default function TecidoOperationalPanel({ children }: Props) {
   return (
     <div className="flex h-full w-full flex-col min-w-0">
-      {/* Header compacto — visível apenas em tablet (md → lg) */}
+      {/* Header compacto — tablet (md → lg). Sticky com safe-area top. */}
       <header
-        className="hidden md:flex xl:hidden items-center gap-3 px-4 py-3 border-b border-border/40 bg-card/60 backdrop-blur sticky top-0 z-20"
+        className="hidden md:flex xl:hidden items-center gap-3 px-4 py-3 border-b border-border/40 bg-card/70 backdrop-blur-md sticky top-0 z-20"
+        style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
         aria-label="Cabeçalho operacional Tecido"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
           <ScanLine className="h-5 w-5" aria-hidden />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-base font-semibold text-foreground leading-tight truncate">
-            Tecido
+            Tecido — Registro e bipagem
           </h1>
           <p className="text-xs text-muted-foreground leading-tight truncate">
             Aponte o leitor ou digite o código para iniciar
           </p>
         </div>
-        <kbd className="ml-auto hidden md:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold text-muted-foreground bg-muted/60 border border-border/40 rounded">
+        <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold text-muted-foreground bg-muted/60 border border-border/40 rounded shrink-0">
           B
         </kbd>
       </header>
 
       {/*
-        Conteúdo operacional — LeftPanel mantém todo o fluxo de bipagem,
-        formulário e modos (manual / IA / diversos / etiq. pronta).
-        O padding inferior em tablet (pb-20) garante que a BottomTabBar
-        (h-16) não cubra a última linha de ações.
+        Conteúdo operacional. Em tablet (md → lg) habilitamos scroll vertical
+        e padding inferior maior (pb-24) para acomodar BottomTabBar + safe-area.
+        Em desktop (xl+) mantém o layout em coluna sem padding extra.
       */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-hidden md:pb-20 xl:pb-0">
+      <div
+        className="flex-1 min-h-0 min-w-0 overflow-y-auto xl:overflow-hidden md:pb-24 xl:pb-0"
+        style={{ paddingBottom: 'max(6rem, calc(env(safe-area-inset-bottom) + 5rem))' }}
+      >
         <LeftPanel />
         {children}
       </div>
