@@ -657,7 +657,7 @@ export default function EstoquePage() {
                       <Grid3X3 className="w-8 h-8" />
                     </div>
                     <div>
-                      <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight uppercase">
+                      <DialogTitle className="text-xl font-semibold tracking-tight">
                         {activeTec} · {selectedCell.col}N{String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
                       <DialogDescription className="text-[10px] sm:text-xs text-muted-foreground font-black uppercase tracking-[0.2em] mt-1 opacity-60">
@@ -792,7 +792,7 @@ export default function EstoquePage() {
                       <Package className="w-10 h-10" />
                     </div>
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight truncate uppercase leading-none">
+                      <DialogTitle className="text-xl font-semibold tracking-tight">
                         {detailPos.item || 'Item sem identificação'}
                       </DialogTitle>
                       <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-black uppercase tracking-[0.2em] mt-2 opacity-60">
@@ -943,7 +943,7 @@ export default function EstoquePage() {
                         <LayoutDashboard className="w-10 h-10" />
                      </div>
                      <div className="flex-1 text-center sm:text-left">
-                        <DialogTitle className="text-3xl sm:text-4xl font-black tracking-tight uppercase leading-none">
+                        <DialogTitle className="text-2xl font-semibold tracking-tight leading-none">
                            {current.label}
                         </DialogTitle>
                         <DialogDescription className="text-xs sm:text-sm font-black text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
@@ -1105,7 +1105,7 @@ export default function EstoquePage() {
                 <ScanBarcode className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-black tracking-tight">Saída por Bipagem</DialogTitle>
+                <DialogTitle className="text-sm font-semibold tracking-tight">Saída por Bipagem</DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground font-medium mt-0.5">
                   Bipe ou digite o <strong>Lote Final</strong> do tecido para dar saída
                 </DialogDescription>
@@ -1115,7 +1115,7 @@ export default function EstoquePage() {
 
           <div className="p-6 space-y-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final (Bipagem)</label>
+              <label className="text-xs font-medium text-muted-foreground ml-1">Lote Final (Bipagem)</label>
               <div className="flex gap-2">
                 <Input
                   ref={scanRef}

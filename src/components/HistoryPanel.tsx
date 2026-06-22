@@ -80,11 +80,11 @@ function EditRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-xl">
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-4 relative">
-             <div className="p-3 rounded-2xl bg-primary shadow-lg shadow-primary/20 text-white animate-in zoom-in duration-500"><Pencil className="w-5 h-5" /></div>
+          <DialogTitle className="text-lg font-semibold tracking-tight flex items-center gap-3">
+             <div className="p-2 rounded-md bg-primary/10 text-primary"><Pencil className="w-5 h-5" /></div>
              Editar Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
@@ -96,46 +96,46 @@ function EditRegistroDialog({
         {form && (
           <div className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Referência do Item</label>
-              <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.item} onChange={e => updateField('item', e.target.value)} />
+              <label className="text-xs font-medium text-muted-foreground ml-1">Referência do Item</label>
+              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.item} onChange={e => updateField('item', e.target.value)} />
             </div>
 
             {(isDiversos || isMotor) && (
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Nota Fiscal</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">Nota Fiscal</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
               </div>
             )}
 
             {isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
-                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                  <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
+                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">QTD</label>
-                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
+                  <label className="text-xs font-medium text-muted-foreground ml-1">QTD</label>
+                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
                 </div>
               </div>
             )}
 
             {isMotor && (
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote Final</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-sm" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">Lote Final</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors font-mono text-sm" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
               </div>
             )}
 
             {!isPVT && !isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
-                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
+                  <label className="text-xs font-medium text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
+                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Largura (m)</label>
-                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
+                  <label className="text-xs font-medium text-muted-foreground ml-1">Largura (m)</label>
+                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
                 </div>
               </div>
             )}
@@ -143,20 +143,20 @@ function EditRegistroDialog({
             {!isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metro Linear</label>
-                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
+                  <label className="text-xs font-medium text-muted-foreground ml-1">Metro Linear</label>
+                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
-                  <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                  <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
+                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
                 </div>
               </div>
             )}
 
             {!isPVT && !isMotor && (
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Endereço de Armazenagem</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all uppercase" value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">Endereço de Armazenagem</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors uppercase" value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
               </div>
             )}
           </div>
@@ -164,7 +164,7 @@ function EditRegistroDialog({
 
         <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
           <Button variant="outline" className="rounded-xl font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
-          <Button className="rounded-xl font-black px-8 h-11 bg-primary shadow-lg shadow-primary/20" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
+          <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -244,11 +244,11 @@ function AddHistoryRegistroDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden shadow-2xl border-none max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-xl">
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-4 relative">
-             <div className="p-3 rounded-2xl bg-primary shadow-lg shadow-primary/20 text-white animate-in zoom-in duration-500"><Plus className="w-5 h-5" /></div>
+          <DialogTitle className="text-lg font-semibold tracking-tight flex items-center gap-3">
+             <div className="p-2 rounded-md bg-primary/10 text-primary"><Plus className="w-5 h-5" /></div>
              Novo Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
@@ -259,39 +259,26 @@ function AddHistoryRegistroDialog({
 
         <div className="p-8 space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Referência do Item</label>
-            <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.item} onChange={e => setForm({ ...form, item: e.target.value })} />
+            <label className="text-xs font-medium text-muted-foreground ml-1">Referência do Item</label>
+            <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.item} onChange={e => setForm({ ...form, item: e.target.value })} />
           </div>
 
           {(isDiversos || isMotor) && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Nota Fiscal</label>
-              <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.nf} onChange={e => setForm({ ...form, nf: e.target.value })} />
+              <label className="text-xs font-medium text-muted-foreground ml-1">Nota Fiscal</label>
+              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.nf} onChange={e => setForm({ ...form, nf: e.target.value })} />
             </div>
           )}
 
           {isMotor && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">QTD</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {!isMotor && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={form.m2} onChange={e => setForm({ ...form, m2: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Largura (m)</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.01" value={form.largura} onChange={e => setForm({ ...form, largura: e.target.value })} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">QTD</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: e.target.value })} />
               </div>
             </div>
           )}
@@ -299,27 +286,40 @@ function AddHistoryRegistroDialog({
           {!isMotor && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Metro Linear</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" type="number" step="0.1" value={form.mLinear} onChange={e => setForm({ ...form, mLinear: e.target.value })} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={form.m2} onChange={e => setForm({ ...form, m2: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Lote / Batch</label>
-                <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all" value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
+                <label className="text-xs font-medium text-muted-foreground ml-1">Largura (m)</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.01" value={form.largura} onChange={e => setForm({ ...form, largura: e.target.value })} />
+              </div>
+            </div>
+          )}
+
+          {!isMotor && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground ml-1">Metro Linear</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={form.mLinear} onChange={e => setForm({ ...form, mLinear: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
               </div>
             </div>
           )}
 
           {!isMotor && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground ml-1">Endereço de Armazenagem</label>
-              <Input className="h-12 rounded-2xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all uppercase" value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value.toUpperCase() })} />
+              <label className="text-xs font-medium text-muted-foreground ml-1">Endereço de Armazenagem</label>
+              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors uppercase" value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value.toUpperCase() })} />
             </div>
           )}
         </div>
 
         <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
           <Button variant="outline" className="rounded-xl font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
-          <Button className="rounded-xl font-black px-8 h-11 bg-primary shadow-lg shadow-primary/20" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Adicionar Item'}</Button>
+          <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Adicionar Item'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -582,7 +582,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm sm:text-lg font-black tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
+                <span className="text-sm sm:text-sm font-semibold tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
                 {!conf.finishedAt && (
                   <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
                     Aberta
@@ -771,7 +771,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
             </div>
-            <DialogTitle className="text-2xl font-black tracking-tight text-center">Excluir Histórico?</DialogTitle>
+            <DialogTitle className="text-lg font-semibold tracking-tight text-center">Excluir Histórico?</DialogTitle>
             <DialogDescription className="text-center text-sm font-medium mt-2 leading-relaxed">
               Esta ação removerá permanentemente a conferência <span className="text-foreground font-black">"{folderName}"</span> e todos os seus registros do banco de dados.
             </DialogDescription>
@@ -789,7 +789,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
             </div>
-            <DialogTitle className="text-2xl font-black tracking-tight text-center">Excluir Item?</DialogTitle>
+            <DialogTitle className="text-lg font-semibold tracking-tight text-center">Excluir Item?</DialogTitle>
             <DialogDescription className="text-center text-sm font-medium mt-2 leading-relaxed">
               Esta ação removerá permanentemente o registro{' '}
               <span className="text-foreground font-black">
@@ -1077,7 +1077,7 @@ export default function HistoryPanel() {
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
         <DialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
           <DialogHeader className="p-2">
-            <DialogTitle className="text-2xl font-black tracking-tight text-center">Limpar Tudo?</DialogTitle>
+            <DialogTitle className="text-lg font-semibold tracking-tight text-center">Limpar Tudo?</DialogTitle>
             <DialogDescription className="font-bold text-sm leading-relaxed mt-2 text-muted-foreground text-center">
               Você está prestes a remover permanentemente <span className="text-destructive font-black">{history.length} conferências</span>. Esta ação limpará todo o banco de dados histórico.
             </DialogDescription>
