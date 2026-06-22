@@ -940,41 +940,35 @@ export default function HistoryPanel() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-1.5 text-center lg:text-left"
-          >
-             <h1 className="text-[clamp(1.75rem,5vw,3.5rem)] font-black tracking-tight text-foreground leading-tight">
-               Histórico de <span className="text-primary italic relative">
-                 Conferências
-                 <svg className="absolute -bottom-2 left-0 w-full h-2 text-primary/20" viewBox="0 0 100 10" preserveAspectRatio="none">
-                   <path d="M0 5 Q 25 0, 50 5 T 100 5" fill="none" stroke="currentColor" strokeWidth="4" />
-                 </svg>
-               </span>
-             </h1>
-             <p className="text-muted-foreground font-medium text-sm sm:text-base">Acompanhe e gerencie todos os registros de conferência realizados.</p>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 w-full lg:w-auto"
-          >
-             <div className="relative group flex-1 w-full sm:w-80">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-all duration-300 group-focus-within:scale-110" />
-                <Input 
-                  value={localSearch} 
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
+              <FolderOpen className="h-5 w-5" strokeWidth={1.75} />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+                Histórico de conferências
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Acompanhe e gerencie todos os registros de conferência realizados.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+             <div className="relative flex-1 lg:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
+                <Input
+                  value={localSearch}
                   onChange={e => setLocalSearch(e.target.value)}
                   placeholder="Pesquisar por item, conferente ou NF..."
-                  className="pl-11 h-12 rounded-2xl border-border/40 bg-card/40 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm shadow-sm"
+                  className="pl-9 h-9 rounded-md border-border/40 bg-card/50 text-sm"
                 />
              </div>
              <select
                value={periodo}
                onChange={e => setPeriodo(e.target.value as any)}
-               className="h-12 rounded-2xl border border-border/40 bg-card/40 px-3 text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/20"
+               className="h-9 rounded-md border border-border/40 bg-card/50 px-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
              >
                <option value="7">Últimos 7 dias</option>
                <option value="30">Últimos 30 dias</option>
@@ -988,30 +982,30 @@ export default function HistoryPanel() {
                      variant={showTestData ? 'default' : 'outline'}
                      size="sm"
                      onClick={() => setShowTestData(v => !v)}
-                     className="h-12 rounded-2xl px-3 text-[10px] font-black uppercase tracking-wider shadow-sm"
+                     className="h-9 rounded-md px-2.5 text-xs font-medium"
                    >
                      {showTestData ? 'Ocultar' : 'Mostrar'} testes ({testCount})
                    </Button>
                  </TooltipTrigger>
-                 <TooltipContent>Conferências marcadas como dados de teste (PROC sem_proc, vazias ou placeholder)</TooltipContent>
+                 <TooltipContent>Conferências marcadas como dados de teste</TooltipContent>
                </Tooltip>
              )}
              {history.length > 0 && !isGuest && (
                <Tooltip>
                  <TooltipTrigger asChild>
-                   <Button 
-                     variant="outline" 
-                     size="icon" 
+                   <Button
+                     variant="outline"
+                     size="icon"
                      onClick={() => setShowClearConfirm(true)}
-                     className="h-12 w-12 rounded-2xl border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/40 transition-all shadow-sm group"
+                     className="h-9 w-9 rounded-md border-destructive/30 text-destructive hover:bg-destructive/10"
                    >
-                     <Trash2 className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                     <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                    </Button>
                  </TooltipTrigger>
                  <TooltipContent>Limpar todo o histórico</TooltipContent>
                </Tooltip>
              )}
-          </motion.div>
+          </div>
         </header>
 
 

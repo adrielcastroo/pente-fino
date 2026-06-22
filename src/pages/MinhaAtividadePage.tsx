@@ -116,110 +116,94 @@ export default function MinhaAtividadePage() {
     return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 50);
   }, [confs, regs, saidas]);
 
+  const summary = [
+    { label: 'Conferências', value: confs.length, icon: CheckCircle2 },
+    { label: 'Itens bipados', value: regs.length, icon: Package },
+    { label: 'Saídas', value: saidas.length, icon: LogOut },
+    { label: 'Tempo médio', value: avgMinPerConf > 0 ? `${avgMinPerConf}min` : '—', icon: Clock },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <header className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-          <Activity className="h-6 w-6" />
+        <div className="p-2 rounded-md bg-primary/10 text-primary">
+          <Activity className="h-5 w-5" strokeWidth={1.75} />
         </div>
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Minha Atividade</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Minha atividade</h1>
           <p className="text-sm text-muted-foreground">
-            Olá, <span className="font-bold text-foreground">{displayName}</span> — resumo do que você fez hoje.
+            Olá, <span className="font-medium text-foreground">{displayName}</span> — resumo do que você fez hoje.
           </p>
         </div>
       </header>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Conferências
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">{confs.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Package className="h-3.5 w-3.5" /> Itens bipados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">{regs.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <LogOut className="h-3.5 w-3.5" /> Saídas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">{saidas.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" /> Tempo médio
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">
-              {avgMinPerConf > 0 ? `${avgMinPerConf}min` : '—'}
+        {summary.map(s => {
+          const Icon = s.icon;
+          return (
+            <div key={s.label} className="rounded-lg border border-border/40 bg-card/50 p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-semibold tabular-nums text-foreground leading-none">{s.value}</div>
+                <p className="text-xs font-medium text-muted-foreground mt-1">{s.label}</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          );
+        })}
       </div>
 
       {/* Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="h-4 w-4 text-primary" /> Timeline de hoje
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-lg border border-border/40 bg-card/50 overflow-hidden">
+        <div className="px-5 py-4 border-b border-border/30 flex items-center gap-2.5">
+          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+            <Calendar className="h-4 w-4" strokeWidth={1.75} />
+          </div>
+          <h2 className="text-sm font-medium tracking-tight">Timeline de hoje</h2>
+        </div>
+        <div className="px-5 py-4">
           {loading && <p className="text-sm text-muted-foreground py-8 text-center">Carregando...</p>}
           {!loading && timeline.length === 0 && (
             <p className="text-sm text-muted-foreground py-8 text-center">
               Nenhuma atividade registrada hoje.
-              <Link to="/tecido" className="text-primary hover:underline ml-1 font-bold">Iniciar bipagem →</Link>
+              <Link to="/tecido" className="text-primary hover:underline ml-1 font-medium">Iniciar bipagem →</Link>
             </p>
           )}
           {!loading && timeline.length > 0 && (
-            <ol className="space-y-2">
+            <ol className="space-y-1">
               {timeline.map(item => (
-                <li key={item.id} className="flex items-start gap-3 py-2 border-b border-border/30 last:border-0">
+                <li key={item.id} className="flex items-start gap-3 py-2 border-b border-border/20 last:border-0">
                   <Badge
                     variant="outline"
                     className={
-                      item.type === 'conf' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
-                      item.type === 'sai' ? 'bg-rose-500/10 text-rose-600 border-rose-500/30' :
-                      'bg-primary/10 text-primary border-primary/30'
+                      'font-medium text-[10px] tabular-nums ' + (
+                        item.type === 'conf' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                        item.type === 'sai' ? 'bg-rose-500/10 text-rose-600 border-rose-500/30' :
+                        'bg-primary/10 text-primary border-primary/30'
+                      )
                     }
                   >
                     {fmtTime(item.at)}
                   </Badge>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">{item.title}</div>
-                    {item.subtitle && <div className="text-[11px] text-muted-foreground truncate">{item.subtitle}</div>}
+                    {item.subtitle && <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>}
                   </div>
                 </li>
               ))}
             </ol>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div className="flex justify-end">
-        <Button asChild variant="outline" className="gap-2">
+        <Button asChild variant="outline" size="sm" className="gap-2">
           <Link to="/historico" aria-label="Ver histórico completo">
-            Ver histórico completo <ArrowRight className="h-4 w-4" />
+            Ver histórico completo <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
           </Link>
         </Button>
       </div>
