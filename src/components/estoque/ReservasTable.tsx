@@ -99,7 +99,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                   </div>
                 </TableCell>
                 <TableCell className={cn('text-center', editedCols.has('quantidade') && 'bg-amber-500/5')}>
-                  <Badge variant="outline" className="font-mono bg-primary/5 text-primary border-primary/20 font-bold px-3 py-1">
+                  <Badge variant="outline" className="font-mono bg-primary/5 text-primary border-primary/20 font-bold px-3 py-1 tabular-nums">
                     {item.quantidade ?? 0}
                   </Badge>
                 </TableCell>
@@ -131,7 +131,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                     <span className="text-muted-foreground/30 text-[10px]">—</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right font-mono font-semibold text-primary px-6">
+                <TableCell className="text-right font-mono font-semibold text-primary px-6 tabular-nums">
                   {calculateTotal(item.quantidade, item.quantidadeCx).toLocaleString('pt-BR')}
                 </TableCell>
                 <TableCell className="text-center">
@@ -191,7 +191,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                           </div>
                           <AlertDialogDescription className="text-sm">
-                            Você está prestes a remover o item <span className="font-mono font-bold text-foreground">{item.codigo}</span>.
+                            Você está prestes a remover o item <span className="font-mono font-bold text-foreground tabular-nums">{item.codigo}</span>.
                             Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>

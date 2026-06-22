@@ -78,7 +78,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-6 pt-6 h-[360px]">
+      <CardContent className="px-4 pb-6 pt-6 h-[360px] min-h-[300px]">
         {processedData.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Activity className="w-8 h-8 opacity-30" strokeWidth={1.5} />
@@ -119,7 +119,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
         </Button>
       </CardHeader>
-      <CardContent className={cn("px-4 sm:px-5 pb-5 pt-5", isMobile ? "min-h-[120px]" : "h-[260px]")}>
+      <CardContent className={cn("px-4 sm:px-5 pb-5 pt-5", isMobile ? "min-h-[300px]" : "h-[300px] min-h-[300px]")}>
         {(!data || data.length === 0) ? (
           <div className="h-full min-h-[120px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Icon className="w-7 h-7 opacity-30" strokeWidth={1.5} />
