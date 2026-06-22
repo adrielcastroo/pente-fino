@@ -369,6 +369,7 @@ export default function CadastrosPage() {
                     checked={isSelected}
                     onCheckedChange={(c) => toggleOne(item.id, !!c)}
                     aria-label={`Selecionar ${item.codigo_interno}`}
+                    className="h-5 w-5"
                   />
                 </TableCell>
                 <TableCell className={cn('font-mono text-xs', editedCol('codigo_interno') && 'bg-amber-500/5')}>
