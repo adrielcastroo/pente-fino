@@ -178,6 +178,13 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
             </div>
           </div>
         )}
+        </div>
+
+        <DialogFooter className="px-4 sm:px-6 py-3 border-t border-border/20 bg-muted/20 flex-none">
+          <Button variant="default" onClick={onClose} className="w-full sm:w-auto font-bold">
+            Fechar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
