@@ -102,7 +102,7 @@ export default function SettingsPage() {
   useDocumentTitle('Configurações');
   const { user, profile, isGuest, signOut, role } = useAuth();
   const [activeCategory, setActiveCategory] = useState('profile');
-  const [searchQuery, setSearchQuery] = useState('');
+  
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
