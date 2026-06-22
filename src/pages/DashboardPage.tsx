@@ -491,25 +491,25 @@ export default function DashboardPage() {
             <table className="w-full text-sm">
               <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-[#0F172A]" : "bg-white")}>
                 <tr>
-                   <th className={cn("px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Processo</th>
-                  <th className={cn("px-10 py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferente</th>
-                  <th className={cn("px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Início</th>
-                  <th className={cn("px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Fim</th>
-                  <th className={cn("px-10 py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Duração</th>
-                  <th className={cn("px-10 py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
+                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Processo</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-black text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Conferente</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden xs:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Início</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Fim</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Duração</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
                 {conferenceSummary.map(c => (
                   <tr key={c.id} className={cn("transition-colors group", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}>
-                    <td className={cn("px-10 py-6 font-bold group-hover:text-[#2563EB] truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-[#2563EB]/90")}>{c.name}</td>
-                    <td className={cn("px-10 py-6 font-bold truncate max-w-[120px] hidden sm:table-cell", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>{c.conferente || '—'}</td>
-                    <td className="px-10 py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
-                    <td className={cn("px-10 py-6 text-center font-mono text-[12px] font-bold hidden md:table-cell", isDark ? "text-slate-500" : "text-[#2563EB]/50")}>{formatTimeBR(c.finishedAt)}</td>
-                    <td className="px-10 py-6 text-center">
+                    <td className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 font-bold group-hover:text-[#2563EB] truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-[#2563EB]/90")}>{c.name}</td>
+                    <td className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 font-bold truncate max-w-[120px] hidden sm:table-cell", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>{c.conferente || '—'}</td>
+                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
+                    <td className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-mono text-[12px] font-bold hidden md:table-cell", isDark ? "text-slate-500" : "text-[#2563EB]/50")}>{formatTimeBR(c.finishedAt)}</td>
+                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center">
                       <Badge variant="outline" className={cn("text-[10px] font-bold px-4 py-1 rounded-full border-[#2563EB]/20 text-[#2563EB] bg-[#2563EB]/5")}>{c.duration}</Badge>
                     </td>
-                    <td className="px-10 py-6 text-right font-mono text-primary font-black text-xl">{c.registros}</td>
+                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-mono text-primary font-black text-xl">{c.registros}</td>
                   </tr>
                 ))}
               </tbody>
