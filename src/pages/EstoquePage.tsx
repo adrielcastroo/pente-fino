@@ -561,13 +561,37 @@ export default function EstoquePage() {
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-xl sm:rounded-3xl cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border ${
-                        !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : 'shadow-lg hover:shadow-primary/10'
+                  const fillPercent = Math.round((items.length / 30) * 100);
+                  const hasItems = items.length > 0;
+                  const matchesFilter = !selectedStat || selectedStat === 'total' || 
+                                      (selectedStat === 'livre' && items.length < 30) ||
+                                      items.some(i => i.status === selectedStat);
+                  const cellKey = `${col}-${nivel}`;
+                  const isHighlighted = matchingCells?.has(cellKey);
+                  const isDimmed = matchingCells && !isHighlighted;
+
+                  // Color by occupation: green <50%, amber 50-80%, red >80%
+                  const fillTone = !hasItems
+                    ? { bg: 'bg-muted/10', border: 'border-white/5', bar: 'bg-muted/30' }
+                    : fillPercent <= 50
+                      ? { bg: 'bg-emerald-500/10', border: 'border-emerald-500/25', bar: 'bg-emerald-500/30' }
+                      : fillPercent <= 80
+                        ? { bg: 'bg-amber-500/10', border: 'border-amber-500/30', bar: 'bg-amber-500/35' }
+                        : { bg: 'bg-rose-500/10', border: 'border-rose-500/30', bar: 'bg-rose-500/40' };
+                  
+                  return (
+                    <motion.div 
+                      key={col} 
+                      whileHover={{ scale: 1.02, zIndex: 10 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedCell({ col, nivel })} 
+                      className={`flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-xl sm:rounded-3xl cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border backdrop-blur-xl shadow-lg hover:shadow-primary/10 ${fillTone.bg} ${fillTone.border} ${
+                        !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : ''
                       } ${
-                        hasItems
-                          ? 'bg-card/60 backdrop-blur-xl border-white/10 ring-1 ring-white/5'
-                          : 'bg-muted/10 border-white/5 opacity-50'
-                      }`}
+                        isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.03] z-10' : ''
+                      } ${
+                        isDimmed ? 'opacity-30 grayscale' : ''
+                      } ${!hasItems ? 'opacity-50' : ''}`}
                     >
                       {/* Fill bar */}
                       {hasItems && (
@@ -575,7 +599,7 @@ export default function EstoquePage() {
                           initial={{ height: 0 }}
                           animate={{ height: `${fillPercent}%` }}
                           transition={{ duration: 1, ease: "easeOut" }}
-                          className="absolute bottom-0 left-0 right-0 bg-primary/10 dark:bg-primary/5" 
+                          className={`absolute bottom-0 left-0 right-0 ${fillTone.bar}`}
                         />
                       )}
                       
