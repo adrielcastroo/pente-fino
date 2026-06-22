@@ -36,7 +36,8 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Operações',
     items: [
-      { key: 'inicio', label: 'Início', icon: Home, path: '/dashboard' },
+      { key: 'inicio', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', minRole: 'supervisor' },
+      { key: 'inicio', label: 'Início', icon: Home, path: '/operacao' },
       { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
       { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
       { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
