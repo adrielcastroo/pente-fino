@@ -90,6 +90,7 @@ const App = () => (
                   <Route path="/tecido" element={<TecidoPage />} />
                   <Route path="/madeira" element={<MadeiraPage />} />
                   <Route path="/motor" element={<MotorControlePage />} />
+                  <Route path="/motor-controle" element={<Navigate to="/motor" replace />} />
                   <Route path="/estoque" element={<EstoquePage />} />
                   <Route path="/saida" element={<SaidaPage />} />
                   <Route path="/reservas" element={<ReservasPage />} />

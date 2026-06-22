@@ -295,11 +295,11 @@ export default function SaidaPage() {
                   </div>
                   <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-lg">
                     <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">M²</span>
-                    <span className="text-xs font-bold">{saida.m2}</span>
+                    <span className="text-xs font-bold">{saida.m2 > 0 ? saida.m2 : '—'}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-lg">
                     <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">M Lin.</span>
-                    <span className="text-xs font-bold">{saida.m_linear}m</span>
+                    <span className="text-xs font-bold">{saida.m_linear > 0 ? `${saida.m_linear}m` : '—'}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-lg flex-1 min-w-0">
                     <FileText className="w-3 h-3 text-muted-foreground/40 shrink-0" />
