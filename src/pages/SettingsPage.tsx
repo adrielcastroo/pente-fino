@@ -58,6 +58,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
+import { usePerformance } from '@/hooks/use-performance';
+
 import { ROLE_LABEL, atLeast, type Role } from '@/lib/permissions';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
@@ -123,6 +125,8 @@ export default function SettingsPage() {
   // Performance settings
   const [reduceAnimations, setReduceAnimations] = useState(localStorage.getItem('perf_reduce_animations') === 'true');
   const [lowDataMode, setLowDataMode] = useState(localStorage.getItem('perf_low_data') === 'true');
+  const { level: perfLevel, isAuto: perfIsAuto, setLevel: perfSetLevel } = usePerformance();
+
 
   useEffect(() => {
     if (profile?.display_name) setDisplayName(profile.display_name);
