@@ -1,8 +1,9 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useAppStore } from '@/store/useAppStore';
+import { normalizeRole, can as canDo, type Role, type Action } from '@/lib/permissions';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +12,8 @@ interface AuthContextType {
   isGuest: boolean;
   guestName: string;
   isAdmin: boolean;
+  role: Role | null;
+  can: (action: Action) => boolean;
   loginAsGuest: (name?: string) => void;
   signOut: () => Promise<void>;
 }
@@ -24,19 +27,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('isGuest') === 'true');
   const [guestName, setGuestName] = useState(() => localStorage.getItem('guestName') || '');
   const setConferente = useAppStore(s => s.setConferente);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<Role | null>(null);
+  const isAdmin = role === 'admin';
 
   useEffect(() => {
-    if (!user) { setIsAdmin(false); return; }
+    if (!user) { setRole(null); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await (supabase
-        .from('user_roles' as any)
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle() as any);
-      if (!cancelled) setIsAdmin(!!data);
+      const { data } = await (supabase.rpc as any)('get_my_role');
+      if (!cancelled) setRole(data ? normalizeRole(data as string) : 'operador');
     })();
     return () => { cancelled = true; };
   }, [user]);
