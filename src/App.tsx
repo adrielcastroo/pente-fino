@@ -18,6 +18,7 @@ const ReservasPage = lazy(() => import("@/pages/ReservasPage"));
 const HistoricoPage = lazy(() => import("@/pages/HistoricoPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const CadastrosPage = lazy(() => import("@/pages/CadastrosPage"));
+const AuditoriaPage = lazy(() => import("@/pages/AuditoriaPage"));
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
@@ -95,6 +96,7 @@ const App = () => (
                   <Route path="/historico" element={<HistoricoPage />} />
                   <Route path="/configuracoes" element={<SettingsPage />} />
                   <Route path="/cadastros" element={<CadastrosPage />} />
+                  <Route path="/auditoria" element={<AuditoriaPage />} />
                   
                 </Route>
 
