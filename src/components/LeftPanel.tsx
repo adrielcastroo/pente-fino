@@ -1218,11 +1218,12 @@ export const LeftPanel = memo(function LeftPanel() {
                   value={processo}
                   onChange={e => handleProcessoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                  className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
+                  className={`w-full h-14 lg:h-11 rounded-lg border px-3 text-base lg:text-sm font-mono transition-colors ${
                     (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
                   }`}
                   placeholder="Ex: 123456..."
                   autoComplete="off"
+                  inputMode="numeric"
                   readOnly={(isMadeira ? lockMadeiraProcesso : lockProcesso) && !!processo}
                 />
               </div>
