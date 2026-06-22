@@ -323,11 +323,12 @@ export default function CadastrosPage() {
         <Table>
           <TableHeader className="sticky top-0 bg-card z-10">
             <TableRow>
-              <TableHead className="w-[40px]">
+              <TableHead className="w-[44px]">
                 <Checkbox
                   checked={allPageSelected}
                   onCheckedChange={(c) => togglePageAll(!!c)}
                   aria-label="Selecionar todos da página"
+                  className="h-5 w-5"
                 />
               </TableHead>
               <TableHead className="w-[200px]">Código interno</TableHead>
@@ -369,6 +370,7 @@ export default function CadastrosPage() {
                     checked={isSelected}
                     onCheckedChange={(c) => toggleOne(item.id, !!c)}
                     aria-label={`Selecionar ${item.codigo_interno}`}
+                    className="h-5 w-5"
                   />
                 </TableCell>
                 <TableCell className={cn('font-mono text-xs', editedCol('codigo_interno') && 'bg-amber-500/5')}>
@@ -438,11 +440,11 @@ export default function CadastrosPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button size="icon" variant="ghost" className="h-10 w-10 md:h-8 md:w-8" onClick={() => handleEdit(item)} aria-label="Editar item">
-                      <Pencil className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                    <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
+                      <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-10 w-10 md:h-8 md:w-8 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir item">
-                      <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                    <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir item">
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
