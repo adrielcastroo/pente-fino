@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { GlossaryDialog } from '@/components/GlossaryDialog';
 
 
 const TopBar = memo(function TopBar() {
@@ -224,6 +225,8 @@ const TopBar = memo(function TopBar() {
               <TooltipContent>Limpar formulário para um novo registro</TooltipContent>
             </Tooltip>
           )}
+
+          <GlossaryDialog />
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
