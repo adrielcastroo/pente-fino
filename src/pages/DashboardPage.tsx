@@ -304,40 +304,64 @@ export default function DashboardPage() {
           
           <Card className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <CardHeader className="p-5 sm:p-6 border-b border-border/5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <TrendingUp className="w-4 h-4" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <CardTitle className="text-lg font-black tracking-tight uppercase">Últimas Saídas</CardTitle>
                 </div>
-                <CardTitle className="text-lg font-black tracking-tight uppercase">Últimas Saídas</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEmptyOutputs(v => !v)}
+                  className="text-[9px] font-black uppercase tracking-wider text-foreground/60 hover:text-primary h-7 px-2"
+                  title={showEmptyOutputs ? 'Ocultar saídas vazias' : 'Mostrar saídas vazias'}
+                >
+                  {showEmptyOutputs ? 'Ocultar vazias' : 'Mostrar vazias'}
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/5">
                 {lastOutputs.length > 0 ? (
-                  lastOutputs.map((output) => (
-                    <motion.div 
-                      key={output.id} 
-                      whileHover={{ x: 5 }}
-                      className="p-4 sm:p-5 flex items-center justify-between hover:bg-primary/[0.04] transition-colors group cursor-default"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm font-bold text-foreground/90 group-hover:text-primary transition-colors truncate max-w-[150px] sm:max-w-[200px]">
-                          {output.item}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
-                            {formatDateBR(output.date)}
-                          </span>
+                  lastOutputs.map((output) => {
+                    const isEmpty = output.quantity <= 0;
+                    return (
+                      <motion.div 
+                        key={output.id} 
+                        whileHover={{ x: 5 }}
+                        className="p-4 sm:p-5 flex items-center justify-between hover:bg-primary/[0.04] transition-colors group cursor-default"
+                      >
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-foreground/90 group-hover:text-primary transition-colors truncate max-w-[140px] sm:max-w-[180px]">
+                              {output.item}
+                            </span>
+                            {isEmpty && (
+                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider px-2 py-0 h-5 border-muted-foreground/30 text-muted-foreground bg-muted/30 shrink-0">
+                                Vazia
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
+                              {formatDateBR(output.date)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-black text-primary tabular-nums">
-                          {output.quantity} {output.unit}
+                        <div className="text-right">
+                          <div className={cn(
+                            "text-sm font-black tabular-nums",
+                            isEmpty ? "text-muted-foreground" : "text-primary"
+                          )}>
+                            {formatQty(output.quantity)} {output.unit}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    );
+                  })
                 ) : (
                   <div className="p-8 text-center">
                     <p className="text-sm text-foreground/60 font-black italic">Nenhum registro recente</p>
