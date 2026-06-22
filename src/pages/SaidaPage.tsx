@@ -6,6 +6,7 @@ import { Search, Archive, Calendar, User, Clock, FileText, ScanBarcode, Loader2,
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { usePerformance } from '@/hooks/use-performance';
@@ -228,10 +229,22 @@ export default function SaidaPage() {
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Filtrar item, PROC..."
+                placeholder="Filtrar item, PROC, conferente..."
                 className="pl-10 h-11 sm:h-12 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
               />
             </div>
+
+            <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
+              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-xl border-border/40 font-bold text-xs sm:text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+                <SelectItem value="todos">Todo o período</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </header>
       </div>
@@ -253,7 +266,7 @@ export default function SaidaPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 max-w-[1400px] mx-auto">
-            {filteredSaidas.map((saida) => (
+            {visibleSaidas.map((saida) => (
               <div key={saida.id} className="bg-card/60 border border-border/40 rounded-2xl p-4 sm:p-5 hover:border-border/60 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">
