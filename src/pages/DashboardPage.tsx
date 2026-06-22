@@ -601,7 +601,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-6 sm:px-10 py-4 sm:py-6 text-right">
                       <div className="text-sm font-black text-primary tabular-nums">
-                        {reg.quantidade || reg.mLinear || reg.m2 || 0} {reg.modoOrigem === 'madeira' ? 'm' : 'un'}
+                        {formatQty(reg.quantidade || reg.mLinear || reg.m2 || 0)} {reg.modoOrigem === 'madeira' ? 'm' : 'un'}
                       </div>
                     </td>
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono font-bold hidden md:table-cell", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>
