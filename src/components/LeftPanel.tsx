@@ -1201,7 +1201,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Form Fields */}
         <div className="space-y-3">
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-start">
 
             {/* PROCESSO */}
             {requiresProcesso && (
@@ -1275,7 +1275,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {/* Coulisse largura */}
             {isCoulisse && (
               <div className="space-y-1.5">
-                <label htmlFor="largura-manual" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label>
+                <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-manual" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label></div>
                 <input
                   id="largura-manual"
                   ref={manualLarguraRef}
@@ -1428,7 +1428,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {isEtiqPronta && (
               <>
                 <div className="space-y-1.5">
-                  <label htmlFor="etiq-codigo-item" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Código item</label>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-codigo-item" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Código item</label></div>
                   <input
                     id="etiq-codigo-item"
                     ref={itemRef}
@@ -1440,7 +1440,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label></div>
                   <input
                     id="etiq-lote-final"
                     ref={etiqProntaLoteFinalRef}
@@ -1452,7 +1452,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label></div>
                   <input
                     id="etiq-posicao"
                     value={posicao}
@@ -1502,7 +1502,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
                 {isRolo && (
                   <div className="space-y-1.5">
-                    <label htmlFor="largura-rolo" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
+                    <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-rolo" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label></div>
                     <input
                       id="largura-rolo"
                       ref={manualLarguraRef}
