@@ -144,10 +144,16 @@
     max-width: 100vw;
   }
 
-  /* Tap-target minimum size for touch devices */
+  /* Tap-target minimum size for touch devices (chão de fábrica: luvas) */
   @media (hover: none) and (pointer: coarse) {
-    button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
+    button, a, [role="button"], input[type="checkbox"], input[type="radio"], [data-touch-target] {
+      min-height: 48px;
+      min-width: 48px;
+    }
+    /* Exceções para controles compactos dentro de tabelas/menus densos */
+    .tap-compact, .tap-compact button, .tap-compact a {
       min-height: 36px;
+      min-width: 36px;
     }
   }
 
