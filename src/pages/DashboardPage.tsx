@@ -523,7 +523,7 @@ export default function DashboardPage() {
           <SummaryChart 
             id="chart-materiais"
             title="Tipos de Materiais" 
-            desc="Classificação de itens (ordenado)" 
+            desc="Top 8 itens por nº de registros (descrição do cadastro quando disponível)" 
             data={[...stats.tipos].sort((a, b) => (b.value || 0) - (a.value || 0))} 
             type="bar" 
             icon={TrendingUp} 
