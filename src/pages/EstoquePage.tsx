@@ -692,14 +692,10 @@ export default function EstoquePage() {
               {/* Positions List/Grid */}
               <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar bg-card/20">
                 {occupiedCount === 0 ? (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center py-24 gap-6 border-2 border-dashed border-white/10 rounded-[2.5rem] bg-white/5"
-                  >
-                    <Box className="w-16 h-16 text-muted-foreground/20" />
-                    <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Célula Disponível para Armazenagem</p>
-                  </motion.div>
+                  <div className="flex flex-col items-center justify-center py-12 gap-3 border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
+                    <Box className="w-8 h-8 text-muted-foreground/30" />
+                    <p className="text-xs font-medium text-muted-foreground/60">Célula disponível</p>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     <AnimatePresence>

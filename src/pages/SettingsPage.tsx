@@ -65,6 +65,7 @@ import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
+import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 
 type Category = {
   id: string;
@@ -191,7 +192,9 @@ export default function SettingsPage() {
   const [prefSidebarCollapsed, setPrefSidebarCollapsed] = useState(localStorage.getItem('pref_sidebar_collapsed') === 'true');
   const [prefDefaultTab, setPrefDefaultTab] = useState(localStorage.getItem('pref_default_tab') || 'inicio');
   const [prefConfirmDelete, setPrefConfirmDelete] = useState(localStorage.getItem('pref_confirm_delete') !== 'false');
-  const [prefSoundFeedback, setPrefSoundFeedback] = useState(localStorage.getItem('pref_sound_feedback') === 'true');
+  const [prefSoundFeedback, setPrefSoundFeedback] = useState(() => {
+    try { return isBipSoundEnabled(); } catch { return true; }
+  });
   const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
   const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
@@ -704,8 +707,9 @@ export default function SettingsPage() {
                           <Label className="text-sm font-bold">Feedback Sonoro de Bipagem</Label>
                           <p className="text-xs text-muted-foreground">Emite som ao bipar códigos com sucesso ou erro.</p>
                         </div>
-                        <Switch checked={prefSoundFeedback} onCheckedChange={(v) => { setPrefSoundFeedback(v); setHasUnsavedChanges(true); }} />
+                        <Switch checked={prefSoundFeedback} onCheckedChange={(v) => { setPrefSoundFeedback(v); setBipSoundEnabled(v); setHasUnsavedChanges(true); if (v) bipSuccess(); }} />
                       </div>
+
 
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">

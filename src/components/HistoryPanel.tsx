@@ -1053,24 +1053,16 @@ export default function HistoryPanel() {
           </div>
 
         ) : (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-32 text-center"
-          >
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-primary/10 rounded-[3rem] blur-2xl animate-pulse" />
-              <div className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-card to-muted border border-border/40 flex items-center justify-center relative shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500">
-                <FolderOpen className="w-12 h-12 text-primary/40" />
-              </div>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mb-4">
+              <FolderOpen className="w-7 h-7 text-muted-foreground/40" />
             </div>
-            <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight">O histórico está pronto.</h3>
-            <p className="text-muted-foreground text-base font-medium max-w-xs leading-relaxed">
-              {localSearch 
-                ? `Nenhum registro encontrado para "${localSearch}". Tente outro termo.` 
-                : 'Suas conferências finalizadas aparecerão aqui organizadas por data e conferente.'}
+            <p className="text-sm text-muted-foreground max-w-xs">
+              {localSearch
+                ? `Nenhum registro para "${localSearch}".`
+                : 'Suas conferências finalizadas aparecerão aqui.'}
             </p>
-          </motion.div>
+          </div>
         )}
 
       </div>
