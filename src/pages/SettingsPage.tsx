@@ -23,7 +23,6 @@ import {
   Palette, 
   Cpu, 
   Users,
-  Search,
   Check,
   ChevronRight,
   Save,
@@ -52,32 +51,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
+import { ROLE_LABEL, atLeast, type Role } from '@/lib/permissions';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 
-const categories = [
-  { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
-  { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
-  { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
-  { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.' },
-  { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
-  { id: 'security', name: 'Segurança', icon: Shield, description: 'Proteja sua conta com senhas e autenticação de dois fatores.' },
-  { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.' },
+type Category = {
+  id: string;
+  name: string;
+  icon: any;
+  description: string;
+  minRole?: Role;
+};
+
+const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role; items: Category[] }[] = [
+  {
+    id: 'account',
+    label: 'Minha Conta',
+    items: [
+      { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
+      { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
+      { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'Sistema',
+    minRole: 'supervisor',
+    items: [
+      { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.', minRole: 'supervisor' },
+      { id: 'security', name: 'Segurança', icon: Shield, description: 'Senha, autenticação de dois fatores e sessões.' },
+      { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.', minRole: 'supervisor' },
+      { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', minRole: 'supervisor' },
+    ],
+  },
 ];
+
+// Compatibilidade com referências antigas a `categories`
+const categories: Category[] = CATEGORY_GROUPS.flatMap(g => g.items);
 
 export default function SettingsPage() {
   useDocumentTitle('Configurações');
-  const { user, profile, isGuest, signOut } = useAuth();
+  const { user, profile, isGuest, signOut, role } = useAuth();
   const [activeCategory, setActiveCategory] = useState('profile');
-  const [searchQuery, setSearchQuery] = useState('');
+  
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
@@ -350,75 +375,83 @@ export default function SettingsPage() {
   const labelSettings = useAppStore(s => s.labelSettings);
   const setLabelSettings = useAppStore(s => s.setLabelSettings);
 
-  const filteredCategories = useMemo(() => 
-    categories.filter(cat => 
-      cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      cat.description.toLowerCase().includes(searchQuery.toLowerCase())
-    ), [searchQuery]);
+  const visibleGroups = useMemo(
+    () => CATEGORY_GROUPS
+      .map(g => ({
+        ...g,
+        items: g.items.filter(item => !item.minRole || atLeast(role, item.minRole)),
+      }))
+      .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole))),
+    [role]
+  );
+  const allVisible = useMemo(() => visibleGroups.flatMap(g => g.items), [visibleGroups]);
+  const activeMeta = allVisible.find(c => c.id === activeCategory) ?? allVisible[0];
+
+  useEffect(() => {
+    if (activeMeta && activeMeta.id !== activeCategory) {
+      setActiveCategory(activeMeta.id);
+    }
+  }, [activeMeta, activeCategory]);
+
+  const roleLabel = role ? ROLE_LABEL[role] : (isGuest ? 'Visitante' : 'Sem perfil');
 
   return (
-    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-1 sm:px-0">
-      <header className="flex flex-row items-center justify-between gap-3 border-b border-border/10 pb-4 sm:pb-6">
-        <div>
-          <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
-          <p className="text-muted-foreground text-[10px] sm:text-sm hidden sm:block">Gerencie sua conta e preferências.</p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {hasUnsavedChanges && (
-            <Badge variant="outline" className="animate-pulse bg-amber-500/10 text-amber-500 border-amber-500/20 py-1">
-              Alterações pendentes
-            </Badge>
-          )}
-          <Button onClick={saveSettings} disabled={!hasUnsavedChanges} className="settings-primary-btn px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg">
-            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            Salvar
-          </Button>
-        </div>
+    <TooltipProvider>
+    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-1 sm:px-0 pb-24">
+      <header className="flex flex-col gap-2 border-b border-border/10 pb-4 sm:pb-6">
+        <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-bold">
+          <span>Configurações</span>
+          <ChevronRight className="w-3 h-3 opacity-50" />
+          <span className="text-foreground">{activeMeta?.name ?? '—'}</span>
+        </nav>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
-        {/* Navigation Sidebar */}
-        <aside className="w-full lg:w-64 space-y-4 shrink-0">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input 
-              placeholder="Buscar..." 
-              className="pl-9 bg-background/50 border-border/50 focus-visible:ring-primary/30"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        {/* Mobile: dropdown */}
+        <div className="lg:hidden w-full">
+          <Select value={activeCategory} onValueChange={setActiveCategory}>
+            <SelectTrigger className="h-11 bg-background/50 border-border/50 font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {visibleGroups.map(g => (
+                <div key={g.id} className="py-1">
+                  <div className="px-2 pb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{g.label}</div>
+                  {g.items.map(item => (
+                    <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                  ))}
+                </div>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar -mx-1 px-1">
-            {filteredCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 group whitespace-nowrap lg:whitespace-normal shrink-0 lg:shrink ${
-                  activeCategory === cat.id 
-                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
-                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <cat.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
-                <span>{cat.name}</span>
-              </button>
-            ))}
-          </nav>
-
-          {!isGuest && (
-            <div className="pt-4 mt-4 border-t border-border/10">
-              <Button 
-                variant="ghost" 
-                onClick={() => signOut()} 
-                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/5 font-bold gap-3 rounded-2xl"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair do Sistema
-              </Button>
+        {/* Desktop: grouped sidebar */}
+        <aside className="hidden lg:block w-64 space-y-5 shrink-0">
+          {visibleGroups.map(group => (
+            <div key={group.id} className="space-y-1.5">
+              <div className="px-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60">
+                {group.label}
+              </div>
+              <nav className="flex flex-col gap-1">
+                {group.items.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 group ${
+                      activeCategory === cat.id
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10'
+                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <cat.icon className={`w-4 h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </nav>
             </div>
-          )}
+          ))}
         </aside>
 
         {/* Content Area */}
@@ -467,9 +500,21 @@ export default function SettingsPage() {
                             {profile?.display_name || "Usuário"}
                           </h4>
                           <p className="text-xs text-muted-foreground truncate">{user?.email || "Sessão local"}</p>
-                          <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider">
-                            {isGuest ? "Guest" : "Member"}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider cursor-help">
+                                {isGuest ? 'Visitante' : roleLabel}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs text-xs">
+                              {isGuest
+                                ? 'Sessão local sem persistência. Faça login para acessar todas as funcionalidades.'
+                                : role === 'admin' ? 'Acesso total: gerenciar usuários, sistema, auditoria, e todas as operações.'
+                                : role === 'gerente' ? 'Acesso a relatórios executivos, auditoria e operações de supervisão.'
+                                : role === 'supervisor' ? 'Pode editar registros antigos, excluir e gerenciar cadastros/estoque.'
+                                : 'Acesso operacional: criar registros e dar saída em estoque.'}
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
 
@@ -484,7 +529,15 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">E-mail (Não alterável)</Label>
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60 flex items-center gap-1.5">
+                            E-mail
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-muted-foreground cursor-help">(?)</span>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">Usado para login — não editável.</TooltipContent>
+                            </Tooltip>
+                          </Label>
                           <Input 
                             value={user?.email || ''} 
                             disabled
@@ -1104,6 +1157,23 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/40 shadow-2xl">
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+            Alterações pendentes
+          </Badge>
+          <Button
+            onClick={saveSettings}
+            size="sm"
+            className="font-bold gap-2"
+          >
+            <Save className="w-3.5 h-3.5" />
+            Salvar alterações
+          </Button>
+        </div>
+      )}
     </div>
+    </TooltipProvider>
   );
 }
