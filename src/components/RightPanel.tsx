@@ -96,7 +96,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-black text-foreground scale-100 group-hover:scale-[1.02] origin-left' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${columnKey === 'loteSistema' ? 'max-w-[140px] sm:max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-semibold text-foreground scale-100 group-hover:scale-[1.02] origin-left' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${columnKey === 'loteSistema' ? 'max-w-[140px] sm:max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap' : ''} ${className || ''}`}
     >
       {content}
     </td>
@@ -126,7 +126,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 
   return (
     <tr className={`group hover:bg-primary/[0.03] border-b border-border/30 ${r.isNew ? 'bg-primary/[0.08] animate-pulse-subtle' : ''} transition-all duration-300`}>
-      <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-black tabular-nums">{i + 1}</td>
+      <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-semibold tabular-nums">{i + 1}</td>
       {columns.map((column: any) => {
         // Critical columns that should always show: item, mLinear, quantidade, loteSistema
         // Less critical: nf, processo, m2, largura, lote, endereco
@@ -405,7 +405,7 @@ export default function RightPanel() {
             <input 
               value={localSearch} 
               onChange={e => setLocalSearch(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 rounded-2xl border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-8 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30 shadow-inner" 
+              className="w-full h-12 pl-12 pr-4 rounded-md border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-8 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30 shadow-inner" 
               placeholder="Buscar material, lote ou endereço..." 
               autoComplete="off" 
             />
@@ -417,7 +417,7 @@ export default function RightPanel() {
               <select 
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-transparent border-none outline-none text-[8px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer group-hover:text-foreground w-16 sm:w-auto"
+                className="bg-transparent border-none outline-none text-[8px] sm:text-xs font-semibold text-muted-foreground cursor-pointer group-hover:text-foreground w-16 sm:w-auto"
               >
                 <option value="">Ordenar</option>
                 <option value="item">A-Z</option>
@@ -434,7 +434,7 @@ export default function RightPanel() {
                     variant="outline" 
                     size="icon" 
                     onClick={handleClearAll} 
-                    className="h-12 w-12 rounded-2xl border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 hover:rotate-12 transition-all active:scale-95 shadow-sm"
+                    className="h-12 w-12 rounded-md border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 hover:rotate-12 transition-all active:scale-95 shadow-sm"
                   >
                     <Trash2 className="w-5 h-5" />
                   </Button>
@@ -459,14 +459,14 @@ export default function RightPanel() {
             ].map((k, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-4 rounded-2xl border border-border/50 bg-background px-4 py-3.5 min-w-[170px] sm:min-w-[200px] hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                className="flex items-center gap-4 rounded-md border border-border/50 bg-background px-4 py-3.5 min-w-[170px] sm:min-w-[200px] hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${k.bg} ${k.color} flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}>
+                <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-md ${k.bg} ${k.color} flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}>
                   <k.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground/50 truncate mb-0.5">{k.label}</span>
-                  <span className="text-lg sm:text-xl font-black text-foreground leading-tight font-mono truncate">{k.value}</span>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/50 truncate mb-0.5">{k.label}</span>
+                  <span className="text-lg sm:text-xl font-semibold text-foreground leading-tight font-mono truncate">{k.value}</span>
                   <span className="text-[10px] text-muted-foreground/60 font-bold truncate mt-0.5">{k.sub}</span>
                 </div>
               </div>
@@ -481,14 +481,14 @@ export default function RightPanel() {
             <table className="w-full border-separate border-spacing-0 table-auto">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background">
                     Séries Bipadas
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background">
                     Séries Sistema
                   </th>
                   {showActions && (
-                    <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">
+                    <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-semibold text-muted-foreground ">
                       Ações
                     </th>
                   )}
@@ -504,10 +504,10 @@ export default function RightPanel() {
                       </>
                     )}
                     <tr className="bg-primary/10">
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-foreground">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-foreground">
                         {group.cxLabel} {group.item}
                       </td>
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black text-primary">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-primary">
                         séries
                       </td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] text-muted-foreground font-bold">
@@ -562,7 +562,7 @@ export default function RightPanel() {
               </tbody>
               {sortedRows.length > 0 && (
                 <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                  <tr className="bg-primary/95 text-white font-semibold font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 ">
                     <td className="px-4 py-4">{sortedRows.length} {sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}</td>
                     <td className="px-4 py-4">{motorGroups.length} {motorGroups.length !== 1 ? 'CAIXAS' : 'CAIXA'}</td>
                     {showActions && <td className="px-4 py-4"></td>}
@@ -574,20 +574,20 @@ export default function RightPanel() {
             <table className="w-full border-separate border-spacing-0 table-auto min-w-[600px] lg:min-w-full">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
                   {columns.map(column => {
                     const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
                     const responsiveClass = isCritical ? "" : "hidden md:table-cell";
                     return (
                       <th 
                         key={column.key} 
-                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em] border-b border-border/40 bg-background ${responsiveClass}`}
+                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background ${responsiveClass}`}
                       >
                         {column.shortLabel || column.label}
                       </th>
                     );
                   })}
-                  {showActions && <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">Ações</th>}
+                  {showActions && <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-semibold text-muted-foreground ">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
@@ -614,7 +614,7 @@ export default function RightPanel() {
               </tbody>
               {sortedRows.length > 0 && (
                 <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-black font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 uppercase tracking-widest">
+                  <tr className="bg-primary/95 text-white font-semibold font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 ">
                     <td className="px-4 py-4">FIM</td>
                     {columns.map(column => {
                       const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
@@ -649,13 +649,13 @@ export default function RightPanel() {
               <div className="h-24 w-24 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 transition-transform hover:rotate-0 duration-500">
                 <Package className="w-12 h-12 text-primary/30" />
               </div>
-              <h3 className="text-xl font-black tracking-tight text-foreground mb-2">Nenhum item registrado</h3>
+              <h3 className="text-xl font-semibold tracking-tight text-foreground mb-2">Nenhum item registrado</h3>
               <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed font-medium">
                 Os materiais bipados ou registrados manualmente aparecerão nesta lista detalhada para conferência.
               </p>
               <Button 
                 variant="outline" 
-                className="mt-8 rounded-2xl px-10 h-12 font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 text-primary transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/5"
+                className="mt-8 rounded-md px-10 h-12 font-semibold border-primary/20 hover:bg-primary/5 text-primary transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/5"
                 onClick={() => useAppStore.getState().setFormData({ activeTab: 'tecido' })}
               >
                 Iniciar bipagem

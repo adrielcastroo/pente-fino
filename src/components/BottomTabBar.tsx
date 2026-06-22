@@ -32,7 +32,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="flex lg:hidden md:landscape:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl"
+      className="flex lg:hidden md:landscape:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navegação principal"
     >
@@ -54,7 +54,7 @@ export default function BottomTabBar() {
                 fill={active ? 'currentColor' : 'none'}
                 fillOpacity={active ? 0.18 : 0}
               />
-              <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
             </NavLink>
           );
         })}
@@ -66,12 +66,12 @@ export default function BottomTabBar() {
               aria-label="Mais opções"
             >
               <MoreHorizontal className="w-6 h-6" />
-              <span className="text-[10px] font-black uppercase tracking-wider">Menu</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Menu</span>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
             <SheetHeader>
-              <SheetTitle className="text-left text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Mais opções</SheetTitle>
+              <SheetTitle className="text-left text-xs font-semibold text-muted-foreground">Mais opções</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-3 gap-3 mt-4">
               {overflow.map(({ to, label, icon: Icon }) => {
@@ -81,7 +81,7 @@ export default function BottomTabBar() {
                     key={to}
                     onClick={() => { setOpen(false); navigate(to); }}
                     className={cn(
-                      'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border/40 bg-card/40 min-h-[88px] active:scale-95 transition-all',
+                      'flex flex-col items-center justify-center gap-2 p-4 rounded-md border border-border/40 bg-card/40 min-h-[88px] active:scale-95 transition-all',
                       active && 'ring-2 ring-primary bg-primary/5'
                     )}
                   >
@@ -91,17 +91,17 @@ export default function BottomTabBar() {
                       fill={active ? 'currentColor' : 'none'}
                       fillOpacity={active ? 0.18 : 0}
                     />
-                    <span className="text-[11px] font-black uppercase tracking-wider text-foreground/80 text-center leading-tight">{label}</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80 text-center leading-tight">{label}</span>
                   </button>
                 );
               })}
               {signOut && (
                 <button
                   onClick={() => { setOpen(false); signOut(); }}
-                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-destructive/30 bg-destructive/5 min-h-[88px] active:scale-95 transition-all col-span-3"
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-md border border-destructive/30 bg-destructive/5 min-h-[88px] active:scale-95 transition-all col-span-3"
                 >
                   <LogOut className="w-5 h-5 text-destructive" />
-                  <span className="text-[11px] font-black uppercase tracking-wider text-destructive">Sair</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-destructive">Sair</span>
                 </button>
               )}
             </div>
