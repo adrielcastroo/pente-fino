@@ -1440,7 +1440,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label></div>
                   <input
                     id="etiq-lote-final"
                     ref={etiqProntaLoteFinalRef}
