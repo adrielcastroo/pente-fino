@@ -791,7 +791,7 @@ export const LeftPanel = memo(function LeftPanel() {
         avariaFotoUrl: avariaEnabled ? avariaFotoUrl : null,
       };
       addRegistro(reg);
-      try { navigator.vibrate?.(100); } catch {}
+      bipSuccess();
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
 
       // Impressão Automática (PNG → n8n)
@@ -874,7 +874,7 @@ export const LeftPanel = memo(function LeftPanel() {
       isNew: true,
     };
     addRegistro(reg);
-    try { navigator.vibrate?.(100); } catch {}
+    bipSuccess();
     toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
 
     // Impressão Automática (PNG → n8n)

@@ -239,16 +239,17 @@ const TopBar = memo(function TopBar() {
                   onClick={exportExcel}
                   size="sm"
                   disabled={isArchiving || isExporting || registroCount === 0}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 sm:px-5 h-9 sm:h-10 xl:h-11 rounded-xl shadow-md shadow-primary/15 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs group/btn relative overflow-hidden shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="outline"
+                  className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-xl border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isArchiving || isExporting ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />
                   ) : (
-                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
                   )}
-                  <span className="hidden sm:inline font-bold">{isArchiving || isExporting ? 'Aguarde...' : 'Exportar'}</span>
+                  <span className="hidden sm:inline">{isArchiving || isExporting ? 'Aguarde...' : 'Exportar'}</span>
                   {!isArchiving && !isExporting && registroCount > 0 && (
-                    <Badge variant="secondary" className="bg-white/20 text-white border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
                       {registroCount}
                     </Badge>
                   )}
