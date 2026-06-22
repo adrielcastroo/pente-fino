@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useItensCadastro, useDeleteItemCadastro } from '@/hooks/useItensCadastro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,7 +66,7 @@ export default function CadastrosPage() {
   const paged = useMemo(() => filtered.slice(0, pageSize), [filtered, pageSize]);
 
   // Reset pagination when filters change
-  useMemo(() => { setPageSize(50); return null; }, [search, fornFilter, sortKey]);
+  useEffect(() => { setPageSize(50); }, [search, fornFilter, sortKey]);
 
   const handleEdit = (item: ItemCadastro) => {
     setEditing(item);
