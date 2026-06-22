@@ -7,7 +7,7 @@ import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
-import { bipSuccess } from '@/lib/bip-feedback';
+import { bipSuccess, bipError } from '@/lib/bip-feedback';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
@@ -752,19 +752,21 @@ export const LeftPanel = memo(function LeftPanel() {
     } catch (e: any) {
       setProgress(0);
       setAiStatus({ msg: '❌ ' + e.message, type: 'err' });
+      bipError();
       toast.error('Erro OpenRouter: ' + e.message);
     }
     setAiLoading(false);
   };
 
   const handleAdd = async () => {
+    const warn = (msg: string) => { bipError(); toast.warning(msg); };
     // Basic validations that apply to all modes
-    if (!effectiveConferente.trim()) { toast.warning('Preencha o campo CONFERENTE no topo.'); return; }
-    if (!item) { toast.warning('Preencha o campo Item.'); return; }
+    if (!effectiveConferente.trim()) { warn('Preencha o campo CONFERENTE no topo.'); return; }
+    if (!item) { warn('Preencha o campo Item.'); return; }
     
     // Processo is required for Madeira and some other modes
-    if (requiresProcesso && !processo.trim()) { toast.warning('Preencha o campo PROCESSO.'); return; }
-    if (requiresNF && !nf.trim()) { toast.warning('Preencha o campo NF.'); return; }
+    if (requiresProcesso && !processo.trim()) { warn('Preencha o campo PROCESSO.'); return; }
+    if (requiresNF && !nf.trim()) { warn('Preencha o campo NF.'); return; }
 
     const proc = processo.trim();
 
@@ -819,14 +821,14 @@ export const LeftPanel = memo(function LeftPanel() {
       return;
     }
 
-    if (isAI && aiLarguraNum <= 0) { toast.warning('Preencha a Largura.'); return; }
-    if (usesM2Input && m2Num > 0 && largura <= 0) { toast.warning('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
-    if (isCortina && largura <= 0) { toast.warning('Preencha a Largura do tecido.'); return; }
-    if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { toast.warning('Preencha o campo Lote Final.'); return; }
+    if (isAI && aiLarguraNum <= 0) { warn('Preencha a Largura.'); return; }
+    if (usesM2Input && m2Num > 0 && largura <= 0) { warn('Largura não detectada no item. Verifique o código ou preencha manualmente.'); return; }
+    if (isCortina && largura <= 0) { warn('Preencha a Largura do tecido.'); return; }
+    if (isEtiqPronta && !etiqProntaLoteFinal.trim()) { warn('Preencha o campo Lote Final.'); return; }
     
-    if (mLinear <= 0 && !isEtiqPronta) { toast.warning(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
-    if (requiresEndereco && !endereco) { toast.warning('Preencha o Endereço.'); return; }
-    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { toast.warning('Endereço inválido. Use: TEC01.A.N03'); return; }
+    if (mLinear <= 0 && !isEtiqPronta) { warn(`Preencha o campo ${(isPVT || isAI || coulisseUsesMLinear || cortinaUsesMLinear) ? 'M Linear' : 'M²'}.`); return; }
+    if (requiresEndereco && !endereco) { warn('Preencha o Endereço.'); return; }
+    if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { warn('Endereço inválido. Use: TEC01.A.N03'); return; }
 
     const resolvedEndereco = isEtiqPronta ? endereco : requiresEndereco ? endereco : '';
     const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
@@ -1258,6 +1260,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
+                  data-barcode="true"
                   readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) && !!item}
                 />
                 {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
