@@ -127,8 +127,7 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base font-extrabold tracking-tight flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-primary" />
+            <CardTitle className="text-base font-semibold tracking-tight">
               Mapa de Sessões
             </CardTitle>
             <p className="text-xs text-muted-foreground font-bold mt-1">

@@ -125,16 +125,11 @@ export default function MinhaAtividadePage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center gap-3">
-        <div className="p-2 rounded-md bg-primary/10 text-primary">
-          <Activity className="h-5 w-5" strokeWidth={1.75} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Minha atividade</h1>
-          <p className="text-sm text-muted-foreground">
-            Olá, <span className="font-medium text-foreground">{displayName}</span> — resumo do que você fez hoje.
-          </p>
-        </div>
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Minha atividade</h1>
+        <p className="text-sm text-muted-foreground">
+          Olá, <span className="font-medium text-foreground">{displayName}</span> — resumo do que você fez hoje.
+        </p>
       </header>
 
       {/* Summary cards */}

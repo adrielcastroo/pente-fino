@@ -65,10 +65,9 @@ export default function OperacaoHomePage() {
             size="lg"
             variant="outline"
             onClick={() => navigate('/configuracoes')}
-            className="h-12 px-5 text-base font-semibold gap-2"
+            className="h-12 px-5 text-base font-semibold"
             aria-label="Abrir configurações pessoais"
           >
-            <SettingsIcon className="h-5 w-5" aria-hidden="true" />
             Configurações
           </Button>
         </div>

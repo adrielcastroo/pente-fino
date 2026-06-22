@@ -458,18 +458,14 @@ export default function SettingsPage() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-3 sm:gap-4"
         >
-          <div className="p-2 rounded-md bg-primary/10 border border-primary/20">
-            <Settings className="w-5 h-5 text-primary" strokeWidth={1.75} />
-          </div>
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
               Configurações
             </h1>
             <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-medium mt-1">
               <span>Configurações</span>
-              <ChevronRight className="w-3 h-3 opacity-50" />
+              <span className="opacity-50">/</span>
               <span className="text-foreground/80">{activeMeta?.name ?? '—'}</span>
             </nav>
           </div>

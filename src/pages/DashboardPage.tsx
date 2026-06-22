@@ -253,16 +253,10 @@ export default function DashboardPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-3 sm:gap-4"
           >
-            <div className="p-2 rounded-md bg-primary/10 border border-primary/20">
-              <Activity className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
-                Dashboard
-              </h1>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+              Dashboard
+            </h1>
           </motion.div>
 
           <motion.div 
@@ -326,14 +320,10 @@ export default function DashboardPage() {
                   variant="default" 
                   size="lg"
                   disabled={isExporting}
-                  className="h-10 sm:h-12 px-4 sm:px-6 rounded-md gap-2 font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap shrink-0"
+                  className="h-10 sm:h-12 px-4 sm:px-6 rounded-md font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap shrink-0"
                   onClick={handleFullExportExcel}
                 >
-                  {isExporting ? (
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                  ) : (
-                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                  )}
+                  {isExporting && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />}
                   <span className="hidden xs:inline">{isExporting ? 'Processando...' : 'Exportar Excel'}</span>
                   <span className="xs:hidden">{isExporting ? '...' : 'Excel'}</span>
                 </Button>
@@ -483,9 +473,8 @@ export default function DashboardPage() {
               )}
               {lastOutputs.length > 0 && (
                 <div className="p-3 border-t border-border/30 bg-muted/10">
-                  <Button variant="ghost" className="w-full text-xs font-medium gap-2 text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
-                    Ver Histórico Completo
-                    <ChevronRight className="w-3.5 h-3.5" />
+                  <Button variant="ghost" className="w-full text-xs font-medium text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
+                    Ver Histórico Completo →
                   </Button>
                 </div>
               )}

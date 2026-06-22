@@ -96,9 +96,7 @@ export default function LotesMestresPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-base font-bold flex items-center gap-2">
-          <Palette className="w-4 h-4 text-primary" /> Lotes Mestres
-        </h3>
+        <h3 className="text-base font-semibold">Lotes Mestres</h3>
         <p className="text-xs text-muted-foreground mt-1">
           Gerencie tonalidades de referência para classificar lâminas, bases e bandôs no módulo Madeira.
         </p>
