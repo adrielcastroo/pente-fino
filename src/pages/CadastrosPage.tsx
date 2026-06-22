@@ -14,11 +14,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fieldLabel } from '@/lib/audit';
 import { cn } from '@/lib/utils';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type FornFilter = 'todos' | 'com' | 'sem';
 type SortKey = 'codigo_interno' | 'descricao' | 'updated_at';
 
 export default function CadastrosPage() {
+  useDocumentTitle('Cadastros');
   const { data: itens = [], isLoading } = useItensCadastro();
   const del = useDeleteItemCadastro();
   const [search, setSearch] = useState('');

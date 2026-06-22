@@ -12,10 +12,12 @@ import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashb
 import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
+import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
 import { motion } from 'framer-motion';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -33,6 +35,7 @@ function formatDuration(start: string | null | undefined, end: string | null | u
 }
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard');
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const { theme: systemTheme } = useTheme();
   const isDark = dashboardDialogTheme === 'dark' || (dashboardDialogTheme === 'system' && systemTheme === 'dark');
@@ -246,7 +249,7 @@ export default function DashboardPage() {
           className="md:col-span-2 lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8"
         >
           <div className="overflow-hidden">
-            <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} />
+            <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} periodLabel={formatPeriodLabel(7)} />
           </div>
           
           

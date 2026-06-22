@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, Search, Filter, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 interface AuditLog {
   id: string;
@@ -95,6 +96,7 @@ function AuditoriaContent() {
   }, [logs]);
 
   const toggle = (id: string) => {
+  useDocumentTitle('Auditoria');
     setExpanded((s) => {
       const next = new Set(s);
       if (next.has(id)) next.delete(id); else next.add(id);

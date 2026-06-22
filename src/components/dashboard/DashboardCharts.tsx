@@ -57,7 +57,7 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any
   return null;
 };
 
-export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: any) => {
+export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, periodLabel }: any) => {
   const { isLow } = usePerformance();
   const processedData = useMemo(() => isLow ? data.slice(-10) : data, [data, isLow]);
 
@@ -71,7 +71,9 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id }: 
             </div>
             <span>Volume de Operações</span>
           </CardTitle>
-          <p className="text-sm text-foreground/60 font-black ml-11">Histórico de conferências por período</p>
+          <p className="text-sm text-foreground/60 font-black ml-11">
+            {periodLabel || 'Histórico de conferências por período'}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {onDetailClick && (

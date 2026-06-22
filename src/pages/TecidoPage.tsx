@@ -3,8 +3,10 @@ import { useAppStore } from '@/store/useAppStore';
 import LeftPanel from '@/components/LeftPanel';
 import FormPageLayout from '@/components/FormPageLayout';
 import { motion } from 'framer-motion';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function TecidoPage() {
+  useDocumentTitle('Tecido');
   const setMode = useAppStore(s => s.setMode);
   const currentMode = useAppStore(s => s.currentMode);
   const setFormData = useAppStore(s => s.setFormData);

@@ -1,6 +1,18 @@
 import { Conference, AppStats } from '@/types';
 import { TOTAL_SLOTS } from './app-utils';
 
+/**
+ * Formata um intervalo de datas em PT-BR.
+ * Ex.: formatPeriodLabel(7) → "Últimos 7 dias (15/06 – 22/06)"
+ */
+export function formatPeriodLabel(days: number, end: Date = new Date()): string {
+  const start = new Date(end);
+  start.setDate(start.getDate() - (days - 1));
+  const fmt = (d: Date) =>
+    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `Últimos ${days} dias (${fmt(start)} – ${fmt(end)})`;
+}
+
 export const computeStats = (history: Conference[], stats_estoque: any): AppStats => {
   const totalConferentes = new Set(history.map(h => h.conferente)).size;
   const totalConferencias = history.length;

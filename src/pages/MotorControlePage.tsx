@@ -10,6 +10,7 @@ import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
 import { parseCoulisseString } from '@/lib/app-utils';
 import { printMotorLabel } from '@/services/printService';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
 
@@ -37,6 +38,7 @@ function sanitize(v: string) {
 }
 
 export default function MotorControlePage() {
+  useDocumentTitle('Motor / Controle');
   const { registros, history, addRegistro, setMode, formData, setFormData, resetMotorFormData, lockMotorModelo, setLockMotorModelo, lockMotorNf, setLockMotorNf, labelSettings } = useAppStore();
   const { isLow } = usePerformance();
   

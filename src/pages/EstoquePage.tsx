@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 
 interface Posicao {
@@ -67,6 +68,7 @@ const TOTAL_SLOTS = Object.values(TEC_CONFIG).reduce((acc, { cols, levels }) => 
 import { formatDateBR } from '@/lib/app-utils';
 
 export default function EstoquePage() {
+  useDocumentTitle('Estoque');
   const { isGuest, isAdmin } = useAuth();
   const navigate = useNavigate();
   const activeTec = useAppStore(s => s.formData.estoqueActiveTec);
