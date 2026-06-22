@@ -476,55 +476,33 @@ export default function SettingsPage() {
         </motion.div>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
-        {/* Mobile: dropdown */}
-        <div className="lg:hidden w-full">
-          <Select value={activeCategory} onValueChange={setActiveCategory}>
-            <SelectTrigger className="h-11 bg-background/50 border-border/50 font-bold">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {visibleGroups.map(g => (
-                <div key={g.id} className="py-1">
-                  <div className="px-2 pb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{g.label}</div>
-                  {g.items.map(item => (
-                    <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
-                  ))}
-                </div>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Horizontal tabs — alinhado com o resto do app (full-width, sem sidebar lateral) */}
+      <div className="border-b border-border/40 -mx-2 sm:-mx-4 lg:-mx-6 px-2 sm:px-4 lg:px-6">
+        <div className="flex items-end gap-6 overflow-x-auto no-scrollbar">
+          {visibleGroups.flatMap(g => g.items).map((cat) => {
+            const active = activeCategory === cat.id;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+                  active
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{cat.name}</span>
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Desktop: grouped sidebar */}
-        <aside className="hidden lg:block w-64 space-y-5 shrink-0">
-          {visibleGroups.map(group => (
-            <div key={group.id} className="space-y-1.5">
-              <div className="px-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60">
-                {group.label}
-              </div>
-              <nav className="flex flex-col gap-1">
-                {group.items.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${
-                      activeCategory === cat.id
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10'
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <cat.icon className={`w-4 h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
-                    <span>{cat.name}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-          ))}
-        </aside>
-
-        {/* Content Area */}
-        <div className="flex-1 min-w-0 w-full lg:max-w-3xl">
+      <div className="flex flex-col gap-4 sm:gap-6 items-start">
+        {/* Content Area — full-width */}
+        <div className="flex-1 min-w-0 w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCategory}
@@ -533,8 +511,8 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="settings-card rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
-                <CardHeader className="p-5 sm:p-6 border-b border-border/5">
+              <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                <CardHeader className="p-5 sm:p-6 border-b border-border/40">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary">
                       {categories.find(c => c.id === activeCategory)?.icon && 
@@ -544,12 +522,13 @@ export default function SettingsPage() {
                        })()
                       }
                     </div>
-                    <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                    <CardTitle className="text-lg font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
                   </div>
                   <CardDescription className="text-sm text-muted-foreground">
                     {categories.find(c => c.id === activeCategory)?.description}
                   </CardDescription>
                 </CardHeader>
+
                 
                 <CardContent className="pt-6 space-y-6">
                   {activeCategory === 'profile' && (
