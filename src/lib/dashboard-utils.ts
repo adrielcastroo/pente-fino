@@ -39,12 +39,12 @@ export const computeStats = (history: Conference[], stats_estoque: any): AppStat
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
-  // Categorias (Setores)
+  // Setores (sempre exibir todos, mesmo zerados, para contexto completo)
   const categorias = [
     { name: 'Tecidos', value: history.filter(h => h.registros.some(r => r.modoOrigem === 'tecido')).length },
     { name: 'Madeira', value: history.filter(h => h.registros.some(r => r.modoOrigem === 'madeira')).length },
     { name: 'Motores', value: history.filter(h => h.registros.some(r => r.modoOrigem === 'motor')).length },
-  ].filter(c => c.value > 0);
+  ];
 
   // Tipos de Materiais
   const tiposMap = new Map<string, number>();

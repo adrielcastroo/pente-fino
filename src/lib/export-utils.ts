@@ -373,7 +373,7 @@ export async function exportDashboardToPDF(elementId: string, fileName: string, 
     const chartContexts = [
       { title: 'Volume de Operações', data: stats?.timeline, key: 'total' },
       { title: 'Produção por Conferente', data: stats?.topConferentes, key: 'count' },
-      { title: 'Sectores Operacionais', data: stats?.categorias, key: 'value' },
+      { title: 'Setores Operacionais', data: stats?.categorias, key: 'value' },
       { title: 'Tipos de Materiais', data: stats?.tipos, key: 'value' }
     ];
 
