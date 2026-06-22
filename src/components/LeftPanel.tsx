@@ -1452,7 +1452,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label></div>
                   <input
                     id="etiq-posicao"
                     value={posicao}
