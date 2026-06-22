@@ -6,12 +6,13 @@ interface StatCardProps {
   id: string;
   label: string;
   value: string | number;
+  subtitle?: string;
   icon: LucideIcon;
   delay?: number;
   onClick: (id: string) => void;
 }
 
-export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick }: StatCardProps) => (
+export const StatCard = memo(({ id, label, value, subtitle, icon: Icon, delay = 0, onClick }: StatCardProps) => (
   <motion.button 
     key={id}
     initial={{ opacity: 0, y: 20 }}
@@ -28,10 +29,11 @@ export const StatCard = memo(({ id, label, value, icon: Icon, delay = 0, onClick
       <div className="p-3 sm:p-5 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-xl shadow-primary/5">
         <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
       </div>
-      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
-        <span className="text-[10px] sm:text-[11px] font-black text-primary uppercase tracking-widest">Detalhes</span>
-        <ChevronRight className="w-4 h-4 text-primary" />
-      </div>
+      {subtitle && (
+        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 px-2.5 py-1 rounded-full border border-border/20 bg-muted/20">
+          {subtitle}
+        </span>
+      )}
     </div>
     
     <div className="space-y-2 sm:space-y-4 relative z-10">
@@ -54,9 +56,9 @@ const iconMap: Record<string, LucideIcon> = { BarChart3, Layers3, Users };
 
 export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick: (id: string) => void }) => {
   const cards = useMemo(() => [
-    { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, icon: 'Users', delay: 1 },
-    { id: 'conferences', label: 'Conferências', value: stats.totalConferencias, icon: 'BarChart3', delay: 2 },
-    { id: 'registros', label: 'Registros', value: stats.totalRegistros, icon: 'Layers3', delay: 3 },
+    { id: 'conferentes', label: 'Conferentes', value: stats.totalConferentes, subtitle: 'Acumulado', icon: 'Users', delay: 1 },
+    { id: 'conferences', label: 'Sessões de Conferência', value: stats.totalConferencias, subtitle: 'Total no histórico', icon: 'BarChart3', delay: 2 },
+    { id: 'registros', label: 'Registros', value: stats.totalRegistros, subtitle: 'Total no histórico', icon: 'Layers3', delay: 3 },
   ], [stats.totalConferencias, stats.totalRegistros, stats.totalConferentes]);
 
   return (
@@ -67,6 +69,7 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
           id={s.id}
           label={s.label} 
           value={s.value} 
+          subtitle={s.subtitle}
           icon={iconMap[s.icon]} 
           delay={s.delay}
           onClick={onStatClick} 

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDashboard } from '@/hooks/useDashboard';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
+import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
@@ -88,20 +89,37 @@ export default function DashboardPage() {
   }, [history]);
 
   const lastOutputs = useMemo(() => {
-    const allRegistros = history.flatMap(conf => 
-      conf.registros.map((reg, idx) => ({
-        id: `${conf.id}-${reg.id || idx}`,
-        date: conf.date,
-        item: reg.processo || reg.nf || reg.item || 'Item sem identificação',
-        quantity: reg.quantidade || reg.mLinear || reg.m2 || 0,
-        unit: reg.modoOrigem === 'madeira' ? 'm' : 'un'
-      }))
-    );
-    return allRegistros.sort((a, b) => {
-      const timeA = new Date(a.date).getTime();
-      const timeB = new Date(b.date).getTime();
-      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
-    }).slice(0, 5);
+    // Agrupa registros do mesmo item+data+unidade para evitar duplicatas visuais
+    const grouped = new Map<string, { id: string; date: string; item: string; quantity: number; unit: string; count: number }>();
+    history.forEach(conf => {
+      conf.registros.forEach((reg, idx) => {
+        const item = reg.processo || reg.nf || reg.item || 'Item sem identificação';
+        const unit = reg.modoOrigem === 'madeira' ? 'm' : 'un';
+        const key = `${item}|${conf.date}|${unit}`;
+        const qty = reg.quantidade || reg.mLinear || reg.m2 || 0;
+        const existing = grouped.get(key);
+        if (existing) {
+          existing.quantity += qty;
+          existing.count += 1;
+        } else {
+          grouped.set(key, {
+            id: `${conf.id}-${reg.id || idx}`,
+            date: conf.date,
+            item,
+            quantity: qty,
+            unit,
+            count: 1,
+          });
+        }
+      });
+    });
+    return Array.from(grouped.values())
+      .sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+      })
+      .slice(0, 5);
   }, [history]);
 
   const allRegistrosDetailed = useMemo(() => {
@@ -204,22 +222,13 @@ export default function DashboardPage() {
           </motion.div>
         </div>
         
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-card/40 backdrop-blur-md w-fit transition-all hover:bg-card/60"
-        >
-          <Clock className="w-4 h-4 text-primary/70 shrink-0" />
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black text-foreground/50 uppercase tracking-widest">Sessão:</span>
-            <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
-          </div>
-        </motion.div>
       </header>
       
       {/* Cyclic Inventory Notification */}
       <CyclicNotification />
+
+      {/* Alertas Operacionais */}
+      <AlertsCard stats={stats} />
 
       {/* Stat Cards - Consolidated and Optimized */}
       <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
@@ -270,8 +279,8 @@ export default function DashboardPage() {
         <div className="md:col-span-2 lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
           <SummaryChart 
             id="chart-conferentes"
-            title="Produção por Conferente" 
-            desc="Top 5 em volume de registros" 
+            title={stats.topConferentes.length > 0 ? `Top ${stats.topConferentes.length} Conferentes` : 'Conferentes'}
+            desc="Maiores volumes de registros" 
             data={stats.topConferentes} 
             type="bar" 
             icon={Users} 
@@ -281,7 +290,7 @@ export default function DashboardPage() {
           
           <SummaryChart 
             id="chart-setores"
-            title="Sectores Operacionais" 
+            title="Setores Operacionais" 
             desc="Carga de trabalho por setor" 
             data={stats.categorias} 
             type="pie" 
@@ -289,6 +298,7 @@ export default function DashboardPage() {
             chartKey="value"
             onDetailClick={setDetailChart} 
           />
+          
           
           <Card className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
             <CardHeader className="p-5 sm:p-6 border-b border-border/5">
