@@ -121,7 +121,7 @@ export function PeriodComparisonCard({ history }: Props) {
               size="sm"
               onClick={() => setDays(d)}
               className={cn(
-                'h-7 px-2.5 text-xs font-medium rounded',
+                'h-9 md:h-9 px-3 text-xs font-medium rounded',
                 days === d ? '' : 'text-muted-foreground hover:text-foreground',
               )}
             >
