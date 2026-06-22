@@ -78,7 +78,9 @@ export default function MainLayout() {
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 max-w-[1600px] 2xl:max-w-[1800px] mx-auto">
-                  <Outlet />
+                  <ErrorBoundary>
+                    <Outlet />
+                  </ErrorBoundary>
                 </div>
               </Suspense>
             </div>
