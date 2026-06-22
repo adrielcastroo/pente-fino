@@ -947,6 +947,21 @@ export default function HistoryPanel() {
                   className="pl-11 h-12 rounded-2xl border-border/40 bg-card/40 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm shadow-sm"
                 />
              </div>
+             {testCount > 0 && (
+               <Tooltip>
+                 <TooltipTrigger asChild>
+                   <Button
+                     variant={showTestData ? 'default' : 'outline'}
+                     size="sm"
+                     onClick={() => setShowTestData(v => !v)}
+                     className="h-12 rounded-2xl px-3 text-[10px] font-black uppercase tracking-wider shadow-sm"
+                   >
+                     {showTestData ? 'Ocultar' : 'Mostrar'} testes ({testCount})
+                   </Button>
+                 </TooltipTrigger>
+                 <TooltipContent>Conferências marcadas como dados de teste (PROC sem_proc, vazias ou placeholder)</TooltipContent>
+               </Tooltip>
+             )}
              {history.length > 0 && !isGuest && (
                <Tooltip>
                  <TooltipTrigger asChild>
