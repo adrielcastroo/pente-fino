@@ -73,7 +73,7 @@ export default function InventorySettingsPanel() {
         {configs.map((config) => (
           <Card key={config.id} className="settings-card rounded-2xl">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-black flex items-center gap-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${
                   config.curva === 'A' ? 'bg-rose-500' : 
                   config.curva === 'B' ? 'bg-amber-500' : 'bg-emerald-500'
@@ -88,7 +88,7 @@ export default function InventorySettingsPanel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor={`days-${config.id}`} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <Label htmlFor={`days-${config.id}`} className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                   Intervalo (Dias)
                 </Label>
                 <div className="relative">
@@ -97,7 +97,7 @@ export default function InventorySettingsPanel() {
                     type="number"
                     value={config.dias_frequencia}
                     onChange={(e) => handleUpdateDays(config.id, e.target.value)}
-                    className="h-12 font-black text-xl rounded-xl border-border/20 focus:ring-primary/20"
+                    className="h-12 font-semibold text-xl rounded-xl border-border/20 focus:ring-primary/20"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none font-bold text-xs">
                     DIAS
@@ -114,7 +114,7 @@ export default function InventorySettingsPanel() {
           <History className="w-5 h-5" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-sm font-black uppercase tracking-tight">Como funciona o cálculo?</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-tight">Como funciona o cálculo?</h4>
           <p className="text-xs font-medium text-muted-foreground leading-relaxed">
             O sistema sugere itens para contagem quando o tempo decorrido desde a última contagem (ou desde a entrada no estoque) for maior que o intervalo definido para a curva do item.
           </p>
@@ -122,7 +122,7 @@ export default function InventorySettingsPanel() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="gap-2 font-black uppercase tracking-widest text-xs px-8 h-12 rounded-2xl">
+        <Button onClick={handleSave} disabled={saving} className="gap-2 font-semibold uppercase tracking-widest text-xs px-8 h-12 rounded-2xl">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Salvar Configurações
         </Button>

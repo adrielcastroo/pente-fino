@@ -483,7 +483,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           <thead>
             <tr className="bg-muted/40">
               {columns.map(column => (
-                <th key={column.key} className="px-2 sm:px-6 py-2 sm:py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
+                <th key={column.key} className="px-2 sm:px-6 py-2 sm:py-4 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
               ))}
               <th className="px-2 sm:px-6 py-2 sm:py-4 border-b border-border/20 w-[80px] sm:w-[100px]"></th>
             </tr>
@@ -492,14 +492,14 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             {conf.registros.map((r, i) => (
               <tr key={r.id} className="group/row hover:bg-primary/5 transition-colors">
                 {columns.map(column => (
-                  <td key={column.key} className={`px-2 sm:px-6 py-2 sm:py-4 ${column.key === 'item' ? 'font-black text-foreground' : 'font-mono text-muted-foreground/90'}`}>
+                  <td key={column.key} className={`px-2 sm:px-6 py-2 sm:py-4 ${column.key === 'item' ? 'font-semibold text-foreground' : 'font-mono text-muted-foreground/90'}`}>
                     {column.key === 'item' ? (
                       <div className="flex flex-col gap-1.5">
                         <span className="text-sm tracking-tight">{r.item || '—'}</span>
-                        {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-1.5 h-4 w-fit bg-primary/5 border-primary/10 text-primary/60">{r.tipoTecido}</Badge>}
+                        {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-semibold uppercase tracking-tighter px-1.5 h-4 w-fit bg-primary/5 border-primary/10 text-primary/60">{r.tipoTecido}</Badge>}
                       </div>
                     ) : column.key === 'mLinear' ? (
-                      <span className="font-black text-foreground/80">{formatML(r.mLinear)}</span>
+                      <span className="font-semibold text-foreground/80">{formatML(r.mLinear)}</span>
                     ) : column.key === 'm2' ? (
                       <span className="font-bold">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</span>
                     ) : column.key === 'largura' ? (
@@ -584,13 +584,13 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm sm:text-sm font-semibold tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
                 {!conf.finishedAt && (
-                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
+                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
                     Aberta
                   </Badge>
                 )}
                 <div className="flex gap-1.5 flex-wrap">
                   {modeBadges.map(b => (
-                    <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
+                    <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
                       {b}
                     </Badge>
                   ))}
@@ -619,7 +619,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   return (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-black px-2 py-0 h-5 cursor-help ${suspect ? 'border-amber-500/40 text-amber-600 bg-amber-500/10' : 'border-primary/10 text-primary/60 bg-primary/5'}`}>
+                        <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-semibold px-2 py-0 h-5 cursor-help ${suspect ? 'border-amber-500/40 text-amber-600 bg-amber-500/10' : 'border-primary/10 text-primary/60 bg-primary/5'}`}>
                           {suspect && '⚠ '}{formatDuration(conf.startedAt, conf.finishedAt)}
                         </Badge>
                       </TooltipTrigger>
@@ -633,7 +633,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 </span>
                 
                 {totalML > 0 && (
-                  <span className="font-black text-primary bg-primary/5 px-2 py-0.5 rounded-md">{formatML(totalML)}</span>
+                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md">{formatML(totalML)}</span>
                 )}
               </div>
             </div>
@@ -653,7 +653,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                         }
                         setIsAdding(true); 
                       }}
-                      className="h-9 sm:h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-black text-[10px] uppercase tracking-wider px-3"
+                      className="h-9 sm:h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
                     </Button>
@@ -727,7 +727,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         className={`border rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 backdrop-blur-sm group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30 shadow-lg shadow-primary/10' : 'border-border/40 hover:border-primary/40'}`}
       >
         {highlight && (
-          <div className="bg-primary/10 text-primary px-4 py-1.5 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border-b border-primary/20">
+          <div className="bg-primary/10 text-primary px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-2 border-b border-primary/20">
             <CheckCircle2 className="w-3.5 h-3.5" /> Exportado agora
           </div>
         )}
@@ -773,12 +773,12 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             </div>
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Excluir Histórico?</DialogTitle>
             <DialogDescription className="text-center text-sm font-medium mt-2 leading-relaxed">
-              Esta ação removerá permanentemente a conferência <span className="text-foreground font-black">"{folderName}"</span> e todos os seus registros do banco de dados.
+              Esta ação removerá permanentemente a conferência <span className="text-foreground font-semibold">"{folderName}"</span> e todos os seus registros do banco de dados.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
             <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button variant="destructive" className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
+            <Button variant="destructive" className="rounded-xl font-semibold h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -792,7 +792,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Excluir Item?</DialogTitle>
             <DialogDescription className="text-center text-sm font-medium mt-2 leading-relaxed">
               Esta ação removerá permanentemente o registro{' '}
-              <span className="text-foreground font-black">
+              <span className="text-foreground font-semibold">
                 "{confirmDeleteItem?.item || confirmDeleteItem?.lote || confirmDeleteItem?.id || ''}"
               </span>{' '}
               desta conferência. Não é possível desfazer.
@@ -802,7 +802,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDeleteItem(null)}>Cancelar</Button>
             <Button
               variant="destructive"
-              className="rounded-xl font-black h-12 w-full shadow-lg shadow-destructive/20"
+              className="rounded-xl font-semibold h-12 w-full shadow-lg shadow-destructive/20"
               onClick={() => {
                 if (confirmDeleteItem) handleDeleteItem(confirmDeleteItem.id);
                 setConfirmDeleteItem(null);
@@ -929,7 +929,7 @@ export default function HistoryPanel() {
           <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl animate-pulse" />
         </div>
         <div className="space-y-2 text-center">
-          <p className="font-black text-foreground uppercase tracking-widest text-sm animate-pulse">Sincronizando Histórico</p>
+          <p className="font-semibold text-foreground uppercase tracking-widest text-sm animate-pulse">Sincronizando Histórico</p>
           <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider opacity-60">Carregando dados do servidor...</p>
         </div>
       </div>
@@ -1015,7 +1015,7 @@ export default function HistoryPanel() {
             <div className="flex items-center gap-3 text-destructive font-bold text-sm">
               <span>⚠️ {historyError}</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => loadHistory()} className="h-8 rounded-lg font-black uppercase text-[10px] hover:bg-destructive/10 text-destructive">Tentar Novamente</Button>
+            <Button variant="ghost" size="sm" onClick={() => loadHistory()} className="h-8 rounded-lg font-semibold uppercase text-[10px] hover:bg-destructive/10 text-destructive">Tentar Novamente</Button>
           </div>
         )}
       </div>
@@ -1045,7 +1045,7 @@ export default function HistoryPanel() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Exibindo {paged.length} de {filtered.length}
                 </p>
-                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-2xl font-black text-xs uppercase tracking-wider h-11 px-6">
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-2xl font-semibold text-xs uppercase tracking-wider h-11 px-6">
                   Carregar mais
                 </Button>
               </div>
@@ -1072,12 +1072,12 @@ export default function HistoryPanel() {
           <DialogHeader className="p-2">
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Limpar Tudo?</DialogTitle>
             <DialogDescription className="font-bold text-sm leading-relaxed mt-2 text-muted-foreground text-center">
-              Você está prestes a remover permanentemente <span className="text-destructive font-black">{history.length} conferências</span>. Esta ação limpará todo o banco de dados histórico.
+              Você está prestes a remover permanentemente <span className="text-destructive font-semibold">{history.length} conferências</span>. Esta ação limpará todo o banco de dados histórico.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="p-2 gap-3 mt-6">
             <Button variant="outline" className="flex-1 rounded-2xl font-bold h-12" onClick={() => setShowClearConfirm(false)}>Manter Dados</Button>
-            <Button variant="destructive" className="flex-1 rounded-2xl font-black h-12 shadow-lg shadow-destructive/20" onClick={handleClear}>Limpar Tudo</Button>
+            <Button variant="destructive" className="flex-1 rounded-2xl font-semibold h-12 shadow-lg shadow-destructive/20" onClick={handleClear}>Limpar Tudo</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

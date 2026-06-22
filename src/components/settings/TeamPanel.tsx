@@ -139,7 +139,7 @@ export default function TeamPanel() {
             <Circle className={`w-2.5 h-2.5 fill-current ${s === 'online' ? 'text-emerald-500' : s === 'away' ? 'text-amber-500' : 'text-muted-foreground'}`} />
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{STATUS_LABEL[s]}</span>
-              <span className="text-xl font-black tabular-nums">{counts[s]}</span>
+              <span className="text-xl font-semibold tabular-nums">{counts[s]}</span>
             </div>
           </div>
         ))}

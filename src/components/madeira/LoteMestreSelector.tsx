@@ -174,7 +174,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Palette className="w-32 h-32" />
             </div>
-            <DialogTitle className="text-2xl font-black mb-1">Novo Lote Mestre</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold mb-1">Novo Lote Mestre</DialogTitle>
             <DialogDescription className="text-primary-foreground/70 font-medium">
               Defina uma tonalidade de referência para classificar as lâminas.
             </DialogDescription>
@@ -237,7 +237,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
             <Button 
               onClick={handleCreate} 
               disabled={creating}
-              className="rounded-xl font-black uppercase tracking-widest px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+              className="rounded-xl font-semibold uppercase tracking-widest px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
               {creating ? (
                 <div className="flex items-center gap-2">

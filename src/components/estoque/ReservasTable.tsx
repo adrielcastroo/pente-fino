@@ -58,14 +58,14 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
       <Table className="min-w-[800px] lg:min-w-full">
         <TableHeader className="bg-muted/30 sticky top-0 z-10">
           <TableRow className="hover:bg-transparent border-b border-border/60">
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 px-6">Código</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade CX</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº CX</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4">OBS</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right pr-6">Total</TableHead>
-            <TableHead className="font-black uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Edição</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4 px-6">Código</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4">Endereço</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Quantidade CX</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Nº CX</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4">OBS</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-right pr-6">Total</TableHead>
+            <TableHead className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground py-4 text-center">Edição</TableHead>
             <TableHead className="w-24 py-4 pr-6"></TableHead>
           </TableRow>
         </TableHeader>
@@ -89,7 +89,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                 key={item.id}
                 className="group hover:bg-primary/[0.02] transition-colors border-b border-border/30"
               >
-                <TableCell className={cn('font-mono font-black text-primary px-6 py-4', editedCols.has('codigo') && 'bg-amber-500/5')}>
+                <TableCell className={cn('font-mono font-semibold text-primary px-6 py-4', editedCols.has('codigo') && 'bg-amber-500/5')}>
                   <EditedCell edited={editedCols.has('codigo')}>{item.codigo}</EditedCell>
                 </TableCell>
                 <TableCell className={cn(editedCols.has('endereco') && 'bg-amber-500/5')}>
@@ -131,7 +131,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                     <span className="text-muted-foreground/30 text-[10px]">—</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right font-mono font-black text-primary px-6">
+                <TableCell className="text-right font-mono font-semibold text-primary px-6">
                   {calculateTotal(item.quantidade, item.quantidadeCx).toLocaleString('pt-BR')}
                 </TableCell>
                 <TableCell className="text-center">

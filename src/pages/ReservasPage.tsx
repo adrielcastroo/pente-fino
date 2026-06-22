@@ -101,7 +101,7 @@ const ReservasPage = () => {
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
           <div className="space-y-1 sm:space-y-2">
-            <h1 className="text-[clamp(1.5rem,7vw,3.5rem)] font-black tracking-tight text-foreground flex items-center gap-3 leading-none">
+            <h1 className="text-[clamp(1.5rem,7vw,3.5rem)] font-semibold tracking-tight text-foreground flex items-center gap-3 leading-none">
               <Package className="w-6 h-6 sm:w-10 sm:h-10 text-primary shrink-0" aria-hidden="true" />
               Reservas
             </h1>

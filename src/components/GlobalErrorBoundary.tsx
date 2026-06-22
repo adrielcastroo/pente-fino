@@ -42,7 +42,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <AlertCircle className="w-10 h-10 text-destructive" />
           </div>
           
-          <h1 className="text-3xl font-black tracking-tight text-foreground mb-3">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground mb-3">
             Ops! Algo deu errado.
           </h1>
           
@@ -52,7 +52,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           </p>
 
           <div className="bg-muted/30 border border-border/50 rounded-2xl p-6 mb-10 w-full max-w-lg text-left overflow-auto max-h-[200px]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Detalhes do erro:</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Detalhes do erro:</p>
             <code className="text-xs font-mono text-destructive font-bold break-all">
               {this.state.error?.name}: {this.state.error?.message}
             </code>
@@ -77,7 +77,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             </Button>
           </div>
           
-          <p className="mt-12 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+          <p className="mt-12 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/40">
             Pente Fino • Erro Crítico
           </p>
         </div>

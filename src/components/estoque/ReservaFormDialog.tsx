@@ -100,7 +100,7 @@ export function ReservaFormDialog({ onAdd, mode = 'create', open, onOpenChange, 
       )}
       <DialogContent className="sm:max-w-[425px] overflow-hidden border-border/40 shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-black">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             {controlled ? <Pencil className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
             {controlled ? 'Editar Reserva' : 'Nova Reserva'}
           </DialogTitle>
@@ -209,7 +209,7 @@ export function ReservaFormDialog({ onAdd, mode = 'create', open, onOpenChange, 
           <DialogFooter className="mt-2">
             <Button
               type="submit"
-              className="w-full font-black text-sm uppercase tracking-widest h-11"
+              className="w-full font-semibold text-sm uppercase tracking-widest h-11"
               disabled={!isFormValid || isSubmitting}
             >
               {isSubmitting ? 'Salvando...' : controlled ? 'Salvar alterações' : 'Confirmar Reserva'}

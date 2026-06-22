@@ -224,7 +224,7 @@ export default function MotorControlePage() {
               <ScanBarcode className="w-7 h-7" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-black text-foreground tracking-tight">Novo registro</h2>
+              <h2 className="text-lg font-semibold text-foreground tracking-tight">Novo registro</h2>
               <p className="text-xs text-muted-foreground/80 font-medium">
                 {subMode === 'coulisse' ? 'Bipe o lote da Coulisse' : `Bipe a série do ${subMode}`}
               </p>
@@ -246,7 +246,7 @@ export default function MotorControlePage() {
               <button 
                 key={mode} 
                 onClick={() => handleSubModeChange(mode)} 
-                className={`flex-1 py-3.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all duration-300 relative ${
+                className={`flex-1 py-3.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.1em] transition-all duration-300 relative ${
                   subMode === mode 
                     ? 'text-primary-foreground' 
                     : 'text-muted-foreground hover:text-foreground'
@@ -293,11 +293,11 @@ export default function MotorControlePage() {
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-2 bg-background/80 p-1.5 rounded-xl border border-primary/20"
                     >
-                      <span className="text-[10px] font-black text-primary px-2">Nº</span>
+                      <span className="text-[10px] font-semibold text-primary px-2">Nº</span>
                       <input
                         type="text" inputMode="numeric" value={caixaNum}
                         onChange={e => setCaixaNum(e.target.value.replace(/\D/g, ''))}
-                        className="w-12 bg-transparent text-center text-sm font-black text-primary outline-none"
+                        className="w-12 bg-transparent text-center text-sm font-semibold text-primary outline-none"
                       />
                     </motion.div>
                   )}
@@ -309,7 +309,7 @@ export default function MotorControlePage() {
                   <>
                     <div className="group space-y-1.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Proc / Cx</label>
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Proc / Cx</label>
                         <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
                           {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
@@ -331,17 +331,17 @@ export default function MotorControlePage() {
                             { label: 'Cx', val: p.cx, icon: <Info className="w-3 h-3" /> }
                           ].map((item, i) => (
                             <div key={i} className="bg-background/40 p-2 rounded-xl border border-white/5">
-                              <div className="flex items-center gap-1.5 text-[8px] font-black text-muted-foreground/60 uppercase mb-1">
+                              <div className="flex items-center gap-1.5 text-[8px] font-semibold text-muted-foreground/60 uppercase mb-1">
                                 {item.icon} {item.label}
                               </div>
-                              <div className="text-[11px] font-black text-foreground truncate">{item.val || '-'}</div>
+                              <div className="text-[11px] font-semibold text-foreground truncate">{item.val || '-'}</div>
                             </div>
                           ));
                         })()}
                       </motion.div>
                     )}
                     <div className="group space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Lote</label>
+                      <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Lote</label>
                       <input 
                         ref={serieRef} 
                         value={coulisseLote} 
@@ -356,7 +356,7 @@ export default function MotorControlePage() {
                   <>
                     <div className="group space-y-1.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Marca</label>
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Marca</label>
                         <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
                           {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
@@ -370,7 +370,7 @@ export default function MotorControlePage() {
                     </div>
                     <div className="group space-y-1.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">Nota Fiscal (NFe)</label>
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">Nota Fiscal (NFe)</label>
                         <button onClick={() => setLockMotorNf(!lockMotorNf)} className={`p-1 rounded-md transition-colors ${lockMotorNf ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
                           {lockMotorNf ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
@@ -383,7 +383,7 @@ export default function MotorControlePage() {
                       />
                     </div>
                     <div className="group space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Série (S/N)</label>
+                      <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60 px-1">Série (S/N)</label>
                       <input 
                         ref={serieRef} 
                         value={serie} 
@@ -400,7 +400,7 @@ export default function MotorControlePage() {
               <motion.div whileTap={{ scale: 0.98 }} className="pt-4">
                 <Button 
                   onClick={subMode === 'motor' ? handleAddMotor : subMode === 'controle' ? handleAddControle : handleAddCoulisse} 
-                  className="w-full h-16 rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:shadow-primary/50 transition-all border-t border-white/20"
+                  className="w-full h-16 rounded-[2rem] text-sm font-semibold uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:shadow-primary/50 transition-all border-t border-white/20"
                 >
                   <Plus className="w-5 h-5 mr-3" strokeWidth={3} /> ADICIONAR {subMode}
                 </Button>
