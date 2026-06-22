@@ -68,8 +68,8 @@ export default function MainLayout() {
   return (
     <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
-        {/* Sidebar: apenas desktop (lg+). Tablet usa BottomTabBar nas duas orientações */}
-        <div className="hidden xl:contents">
+        {/* Sidebar: apenas desktop ≥1366px. Tablets (incl. TCL Tab 10L landscape 1280px) usam BottomTabBar */}
+        <div className="hidden min-[1366px]:contents">
           <AppSidebar activeTab={activeTab} onTabChange={() => {}} />
         </div>
 
