@@ -435,6 +435,7 @@ function formatDuration(start: string | null | undefined, end: string | null | u
     const hours = Math.floor(mins / 60);
     const remainMins = mins % 60;
     if (hours > 0) return `${hours}h ${remainMins}min`;
+    if (mins < 1) return '< 1min';
     return `${mins}min`;
   } catch { return '—'; }
 }
