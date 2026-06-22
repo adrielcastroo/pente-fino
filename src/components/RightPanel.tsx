@@ -211,7 +211,7 @@ export default function RightPanel() {
   const { isGuest } = useAuth();
   const {
     registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
-    deleteRegistro, undo, undoStack, updateRegistro
+    deleteRegistro, undo, undoStack, updateRegistro, activeTab
   } = useAppStore(useShallow(s => ({
     registros: s.registros,
     currentMode: s.currentMode,
@@ -222,7 +222,8 @@ export default function RightPanel() {
     deleteRegistro: s.deleteRegistro,
     undo: s.undo,
     undoStack: s.undoStack,
-    updateRegistro: s.updateRegistro
+    updateRegistro: s.updateRegistro,
+    activeTab: s.formData.activeTab
   })));
 
   const { isLow } = usePerformance();
@@ -571,7 +572,20 @@ export default function RightPanel() {
               )}
             </table>
           ) : (
-            <table className="w-full border-separate border-spacing-0 table-auto min-w-[600px] lg:min-w-full">
+            <>
+              {/* Tablet vertical (md→lg) na aba Tecido: cards operacionais */}
+              {activeTab === 'tecido' && (
+                <div className="block xl:hidden">
+                  <TecidoCardsView
+                    rows={pagedRows}
+                    onDelete={deleteRegistro}
+                    onCopy={copyText}
+                    isGuest={isGuest}
+                    showActions={showActions}
+                  />
+                </div>
+              )}
+            <table className={`w-full border-separate border-spacing-0 table-auto min-w-[600px] lg:min-w-full ${activeTab === 'tecido' ? 'hidden xl:table' : ''}`}>
               <thead>
                 <tr className="bg-muted/30">
                   <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
