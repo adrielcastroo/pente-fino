@@ -89,8 +89,16 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/" element={<RoleHomeRedirect />} />
+                  <Route path="/operacao" element={<OperacaoHomePage />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <RequireRole role="supervisor" fallback={<Navigate to="/operacao" replace />}>
+                        <DashboardPage />
+                      </RequireRole>
+                    }
+                  />
                   <Route path="/tecido" element={<TecidoPage />} />
                   <Route path="/madeira" element={<MadeiraPage />} />
                   <Route path="/motor" element={<MotorControlePage />} />
@@ -101,9 +109,16 @@ const App = () => (
                   <Route path="/historico" element={<HistoricoPage />} />
                   <Route path="/configuracoes" element={<SettingsPage />} />
                   <Route path="/cadastros" element={<CadastrosPage />} />
-                  <Route path="/auditoria" element={<AuditoriaPage />} />
+                  <Route
+                    path="/auditoria"
+                    element={
+                      <RequireRole action="view:auditoria" fallback={<Navigate to="/" replace />}>
+                        <AuditoriaPage />
+                      </RequireRole>
+                    }
+                  />
                   <Route path="/minha-atividade" element={<MinhaAtividadePage />} />
-                  
+
                 </Route>
 
 
