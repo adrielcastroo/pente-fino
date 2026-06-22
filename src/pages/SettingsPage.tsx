@@ -449,14 +449,28 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-    <div className="flex flex-col h-full space-y-4 sm:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-1 sm:px-0 pb-24">
-      <header className="flex flex-col gap-2 border-b border-border/10 pb-4 sm:pb-6">
-        <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Configurações</h1>
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-bold">
-          <span>Configurações</span>
-          <ChevronRight className="w-3 h-3 opacity-50" />
-          <span className="text-foreground">{activeMeta?.name ?? '—'}</span>
-        </nav>
+    <div className="flex flex-col h-full space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 pb-24">
+      <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center gap-3 sm:gap-4"
+        >
+          <div className="p-2 rounded-md bg-primary/10 border border-primary/20">
+            <Settings className="w-5 h-5 text-primary" strokeWidth={1.75} />
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+              Configurações
+            </h1>
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-medium mt-1">
+              <span>Configurações</span>
+              <ChevronRight className="w-3 h-3 opacity-50" />
+              <span className="text-foreground/80">{activeMeta?.name ?? '—'}</span>
+            </nav>
+          </div>
+        </motion.div>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
@@ -491,7 +505,7 @@ export default function SettingsPage() {
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 group ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${
                       activeCategory === cat.id
                         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10'
                         : 'hover:bg-muted text-muted-foreground hover:text-foreground'
@@ -516,25 +530,23 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="settings-card rounded-3xl">
-                <CardHeader className="pb-4">
+              <Card className="settings-card rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+                <CardHeader className="p-5 sm:p-6 border-b border-border/5">
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="settings-icon-pill">
+                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary">
                       {categories.find(c => c.id === activeCategory)?.icon && 
                        (() => {
                          const Icon = categories.find(c => c.id === activeCategory)!.icon;
-                         return <Icon className="w-5 h-5" />;
+                         return <Icon className="w-5 h-5" strokeWidth={1.75} />;
                        })()
                       }
                     </div>
-                    <CardTitle className="text-xl font-black">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
                   </div>
-                  <CardDescription className="text-sm font-medium opacity-70">
+                  <CardDescription className="text-sm text-muted-foreground">
                     {categories.find(c => c.id === activeCategory)?.description}
                   </CardDescription>
                 </CardHeader>
-                
-                <Separator className="bg-border/5" />
                 
                 <CardContent className="pt-6 space-y-6">
                   {activeCategory === 'profile' && (
