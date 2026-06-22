@@ -707,8 +707,9 @@ export default function SettingsPage() {
                           <Label className="text-sm font-bold">Feedback Sonoro de Bipagem</Label>
                           <p className="text-xs text-muted-foreground">Emite som ao bipar códigos com sucesso ou erro.</p>
                         </div>
-                        <Switch checked={prefSoundFeedback} onCheckedChange={(v) => { setPrefSoundFeedback(v); setHasUnsavedChanges(true); }} />
+                        <Switch checked={prefSoundFeedback} onCheckedChange={(v) => { setPrefSoundFeedback(v); setBipSoundEnabled(v); setHasUnsavedChanges(true); if (v) bipSuccess(); }} />
                       </div>
+
 
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
