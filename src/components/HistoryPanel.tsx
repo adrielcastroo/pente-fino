@@ -846,13 +846,26 @@ export default function HistoryPanel() {
     return () => clearTimeout(timer);
   }, [localSearch]);
 
+  const { visibleHistory, testCount } = useMemo(() => {
+    let testCount = 0;
+    const visible: Conference[] = [];
+    for (const c of history) {
+      if (isTestConference(c)) {
+        testCount++;
+        if (!showTestData) continue;
+      }
+      visible.push(c);
+    }
+    return { visibleHistory: visible, testCount };
+  }, [history, showTestData]);
+
   const filtered = useMemo(() => {
     const q = debouncedSearch.toLowerCase().trim();
-    if (!q) return history;
+    if (!q) return visibleHistory;
     
     const result: Conference[] = [];
-    for (let i = 0, len = history.length; i < len; i++) {
-      const c = history[i];
+    for (let i = 0, len = visibleHistory.length; i < len; i++) {
+      const c = visibleHistory[i];
       if (
         (c.processo || '').toLowerCase().includes(q) || 
         (c.conferente || '').toLowerCase().includes(q)
@@ -871,7 +884,7 @@ export default function HistoryPanel() {
       }
     }
     return result;
-  }, [history, debouncedSearch]);
+  }, [visibleHistory, debouncedSearch]);
 
   const handleClear = async () => {
     try {
