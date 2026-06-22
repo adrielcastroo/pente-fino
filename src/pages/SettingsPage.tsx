@@ -106,6 +106,11 @@ export default function SettingsPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
+  const [cargo, setCargo] = useState('');
+  const [setor, setSetor] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const setFormData = useAppStore(s => s.setFormData);
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const setDashboardDialogTheme = useAppStore(s => s.setDashboardDialogTheme);
@@ -120,15 +125,48 @@ export default function SettingsPage() {
   const [lowDataMode, setLowDataMode] = useState(localStorage.getItem('perf_low_data') === 'true');
 
   useEffect(() => {
-    if (profile?.display_name) {
-      setDisplayName(profile.display_name);
-    }
+    if (profile?.display_name) setDisplayName(profile.display_name);
+    if ((profile as any)?.cargo !== undefined) setCargo((profile as any).cargo || '');
+    if ((profile as any)?.setor !== undefined) setSetor((profile as any).setor || '');
+    if ((profile as any)?.telefone !== undefined) setTelefone((profile as any).telefone || '');
+    if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
     const remotePref = (profile as any)?.preferences?.disable_browser_print;
     if (typeof remotePref === 'boolean') {
       setPrefDisableBrowserPrint(remotePref);
       localStorage.setItem('pref_disable_browser_print', String(remotePref));
     }
   }, [profile]);
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user || isGuest) { toast.error('Faça login para alterar o avatar.'); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error('Imagem maior que 2MB.'); return; }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Formato inválido. Use JPG, PNG ou WebP.'); return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
+        upsert: true, contentType: file.type,
+      });
+      if (upErr) throw upErr;
+      const { data: signed, error: signErr } = await supabase.storage
+        .from('avatars').createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signErr) throw signErr;
+      const url = signed.signedUrl;
+      const { error: updErr } = await (supabase.from('profiles') as any)
+        .update({ avatar_url: url, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+      if (updErr) throw updErr;
+      setAvatarUrl(url);
+      toast.success('Avatar atualizado!');
+    } catch (e: any) {
+      toast.error('Erro ao enviar avatar: ' + e.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
   const [orModel, setOrModel] = useState(localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku');
