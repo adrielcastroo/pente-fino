@@ -866,6 +866,7 @@ export type Database = {
         Row: {
           ai_customization_rules: string | null
           avatar_url: string | null
+          cargo: string | null
           created_at: string
           display_mode: string | null
           display_name: string | null
@@ -873,11 +874,14 @@ export type Database = {
           id: string
           opt_out_reports: boolean | null
           preferences: Json
+          setor: string | null
+          telefone: string | null
           updated_at: string
         }
         Insert: {
           ai_customization_rules?: string | null
           avatar_url?: string | null
+          cargo?: string | null
           created_at?: string
           display_mode?: string | null
           display_name?: string | null
@@ -885,11 +889,14 @@ export type Database = {
           id: string
           opt_out_reports?: boolean | null
           preferences?: Json
+          setor?: string | null
+          telefone?: string | null
           updated_at?: string
         }
         Update: {
           ai_customization_rules?: string | null
           avatar_url?: string | null
+          cargo?: string | null
           created_at?: string
           display_mode?: string | null
           display_name?: string | null
@@ -897,6 +904,8 @@ export type Database = {
           id?: string
           opt_out_reports?: boolean | null
           preferences?: Json
+          setor?: string | null
+          telefone?: string | null
           updated_at?: string
         }
         Relationships: []
