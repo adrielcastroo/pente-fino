@@ -372,9 +372,19 @@ export default function SettingsPage() {
         localStorage.setItem('cft4_or_key', orKey.trim());
         localStorage.setItem('cft4_or_model', orModel);
       } else if (activeCategory === 'profile' && !isGuest && user) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ display_name: displayName.trim(), updated_at: new Date().toISOString() })
+        const telefoneTrim = telefone.trim();
+        if (telefoneTrim && !/^[0-9+\-\s()]{0,20}$/.test(telefoneTrim)) {
+          toast.error('Telefone inválido. Use apenas dígitos, espaços, +, -, ( ).');
+          return;
+        }
+        const { error } = await (supabase.from('profiles') as any)
+          .update({
+            display_name: displayName.trim(),
+            cargo: cargo.trim() || null,
+            setor: setor.trim() || null,
+            telefone: telefoneTrim || null,
+            updated_at: new Date().toISOString(),
+          })
           .eq('id', user.id);
         if (error) throw error;
       } else if (activeCategory === 'performance') {
