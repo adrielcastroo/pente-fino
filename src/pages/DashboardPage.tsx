@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
   const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
+  const [showMobileExtras, setShowMobileExtras] = useState(false);
   const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
   const compareConference = useMemo(
     () => history.find(c => c.id === compareConferenceId) ?? null,
