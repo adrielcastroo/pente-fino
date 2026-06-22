@@ -26,9 +26,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-type Material = { id: string; descricao: string | null; codigo: string | null };
+type Material = { id: string; descricao: string | null; codigo_interno: string | null };
 type Posicao = { id: string; estrutura: string; coluna: string; nivel: number; posicao: number; item: string | null };
-type Conferencia = { id: string; nf: string | null; conferente: string | null; created_at: string };
+type Conferencia = { id: string; processo: string | null; conferente: string | null; created_at: string };
 
 const ROUTES: Array<{ label: string; path: string; icon: React.ComponentType<{ className?: string }>; keywords?: string }> = [
   { label: 'Início (Dashboard)', path: '/', icon: LayoutDashboard, keywords: 'dashboard inicio home' },
