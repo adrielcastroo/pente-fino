@@ -536,11 +536,38 @@ export default function SettingsPage() {
                   {activeCategory === 'profile' && (
                     <div className="space-y-6">
                       <div className="flex items-center gap-5 p-4 rounded-2xl bg-muted/30 border border-border/20">
-                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
-                          {profile?.avatar_url ? (
-                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                          ) : (
-                            <User className="w-8 h-8 text-primary" />
+                        <div className="relative group">
+                          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-8 h-8 text-primary" />
+                            )}
+                          </div>
+                          {!isGuest && (
+                            <label
+                              htmlFor="avatar-upload"
+                              className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                              title="Alterar avatar"
+                            >
+                              {uploadingAvatar ? (
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                              ) : (
+                                <Palette className="w-5 h-5 text-white" />
+                              )}
+                              <input
+                                id="avatar-upload"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                disabled={uploadingAvatar}
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) handleAvatarUpload(f);
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -566,14 +593,15 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      <div className="grid gap-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Nome de Exibição</Label>
-                          <Input 
-                            value={displayName} 
+                          <Input
+                            value={displayName}
                             onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
-                            className="bg-muted/20 border-border/40 h-11 focus-visible:ring-primary/20"
+                            className="bg-muted/20 border-border/40 h-11"
                             placeholder="Seu nome no sistema"
+                            maxLength={80}
                           />
                         </div>
                         <div className="space-y-2">
@@ -583,13 +611,46 @@ export default function SettingsPage() {
                               <TooltipTrigger asChild>
                                 <span className="text-muted-foreground cursor-help">(?)</span>
                               </TooltipTrigger>
-                              <TooltipContent className="text-xs">Usado para login — não editável.</TooltipContent>
+                              <TooltipContent className="text-xs">Usado para login — não editável aqui.</TooltipContent>
                             </Tooltip>
                           </Label>
-                          <Input 
-                            value={user?.email || ''} 
+                          <Input
+                            value={user?.email || ''}
                             disabled
                             className="bg-muted/10 border-border/20 opacity-50 cursor-not-allowed h-11"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Cargo</Label>
+                          <Input
+                            value={cargo}
+                            onChange={(e) => { setCargo(e.target.value); setHasUnsavedChanges(true); }}
+                            className="bg-muted/20 border-border/40 h-11"
+                            placeholder="Ex: Operador de Estoque"
+                            maxLength={60}
+                            disabled={isGuest}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Setor</Label>
+                          <Input
+                            value={setor}
+                            onChange={(e) => { setSetor(e.target.value); setHasUnsavedChanges(true); }}
+                            className="bg-muted/20 border-border/40 h-11"
+                            placeholder="Ex: Logística"
+                            maxLength={60}
+                            disabled={isGuest}
+                          />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Telefone</Label>
+                          <Input
+                            value={telefone}
+                            onChange={(e) => { setTelefone(e.target.value); setHasUnsavedChanges(true); }}
+                            className="bg-muted/20 border-border/40 h-11"
+                            placeholder="(11) 99999-0000"
+                            maxLength={20}
+                            disabled={isGuest}
                           />
                         </div>
                       </div>
