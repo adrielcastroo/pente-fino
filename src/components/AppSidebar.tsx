@@ -126,7 +126,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               Pente Fino
             </span>
             <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              ESTOQUE
+              Gestão de Estoque
             </span>
           </div>
         </button>
