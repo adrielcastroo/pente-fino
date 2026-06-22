@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
+import { useNetworkStatus } from '@/hooks/use-network-status';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
