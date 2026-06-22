@@ -114,7 +114,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
     >
       <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
         <button
-          onClick={() => handleTabClick('inicio', '/dashboard')}
+          onClick={() => handleTabClick('inicio', '/')}
           className="flex items-center gap-3 rounded-xl px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
           aria-label="Ir para Início"
         >
