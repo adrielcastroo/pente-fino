@@ -284,6 +284,37 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="icon"
+              onClick={() => setAutoRefresh(v => !v)}
+              className="hidden lg:inline-flex h-14 w-14 rounded-2xl"
+              title={autoRefresh ? 'Pausar atualização automática (30s)' : 'Ativar atualização automática (30s)'}
+            >
+              <RefreshCw className={cn('w-5 h-5', autoRefresh && 'text-primary animate-spin-slow')} />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              className="hidden lg:inline-flex h-14 w-14 rounded-2xl"
+              title="Exportar dashboard como PDF"
+            >
+              {isExportingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePopOut}
+              className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
+              title="Abrir em janela separada (multi-monitor)"
+            >
+              <ExternalLink className="w-5 h-5" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
               onClick={togglePresentation}
               className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
               title={presentationMode ? 'Sair do modo apresentação (Esc)' : 'Modo apresentação (F11)'}
