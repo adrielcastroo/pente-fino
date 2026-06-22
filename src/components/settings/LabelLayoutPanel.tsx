@@ -160,9 +160,9 @@ export default function LabelLayoutPanel() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={kind} className="mt-6 animate-fade-in">
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 items-start">
-            <div className="space-y-6 xl:col-span-3 order-2 xl:order-1">
+        <TabsContent value={kind} className="mt-4 animate-fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 items-start">
+            <div className="space-y-4 lg:col-span-3 order-2 lg:order-1">
               <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
