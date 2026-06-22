@@ -243,6 +243,16 @@ export default function DashboardPage() {
               </div>
             </div>
             
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={togglePresentation}
+              className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
+              title={presentationMode ? 'Sair do modo apresentação (Esc)' : 'Modo apresentação (F11)'}
+            >
+              {presentationMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </Button>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
