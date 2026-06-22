@@ -444,7 +444,7 @@ export default function EstoquePage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                 <CardContent className="p-4 sm:p-6 text-center space-y-1 sm:space-y-2 relative z-10">
-                  <div className={`text-[clamp(1.25rem,5vw,2.25rem)] font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className={`text-xl sm:text-2xl lg:text-3xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
                   <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
                   <div className="flex items-center justify-center gap-1.5 pt-2">
                     <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
