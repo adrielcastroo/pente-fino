@@ -20,4 +20,5 @@ if (rootElement) {
       <App />
     </GlobalErrorBoundary>
   );
+  registerAppServiceWorker();
 }
