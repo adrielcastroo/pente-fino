@@ -62,10 +62,13 @@ const menuGroups: MenuGroup[] = [
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
-  const { signOut } = useAuth();
+  const { signOut, role } = useAuth();
   const navigate = useNavigate();
   const registroCount = useAppStore(s => s.registros.length);
   const reservasCount = useAppStore(s => s.reservas.length);
+  const visibleGroups = menuGroups
+    .map(g => ({ ...g, items: g.items.filter(i => !i.minRole || atLeast(role, i.minRole)) }))
+    .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole)));
 
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
