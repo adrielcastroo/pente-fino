@@ -111,9 +111,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setConferente('');
   };
 
+  const can = useCallback((action: Action) => canDo(role, action), [role]);
+
   const value = useMemo(() => ({
-    user, profile, loading, isGuest, guestName, isAdmin, loginAsGuest, signOut
-  }), [user, profile, loading, isGuest, guestName, isAdmin]);
+    user, profile, loading, isGuest, guestName, isAdmin, role, can, loginAsGuest, signOut
+  }), [user, profile, loading, isGuest, guestName, isAdmin, role, can]);
 
   return (
     <AuthContext.Provider value={value}>
