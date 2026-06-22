@@ -554,18 +554,6 @@ export default function EstoquePage() {
                   const matchesFilter = !selectedStat || selectedStat === 'total' || 
                                       (selectedStat === 'livre' && items.length < 30) ||
                                       items.some(i => i.status === selectedStat);
-                  
-                  return (
-                    <motion.div 
-                      key={col} 
-                      whileHover={{ scale: 1.02, zIndex: 10 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setSelectedCell({ col, nivel })} 
-                  const fillPercent = Math.round((items.length / 30) * 100);
-                  const hasItems = items.length > 0;
-                  const matchesFilter = !selectedStat || selectedStat === 'total' || 
-                                      (selectedStat === 'livre' && items.length < 30) ||
-                                      items.some(i => i.status === selectedStat);
                   const cellKey = `${col}-${nivel}`;
                   const isHighlighted = matchingCells?.has(cellKey);
                   const isDimmed = matchingCells && !isHighlighted;
