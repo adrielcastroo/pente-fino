@@ -530,25 +530,23 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="settings-card rounded-3xl">
-                <CardHeader className="pb-4">
+              <Card className="settings-card rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
+                <CardHeader className="p-5 sm:p-6 border-b border-border/5">
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="settings-icon-pill">
+                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary">
                       {categories.find(c => c.id === activeCategory)?.icon && 
                        (() => {
                          const Icon = categories.find(c => c.id === activeCategory)!.icon;
-                         return <Icon className="w-5 h-5" />;
+                         return <Icon className="w-5 h-5" strokeWidth={1.75} />;
                        })()
                       }
                     </div>
-                    <CardTitle className="text-xl font-black">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
                   </div>
-                  <CardDescription className="text-sm font-medium opacity-70">
+                  <CardDescription className="text-sm text-muted-foreground">
                     {categories.find(c => c.id === activeCategory)?.description}
                   </CardDescription>
                 </CardHeader>
-                
-                <Separator className="bg-border/5" />
                 
                 <CardContent className="pt-6 space-y-6">
                   {activeCategory === 'profile' && (
