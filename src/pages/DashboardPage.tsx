@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDashboard } from '@/hooks/useDashboard';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
+import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
@@ -221,22 +222,13 @@ export default function DashboardPage() {
           </motion.div>
         </div>
         
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex md:hidden items-center gap-3 px-4 py-2.5 mx-4 sm:mx-6 rounded-xl border border-border/10 bg-card/40 backdrop-blur-md w-fit transition-all hover:bg-card/60"
-        >
-          <Clock className="w-4 h-4 text-primary/70 shrink-0" />
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black text-foreground/50 uppercase tracking-widest">Sessão:</span>
-            <span className="text-xs font-bold text-foreground leading-none">{stats.avgDuration}</span>
-          </div>
-        </motion.div>
       </header>
       
       {/* Cyclic Inventory Notification */}
       <CyclicNotification />
+
+      {/* Alertas Operacionais */}
+      <AlertsCard stats={stats} />
 
       {/* Stat Cards - Consolidated and Optimized */}
       <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
