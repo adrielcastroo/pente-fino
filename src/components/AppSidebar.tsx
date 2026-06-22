@@ -2,7 +2,8 @@
 import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard, Package, ShieldAlert } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
-import logoComb from '@/assets/logo-comb.png';
+// Industrial SVG logo (served from /public, scales crisp at any size)
+const logoComb = '/favicon.svg';
 import { AppTab } from '@/types';
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
