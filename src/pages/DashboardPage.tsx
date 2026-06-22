@@ -480,7 +480,12 @@ export default function DashboardPage() {
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
                 {stats.conferenteDetails.map(c => (
-                  <tr key={c.name} className={cn("transition-colors group", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}>
+                  <tr
+                    key={c.name}
+                    onClick={() => setSelectedConferente(c.name)}
+                    className={cn("transition-colors group cursor-pointer", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}
+                    title="Ver perfil do conferente"
+                  >
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 font-bold group-hover:text-[#2563EB] transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-[#2563EB]/90")}>{c.name}</td>
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>{c.conferences}</td>
                     <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-black text-lg sm:text-xl">{c.total}</td>
