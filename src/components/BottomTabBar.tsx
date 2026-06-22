@@ -48,7 +48,12 @@ export default function BottomTabBar() {
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Icon className={cn('w-6 h-6', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')} strokeWidth={active ? 2.5 : 2} />
+              <Icon
+                className={cn('w-6 h-6', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')}
+                strokeWidth={active ? 2.4 : 1.75}
+                fill={active ? 'currentColor' : 'none'}
+                fillOpacity={active ? 0.18 : 0}
+              />
               <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
             </NavLink>
           );
