@@ -73,10 +73,11 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
           {items.length === 0 ? (
             <TableRow>
               <TableCell colSpan={9} className="h-48 text-center text-muted-foreground">
-                <div className="flex flex-col items-center justify-center gap-3 animate-in fade-in zoom-in-95 duration-300">
-                  <Package className="w-12 h-12 opacity-20" aria-hidden="true" />
-                  <p className="font-semibold italic text-sm">Nenhum item encontrado na prateleira virtual.</p>
-                </div>
+                <EmptyState
+                  icon={Package}
+                  title="Prateleira virtual vazia"
+                  description="Nenhum item reservado no momento. Crie uma nova reserva para começar."
+                />
               </TableCell>
             </TableRow>
           ) : (
