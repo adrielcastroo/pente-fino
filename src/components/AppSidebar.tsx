@@ -12,6 +12,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -26,17 +27,34 @@ interface AppSidebarProps {
   onOpenConfig?: () => void;
 }
 
-const menuItems: { key: AppTab; label: string; icon: any; path: string }[] = [
-  { key: 'inicio', label: 'Início', icon: Home, path: '/dashboard' },
-  
-  { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
-  { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
-  { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
-  { key: 'estoque', label: 'Estoque', icon: Warehouse, path: '/estoque' },
-  { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
-  { key: 'reservas', label: 'Reservas Estoque', icon: Table, path: '/reservas' },
-  { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
-  { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros' },
+type MenuItem = { key: AppTab; label: string; icon: any; path: string };
+type MenuGroup = { label: string; items: MenuItem[] };
+
+const menuGroups: MenuGroup[] = [
+  {
+    label: 'Operações',
+    items: [
+      { key: 'inicio', label: 'Início', icon: Home, path: '/dashboard' },
+      { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
+      { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
+      { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
+      { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
+    ],
+  },
+  {
+    label: 'Estoque',
+    items: [
+      { key: 'estoque', label: 'Estoque', icon: Warehouse, path: '/estoque' },
+      { key: 'reservas', label: 'Reservas', icon: Table, path: '/reservas' },
+      { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros' },
+    ],
+  },
 ];
 
 const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
@@ -107,69 +125,74 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
       </SidebarHeader>
 
       <SidebarContent className="px-3 group-data-[state=collapsed]:px-0 custom-scrollbar">
-        <SidebarGroup className="p-0">
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
-              {menuItems.map(item => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.key;
-                const isTableTab = item.key === 'reservas';
-                const hasRecords = isTableTab && reservasCount > 0;
-                const displayCount = isTableTab ? reservasCount : registroCount;
+        {menuGroups.map(group => (
+          <SidebarGroup key={group.label} className="p-0 mb-2">
+            <SidebarGroupLabel className="px-2 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 group-data-[state=collapsed]:hidden">
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
+                {group.items.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.key;
+                  const isTableTab = item.key === 'reservas';
+                  const hasRecords = isTableTab && reservasCount > 0;
+                  const displayCount = isTableTab ? reservasCount : registroCount;
 
-                return (
-                <SidebarMenuItem key={item.key}>
-                    <SidebarMenuButton
-                      size="lg"
-                      onClick={() => handleTabClick(item.key, item.path)}
-                      tooltip={item.label}
-                      isActive={isActive}
-                      aria-current={isActive ? 'page' : undefined}
-                      className={`
-                        relative h-10 rounded-lg transition-all duration-150 active:scale-[0.97]
-                        group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
-                        group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
-                        ${isActive
-                          ? 'text-primary font-bold'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
-                        ${hasRecords && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
-                      `}
-                    >
-                      {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
-                      )}
+                  return (
+                  <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton
+                        size="lg"
+                        onClick={() => handleTabClick(item.key, item.path)}
+                        tooltip={item.label}
+                        isActive={isActive}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`
+                          relative h-10 rounded-lg transition-all duration-150 active:scale-[0.97]
+                          group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
+                          group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
+                          ${isActive
+                            ? 'text-primary font-bold'
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
+                          ${hasRecords && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
+                        `}
+                      >
+                        {isActive && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
+                        )}
 
-                      <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
-                        <Icon className="h-[18px] w-[18px]" />
-                        {hasRecords && collapsed && (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
+                        <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+                          <Icon className="h-[18px] w-[18px]" />
+                          {hasRecords && collapsed && (
+                            <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
+                              {displayCount}
+                            </span>
+                          )}
+                        </div>
+
+                        <span className="truncate text-[13px] transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
+                          {item.label}
+                        </span>
+
+                        {hasRecords && (
+                          <span
+                            className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
+                              isActive
+                                ? 'bg-primary-foreground/20 text-primary-foreground'
+                                : 'bg-primary/10 text-primary'
+                            }`}
+                          >
                             {displayCount}
                           </span>
                         )}
-                      </div>
-
-                      <span className="truncate text-[13px] transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
-                        {item.label}
-                      </span>
-
-                      {hasRecords && (
-                        <span
-                          className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
-                            isActive
-                              ? 'bg-primary-foreground/20 text-primary-foreground'
-                              : 'bg-primary/10 text-primary'
-                          }`}
-                        >
-                          {displayCount}
-                        </span>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-0 border-t border-border/30">
