@@ -413,32 +413,8 @@ export default function DashboardPage() {
               ]}
             />
           </div>
-        </motion.div>
 
-        <div className="md:col-span-2 lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
-          <SummaryChart 
-            id="chart-conferentes"
-            title={stats.topConferentes.length > 0 ? `Top ${stats.topConferentes.length} Conferentes` : 'Conferentes'}
-            desc="Por volume de registros" 
-            data={stats.topConferentes} 
-            type="bar" 
-            icon={Users} 
-            chartKey="value"
-            onDetailClick={setDetailChart} 
-          />
-          
-          <SummaryChart 
-            id="chart-setores"
-            title="Setores Operacionais" 
-            desc="Carga de trabalho por setor (ordenado)" 
-            data={[...stats.categorias].sort((a, b) => (b.value || 0) - (a.value || 0))} 
-            type="bar" 
-            icon={Layers3} 
-            chartKey="value"
-            onDetailClick={setDetailChart} 
-          />
-          
-          
+          {/* Últimas Saídas — ocupa a zona morta abaixo das ocupações */}
           <Card className="rounded-lg border border-border/40 bg-card/50 shadow-none overflow-hidden">
             <CardHeader className="px-5 py-4 border-b border-border/30">
               <div className="flex items-center justify-between gap-3">
@@ -515,7 +491,33 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+        </motion.div>
+
+        <div className="md:col-span-2 lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
+          <SummaryChart 
+            id="chart-conferentes"
+            title={stats.topConferentes.length > 0 ? `Top ${stats.topConferentes.length} Conferentes` : 'Conferentes'}
+            desc="Por volume de registros" 
+            data={stats.topConferentes} 
+            type="bar" 
+            icon={Users} 
+            chartKey="value"
+            onDetailClick={setDetailChart} 
+          />
+          
+          <SummaryChart 
+            id="chart-setores"
+            title="Setores Operacionais" 
+            desc="Carga de trabalho por setor (ordenado)" 
+            data={[...stats.categorias].sort((a, b) => (b.value || 0) - (a.value || 0))} 
+            type="bar" 
+            icon={Layers3} 
+            chartKey="value"
+            onDetailClick={setDetailChart} 
+          />
+          
         </div>
+
 
         <div className="md:col-span-1 lg:col-span-4 h-full">
           <SummaryChart 
