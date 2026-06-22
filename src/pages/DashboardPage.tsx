@@ -439,77 +439,77 @@ export default function DashboardPage() {
           />
           
           
-          <Card className="rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
-            <CardHeader className="p-5 sm:p-6 border-b border-border/5">
+          <Card className="rounded-lg border border-border/40 bg-card/50 shadow-none overflow-hidden">
+            <CardHeader className="px-5 py-4 border-b border-border/30">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                    <TrendingUp className="w-4 h-4" />
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                    <TrendingUp className="w-4 h-4" strokeWidth={1.75} />
                   </div>
-                  <CardTitle className="text-lg font-black tracking-tight uppercase">Últimas Saídas</CardTitle>
+                  <div>
+                    <CardTitle className="text-sm font-medium tracking-tight">Últimas Saídas</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-0.5">Registros mais recentes agrupados por item e data</p>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowEmptyOutputs(v => !v)}
-                  className="text-[9px] font-black uppercase tracking-wider text-foreground/60 hover:text-primary h-7 px-2"
+                  className="text-[11px] font-medium text-muted-foreground hover:text-primary h-8 px-2"
                   title={showEmptyOutputs ? 'Ocultar saídas vazias' : 'Mostrar saídas vazias'}
                 >
-                  {showEmptyOutputs ? 'Ocultar conferências sem itens' : 'Incluir conferências sem itens'}
+                  {showEmptyOutputs ? 'Ocultar vazias' : 'Incluir vazias'}
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-border/5">
-                {lastOutputs.length > 0 ? (
-                  lastOutputs.map((output) => {
-                    const isEmpty = output.quantity <= 0;
-                    return (
-                      <motion.div 
-                        key={output.id} 
-                        whileHover={{ x: 5 }}
-                        className="p-4 sm:p-5 flex items-center justify-between hover:bg-primary/[0.04] transition-colors group cursor-default"
-                      >
-                        <div className="flex flex-col gap-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-foreground/90 group-hover:text-primary transition-colors truncate max-w-[140px] sm:max-w-[180px]">
-                              {output.item}
-                            </span>
-                            {isEmpty && (
-                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider px-2 py-0 h-5 border-muted-foreground/30 text-muted-foreground bg-muted/30 shrink-0">
-                                Vazia
+              {lastOutputs.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/30 bg-muted/20">
+                        <th className="text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground px-5 py-2.5">Documento</th>
+                        <th className="text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground px-5 py-2.5 hidden sm:table-cell">Data</th>
+                        <th className="text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground px-5 py-2.5">Quantidade</th>
+                        <th className="text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground px-5 py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/20">
+                      {lastOutputs.map((output) => {
+                        const isEmpty = output.quantity <= 0;
+                        return (
+                          <tr key={output.id} className="hover:bg-primary/[0.03] transition-colors">
+                            <td className="px-5 py-3 font-medium text-foreground/90 truncate max-w-[200px]">{output.item}</td>
+                            <td className="px-5 py-3 text-muted-foreground tabular-nums text-xs hidden sm:table-cell">{formatDateBR(output.date)}</td>
+                            <td className={cn("px-5 py-3 text-right tabular-nums font-semibold", isEmpty ? "text-muted-foreground" : "text-primary")}>
+                              {formatQty(output.quantity)} <span className="text-xs text-muted-foreground font-normal">{output.unit}</span>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <Badge variant="outline" className={cn(
+                                "text-[10px] font-medium px-2 py-0 h-5",
+                                isEmpty
+                                  ? "border-muted-foreground/30 text-muted-foreground bg-muted/30"
+                                  : "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                              )}>
+                                {isEmpty ? 'Vazia' : 'Concluído'}
                               </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
-                              {formatDateBR(output.date)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className={cn(
-                            "text-sm font-black tabular-nums",
-                            isEmpty ? "text-muted-foreground" : "text-primary"
-                          )}>
-                            {formatQty(output.quantity)} {output.unit}
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className="p-8 text-center">
-                    <p className="text-sm text-foreground/60 font-black italic">Nenhum registro recente</p>
-                  </div>
-                )}
-              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-8 text-center">
+                  <p className="text-sm text-muted-foreground italic">Nenhum registro recente</p>
+                </div>
+              )}
               {lastOutputs.length > 0 && (
-                <div className="p-4 border-t border-border/5 bg-muted/5">
-                  <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest gap-2 text-foreground/60 hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
+                <div className="p-3 border-t border-border/30 bg-muted/10">
+                  <Button variant="ghost" className="w-full text-xs font-medium gap-2 text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
                     Ver Histórico Completo
-                    <ChevronRight className="w-3 h-3" />
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               )}
