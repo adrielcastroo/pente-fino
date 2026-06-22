@@ -52,14 +52,15 @@
     --surface-2: 220 20% 98%;
     --surface-3: 220 13% 91%;
 
-    --sidebar-background: 220 20% 99%;
-    --sidebar-foreground: 220 9% 46%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
+    /* Slate-800 industrial sidebar (was near-white) */
+    --sidebar-background: 217 33% 17%;
+    --sidebar-foreground: 215 20% 75%;
+    --sidebar-primary: 201 96% 45%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar-accent: 217 33% 22%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 22%;
+    --sidebar-ring: 201 96% 45%;
   }
 
   .dark {
