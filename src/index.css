@@ -6,41 +6,43 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 224 71.4% 4.1%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 221.2 83.2% 53.3%;
+    /* Industrial sky-700 instead of generic blue-600 (less "AI starter kit") */
+    --primary: 201 96% 32%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 215 16% 95%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 215 16% 95%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 201 94% 94%;
+    --accent-foreground: 201 96% 22%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142.1 70.6% 45.3%;
+    --success: 142 71% 36%;
     --success-foreground: 210 40% 98%;
 
-    --warning: 38 92% 50%;
+    --warning: 32 95% 44%;
     --warning-foreground: 210 40% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 215 20% 89%;
+    --input: 215 20% 89%;
+    --ring: 201 96% 32%;
 
-    --radius: 0.75rem;
+    /* Tighter radius — industrial, not "consumer SaaS round" */
+    --radius: 0.375rem;
 
     --navy: 222 47% 11%;
     --navy-2: 217 33% 17%;
@@ -50,14 +52,15 @@
     --surface-2: 220 20% 98%;
     --surface-3: 220 13% 91%;
 
-    --sidebar-background: 220 20% 99%;
-    --sidebar-foreground: 220 9% 46%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
+    /* Slate-800 industrial sidebar (was near-white) */
+    --sidebar-background: 217 33% 17%;
+    --sidebar-foreground: 215 20% 75%;
+    --sidebar-primary: 201 96% 45%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar-accent: 217 33% 22%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 22%;
+    --sidebar-ring: 201 96% 45%;
   }
 
   .dark {
@@ -70,8 +73,8 @@
     --popover: 228 14% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 201 96% 50%;
+    --primary-foreground: 222 47% 11%;
 
     --secondary: 224 14% 14%;
     --secondary-foreground: 210 40% 98%;
@@ -180,6 +183,26 @@
 
   .font-mono {
     font-family: 'IBM Plex Mono', monospace !important;
+  }
+
+  /* Industrial: numbers always tabular for visual alignment in tables/KPIs */
+  .tabular-nums,
+  [class*="text-"][class*="font-black"],
+  [class*="text-"][class*="font-bold"][class*="tracking-tight"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Tame "shadcn starter kit" excess: drastically reduce decorative shadows
+     on cards, replacing them with structural borders. Keep shadows only
+     on overlays (popovers, dropdowns, dialogs). */
+  .shadow-xl, .shadow-2xl {
+    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04) !important;
+  }
+  [role="dialog"].shadow-xl,
+  [role="dialog"].shadow-2xl,
+  [data-radix-popper-content-wrapper] .shadow-xl,
+  [data-radix-popper-content-wrapper] .shadow-2xl {
+    box-shadow: 0 10px 25px -5px rgb(15 23 42 / 0.15), 0 8px 10px -6px rgb(15 23 42 / 0.1) !important;
   }
 }
 

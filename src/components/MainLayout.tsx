@@ -11,6 +11,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { LATEST_VERSION } from '@/lib/changelog';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { AppTab } from '@/types';
@@ -84,6 +85,13 @@ export default function MainLayout() {
                     <Outlet />
                   </ErrorBoundary>
                 </div>
+                <footer className="mt-auto border-t border-border/40 bg-background/60 px-4 py-2 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" aria-hidden="true" />
+                    Sistema operacional
+                  </span>
+                  <span>Pente Fino · v{LATEST_VERSION}</span>
+                </footer>
               </Suspense>
             </div>
           </main>
