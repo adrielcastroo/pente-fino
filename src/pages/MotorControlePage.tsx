@@ -400,7 +400,7 @@ export default function MotorControlePage() {
               <motion.div whileTap={{ scale: 0.98 }} className="pt-4">
                 <Button 
                   onClick={subMode === 'motor' ? handleAddMotor : subMode === 'controle' ? handleAddControle : handleAddCoulisse} 
-                  className="w-full h-16 rounded-[2rem] text-sm font-semibold uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:shadow-primary/50 transition-all border-t border-white/20"
+                  className="w-full h-16 rounded-[2rem] text-sm font-semibold tracking-[0.2em] shadow-2xl shadow-primary/40 hover:shadow-primary/50 transition-all border-t border-white/20"
                 >
                   <Plus className="w-5 h-5 mr-3" strokeWidth={3} /> ADICIONAR {subMode}
                 </Button>

@@ -1674,7 +1674,7 @@ export const LeftPanel = memo(function LeftPanel() {
           >
             <Button
               onClick={handleAdd}
-              className="w-full h-14 sm:h-16 rounded-md font-semibold uppercase tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
+              className="w-full h-14 sm:h-16 rounded-md font-semibold tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
               <span className="relative flex items-center justify-center gap-3">

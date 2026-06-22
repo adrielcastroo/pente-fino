@@ -204,7 +204,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
                 <Input 
                   value={newColor} 
                   onChange={e => setNewColor(e.target.value)} 
-                  className="h-14 font-mono font-bold uppercase tracking-widest text-center rounded-md bg-muted/20 border-border/50" 
+                  className="h-14 font-mono font-bold text-center rounded-md bg-muted/20 border-border/50" 
                   maxLength={7} 
                 />
               </div>
@@ -227,14 +227,14 @@ export function LoteMestreSelector({ value, onChange }: Props) {
               variant="ghost" 
               onClick={() => setCreateOpen(false)} 
               disabled={creating}
-              className="rounded-md font-bold uppercase tracking-wider px-6"
+              className="rounded-md font-bold px-6"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleCreate} 
               disabled={creating}
-              className="rounded-md font-semibold uppercase tracking-widest px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+              className="rounded-md font-semibold px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
               {creating ? (
                 <div className="flex items-center gap-2">

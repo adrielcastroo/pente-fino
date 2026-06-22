@@ -69,7 +69,7 @@ export function CountingHistoryTable() {
             <History className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-3xl font-semibold uppercase tracking-tight">Histórico de Auditoria</h2>
+            <h2 className="text-3xl font-semibold">Histórico de Auditoria</h2>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] mt-1 opacity-70">Rastreabilidade completa de contagens</p>
           </div>
         </div>
@@ -150,7 +150,7 @@ export function CountingHistoryTable() {
                         </TableCell>
                         <TableCell className="px-10">
                             <div className="flex flex-col">
-                                <span className="font-semibold text-sm text-foreground uppercase tracking-tight truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
+                                <span className="font-semibold text-sm text-foreground truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
                                 <Badge variant="outline" className="w-fit text-[9px] font-semibold uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
                             </div>
                         </TableCell>

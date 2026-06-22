@@ -158,7 +158,7 @@ export function InventorySuggestionsTab() {
     return (
       <div className="flex flex-col items-center justify-center p-20 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Analisando histórico de estoque...</p>
+        <p className="text-sm font-semibold text-muted-foreground">Analisando histórico de estoque...</p>
       </div>
     );
   }
@@ -167,7 +167,7 @@ export function InventorySuggestionsTab() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h3 className="text-3xl font-semibold uppercase tracking-tight">Auditoria Sugerida</h3>
+          <h3 className="text-3xl font-semibold">Auditoria Sugerida</h3>
           <div className="flex items-center gap-2">
              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em]">
@@ -193,7 +193,7 @@ export function InventorySuggestionsTab() {
           className="p-20 text-center rounded-[3rem] border-2 border-dashed border-white/10 bg-card/40 backdrop-blur-xl shadow-inner"
         >
           <Package className="w-20 h-20 text-muted-foreground/10 mx-auto mb-6" />
-          <h4 className="text-xl font-semibold uppercase tracking-tight text-muted-foreground opacity-50">Tudo em dia!</h4>
+          <h4 className="text-xl font-semibold text-muted-foreground opacity-50">Tudo em dia!</h4>
           <p className="text-[10px] font-semibold text-muted-foreground/30 uppercase tracking-[0.3em] mt-3">Nenhum item com atraso de auditoria detectado.</p>
         </motion.div>
       ) : (
@@ -219,7 +219,7 @@ export function InventorySuggestionsTab() {
                   </motion.div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <h4 className="text-2xl font-semibold uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">{item.name}</h4>
+                      <h4 className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors">{item.name}</h4>
                       <Badge variant="outline" className="text-[9px] font-semibold uppercase py-1 px-3 border-white/10 bg-white/5 rounded-lg shadow-sm">
                         {item.source === 'registros' ? 'Estoque Oficial' : 'Cadastro Geral'}
                       </Badge>
