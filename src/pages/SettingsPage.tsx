@@ -875,7 +875,7 @@ export default function SettingsPage() {
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Chave de API</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Chave de API</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
@@ -889,7 +889,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Modelo Preferencial</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Modelo Preferencial</Label>
                           <Select 
                             value={orModel} 
                             onValueChange={(val) => { setOrModel(val); setHasUnsavedChanges(true); }}
@@ -924,7 +924,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Webhook do n8n (fixo)</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Webhook do n8n (fixo)</Label>
                           <div className="relative">
                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
@@ -965,15 +965,15 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <Mail className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar E-mail</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Alterar E-mail</h4>
                             </div>
                             <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">E-mail Atual</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">E-mail Atual</Label>
                                 <Input value={user?.email || ''} disabled className="bg-muted/10 border-border/20 opacity-60 h-11" />
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Novo E-mail</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Novo E-mail</Label>
                                 <div className="relative">
                                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                   <Input
@@ -997,11 +997,11 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <User className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Nome de Exibição</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Alterar Nome de Exibição</h4>
                             </div>
                             <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nome de Exibição</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Nome de Exibição</Label>
                                 <Input
                                   value={displayName}
                                   onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
@@ -1032,11 +1032,11 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <KeyRound className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Senha</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Alterar Senha</h4>
                             </div>
                             <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nova Senha</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Nova Senha</Label>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                   <Input
@@ -1056,7 +1056,7 @@ export default function SettingsPage() {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Confirmar Nova Senha</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Confirmar Nova Senha</Label>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                   <Input
@@ -1083,7 +1083,7 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <ShieldCheck className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Autenticação em Dois Fatores (2FA)</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Autenticação em Dois Fatores (2FA)</h4>
                             </div>
                             <div className="p-5 rounded-2xl bg-muted/20 border border-border/20 space-y-4">
                               {mfaLoading ? (
@@ -1117,7 +1117,7 @@ export default function SettingsPage() {
                                   </div>
                                   {mfaSecret && (
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Ou insira manualmente</Label>
+                                      <Label className="text-sm font-medium text-muted-foreground">Ou insira manualmente</Label>
                                       <div className="flex gap-2">
                                         <Input value={mfaSecret} readOnly className="font-mono text-xs bg-background/50" />
                                         <Button variant="outline" size="icon" onClick={copySecret}>
@@ -1127,7 +1127,7 @@ export default function SettingsPage() {
                                     </div>
                                   )}
                                   <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Código de Verificação</Label>
+                                    <Label className="text-sm font-medium text-muted-foreground">Código de Verificação</Label>
                                     <Input
                                       value={mfaVerifyCode}
                                       onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -1170,7 +1170,7 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <LogOut className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Sessões</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Sessões</h4>
                             </div>
                             <div className="space-y-3">
                               <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
@@ -1200,7 +1200,7 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <AlertTriangle className="w-4 h-4 text-destructive" />
-                              <h4 className="text-sm font-black uppercase tracking-wider text-destructive">Zona de Perigo</h4>
+                              <h4 className="text-sm font-semibold text-destructive">Zona de Perigo</h4>
                             </div>
                             <div className="p-5 rounded-2xl bg-destructive/5 border border-destructive/20 space-y-4">
                               <div className="flex items-start gap-3">
