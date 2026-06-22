@@ -41,12 +41,14 @@ function computeMetrics(history: Conference[], start: Date, end: Date): PeriodMe
   };
 }
 
-function formatDelta(current: number, previous: number): { pct: number; trend: 'up' | 'down' | 'flat' } {
-  if (previous === 0 && current === 0) return { pct: 0, trend: 'flat' };
-  if (previous === 0) return { pct: 100, trend: 'up' };
+function formatDelta(current: number, previous: number): { pct: number; trend: 'up' | 'down' | 'flat'; capped: boolean } {
+  if (previous === 0 && current === 0) return { pct: 0, trend: 'flat', capped: false };
+  if (previous === 0) return { pct: 999, trend: 'up', capped: true };
   const diff = ((current - previous) / previous) * 100;
   const rounded = Math.round(diff);
-  return { pct: Math.abs(rounded), trend: rounded > 0 ? 'up' : rounded < 0 ? 'down' : 'flat' };
+  const abs = Math.abs(rounded);
+  const capped = abs > 999;
+  return { pct: capped ? 999 : abs, trend: rounded > 0 ? 'up' : rounded < 0 ? 'down' : 'flat', capped };
 }
 
 const fmtRange = (start: Date, end: Date) => {
@@ -136,7 +138,7 @@ export function PeriodComparisonCard({ history }: Props) {
           {METRICS.map(m => {
             const curr = current[m.key];
             const prev = previous[m.key];
-            const { pct, trend } = formatDelta(curr, prev);
+            const { pct, trend, capped } = formatDelta(curr, prev);
             const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
 
             const isPositive = m.isDuration ? trend === 'down' : trend === 'up';
@@ -153,28 +155,34 @@ export function PeriodComparisonCard({ history }: Props) {
             const Icon = m.icon;
             const display = m.isDuration ? fmtDuration(curr) : curr.toLocaleString('pt-BR');
             const prevDisplay = m.isDuration ? fmtDuration(prev) : prev.toLocaleString('pt-BR');
+            const deltaLabel = trend === 'flat'
+              ? '—'
+              : capped
+                ? (trend === 'up' ? '>+999%' : '>−999%')
+                : `${trend === 'down' ? '−' : '+'}${pct}%`;
 
             return (
               <div
                 key={m.key}
-                className="rounded-md border border-border/30 bg-background/40 p-3 hover:border-border/60 transition-colors"
+                className="rounded-md border border-border/30 bg-background/40 p-4 hover:border-border/60 transition-colors"
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
                     <span className="truncate">{m.label}</span>
                   </div>
                   <Badge
                     variant="secondary"
-                    className={cn('gap-0.5 font-medium text-[10px] px-1.5 py-0 h-4 border-none rounded', trendColor)}
+                    className={cn('gap-0.5 font-medium text-[10px] px-1.5 py-0 h-5 border-none rounded tabular-nums', trendColor)}
+                    title={capped ? `Variação real: ${prev === 0 ? 'sem base anterior' : `${trend === 'down' ? '−' : '+'}${Math.round(Math.abs(((curr - prev) / prev) * 100))}%`}` : undefined}
                   >
                     <TrendIcon className="w-3 h-3" strokeWidth={2} />
-                    {trend === 'flat' ? '—' : `${pct}%`}
+                    {deltaLabel}
                   </Badge>
                 </div>
-                <p className="text-xl font-semibold text-foreground tracking-tight tabular-nums">{display}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Anterior: <span className="text-foreground/70 tabular-nums">{prevDisplay}</span>
+                <p className="text-3xl font-bold text-foreground tracking-tight tabular-nums leading-none">{display}</p>
+                <p className="text-[11px] text-muted-foreground/80 mt-2">
+                  Anterior <span className="tabular-nums">{prevDisplay}</span>
                 </p>
               </div>
             );

@@ -200,22 +200,25 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
     <Card id={id} className="border border-border/40 bg-card/50 shadow-none overflow-hidden rounded-lg">
       <CardHeader className="px-5 py-4 border-b border-border/30">
         <CardTitle className="text-sm font-medium flex items-center gap-2.5 tracking-tight">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+          <div className={cn("p-1.5 rounded-md", isEmpty ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
             <Package className="w-4 h-4" strokeWidth={1.75} />
           </div>
-          <span>{title}</span>
+          <span className={cn(isEmpty && "text-muted-foreground")}>{title}</span>
         </CardTitle>
       </CardHeader>
+      {isEmpty ? (
+        <CardContent className="p-6 flex flex-col items-center justify-center text-center gap-2 min-h-[180px]">
+          <Package className="w-8 h-8 text-muted-foreground/40" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-muted-foreground">Setor inativo</p>
+          <p className="text-xs text-muted-foreground/70">Nenhuma alocação registrada</p>
+        </CardContent>
+      ) : (
       <CardContent className={cn("flex flex-col items-center gap-5", isMobile ? "p-4" : "p-6 gap-6")}>
         {isMobile ? (
           <div className="w-full space-y-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-semibold tabular-nums text-foreground">
-                {isEmpty ? '—' : `${percentage}%`}
-              </span>
-              <span className="text-xs font-medium text-muted-foreground">
-                {isEmpty ? 'Setor inativo' : 'Ocupado'}
-              </span>
+              <span className="text-3xl font-bold tabular-nums text-foreground">{percentage}%</span>
+              <span className="text-xs font-medium text-muted-foreground">Ocupado</span>
             </div>
             <div className="h-2 rounded-full bg-muted/40 overflow-hidden flex">
               {data.filter(d => d.name !== 'Livre').map((d, i) => {
@@ -235,17 +238,8 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              {isEmpty ? (
-                <>
-                  <span className="text-xl font-semibold text-muted-foreground">Sem uso</span>
-                  <span className="text-xs text-muted-foreground/70 mt-0.5">Setor inativo</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-3xl font-semibold tabular-nums text-foreground">{percentage}%</span>
-                  <span className="text-xs text-muted-foreground mt-0.5">Ocupado</span>
-                </>
-              )}
+              <span className="text-3xl font-bold tabular-nums text-foreground">{percentage}%</span>
+              <span className="text-xs text-muted-foreground mt-0.5">Ocupado</span>
             </div>
           </div>
         )}
@@ -261,6 +255,7 @@ export const OccupationChart = React.memo(({ title, used, total, reserved = 0, b
           ))}
         </div>
       </CardContent>
+      )}
     </Card>
   );
 });
