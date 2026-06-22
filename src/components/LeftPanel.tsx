@@ -1260,6 +1260,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
+                  data-barcode="true"
                   readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) && !!item}
                 />
                 {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
