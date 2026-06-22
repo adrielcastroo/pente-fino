@@ -820,6 +820,7 @@ export default function HistoryPanel() {
   })));
   const [localSearch, setLocalSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [showTestData, setShowTestData] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
