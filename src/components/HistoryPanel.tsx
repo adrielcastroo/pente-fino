@@ -970,6 +970,16 @@ export default function HistoryPanel() {
                   className="pl-11 h-12 rounded-2xl border-border/40 bg-card/40 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm shadow-sm"
                 />
              </div>
+             <select
+               value={periodo}
+               onChange={e => setPeriodo(e.target.value as any)}
+               className="h-12 rounded-2xl border border-border/40 bg-card/40 px-3 text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/20"
+             >
+               <option value="7">Últimos 7 dias</option>
+               <option value="30">Últimos 30 dias</option>
+               <option value="90">Últimos 90 dias</option>
+               <option value="todos">Todo período</option>
+             </select>
              {testCount > 0 && (
                <Tooltip>
                  <TooltipTrigger asChild>
