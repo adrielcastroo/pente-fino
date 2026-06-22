@@ -439,6 +439,22 @@ function formatDuration(start: string | null | undefined, end: string | null | u
   } catch { return '—'; }
 }
 
+function getDurationHours(start: string | null | undefined, end: string | null | undefined): number {
+  if (!start || !end) return 0;
+  const s = new Date(start).getTime();
+  const e = new Date(end).getTime();
+  if (isNaN(s) || isNaN(e)) return 0;
+  return Math.abs(e - s) / 3600000;
+}
+
+function isTestConference(conf: Conference): boolean {
+  const proc = (conf.processo || '').toLowerCase().trim();
+  if (proc.includes('sem_proc') || proc === 'conferencia_conferencia') return true;
+  // duplicated empty placeholder rows
+  if (conf.registros.length === 0) return true;
+  return false;
+}
+
 const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
   const [open, setOpen] = useState(highlight);
 
@@ -585,11 +601,20 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   </span>
                 )}
                 
-                {conf.startedAt && conf.finishedAt && (
-                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black px-2 py-0 h-5 border-primary/10 text-primary/60 bg-primary/5">
-                    {formatDuration(conf.startedAt, conf.finishedAt)}
-                  </Badge>
-                )}
+                {conf.startedAt && conf.finishedAt && (() => {
+                  const h = getDurationHours(conf.startedAt, conf.finishedAt);
+                  const suspect = h > 8;
+                  return (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-black px-2 py-0 h-5 cursor-help ${suspect ? 'border-amber-500/40 text-amber-600 bg-amber-500/10' : 'border-primary/10 text-primary/60 bg-primary/5'}`}>
+                          {suspect && '⚠ '}{formatDuration(conf.startedAt, conf.finishedAt)}
+                        </Badge>
+                      </TooltipTrigger>
+                      {suspect && <TooltipContent>Duração anormal ({h.toFixed(1)}h). Possível sessão esquecida aberta.</TooltipContent>}
+                    </Tooltip>
+                  );
+                })()}
                 
                 <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md">
                   <Package className="w-3.5 h-3.5 opacity-60" /> {getSmartCount(conf)}
