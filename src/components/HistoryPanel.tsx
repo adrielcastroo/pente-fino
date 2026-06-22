@@ -475,16 +475,16 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
   const tableContent = (
-    <div className="overflow-x-auto custom-scrollbar p-3 sm:p-6 lg:p-8">
-      <div className="rounded-2xl lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
-        <table className="w-full text-xs min-w-full sm:min-w-[800px] border-separate border-spacing-0">
+    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
+      <div className="rounded-xl sm:rounded-2xl lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
+        <table className="w-full text-xs min-w-[520px] sm:min-w-[800px] border-separate border-spacing-0">
 
           <thead>
             <tr className="bg-muted/40">
               {columns.map(column => (
-                <th key={column.key} className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
+                <th key={column.key} className="px-2 sm:px-6 py-2 sm:py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
               ))}
-              <th className="px-6 py-4 border-b border-border/20 w-[100px]"></th>
+              <th className="px-2 sm:px-6 py-2 sm:py-4 border-b border-border/20 w-[80px] sm:w-[100px]"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/10">
