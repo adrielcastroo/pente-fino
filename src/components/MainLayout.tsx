@@ -5,6 +5,7 @@ import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
+import BottomTabBar from '@/components/BottomTabBar';
 import UndoBanner from '@/components/UndoBanner';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
