@@ -11,6 +11,7 @@ import { StatCards } from '@/components/dashboard/StatCards';
 import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashboard/DashboardCharts';
 import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
+import { ConferenteProfileDialog } from '@/components/dashboard/ConferenteProfileDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
@@ -56,6 +57,7 @@ export default function DashboardPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
+  const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
 
   const handleFullExportExcel = async () => {
     setIsExporting(true);
@@ -444,6 +446,12 @@ export default function DashboardPage() {
       {/* Detail Dialogs */}
       <DetailDialog detailChart={detailChart} onClose={() => setDetailChart(null)} />
 
+      <ConferenteProfileDialog
+        conferente={selectedConferente}
+        history={history}
+        onClose={() => setSelectedConferente(null)}
+      />
+
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className={cn(
@@ -478,7 +486,12 @@ export default function DashboardPage() {
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
                 {stats.conferenteDetails.map(c => (
-                  <tr key={c.name} className={cn("transition-colors group", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}>
+                  <tr
+                    key={c.name}
+                    onClick={() => setSelectedConferente(c.name)}
+                    className={cn("transition-colors group cursor-pointer", isDark ? "hover:bg-slate-800/50" : "hover:bg-primary/[0.02]")}
+                    title="Ver perfil do conferente"
+                  >
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 font-bold group-hover:text-[#2563EB] transition-colors text-sm sm:text-base", isDark ? "text-slate-200" : "text-[#2563EB]/90")}>{c.name}</td>
                     <td className={cn("px-6 sm:px-10 py-4 sm:py-6 text-right font-mono font-bold", isDark ? "text-slate-400" : "text-[#2563EB]/70")}>{c.conferences}</td>
                     <td className="px-6 sm:px-10 py-4 sm:py-6 text-right font-mono text-primary font-black text-lg sm:text-xl">{c.total}</td>

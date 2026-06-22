@@ -14,7 +14,7 @@ export function formatPeriodLabel(days: number, end: Date = new Date()): string 
 }
 
 // Normaliza nome do conferente: trim, colapsa espaços, Title Case sensível a acentos
-const normalizeConferente = (raw: string | null | undefined): string => {
+export const normalizeConferente = (raw: string | null | undefined): string => {
   const cleaned = (raw || '').replace(/\s+/g, ' ').trim();
   if (!cleaned) return 'Anônimo';
   return cleaned
