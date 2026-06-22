@@ -61,6 +61,34 @@ export default function DashboardPage() {
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
   const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
   const [showMobileExtras, setShowMobileExtras] = useState(false);
+  const [presentationMode, setPresentationMode] = useState(false);
+
+  const togglePresentation = async () => {
+    const next = !presentationMode;
+    setPresentationMode(next);
+    try {
+      if (next && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen?.();
+      } else if (!next && document.fullscreenElement) {
+        await document.exitFullscreen?.();
+      }
+    } catch { /* ignore */ }
+    document.body.classList.toggle('presentation-mode', next);
+  };
+
+  useEffect(() => {
+    const onFsChange = () => {
+      if (!document.fullscreenElement && presentationMode) {
+        setPresentationMode(false);
+        document.body.classList.remove('presentation-mode');
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.body.classList.remove('presentation-mode');
+    };
+  }, [presentationMode]);
   const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
   const compareConference = useMemo(
     () => history.find(c => c.id === compareConferenceId) ?? null,
