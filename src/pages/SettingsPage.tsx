@@ -452,7 +452,7 @@ export default function SettingsPage() {
 
   return (
     <TooltipProvider>
-    <div className="flex flex-col h-full space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 pb-24">
+    <div className="flex flex-col h-full space-y-4 sm:space-y-6 animate-in fade-in duration-500 w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pb-24">
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -476,55 +476,33 @@ export default function SettingsPage() {
         </motion.div>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-start">
-        {/* Mobile: dropdown */}
-        <div className="lg:hidden w-full">
-          <Select value={activeCategory} onValueChange={setActiveCategory}>
-            <SelectTrigger className="h-11 bg-background/50 border-border/50 font-bold">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {visibleGroups.map(g => (
-                <div key={g.id} className="py-1">
-                  <div className="px-2 pb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{g.label}</div>
-                  {g.items.map(item => (
-                    <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
-                  ))}
-                </div>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Horizontal tabs — alinhado com o resto do app (full-width, sem sidebar lateral) */}
+      <div className="border-b border-border/40 -mx-2 sm:-mx-4 lg:-mx-6 px-2 sm:px-4 lg:px-6">
+        <div className="flex items-end gap-6 overflow-x-auto no-scrollbar">
+          {visibleGroups.flatMap(g => g.items).map((cat) => {
+            const active = activeCategory === cat.id;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+                  active
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{cat.name}</span>
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Desktop: grouped sidebar */}
-        <aside className="hidden lg:block w-64 space-y-5 shrink-0">
-          {visibleGroups.map(group => (
-            <div key={group.id} className="space-y-1.5">
-              <div className="px-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60">
-                {group.label}
-              </div>
-              <nav className="flex flex-col gap-1">
-                {group.items.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${
-                      activeCategory === cat.id
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10'
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <cat.icon className={`w-4 h-4 ${activeCategory === cat.id ? 'text-white' : 'group-hover:text-primary'}`} />
-                    <span>{cat.name}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-          ))}
-        </aside>
-
-        {/* Content Area */}
-        <div className="flex-1 min-w-0 w-full lg:max-w-3xl">
+      <div className="flex flex-col gap-4 sm:gap-6 items-start">
+        {/* Content Area — full-width */}
+        <div className="flex-1 min-w-0 w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCategory}
@@ -533,8 +511,8 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="settings-card rounded-[1.25rem] sm:rounded-[1.5rem] lg:rounded-[2rem] border border-border/20 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-700 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/[0.02]">
-                <CardHeader className="p-5 sm:p-6 border-b border-border/5">
+              <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                <CardHeader className="p-5 sm:p-6 border-b border-border/40">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary">
                       {categories.find(c => c.id === activeCategory)?.icon && 
@@ -544,12 +522,13 @@ export default function SettingsPage() {
                        })()
                       }
                     </div>
-                    <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                    <CardTitle className="text-lg font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
                   </div>
                   <CardDescription className="text-sm text-muted-foreground">
                     {categories.find(c => c.id === activeCategory)?.description}
                   </CardDescription>
                 </CardHeader>
+
                 
                 <CardContent className="pt-6 space-y-6">
                   {activeCategory === 'profile' && (
@@ -596,7 +575,7 @@ export default function SettingsPage() {
                           <p className="text-xs text-muted-foreground truncate">{user?.email || "Sessão local"}</p>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider cursor-help">
+                              <Badge variant="secondary" className="mt-1.5 bg-muted text-muted-foreground border border-border/60 text-xs font-medium normal-case tracking-normal cursor-help">
                                 {isGuest ? 'Visitante' : roleLabel}
                               </Badge>
                             </TooltipTrigger>
@@ -614,7 +593,7 @@ export default function SettingsPage() {
 
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Nome de Exibição</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Nome de Exibição</Label>
                           <Input
                             value={displayName}
                             onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
@@ -624,7 +603,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60 flex items-center gap-1.5">
+                          <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                             E-mail
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -640,7 +619,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Cargo</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Cargo</Label>
                           <Input
                             value={cargo}
                             onChange={(e) => { setCargo(e.target.value); setHasUnsavedChanges(true); }}
@@ -651,7 +630,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Setor</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Setor</Label>
                           <Input
                             value={setor}
                             onChange={(e) => { setSetor(e.target.value); setHasUnsavedChanges(true); }}
@@ -662,7 +641,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Telefone</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Telefone</Label>
                           <Input
                             value={telefone}
                             onChange={(e) => { setTelefone(e.target.value); setHasUnsavedChanges(true); }}
@@ -896,7 +875,7 @@ export default function SettingsPage() {
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Chave de API</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Chave de API</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
@@ -910,7 +889,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Modelo Preferencial</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Modelo Preferencial</Label>
                           <Select 
                             value={orModel} 
                             onValueChange={(val) => { setOrModel(val); setHasUnsavedChanges(true); }}
@@ -945,7 +924,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Webhook do n8n (fixo)</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Webhook do n8n (fixo)</Label>
                           <div className="relative">
                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
@@ -986,15 +965,15 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <Mail className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar E-mail</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Alterar E-mail</h4>
                             </div>
                             <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">E-mail Atual</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">E-mail Atual</Label>
                                 <Input value={user?.email || ''} disabled className="bg-muted/10 border-border/20 opacity-60 h-11" />
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Novo E-mail</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Novo E-mail</Label>
                                 <div className="relative">
                                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                   <Input
@@ -1018,11 +997,11 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <User className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Nome de Exibição</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Alterar Nome de Exibição</h4>
                             </div>
                             <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nome de Exibição</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Nome de Exibição</Label>
                                 <Input
                                   value={displayName}
                                   onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
@@ -1053,11 +1032,11 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <KeyRound className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Alterar Senha</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Alterar Senha</h4>
                             </div>
                             <div className="space-y-3 p-5 rounded-2xl bg-muted/20 border border-border/20">
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Nova Senha</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Nova Senha</Label>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                   <Input
@@ -1077,7 +1056,7 @@ export default function SettingsPage() {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Confirmar Nova Senha</Label>
+                                <Label className="text-sm font-medium text-muted-foreground">Confirmar Nova Senha</Label>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                   <Input
@@ -1104,7 +1083,7 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <ShieldCheck className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Autenticação em Dois Fatores (2FA)</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Autenticação em Dois Fatores (2FA)</h4>
                             </div>
                             <div className="p-5 rounded-2xl bg-muted/20 border border-border/20 space-y-4">
                               {mfaLoading ? (
@@ -1138,7 +1117,7 @@ export default function SettingsPage() {
                                   </div>
                                   {mfaSecret && (
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Ou insira manualmente</Label>
+                                      <Label className="text-sm font-medium text-muted-foreground">Ou insira manualmente</Label>
                                       <div className="flex gap-2">
                                         <Input value={mfaSecret} readOnly className="font-mono text-xs bg-background/50" />
                                         <Button variant="outline" size="icon" onClick={copySecret}>
@@ -1148,7 +1127,7 @@ export default function SettingsPage() {
                                     </div>
                                   )}
                                   <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Código de Verificação</Label>
+                                    <Label className="text-sm font-medium text-muted-foreground">Código de Verificação</Label>
                                     <Input
                                       value={mfaVerifyCode}
                                       onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -1191,7 +1170,7 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <LogOut className="w-4 h-4 text-primary" />
-                              <h4 className="text-sm font-black uppercase tracking-wider">Sessões</h4>
+                              <h4 className="text-sm font-semibold text-foreground">Sessões</h4>
                             </div>
                             <div className="space-y-3">
                               <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/20 border border-border/20">
@@ -1221,7 +1200,7 @@ export default function SettingsPage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <AlertTriangle className="w-4 h-4 text-destructive" />
-                              <h4 className="text-sm font-black uppercase tracking-wider text-destructive">Zona de Perigo</h4>
+                              <h4 className="text-sm font-semibold text-destructive">Zona de Perigo</h4>
                             </div>
                             <div className="p-5 rounded-2xl bg-destructive/5 border border-destructive/20 space-y-4">
                               <div className="flex items-start gap-3">
