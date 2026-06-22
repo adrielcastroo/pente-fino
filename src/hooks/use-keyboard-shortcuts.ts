@@ -80,6 +80,24 @@ export function useKeyboardShortcuts({
         }
       }
 
+      // "?" abre o modal de atalhos (Shift + /)
+      if (e.key === '?' && !isTyping && !cmdKey && !e.altKey) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+      }
+
+      // "B" foca o campo de bipagem (scanner) na tela operacional
+      if (e.key.toLowerCase() === 'b' && !isTyping && !cmdKey && !e.altKey && !e.shiftKey) {
+        const barcode = document.querySelector<HTMLInputElement>(
+          'input[placeholder*="código" i], input[placeholder*="aponte" i], input[placeholder*="bipa" i], input[data-barcode="true"]'
+        );
+        if (barcode) {
+          e.preventDefault();
+          barcode.focus();
+          barcode.select?.();
+        }
+      }
+
       // Ctrl+N → nova conferência (Tecido)
       if (cmdKey && e.key.toLowerCase() === 'n' && !isTyping) {
         e.preventDefault();
