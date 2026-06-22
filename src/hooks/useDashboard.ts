@@ -42,11 +42,22 @@ export function useDashboard() {
     try {
       const { data: cadastro, error: e2 } = await supabase
         .from('itens_cadastro')
-        .select('codigo_interno, descricao');
+        .select('codigo_interno, codigo_fornecedor, codigos_fornecedor, descricao');
       if (e2) throw e2;
       const map = new Map<string, string>();
+      const addKey = (raw: any, desc: string) => {
+        const k = String(raw ?? '').trim();
+        if (!k) return;
+        map.set(k, desc);
+        map.set(k.toUpperCase(), desc);
+      };
       cadastro?.forEach((c: any) => {
-        if (c.codigo_interno && c.descricao) map.set(String(c.codigo_interno).trim(), c.descricao);
+        if (!c.descricao) return;
+        addKey(c.codigo_interno, c.descricao);
+        addKey(c.codigo_fornecedor, c.descricao);
+        if (Array.isArray(c.codigos_fornecedor)) {
+          c.codigos_fornecedor.forEach((cf: any) => addKey(cf, c.descricao));
+        }
       });
       setCadastroMap(map);
     } catch (e) {
