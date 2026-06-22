@@ -33,9 +33,12 @@ export default function TecidoOperationalPanel({ children }: Props) {
             Tecido
           </h1>
           <p className="text-xs text-muted-foreground leading-tight truncate">
-            Registro e bipagem
+            Aponte o leitor ou digite o código para iniciar
           </p>
         </div>
+        <kbd className="ml-auto hidden md:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-semibold text-muted-foreground bg-muted/60 border border-border/40 rounded">
+          B
+        </kbd>
       </header>
 
       {/*
