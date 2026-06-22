@@ -521,8 +521,8 @@ export default function EstoquePage() {
           transition={{ duration: 0.8 }}
           className="w-full pb-6"
         >
-          <div className="w-full space-y-2 sm:space-y-3 p-1 overflow-x-auto lg:overflow-x-visible no-scrollbar">
-            <div className="min-w-[600px] lg:min-w-0 space-y-2 sm:space-y-3">
+          <div className="w-full space-y-2 sm:space-y-3 p-1 overflow-x-auto md:overflow-x-visible no-scrollbar">
+            <div className="min-w-[520px] md:min-w-0 space-y-2 sm:space-y-3">
             {/* Column headers */}
             <div className="flex gap-2 sm:gap-3">
               <div className="w-10 sm:w-12 md:w-16 shrink-0" />
