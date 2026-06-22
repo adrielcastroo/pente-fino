@@ -86,6 +86,7 @@ export default function MainLayout() {
         <BottomTabBar />
       </div>
       {!['/tecido', '/madeira', '/motor'].includes(location.pathname) && <UndoBanner />}
+      <CommandPalette />
 
 
     </SidebarProvider>
