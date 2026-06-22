@@ -162,7 +162,7 @@ export default function LoginPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="relative z-10 flex flex-col items-center text-center max-w-md"
         >
-          <div className={`p-4 bg-white dark:bg-card border border-border/50 rounded-3xl shadow-xl mb-8 ${!isLow ? 'transform hover:scale-105 transition-transform duration-300' : ''}`}>
+          <div className={`p-4 bg-white dark:bg-card border border-border/50 rounded-md shadow-xl mb-8 ${!isLow ? 'transform hover:scale-105 transition-transform duration-300' : ''}`}>
             <img src={logoComb} alt="Logo" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-5xl font-semibold tracking-tight text-foreground mb-8 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
@@ -181,9 +181,9 @@ export default function LoginPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + (i * 0.1) }}
-                className="flex items-start gap-4 p-4 rounded-2xl bg-white/50 dark:bg-card/50 border border-border/30 backdrop-blur-sm hover:shadow-md transition-all duration-300 group"
+                className="flex items-start gap-4 p-4 rounded-md bg-white/50 dark:bg-card/50 border border-border/30 backdrop-blur-sm hover:shadow-md transition-all duration-300 group"
               >
-                <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                <div className="p-2.5 rounded-md bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
                   <item.icon className="w-5 h-5" />
                 </div>
                 <div className="text-left">
@@ -207,7 +207,7 @@ export default function LoginPage() {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="p-3 bg-white dark:bg-card border border-border/50 rounded-2xl shadow-sm mb-4"
+              className="p-3 bg-white dark:bg-card border border-border/50 rounded-md shadow-sm mb-4"
             >
               <img src={logoComb} alt="Logo" className="w-10 h-10 object-contain" />
             </motion.div>
@@ -219,7 +219,7 @@ export default function LoginPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <Card className={`border-border/40 shadow-2xl rounded-2xl overflow-hidden ${isLow ? 'bg-card' : 'bg-card/80 backdrop-blur-md'}`}>
+            <Card className={`border-border/40 shadow-2xl rounded-md overflow-hidden ${isLow ? 'bg-card' : 'bg-card/80 backdrop-blur-md'}`}>
               <div className="h-1 bg-primary w-full opacity-80" />
               
               <CardHeader className="space-y-1 pb-4 px-4 sm:px-6">

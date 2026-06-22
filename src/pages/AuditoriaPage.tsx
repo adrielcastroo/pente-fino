@@ -108,7 +108,7 @@ function AuditoriaContent() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1400px] mx-auto">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
             <ShieldAlert className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -161,7 +161,7 @@ function AuditoriaContent() {
 
       <div className="space-y-2">
         {loading ? (
-          Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)
+          Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-md" />)
         ) : error ? (
           <Card className="p-6 text-center text-destructive">
             <p className="text-sm font-bold">Falha ao carregar.</p>

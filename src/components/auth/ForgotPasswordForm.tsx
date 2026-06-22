@@ -91,7 +91,7 @@ export const ForgotPasswordForm = ({
           <button
             type="button"
             onClick={() => setValue("method", "link")}
-            className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden group ${
+            className={`flex flex-col items-center justify-center p-4 rounded-md border-2 transition-all duration-300 text-left relative overflow-hidden group ${
               selectedMethod === "link"
                 ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
                 : "border-border/40 hover:border-border/80 bg-muted/20"
@@ -102,14 +102,14 @@ export const ForgotPasswordForm = ({
             </div>
             <span className="text-[11px] font-bold uppercase tracking-wider">Link Seguro</span>
             {selectedMethod === "link" && (
-              <motion.div layoutId="active-method" className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none" />
+              <motion.div layoutId="active-method" className="absolute inset-0 border-2 border-primary rounded-md pointer-events-none" />
             )}
           </button>
           
           <button
             type="button"
             onClick={() => setValue("method", "otp")}
-            className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden group ${
+            className={`flex flex-col items-center justify-center p-4 rounded-md border-2 transition-all duration-300 text-left relative overflow-hidden group ${
               selectedMethod === "otp"
                 ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
                 : "border-border/40 hover:border-border/80 bg-muted/20"
@@ -120,7 +120,7 @@ export const ForgotPasswordForm = ({
             </div>
             <span className="text-[11px] font-bold uppercase tracking-wider">Código OTP</span>
             {selectedMethod === "otp" && (
-              <motion.div layoutId="active-method" className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none" />
+              <motion.div layoutId="active-method" className="absolute inset-0 border-2 border-primary rounded-md pointer-events-none" />
             )}
           </button>
         </div>
@@ -129,7 +129,7 @@ export const ForgotPasswordForm = ({
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 rounded-xl font-semibold transition-all active:scale-[0.98] shadow-md hover:shadow-lg bg-primary text-primary-foreground"
+        className="w-full h-12 rounded-md font-semibold transition-all active:scale-[0.98] shadow-md hover:shadow-lg bg-primary text-primary-foreground"
       >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

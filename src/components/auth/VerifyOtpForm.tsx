@@ -112,7 +112,7 @@ export const VerifyOtpForm = ({
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-11 rounded-xl font-medium transition-all active:scale-[0.98]"
+            className="w-full h-11 rounded-md font-medium transition-all active:scale-[0.98]"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -129,7 +129,7 @@ export const VerifyOtpForm = ({
             variant="outline"
             disabled={!canResend}
             onClick={handleResend}
-            className="w-full h-11 rounded-xl text-sm font-medium border-border/50"
+            className="w-full h-11 rounded-md text-sm font-medium border-border/50"
           >
             {canResend ? (
               <>

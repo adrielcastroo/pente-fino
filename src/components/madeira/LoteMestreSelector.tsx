@@ -77,7 +77,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex-1 h-12 rounded-xl border border-border/50 bg-muted/20 px-4 text-sm flex items-center justify-between gap-3 hover:border-primary/40 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all duration-300 group"
+              className="flex-1 h-12 rounded-md border border-border/50 bg-muted/20 px-4 text-sm flex items-center justify-between gap-3 hover:border-primary/40 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all duration-300 group"
             >
               <span className="flex items-center gap-3 min-w-0">
                 {selected ? (
@@ -111,7 +111,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
               </div>
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-2 rounded-2xl shadow-2xl border-border/40 animate-in zoom-in-95 duration-200" align="start">
+          <PopoverContent className="w-[300px] p-2 rounded-md shadow-2xl border-border/40 animate-in zoom-in-95 duration-200" align="start">
             <div className="max-h-[260px] overflow-y-auto space-y-1 custom-scrollbar pr-1">
               {loading && (
                 <div className="flex items-center justify-center py-8">
@@ -129,7 +129,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
                   key={l.id}
                   type="button"
                   onClick={() => { onChange(l.id, l); setOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm transition-all active:scale-[0.98] ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left text-sm transition-all active:scale-[0.98] ${
                     l.id === value 
                       ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
                       : 'hover:bg-muted/60 text-foreground'
@@ -158,7 +158,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="w-full h-10 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/5 rounded-xl"
+                className="w-full h-10 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/5 rounded-md"
                 onClick={() => { setOpen(false); setCreateOpen(true); }}
               >
                 <Plus className="w-4 h-4 mr-2" /> Novo Lote Mestre
@@ -169,7 +169,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[420px] rounded-3xl border-none shadow-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[420px] rounded-md border-none shadow-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
           <div className="bg-primary px-6 py-8 text-primary-foreground relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Palette className="w-32 h-32" />
@@ -188,7 +188,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
                 value={newName} 
                 onChange={e => setNewName(e.target.value)} 
                 placeholder="Ex: Branco Gelo, Carvalho, etc."
-                className="h-12 rounded-xl bg-muted/20 border-border/50 focus:ring-4 focus:ring-primary/5 transition-all font-bold"
+                className="h-12 rounded-md bg-muted/20 border-border/50 focus:ring-4 focus:ring-primary/5 transition-all font-bold"
               />
             </div>
             
@@ -201,13 +201,13 @@ export function LoteMestreSelector({ value, onChange }: Props) {
                     type="color"
                     value={newColor}
                     onChange={e => setNewColor(e.target.value)}
-                    className="h-14 w-20 rounded-2xl border border-border/50 cursor-pointer bg-muted/20 p-1.5 transition-all hover:scale-105 active:scale-95"
+                    className="h-14 w-20 rounded-md border border-border/50 cursor-pointer bg-muted/20 p-1.5 transition-all hover:scale-105 active:scale-95"
                   />
                 </div>
                 <Input 
                   value={newColor} 
                   onChange={e => setNewColor(e.target.value)} 
-                  className="h-14 font-mono font-bold uppercase tracking-widest text-center rounded-2xl bg-muted/20 border-border/50" 
+                  className="h-14 font-mono font-bold uppercase tracking-widest text-center rounded-md bg-muted/20 border-border/50" 
                   maxLength={7} 
                 />
               </div>
@@ -220,7 +220,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
                 value={newDesc} 
                 onChange={e => setNewDesc(e.target.value)} 
                 placeholder="Ex: Utilizado para persianas de madeira 50mm..."
-                className="h-12 rounded-xl bg-muted/20 border-border/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                className="h-12 rounded-md bg-muted/20 border-border/50 focus:ring-4 focus:ring-primary/5 transition-all"
               />
             </div>
           </div>
@@ -230,14 +230,14 @@ export function LoteMestreSelector({ value, onChange }: Props) {
               variant="ghost" 
               onClick={() => setCreateOpen(false)} 
               disabled={creating}
-              className="rounded-xl font-bold uppercase tracking-wider px-6"
+              className="rounded-md font-bold uppercase tracking-wider px-6"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleCreate} 
               disabled={creating}
-              className="rounded-xl font-semibold uppercase tracking-widest px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+              className="rounded-md font-semibold uppercase tracking-widest px-10 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
               {creating ? (
                 <div className="flex items-center gap-2">

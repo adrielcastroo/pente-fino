@@ -52,7 +52,7 @@ export function AvariaForm({
   };
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-muted/5 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-destructive/30">
+    <div className="rounded-md border border-border/50 bg-muted/5 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-destructive/30">
       <div className={`flex items-center justify-between px-4 py-3.5 transition-all duration-500 ${enabled ? 'bg-destructive/10' : 'bg-background/40'}`}>
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${enabled ? 'bg-destructive/20 text-destructive' : 'bg-muted/40 text-muted-foreground/60'}`}>
@@ -78,10 +78,10 @@ export function AvariaForm({
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 ml-1">Tipo da Avaria</Label>
             <Select value={tipo ?? ''} onValueChange={(v) => onTipoChange(v as AvariaTipo)}>
-              <SelectTrigger className="h-11 rounded-xl bg-background border-border/60 text-sm transition-all focus:ring-2 focus:ring-destructive/10 focus:border-destructive/40">
+              <SelectTrigger className="h-11 rounded-md bg-background border-border/60 text-sm transition-all focus:ring-2 focus:ring-destructive/10 focus:border-destructive/40">
                 <SelectValue placeholder="Selecionar tipo…" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-border/40 shadow-xl">
+              <SelectContent className="rounded-md border-border/40 shadow-xl">
                 {TIPO_OPTIONS.map(o => (
                   <SelectItem key={o.value} value={o.value} className="rounded-lg my-1">{o.label}</SelectItem>
                 ))}
@@ -96,7 +96,7 @@ export function AvariaForm({
               onChange={e => onDescricaoChange(e.target.value)}
               placeholder="Descreva brevemente o problema encontrado..."
               rows={2}
-              className="text-sm rounded-xl bg-background border-border/60 resize-none transition-all focus:ring-2 focus:ring-destructive/10 focus:border-destructive/40 placeholder:text-muted-foreground/30"
+              className="text-sm rounded-md bg-background border-border/60 resize-none transition-all focus:ring-2 focus:ring-destructive/10 focus:border-destructive/40 placeholder:text-muted-foreground/30"
             />
           </div>
 
@@ -115,13 +115,13 @@ export function AvariaForm({
               }}
             />
             {fotoUrl ? (
-              <div className="relative rounded-xl overflow-hidden border border-border/60 group animate-in zoom-in-95 duration-300">
+              <div className="relative rounded-md overflow-hidden border border-border/60 group animate-in zoom-in-95 duration-300">
                 <img src={fotoUrl} alt="Avaria" className="w-full h-40 object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <button
                   type="button"
                   onClick={() => onFotoUrlChange(null)}
-                  className="absolute top-2 right-2 p-2 rounded-xl bg-background/90 text-destructive shadow-lg hover:bg-destructive hover:text-white transition-all transform hover:rotate-90 active:scale-90"
+                  className="absolute top-2 right-2 p-2 rounded-md bg-background/90 text-destructive shadow-lg hover:bg-destructive hover:text-white transition-all transform hover:rotate-90 active:scale-90"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -131,7 +131,7 @@ export function AvariaForm({
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1 h-12 rounded-xl border-dashed border-border/80 bg-background/40 hover:bg-background hover:border-primary/50 text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98]"
+                  className="flex-1 h-12 rounded-md border-dashed border-border/80 bg-background/40 hover:bg-background hover:border-primary/50 text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98]"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
                 >

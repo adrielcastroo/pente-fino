@@ -105,7 +105,7 @@ export default function LotesMestresPanel() {
       </div>
 
       {/* Create row */}
-      <Card className="settings-card border-dashed rounded-2xl">
+      <Card className="settings-card border-dashed rounded-md">
         <CardContent className="pt-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto] gap-3 items-end">
             <div className="space-y-1.5">
@@ -148,7 +148,7 @@ export default function LotesMestresPanel() {
         {items.map(l => {
           const isEditing = editingId === l.id;
           return (
-            <Card key={l.id} className="settings-card rounded-2xl">
+            <Card key={l.id} className="settings-card rounded-md">
               <CardContent className="py-3">
                 {isEditing ? (
                   <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_2fr_auto_auto] gap-3 items-end">

@@ -163,7 +163,7 @@ function EditRegistroDialog({
         )}
 
         <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-          <Button variant="outline" className="rounded-xl font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
+          <Button variant="outline" className="rounded-md font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
           <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
         </DialogFooter>
       </DialogContent>
@@ -318,7 +318,7 @@ function AddHistoryRegistroDialog({
         </div>
 
         <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-          <Button variant="outline" className="rounded-xl font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
+          <Button variant="outline" className="rounded-md font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
           <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Adicionar Item'}</Button>
         </DialogFooter>
       </DialogContent>
@@ -477,7 +477,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
 
   const tableContent = (
     <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
-      <div className="rounded-xl sm:rounded-2xl lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
+      <div className="rounded-md sm:rounded-md lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
         <table className="w-full text-xs min-w-[520px] sm:min-w-[800px] border-separate border-spacing-0">
 
           <thead>
@@ -519,7 +519,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                               variant="ghost"
                               size="icon"
                               onClick={() => setEditingRegistro(r)}
-                              className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                              className="h-9 w-9 rounded-md border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
@@ -537,7 +537,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                               variant="ghost"
                               size="icon"
                               onClick={() => setConfirmDeleteItem(r)}
-                              className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+                              className="h-9 w-9 rounded-md border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
                             >
                               <X className="w-4 h-4" />
                             </Button>
@@ -574,7 +574,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         onClick={() => setOpen(!open)} 
         className="w-full px-4 sm:px-6 py-5 flex items-center gap-4 hover:bg-muted/40 transition-all text-left relative overflow-hidden"
       >
-        <div className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'bg-primary/10 text-primary group-hover/header:bg-primary/20'}`}>
+        <div className={`p-2.5 sm:p-4 rounded-md sm:rounded-md transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'bg-primary/10 text-primary group-hover/header:bg-primary/20'}`}>
           <FolderOpen className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 ${open ? 'scale-110' : 'group-hover/header:scale-110'}`} />
         </div>
         
@@ -653,7 +653,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                         }
                         setIsAdding(true); 
                       }}
-                      className="h-9 sm:h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
+                      className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
                     </Button>
@@ -667,7 +667,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       variant="ghost"
                       size="icon"
                       onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-primary/10 text-primary transition-all border border-border/40 group/btn"
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-md hover:bg-primary/10 text-primary transition-all border border-border/40 group/btn"
                     >
                       <Download className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
                     </Button>
@@ -683,7 +683,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                           variant="ghost"
                           size="icon"
                           onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-md hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
                         >
                           <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
                         </Button>
@@ -724,7 +724,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         whileHover={{ y: -2 }}
-        className={`border rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 backdrop-blur-sm group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30 shadow-lg shadow-primary/10' : 'border-border/40 hover:border-primary/40'}`}
+        className={`border rounded-md sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 backdrop-blur-sm group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30 shadow-lg shadow-primary/10' : 'border-border/40 hover:border-primary/40'}`}
       >
         {highlight && (
           <div className="bg-primary/10 text-primary px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-2 border-b border-primary/20">
@@ -768,7 +768,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
+            <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-md flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
             </div>
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Excluir Histórico?</DialogTitle>
@@ -777,8 +777,8 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
-            <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button variant="destructive" className="rounded-xl font-semibold h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
+            <Button variant="outline" className="rounded-md font-bold h-12 w-full" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <Button variant="destructive" className="rounded-md font-semibold h-12 w-full shadow-lg shadow-destructive/20" onClick={() => { onDelete(); setConfirmDelete(false); }}>Excluir Agora</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -786,7 +786,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       <Dialog open={!!confirmDeleteItem} onOpenChange={(o) => { if (!o) setConfirmDeleteItem(null); }}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
+            <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-md flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
             </div>
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Excluir Item?</DialogTitle>
@@ -799,10 +799,10 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-3 mt-8">
-            <Button variant="outline" className="rounded-xl font-bold h-12 w-full" onClick={() => setConfirmDeleteItem(null)}>Cancelar</Button>
+            <Button variant="outline" className="rounded-md font-bold h-12 w-full" onClick={() => setConfirmDeleteItem(null)}>Cancelar</Button>
             <Button
               variant="destructive"
-              className="rounded-xl font-semibold h-12 w-full shadow-lg shadow-destructive/20"
+              className="rounded-md font-semibold h-12 w-full shadow-lg shadow-destructive/20"
               onClick={() => {
                 if (confirmDeleteItem) handleDeleteItem(confirmDeleteItem.id);
                 setConfirmDeleteItem(null);
@@ -1011,7 +1011,7 @@ export default function HistoryPanel() {
 
 
         {historyError && (
-          <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+          <div className="p-4 rounded-md bg-destructive/10 border border-destructive/20 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center gap-3 text-destructive font-bold text-sm">
               <span>⚠️ {historyError}</span>
             </div>
@@ -1045,7 +1045,7 @@ export default function HistoryPanel() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Exibindo {paged.length} de {filtered.length}
                 </p>
-                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-2xl font-semibold text-xs uppercase tracking-wider h-11 px-6">
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-md font-semibold text-xs uppercase tracking-wider h-11 px-6">
                   Carregar mais
                 </Button>
               </div>
@@ -1054,7 +1054,7 @@ export default function HistoryPanel() {
 
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mb-4">
+            <div className="w-14 h-14 rounded-md bg-muted/30 flex items-center justify-center mb-4">
               <FolderOpen className="w-7 h-7 text-muted-foreground/40" />
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
@@ -1076,8 +1076,8 @@ export default function HistoryPanel() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="p-2 gap-3 mt-6">
-            <Button variant="outline" className="flex-1 rounded-2xl font-bold h-12" onClick={() => setShowClearConfirm(false)}>Manter Dados</Button>
-            <Button variant="destructive" className="flex-1 rounded-2xl font-semibold h-12 shadow-lg shadow-destructive/20" onClick={handleClear}>Limpar Tudo</Button>
+            <Button variant="outline" className="flex-1 rounded-md font-bold h-12" onClick={() => setShowClearConfirm(false)}>Manter Dados</Button>
+            <Button variant="destructive" className="flex-1 rounded-md font-semibold h-12 shadow-lg shadow-destructive/20" onClick={handleClear}>Limpar Tudo</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

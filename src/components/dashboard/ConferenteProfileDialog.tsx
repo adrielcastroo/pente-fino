@@ -86,7 +86,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
       <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] p-0 gap-0 overflow-hidden flex flex-col">
         <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b border-border/20 flex-none space-y-0">
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold border border-primary/20 flex-none">
+            <div className="h-14 w-14 rounded-md bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold border border-primary/20 flex-none">
               {data ? getInitials(data.name) : <User className="w-6 h-6" />}
             </div>
             <div className="flex-1 min-w-0 text-left">
@@ -112,7 +112,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
             </div>
 
             {/* Sparkline 14d */}
-            <div className="rounded-2xl border border-border/40 bg-muted/20 p-4">
+            <div className="rounded-md border border-border/40 bg-muted/20 p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Produção · 14 dias</span>
                 <span className="text-xs font-bold text-primary tabular-nums">
@@ -151,7 +151,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
                 {data.recentSessions.map(s => (
                   <div
                     key={s.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-border/30 bg-card/40 px-4 py-3 hover:border-primary/30 transition-colors"
+                    className="flex items-center justify-between gap-3 rounded-md border border-border/30 bg-card/40 px-4 py-3 hover:border-primary/30 transition-colors"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold truncate">{s.processo || s.name}</p>
@@ -192,7 +192,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
 
 function KpiCard({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-border/40 bg-muted/20 p-3 flex flex-col gap-1">
+    <div className="rounded-md border border-border/40 bg-muted/20 p-3 flex flex-col gap-1">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <Icon className="w-3.5 h-3.5" />
         <span className="text-[9px] font-semibold uppercase tracking-wider">{label}</span>

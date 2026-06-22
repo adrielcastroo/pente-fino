@@ -84,7 +84,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
     content = (
       <Badge 
         variant="outline" 
-        className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-xl border-dashed shadow-sm" 
+        className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-md border-dashed shadow-sm" 
         onClick={() => onCopy(loteSistema || '')}
       >
         {loteSistema || '—'}
@@ -162,7 +162,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                   variant="ghost" 
                   size="icon" 
                   onClick={() => onCopy(r.loteSistema)} 
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all active:scale-90 shadow-none hover:shadow-sm" 
+                  className="h-9 w-9 rounded-md hover:bg-primary/10 hover:text-primary transition-all active:scale-90 shadow-none hover:shadow-sm" 
                 >
                   <Copy className="w-4 h-4" />
                 </Button>
@@ -178,7 +178,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                       variant="ghost"
                       size="icon"
                       aria-label="Remover registro"
-                      className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm"
+                      className="h-9 w-9 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -398,7 +398,7 @@ export default function RightPanel() {
   const showActions = true;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background rounded-3xl border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
+    <div className="flex flex-col h-full overflow-hidden bg-background rounded-md border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
 
       <div className="px-4 xs:px-6 py-4 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
         <div className="flex flex-row items-center gap-3 sm:gap-5">
@@ -414,7 +414,7 @@ export default function RightPanel() {
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="flex-none h-11 px-2 sm:px-3 rounded-xl bg-transparent hover:bg-muted/40 flex items-center gap-1.5 transition-colors group">
+            <div className="flex-none h-11 px-2 sm:px-3 rounded-md bg-transparent hover:bg-muted/40 flex items-center gap-1.5 transition-colors group">
               <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground" />
               <select
                 value={sortBy}
@@ -526,7 +526,7 @@ export default function RightPanel() {
                           <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-foreground font-bold">
                             <Badge 
                               variant="outline" 
-                              className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-xl border-dashed shadow-sm"
+                              className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-md border-dashed shadow-sm"
                               onClick={() => copyText(r.loteSistema)}
                             >
                               {r.loteSistema || '—'}
@@ -654,7 +654,7 @@ export default function RightPanel() {
 
           {sortedRows.length > visibleCount && (
             <div className="p-4 flex justify-center border-t border-border/10 bg-muted/5">
-              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-xl px-6">
+              <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-md px-6">
                 Carregar mais registros ({sortedRows.length - visibleCount} restantes)
               </Button>
             </div>
@@ -662,7 +662,7 @@ export default function RightPanel() {
 
           {sortedRows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-              <div className="h-14 w-14 bg-muted/40 rounded-2xl flex items-center justify-center mb-4">
+              <div className="h-14 w-14 bg-muted/40 rounded-md flex items-center justify-center mb-4">
                 <Package className="w-7 h-7 text-muted-foreground/50" />
               </div>
               <p className="text-sm font-semibold text-foreground mb-1">Nenhum item registrado</p>

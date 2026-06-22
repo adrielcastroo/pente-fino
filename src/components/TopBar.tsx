@@ -147,10 +147,10 @@ const TopBar = memo(function TopBar() {
     <header className="app-topbar sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="flex h-14 sm:h-16 xl:h-[72px] items-center gap-1 sm:gap-4 px-2 sm:px-6 xl:px-8 max-w-full mx-auto">
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-xl shrink-0" />
+          <SidebarTrigger className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-md shrink-0" />
           {isRegistroRoute ? (
             <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="hidden xs:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary items-center justify-center shrink-0">
+              <div className="hidden xs:flex w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-primary/10 text-primary items-center justify-center shrink-0">
                 <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
               </div>
               <div className="flex flex-col leading-tight">
@@ -178,7 +178,7 @@ const TopBar = memo(function TopBar() {
               </div>
               <input
                 id="conferente-input"
-                className="h-8 sm:h-10 xl:h-11 w-full rounded-lg sm:rounded-xl border border-border/60 bg-muted/30 pl-7 sm:pl-10 pr-2 text-[10px] sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                className="h-8 sm:h-10 xl:h-11 w-full rounded-lg sm:rounded-md border border-border/60 bg-muted/30 pl-7 sm:pl-10 pr-2 text-[10px] sm:text-sm font-semibold tracking-tight ring-offset-background placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
                 value={conferente}
                 onChange={e => setConferente(e.target.value)}
                 placeholder={isMobile ? "Conf..." : "Conferente..."}
@@ -192,7 +192,7 @@ const TopBar = memo(function TopBar() {
           {!isGuest && user && (
             <Link
               to="/minha-atividade"
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/10 transition-colors"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 rounded-md border border-primary/10 transition-colors"
               aria-label="Ver minha atividade do dia"
             >
               <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
@@ -217,7 +217,7 @@ const TopBar = memo(function TopBar() {
                   }}
                   size="sm"
                   variant="outline"
-                  className="h-9 sm:h-10 xl:h-11 rounded-xl px-2.5 sm:px-4 gap-1.5 font-bold text-xs border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all shrink-0"
+                  className="h-9 sm:h-10 xl:h-11 rounded-md px-2.5 sm:px-4 gap-1.5 font-bold text-xs border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden md:inline">Novo registro</span>
@@ -240,7 +240,7 @@ const TopBar = memo(function TopBar() {
                   size="sm"
                   disabled={isArchiving || isExporting || registroCount === 0}
                   variant="outline"
-                  className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-xl border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-md border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isArchiving || isExporting ? (
                     <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />

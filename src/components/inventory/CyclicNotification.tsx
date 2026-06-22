@@ -56,7 +56,7 @@ export function CyclicNotification() {
         </div>
         <Button 
           onClick={() => navigate('/inventario-ciclico')}
-          className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-semibold uppercase tracking-widest text-xs py-6 px-8 rounded-xl shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 gap-3"
+          className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-semibold uppercase tracking-widest text-xs py-6 px-8 rounded-md shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 gap-3"
         >
           Iniciar Conferência
           <ArrowRight className="w-4 h-4" />

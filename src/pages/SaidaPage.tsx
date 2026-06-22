@@ -218,7 +218,7 @@ export default function SaidaPage() {
             <Button 
               onClick={() => setScanMode(true)} 
               variant="outline" 
-              className="w-full sm:w-auto h-12 px-6 font-bold rounded-xl border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-base shrink-0"
+              className="w-full sm:w-auto h-12 px-6 font-bold rounded-md border-violet-500/30 text-violet-500 hover:bg-violet-500/10 gap-2 shadow-sm transition-all active:scale-95 text-base shrink-0"
             >
                <LogOut className="w-5 h-5" />
               <span>Dar saída</span>
@@ -230,12 +230,12 @@ export default function SaidaPage() {
                 value={search} 
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Filtrar item, PROC, conferente..."
-                className="pl-10 h-11 sm:h-12 rounded-xl border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
+                className="pl-10 h-11 sm:h-12 rounded-md border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
               />
             </div>
 
             <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
-              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-xl border-border/40 font-bold text-xs sm:text-sm">
+              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-md border-border/40 font-bold text-xs sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -257,7 +257,7 @@ export default function SaidaPage() {
           </div>
         ) : filteredSaidas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-muted/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-md bg-muted/30 flex items-center justify-center">
               <Archive className="w-6 h-6 text-muted-foreground/40" />
             </div>
             <p className="text-muted-foreground text-sm">
@@ -267,7 +267,7 @@ export default function SaidaPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 max-w-[1400px] mx-auto">
             {visibleSaidas.map((saida) => (
-              <div key={saida.id} className="bg-card/60 border border-border/40 rounded-2xl p-4 sm:p-5 hover:border-border/60 transition-colors">
+              <div key={saida.id} className="bg-card/60 border border-border/40 rounded-md p-4 sm:p-5 hover:border-border/60 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-foreground text-base sm:text-lg tracking-tight truncate">{saida.item}</h3>
@@ -339,7 +339,7 @@ export default function SaidaPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                   Exibindo {visibleSaidas.length} de {filteredSaidas.length}
                 </p>
-                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-xl font-semibold text-xs uppercase tracking-wider h-10 px-6">
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-md font-semibold text-xs uppercase tracking-wider h-10 px-6">
                   Carregar mais
                 </Button>
               </div>
@@ -350,10 +350,10 @@ export default function SaidaPage() {
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-md max-h-[90vh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
+              <div className="p-2.5 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-500">
                 <LogOut className="w-5 h-5" />
               </div>
               <div>
@@ -375,13 +375,13 @@ export default function SaidaPage() {
                   onChange={e => setScanInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleScanSubmit(); }}
                   placeholder="Ex: TEC01.A.N03 PROC 12345 18,2M"
-                  className="h-14 rounded-xl border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-lg"
+                  className="h-14 rounded-md border-border/50 bg-muted/20 font-bold focus:bg-background transition-all font-mono text-lg"
                   autoFocus
                 />
                 <Button
                   onClick={handleScanSubmit}
                   disabled={scanning || !scanInput.trim()}
-                  className="h-14 px-6 rounded-xl font-semibold bg-violet-600 hover:bg-violet-700 shrink-0 text-base"
+                  className="h-14 px-6 rounded-md font-semibold bg-violet-600 hover:bg-violet-700 shrink-0 text-base"
                 >
                   {scanning ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Buscar'}
                 </Button>
@@ -389,7 +389,7 @@ export default function SaidaPage() {
             </div>
 
             {scanResult && (
-              <div className={`p-4 rounded-xl border ${
+              <div className={`p-4 rounded-md border ${
                 scanResult.success 
                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
                   : 'bg-red-500/10 border-red-500/20 text-red-400'
@@ -417,7 +417,7 @@ export default function SaidaPage() {
           setDestino('');
         }
       }}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent className="border-border/40 bg-card rounded-md max-w-lg max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Confirmar saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-4">
@@ -433,7 +433,7 @@ export default function SaidaPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2 bg-muted/10 p-4 rounded-xl border border-border/20">
+                  <div className="space-y-2 bg-muted/10 p-4 rounded-md border border-border/20">
                     <label className="text-xs font-semibold uppercase tracking-widest text-violet-500 flex items-center gap-2 mb-1">
                       <Truck className="w-3.5 h-3.5" />
                       Destino <span className="text-red-400">*</span>
@@ -463,9 +463,9 @@ export default function SaidaPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
-            <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-md font-bold">Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              className="rounded-xl bg-violet-600 hover:bg-violet-700 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-md bg-violet-600 hover:bg-violet-700 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!destino.trim() || !(conferente || '').trim()}
               onClick={executeScanSaida}
             >

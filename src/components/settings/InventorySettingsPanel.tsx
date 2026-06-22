@@ -71,7 +71,7 @@ export default function InventorySettingsPanel() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {configs.map((config) => (
-          <Card key={config.id} className="settings-card rounded-2xl">
+          <Card key={config.id} className="settings-card rounded-md">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${
@@ -97,7 +97,7 @@ export default function InventorySettingsPanel() {
                     type="number"
                     value={config.dias_frequencia}
                     onChange={(e) => handleUpdateDays(config.id, e.target.value)}
-                    className="h-12 font-semibold text-xl rounded-xl border-border/20 focus:ring-primary/20"
+                    className="h-12 font-semibold text-xl rounded-md border-border/20 focus:ring-primary/20"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none font-bold text-xs">
                     DIAS
@@ -109,8 +109,8 @@ export default function InventorySettingsPanel() {
         ))}
       </div>
 
-      <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-4">
-        <div className="p-2 rounded-xl bg-primary/10 text-primary">
+      <div className="p-4 rounded-md bg-primary/5 border border-primary/10 flex items-start gap-4">
+        <div className="p-2 rounded-md bg-primary/10 text-primary">
           <History className="w-5 h-5" />
         </div>
         <div className="space-y-1">
@@ -122,7 +122,7 @@ export default function InventorySettingsPanel() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="gap-2 font-semibold uppercase tracking-widest text-xs px-8 h-12 rounded-2xl">
+        <Button onClick={handleSave} disabled={saving} className="gap-2 font-semibold uppercase tracking-widest text-xs px-8 h-12 rounded-md">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Salvar Configurações
         </Button>

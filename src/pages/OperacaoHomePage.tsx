@@ -86,7 +86,7 @@ export default function OperacaoHomePage() {
             role="listitem"
             onClick={() => navigate(to)}
             className={cn(
-              'group flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-card',
+              'group flex flex-col items-start gap-3 rounded-md border border-border/60 bg-card',
               'p-5 md:p-6 min-h-[140px] text-left',
               'transition-all duration-150 hover:border-primary/60 hover:bg-primary/5',
               'active:scale-[0.98]',
@@ -95,7 +95,7 @@ export default function OperacaoHomePage() {
             aria-label={label}
           >
             <span
-              className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+              className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
               aria-hidden="true"
             >
               <Icon className="h-7 w-7" strokeWidth={2} />

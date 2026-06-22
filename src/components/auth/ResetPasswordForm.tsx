@@ -117,7 +117,7 @@ export const ResetPasswordForm = ({
         </div>
       </div>
 
-      <div className="space-y-3 p-4 bg-muted/30 rounded-xl border border-border/50">
+      <div className="space-y-3 p-4 bg-muted/30 rounded-md border border-border/50">
         <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
           <span>Força da Senha</span>
           <span>{passwordStrength}%</span>
@@ -155,7 +155,7 @@ export const ResetPasswordForm = ({
       <Button
         type="submit"
         disabled={isLoading || passwordStrength < 100}
-        className="w-full h-11 rounded-xl font-medium transition-all active:scale-[0.98]"
+        className="w-full h-11 rounded-md font-medium transition-all active:scale-[0.98]"
       >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

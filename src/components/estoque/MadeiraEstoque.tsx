@@ -124,7 +124,7 @@ export default function MadeiraEstoque() {
 
       {/* Legenda Lotes Mestres */}
       {lotes.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border border-border/30 bg-muted/20">
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-border/30 bg-muted/20">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mr-1">Tonalidades:</span>
           <button
             onClick={() => setFilterLote(null)}

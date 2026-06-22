@@ -135,7 +135,7 @@ export default function TeamPanel() {
       {/* Status summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {(['online', 'away', 'offline'] as PresenceStatus[]).map((s) => (
-          <div key={s} className={`flex items-center gap-3 p-4 rounded-2xl border ${STATUS_BADGE[s]}`}>
+          <div key={s} className={`flex items-center gap-3 p-4 rounded-md border ${STATUS_BADGE[s]}`}>
             <Circle className={`w-2.5 h-2.5 fill-current ${s === 'online' ? 'text-emerald-500' : s === 'away' ? 'text-amber-500' : 'text-muted-foreground'}`} />
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{STATUS_LABEL[s]}</span>
@@ -146,7 +146,7 @@ export default function TeamPanel() {
       </div>
 
       {isAdmin && (
-        <div className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs">
+        <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs">
           <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <span className="text-muted-foreground">
             Como <strong className="text-foreground">Admin</strong>, você pode alterar o perfil de cada membro.
@@ -162,16 +162,16 @@ export default function TeamPanel() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar membro..."
-          className="pl-9 h-11 rounded-xl bg-muted/30 border-border/30"
+          className="pl-9 h-11 rounded-md bg-muted/30 border-border/30"
         />
       </div>
 
       {/* Members list */}
       <div className="space-y-2">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-16 rounded-2xl" />))
+          Array.from({ length: 4 }).map((_, i) => (<Skeleton key={i} className="h-16 rounded-md" />))
         ) : loadError ? (
-          <div className="text-center py-10 rounded-2xl border border-destructive/20 bg-destructive/5 text-destructive">
+          <div className="text-center py-10 rounded-md border border-destructive/20 bg-destructive/5 text-destructive">
             <p className="text-sm font-bold">Não foi possível carregar os membros.</p>
             <p className="text-xs opacity-70 mt-1">{loadError}</p>
           </div>
@@ -184,9 +184,9 @@ export default function TeamPanel() {
           members.map((m) => {
             const isSelf = user?.id === m.id;
             return (
-              <div key={m.id} className="flex flex-wrap items-center gap-3 sm:gap-4 p-3.5 rounded-2xl bg-muted/20 border border-border/20 hover:border-border/40 transition-colors">
+              <div key={m.id} className="flex flex-wrap items-center gap-3 sm:gap-4 p-3.5 rounded-md bg-muted/20 border border-border/20 hover:border-border/40 transition-colors">
                 <div className="relative">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+                  <div className="w-11 h-11 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                     {m.avatar ? (
                       <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
                     ) : (
