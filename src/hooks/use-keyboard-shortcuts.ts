@@ -67,6 +67,24 @@ export function useKeyboardShortcuts({
         e.preventDefault(); 
         setConfigOpen(true); 
       }
+
+      // "/" foca o primeiro campo de busca da página
+      if (e.key === '/' && !isTyping && !cmdKey && !e.altKey) {
+        const search = document.querySelector<HTMLInputElement>(
+          'input[type="search"], input[placeholder*="Buscar" i], input[placeholder*="Filtrar" i]'
+        );
+        if (search) {
+          e.preventDefault();
+          search.focus();
+          search.select?.();
+        }
+      }
+
+      // Ctrl+N → nova conferência (Tecido)
+      if (cmdKey && e.key.toLowerCase() === 'n' && !isTyping) {
+        e.preventDefault();
+        window.location.assign('/tecido');
+      }
     };
 
     document.addEventListener('keydown', handler);
