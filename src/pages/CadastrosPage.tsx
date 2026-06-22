@@ -323,11 +323,12 @@ export default function CadastrosPage() {
         <Table>
           <TableHeader className="sticky top-0 bg-card z-10">
             <TableRow>
-              <TableHead className="w-[40px]">
+              <TableHead className="w-[44px]">
                 <Checkbox
                   checked={allPageSelected}
                   onCheckedChange={(c) => togglePageAll(!!c)}
                   aria-label="Selecionar todos da página"
+                  className="h-5 w-5"
                 />
               </TableHead>
               <TableHead className="w-[200px]">Código interno</TableHead>
