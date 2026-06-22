@@ -40,7 +40,7 @@ export default function SaidaPage() {
   const [saidas, setSaidas] = useState<SaidaRegistro[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [periodo, setPeriodo] = useState<Periodo>('30');
+  const [periodo, setPeriodo] = useState<Periodo>('todos');
   const [pageSize, setPageSize] = useState(20);
   const { isLow } = usePerformance();
 

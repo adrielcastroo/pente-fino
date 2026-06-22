@@ -13,7 +13,11 @@ export function formatPeriodLabel(days: number, end: Date = new Date()): string 
   return `Últimos ${days} dias (${fmt(start)} – ${fmt(end)})`;
 }
 
-export const computeStats = (history: Conference[], stats_estoque: any): AppStats => {
+export const computeStats = (
+  history: Conference[],
+  stats_estoque: any,
+  cadastroMap: Map<string, string> = new Map()
+): AppStats => {
   const totalConferentes = new Set(history.map(h => h.conferente)).size;
   const totalConferencias = history.length;
   const totalRegistros = history.reduce((acc, h) => acc + h.registros.length, 0);
@@ -33,13 +37,19 @@ export const computeStats = (history: Conference[], stats_estoque: any): AppStat
   const avgMins = avgMinsTotal % 60;
   const avgDurationStr = avgHours > 0 ? `${avgHours}h ${avgMins}min` : `${avgMins}min`;
 
-  // Timeline (last 7 sessions)
-  const timeline = history.slice(0, 7).reverse().map(h => ({
-    name: (h.processo || h.name || '').slice(0, 10),
-    total: h.registros.length
-  }));
+  // Timeline (last 7 sessions) — include date + conferente for richer cards
+  const timeline = history.slice(0, 7).reverse().map(h => {
+    const d = h.date ? new Date(h.date) : null;
+    const dStr = d ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` : '';
+    const conf = (h.conferente || '').split(' ')[0] || '—';
+    const proc = (h.processo || h.name || '').slice(0, 8);
+    return {
+      name: `${dStr} ${conf} ${proc}`.trim(),
+      total: h.registros.length,
+    };
+  });
 
-  // Top 5 Conferentes
+  // Top Conferentes (sorted)
   const conferenteMap = new Map<string, number>();
   history.forEach(h => {
     const current = conferenteMap.get(h.conferente || 'Anônimo') || 0;
@@ -51,19 +61,27 @@ export const computeStats = (history: Conference[], stats_estoque: any): AppStat
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
-  // Setores (sempre exibir todos, mesmo zerados, para contexto completo)
+  // Setores — carga de trabalho = nº de registros por setor (não conferências)
+  let regTecido = 0, regMadeira = 0, regMotor = 0;
+  history.forEach(h => h.registros.forEach(r => {
+    if (r.modoOrigem === 'tecido') regTecido++;
+    else if (r.modoOrigem === 'madeira') regMadeira++;
+    else if (r.modoOrigem === 'motor') regMotor++;
+  }));
   const categorias = [
-    { name: 'Tecidos', value: history.filter(h => h.registros.some(r => r.modoOrigem === 'tecido')).length },
-    { name: 'Madeira', value: history.filter(h => h.registros.some(r => r.modoOrigem === 'madeira')).length },
-    { name: 'Motores', value: history.filter(h => h.registros.some(r => r.modoOrigem === 'motor')).length },
+    { name: `Tecidos (${regTecido})`, value: regTecido },
+    { name: `Madeira (${regMadeira})`, value: regMadeira },
+    { name: `Motores (${regMotor})`, value: regMotor },
   ];
 
-  // Tipos de Materiais
+  // Tipos de Materiais — resolve código → descrição quando disponível
   const tiposMap = new Map<string, number>();
   history.flatMap(h => h.registros).forEach(r => {
-    const item = r.item || 'Outros';
-    const current = tiposMap.get(item) || 0;
-    tiposMap.set(item, current + 1);
+    const codigo = (r.item || '').trim();
+    const descricao = cadastroMap.get(codigo) || cadastroMap.get(codigo.toUpperCase());
+    const display = descricao ? `${descricao}` : (codigo || 'Outros');
+    const current = tiposMap.get(display) || 0;
+    tiposMap.set(display, current + 1);
   });
 
   const tipos = Array.from(tiposMap.entries())
