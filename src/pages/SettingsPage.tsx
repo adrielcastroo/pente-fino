@@ -100,7 +100,7 @@ const categories: Category[] = CATEGORY_GROUPS.flatMap(g => g.items);
 
 export default function SettingsPage() {
   useDocumentTitle('Configurações');
-  const { user, profile, isGuest, signOut } = useAuth();
+  const { user, profile, isGuest, signOut, role } = useAuth();
   const [activeCategory, setActiveCategory] = useState('profile');
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -375,7 +375,6 @@ export default function SettingsPage() {
   const labelSettings = useAppStore(s => s.labelSettings);
   const setLabelSettings = useAppStore(s => s.setLabelSettings);
 
-  const { role } = useAuth();
   const visibleGroups = useMemo(
     () => CATEGORY_GROUPS
       .map(g => ({
@@ -1138,6 +1137,23 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/40 shadow-2xl">
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+            Alterações pendentes
+          </Badge>
+          <Button
+            onClick={saveSettings}
+            size="sm"
+            className="font-bold gap-2"
+          >
+            <Save className="w-3.5 h-3.5" />
+            Salvar alterações
+          </Button>
+        </div>
+      )}
     </div>
+    </TooltipProvider>
   );
 }
