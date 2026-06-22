@@ -7,6 +7,7 @@ import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
+import { bipSuccess } from '@/lib/bip-feedback';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
@@ -791,7 +792,7 @@ export const LeftPanel = memo(function LeftPanel() {
         avariaFotoUrl: avariaEnabled ? avariaFotoUrl : null,
       };
       addRegistro(reg);
-      try { navigator.vibrate?.(100); } catch {}
+      bipSuccess();
       toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
 
       // Impressão Automática (PNG → n8n)
@@ -874,7 +875,7 @@ export const LeftPanel = memo(function LeftPanel() {
       isNew: true,
     };
     addRegistro(reg);
-    try { navigator.vibrate?.(100); } catch {}
+    bipSuccess();
     toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
 
     // Impressão Automática (PNG → n8n)

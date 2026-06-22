@@ -414,12 +414,12 @@ export default function RightPanel() {
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="flex-none h-11 px-2 sm:px-4 rounded-xl border border-border/50 bg-muted/30 flex items-center gap-1.5 sm:gap-2 transition-all hover:bg-muted/50 group">
-              <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-primary" />
-              <select 
-                value={sortBy} 
+            <div className="flex-none h-11 px-2 sm:px-3 rounded-xl bg-transparent hover:bg-muted/40 flex items-center gap-1.5 transition-colors group">
+              <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground" />
+              <select
+                value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-transparent border-none outline-none text-[8px] sm:text-xs font-semibold text-muted-foreground cursor-pointer group-hover:text-foreground w-16 sm:w-auto"
+                className="bg-transparent border-none outline-none text-[8px] sm:text-xs font-medium text-muted-foreground/70 cursor-pointer group-hover:text-foreground w-16 sm:w-auto"
               >
                 <option value="">Ordenar</option>
                 <option value="item">A-Z</option>
@@ -661,23 +661,14 @@ export default function RightPanel() {
           )}
 
           {sortedRows.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-32 text-center px-6">
-              <div className="h-24 w-24 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 transition-transform hover:rotate-0 duration-500">
-                <Package className="w-12 h-12 text-primary/30" />
+            <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+              <div className="h-14 w-14 bg-muted/40 rounded-2xl flex items-center justify-center mb-4">
+                <Package className="w-7 h-7 text-muted-foreground/50" />
               </div>
-              <h3 className="text-xl font-semibold tracking-tight text-foreground mb-2">Nenhum item registrado</h3>
-              <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed font-medium">
-                Os materiais bipados ou registrados manualmente aparecerão nesta lista detalhada para conferência.
+              <p className="text-sm font-semibold text-foreground mb-1">Nenhum item registrado</p>
+              <p className="text-xs text-muted-foreground max-w-[280px] leading-relaxed">
+                Os materiais bipados aparecerão aqui.
               </p>
-              {activeTab !== 'tecido' && (
-                <Button
-                  variant="outline"
-                  className="mt-8 rounded-md px-10 h-12 font-semibold border-primary/20 hover:bg-primary/5 text-primary transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/5"
-                  onClick={() => useAppStore.getState().setFormData({ activeTab: 'tecido' })}
-                >
-                  Iniciar bipagem
-                </Button>
-              )}
             </div>
           )}
         </div>
