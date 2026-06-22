@@ -61,7 +61,7 @@ export default function MainLayout() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain">
+          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 lg:pb-0 portrait:pb-16 landscape:pb-0">
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 max-w-[2000px] mx-auto">
@@ -71,6 +71,7 @@ export default function MainLayout() {
             </div>
           </main>
         </div>
+        <BottomTabBar />
       </div>
       {!['/tecido', '/madeira', '/motor'].includes(location.pathname) && <UndoBanner />}
 
