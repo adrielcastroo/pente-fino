@@ -244,7 +244,7 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-full mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
+      className="space-y-10 lg:space-y-12 max-w-full mx-auto pb-8 sm:pb-16 px-2 sm:px-6 lg:px-8 overflow-x-hidden"
     >
       {/* Header - Simple and Clean */}
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
@@ -349,28 +349,28 @@ export default function DashboardPage() {
       {/* Cyclic Inventory Notification */}
       <CyclicNotification />
 
-      {/* Alertas Operacionais */}
-      <AlertsCard stats={stats} />
+      {/* ============== SEÇÃO 1 — RESUMO EXECUTIVO ============== */}
+      <section aria-labelledby="sec-resumo" className="space-y-5">
+        <div className="px-1">
+          <h2 id="sec-resumo" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resumo executivo</h2>
+          <p className="text-[11px] text-muted-foreground/70 mt-0.5">Alertas, indicadores principais e variação por período</p>
+        </div>
+        <AlertsCard stats={stats} />
+        <PeriodComparisonCard history={history} />
+        <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
+      </section>
 
-      {/* Comparação período a período */}
-      <PeriodComparisonCard history={history} />
-
-      {/* Stat Cards - Consolidated and Optimized */}
-      <StatCards stats={stats} onStatClick={(id) => id === 'conferentes' || id === 'registros' ? setDetailDialog(id) : setDetailDialog(id)} />
-
-
-      {/* Charts Grid */}
       {/* Toggle mobile para revelar gráficos pesados */}
       <button
         type="button"
         onClick={() => setShowMobileExtras(v => !v)}
-        className="md:hidden w-full rounded-xl border border-border/30 bg-card/40 backdrop-blur py-3 px-4 flex items-center justify-between text-xs font-black uppercase tracking-wider text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
+        className="md:hidden w-full rounded-xl border border-border/30 bg-card/40 backdrop-blur py-3 px-4 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
       >
         <span>{showMobileExtras ? 'Ocultar gráficos detalhados' : 'Ver mais gráficos e detalhes'}</span>
         <ChevronRight className={cn("w-4 h-4 transition-transform", showMobileExtras && "rotate-90")} />
       </button>
 
-      {/* Charts Grid */}
+      {/* ============== SEÇÕES 2-4 ============== */}
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden",
         !showMobileExtras && "hidden md:grid"
