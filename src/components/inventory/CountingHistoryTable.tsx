@@ -10,6 +10,7 @@ import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import { EmptyState } from '@/components/ui/empty-state';
 
 
 export function CountingHistoryTable() {
