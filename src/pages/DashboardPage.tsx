@@ -13,6 +13,7 @@ import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { ConferenteProfileDialog } from '@/components/dashboard/ConferenteProfileDialog';
 import { SessionsHeatmap } from '@/components/dashboard/SessionsHeatmap';
+import { NfPhysicalCompareDialog } from '@/components/dashboard/NfPhysicalCompareDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
@@ -59,6 +60,11 @@ export default function DashboardPage() {
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
   const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
+  const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
+  const compareConference = useMemo(
+    () => history.find(c => c.id === compareConferenceId) ?? null,
+    [history, compareConferenceId]
+  );
 
   const handleFullExportExcel = async () => {
     setIsExporting(true);
