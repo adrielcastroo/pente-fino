@@ -13,24 +13,33 @@ export function useDashboard() {
   const setFormData = useAppStore(s => s.setFormData);
   
   const [dbStats, setDbStats] = useState<any>(null);
+  const [cadastroMap, setCadastroMap] = useState<Map<string, string>>(new Map());
 
   const fetchDbStats = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from('estoque_posicoes').select('status');
-      if (error) throw error;
-      
+      const [{ data: posicoes, error: e1 }, { data: cadastro, error: e2 }] = await Promise.all([
+        supabase.from('estoque_posicoes').select('status'),
+        supabase.from('itens_cadastro').select('codigo, descricao'),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+
       const stats = {
         tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
-        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 } // Madeira is usually different, keeping placeholder
+        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 }
       };
-
-      data?.forEach(p => {
+      posicoes?.forEach(p => {
         if (p.status === 'ocupado') stats.tecido.used++;
         else if (p.status === 'reservado') stats.tecido.reserved++;
         else if (p.status === 'bloqueado') stats.tecido.blocked++;
       });
-
       setDbStats(stats);
+
+      const map = new Map<string, string>();
+      cadastro?.forEach((c: any) => {
+        if (c.codigo && c.descricao) map.set(String(c.codigo).trim(), c.descricao);
+      });
+      setCadastroMap(map);
     } catch (e) {
       console.error('Error fetching dashboard DB stats:', e);
     }
@@ -40,7 +49,7 @@ export function useDashboard() {
     fetchDbStats();
   }, [fetchDbStats]);
 
-  const stats = useMemo(() => computeStats(history, dbStats), [history, dbStats]);
+  const stats = useMemo(() => computeStats(history, dbStats, cadastroMap), [history, dbStats, cadastroMap]);
   const [detailChart, setDetailChart] = useState<{ title: string; data: any[]; type: 'pie' | 'bar' | 'area' } | null>(null);
 
   const handleStatClick = useCallback((id: string) => {
