@@ -874,6 +874,7 @@ export const LeftPanel = memo(function LeftPanel() {
       isNew: true,
     };
     addRegistro(reg);
+    try { navigator.vibrate?.(100); } catch {}
     toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
 
     // Impressão Automática (PNG → n8n)
