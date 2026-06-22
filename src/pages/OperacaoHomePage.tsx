@@ -1,8 +1,18 @@
 import { useNavigate } from 'react-router-dom';
-import { Archive, Warehouse, Table as TableIcon, FolderOpen, LucideIcon } from 'lucide-react';
+import {
+  Archive,
+  Warehouse,
+  Table as TableIcon,
+  FolderOpen,
+  Package,
+  Settings as SettingsIcon,
+  PlayCircle,
+  LucideIcon,
+} from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface OpAction {
   to: string;
@@ -14,8 +24,10 @@ interface OpAction {
 const actions: OpAction[] = [
   { to: '/saida', label: 'Conferir saída', description: 'Bipar documento e itens', icon: Archive },
   { to: '/estoque', label: 'Consultar estoque', description: 'Localizar posições', icon: Warehouse },
-  { to: '/reservas', label: 'Registrar reserva', description: 'Reservar peças', icon: TableIcon },
+  { to: '/reservas', label: 'Reservas', description: 'Visualizar e registrar reservas', icon: TableIcon },
+  { to: '/cadastros', label: 'Cadastros', description: 'Consultar itens cadastrados', icon: Package },
   { to: '/historico', label: 'Histórico recente', description: 'Últimas conferências', icon: FolderOpen },
+  { to: '/configuracoes', label: 'Configurações', description: 'Preferências pessoais', icon: SettingsIcon },
 ];
 
 export default function OperacaoHomePage() {
@@ -33,14 +45,37 @@ export default function OperacaoHomePage() {
 
   return (
     <main className="min-h-[calc(100vh-4rem)] lg:min-h-screen p-4 md:p-6 lg:p-8 bg-background">
-      <header className="mb-6 md:mb-8">
-        <p className="text-sm md:text-base text-muted-foreground">{greeting},</p>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{name}</h1>
-        <p className="mt-1 text-sm md:text-base text-muted-foreground">O que deseja fazer?</p>
+      <header className="mb-6 md:mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-sm md:text-base text-muted-foreground">{greeting},</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">{name}</h1>
+          <p className="mt-1 text-sm md:text-base text-muted-foreground">O que deseja fazer?</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button
+            size="lg"
+            onClick={() => navigate('/tecido')}
+            className="h-12 px-5 text-base font-semibold gap-2"
+            aria-label="Iniciar nova conferência"
+          >
+            <PlayCircle className="h-5 w-5" aria-hidden="true" />
+            Nova conferência
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/configuracoes')}
+            className="h-12 px-5 text-base font-semibold gap-2"
+            aria-label="Abrir configurações pessoais"
+          >
+            <SettingsIcon className="h-5 w-5" aria-hidden="true" />
+            Configurações
+          </Button>
+        </div>
       </header>
 
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 max-w-3xl"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 max-w-5xl"
         role="list"
         aria-label="Ações operacionais"
       >

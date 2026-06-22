@@ -27,8 +27,10 @@ const overflowOperacao: Tab[] = [
   { to: '/madeira', label: 'Madeira', icon: TreePine },
   { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
   { to: '/reservas', label: 'Reservas', icon: Table },
+  { to: '/cadastros', label: 'Cadastros', icon: Package },
   { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
 ];
+
 
 const overflowGestao: Tab[] = [
   { to: '/madeira', label: 'Madeira', icon: TreePine },
