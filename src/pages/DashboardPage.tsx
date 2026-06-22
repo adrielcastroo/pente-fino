@@ -89,6 +89,44 @@ export default function DashboardPage() {
       document.body.classList.remove('presentation-mode');
     };
   }, [presentationMode]);
+
+  // Real-time: auto-refresh a cada 30s (pausa em background)
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => {
+      if (!document.hidden) loadHistory();
+    }, 30000);
+    return () => clearInterval(id);
+  }, [autoRefresh, loadHistory]);
+
+  // Pop-out: abre o dashboard em janela separada (multi-monitor)
+  const handlePopOut = () => {
+    window.open('/dashboard', 'pente-fino-dashboard', 'width=1400,height=900,noopener');
+  };
+
+  // Export PDF do dashboard via html2canvas + jspdf
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const node = document.getElementById('dashboard-content');
+      if (!node) return;
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(node, { scale: 2, backgroundColor: null, logging: false });
+      const img = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+      pdf.addImage(img, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`dashboard_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e) {
+      console.error('Erro ao exportar PDF', e);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
   const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
   const compareConference = useMemo(
     () => history.find(c => c.id === compareConferenceId) ?? null,
