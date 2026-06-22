@@ -119,7 +119,7 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
         </Button>
       </CardHeader>
-      <CardContent className={cn("px-4 sm:px-5 pb-5 pt-5", isMobile ? "min-h-[120px]" : "h-[260px]")}>
+      <CardContent className={cn("px-4 sm:px-5 pb-5 pt-5", isMobile ? "min-h-[300px]" : "h-[300px] min-h-[300px]")}>
         {(!data || data.length === 0) ? (
           <div className="h-full min-h-[120px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Icon className="w-7 h-7 opacity-30" strokeWidth={1.5} />
