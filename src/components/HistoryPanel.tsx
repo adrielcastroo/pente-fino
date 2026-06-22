@@ -494,19 +494,21 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
                     {!isGuest && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingRegistro(r)}
-                            className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Editar registro</TooltipContent>
-                      </Tooltip>
+                      <RequireRole action="edit:registro-antigo" showLocked>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingRegistro(r)}
+                              className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar registro</TooltipContent>
+                        </Tooltip>
+                      </RequireRole>
                     )}
                     
                     {!isGuest && (
