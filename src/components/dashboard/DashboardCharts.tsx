@@ -10,6 +10,7 @@ import {
 import { usePerformance } from '@/hooks/use-performance';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 // Premium Color Palette
 const CHART_COLORS = [
