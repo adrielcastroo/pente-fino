@@ -265,6 +265,16 @@ export default function CadastrosPage() {
             );})}
           </TableBody>
         </Table>
+        {filtered.length > paged.length && (
+          <div className="flex flex-col items-center gap-2 py-6 border-t border-border/40">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Exibindo {paged.length} de {filtered.length}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => setPageSize(p => p + 50)} className="gap-2">
+              Carregar mais 50
+            </Button>
+          </div>
+        )}
       </div>
       </TooltipProvider>
 
