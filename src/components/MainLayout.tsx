@@ -8,6 +8,7 @@ import AppSidebar from '@/components/AppSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
+import CommandPalette from '@/components/CommandPalette';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { AppTab } from '@/types';
