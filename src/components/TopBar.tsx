@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 
 
 const TopBar = memo(function TopBar() {
@@ -188,14 +188,18 @@ const TopBar = memo(function TopBar() {
           )}
 
           {!isGuest && user && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-xl border border-primary/10">
+            <Link
+              to="/minha-atividade"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/10 transition-colors"
+              aria-label="Ver minha atividade do dia"
+            >
               <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                 <User className="w-3.5 h-3.5 text-primary" />
               </div>
               <span className="text-xs font-bold text-foreground truncate max-w-[80px] md:max-w-[120px]">
                 {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
               </span>
-            </div>
+            </Link>
           )}
 
 
