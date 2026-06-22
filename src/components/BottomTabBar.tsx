@@ -32,7 +32,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="flex lg:hidden md:landscape:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl"
+      className="flex lg:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navegação principal"
     >
@@ -43,18 +43,21 @@ export default function BottomTabBar() {
             <NavLink
               key={to}
               to={to}
+              aria-current={active ? 'page' : undefined}
+              aria-label={label}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] transition-colors',
+                'flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <Icon
-                className={cn('w-6 h-6', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')}
+                className={cn('w-6 h-6 md:w-7 md:h-7', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')}
                 strokeWidth={active ? 2.4 : 1.75}
                 fill={active ? 'currentColor' : 'none'}
                 fillOpacity={active ? 0.18 : 0}
+                aria-hidden="true"
               />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider">{label}</span>
             </NavLink>
           );
         })}
@@ -62,11 +65,14 @@ export default function BottomTabBar() {
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-muted-foreground hover:text-foreground transition-colors"
+              type="button"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors"
               aria-label="Mais opções"
+              aria-haspopup="dialog"
+              aria-expanded={open}
             >
-              <MoreHorizontal className="w-6 h-6" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Menu</span>
+              <MoreHorizontal className="w-6 h-6 md:w-7 md:h-7" aria-hidden="true" />
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider">Menu</span>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
