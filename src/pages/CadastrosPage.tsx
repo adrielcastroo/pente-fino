@@ -26,6 +26,7 @@ export default function CadastrosPage() {
   const [search, setSearch] = useState('');
   const [fornFilter, setFornFilter] = useState<FornFilter>('todos');
   const [sortKey, setSortKey] = useState<SortKey>('codigo_interno');
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
@@ -61,6 +62,11 @@ export default function CadastrosPage() {
     });
     return sorted;
   }, [itens, search, fornFilter, sortKey]);
+
+  const paged = useMemo(() => filtered.slice(0, pageSize), [filtered, pageSize]);
+
+  // Reset pagination when filters change
+  useMemo(() => { setPageSize(50); return null; }, [search, fornFilter, sortKey]);
 
   const handleEdit = (item: ItemCadastro) => {
     setEditing(item);
@@ -174,7 +180,7 @@ export default function CadastrosPage() {
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((item) => {
+            {paged.map((item) => {
               const lf = item.last_edited_field || null;
               const wasEdited = !!item.last_edited_at;
               const editedCol = (k: string) => lf === k;
