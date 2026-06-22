@@ -134,12 +134,36 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           <Eye className="w-4 h-4" />
         </Button>
       </CardHeader>
-      <CardContent className="px-8 pb-8 h-[260px]">
+      <CardContent className={cn("px-4 sm:px-8 pb-6 sm:pb-8", isMobile ? "min-h-[120px]" : "h-[260px]")}>
         {(!data || data.length === 0) ? (
-          <div className="h-full flex flex-col items-center justify-center gap-2 text-foreground/50">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center gap-2 text-foreground/50">
             <Icon className="w-8 h-8 opacity-30" />
             <p className="text-sm font-bold">Sem dados ainda</p>
           </div>
+        ) : isMobile ? (
+          (() => {
+            const max = Math.max(...data.map((d: any) => Number(d[chartKey]) || 0), 1);
+            return (
+              <ul className="flex flex-col gap-2.5 py-2">
+                {data.slice(0, 6).map((d: any, i: number) => {
+                  const v = Number(d[chartKey]) || 0;
+                  const pct = Math.round((v / max) * 100);
+                  const color = CHART_COLORS[i % CHART_COLORS.length];
+                  return (
+                    <li key={i} className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="truncate text-foreground/80">{d.name}</span>
+                        <span className="tabular-nums text-foreground/60">{v}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {type === 'bar' ? (
