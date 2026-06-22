@@ -941,12 +941,12 @@ export default function HistoryPanel() {
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-primary/10 text-primary">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
               <FolderOpen className="h-5 w-5" strokeWidth={1.75} />
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground leading-tight truncate">
                 Histórico de conferências
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
@@ -955,20 +955,20 @@ export default function HistoryPanel() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-             <div className="relative flex-1 lg:w-72">
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+             <div className="relative flex-1 min-w-[180px] lg:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
                 <Input
                   value={localSearch}
                   onChange={e => setLocalSearch(e.target.value)}
                   placeholder="Pesquisar por item, conferente ou NF..."
-                  className="pl-9 h-9 rounded-md border-border/40 bg-card/50 text-sm"
+                  className="pl-9 h-9 rounded-md border-border/40 bg-card/50 text-sm w-full"
                 />
              </div>
              <select
                value={periodo}
                onChange={e => setPeriodo(e.target.value as any)}
-               className="h-9 rounded-md border border-border/40 bg-card/50 px-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+               className="h-9 rounded-md border border-border/40 bg-card/50 px-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0"
              >
                <option value="7">Últimos 7 dias</option>
                <option value="30">Últimos 30 dias</option>
@@ -982,7 +982,7 @@ export default function HistoryPanel() {
                      variant={showTestData ? 'default' : 'outline'}
                      size="sm"
                      onClick={() => setShowTestData(v => !v)}
-                     className="h-9 rounded-md px-2.5 text-xs font-medium"
+                     className="h-9 rounded-md px-2.5 text-xs font-medium shrink-0"
                    >
                      {showTestData ? 'Ocultar' : 'Mostrar'} testes ({testCount})
                    </Button>
@@ -997,7 +997,7 @@ export default function HistoryPanel() {
                      variant="outline"
                      size="icon"
                      onClick={() => setShowClearConfirm(true)}
-                     className="h-9 w-9 rounded-md border-destructive/30 text-destructive hover:bg-destructive/10"
+                     className="h-9 w-9 rounded-md border-destructive/30 text-destructive hover:bg-destructive/10 shrink-0"
                    >
                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                    </Button>
@@ -1007,6 +1007,7 @@ export default function HistoryPanel() {
              )}
           </div>
         </header>
+
 
 
         {historyError && (

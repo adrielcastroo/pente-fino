@@ -395,7 +395,7 @@ export default function EstoquePage() {
       </div>
 
       {/* Categoria Tabs */}
-      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] p-1.5 gap-1.5 border border-white/10 shadow-2xl max-w-md ring-1 ring-white/5">
+      <div className="flex bg-card/40 backdrop-blur rounded-lg p-1 gap-1 border border-border/30 w-full sm:max-w-md">
         {(['tecido', 'madeira'] as const).map((key) => {
           const Icon = key === 'tecido' ? Shirt : TreePine;
           const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
@@ -403,18 +403,19 @@ export default function EstoquePage() {
             <button
               key={key}
               onClick={() => setCategory(key)}
-              className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-2.5 ${
+              className={`flex-1 py-2.5 rounded-md text-[10px] sm:text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-w-0 ${
                 category === key
-                  ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              {label}
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{label}</span>
             </button>
           );
         })}
       </div>
+
 
       {category === 'madeira' ? (
         <MadeiraEstoque />
@@ -443,7 +444,7 @@ export default function EstoquePage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                 <CardContent className="p-4 sm:p-6 text-center space-y-1 sm:space-y-2 relative z-10">
-                  <div className={`text-[clamp(1.25rem,5vw,2.25rem)] font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className={`text-xl sm:text-2xl lg:text-3xl font-black tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
                   <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
                   <div className="flex items-center justify-center gap-1.5 pt-2">
                     <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">

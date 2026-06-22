@@ -283,10 +283,10 @@ export default function DashboardPage() {
               variant="outline"
               size="icon"
               onClick={() => setAutoRefresh(v => !v)}
-              className="hidden lg:inline-flex h-14 w-14 rounded-2xl"
+              className="hidden sm:inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-md shrink-0"
               title={autoRefresh ? 'Pausar atualização automática (30s)' : 'Ativar atualização automática (30s)'}
             >
-              <RefreshCw className={cn('w-5 h-5', autoRefresh && 'text-primary animate-spin-slow')} />
+              <RefreshCw className={cn('w-4 h-4 lg:w-5 lg:h-5', autoRefresh && 'text-primary animate-spin-slow')} />
             </Button>
 
             <Button
@@ -294,17 +294,17 @@ export default function DashboardPage() {
               size="icon"
               onClick={handleExportPdf}
               disabled={isExportingPdf}
-              className="hidden lg:inline-flex h-14 w-14 rounded-2xl"
+              className="hidden sm:inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-md shrink-0"
               title="Exportar dashboard como PDF"
             >
-              {isExportingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
+              {isExportingPdf ? <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 animate-spin" /> : <FileDown className="w-4 h-4 lg:w-5 lg:h-5" />}
             </Button>
 
             <Button
               variant="outline"
               size="icon"
               onClick={handlePopOut}
-              className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
+              className="hidden lg:inline-flex h-12 w-12 rounded-md shrink-0"
               title="Abrir em janela separada (multi-monitor)"
             >
               <ExternalLink className="w-5 h-5" />
@@ -314,7 +314,7 @@ export default function DashboardPage() {
               variant="outline"
               size="icon"
               onClick={togglePresentation}
-              className="hidden xl:inline-flex h-14 w-14 rounded-2xl"
+              className="hidden lg:inline-flex h-12 w-12 rounded-md shrink-0"
               title={presentationMode ? 'Sair do modo apresentação (Esc)' : 'Modo apresentação (F11)'}
             >
               {presentationMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
@@ -326,19 +326,21 @@ export default function DashboardPage() {
                   variant="default" 
                   size="lg"
                   disabled={isExporting}
-                  className="h-12 sm:h-14 px-6 sm:px-10 rounded-2xl shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:translate-y-[-4px] active:translate-y-[0px] transition-all duration-300 gap-3 sm:gap-4 font-black uppercase tracking-[0.2em] text-[10px] sm:text-[12px] bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap border-b-4 border-emerald-800"
+                  className="h-10 sm:h-12 px-4 sm:px-6 rounded-md gap-2 font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap shrink-0"
                   onClick={handleFullExportExcel}
                 >
                   {isExporting ? (
-                    <Loader2 className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
-                    <FileText className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
-                  {isExporting ? 'Processando...' : 'Exportar Excel'}
+                  <span className="hidden xs:inline">{isExporting ? 'Processando...' : 'Exportar Excel'}</span>
+                  <span className="xs:hidden">{isExporting ? '...' : 'Excel'}</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="font-bold text-[10px] uppercase tracking-wider py-2">Gerar Relatório Completo de Atividades</TooltipContent>
+              <TooltipContent className="font-medium text-xs py-1.5">Gerar Relatório Completo de Atividades</TooltipContent>
             </Tooltip>
+
           </motion.div>
         </div>
         
