@@ -334,6 +334,16 @@ export default function SaidaPage() {
                 </div>
               </div>
             ))}
+            {filteredSaidas.length > visibleSaidas.length && (
+              <div className="flex flex-col items-center gap-2 py-6">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Exibindo {visibleSaidas.length} de {filteredSaidas.length}
+                </p>
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-xl font-black text-xs uppercase tracking-wider h-10 px-6">
+                  Carregar mais
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
