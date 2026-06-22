@@ -534,36 +534,6 @@ export default function DashboardPage() {
           <SessionsHeatmap history={history} weeks={12} />
         </div>
         
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="md:col-span-2 lg:col-span-4 relative group rounded-[2rem] border border-border/20 bg-primary/[0.02] backdrop-blur-xl p-5 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 lg:space-y-6 overflow-hidden transition-all duration-700 hover:bg-primary/[0.05] hover:border-primary/30 hover:shadow-[0_40px_80px_-20px_rgba(var(--primary-rgb),0.15)]"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full scale-150 opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
-            <motion.div 
-              whileHover={{ rotate: 12, scale: 1.1 }}
-              className="relative p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[1.5rem] bg-primary/10 text-primary border border-primary/20 transition-transform duration-500"
-            >
-              <FileText className="w-7 h-7 sm:w-10 sm:h-10" />
-            </motion.div>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            <h3 className="font-extrabold text-lg sm:text-2xl tracking-tight text-foreground">Relatório Executivo</h3>
-            <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed max-w-[240px] mx-auto font-bold">Relatório consolidado em Excel.</p>
-          </div>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
-            <Button 
-              className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3 group/btn"
-              onClick={handleFullExportExcel}
-              disabled={isExporting}
-            >
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 group-hover/btn:translate-y-0.5 transition-transform" />}
-              {isExporting ? 'Processando' : 'Baixar Relatório'}
-            </Button>
-          </motion.div>
-        </motion.div>
       </div>
 
       {/* Detail Dialogs */}
