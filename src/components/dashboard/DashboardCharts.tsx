@@ -112,6 +112,7 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
 
 export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const { isLow } = usePerformance();
+  const isMobile = useIsMobile();
   return (
     <Card id={id} className="group border border-border/10 bg-card/20 backdrop-blur-xl shadow-sm overflow-hidden rounded-[2rem] transition-all duration-500 hover:border-primary/30 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-2">
       <CardHeader className="px-8 py-8 flex flex-row items-start justify-between">
