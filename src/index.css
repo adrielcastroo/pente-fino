@@ -184,6 +184,26 @@
   .font-mono {
     font-family: 'IBM Plex Mono', monospace !important;
   }
+
+  /* Industrial: numbers always tabular for visual alignment in tables/KPIs */
+  .tabular-nums,
+  [class*="text-"][class*="font-black"],
+  [class*="text-"][class*="font-bold"][class*="tracking-tight"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Tame "shadcn starter kit" excess: drastically reduce decorative shadows
+     on cards, replacing them with structural borders. Keep shadows only
+     on overlays (popovers, dropdowns, dialogs). */
+  .shadow-xl, .shadow-2xl {
+    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04) !important;
+  }
+  [role="dialog"].shadow-xl,
+  [role="dialog"].shadow-2xl,
+  [data-radix-popper-content-wrapper] .shadow-xl,
+  [data-radix-popper-content-wrapper] .shadow-2xl {
+    box-shadow: 0 10px 25px -5px rgb(15 23 42 / 0.15), 0 8px 10px -6px rgb(15 23 42 / 0.1) !important;
+  }
 }
 
 @layer components {
