@@ -450,6 +450,12 @@ export default function DashboardPage() {
         onClose={() => setSelectedConferente(null)}
       />
 
+      <NfPhysicalCompareDialog
+        open={!!compareConference}
+        onOpenChange={(v) => !v && setCompareConferenceId(null)}
+        conference={compareConference}
+      />
+
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className={cn(
