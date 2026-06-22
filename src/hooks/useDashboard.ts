@@ -16,32 +16,41 @@ export function useDashboard() {
   const [cadastroMap, setCadastroMap] = useState<Map<string, string>>(new Map());
 
   const fetchDbStats = useCallback(async () => {
+    // Run independently so one failure doesn't kill the other (was: codigo column
+    // didn't exist and threw, leaving dbStats null → tecido.used = 0 → 0%).
     try {
-      const [{ data: posicoes, error: e1 }, { data: cadastro, error: e2 }] = await Promise.all([
-        supabase.from('estoque_posicoes').select('status'),
-        supabase.from('itens_cadastro').select('codigo, descricao'),
-      ]);
+      const { data: posicoes, error: e1 } = await supabase
+        .from('estoque_posicoes')
+        .select('status, item');
       if (e1) throw e1;
-      if (e2) throw e2;
 
       const stats = {
         tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
-        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 }
+        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 },
       };
-      posicoes?.forEach(p => {
-        if (p.status === 'ocupado') stats.tecido.used++;
-        else if (p.status === 'reservado') stats.tecido.reserved++;
+      posicoes?.forEach((p: any) => {
+        const occupied = p.status === 'ocupado' || (p.item && String(p.item).trim() !== '');
+        if (p.status === 'reservado') stats.tecido.reserved++;
         else if (p.status === 'bloqueado') stats.tecido.blocked++;
+        else if (occupied) stats.tecido.used++;
       });
       setDbStats(stats);
+    } catch (e) {
+      console.error('Error fetching estoque stats:', e);
+    }
 
+    try {
+      const { data: cadastro, error: e2 } = await supabase
+        .from('itens_cadastro')
+        .select('codigo_interno, descricao');
+      if (e2) throw e2;
       const map = new Map<string, string>();
       cadastro?.forEach((c: any) => {
-        if (c.codigo && c.descricao) map.set(String(c.codigo).trim(), c.descricao);
+        if (c.codigo_interno && c.descricao) map.set(String(c.codigo_interno).trim(), c.descricao);
       });
       setCadastroMap(map);
     } catch (e) {
-      console.error('Error fetching dashboard DB stats:', e);
+      console.error('Error fetching cadastro map:', e);
     }
   }, []);
 

@@ -3,12 +3,14 @@ import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
+import { useNetworkStatus } from '@/hooks/use-network-status';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
 import CommandPalette from '@/components/CommandPalette';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { AppTab } from '@/types';
@@ -31,6 +33,7 @@ export default function MainLayout() {
   const isTablet = useIsTablet();
   const location = useLocation();
   usePresenceTracker();
+  useNetworkStatus();
 
   // Map path to active tab
   const getActiveTab = (path: string): AppTab => {
@@ -77,7 +80,9 @@ export default function MainLayout() {
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 max-w-[1600px] 2xl:max-w-[1800px] mx-auto">
-                  <Outlet />
+                  <ErrorBoundary>
+                    <Outlet />
+                  </ErrorBoundary>
                 </div>
               </Suspense>
             </div>
