@@ -647,7 +647,7 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-500">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-500 max-h-[90vh] overflow-y-auto">
           {selectedCell && (
             <>
               {/* Dialog Header */}
@@ -1063,7 +1063,7 @@ export default function EstoquePage() {
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-black">Confirmar Saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
@@ -1081,7 +1081,7 @@ export default function EstoquePage() {
 
       {/* Confirmação Excluir */}
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-black">Excluir Item</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
@@ -1099,7 +1099,7 @@ export default function EstoquePage() {
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
@@ -1160,7 +1160,7 @@ export default function EstoquePage() {
 
       {/* Confirm Scan Saida */}
       <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl">
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-black">Confirmar Saída por Bipagem</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">

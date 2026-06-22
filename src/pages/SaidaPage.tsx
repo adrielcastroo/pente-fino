@@ -350,7 +350,7 @@ export default function SaidaPage() {
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-500">
@@ -417,7 +417,7 @@ export default function SaidaPage() {
           setDestino('');
         }
       }}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg">
+        <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-black">Confirmar saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-4">

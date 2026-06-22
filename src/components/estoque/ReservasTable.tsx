@@ -182,7 +182,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                           <span className="sr-only">Remover item</span>
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-[400px]">
+                      <AlertDialogContent className="max-w-[400px] max-h-[90vh] overflow-y-auto">
                         <AlertDialogHeader>
                           <div className="flex items-center gap-3 text-destructive mb-2">
                             <div className="p-2 bg-destructive/10 rounded-full">
