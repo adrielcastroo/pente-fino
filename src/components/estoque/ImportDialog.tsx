@@ -428,13 +428,13 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
                           )}
                         </td>
                         <td className="px-3 py-2 font-bold text-foreground">{row.item || '—'}</td>
-                        <td className="px-3 py-2 text-right font-mono text-muted-foreground">{row.m2 || '—'}</td>
-                        <td className="px-3 py-2 font-mono text-muted-foreground">{row.proc || '—'}</td>
-                        <td className="px-3 py-2 text-right font-mono text-muted-foreground">{row.largura || '—'}</td>
-                        <td className="px-3 py-2 text-right font-mono text-muted-foreground">{row.m_linear || '—'}</td>
-                        <td className="px-3 py-2 font-mono text-muted-foreground truncate max-w-[120px]">{row.lote || '—'}</td>
-                        <td className="px-3 py-2 font-mono text-muted-foreground">{row.endereco || '—'}</td>
-                        <td className="px-3 py-2 font-mono text-primary font-bold truncate max-w-[160px]">{row.lote_sistema || '—'}</td>
+                        <td className="px-3 py-2 text-right font-mono text-muted-foreground tabular-nums">{row.m2 || '—'}</td>
+                        <td className="px-3 py-2 font-mono text-muted-foreground tabular-nums">{row.proc || '—'}</td>
+                        <td className="px-3 py-2 text-right font-mono text-muted-foreground tabular-nums">{row.largura || '—'}</td>
+                        <td className="px-3 py-2 text-right font-mono text-muted-foreground tabular-nums">{row.m_linear || '—'}</td>
+                        <td className="px-3 py-2 font-mono text-muted-foreground truncate max-w-[120px] tabular-nums">{row.lote || '—'}</td>
+                        <td className="px-3 py-2 font-mono text-muted-foreground tabular-nums">{row.endereco || '—'}</td>
+                        <td className="px-3 py-2 font-mono text-primary font-bold truncate max-w-[160px] tabular-nums">{row.lote_sistema || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

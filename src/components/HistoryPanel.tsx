@@ -122,7 +122,7 @@ function EditRegistroDialog({
             {isMotor && (
               <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground ml-1">Lote Final</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors font-mono text-sm" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
+                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors font-mono text-sm tabular-nums" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
               </div>
             )}
 
