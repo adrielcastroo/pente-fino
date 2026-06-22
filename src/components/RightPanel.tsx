@@ -658,7 +658,7 @@ export default function RightPanel() {
                 className="mt-8 rounded-2xl px-10 h-12 font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 text-primary transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/5"
                 onClick={() => useAppStore.getState().setFormData({ activeTab: 'tecido' })}
               >
-                Começar agora
+                Iniciar bipagem
               </Button>
             </div>
           )}
