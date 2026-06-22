@@ -154,8 +154,8 @@ const TopBar = memo(function TopBar() {
                 <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="hidden sm:block text-[11px] sm:text-sm font-black text-foreground tracking-tight whitespace-nowrap">Registro &amp; Bipagem</span>
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground/70 font-bold">
+                <span className="hidden sm:block text-[11px] sm:text-sm font-semibold text-foreground tracking-tight whitespace-nowrap">Registro &amp; Bipagem</span>
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-bold">
                   {path === '/tecido' ? 'Tecido' : path === '/madeira' ? 'Madeira' : 'Motor / Controle'}
                 </span>
               </div>
@@ -163,7 +163,7 @@ const TopBar = memo(function TopBar() {
           ) : (
             <div className="hidden xs:flex flex-col">
               <p className="text-[10px] sm:text-sm font-bold text-foreground tracking-tight">
-                Sistema <span className="text-primary font-black uppercase tracking-widest text-[8px] sm:text-xs">Pente Fino</span>
+                Sistema <span className="text-primary font-semibold text-[8px] sm:text-xs">Pente Fino</span>
               </p>
             </div>
           )}
