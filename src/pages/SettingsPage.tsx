@@ -803,6 +803,30 @@ export default function SettingsPage() {
                     <div className="space-y-6">
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
                         <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Modo Lite (Performance)</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Desativa animações pesadas, blurs e gráficos secundários. {perfIsAuto ? 'Detecção automática ativa.' : (perfLevel === 'low' ? 'Forçado: ligado.' : 'Forçado: desligado.')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={perfLevel === 'low'}
+                            onCheckedChange={(val) => perfSetLevel(val ? 'low' : 'high')}
+                          />
+                          {!perfIsAuto && (
+                            <button
+                              onClick={() => perfSetLevel('auto')}
+                              className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-primary"
+                              title="Restaurar detecção automática baseada no dispositivo"
+                            >
+                              Auto
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/10">
+                        <div className="space-y-0.5">
                           <Label className="text-sm font-bold">Reduzir Animações</Label>
                           <p className="text-xs text-muted-foreground">Melhora a fluidez em dispositivos lentos.</p>
                         </div>
@@ -828,12 +852,13 @@ export default function SettingsPage() {
                         <div className="space-y-1">
                           <h5 className="text-xs font-bold text-amber-500 uppercase">Dica de Performance</h5>
                           <p className="text-xs text-muted-foreground leading-relaxed">
-                            Para dispositivos com pouca memória, ative a redução de animações para garantir uma navegação instantânea.
+                            O Modo Lite é ativado automaticamente em tablets de entrada (≤4GB RAM, ≤4 núcleos ou rede 3G). Você pode forçar manual e voltar ao automático no botão "Auto".
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
+
 
                   {activeCategory === 'integrations' && (
                     <div className="space-y-6">
