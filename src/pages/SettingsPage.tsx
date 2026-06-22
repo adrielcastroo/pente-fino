@@ -593,7 +593,7 @@ export default function SettingsPage() {
 
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Nome de Exibição</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Nome de Exibição</Label>
                           <Input
                             value={displayName}
                             onChange={(e) => { setDisplayName(e.target.value); setHasUnsavedChanges(true); }}
@@ -603,7 +603,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60 flex items-center gap-1.5">
+                          <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                             E-mail
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -619,7 +619,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Cargo</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Cargo</Label>
                           <Input
                             value={cargo}
                             onChange={(e) => { setCargo(e.target.value); setHasUnsavedChanges(true); }}
@@ -630,7 +630,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Setor</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Setor</Label>
                           <Input
                             value={setor}
                             onChange={(e) => { setSetor(e.target.value); setHasUnsavedChanges(true); }}
@@ -641,7 +641,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
-                          <Label className="text-xs font-black uppercase tracking-[0.1em] opacity-60">Telefone</Label>
+                          <Label className="text-sm font-medium text-muted-foreground">Telefone</Label>
                           <Input
                             value={telefone}
                             onChange={(e) => { setTelefone(e.target.value); setHasUnsavedChanges(true); }}
