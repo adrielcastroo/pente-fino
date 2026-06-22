@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          after_data: Json | null
+          before_data: Json | null
+          changed_keys: string[] | null
+          entity: string
+          entity_id: string | null
+          id: string
+          occurred_at: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_keys?: string[] | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          occurred_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_keys?: string[] | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          occurred_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       auth_audit_logs: {
         Row: {
           created_at: string
