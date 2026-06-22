@@ -248,7 +248,7 @@ export default function DashboardPage() {
           className="md:col-span-2 lg:col-span-8 space-y-4 sm:space-y-6 lg:space-y-8"
         >
           <div className="overflow-hidden">
-            <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} />
+            <TimelineChart id="chart-timeline" data={stats.timeline} onExport={handleExport} onDetailClick={setDetailChart} periodLabel={formatPeriodLabel(7)} />
           </div>
           
           
