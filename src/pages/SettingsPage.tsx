@@ -575,7 +575,7 @@ export default function SettingsPage() {
                           <p className="text-xs text-muted-foreground truncate">{user?.email || "Sessão local"}</p>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge className="mt-1.5 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-wider cursor-help">
+                              <Badge variant="secondary" className="mt-1.5 bg-muted text-muted-foreground border border-border/60 text-xs font-medium normal-case tracking-normal cursor-help">
                                 {isGuest ? 'Visitante' : roleLabel}
                               </Badge>
                             </TooltipTrigger>
