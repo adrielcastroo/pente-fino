@@ -100,9 +100,9 @@ export const computeStats = (
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
-  // Conferente Details
+  // Conferente Details — chaveia pelo nome normalizado
   const conferenteDetails = Array.from(conferenteMap.entries()).map(([name, total]) => {
-    const sessions = history.filter(h => h.conferente === name);
+    const sessions = history.filter(h => normalizeConferente(h.conferente) === name);
     return {
       name,
       total,
