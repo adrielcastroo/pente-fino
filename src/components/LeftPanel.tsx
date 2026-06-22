@@ -1428,7 +1428,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {isEtiqPronta && (
               <>
                 <div className="space-y-1.5">
-                  <label htmlFor="etiq-codigo-item" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Código item</label>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-codigo-item" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Código item</label></div>
                   <input
                     id="etiq-codigo-item"
                     ref={itemRef}
