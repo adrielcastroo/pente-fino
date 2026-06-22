@@ -13,6 +13,7 @@ import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { ConferenteProfileDialog } from '@/components/dashboard/ConferenteProfileDialog';
 import { SessionsHeatmap } from '@/components/dashboard/SessionsHeatmap';
+import { NfPhysicalCompareDialog } from '@/components/dashboard/NfPhysicalCompareDialog';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
@@ -59,6 +60,11 @@ export default function DashboardPage() {
   const [detailDialog, setDetailDialog] = useState<string | null>(null);
   const [showEmptyOutputs, setShowEmptyOutputs] = useState(false);
   const [selectedConferente, setSelectedConferente] = useState<string | null>(null);
+  const [compareConferenceId, setCompareConferenceId] = useState<string | null>(null);
+  const compareConference = useMemo(
+    () => history.find(c => c.id === compareConferenceId) ?? null,
+    [history, compareConferenceId]
+  );
 
   const handleFullExportExcel = async () => {
     setIsExporting(true);
@@ -444,6 +450,12 @@ export default function DashboardPage() {
         onClose={() => setSelectedConferente(null)}
       />
 
+      <NfPhysicalCompareDialog
+        open={!!compareConference}
+        onOpenChange={(v) => !v && setCompareConferenceId(null)}
+        conference={compareConference}
+      />
+
       {/* Conferentes Detail Dialog */}
       <Dialog open={detailDialog === 'conferentes'} onOpenChange={() => setDetailDialog(null)}>
         <DialogContent className={cn(
@@ -531,6 +543,7 @@ export default function DashboardPage() {
                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b hidden md:table-cell", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Fim</th>
                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Duração</th>
                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Registros</th>
+                  <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-black text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-slate-400 border-slate-800" : "text-[#2563EB]/60 border-border/5")}>Análise</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-border/5")}>
@@ -544,6 +557,17 @@ export default function DashboardPage() {
                       <Badge variant="outline" className={cn("text-[10px] font-bold px-4 py-1 rounded-full border-[#2563EB]/20 text-[#2563EB] bg-[#2563EB]/5")}>{c.duration}</Badge>
                     </td>
                     <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-right font-mono text-primary font-black text-xl">{c.registros}</td>
+                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-lg font-black text-[10px] uppercase tracking-wider h-8 px-3"
+                        onClick={() => setCompareConferenceId(c.id)}
+                        title="Comparar NF × Físico"
+                      >
+                        NF × Físico
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
