@@ -133,23 +133,31 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
         </Button>
       </CardHeader>
       <CardContent className="px-8 pb-8 h-[260px]">
-        <ResponsiveContainer width="100%" height="100%">
-          {type === 'bar' ? (
-            <BarChart data={data}>
-              <XAxis dataKey="name" fontSize={9} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} />
-              <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              <ChartTooltip content={<CustomTooltip />} />
-            </BarChart>
-          ) : (
-            <PieChart>
-              <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
-                {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-              </Pie>
-              <ChartTooltip content={<CustomTooltip />} />
-              <Legend />
-            </PieChart>
-          )}
-        </ResponsiveContainer>
+        {(!data || data.length === 0) ? (
+          <div className="h-full flex flex-col items-center justify-center gap-2 text-foreground/50">
+            <Icon className="w-8 h-8 opacity-30" />
+            <p className="text-sm font-bold">Sem dados ainda</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            {type === 'bar' ? (
+              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <XAxis type="number" fontSize={10} tick={{ fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 800 }} allowDecimals={false} />
+                <YAxis type="category" dataKey="name" fontSize={11} tick={{ fill: 'hsl(var(--foreground) / 0.7)', fontWeight: 800 }} width={90} />
+                <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} label={{ position: 'right', fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 800 }} />
+                <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
+              </BarChart>
+            ) : (
+              <PieChart>
+                <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
+                  {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <ChartTooltip content={<CustomTooltip />} />
+                <Legend />
+              </PieChart>
+            )}
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
