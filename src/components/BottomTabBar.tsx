@@ -65,11 +65,14 @@ export default function BottomTabBar() {
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-muted-foreground hover:text-foreground transition-colors"
+              type="button"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors"
               aria-label="Mais opções"
+              aria-haspopup="dialog"
+              aria-expanded={open}
             >
-              <MoreHorizontal className="w-6 h-6" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Menu</span>
+              <MoreHorizontal className="w-6 h-6 md:w-7 md:h-7" aria-hidden="true" />
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider">Menu</span>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
