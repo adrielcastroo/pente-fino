@@ -582,6 +582,11 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm sm:text-lg font-black tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
+                {!conf.finishedAt && (
+                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
+                    Aberta
+                  </Badge>
+                )}
                 <div className="flex gap-1.5 flex-wrap">
                   {modeBadges.map(b => (
                     <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
@@ -593,6 +598,12 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
               
               <div className="flex items-center gap-3 text-[10px] sm:text-xs text-muted-foreground font-bold flex-wrap">
                 <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md"><Calendar className="w-3.5 h-3.5 opacity-60" /> {formatDateBR(conf.date)}</span>
+                
+                {conf.conferente && (
+                  <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-md">
+                    <User className="w-3.5 h-3.5" /> {conf.conferente}
+                  </span>
+                )}
                 
                 {conf.startedAt && (
                   <span className="flex items-center gap-1.5 text-emerald-600/80 bg-emerald-500/5 px-2 py-0.5 rounded-md">
