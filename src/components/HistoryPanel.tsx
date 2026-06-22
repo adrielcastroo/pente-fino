@@ -639,19 +639,21 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 </Tooltip>
 
                 {!isGuest && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
-                      >
-                        <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Excluir Conferência</TooltipContent>
-                  </Tooltip>
+                  <RequireRole action="delete:registro" showLocked>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
+                        >
+                          <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Excluir Conferência</TooltipContent>
+                    </Tooltip>
+                  </RequireRole>
                 )}
               </div>
 
