@@ -492,7 +492,7 @@ export default function EstoquePage() {
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[60px] sm:min-w-[100px] py-2.5 sm:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 ${
+            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-black tracking-widest uppercase transition-all duration-500 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
@@ -521,8 +521,8 @@ export default function EstoquePage() {
           transition={{ duration: 0.8 }}
           className="w-full pb-6"
         >
-          <div className="w-full space-y-2 sm:space-y-3 p-1 overflow-x-auto lg:overflow-x-visible no-scrollbar">
-            <div className="min-w-[600px] lg:min-w-0 space-y-2 sm:space-y-3">
+          <div className="w-full space-y-2 sm:space-y-3 p-1 overflow-x-auto md:overflow-x-visible no-scrollbar">
+            <div className="min-w-[520px] md:min-w-0 space-y-2 sm:space-y-3">
             {/* Column headers */}
             <div className="flex gap-2 sm:gap-3">
               <div className="w-10 sm:w-12 md:w-16 shrink-0" />
@@ -794,7 +794,7 @@ export default function EstoquePage() {
 
                 {/* Info Grid */}
                 <div className="p-8 space-y-8 bg-card/20">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                       { label: 'Lote Fábrica', value: detailPos.lote || '—' },
                       { label: 'Lote Sistema (Final)', value: detailPos.lote_sistema || '—' },
