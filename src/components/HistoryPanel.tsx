@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
 import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet, Clock, Plus, X, Download } from 'lucide-react';
+import { RequireRole } from '@/components/auth/RequireRole';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -494,35 +495,39 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
                     {!isGuest && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingRegistro(r)}
-                            className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Editar registro</TooltipContent>
-                      </Tooltip>
+                      <RequireRole action="edit:registro-antigo" showLocked>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingRegistro(r)}
+                              className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar registro</TooltipContent>
+                        </Tooltip>
+                      </RequireRole>
                     )}
                     
                     {!isGuest && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setConfirmDeleteItem(r)}
-                            className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Excluir item</TooltipContent>
-                      </Tooltip>
+                      <RequireRole action="delete:registro" showLocked>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setConfirmDeleteItem(r)}
+                              className="h-9 w-9 rounded-xl border border-border/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Excluir item</TooltipContent>
+                        </Tooltip>
+                      </RequireRole>
                     )}
 
                     {r.wasEdited && (
@@ -634,19 +639,21 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 </Tooltip>
 
                 {!isGuest && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
-                      >
-                        <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Excluir Conferência</TooltipContent>
-                  </Tooltip>
+                  <RequireRole action="delete:registro" showLocked>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
+                        >
+                          <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Excluir Conferência</TooltipContent>
+                    </Tooltip>
+                  </RequireRole>
                 )}
               </div>
 
