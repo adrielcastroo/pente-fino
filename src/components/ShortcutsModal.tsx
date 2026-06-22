@@ -76,14 +76,8 @@ export default function ShortcutsModal({ open, onClose }: { open: boolean; onClo
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
         <div className="bg-card w-full max-w-md rounded-2xl p-6 border border-border">
           <h2 className="text-xl font-bold mb-4">Atalhos do Sistema</h2>
-          <div className="space-y-2">
-            {shortcuts.map(s => (
-              <div key={s.key} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
-                <span className="text-sm font-medium text-muted-foreground">{s.label}</span>
-                <kbd className="px-2 py-1 bg-muted rounded text-[10px] font-mono font-bold border border-border shadow-sm">{s.key}</kbd>
-              </div>
-            ))}
-          </div>
+          <ShortcutList />
+
           <div className="h-px bg-border my-4" />
           <button onClick={onClose} className="w-full border border-border rounded-lg py-2 text-sm hover:bg-surface-2">Fechar</button>
         </div>
