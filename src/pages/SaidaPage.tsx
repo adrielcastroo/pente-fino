@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { usePerformance } from '@/hooks/use-performance';
 import { formatDateBR } from '@/lib/app-utils';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 interface SaidaRegistro {
   id: string;
@@ -46,7 +47,9 @@ export default function SaidaPage() {
   const [confirmScan, setConfirmScan] = useState<any>(null);
   const scanRef = useRef<HTMLInputElement>(null);
   const [observacoes, setObservacoes] = useState('');
+  const [destino, setDestino] = useState('');
   const conferente = useAppStore(s => s.conferente);
+  useDocumentTitle('Saídas');
 
   const loadSaidas = async () => {
     setLoading(true);
@@ -111,6 +114,26 @@ export default function SaidaPage() {
     if (!confirmScan) return;
     const pos = confirmScan;
 
+    // Fase 0.4 — validações de negócio
+    const destinoTrim = destino.trim();
+    const responsavel = (conferente || '').trim();
+    if (!responsavel) {
+      toast.error('Informe o conferente responsável antes de dar saída.');
+      return;
+    }
+    if (!destinoTrim) {
+      toast.error('Informe o destino da saída.');
+      return;
+    }
+    const m2 = Number(pos.m2);
+    const mLinear = Number(pos.m_linear);
+    if (!Number.isFinite(m2) || m2 <= 0 || !Number.isFinite(mLinear) || mLinear <= 0) {
+      toast.error('Quantidades inválidas: m² e metro linear devem ser maiores que zero.');
+      return;
+    }
+
+    const observacoesFinal = [`Destino: ${destinoTrim}`, observacoes.trim()].filter(Boolean).join(' | ');
+
     try {
       // Insert into estoque_saidas
       const { error: saError } = await supabase.from('estoque_saidas').insert({
@@ -128,10 +151,10 @@ export default function SaidaPage() {
         nivel: pos.nivel,
         posicao: pos.posicao,
         conferente_entrada: pos.conferente_entrada,
-        conferente_saida: conferente || 'Sistema',
+        conferente_saida: responsavel,
         data_registro: pos.data_registro,
         data_saida: new Date().toISOString(),
-        observacoes: observacoes.trim() || null,
+        observacoes: observacoesFinal,
       });
       if (saError) throw saError;
 
@@ -146,6 +169,7 @@ export default function SaidaPage() {
       });
       setConfirmScan(null);
       setObservacoes('');
+      setDestino('');
       setScanInput('');
       loadSaidas();
     } catch (e: any) {
@@ -354,6 +378,7 @@ export default function SaidaPage() {
         if (!open) {
           setConfirmScan(null);
           setObservacoes('');
+          setDestino('');
         }
       }}>
         <AlertDialogContent className="border-border/40 bg-card rounded-2xl max-w-lg">
@@ -374,14 +399,25 @@ export default function SaidaPage() {
 
                   <div className="space-y-2 bg-muted/10 p-4 rounded-xl border border-border/20">
                     <label className="text-xs font-black uppercase tracking-widest text-violet-500 flex items-center gap-2 mb-1">
+                      <Truck className="w-3.5 h-3.5" />
+                      Destino <span className="text-red-400">*</span>
+                    </label>
+                    <Input
+                      value={destino}
+                      onChange={(e) => setDestino(e.target.value)}
+                      placeholder="Ex: Produção - Linha 2, Cliente XPTO, Sala de corte..."
+                      className="h-10 rounded-lg border-border/50 bg-background/50 focus:bg-background font-bold text-xs"
+                      required
+                    />
+                    <label className="text-xs font-black uppercase tracking-widest text-violet-500 flex items-center gap-2 mt-3 mb-1">
                       <User className="w-3.5 h-3.5" />
-                      Saída por {conferente || 'Sistema'}
+                      Saída por {conferente || <span className="text-red-400">— defina o conferente</span>}
                     </label>
                     <textarea
                       value={observacoes}
                       onChange={(e) => setObservacoes(e.target.value)}
-                      placeholder="Observações / Informações adicionais (opcional)..."
-                      className="w-full min-h-[80px] p-3 rounded-lg border border-border/50 bg-background/50 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
+                      placeholder="Observações adicionais (opcional)..."
+                      className="w-full min-h-[60px] p-3 rounded-lg border border-border/50 bg-background/50 focus:bg-background transition-all text-xs font-medium text-foreground resize-none focus:ring-1 focus:ring-violet-500/50 outline-none"
                     />
                   </div>
 
