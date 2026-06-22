@@ -12,6 +12,7 @@ import { TimelineChart, SummaryChart, OccupationChart } from '@/components/dashb
 import { AlertsCard } from '@/components/dashboard/AlertsCard';
 import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { ConferenteProfileDialog } from '@/components/dashboard/ConferenteProfileDialog';
+import { SessionsHeatmap } from '@/components/dashboard/SessionsHeatmap';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
@@ -399,16 +400,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="md:col-span-1 lg:col-span-4 h-full">
-          <SummaryChart
-            id="chart-sessoes"
-            title="Histórico de Sessões"
-            desc="Últimas conferências"
-            data={registrosPerConference.slice(0, 10)}
-            type="bar"
-            icon={Package}
-            chartKey="value"
-            onDetailClick={setDetailChart}
-          />
+          <SessionsHeatmap history={history} weeks={12} />
         </div>
         
         <motion.div 
