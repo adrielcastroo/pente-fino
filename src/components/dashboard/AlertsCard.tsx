@@ -63,55 +63,47 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
 
   if (alerts.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] backdrop-blur-xl px-6 py-4 flex items-center gap-4"
-      >
-        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500">
-          <CheckCircle2 className="w-5 h-5" />
+      <div className="rounded-lg border border-border/40 bg-card/50 px-4 py-3 flex items-center gap-3">
+        <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-500">
+          <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-black text-foreground tracking-tight">Nenhum alerta ativo</span>
-          <span className="text-[11px] font-bold text-foreground/50 uppercase tracking-wider">0 alertas</span>
+          <span className="text-sm font-medium text-foreground">Nenhum alerta ativo</span>
+          <span className="text-xs text-muted-foreground">0 alertas</span>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-xl overflow-hidden"
-    >
-      <div className="px-6 py-3 border-b border-border/10 flex items-center gap-3">
-        <AlertTriangle className="w-4 h-4 text-amber-500" />
-        <h2 className="text-xs font-black uppercase tracking-[0.25em] text-foreground/70">
-          Alertas Operacionais
+    <div className="rounded-lg border border-border/40 bg-card/50 overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-border/30 flex items-center gap-2">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.75} />
+        <h2 className="text-xs font-medium text-foreground">
+          Alertas operacionais
         </h2>
-        <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/30 tabular-nums">
+        <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 tabular-nums">
           {alerts.length}
         </span>
       </div>
-      <div className="divide-y divide-border/5">
+      <div className="divide-y divide-border/20">
         {alerts.map(alert => {
           const style = SEVERITY_STYLES[alert.severity];
           const Icon = style.icon;
           return (
-            <div key={alert.id} className="px-6 py-4 flex items-start gap-4 hover:bg-muted/10 transition-colors">
-              <div className={`p-2 rounded-lg ${style.bg} ${style.text} ${style.border} border shrink-0`}>
-                <Icon className="w-4 h-4" />
+            <div key={alert.id} className="px-4 py-3 flex items-start gap-3 hover:bg-muted/20 transition-colors">
+              <div className={`p-1.5 rounded-md ${style.bg} ${style.text} shrink-0`}>
+                <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
               </div>
               <div className="flex flex-col gap-0.5 min-w-0">
-                <span className={`text-sm font-black ${style.text} truncate`}>{alert.title}</span>
-                <span className="text-xs font-bold text-foreground/60">{alert.description}</span>
+                <span className={`text-sm font-medium ${style.text} truncate`}>{alert.title}</span>
+                <span className="text-xs text-muted-foreground">{alert.description}</span>
               </div>
             </div>
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 });
 
