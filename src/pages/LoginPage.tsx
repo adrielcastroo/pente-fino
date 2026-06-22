@@ -484,7 +484,7 @@ export default function LoginPage() {
       </div>
 
       <Dialog open={guestDialogOpen} onOpenChange={setGuestDialogOpen}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[420px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Entrar como Visitante</DialogTitle>
             <DialogDescription>

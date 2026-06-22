@@ -169,7 +169,7 @@ export function LoteMestreSelector({ value, onChange }: Props) {
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[420px] rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[420px] rounded-3xl border-none shadow-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
           <div className="bg-primary px-6 py-8 text-primary-foreground relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Palette className="w-32 h-32" />

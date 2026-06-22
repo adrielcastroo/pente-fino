@@ -135,7 +135,7 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initial?.id ? 'Editar item' : 'Novo item'}</DialogTitle>
           <DialogDescription>

@@ -766,7 +766,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       />
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
@@ -784,7 +784,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       </Dialog>
 
       <Dialog open={!!confirmDeleteItem} onOpenChange={(o) => { if (!o) setConfirmDeleteItem(null); }}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
@@ -1076,7 +1076,7 @@ export default function HistoryPanel() {
       </div>
 
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-        <DialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
+        <DialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-2">
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Limpar Tudo?</DialogTitle>
             <DialogDescription className="font-bold text-sm leading-relaxed mt-2 text-muted-foreground text-center">
