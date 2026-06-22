@@ -1,5 +1,5 @@
 
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard, Package } from 'lucide-react';
+import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard, Package, ShieldAlert } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
@@ -56,6 +56,7 @@ const menuGroups: MenuGroup[] = [
     minRole: 'supervisor',
     items: [
       { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros', minRole: 'supervisor' },
+      { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/auditoria', minRole: 'gerente' },
     ],
   },
 ];

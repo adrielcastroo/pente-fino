@@ -45,7 +45,7 @@ export interface Conference {
 }
 
 export type AppMode = 'manual' | 'openrouter' | 'diversos' | 'madeira' | 'motor' | 'controle' | 'etiq_pronta';
-export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'reservas' | 'history' | 'settings' | 'cadastros';
+export type AppTab = 'inicio' | 'tecido' | 'madeira' | 'motor' | 'estoque' | 'saida' | 'reservas' | 'history' | 'settings' | 'cadastros' | 'auditoria';
 
 export interface Reserva {
   id: string;
