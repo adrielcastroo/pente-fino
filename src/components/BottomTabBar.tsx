@@ -1,0 +1,103 @@
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Warehouse, Archive, MoreHorizontal, Waves, TreePine, Settings2, FolderOpen, Table, Package, ShieldAlert, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+
+const primary = [
+  { to: '/dashboard', label: 'Início', icon: Home },
+  { to: '/tecido', label: 'Conferência', icon: Waves },
+  { to: '/estoque', label: 'Estoque', icon: Warehouse },
+  { to: '/saida', label: 'Saída', icon: Archive },
+];
+
+const overflow = [
+  { to: '/madeira', label: 'Madeira', icon: TreePine },
+  { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
+  { to: '/reservas', label: 'Reservas', icon: Table },
+  { to: '/historico', label: 'Histórico', icon: FolderOpen },
+  { to: '/cadastros', label: 'Cadastros', icon: Package },
+  { to: '/auditoria', label: 'Auditoria', icon: ShieldAlert },
+  { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
+];
+
+export default function BottomTabBar() {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const { signOut } = useAuth() as any;
+
+  const isActive = (to: string) => pathname === to || (to === '/tecido' && pathname === '/');
+
+  return (
+    <nav
+      className="lg:hidden portrait:flex landscape:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      aria-label="Navegação principal"
+    >
+      <div className="flex w-full items-stretch">
+        {primary.map(({ to, label, icon: Icon }) => {
+          const active = isActive(to);
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={cn(
+                'flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] transition-colors',
+                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Icon className={cn('w-6 h-6', active && 'drop-shadow-[0_0_6px_hsl(var(--primary))]')} strokeWidth={active ? 2.5 : 2} />
+              <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
+            </NavLink>
+          );
+        })}
+
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <button
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Mais opções"
+            >
+              <MoreHorizontal className="w-6 h-6" />
+              <span className="text-[10px] font-black uppercase tracking-wider">Menu</span>
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="text-left text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Mais opções</SheetTitle>
+            </SheetHeader>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              {overflow.map(({ to, label, icon: Icon }) => {
+                const active = isActive(to);
+                return (
+                  <button
+                    key={to}
+                    onClick={() => { setOpen(false); navigate(to); }}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border/40 bg-card/40 min-h-[88px] active:scale-95 transition-all',
+                      active && 'ring-2 ring-primary bg-primary/5'
+                    )}
+                  >
+                    <Icon className="w-6 h-6 text-foreground/80" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-foreground/80 text-center leading-tight">{label}</span>
+                  </button>
+                );
+              })}
+              {signOut && (
+                <button
+                  onClick={() => { setOpen(false); signOut(); }}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-destructive/30 bg-destructive/5 min-h-[88px] active:scale-95 transition-all col-span-3"
+                >
+                  <LogOut className="w-5 h-5 text-destructive" />
+                  <span className="text-[11px] font-black uppercase tracking-wider text-destructive">Sair</span>
+                </button>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </nav>
+  );
+}
