@@ -14,6 +14,7 @@ import { DetailDialog } from '@/components/dashboard/DetailDialog';
 import { ConferenteProfileDialog } from '@/components/dashboard/ConferenteProfileDialog';
 import { SessionsHeatmap } from '@/components/dashboard/SessionsHeatmap';
 import { NfPhysicalCompareDialog } from '@/components/dashboard/NfPhysicalCompareDialog';
+import { PeriodComparisonCard } from '@/components/dashboard/PeriodComparisonCard';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { formatPeriodLabel } from '@/lib/dashboard-utils';
 import { cn, formatQty } from '@/lib/utils';
