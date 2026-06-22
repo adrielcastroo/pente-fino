@@ -336,3 +336,20 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+/* ============ Modo Apresentação (Desktop) ============ */
+body.presentation-mode [data-sidebar],
+body.presentation-mode aside[role="navigation"],
+body.presentation-mode header.app-topbar,
+body.presentation-mode nav[aria-label="Navegação principal"] {
+  display: none !important;
+}
+body.presentation-mode #dashboard-content {
+  padding: 2rem 3rem !important;
+  font-size: 1.05rem;
+}
+body.presentation-mode #dashboard-content h1 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem) !important;
+}
+body.presentation-mode .recharts-wrapper {
+  filter: contrast(1.05);
+}
