@@ -438,3 +438,23 @@ body.presentation-mode .recharts-wrapper {
   .touch-target { min-width: 48px; min-height: 48px; }
 }
 
+
+/* ============ Tablet Forms (Fase 4) ============ */
+/* Em tablet portrait, inputs/selects/triggers ganham altura touch-friendly. */
+@media (min-width: 600px) and (max-width: 1365px) and (orientation: portrait) {
+  input.h-10, [data-slot="input"].h-10,
+  button[role="combobox"].h-10,
+  [data-radix-select-trigger].h-10 {
+    height: 3rem; /* 48px */
+  }
+  /* SettingsPage: inputs full-width no portrait */
+  .settings-form .max-w-md { max-width: 100% !important; }
+}
+
+/* Cards/rows em listas: alvo mínimo de 48px em tablet/mobile */
+@media (max-width: 1365px) {
+  [role="row"] > [role="cell"],
+  .list-row {
+    min-height: 48px;
+  }
+}
