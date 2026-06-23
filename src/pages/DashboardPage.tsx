@@ -265,13 +265,8 @@ export default function DashboardPage() {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
           >
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 rounded-md border border-border/10 bg-card/40 backdrop-blur-md transition-all hover:bg-card/60">
-              <Clock className="w-5 h-5 text-primary/70 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-semibold text-foreground/50 uppercase tracking-widest leading-tight">Média de Sessão</span>
-                <span className="text-sm font-bold text-foreground leading-none">{stats.avgDuration}</span>
-              </div>
-            </div>
+            {/* "Média de Sessão" removida do header — agora aparece como KPI dentro de PeriodComparisonCard (Duração média) */}
+            
             
             <Button
               variant="outline"
@@ -324,8 +319,8 @@ export default function DashboardPage() {
                   onClick={handleFullExportExcel}
                 >
                   {isExporting && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />}
-                  <span className="hidden xs:inline">{isExporting ? 'Processando...' : 'Exportar Excel'}</span>
-                  <span className="xs:hidden">{isExporting ? '...' : 'Excel'}</span>
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" strokeWidth={2} />
+                  <span>{isExporting ? 'Processando...' : 'Exportar'}</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="font-medium text-xs py-1.5">Gerar Relatório Completo de Atividades</TooltipContent>
@@ -473,9 +468,13 @@ export default function DashboardPage() {
               )}
               {lastOutputs.length > 0 && (
                 <div className="p-3 border-t border-border/30 bg-muted/10">
-                  <Button variant="ghost" className="w-full text-xs font-medium text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
-                    Ver Histórico Completo →
-                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setDetailDialog('conferences')}
+                    className="w-full text-xs text-slate-500 hover:text-sky-700 transition-colors h-7 font-normal"
+                  >
+                    Ver histórico completo
+                  </button>
                 </div>
               )}
             </CardContent>

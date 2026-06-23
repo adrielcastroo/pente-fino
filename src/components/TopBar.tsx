@@ -232,40 +232,42 @@ const TopBar = memo(function TopBar() {
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button
-                  onClick={exportExcel}
-                  size="sm"
-                  disabled={isArchiving || isExporting || registroCount === 0}
-                  variant="outline"
-                  className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-md border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isArchiving || isExporting ? (
-                    <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />
-                  ) : (
-                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
-                  )}
-                  <span className="hidden sm:inline">{isArchiving || isExporting ? 'Aguarde...' : 'Exportar Excel'}</span>
-                  {!isArchiving && !isExporting && registroCount > 0 && (
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
-                      {registroCount}
-                    </Badge>
-                  )}
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent className="font-semibold">
-              <p>
-                {isGuest || !user
-                  ? 'Entre na sua conta para exportar e salvar no histórico'
-                  : registroCount === 0
-                  ? 'Sem itens bipados nesta sessão'
-                  : `Exportar ${registroCount} itens para Excel e enviar ao histórico`}
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          {isRegistroRoute && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={exportExcel}
+                    size="sm"
+                    disabled={isArchiving || isExporting || registroCount === 0}
+                    variant="outline"
+                    className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-md border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {isArchiving || isExporting ? (
+                      <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                    )}
+                    <span className="hidden sm:inline">{isArchiving || isExporting ? 'Aguarde...' : 'Exportar Excel'}</span>
+                    {!isArchiving && !isExporting && registroCount > 0 && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
+                        {registroCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="font-semibold">
+                <p>
+                  {isGuest || !user
+                    ? 'Entre na sua conta para exportar e salvar no histórico'
+                    : registroCount === 0
+                    ? 'Sem itens bipados nesta sessão'
+                    : `Exportar ${registroCount} itens para Excel e enviar ao histórico`}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
         </div>
       </div>
