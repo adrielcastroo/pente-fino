@@ -420,9 +420,12 @@ export default function SettingsPage() {
         }
       }
       
-      toast.success('Configurações salvas com sucesso!');
       setHasUnsavedChanges(false);
+      setSaveState('saved');
+      if (saveStateTimeoutRef.current) clearTimeout(saveStateTimeoutRef.current);
+      saveStateTimeoutRef.current = setTimeout(() => setSaveState('idle'), 1500);
     } catch (error: any) {
+      setSaveState('idle');
       toast.error('Erro ao salvar: ' + error.message);
     }
   };
