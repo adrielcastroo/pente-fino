@@ -153,9 +153,20 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {type === 'bar' ? (
-              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
                 <XAxis type="number" fontSize={10} tick={{ fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
-                <YAxis type="category" dataKey="name" fontSize={11} tick={{ fill: 'hsl(var(--foreground) / 0.8)' }} width={90} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  fontSize={11}
+                  tick={{ fill: 'hsl(var(--foreground) / 0.8)' }}
+                  width={160}
+                  interval={0}
+                  tickFormatter={(value: string) => {
+                    const s = String(value ?? '');
+                    return s.length > 22 ? s.slice(0, 21) + '…' : s;
+                  }}
+                />
                 <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[0, 3, 3, 0]} label={{ position: 'right', fill: 'hsl(var(--foreground))', fontSize: 11 }} />
                 <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
               </BarChart>
