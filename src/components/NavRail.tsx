@@ -24,9 +24,7 @@ type RailItem = { to: string; label: string; icon: any };
 
 const railOperacao: RailItem[] = [
   { to: '/operacao', label: 'Início', icon: Home },
-  { to: '/tecido', label: 'Tecido', icon: ScanLine },
-  { to: '/madeira', label: 'Madeira', icon: TreePine },
-  { to: '/motor', label: 'Motor/Controle', icon: Zap },
+  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
   { to: '/estoque', label: 'Estoque', icon: Package },
   { to: '/saida', label: 'Saída', icon: ArrowUpRight },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
