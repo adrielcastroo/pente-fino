@@ -165,10 +165,21 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                   {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Pie>
                 <ChartTooltip content={<CustomTooltip />} />
-                <Legend />
               </PieChart>
             )}
           </ResponsiveContainer>
+        )}
+        {/* Legenda HTML custom para pie */}
+        {!isMobile && type === 'pie' && data && data.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-3 -mb-2">
+            {data.slice(0, 6).map((d: any, i: number) => (
+              <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                <span className="text-muted-foreground">{d.name}</span>
+                <span className="tabular-nums font-medium text-foreground/80">{Number(d[chartKey]) || 0}</span>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
