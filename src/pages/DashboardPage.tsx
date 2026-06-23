@@ -468,9 +468,13 @@ export default function DashboardPage() {
               )}
               {lastOutputs.length > 0 && (
                 <div className="p-3 border-t border-border/30 bg-muted/10">
-                  <Button variant="ghost" className="w-full text-xs font-medium text-muted-foreground hover:text-primary transition-colors h-8" onClick={() => setDetailDialog('conferences')}>
-                    Ver Histórico Completo →
-                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setDetailDialog('conferences')}
+                    className="w-full text-xs text-slate-500 hover:text-sky-700 transition-colors h-7 font-normal"
+                  >
+                    Ver histórico completo
+                  </button>
                 </div>
               )}
             </CardContent>
