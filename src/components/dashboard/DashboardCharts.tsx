@@ -154,21 +154,21 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {type === 'bar' ? (
-              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
+              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }} barCategoryGap={20}>
                 <XAxis type="number" fontSize={10} tick={{ fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  fontSize={11}
+                  fontSize={12}
                   tick={{ fill: 'hsl(var(--foreground) / 0.8)' }}
-                  width={160}
+                  width={240}
                   interval={0}
                   tickFormatter={(value: string) => {
                     const s = String(value ?? '');
-                    return s.length > 22 ? s.slice(0, 21) + '…' : s;
+                    return s.length > 36 ? s.slice(0, 35) + '…' : s;
                   }}
                 />
-                <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[0, 3, 3, 0]} label={{ position: 'right', fill: 'hsl(var(--foreground))', fontSize: 11 }} />
+                <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: 'hsl(var(--foreground))', fontSize: 11, offset: 8 }} />
                 <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
               </BarChart>
             ) : (
