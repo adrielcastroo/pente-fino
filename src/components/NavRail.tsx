@@ -8,7 +8,7 @@ import {
   Package,
   ArrowUpRight,
   FolderOpen,
-  Package,
+  ClipboardList,
   Table,
   ShieldAlert,
   Settings as SettingsIcon,
