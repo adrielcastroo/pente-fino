@@ -1,6 +1,6 @@
 
 import { Home, ScanLine, TreePine, Zap, Table, FolderOpen, Package, ArrowUpRight, Settings, LogOut, ClipboardCheck, ClipboardList, MapPin, AlertCircle, LayoutDashboard, ShieldAlert } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
 import { AppTab } from '@/types';
@@ -64,6 +64,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const { signOut, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const registroCount = useAppStore(s => s.registros.length);
   const reservasCount = useAppStore(s => s.reservas.length);
   const visibleGroups = menuGroups
@@ -140,7 +141,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
                 {group.items.map(item => {
                   const Icon = item.icon;
-                  const isActive = activeTab === item.key;
+                  const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
                   const isTableTab = item.key === 'reservas';
                   const hasRecords = isTableTab && reservasCount > 0;
                   const displayCount = isTableTab ? reservasCount : registroCount;
