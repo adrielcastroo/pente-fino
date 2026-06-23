@@ -107,6 +107,9 @@ export default function SettingsPage() {
   const [activeCategory, setActiveCategory] = useState('profile');
   
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const saveStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveSettingsRef = useRef<() => Promise<void>>();
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
   const [cargo, setCargo] = useState('');
