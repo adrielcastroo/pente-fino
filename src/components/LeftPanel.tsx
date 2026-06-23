@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { bipSuccess, bipError } from '@/lib/bip-feedback';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
+import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
+import { useAutoRefocus } from '@/hooks/useAutoRefocus';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -155,6 +157,9 @@ export const LeftPanel = memo(function LeftPanel() {
   const streamRef = useRef<MediaStream | null>(null);
 
   const itemRef = useRef<HTMLInputElement>(null);
+  const _isMobileForRefocus = useIsMobile();
+  const _isTabletForRefocus = useIsTablet();
+  useAutoRefocus(itemRef, _isMobileForRefocus || _isTabletForRefocus);
   const nfRef = useRef<HTMLInputElement>(null);
   const m2Ref = useRef<HTMLInputElement>(null);
   const larguraRef = useRef<HTMLInputElement>(null);
