@@ -48,8 +48,11 @@ export default function BottomTabBar() {
   const primary = useMemo(() => (isGestao ? primaryGestao : primaryOperacao), [isGestao]);
   const overflow = useMemo(() => (isGestao ? overflowGestao : overflowOperacao), [isGestao]);
 
+  const CONFERENCIA_PATHS = ['/conferencia', '/tecido', '/madeira', '/motor'];
   const isActive = (to: string) =>
-    pathname === to || (to === '/operacao' && pathname === '/');
+    pathname === to
+    || (to === '/operacao' && pathname === '/')
+    || (to === '/conferencia' && CONFERENCIA_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')));
 
 
   return (
