@@ -501,6 +501,40 @@ export const useAppStore = create<AppState>()(
             }, 1500);
             return;
           }
+
+          // Offline / network failure: enqueue for background sync
+          const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+          const msg = String(e?.message || '').toLowerCase();
+          const looksLikeNetwork = isOffline || msg.includes('failed to fetch') || msg.includes('network') || msg.includes('load failed');
+
+          if (looksLikeNetwork) {
+            try {
+              await enqueueArchive({
+                processo: processoToArchive,
+                conferente: conferenteToArchive,
+                startedAt,
+                currentMode: currentModeToArchive,
+                registros: registrosToArchive,
+              });
+              set({
+                registros: [],
+                undoStack: [],
+                sessionStartedAt: null,
+                isArchiving: false,
+                archiveError: null,
+              });
+              get().resetFormData();
+              get().resetMotorFormData();
+              toast.success('Conferência salva localmente', {
+                description: 'Será enviada automaticamente quando a conexão voltar.',
+                duration: 5000,
+              });
+              return;
+            } catch (queueErr) {
+              console.error('Failed to enqueue archive:', queueErr);
+            }
+          }
+
           set({
             isArchiving: false,
             archiveError: e.message || 'Falha ao arquivar conferência'
@@ -508,6 +542,7 @@ export const useAppStore = create<AppState>()(
           throw e;
         }
       },
+
       
       loadHistory: async () => {
         const state = get();
