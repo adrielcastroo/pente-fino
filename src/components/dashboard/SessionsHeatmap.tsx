@@ -153,28 +153,28 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
             </div>
 
             {/* Grid */}
-            <div className="flex-1 overflow-x-auto">
-              <div className="inline-flex flex-col gap-1 min-w-full">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col gap-1 w-full">
                 {/* Month row */}
-                <div className="flex gap-[3px] h-4 relative">
+                <div className="flex gap-[3px] h-4 relative w-full">
                   {grid.map((_, colIdx) => {
                     const marker = monthMarkers.find(m => m.col === colIdx);
                     return (
-                      <div key={colIdx} className="w-4 text-[9px] text-muted-foreground/70 font-bold">
+                      <div key={colIdx} className="flex-1 min-w-0 text-[9px] text-muted-foreground/70 font-bold">
                         {marker?.label ?? ''}
                       </div>
                     );
                   })}
                 </div>
                 {/* Cells */}
-                <div className="flex gap-[3px]">
+                <div className="flex gap-[3px] w-full">
                   {grid.map((col, colIdx) => (
-                    <div key={colIdx} className="flex flex-col gap-[3px]">
+                    <div key={colIdx} className="flex-1 min-w-0 flex flex-col gap-[3px]">
                       {col.map(cell => {
                         const lvl = intensity(cell.sessions);
                         const isSelected = selected === cell.date;
                         if (cell.inFuture) {
-                          return <div key={cell.date} className="w-4 h-4" />;
+                          return <div key={cell.date} className="aspect-square w-full" />;
                         }
                         return (
                           <Tooltip key={cell.date}>
@@ -182,7 +182,7 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
                               <button
                                 type="button"
                                 aria-label={`${cell.date}: ${cell.sessions} sessões`}
-                                className={cn('w-4 h-4', levelClass(lvl, isSelected))}
+                                className={cn('aspect-square w-full', levelClass(lvl, isSelected))}
                                 onClick={() => handleClick(cell.date, cell.sessions, cell.inFuture)}
                               />
                             </TooltipTrigger>

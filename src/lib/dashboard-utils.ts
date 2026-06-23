@@ -110,6 +110,7 @@ export const computeStats = (
 
   const tipos = Array.from(tiposMap.entries())
     .map(([name, value]) => ({ name, value }))
+    .filter(({ name }) => !/\(sem cadastro\)/i.test(name) && name !== 'Sem item')
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
