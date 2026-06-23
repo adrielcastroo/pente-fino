@@ -434,6 +434,24 @@ export default function SettingsPage() {
     }
   };
 
+  // Mantém ref atualizada com o saveSettings mais recente (closure-safe para debounce)
+  saveSettingsRef.current = saveSettings;
+
+  // Auto-save com debounce de 800ms após qualquer alteração
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handle = setTimeout(() => {
+      saveSettingsRef.current?.();
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => () => {
+    if (saveStateTimeoutRef.current) clearTimeout(saveStateTimeoutRef.current);
+  }, []);
+
+
+
   const labelSettings = useAppStore(s => s.labelSettings);
   const setLabelSettings = useAppStore(s => s.setLabelSettings);
 
