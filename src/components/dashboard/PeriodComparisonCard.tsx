@@ -147,7 +147,7 @@ export function PeriodComparisonCard({ history }: Props) {
                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                 : 'bg-muted text-muted-foreground';
 
-            const Icon = m.icon;
+            
             const display = m.isDuration ? fmtDuration(curr) : curr.toLocaleString('pt-BR');
             const prevDisplay = m.isDuration ? fmtDuration(prev) : prev.toLocaleString('pt-BR');
             const deltaLabel = trend === 'flat'
