@@ -140,11 +140,11 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
         <TooltipProvider delayDuration={100}>
           <div className="flex gap-2">
             {/* Day-of-week labels */}
-            <div className="flex flex-col gap-[3px] pt-5 pr-1">
+            <div className="flex flex-col gap-[3px] pt-6 pr-1">
               {WEEK_DAY_LABELS.map((d, i) => (
                 <div
                   key={i}
-                  className="h-3 text-[9px] leading-3 text-muted-foreground/70 font-bold"
+                  className="h-4 text-[9px] leading-4 text-muted-foreground/70 font-bold"
                   style={{ visibility: i % 2 === 1 ? 'visible' : 'hidden' }}
                 >
                   {d}
@@ -160,7 +160,7 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
                   {grid.map((_, colIdx) => {
                     const marker = monthMarkers.find(m => m.col === colIdx);
                     return (
-                      <div key={colIdx} className="w-3 text-[9px] text-muted-foreground/70 font-bold">
+                      <div key={colIdx} className="w-4 text-[9px] text-muted-foreground/70 font-bold">
                         {marker?.label ?? ''}
                       </div>
                     );
@@ -174,7 +174,7 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
                         const lvl = intensity(cell.sessions);
                         const isSelected = selected === cell.date;
                         if (cell.inFuture) {
-                          return <div key={cell.date} className="w-3 h-3" />;
+                          return <div key={cell.date} className="w-4 h-4" />;
                         }
                         return (
                           <Tooltip key={cell.date}>
@@ -182,7 +182,7 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
                               <button
                                 type="button"
                                 aria-label={`${cell.date}: ${cell.sessions} sessões`}
-                                className={cn('w-3 h-3', levelClass(lvl, isSelected))}
+                                className={cn('w-4 h-4', levelClass(lvl, isSelected))}
                                 onClick={() => handleClick(cell.date, cell.sessions, cell.inFuture)}
                               />
                             </TooltipTrigger>
@@ -203,7 +203,7 @@ export function SessionsHeatmap({ history, weeks = 12, onDayClick }: SessionsHea
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-end gap-2 mt-3 text-[10px] text-muted-foreground font-bold">
+          <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-border/30 text-[10px] text-muted-foreground font-bold">
             <span>Menos</span>
             {[0, 1, 2, 3, 4].map(lvl => (
               <div key={lvl} className={cn('w-3 h-3 rounded-[3px]', levelClass(lvl, false).split(' ').filter(c => c.startsWith('bg-')).join(' '))} />
