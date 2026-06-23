@@ -104,6 +104,14 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
 
 export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const isMobile = useIsMobile();
+  // Top 5 ordenados desc — evita poluição visual e escalas distorcidas
+  const displayData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return [...data]
+      .sort((a: any, b: any) => (Number(b?.[chartKey]) || 0) - (Number(a?.[chartKey]) || 0))
+      .slice(0, 5);
+  }, [data, chartKey]);
+
   return (
     <Card id={id} className="border border-border/40 bg-card/50 shadow-none overflow-hidden rounded-lg">
       <CardHeader className="px-5 py-4 flex flex-row items-start justify-between border-b border-border/30">
@@ -122,24 +130,59 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
       </CardHeader>
       <CardContent className={cn("px-4 sm:px-5 pb-5 pt-5", isMobile ? "min-h-[300px]" : "h-[340px] min-h-[300px]")}>
 
-        {(!data || data.length === 0) ? (
+        {(!displayData || displayData.length === 0) ? (
           <div className="h-full min-h-[120px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Icon className="w-7 h-7 opacity-30" strokeWidth={1.5} />
             <p className="text-sm font-medium">Sem dados ainda</p>
           </div>
+        ) : type === 'bar' ? (
+          // Lista ranqueada com progress bar — substitui barras horizontais
+          // (resolve overflow, labels cortados e escala distorcida)
+          (() => {
+            const max = Math.max(...displayData.map((d: any) => Number(d[chartKey]) || 0), 1);
+            return (
+              <ul className="flex flex-col gap-3 py-1 h-full overflow-y-auto">
+                {displayData.map((d: any, i: number) => {
+                  const v = Number(d[chartKey]) || 0;
+                  const pct = Math.round((v / max) * 100);
+                  const color = CHART_COLORS[i % CHART_COLORS.length];
+                  const fullName = String(d.name ?? '');
+                  return (
+                    <li key={i} className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between text-xs gap-3">
+                        <span
+                          className="truncate text-foreground/85 font-medium"
+                          title={fullName}
+                        >
+                          {fullName}
+                        </span>
+                        <span className="tabular-nums text-muted-foreground shrink-0">{v}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: color }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()
         ) : isMobile ? (
           (() => {
-            const max = Math.max(...data.map((d: any) => Number(d[chartKey]) || 0), 1);
+            const max = Math.max(...displayData.map((d: any) => Number(d[chartKey]) || 0), 1);
             return (
               <ul className="flex flex-col gap-2.5 py-2">
-                {data.slice(0, 6).map((d: any, i: number) => {
+                {displayData.map((d: any, i: number) => {
                   const v = Number(d[chartKey]) || 0;
                   const pct = Math.round((v / max) * 100);
                   const color = CHART_COLORS[i % CHART_COLORS.length];
                   return (
                     <li key={i} className="flex flex-col gap-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="truncate text-foreground/80 font-medium">{d.name}</span>
+                        <span className="truncate text-foreground/80 font-medium" title={String(d.name ?? '')}>{d.name}</span>
                         <span className="tabular-nums text-muted-foreground">{v}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
@@ -153,46 +196,27 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
           })()
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            {type === 'bar' ? (
-              <BarChart data={data} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }} barCategoryGap={20}>
-                <XAxis type="number" fontSize={10} tick={{ fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  fontSize={12}
-                  tick={{ fill: 'hsl(var(--foreground) / 0.8)' }}
-                  width={240}
-                  interval={0}
-                  tickFormatter={(value: string) => {
-                    const s = String(value ?? '');
-                    return s.length > 36 ? s.slice(0, 35) + '…' : s;
-                  }}
-                />
-                <Bar dataKey={chartKey} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: 'hsl(var(--foreground))', fontSize: 11, offset: 8 }} />
-                <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.05)' }} />
-              </BarChart>
-            ) : (
-              <PieChart>
-                <Pie data={data} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
-                  {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                </Pie>
-                <ChartTooltip content={<CustomTooltip />} />
-              </PieChart>
-            )}
+            <PieChart>
+              <Pie data={displayData} dataKey={chartKey} innerRadius="60%" outerRadius="85%" stroke="transparent">
+                {displayData.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <ChartTooltip content={<CustomTooltip />} />
+            </PieChart>
           </ResponsiveContainer>
         )}
         {/* Legenda HTML custom para pie */}
-        {!isMobile && type === 'pie' && data && data.length > 0 && (
+        {!isMobile && type === 'pie' && displayData.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-3 -mb-2">
-            {data.slice(0, 6).map((d: any, i: number) => (
+            {displayData.map((d: any, i: number) => (
               <div key={i} className="flex items-center gap-1.5 text-[11px]">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                <span className="text-muted-foreground">{d.name}</span>
+                <span className="text-muted-foreground" title={String(d.name ?? '')}>{d.name}</span>
                 <span className="tabular-nums font-medium text-foreground/80">{Number(d[chartKey]) || 0}</span>
               </div>
             ))}
           </div>
         )}
+
       </CardContent>
     </Card>
   );
