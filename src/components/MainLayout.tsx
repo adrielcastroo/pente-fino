@@ -91,7 +91,7 @@ export default function MainLayout() {
                 </div>
                 <footer
                   role="contentinfo"
-                  className="mt-8 border-t border-border/60 bg-card/40 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground font-mono"
+                  className="mt-8 border-t border-border/60 bg-card/70 dark:bg-card/40 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/70 font-mono"
                 >
                   <span className="flex items-center gap-2">
                     <span className="relative flex h-2 w-2" aria-hidden="true">
@@ -101,9 +101,9 @@ export default function MainLayout() {
                     <span className="text-foreground/80">Sistema operacional</span>
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="text-foreground/90 font-semibold tracking-tight">Pente Fino</span>
+                    <span className="text-foreground font-semibold tracking-tight">Pente Fino</span>
                     <span className="text-border" aria-hidden="true">·</span>
-                    <span className="px-1.5 py-0.5 rounded-md bg-muted/60 text-muted-foreground border border-border/50">
+                    <span className="px-1.5 py-0.5 rounded-md bg-muted/70 text-foreground/80 border border-border/60">
                       v{LATEST_VERSION}
                     </span>
                   </span>
