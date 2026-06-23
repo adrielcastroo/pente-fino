@@ -147,7 +147,7 @@ export function PeriodComparisonCard({ history }: Props) {
                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                 : 'bg-muted text-muted-foreground';
 
-            const Icon = m.icon;
+            
             const display = m.isDuration ? fmtDuration(curr) : curr.toLocaleString('pt-BR');
             const prevDisplay = m.isDuration ? fmtDuration(prev) : prev.toLocaleString('pt-BR');
             const deltaLabel = trend === 'flat'
@@ -159,13 +159,10 @@ export function PeriodComparisonCard({ history }: Props) {
             return (
               <div
                 key={m.key}
-                className="rounded-md border border-border/30 bg-background/40 p-4 hover:border-border/60 transition-colors"
+                className="rounded-md border border-slate-200 dark:border-border/30 bg-white dark:bg-background/40 p-4 hover:border-border/60 transition-colors"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-                    <span className="truncate">{m.label}</span>
-                  </div>
+                  <span className="text-xs font-medium text-muted-foreground truncate">{m.label}</span>
                   <Badge
                     variant="secondary"
                     className={cn('gap-0.5 font-medium text-[10px] px-1.5 py-0 h-5 border-none rounded tabular-nums', trendColor)}

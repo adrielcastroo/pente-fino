@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Warehouse, Archive, MoreHorizontal, Waves, TreePine, Settings2, FolderOpen, Table, Package, ShieldAlert, Settings as SettingsIcon, LogOut, LayoutDashboard } from 'lucide-react';
+import { Home, Package, ArrowUpRight, MoreHorizontal, ScanLine, TreePine, Zap, FolderOpen, Table, ClipboardList, ShieldAlert, Settings as SettingsIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -10,34 +10,34 @@ type Tab = { to: string; label: string; icon: any };
 
 const primaryOperacao: Tab[] = [
   { to: '/operacao', label: 'Início', icon: Home },
-  { to: '/saida', label: 'Saída', icon: Archive },
-  { to: '/estoque', label: 'Estoque', icon: Warehouse },
+  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
+  { to: '/estoque', label: 'Estoque', icon: Package },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
 ];
 
 const primaryGestao: Tab[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/tecido', label: 'Conferência', icon: Waves },
-  { to: '/estoque', label: 'Estoque', icon: Warehouse },
-  { to: '/saida', label: 'Saída', icon: Archive },
+  { to: '/tecido', label: 'Conferência', icon: ScanLine },
+  { to: '/estoque', label: 'Estoque', icon: Package },
+  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
 ];
 
 const overflowOperacao: Tab[] = [
-  { to: '/tecido', label: 'Tecido', icon: Waves },
+  { to: '/tecido', label: 'Tecido', icon: ScanLine },
   { to: '/madeira', label: 'Madeira', icon: TreePine },
-  { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
+  { to: '/motor', label: 'Motor/Controle', icon: Zap },
   { to: '/reservas', label: 'Reservas', icon: Table },
-  { to: '/cadastros', label: 'Cadastros', icon: Package },
+  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
   { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
 ];
 
 
 const overflowGestao: Tab[] = [
   { to: '/madeira', label: 'Madeira', icon: TreePine },
-  { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
+  { to: '/motor', label: 'Motor/Controle', icon: Zap },
   { to: '/reservas', label: 'Reservas', icon: Table },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
-  { to: '/cadastros', label: 'Cadastros', icon: Package },
+  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
   { to: '/auditoria', label: 'Auditoria', icon: ShieldAlert },
   { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
 ];

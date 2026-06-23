@@ -2,13 +2,13 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import {
   LayoutDashboard,
-  Waves,
+  ScanLine,
   TreePine,
-  Settings2,
-  Warehouse,
-  Archive,
-  FolderOpen,
+  Zap,
   Package,
+  ArrowUpRight,
+  FolderOpen,
+  ClipboardList,
   Table,
   ShieldAlert,
   Settings as SettingsIcon,
@@ -24,22 +24,22 @@ type RailItem = { to: string; label: string; icon: any };
 
 const railOperacao: RailItem[] = [
   { to: '/operacao', label: 'Início', icon: Home },
-  { to: '/tecido', label: 'Tecido', icon: Waves },
+  { to: '/tecido', label: 'Tecido', icon: ScanLine },
   { to: '/madeira', label: 'Madeira', icon: TreePine },
-  { to: '/motor', label: 'Motor/Controle', icon: Settings2 },
-  { to: '/estoque', label: 'Estoque', icon: Warehouse },
-  { to: '/saida', label: 'Saída', icon: Archive },
+  { to: '/motor', label: 'Motor/Controle', icon: Zap },
+  { to: '/estoque', label: 'Estoque', icon: Package },
+  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
 ];
 
 const railGestao: RailItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/tecido', label: 'Conferência', icon: Waves },
-  { to: '/estoque', label: 'Estoque', icon: Warehouse },
-  { to: '/saida', label: 'Saída', icon: Archive },
+  { to: '/tecido', label: 'Conferência', icon: ScanLine },
+  { to: '/estoque', label: 'Estoque', icon: Package },
+  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
   { to: '/reservas', label: 'Reservas', icon: Table },
-  { to: '/cadastros', label: 'Cadastros', icon: Package },
+  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
   { to: '/auditoria', label: 'Auditoria', icon: ShieldAlert },
 ];
 

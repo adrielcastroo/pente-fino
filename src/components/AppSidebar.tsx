@@ -1,5 +1,5 @@
 
-import { Home, Waves, TreePine, Settings2, Table, FolderOpen, Warehouse, Archive, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard, Package, ShieldAlert } from 'lucide-react';
+import { Home, ScanLine, TreePine, Zap, Table, FolderOpen, Package, ArrowUpRight, Settings, LogOut, ClipboardCheck, ClipboardList, MapPin, AlertCircle, LayoutDashboard, ShieldAlert } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
@@ -38,16 +38,16 @@ const menuGroups: MenuGroup[] = [
     items: [
       { key: 'inicio', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', minRole: 'supervisor' },
       { key: 'inicio', label: 'Início', icon: Home, path: '/operacao' },
-      { key: 'tecido', label: 'Tecido', icon: Waves, path: '/tecido' },
+      { key: 'tecido', label: 'Tecido', icon: ScanLine, path: '/tecido' },
       { key: 'madeira', label: 'Madeira', icon: TreePine, path: '/madeira' },
-      { key: 'motor', label: 'Motor/Controle', icon: Settings2, path: '/motor' },
-      { key: 'saida', label: 'Saída', icon: Archive, path: '/saida' },
+      { key: 'motor', label: 'Motor/Controle', icon: Zap, path: '/motor' },
+      { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/saida' },
     ],
   },
   {
     label: 'Estoque',
     items: [
-      { key: 'estoque', label: 'Estoque', icon: Warehouse, path: '/estoque' },
+      { key: 'estoque', label: 'Estoque', icon: Package, path: '/estoque' },
       { key: 'reservas', label: 'Reservas', icon: Table, path: '/reservas' },
       { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
     ],
@@ -56,7 +56,7 @@ const menuGroups: MenuGroup[] = [
     label: 'Admin',
     minRole: 'supervisor',
     items: [
-      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros', minRole: 'supervisor' },
+      { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/cadastros', minRole: 'supervisor' },
       { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/auditoria', minRole: 'gerente' },
     ],
   },
