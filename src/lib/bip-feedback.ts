@@ -65,6 +65,20 @@ export function bipSuccess(): void {
 }
 
 export function bipError(): void {
-  try { navigator.vibrate?.([40, 40, 40]); } catch { /* ignore */ }
+  try { navigator.vibrate?.([100, 50, 100, 50, 100]); } catch { /* ignore */ }
   playBipSound('error');
+}
+
+/** Item já bipado (duplicado). Vibração dupla longa. */
+export function bipDuplicate(): void {
+  try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
+  playBipSound('error');
+}
+
+/** Feedback de bipagem por tipo de resultado. */
+export type ScanResult = 'success' | 'error' | 'duplicate';
+export function vibrateOnScan(result: ScanResult): void {
+  if (result === 'success') return bipSuccess();
+  if (result === 'duplicate') return bipDuplicate();
+  return bipError();
 }
