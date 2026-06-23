@@ -51,26 +51,17 @@ export const DetailDialog = ({ detailChart, onClose }: DetailDialogProps) => {
   return (
     <Dialog open={!!detailChart} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-5xl md:max-w-3xl lg:max-w-5xl h-[92dvh] md:h-[88dvh] lg:h-[85dvh] p-0 overflow-hidden flex flex-col gap-0">
-        <DialogHeader className="p-4 sm:p-6 border-b bg-gradient-to-br from-muted/40 via-muted/20 to-transparent space-y-0 flex-none">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 text-primary border border-primary/20 flex-none shadow-sm">
-              <Icon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
-            </div>
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-primary/80">
-                Detalhamento
-              </p>
-              <DialogTitle className="text-lg sm:text-xl font-semibold tracking-tight truncate text-foreground">
-                {detailChart?.title}
-              </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm text-muted-foreground/90">
-                Análise técnica e métricas operacionais
-              </DialogDescription>
-            </div>
-          </div>
+        <DialogHeader className="px-6 py-4 border-b flex-none space-y-1">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+            <Icon className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <span className="truncate">{detailChart?.title}</span>
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Detalhamento de métricas
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 relative w-full overflow-hidden" key={detailChart?.title}>
+        <div className="flex-1 relative w-full overflow-hidden bg-background" key={detailChart?.title}>
           {detailChart && (
             <div className="absolute inset-0 p-3 sm:p-6">
               <ResponsiveContainer width="100%" height="100%" debounce={50}>
