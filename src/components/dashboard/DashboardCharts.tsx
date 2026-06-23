@@ -104,6 +104,14 @@ export const TimelineChart = React.memo(({ data, onExport, onDetailClick, id, pe
 
 export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, onDetailClick, chartKey, id }: any) => {
   const isMobile = useIsMobile();
+  // Top 5 ordenados desc — evita poluição visual e escalas distorcidas
+  const displayData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return [...data]
+      .sort((a: any, b: any) => (Number(b?.[chartKey]) || 0) - (Number(a?.[chartKey]) || 0))
+      .slice(0, 5);
+  }, [data, chartKey]);
+
   return (
     <Card id={id} className="border border-border/40 bg-card/50 shadow-none overflow-hidden rounded-lg">
       <CardHeader className="px-5 py-4 flex flex-row items-start justify-between border-b border-border/30">
