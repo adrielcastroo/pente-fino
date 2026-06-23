@@ -645,10 +645,6 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       size="sm"
                       onClick={(e) => { 
                         e.stopPropagation(); 
-                        if (isGuest) {
-                          toast.error('Convidados não podem incluir itens no histórico.');
-                          return;
-                        }
                         setIsAdding(true); 
                       }}
                       className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
