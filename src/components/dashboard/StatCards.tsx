@@ -10,25 +10,22 @@ interface StatCardProps {
   onClick: (id: string) => void;
 }
 
-export const StatCard = memo(({ id, label, value, subtitle, icon: Icon, onClick }: StatCardProps) => (
+export const StatCard = memo(({ id, label, value, subtitle, onClick }: StatCardProps) => (
   <button
     key={id}
     onClick={() => onClick(id)}
-    className="group relative cursor-pointer rounded-md border border-border/40 bg-card/50 p-5 text-left transition-colors hover:border-primary/40 hover:bg-card/80 flex flex-col gap-4 min-h-[120px] h-full"
+    className="group relative cursor-pointer rounded-md border border-slate-200 bg-white dark:bg-card/50 dark:border-border/40 p-5 text-left transition-colors hover:border-primary/40 flex flex-col gap-4 min-h-[120px] h-full"
     role="button"
   >
-    <div className="flex items-center justify-between">
-      <div className="p-2 rounded-md bg-primary/10 text-primary">
-        <Icon className="w-4 h-4" strokeWidth={1.75} />
-      </div>
-      {subtitle && (
-        <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+    {subtitle && (
+      <div className="flex justify-end">
+        <span className="text-[10px] font-medium text-muted-foreground tabular-nums uppercase tracking-wider">
           {subtitle}
         </span>
-      )}
-    </div>
+      </div>
+    )}
 
-    <div className="space-y-1">
+    <div className="space-y-1 mt-auto">
       <div className="text-3xl sm:text-4xl font-semibold tracking-tight tabular-nums text-foreground leading-none">
         {value}
       </div>
