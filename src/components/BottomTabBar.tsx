@@ -23,9 +23,7 @@ const primaryGestao: Tab[] = [
 ];
 
 const overflowOperacao: Tab[] = [
-  { to: '/tecido', label: 'Tecido', icon: ScanLine },
-  { to: '/madeira', label: 'Madeira', icon: TreePine },
-  { to: '/motor', label: 'Motor/Controle', icon: Zap },
+  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
   { to: '/reservas', label: 'Reservas', icon: Table },
   { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
   { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
@@ -33,8 +31,6 @@ const overflowOperacao: Tab[] = [
 
 
 const overflowGestao: Tab[] = [
-  { to: '/madeira', label: 'Madeira', icon: TreePine },
-  { to: '/motor', label: 'Motor/Controle', icon: Zap },
   { to: '/reservas', label: 'Reservas', icon: Table },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
   { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
