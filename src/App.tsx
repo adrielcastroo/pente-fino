@@ -21,6 +21,7 @@ const CadastrosPage = lazy(() => import("@/pages/CadastrosPage"));
 const AuditoriaPage = lazy(() => import("@/pages/AuditoriaPage"));
 const MinhaAtividadePage = lazy(() => import("@/pages/MinhaAtividadePage"));
 const OperacaoHomePage = lazy(() => import("@/pages/OperacaoHomePage"));
+const ConferenciaHubPage = lazy(() => import("@/pages/ConferenciaHubPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
