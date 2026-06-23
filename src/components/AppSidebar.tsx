@@ -56,7 +56,7 @@ const menuGroups: MenuGroup[] = [
     label: 'Admin',
     minRole: 'supervisor',
     items: [
-      { key: 'cadastros', label: 'Cadastros', icon: Package, path: '/cadastros', minRole: 'supervisor' },
+      { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/cadastros', minRole: 'supervisor' },
       { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/auditoria', minRole: 'gerente' },
     ],
   },
