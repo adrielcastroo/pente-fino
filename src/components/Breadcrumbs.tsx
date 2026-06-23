@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 
 const LABELS: Record<string, string> = {
   dashboard: 'Início',
+  conferencia: 'Conferência',
   tecido: 'Tecido',
   madeira: 'Madeira',
   motor: 'Motor/Controle',
@@ -15,6 +16,8 @@ const LABELS: Record<string, string> = {
   auditoria: 'Auditoria',
   configuracoes: 'Configurações',
 };
+
+const CONFERENCIA_CHILDREN = new Set(['tecido', 'madeira', 'motor']);
 
 export default function Breadcrumbs() {
   const { pathname } = useLocation();
