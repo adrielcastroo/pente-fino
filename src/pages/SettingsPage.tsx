@@ -377,6 +377,7 @@ export default function SettingsPage() {
   };
 
   const saveSettings = async () => {
+    setSaveState('saving');
     try {
       if (activeCategory === 'integrations') {
         localStorage.setItem('cft4_or_key', orKey.trim());
