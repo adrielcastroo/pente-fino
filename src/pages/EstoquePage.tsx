@@ -417,7 +417,7 @@ export default function EstoquePage() {
         <>
       {/* Stats Cards */}
       <div className="w-full pb-4 px-0">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 tablet-portrait:grid-cols-5 gap-3 sm:gap-4 tablet-portrait:gap-2">
           {[
             { key: 'total', label: 'Capacidade Total', value: stats.totalSlots, percent: 100, config: { color: 'text-foreground', bg: 'bg-card/40 shadow-2xl ring-1 ring-white/10', border: 'border-white/5' } },
             { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
@@ -434,12 +434,12 @@ export default function EstoquePage() {
                 onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
                 className={`rounded-[1.5rem] sm:rounded-[2rem] border-2 ${s.config.border} ${s.config.bg} backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl relative overflow-hidden group ${
                   selectedStat === s.key ? 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background scale-[1.02] sm:scale-105' : ''
-                } ${s.key === 'total' ? 'col-span-2 sm:col-span-1' : ''}`}
+                } ${s.key === 'total' ? 'col-span-2 sm:col-span-1 tablet-portrait:col-span-1' : ''}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                <CardContent className="p-4 sm:p-6 text-center space-y-1 sm:space-y-2 relative z-10">
-                  <div className={`text-xl sm:text-2xl lg:text-3xl font-semibold tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
-                  <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
+                <CardContent className="p-4 sm:p-6 tablet-portrait:p-2 text-center space-y-1 sm:space-y-2 tablet-portrait:space-y-0.5 relative z-10">
+                  <div className={`text-xl sm:text-2xl lg:text-3xl tablet-portrait:text-lg font-semibold tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
+                  <div className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
                   <div className="flex items-center justify-center gap-1.5 pt-2">
                     <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
                        <div className={`h-full ${s.config.color.replace('text', 'bg')}`} style={{ width: `${s.percent}%` }} />
