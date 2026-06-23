@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiService } from '@/services/api';
+import { enqueueArchive } from '@/lib/offline-queue';
 import { isSessionExpiredError } from '@/services/authGuard';
 import { toast } from 'sonner';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
