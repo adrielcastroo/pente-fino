@@ -52,7 +52,6 @@ export const StatCards = memo(({ stats, onStatClick }: { stats: any, onStatClick
           label={s.label}
           value={s.value}
           subtitle={s.subtitle}
-          icon={iconMap[s.icon]}
           onClick={onStatClick}
         />
       ))}
