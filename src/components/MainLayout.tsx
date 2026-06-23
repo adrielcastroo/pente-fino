@@ -91,22 +91,24 @@ export default function MainLayout() {
                 </div>
                 <footer
                   role="contentinfo"
-                  className="mt-8 border-t border-border/60 bg-card/70 dark:bg-card/40 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/70 font-mono"
+                  className="mt-8 border-t border-border bg-card/50"
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2" aria-hidden="true">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-success/60 animate-ping" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                  <div className="max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2" aria-hidden="true">
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-success/60 animate-ping" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                      </span>
+                      <span>Sistema operacional</span>
                     </span>
-                    <span className="text-foreground/80">Sistema operacional</span>
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-foreground font-semibold tracking-tight">Pente Fino</span>
-                    <span className="text-border" aria-hidden="true">·</span>
-                    <span className="px-1.5 py-0.5 rounded-md bg-muted/70 text-foreground/80 border border-border/60">
-                      v{LATEST_VERSION}
+                    <span className="flex items-center gap-2">
+                      <span className="text-foreground font-semibold tracking-tight">Pente Fino</span>
+                      <span className="text-border" aria-hidden="true">·</span>
+                      <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border font-mono text-[11px]">
+                        v{LATEST_VERSION}
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </footer>
               </Suspense>
             </div>
