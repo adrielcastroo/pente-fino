@@ -1,5 +1,5 @@
 
-import { Home, ScanLine, TreePine, Zap, Table, FolderOpen, Package, ArrowUpRight, Settings, LogOut, ClipboardCheck, MapPin, AlertCircle, LayoutDashboard, ShieldAlert } from 'lucide-react';
+import { Home, ScanLine, TreePine, Zap, Table, FolderOpen, Package, ArrowUpRight, Settings, LogOut, ClipboardCheck, ClipboardList, MapPin, AlertCircle, LayoutDashboard, ShieldAlert } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import logoComb from '@/assets/logo-comb.png';
