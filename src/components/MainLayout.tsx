@@ -7,6 +7,7 @@ import { useNetworkStatus } from '@/hooks/use-network-status';
 import TopBar from '@/components/TopBar';
 import AppSidebar from '@/components/AppSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
+import NavRail from '@/components/NavRail';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
 import CommandPalette from '@/components/CommandPalette';
@@ -68,16 +69,18 @@ export default function MainLayout() {
   return (
     <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
-        {/* Sidebar: apenas desktop ≥1366px. Tablets (incl. TCL Tab 10L landscape 1280px) usam BottomTabBar */}
+        {/* Sidebar: apenas desktop ≥1366px. Tablets em landscape recebem NavRail; portrait/mobile usam BottomTabBar */}
         <div className="hidden min-[1366px]:contents">
           <AppSidebar activeTab={activeTab} onTabChange={() => {}} />
         </div>
+
+        <NavRail />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
           <Breadcrumbs />
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 min-[1366px]:pb-0">
+          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 tablet-landscape:pb-0 min-[1366px]:pb-0">
 
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
