@@ -153,7 +153,7 @@ export function PeriodComparisonCard({ history }: Props) {
             const deltaLabel = trend === 'flat'
               ? '—'
               : capped
-                ? (trend === 'up' ? '>+999%' : '>−999%')
+                ? (trend === 'up' ? '+999%' : '−999%')
                 : `${trend === 'down' ? '−' : '+'}${pct}%`;
 
             return (
