@@ -100,6 +100,7 @@ const App = () => (
                       </RequireRole>
                     }
                   />
+                  <Route path="/conferencia" element={<ConferenciaHubPage />} />
                   <Route path="/tecido" element={<TecidoPage />} />
                   <Route path="/madeira" element={<MadeiraPage />} />
                   <Route path="/motor" element={<MotorControlePage />} />
