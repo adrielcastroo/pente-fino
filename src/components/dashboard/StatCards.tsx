@@ -1,12 +1,10 @@
 import React, { useMemo, memo } from 'react';
-import { LucideIcon, BarChart3, Layers3, Users } from 'lucide-react';
 
 interface StatCardProps {
   id: string;
   label: string;
   value: string | number;
   subtitle?: string;
-  icon: LucideIcon;
   onClick: (id: string) => void;
 }
 
