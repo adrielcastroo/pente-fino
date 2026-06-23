@@ -69,8 +69,8 @@ export default function MainLayout() {
   return (
     <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
-        {/* Sidebar: apenas desktop ≥1366px. Tablets em landscape recebem NavRail; portrait/mobile usam BottomTabBar */}
-        <div className="hidden min-[1366px]:contents">
+        {/* Sidebar: desktop real (mouse + hover). Tablets touch recebem NavRail; portrait/mobile usam BottomTabBar */}
+        <div className="hidden desktop:contents">
           <AppSidebar activeTab={activeTab} onTabChange={() => {}} />
         </div>
 
@@ -80,7 +80,7 @@ export default function MainLayout() {
           <TopBar />
           <Breadcrumbs />
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 tablet-landscape:pb-0 min-[1366px]:pb-0">
+          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 tablet-landscape:pb-0 desktop:pb-0">
 
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>

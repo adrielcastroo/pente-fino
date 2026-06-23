@@ -18,8 +18,10 @@ export default {
       lg: "1024px",
       xl: "1280px",
       "2xl": "1536px",
-      "tablet-landscape": { raw: "(min-width: 768px) and (max-width: 1365px) and (orientation: landscape)" },
-      "tablet-portrait": { raw: "(min-width: 600px) and (max-width: 1365px) and (orientation: portrait)" },
+      // Desktop real: mouse fino + hover. Notebooks com janelas pequenas continuam desktop.
+      desktop: { raw: "(min-width: 1024px) and (hover: hover) and (pointer: fine), (min-width: 1366px)" },
+      "tablet-landscape": { raw: "(min-width: 768px) and (max-width: 1365px) and (orientation: landscape) and (hover: none), (min-width: 768px) and (max-width: 1365px) and (orientation: landscape) and (pointer: coarse)" },
+      "tablet-portrait": { raw: "(min-width: 600px) and (max-width: 1365px) and (orientation: portrait) and (hover: none), (min-width: 600px) and (max-width: 1365px) and (orientation: portrait) and (pointer: coarse)" },
     },
     extend: {
       fontFamily: {
