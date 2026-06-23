@@ -39,7 +39,7 @@ const railGestao: RailItem[] = [
   { to: '/saida', label: 'Saída', icon: ArrowUpRight },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
   { to: '/reservas', label: 'Reservas', icon: Table },
-  { to: '/cadastros', label: 'Cadastros', icon: Package },
+  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
   { to: '/auditoria', label: 'Auditoria', icon: ShieldAlert },
 ];
 
