@@ -4,19 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Activity, Download, Eye, Package } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid,
 } from 'recharts';
 import { usePerformance } from '@/hooks/use-performance';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
+// Paleta sky/teal coerente — sem violeta
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  '#0D9488',
-  '#7C3AED',
-  '#D97706',
-  '#DC2626',
-  '#2563EB',
+  '#0EA5E9', // sky-500
+  '#0D9488', // teal-600
+  '#0369A1', // sky-700
+  '#14B8A6', // teal-500
+  '#38BDF8', // sky-400
 ];
 
 const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any) => {
