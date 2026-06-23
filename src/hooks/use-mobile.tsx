@@ -1,46 +1,41 @@
 import { useState, useEffect } from 'react';
 
-export const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
+// Desktop "real": mouse fino + hover, OU tela muito larga (≥1366px) como fallback.
+// Isto garante que notebooks com janelas <1366px continuem em layout desktop.
+const DESKTOP_QUERY =
+  '(min-width: 1024px) and (hover: hover) and (pointer: fine), (min-width: 1366px)';
+
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia(query).matches;
+  });
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mql = window.matchMedia(query);
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+    setMatches(mql.matches);
+    mql.addEventListener?.('change', handler);
+    return () => mql.removeEventListener?.('change', handler);
+  }, [query]);
 
-  return isMobile;
+  return matches;
+};
+
+export const useIsDesktop = () => useMediaQuery(DESKTOP_QUERY);
+
+export const useIsMobile = () => {
+  const isDesktop = useIsDesktop();
+  const narrow = useMediaQuery('(max-width: 767px)');
+  return !isDesktop && narrow;
 };
 
 export const useIsTablet = () => {
-  const [isTablet, setIsTablet] = useState(false);
-
-  useEffect(() => {
-    const checkTablet = () => {
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
-    };
-    checkTablet();
-    window.addEventListener('resize', checkTablet);
-    return () => window.removeEventListener('resize', checkTablet);
-  }, []);
-
-  return isTablet;
+  const isDesktop = useIsDesktop();
+  const inRange = useMediaQuery('(min-width: 768px) and (max-width: 1365px)');
+  return !isDesktop && inRange;
 };
 
-export const useIsLandscape = () => {
-  const [isLandscape, setIsLandscape] = useState(false);
-
-  useEffect(() => {
-    const checkLandscape = () => {
-      setIsLandscape(window.innerWidth > window.innerHeight);
-    };
-    checkLandscape();
-    window.addEventListener('resize', checkLandscape);
-    return () => window.removeEventListener('resize', checkLandscape);
-  }, []);
-
-  return isLandscape;
-};
+export const useIsLandscape = () =>
+  useMediaQuery('(orientation: landscape)');
