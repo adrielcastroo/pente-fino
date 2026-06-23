@@ -37,11 +37,11 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         // Mobile: bottom-sheet ocupando 90vh, sobe de baixo, cantos arredondados no topo
-        "fixed left-0 right-0 bottom-0 z-50 grid w-full max-h-[90vh] overflow-y-auto gap-4 border-t bg-background p-4 shadow-lg rounded-t-2xl",
+        "fixed left-0 right-0 bottom-0 z-50 grid w-full max-h-[90vh] overflow-y-auto gap-4 border-t border-border/60 bg-card/95 backdrop-blur-xl p-4 shadow-2xl rounded-t-2xl",
         // Animações mobile (slide de baixo)
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom duration-300",
         // Desktop (sm+): centralizado, override total da posição mobile
-        "sm:left-[50%] sm:right-auto sm:bottom-auto sm:top-[50%] sm:max-w-lg sm:max-h-[calc(100vh-2rem)] sm:w-full sm:max-w-[calc(100vw-1rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:border sm:rounded-lg sm:p-6",
+        "sm:left-[50%] sm:right-auto sm:bottom-auto sm:top-[50%] sm:max-w-lg sm:max-h-[calc(100vh-2rem)] sm:w-full sm:max-w-[calc(100vw-1rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:border sm:border-border/60 sm:rounded-lg sm:p-6",
         // Desktop animation: zoom em vez de slide
         "sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
         className,

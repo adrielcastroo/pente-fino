@@ -53,8 +53,11 @@ export default function NavRail() {
   const isGestao = atLeast(role, 'supervisor');
   const items = useMemo(() => (isGestao ? railGestao : railOperacao), [isGestao]);
 
+  const CONFERENCIA_PATHS = ['/conferencia', '/tecido', '/madeira', '/motor'];
   const isActive = (to: string) =>
-    pathname === to || (to === '/operacao' && pathname === '/');
+    pathname === to
+    || (to === '/operacao' && pathname === '/')
+    || (to === '/conferencia' && CONFERENCIA_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')));
 
   return (
     <TooltipProvider delayDuration={300}>
