@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef<
         // Animações mobile (slide de baixo)
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom duration-300",
         // Desktop (sm+): centralizado, override total da posição mobile
-        "sm:left-[50%] sm:right-auto sm:bottom-auto sm:top-[50%] sm:max-w-lg sm:max-h-[calc(100vh-2rem)] sm:w-full sm:max-w-[calc(100vw-1rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:border sm:rounded-lg sm:p-6",
+        "sm:left-[50%] sm:right-auto sm:bottom-auto sm:top-[50%] sm:max-w-lg sm:max-h-[calc(100vh-2rem)] sm:w-full sm:max-w-[calc(100vw-1rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:border sm:border-border/60 sm:rounded-lg sm:p-6",
         // Desktop animation: zoom em vez de slide
         "sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
         className,
