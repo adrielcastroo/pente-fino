@@ -34,7 +34,7 @@ const railOperacao: RailItem[] = [
 
 const railGestao: RailItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/tecido', label: 'Conferência', icon: ScanLine },
+  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
   { to: '/estoque', label: 'Estoque', icon: Package },
   { to: '/saida', label: 'Saída', icon: ArrowUpRight },
   { to: '/historico', label: 'Histórico', icon: FolderOpen },
