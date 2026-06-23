@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -107,6 +107,9 @@ export default function SettingsPage() {
   const [activeCategory, setActiveCategory] = useState('profile');
   
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const saveStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveSettingsRef = useRef<() => Promise<void>>();
   const { theme, setTheme } = useTheme();
   const [displayName, setDisplayName] = useState('');
   const [cargo, setCargo] = useState('');
@@ -374,6 +377,7 @@ export default function SettingsPage() {
   };
 
   const saveSettings = async () => {
+    setSaveState('saving');
     try {
       if (activeCategory === 'integrations') {
         localStorage.setItem('cft4_or_key', orKey.trim());
@@ -420,12 +424,33 @@ export default function SettingsPage() {
         }
       }
       
-      toast.success('Configurações salvas com sucesso!');
       setHasUnsavedChanges(false);
+      setSaveState('saved');
+      if (saveStateTimeoutRef.current) clearTimeout(saveStateTimeoutRef.current);
+      saveStateTimeoutRef.current = setTimeout(() => setSaveState('idle'), 1500);
     } catch (error: any) {
+      setSaveState('idle');
       toast.error('Erro ao salvar: ' + error.message);
     }
   };
+
+  // Mantém ref atualizada com o saveSettings mais recente (closure-safe para debounce)
+  saveSettingsRef.current = saveSettings;
+
+  // Auto-save com debounce de 800ms após qualquer alteração
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handle = setTimeout(() => {
+      saveSettingsRef.current?.();
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => () => {
+    if (saveStateTimeoutRef.current) clearTimeout(saveStateTimeoutRef.current);
+  }, []);
+
+
 
   const labelSettings = useAppStore(s => s.labelSettings);
   const setLabelSettings = useAppStore(s => s.setLabelSettings);
@@ -1287,19 +1312,26 @@ export default function SettingsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {hasUnsavedChanges && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-md bg-card/95 backdrop-blur-xl border border-border/40 shadow-2xl">
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-            Alterações pendentes
-          </Badge>
-          <Button
-            onClick={saveSettings}
-            size="sm"
-            className="font-bold gap-2"
-          >
-            <Save className="w-3.5 h-3.5" />
-            Salvar alterações
-          </Button>
+      {(saveState !== 'idle' || hasUnsavedChanges) && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3.5 py-2 rounded-md bg-card/95 backdrop-blur-xl border border-border/40 shadow-lg text-xs font-medium">
+          {saveState === 'saving' && (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+              <span className="text-muted-foreground">Salvando…</span>
+            </>
+          )}
+          {saveState === 'saved' && (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-emerald-600 dark:text-emerald-400">Salvo automaticamente</span>
+            </>
+          )}
+          {saveState === 'idle' && hasUnsavedChanges && (
+            <>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-muted-foreground">Alterações pendentes…</span>
+            </>
+          )}
         </div>
       )}
     </div>
