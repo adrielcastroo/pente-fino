@@ -407,7 +407,6 @@ export default function DashboardPage() {
                   <CardTitle className="text-sm font-medium tracking-tight">Últimas Saídas</CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">Registros mais recentes agrupados por item e data</p>
                 </div>
-                </div>
                 <Button
                   variant="ghost"
                   size="sm"
