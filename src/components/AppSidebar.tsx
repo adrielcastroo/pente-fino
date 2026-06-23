@@ -64,6 +64,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
   const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
   const { signOut, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const registroCount = useAppStore(s => s.registros.length);
   const reservasCount = useAppStore(s => s.reservas.length);
   const visibleGroups = menuGroups
