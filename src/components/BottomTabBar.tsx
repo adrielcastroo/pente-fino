@@ -17,7 +17,7 @@ const primaryOperacao: Tab[] = [
 
 const primaryGestao: Tab[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/tecido', label: 'Conferência', icon: ScanLine },
+  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
   { to: '/estoque', label: 'Estoque', icon: Package },
   { to: '/saida', label: 'Saída', icon: ArrowUpRight },
 ];
