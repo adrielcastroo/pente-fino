@@ -408,3 +408,33 @@ body.presentation-mode .recharts-wrapper {
     animation: none !important;
   }
 }
+
+/* ============ Tablet Touch Optimizations (Fase 3) ============ */
+/* Targets ≥48px com luvas em ambiente fabril.
+   Aplicado via classe utilitária .touch-cell + media queries por orientação. */
+.touch-cell {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.1s ease;
+}
+.touch-cell:active {
+  transform: scale(0.96);
+}
+
+@media (min-width: 600px) and (max-width: 1365px) and (orientation: portrait) {
+  .touch-cell { min-height: 56px; }
+  /* TEC tabs: trocar wrap por scroll horizontal em portrait */
+  .tec-tabs { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tec-tabs::-webkit-scrollbar { display: none; }
+}
+
+@media (min-width: 768px) and (max-width: 1365px) and (orientation: landscape) {
+  .touch-cell { min-height: 64px; }
+}
+
+/* Garantir alvo mínimo de toque em botões/links em viewports tablet */
+@media (max-width: 1365px) {
+  .touch-target { min-width: 48px; min-height: 48px; }
+}
+
