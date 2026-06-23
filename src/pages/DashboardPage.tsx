@@ -403,14 +403,10 @@ export default function DashboardPage() {
           <Card className="rounded-lg border border-border/40 bg-card/50 shadow-none overflow-hidden">
             <CardHeader className="px-5 py-4 border-b border-border/30">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-                    <TrendingUp className="w-4 h-4" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm font-medium tracking-tight">Últimas Saídas</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-0.5">Registros mais recentes agrupados por item e data</p>
-                  </div>
+                <div>
+                  <CardTitle className="text-sm font-medium tracking-tight">Últimas Saídas</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Registros mais recentes agrupados por item e data</p>
+                </div>
                 </div>
                 <Button
                   variant="ghost"
