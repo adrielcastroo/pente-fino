@@ -472,12 +472,12 @@ export default function EstoquePage() {
       </div>
 
       {/* TEC Tabs */}
-      <div className="flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] p-1.5 gap-1.5 sm:gap-2 border border-white/10 shadow-2xl flex-wrap sm:flex-nowrap ring-1 ring-white/5">
+      <div className="tec-tabs flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] p-1.5 gap-1.5 sm:gap-2 border border-white/10 shadow-2xl flex-wrap sm:flex-nowrap ring-1 ring-white/5">
         {Object.keys(TEC_CONFIG).map(tec => (
           <button 
             key={tec} 
             onClick={() => setActiveTec(tec)} 
-            className={`flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-md sm:rounded-md text-[9px] sm:text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
+            className={`touch-target flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-md sm:rounded-md text-[9px] sm:text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
               activeTec === tec 
                 ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
@@ -559,7 +559,7 @@ export default function EstoquePage() {
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border backdrop-blur-xl shadow-lg hover:shadow-primary/10 ${fillTone.bg} ${fillTone.border} ${
+                      className={`touch-cell flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border backdrop-blur-xl shadow-lg hover:shadow-primary/10 ${fillTone.bg} ${fillTone.border} ${
                         !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : ''
                       } ${
                         isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.03] z-10' : ''
