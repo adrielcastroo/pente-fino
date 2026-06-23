@@ -27,11 +27,18 @@ export default function Breadcrumbs() {
     return null;
   }
 
-  const crumbs = segments.map((seg, i) => {
-    const to = '/' + segments.slice(0, i + 1).join('/');
+  const effectiveSegments =
+    segments.length > 0 && CONFERENCIA_CHILDREN.has(segments[0])
+      ? ['conferencia', ...segments]
+      : segments;
+
+  const crumbs = effectiveSegments.map((seg, i) => {
+    const to = '/' + effectiveSegments.slice(0, i + 1).join('/').replace(/^conferencia\/conferencia/, 'conferencia');
+    // When we injected 'conferencia', that crumb maps to /conferencia explicitly
+    const resolvedTo = i === 0 && seg === 'conferencia' && segments[0] !== 'conferencia' ? '/conferencia' : to;
     const label = LABELS[seg] ?? decodeURIComponent(seg);
-    const isLast = i === segments.length - 1;
-    return { to, label, isLast };
+    const isLast = i === effectiveSegments.length - 1;
+    return { to: resolvedTo, label, isLast };
   });
 
   return (
