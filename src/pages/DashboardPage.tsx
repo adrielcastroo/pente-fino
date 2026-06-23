@@ -319,8 +319,8 @@ export default function DashboardPage() {
                   onClick={handleFullExportExcel}
                 >
                   {isExporting && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />}
-                  <span className="hidden xs:inline">{isExporting ? 'Processando...' : 'Exportar Excel'}</span>
-                  <span className="xs:hidden">{isExporting ? '...' : 'Excel'}</span>
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" strokeWidth={2} />
+                  <span>{isExporting ? 'Processando...' : 'Exportar'}</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="font-medium text-xs py-1.5">Gerar Relatório Completo de Atividades</TooltipContent>
