@@ -141,7 +141,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
               <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
                 {group.items.map(item => {
                   const Icon = item.icon;
-                  const isActive = activeTab === item.key;
+                  const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
                   const isTableTab = item.key === 'reservas';
                   const hasRecords = isTableTab && reservasCount > 0;
                   const displayCount = isTableTab ? reservasCount : registroCount;
