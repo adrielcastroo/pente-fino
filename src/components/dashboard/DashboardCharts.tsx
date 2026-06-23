@@ -4,19 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Activity, Download, Eye, Package } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid,
 } from 'recharts';
 import { usePerformance } from '@/hooks/use-performance';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
+// Paleta sky/teal coerente — sem violeta
 const CHART_COLORS = [
   'hsl(var(--primary))',
-  '#0D9488',
-  '#7C3AED',
-  '#D97706',
-  '#DC2626',
-  '#2563EB',
+  '#0EA5E9', // sky-500
+  '#0D9488', // teal-600
+  '#0369A1', // sky-700
+  '#14B8A6', // teal-500
+  '#38BDF8', // sky-400
 ];
 
 const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any) => {
@@ -164,10 +165,21 @@ export const SummaryChart = React.memo(({ title, desc, data, type, icon: Icon, o
                   {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Pie>
                 <ChartTooltip content={<CustomTooltip />} />
-                <Legend />
               </PieChart>
             )}
           </ResponsiveContainer>
+        )}
+        {/* Legenda HTML custom para pie */}
+        {!isMobile && type === 'pie' && data && data.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-3 -mb-2">
+            {data.slice(0, 6).map((d: any, i: number) => (
+              <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                <span className="text-muted-foreground">{d.name}</span>
+                <span className="tabular-nums font-medium text-foreground/80">{Number(d[chartKey]) || 0}</span>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
