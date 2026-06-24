@@ -1,4 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.cdnfonts.com/css/ocr-b-10-bt');
+
+/* OCR-B fallback via @font-face para garantir embed em PNG das etiquetas */
+@font-face {
+  font-family: 'OCR-B';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.cdnfonts.com/s/14101/OCRB_Medium.woff') format('woff');
+}
 
 @tailwind base;
 @tailwind components;
