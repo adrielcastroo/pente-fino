@@ -41,7 +41,7 @@ describe('persistência das configurações (/configuracoes)', () => {
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw!);
     expect(parsed.state.labelSettings.fontSize).toBe(22);
-    expect(parsed.state.labelSettings.showSku).toBe(false);
+    expect(parsed.state.labelSettings.showLogo).toBe(false);
     expect(parsed.state.labelSettings.printOffsetXMm).toBe(-8);
     expect(parsed.state.dashboardDialogTheme).toBe('dark');
 
@@ -53,7 +53,7 @@ describe('persistência das configurações (/configuracoes)', () => {
     const rehydrated = mod.useAppStore.getState();
 
     expect(rehydrated.labelSettings.fontSize).toBe(22);
-    expect(rehydrated.labelSettings.showSku).toBe(false);
+    expect(rehydrated.labelSettings.showLogo).toBe(false);
     expect(rehydrated.labelSettings.printOffsetXMm).toBe(-8);
     expect(rehydrated.dashboardDialogTheme).toBe('dark');
   });
