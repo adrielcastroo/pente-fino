@@ -51,8 +51,8 @@ export default function LabelLayoutPanel() {
   const w = isMotor ? (labelSettings.motorWidth ?? 90) : labelSettings.width;
   const h = isMotor ? (labelSettings.motorHeight ?? 80) : labelSettings.height;
   const offsetMm = isMotor
-    ? (labelSettings.motorPrintOffsetXMm ?? 4)
-    : (labelSettings.printOffsetXMm ?? 4);
+    ? (labelSettings.motorPrintOffsetXMm ?? -5)
+    : (labelSettings.printOffsetXMm ?? -5);
   const availableFields = isMotor ? MOTOR_FIELDS : TECIDO_FIELDS;
   const has = (id: string) => fields.includes(id);
 

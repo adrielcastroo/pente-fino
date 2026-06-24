@@ -100,16 +100,20 @@ export async function renderTecidoLabel(
   const orientation = labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * PREVIEW_SCALE;
   const hPx = (orientation === 'landscape' ? h : w) * PREVIEW_SCALE;
-  const offsetMm = Math.max(0, labelSettings.printOffsetXMm ?? 4);
-  const offsetPx = Math.min(offsetMm * LABEL_PX_PER_MM, wPx - 1);
-  const innerWpx = wPx - offsetPx;
+  const offsetMm = labelSettings.printOffsetXMm ?? 0;
+  const maxOffsetPx = wPx - 1;
+  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
+  const innerWpx = wPx - Math.abs(offsetPx);
+  const leftPx = offsetPx > 0 ? offsetPx : 0;
+  const rightPx = offsetPx < 0 ? -offsetPx : 0;
 
   const { container, root, cleanup } = mountOffscreen();
   try {
     root.render(
       createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
-        createElement('div', { style: { width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+        createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
         createElement(TecidoPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
+        createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
       ),
     );
     await new Promise((r) => setTimeout(r, 50));
@@ -132,16 +136,20 @@ export async function renderMotorLabel(
   const orientation = labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * PREVIEW_SCALE;
   const hPx = (orientation === 'landscape' ? h : w) * PREVIEW_SCALE;
-  const offsetMm = Math.max(0, labelSettings.motorPrintOffsetXMm ?? 4);
-  const offsetPx = Math.min(offsetMm * LABEL_PX_PER_MM, wPx - 1);
-  const innerWpx = wPx - offsetPx;
+  const offsetMm = labelSettings.motorPrintOffsetXMm ?? 0;
+  const maxOffsetPx = wPx - 1;
+  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
+  const innerWpx = wPx - Math.abs(offsetPx);
+  const leftPx = offsetPx > 0 ? offsetPx : 0;
+  const rightPx = offsetPx < 0 ? -offsetPx : 0;
 
   const { container, root, cleanup } = mountOffscreen();
   try {
     root.render(
       createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
-        createElement('div', { style: { width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+        createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
         createElement(MotorPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
+        createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
       ),
     );
     await new Promise((r) => setTimeout(r, 50));
