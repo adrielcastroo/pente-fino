@@ -184,7 +184,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
         borderColor: '#000',
         borderRadius: `${borderRadius}px`,
       } as React.CSSProperties}
-      className="bg-white text-black flex flex-col font-['IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
+      className="bg-white text-black flex flex-col font-['OCR-B','OCR_B_10_BT','IBM_Plex_Mono',ui-monospace,monospace] overflow-hidden antialiased"
     >
       {/* Top: SKU + descrição */}
       <div className="border-b-[3px] border-black px-3 py-2 flex flex-col justify-center overflow-hidden flex-[1.15]">
