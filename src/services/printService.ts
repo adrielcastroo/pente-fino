@@ -115,6 +115,8 @@ async function sendToWebhook(
   //  - dataUrl: mantido por retrocompatibilidade
   const body = {
     ...payload,
+    template: payload.type,                 // alias explícito p/ roteamento
+    format: payload.type,                   // alias adicional
     imageBase64: base64,
     mimeType,
     imageSize: base64.length,
