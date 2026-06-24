@@ -65,8 +65,10 @@ export interface PrintConfig {
   autoPrint: boolean;
   /** 'browser' (padrão), 'webhook' (n8n) ou 'both'. */
   printMethod?: PrintMethod;
-  /** URL do webhook (n8n) — usado quando printMethod inclui webhook. */
+  /** URL do webhook (n8n) — usado para tecido e como fallback geral. */
   webhookUrl?: string;
+  /** URL do webhook (n8n) específico para etiquetas de motor. Se vazio, usa `webhookUrl`. */
+  motorWebhookUrl?: string;
 }
 
 /**
