@@ -188,14 +188,22 @@ export default function LabelLayoutPanel() {
                     </div>
                   </div>
                   <div className="space-y-2 pt-2">
-                    <Label className="text-xs font-bold">Orientação (global)</Label>
+                    <Label className="text-xs font-bold">Orientação ({isMotor ? 'Motor' : 'Tecido'})</Label>
                     <div className="flex gap-2">
-                      <Button variant={labelSettings.orientation === 'landscape' ? 'default' : 'outline'} size="sm"
-                        className="flex-1 font-bold text-xs" onClick={() => setLabelSettings({ orientation: 'landscape' })}>
+                      <Button
+                        variant={(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'default' : 'outline'}
+                        size="sm"
+                        className="flex-1 font-bold text-xs"
+                        onClick={() => setLabelSettings(isMotor ? { motorOrientation: 'landscape' } : { orientation: 'landscape' })}
+                      >
                         Paisagem
                       </Button>
-                      <Button variant={labelSettings.orientation === 'portrait' ? 'default' : 'outline'} size="sm"
-                        className="flex-1 font-bold text-xs" onClick={() => setLabelSettings({ orientation: 'portrait' })}>
+                      <Button
+                        variant={(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'portrait' ? 'default' : 'outline'}
+                        size="sm"
+                        className="flex-1 font-bold text-xs"
+                        onClick={() => setLabelSettings(isMotor ? { motorOrientation: 'portrait' } : { orientation: 'portrait' })}
+                      >
                         Retrato
                       </Button>
                     </div>
@@ -212,6 +220,23 @@ export default function LabelLayoutPanel() {
                     />
                     <p className="text-[10px] opacity-60 leading-tight">
                       Compensa o deslocamento da impressora (faixa branca à esquerda). Padrão: 4 mm.
+                    </p>
+                  </div>
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-xs font-bold">
+                      Webhook n8n ({isMotor ? 'Motor' : 'Tecido'})
+                    </Label>
+                    <Input
+                      type="url"
+                      placeholder={isMotor ? 'Deixe vazio para usar o webhook de Tecido' : 'http://localhost:5678/webhook/imprimir-etiqueta'}
+                      value={isMotor ? (labelSettings.motorWebhookUrl ?? '') : (labelSettings.webhookUrl ?? '')}
+                      onChange={(e) => setLabelSettings(isMotor
+                        ? { motorWebhookUrl: e.target.value }
+                        : { webhookUrl: e.target.value })}
+                      className="h-9"
+                    />
+                    <p className="text-[10px] opacity-60 leading-tight">
+                      Cada tipo pode ir para um fluxo/impressora diferente. Se o de Motor ficar vazio, usa o de Tecido.
                     </p>
                   </div>
                 </CardContent>
