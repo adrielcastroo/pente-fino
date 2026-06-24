@@ -20,8 +20,12 @@ export interface LabelSettings {
   showLogo: boolean;
   showQRCode: boolean;
   orientation: 'portrait' | 'landscape';
+  motorOrientation?: 'portrait' | 'landscape';
   autoPrint: boolean;
+  /** Webhook do n8n para etiquetas de tecido (também usado como padrão). */
   webhookUrl: string;
+  /** Webhook do n8n específico para etiquetas de motor/controle. Se vazio, usa `webhookUrl`. */
+  motorWebhookUrl?: string;
   printOffsetXMm?: number;
   motorPrintOffsetXMm?: number;
   // Aparência (Tecido)
