@@ -792,6 +792,8 @@ export const useAppStore = create<AppState>()(
         lockMadeiraEndereco: state.lockMadeiraEndereco,
         lockMotorModelo: state.lockMotorModelo,
         lockMotorNf: state.lockMotorNf,
+        labelSettings: state.labelSettings,
+        dashboardDialogTheme: state.dashboardDialogTheme,
       } as any),
     }
   )
