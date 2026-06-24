@@ -836,9 +836,18 @@ export const LeftPanel = memo(function LeftPanel() {
     if (requiresEndereco && !ENDERECO_REGEX.test(endereco)) { warn('Endereço inválido. Use: TEC01.A.N03'); return; }
 
     const resolvedEndereco = isEtiqPronta ? endereco : requiresEndereco ? endereco : '';
-    const resolvedM2 = isAI ? (aiMLinearNum * aiLarguraNum) : (isPVT || isEtiqPronta || coulisseUsesMLinear || cortinaUsesMLinear) ? 0 : m2Num;
-    const resolvedMLinear = isEtiqPronta ? mLinear : mLinear;
     const resolvedLargura = isAI ? aiLarguraNum : isPVT ? 0 : isCelular ? celularDivisor : largura;
+    const resolvedMLinear = isEtiqPronta ? mLinear : mLinear;
+    // M² = Largura × Metragem Linear. When the user typed M Linear directly (coulisse/cortina M Linear modes),
+    // derive M² from largura × mLinear instead of storing 0. PVT/etiq_pronta don't track m² conceptually.
+    const computedM2FromLinear = resolvedLargura > 0 && resolvedMLinear > 0 ? resolvedLargura * resolvedMLinear : 0;
+    const resolvedM2 = isAI
+      ? (aiMLinearNum * aiLarguraNum)
+      : (isPVT || isEtiqPronta)
+        ? 0
+        : (coulisseUsesMLinear || cortinaUsesMLinear)
+          ? computedM2FromLinear
+          : (m2Num > 0 ? m2Num : computedM2FromLinear);
 
     // Celular and Etiq Pronta use processo, other Diversos use NF
     const resolvedProcesso = (isDiversos && !isCelular) ? '' : proc;
