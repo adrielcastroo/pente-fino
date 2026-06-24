@@ -166,7 +166,7 @@ async function dispatchPrint(
   const tryWebhook = async () => {
     if (!hasWebhook) return false;
     try {
-      await sendToWebhook(cfg.webhookUrl!, payload);
+      await sendToWebhook(resolvedWebhook, payload);
       return true;
     } catch (e) {
       console.error('Webhook falhou:', e);
