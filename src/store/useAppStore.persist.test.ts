@@ -29,7 +29,7 @@ describe('persistência das configurações (/configuracoes)', () => {
     let mod = await import('./useAppStore');
     mod.useAppStore.getState().setLabelSettings({
       fontSize: 22,
-      showSku: false,
+      showLogo: false,
       printOffsetXMm: -8,
     });
     mod.useAppStore.getState().setDashboardDialogTheme('dark');
