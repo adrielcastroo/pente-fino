@@ -65,8 +65,10 @@ export interface PrintConfig {
   autoPrint: boolean;
   /** 'browser' (padrão), 'webhook' (n8n) ou 'both'. */
   printMethod?: PrintMethod;
-  /** URL do webhook (n8n) — usado quando printMethod inclui webhook. */
+  /** URL do webhook (n8n) — usado para tecido e como fallback geral. */
   webhookUrl?: string;
+  /** URL do webhook (n8n) específico para etiquetas de motor. Se vazio, usa `webhookUrl`. */
+  motorWebhookUrl?: string;
 }
 
 /**
@@ -113,6 +115,8 @@ async function sendToWebhook(
   //  - dataUrl: mantido por retrocompatibilidade
   const body = {
     ...payload,
+    template: payload.type,                 // alias explícito p/ roteamento
+    format: payload.type,                   // alias adicional
     imageBase64: base64,
     mimeType,
     imageSize: base64.length,
@@ -140,8 +144,11 @@ async function dispatchPrint(
   const browserDisabled = typeof localStorage !== 'undefined'
     && localStorage.getItem('pref_disable_browser_print') === 'true';
 
-  // Preferência: SEMPRE n8n (webhook) primeiro, navegador apenas como fallback.
-  const hasWebhook = !!cfg.webhookUrl;
+  // Webhook por tipo: motor usa `motorWebhookUrl` se definido; tecido usa `webhookUrl`.
+  const resolvedWebhook = payload.type === 'motor'
+    ? (cfg.motorWebhookUrl?.trim() || cfg.webhookUrl?.trim() || '')
+    : (cfg.webhookUrl?.trim() || '');
+  const hasWebhook = !!resolvedWebhook;
   const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
 
   const tryBrowser = async () => {
@@ -161,7 +168,7 @@ async function dispatchPrint(
   const tryWebhook = async () => {
     if (!hasWebhook) return false;
     try {
-      await sendToWebhook(cfg.webhookUrl!, payload);
+      await sendToWebhook(resolvedWebhook, payload);
       return true;
     } catch (e) {
       console.error('Webhook falhou:', e);

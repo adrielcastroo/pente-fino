@@ -133,7 +133,7 @@ export async function renderMotorLabel(
   const has: LabelHas = (id) => fields.includes(id);
   const w = labelSettings.motorWidth ?? 60;
   const h = labelSettings.motorHeight ?? 50;
-  const orientation = labelSettings.orientation ?? 'landscape';
+  const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * PREVIEW_SCALE;
   const hPx = (orientation === 'landscape' ? h : w) * PREVIEW_SCALE;
   const offsetMm = labelSettings.motorPrintOffsetXMm ?? 0;
