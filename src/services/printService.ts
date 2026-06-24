@@ -142,8 +142,11 @@ async function dispatchPrint(
   const browserDisabled = typeof localStorage !== 'undefined'
     && localStorage.getItem('pref_disable_browser_print') === 'true';
 
-  // Preferência: SEMPRE n8n (webhook) primeiro, navegador apenas como fallback.
-  const hasWebhook = !!cfg.webhookUrl;
+  // Webhook por tipo: motor usa `motorWebhookUrl` se definido; tecido usa `webhookUrl`.
+  const resolvedWebhook = payload.type === 'motor'
+    ? (cfg.motorWebhookUrl?.trim() || cfg.webhookUrl?.trim() || '')
+    : (cfg.webhookUrl?.trim() || '');
+  const hasWebhook = !!resolvedWebhook;
   const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
 
   const tryBrowser = async () => {
