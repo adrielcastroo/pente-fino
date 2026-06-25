@@ -30,6 +30,7 @@ export default function HistoricoPage() {
   const { data, isLoading } = usePickings();
   const [filter, setFilter] = useState<Filter>('faturado');
   const [search, setSearch] = useState('');
+  const [estornoTarget, setEstornoTarget] = useState<Picking | null>(null);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
