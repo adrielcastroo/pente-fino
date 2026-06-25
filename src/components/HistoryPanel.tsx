@@ -797,8 +797,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        whileHover={{ y: -2 }}
-        className={`border rounded-md sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 backdrop-blur-sm group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30 shadow-lg shadow-primary/10' : 'border-border/40 hover:border-primary/40'}`}
+        className={`border rounded-md overflow-hidden bg-card hover:bg-muted/30 transition-colors duration-150 group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30' : 'border-border/50'}`}
       >
         {highlight && (
           <div className="bg-primary/10 text-primary px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-2 border-b border-primary/20">
