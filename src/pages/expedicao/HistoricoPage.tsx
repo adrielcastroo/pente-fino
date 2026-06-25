@@ -119,6 +119,7 @@ export default function HistoricoPage() {
                 <th className="px-3 py-2 text-right">Peças</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-left">Finalizado</th>
+                <th className="px-3 py-2 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -143,12 +144,30 @@ export default function HistoricoPage() {
                       ? new Date(p.finished_at).toLocaleString('pt-BR')
                       : '—'}
                   </td>
+                  <td className="px-3 py-2 text-right">
+                    {p.status === 'faturado' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setEstornoTarget(p)}
+                      >
+                        <Undo2 className="size-3.5 mr-1" /> Estornar
+                      </Button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <CancelPickingDialog
+        picking={estornoTarget}
+        open={!!estornoTarget}
+        onOpenChange={(o) => !o && setEstornoTarget(null)}
+      />
     </div>
   );
 }
