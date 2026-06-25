@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, Undo2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { usePickings, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
+import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 
 const STATUS_LABEL: Record<PickingStatus, string> = {
   aguardando: 'Aguardando',
