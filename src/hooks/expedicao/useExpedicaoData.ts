@@ -320,6 +320,40 @@ export function useBipPeca() {
   });
 }
 
+export function useFaturarPicking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (pickingId: string) => {
+      const { data: p, error: errP } = await supabase
+        .from('expedicao_pickings')
+        .select('id, status, carrinho_id')
+        .eq('id', pickingId)
+        .maybeSingle();
+      if (errP) throw errP;
+      if (!p) throw new Error('Picking não encontrado.');
+      if (p.status !== 'conferido') throw new Error('Apenas pickings conferidos podem ser faturados.');
+
+      const { error } = await supabase
+        .from('expedicao_pickings')
+        .update({ status: 'faturado' })
+        .eq('id', pickingId);
+      if (error) throw error;
+
+      if (p.carrinho_id) {
+        await supabase.from('expedicao_carrinhos').update({ status: 'livre' }).eq('id', p.carrinho_id);
+        await supabase.from('expedicao_pickings').update({ carrinho_id: null }).eq('id', pickingId);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEYS.pickings });
+      qc.invalidateQueries({ queryKey: KEYS.carrinhos });
+      toast.success('Picking faturado');
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Falha ao faturar'),
+  });
+}
+
+
 export function useFinalizarConferencia() {
   const qc = useQueryClient();
   return useMutation({
