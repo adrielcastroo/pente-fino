@@ -587,7 +587,15 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     {column.key === 'item' ? (
                       <div className="flex flex-col gap-1.5">
                         <span className="text-sm tracking-tight">{r.item || '—'}</span>
-                        {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-semibold uppercase tracking-tighter px-1.5 h-4 w-fit bg-primary/5 border-primary/10 text-primary/60">{r.tipoTecido}</Badge>}
+                        {(() => {
+                          const label = r.modoOrigem === 'motor' ? 'Motor'
+                            : r.modoOrigem === 'controle' ? 'Controle'
+                            : r.modoOrigem === 'madeira' ? 'Madeira'
+                            : r.modoOrigem === 'openrouter' ? 'IA Vision'
+                            : r.tipoTecido === 'Celular' ? 'Celular/Plissada'
+                            : (r.tipoTecido || '').trim() || (r.modoOrigem === 'diversos' ? 'Diversos' : 'Coulisse');
+                          return <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide w-fit ${getBadgeClass(label)}`}>{label}</span>;
+                        })()}
                       </div>
                     ) : column.key === 'mLinear' ? (
                       <span className="font-semibold text-foreground/80 tabular-nums">{formatMLDisplay(r.mLinear)}</span>
