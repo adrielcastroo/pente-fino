@@ -7,6 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useTransportadoras, useCreateTransportadora } from '@/hooks/expedicao/useExpedicaoData';
+import { RequireRole } from '@/components/auth/RequireRole';
 
 export default function ExpedicaoConfiguracoesPage() {
   const { data = [], isLoading } = useTransportadoras();
@@ -29,15 +30,25 @@ export default function ExpedicaoConfiguracoesPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Transportadoras</h2>
-        <form onSubmit={submit} className="flex gap-2 max-w-md">
-          <Input
-            placeholder="Nome da transportadora"
-            value={nome}
-            onChange={e => setNome(e.target.value)}
-          />
-          <Button type="submit" disabled={create.isPending} className="gap-2 shrink-0">
-            <Plus className="w-4 h-4" /> Adicionar
-          </Button>
+        <RequireRole
+          action="expedicao:manage-cadastros"
+          fallback={
+            <p className="text-xs text-muted-foreground italic">
+              Somente Supervisor+ pode cadastrar transportadoras.
+            </p>
+          }
+        >
+          <form onSubmit={submit} className="flex gap-2 max-w-md">
+            <Input
+              placeholder="Nome da transportadora"
+              value={nome}
+              onChange={e => setNome(e.target.value)}
+            />
+            <Button type="submit" disabled={create.isPending} className="gap-2 shrink-0">
+              <Plus className="w-4 h-4" /> Adicionar
+            </Button>
+          </form>
+        </RequireRole>
         </form>
 
         <div className="bg-card border border-border rounded-md overflow-hidden">
