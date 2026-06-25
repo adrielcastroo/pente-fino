@@ -1356,7 +1356,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="nf-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NF)</label>
-                  {(lockNf || isRolo) && (
+                  {(lockNf || isRolo || isPVT || isCortina) && (
                     <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
                       {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                     </button>
