@@ -6,7 +6,7 @@ import type { Conference, AppMode } from '@/types';
  */
 export function routeForConference(conf: Conference): string {
   const modos = new Set(conf.registros.map(r => r.modoOrigem || ''));
-  if (modos.has('motor') || modos.has('controle')) return '/motor-controle';
+  if (modos.has('motor') || modos.has('controle')) return '/motor';
   if (modos.has('madeira')) return '/madeira';
   return '/tecido';
 }
