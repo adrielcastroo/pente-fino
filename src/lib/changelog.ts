@@ -7,6 +7,29 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.2.0',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'feature', text: 'Trava de NF disponível também para os modos PVT e Cortina em /tecido.' },
+      { type: 'improvement', text: 'Home preenche toda a largura em notebooks/desktops (sem faixa em branco à direita).' },
+    ],
+  },
+  {
+    version: '3.1.1',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'fix', text: 'Badges do detalhe expandido em /historico usam mapa de cores canônico com variantes dark para contraste AA.' },
+    ],
+  },
+  {
+    version: '3.1.0',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'feature', text: 'Incluir item múltiplas vezes em NFs agrupadas no /historico, com auditoria preservada via triggers.' },
+      { type: 'improvement', text: 'Cores padronizadas por tipo (Motor/Controle/Cortina/Coulisse/Rolo/Madeira) e botões do header uniformizados.' },
+    ],
+  },
+  {
     version: '3.0.0',
     date: '2026-06-25',
     highlights: [
