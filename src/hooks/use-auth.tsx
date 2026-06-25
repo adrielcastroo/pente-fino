@@ -13,6 +13,7 @@ interface AuthContextType {
   guestName: string;
   isAdmin: boolean;
   role: Role | null;
+  modules: string[];
   can: (action: Action) => boolean;
   loginAsGuest: (name?: string) => void;
   signOut: () => Promise<void>;
@@ -113,9 +114,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const can = useCallback((action: Action) => canDo(role, action), [role]);
 
+  const modules = useMemo<string[]>(() => {
+    const raw = (profile as any)?.modules;
+    if (Array.isArray(raw) && raw.length) return raw as string[];
+    if (isAdmin) return ['estoque', 'expedicao'];
+    return ['estoque'];
+  }, [profile, isAdmin]);
+
   const value = useMemo(() => ({
-    user, profile, loading, isGuest, guestName, isAdmin, role, can, loginAsGuest, signOut
-  }), [user, profile, loading, isGuest, guestName, isAdmin, role, can]);
+    user, profile, loading, isGuest, guestName, isAdmin, role, modules, can, loginAsGuest, signOut
+  }), [user, profile, loading, isGuest, guestName, isAdmin, role, modules, can]);
 
   return (
     <AuthContext.Provider value={value}>

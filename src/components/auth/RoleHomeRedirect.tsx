@@ -8,7 +8,7 @@ import { atLeast } from '@/lib/permissions';
  *   - operação (operador / user)             → /operacao
  */
 export default function RoleHomeRedirect() {
-  const { role, loading, isGuest } = useAuth();
+  const { role, loading, isGuest, modules } = useAuth();
 
   if (loading) {
     return (
@@ -20,6 +20,12 @@ export default function RoleHomeRedirect() {
 
   // Guests have no role — default to operational home.
   if (isGuest) return <Navigate to="/operacao" replace />;
+
+  // Bifurcação de módulos: se tem acesso a ambos, mostra seletor
+  const hasEstoque = modules.includes('estoque');
+  const hasExpedicao = modules.includes('expedicao');
+  if (hasEstoque && hasExpedicao) return <Navigate to="/selecionar-modulo" replace />;
+  if (hasExpedicao && !hasEstoque) return <Navigate to="/expedicao/painel" replace />;
 
   const isGestao = atLeast(role, 'supervisor');
   return <Navigate to={isGestao ? '/dashboard' : '/operacao'} replace />;

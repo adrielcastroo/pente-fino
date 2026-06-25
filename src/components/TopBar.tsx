@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { toast } from 'sonner';
-import { Download, User, CheckCircle2, LogOut, ScanBarcode, Plus } from 'lucide-react';
+import { Download, User, CheckCircle2, LogOut, ScanBarcode, Plus, ArrowLeftRight } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,8 @@ const TopBar = memo(function TopBar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, isGuest, guestName, signOut, profile } = useAuth();
+  const { user, isGuest, guestName, signOut, profile, modules } = useAuth();
+  const canSwitchModule = modules.length > 1;
   const [isExporting, setIsExporting] = useState(false);
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
@@ -229,6 +230,24 @@ const TopBar = memo(function TopBar() {
 
           <GlossaryDialog />
           <ChangelogDialog />
+
+          {canSwitchModule && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 sm:h-10 rounded-md px-2 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                >
+                  <Link to="/selecionar-modulo" aria-label="Trocar de módulo">
+                    <ArrowLeftRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Trocar de módulo</TooltipContent>
+            </Tooltip>
+          )}
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
