@@ -7,10 +7,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { usePickings, useFaturarPicking } from '@/hooks/expedicao/useExpedicaoData';
+import { useAuth } from '@/hooks/use-auth';
+import { Lock } from 'lucide-react';
 
 export default function FaturamentoPage() {
   const { data, isLoading } = usePickings();
   const faturar = useFaturarPicking();
+  const { can } = useAuth();
+  const allowFaturar = can('expedicao:faturar');
   const [filter, setFilter] = useState('');
 
   const fila = useMemo(() => {

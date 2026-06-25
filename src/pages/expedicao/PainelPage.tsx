@@ -9,6 +9,7 @@ import {
 import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
 import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
+import { useAuth } from '@/hooks/use-auth';
 
 const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
   aguardando:     { label: 'Aguardando',     cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
@@ -21,6 +22,8 @@ const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
 
 export default function PainelPage() {
   const { data, isLoading } = usePickings();
+  const { can } = useAuth();
+  const allowCancel = can('expedicao:cancel-picking');
   const [novo, setNovo] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
@@ -110,7 +113,7 @@ export default function PainelPage() {
             <TableBody>
               {filtered.map(p => {
                 const s = STATUS_LABEL[p.status];
-                const canCancel = !['faturado', 'cancelado'].includes(p.status);
+                const canCancel = allowCancel && !['faturado', 'cancelado'].includes(p.status);
                 return (
                   <TableRow key={p.id}>
                     <TableCell className="font-mono text-xs">{p.numero}</TableCell>
