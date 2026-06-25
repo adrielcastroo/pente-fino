@@ -476,6 +476,11 @@ export const useAppStore = create<AppState>()(
       
       archiveAndClear: async (name: string, bypassLengthCheck = false) => {
         const state = get();
+        // Em modo retomada, "finalizar" significa anexar à conferência existente.
+        if (state.resumeMode) {
+          await get().finishResumeConference();
+          return;
+        }
         if ((!state.registros.length && !bypassLengthCheck) || state.isArchiving) return;
         const registrosToArchive = [...state.registros];
         const processoToArchive = state.processo.trim() || name;
