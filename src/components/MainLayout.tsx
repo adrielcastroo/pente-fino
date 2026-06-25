@@ -13,7 +13,7 @@ import UndoBanner from '@/components/UndoBanner';
 import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { LATEST_VERSION } from '@/lib/changelog';
+import { LATEST_VERSION, BUILD_TIME } from '@/lib/changelog';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { AppTab } from '@/types';
@@ -106,7 +106,10 @@ export default function MainLayout() {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="text-foreground/80 font-medium tracking-tight">Pente Fino</span>
-                        <span className="px-1.5 py-0 rounded bg-muted/60 text-muted-foreground border border-border/40 font-mono text-[10px] leading-4">
+                        <span
+                          className="px-1.5 py-0 rounded bg-muted/60 text-muted-foreground border border-border/40 font-mono text-[10px] leading-4"
+                          title={BUILD_TIME ? `Build: ${new Date(BUILD_TIME).toLocaleString('pt-BR')}` : undefined}
+                        >
                           v{LATEST_VERSION}
                         </span>
                       </span>
