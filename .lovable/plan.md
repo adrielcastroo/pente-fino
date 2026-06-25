@@ -1,36 +1,36 @@
 ## Problema
 
-Em telas grandes (≥1280px), o grid de ações da `OperacaoHomePage` é limitado por `max-w-5xl` + `lg:grid-cols-3`, deixando a faixa direita vazia (área vermelha do print).
+O rodapé já lê a versão dinamicamente (`__APP_VERSION__` injetado por `vite.config.ts` a partir do topo de `src/lib/changelog.ts`), mas o changelog está parado em **3.0.0**. Várias mudanças foram entregues depois sem bump de versão, então o rodapé mostra a mesma versão "antiga" — dando a impressão de que o versionamento não funciona.
 
-## Causa
+## Solução
 
-`src/pages/OperacaoHomePage.tsx` linha 77:
-```
-grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 max-w-5xl
-```
-O `<main>` ocupa toda a largura disponível, mas o grid é travado em ~1024px.
+Adotar disciplina SemVer no `CHANGELOG` e bumpar a versão a cada entrega (a infra de exibição já está pronta, não precisa mexer).
 
-## Opções (escolher 1 antes de implementar)
+### Regra SemVer (a aplicar daqui em diante)
 
-**A. Centralizar (mínimo esforço, mantém densidade atual)**
-- Adicionar `mx-auto` ao grid.
-- Resultado: cartões ficam centralizados; some a "faixa" assimétrica à direita.
+- **MAJOR (X.0.0)** — mudanças amplas / quebra de comportamento.
+- **MINOR (x.Y.0)** — nova feature visível ao usuário.
+- **PATCH (x.y.Z)** — correção de bug ou ajuste pequeno de UI.
 
-**B. Esticar para preencher (aproveita o espaço sem novo conteúdo)**
-- Remover `max-w-5xl`, manter `lg:grid-cols-3` e adicionar `xl:grid-cols-3 2xl:grid-cols-3` com `gap` maior; cartões ficam mais largos (uniforme 3×2).
-- Header também passa a respirar a largura toda.
+A versão exibida no rodapé = primeira entrada de `CHANGELOG` em `src/lib/changelog.ts`.
 
-**C. 4 colunas em telas largas (mais ações visíveis)**
-- `lg:grid-cols-3 xl:grid-cols-4` + remover `max-w-5xl`.
-- Com 6 itens vira 4+2 (assimetria na 2ª linha). Pode-se compensar com `justify-items-stretch` ou reordenar.
+### Entradas a adicionar (refletindo o que já foi entregue após 3.0.0)
 
-**D. Painel lateral informativo (usa o espaço com conteúdo útil)**
-- Em `xl:`, transformar layout em `xl:grid-cols-[1fr_320px]`: à esquerda o grid de ações (3 cols), à direita um cartão "Atividade recente" / "Resumo do dia" (últimas conferências, contagem do turno).
-- Mais valor para o usuário, mas requer query (já existe em `useDashboard`/`HistoryPanel`).
+Empilhar no topo de `CHANGELOG`, mais nova primeiro:
 
-## Recomendação
+1. **3.2.0** — feature: trava de NF para PVT e Cortina em `/tecido`; improvement: home grid preenche largura total em notebooks/desktops (sem faixa em branco à direita).
+2. **3.1.1** — fix: badges do detalhe expandido em `/historico` usam mapa de cores canônico com variantes dark para contraste AA.
+3. **3.1.0** — feature: incluir item múltiplas vezes em NFs agrupadas no `/historico`, com auditoria preservada via triggers; improvement: cores padronizadas por tipo (Motor/Controle/Cortina/Coulisse/Rolo/Madeira) e botões do header uniformizados.
 
-**Opção A** se a prioridade é puramente cosmética (1 linha de código).  
-**Opção D** se quiser aproveitar o espaço com algo útil (recomendado, alinhado com padrões SaaS modernos — Linear/Stripe).
+Datas: usar `2026-06-25` (hoje) para as três, com a mais alta sendo a "atual".
 
-Qual aplicar?
+### Arquivo a alterar
+
+- `src/lib/changelog.ts` — inserir as três entradas no topo de `CHANGELOG`. Nenhum outro arquivo precisa mudar; `vite.config.ts` faz o regex no topo e o `MainLayout` já renderiza `v{LATEST_VERSION}` + tooltip de build.
+
+### Processo daqui em diante
+
+A cada PR/turno que entregar mudança ao usuário:
+- adicionar uma nova entrada no topo de `CHANGELOG`;
+- escolher o tipo de bump conforme SemVer;
+- a versão do rodapé acompanha automaticamente no próximo build.
