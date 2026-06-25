@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Settings,
   ArrowLeftRight,
+  History,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
