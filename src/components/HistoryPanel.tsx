@@ -909,6 +909,7 @@ export default function HistoryPanel() {
   const [showTestData, setShowTestData] = useState(false);
   const [periodo, setPeriodo] = useState<'todos' | '7' | '30' | '90'>('30');
   const [pageSize, setPageSize] = useState(20);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
