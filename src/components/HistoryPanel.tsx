@@ -518,6 +518,9 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const [open, setOpen] = useState(highlight);
   const navigate = useNavigate();
   const startResumeConference = useAppStore(s => s.startResumeConference);
+  const merged = conf as MergedConference;
+  const isGrouped = (merged._underlyingIds?.length ?? 0) > 1;
+  const resolveConfId = (regId: string) => merged._regToConfId?.[regId] || conf.id;
 
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
