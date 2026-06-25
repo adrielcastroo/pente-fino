@@ -392,6 +392,18 @@ function getModeBadges(conf: Conference): string[] {
   return Array.from(badges);
 }
 
+function pluralize(count: number, singular: string, plural: string): string {
+  return `${count.toLocaleString('pt-BR')} ${count === 1 ? singular : plural}`;
+}
+
+function formatMLDisplay(v: number): string {
+  if (typeof v !== 'number' || v === 0) return '';
+  const rounded = Math.round(v * 10) / 10;
+  if (rounded === 0) return '';
+  const numStr = rounded.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  return `${numStr} M`;
+}
+
 function getSmartCount(conf: Conference): string {
   const regs = conf.registros;
   const allMadeira = regs.every(r => r.modoOrigem === 'madeira');
@@ -402,26 +414,26 @@ function getSmartCount(conf: Conference): string {
 
   if (allMadeira) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
-    return `${regs.length} caixas${totalQtd > 0 ? ` (${totalQtd} und)` : ''}`;
+    return `${pluralize(regs.length, 'caixa', 'caixas')}${totalQtd > 0 ? ` (${pluralize(totalQtd, 'unidade', 'unidades')})` : ''}`;
   }
   if (allMotor) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
-    return totalQtd > 0 ? `${totalQtd} motores` : `${regs.length} motores`;
+    return pluralize(totalQtd > 0 ? totalQtd : regs.length, 'motor', 'motores');
   }
   if (allControle) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
-    return totalQtd > 0 ? `${totalQtd} controles` : `${regs.length} controles`;
+    return pluralize(totalQtd > 0 ? totalQtd : regs.length, 'controle', 'controles');
   }
   if (allMotorControle) {
     const motors = regs.filter(r => r.modoOrigem === 'motor').reduce((s, r) => s + (r.quantidade || 1), 0);
     const ctrls = regs.filter(r => r.modoOrigem === 'controle').reduce((s, r) => s + (r.quantidade || 1), 0);
-    return `${motors} motores · ${ctrls} controles`;
+    return `${pluralize(motors, 'motor', 'motores')} · ${pluralize(ctrls, 'controle', 'controles')}`;
   }
-  if (allCelular) return `${regs.length} rolos (Celular)`;
+  if (allCelular) return `${pluralize(regs.length, 'rolo', 'rolos')} (Celular)`;
 
   const hasMixed = new Set(regs.map(r => r.modoOrigem)).size > 1;
-  if (hasMixed) return `${regs.length} itens`;
-  return `${regs.length} rolos`;
+  if (hasMixed) return pluralize(regs.length, 'item', 'itens');
+  return pluralize(regs.length, 'rolo', 'rolos');
 }
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
@@ -434,9 +446,9 @@ function formatDuration(start: string | null | undefined, end: string | null | u
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(mins / 60);
     const remainMins = mins % 60;
-    if (hours > 0) return `${hours}h ${remainMins}min`;
-    if (mins < 1) return '< 1min';
-    return `${mins}min`;
+    if (hours > 0) return remainMins === 0 ? `${hours} h` : `${hours} h ${remainMins} min`;
+    if (mins < 1) return '< 1 min';
+    return `${mins} min`;
   } catch { return '—'; }
 }
 
