@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
+import { useAuth } from '@/hooks/use-auth';
 
 const STATUS_LABEL: Record<PickingStatus, string> = {
   aguardando: 'Aguardando',
@@ -145,7 +146,7 @@ export default function HistoricoPage() {
                       : '—'}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    {p.status === 'faturado' && (
+                    {p.status === 'faturado' && allowEstorno && (
                       <Button
                         variant="ghost"
                         size="sm"

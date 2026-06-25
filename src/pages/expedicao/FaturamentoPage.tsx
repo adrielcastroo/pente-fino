@@ -72,14 +72,23 @@ export default function FaturamentoPage() {
                   <TableCell className="text-muted-foreground">{p.transportadora?.nome ?? '—'}</TableCell>
                   <TableCell className="font-mono text-muted-foreground">{p.carrinho?.codigo ?? '—'}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      disabled={faturar.isPending}
-                      onClick={() => faturar.mutate(p.id)}
-                    >
-                      {faturar.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-                      Faturar
-                    </Button>
+                    {allowFaturar ? (
+                      <Button
+                        size="sm"
+                        disabled={faturar.isPending}
+                        onClick={() => faturar.mutate(p.id)}
+                      >
+                        {faturar.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                        Faturar
+                      </Button>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                        title="Requer perfil Supervisor ou superior"
+                      >
+                        <Lock className="size-3" /> Sem permissão
+                      </span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
