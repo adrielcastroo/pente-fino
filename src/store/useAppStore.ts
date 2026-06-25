@@ -155,6 +155,12 @@ export interface AppState {
   addHistoryRegistro: (conferenceId: string, reg: Omit<Registro, 'id'>) => Promise<void>;
   setLastArchivedConferenceId: (id: string | null) => void;
 
+  /** Inicia a retomada de uma conferência arquivada na página operacional. */
+  startResumeConference: (conf: Conference) => void;
+  /** Persiste os novos registros adicionados em modo retomada e volta ao histórico. */
+  finishResumeConference: () => Promise<void>;
+  /** Aborta a retomada sem persistir nada novo. */
+  cancelResumeConference: () => void;
 }
 
 const INITIAL_FORM_DATA: FormData = {
