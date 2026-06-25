@@ -13,6 +13,7 @@ interface AuthContextType {
   guestName: string;
   isAdmin: boolean;
   role: Role | null;
+  modules: string[];
   can: (action: Action) => boolean;
   loginAsGuest: (name?: string) => void;
   signOut: () => Promise<void>;
