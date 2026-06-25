@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.2.1',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'feature', text: "Automação de bump de versão (scripts/bump-changelog.mjs) integrada ao changelog e rodapé" },
+    ],
+  },
+  {
     version: '3.2.0',
     date: '2026-06-25',
     highlights: [
