@@ -10,6 +10,7 @@ import BottomTabBar from '@/components/BottomTabBar';
 import NavRail from '@/components/NavRail';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
+import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LATEST_VERSION } from '@/lib/changelog';
