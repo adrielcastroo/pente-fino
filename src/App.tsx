@@ -22,6 +22,9 @@ const AuditoriaPage = lazy(() => import("@/pages/AuditoriaPage"));
 const MinhaAtividadePage = lazy(() => import("@/pages/MinhaAtividadePage"));
 const OperacaoHomePage = lazy(() => import("@/pages/OperacaoHomePage"));
 const ConferenciaHubPage = lazy(() => import("@/pages/ConferenciaHubPage"));
+const SelecionarModuloPage = lazy(() => import("@/pages/SelecionarModuloPage"));
+const ExpedicaoLayout = lazy(() => import("@/components/expedicao/ExpedicaoLayout"));
+const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlaceholder"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
