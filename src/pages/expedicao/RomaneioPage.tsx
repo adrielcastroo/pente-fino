@@ -38,20 +38,37 @@ export default function RomaneioPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-6 print:space-y-3">
+      <style>{`
+        @media print {
+          body { background: #fff !important; }
+          aside, header.md\\:hidden, nav[aria-label="Navegação Expedição"], footer, .no-print { display: none !important; }
+          details > * { display: block !important; }
+          details summary > svg { display: none !important; }
+          .romaneio-print { padding: 0 !important; }
+        }
+      `}</style>
+      <header className="flex flex-wrap items-end justify-between gap-3 print:border-b print:pb-2">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Romaneio</h1>
           <p className="text-sm text-muted-foreground">
             Transportadora → Região → Cidade → Cliente · <span className="font-mono">{totalPickings}</span> pickings
           </p>
+          <p className="hidden print:block text-xs text-muted-foreground">
+            Emitido em {new Date().toLocaleString('pt-BR')}
+          </p>
         </div>
-        <Input
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filtrar por número ou cliente"
-          className="h-10 w-full md:w-72"
-        />
+        <div className="flex items-center gap-2 no-print">
+          <Input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filtrar por número ou cliente"
+            className="h-10 w-full md:w-72"
+          />
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="size-4 mr-1.5" /> Imprimir
+          </Button>
+        </div>
       </header>
 
       {isLoading ? (
