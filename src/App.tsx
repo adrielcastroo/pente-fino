@@ -25,6 +25,9 @@ const ConferenciaHubPage = lazy(() => import("@/pages/ConferenciaHubPage"));
 const SelecionarModuloPage = lazy(() => import("@/pages/SelecionarModuloPage"));
 const ExpedicaoLayout = lazy(() => import("@/components/expedicao/ExpedicaoLayout"));
 const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlaceholder"));
+const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
+const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
+const ExpedicaoConfiguracoesPage = lazy(() => import("@/pages/expedicao/ConfiguracoesPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
@@ -159,15 +162,16 @@ const App = () => (
                   }
                 >
                   <Route index element={<Navigate to="/expedicao/painel" replace />} />
-                  <Route path="painel" element={<ExpedicaoPlaceholder title="Painel da expedição" description="Pickings aguardando movimentação e conferência." />} />
+                  <Route path="painel" element={<ExpedicaoPainelPage />} />
                   <Route path="pickings" element={<ExpedicaoPlaceholder title="Pickings" description="Associação picking ↔ carrinho por dupla bipagem." />} />
                   <Route path="conferencia" element={<ExpedicaoPlaceholder title="Conferência de peças" description="Bipagem de peças por QR Code." />} />
                   <Route path="romaneio" element={<ExpedicaoPlaceholder title="Romaneio" description="Transportadora → Região → Cidade → Cliente." />} />
                   <Route path="faturamento" element={<ExpedicaoPlaceholder title="Faturamento" description="Fila de pickings liberados para faturar." />} />
                   <Route path="dashboard" element={<ExpedicaoPlaceholder title="Dashboard operacional" description="KPIs do dia, produtividade e tempos por etapa." />} />
                   <Route path="logistica" element={<ExpedicaoPlaceholder title="Dashboard logístico" description="Volumes por transportadora, região e cidade." />} />
-                  <Route path="carrinhos" element={<ExpedicaoPlaceholder title="Carrinhos" description="Gestão dos carrinhos da expedição." />} />
-                  <Route path="configuracoes" element={<ExpedicaoPlaceholder title="Configurações da expedição" description="SLAs, transportadoras, regiões e alertas." />} />
+                  <Route path="carrinhos" element={<ExpedicaoCarrinhosPage />} />
+                  <Route path="configuracoes" element={<ExpedicaoConfiguracoesPage />} />
+
                 </Route>
 
                 <Route path="*" element={<NotFound />} />

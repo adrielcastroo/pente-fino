@@ -402,6 +402,167 @@ export type Database = {
         }
         Relationships: []
       }
+      expedicao_carrinhos: {
+        Row: {
+          codigo: string
+          created_at: string
+          id: string
+          status: Database["public"]["Enums"]["expedicao_carrinho_status"]
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["expedicao_carrinho_status"]
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["expedicao_carrinho_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expedicao_picking_itens: {
+        Row: {
+          bipado_at: string | null
+          bipado_por: string | null
+          codigo_peca: string
+          created_at: string
+          descricao: string | null
+          id: string
+          picking_id: string
+          qtd_bipada: number
+          qtd_prevista: number
+          updated_at: string
+        }
+        Insert: {
+          bipado_at?: string | null
+          bipado_por?: string | null
+          codigo_peca: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          picking_id: string
+          qtd_bipada?: number
+          qtd_prevista?: number
+          updated_at?: string
+        }
+        Update: {
+          bipado_at?: string | null
+          bipado_por?: string | null
+          codigo_peca?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          picking_id?: string
+          qtd_bipada?: number
+          qtd_prevista?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_picking_itens_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pickings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_pickings: {
+        Row: {
+          carrinho_id: string | null
+          cidade: string | null
+          cliente: string
+          created_at: string
+          created_by: string | null
+          finished_at: string | null
+          id: string
+          numero: string
+          observacao: string | null
+          regiao: string | null
+          status: Database["public"]["Enums"]["expedicao_picking_status"]
+          total_pecas: number
+          transportadora_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          carrinho_id?: string | null
+          cidade?: string | null
+          cliente: string
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: string
+          numero: string
+          observacao?: string | null
+          regiao?: string | null
+          status?: Database["public"]["Enums"]["expedicao_picking_status"]
+          total_pecas?: number
+          transportadora_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carrinho_id?: string | null
+          cidade?: string | null
+          cliente?: string
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: string
+          numero?: string
+          observacao?: string | null
+          regiao?: string | null
+          status?: Database["public"]["Enums"]["expedicao_picking_status"]
+          total_pecas?: number
+          transportadora_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_pickings_carrinho_id_fkey"
+            columns: ["carrinho_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_carrinhos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_pickings_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_transportadoras: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       historico_contagens: {
         Row: {
           conferente_nome: string | null
@@ -1222,6 +1383,7 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_module: { Args: { _module: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1246,6 +1408,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"
+      expedicao_carrinho_status: "livre" | "em_uso" | "manutencao"
+      expedicao_picking_status:
+        | "aguardando"
+        | "em_separacao"
+        | "em_conferencia"
+        | "conferido"
+        | "faturado"
+        | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1374,6 +1544,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "operador", "user", "supervisor", "gerente"],
+      expedicao_carrinho_status: ["livre", "em_uso", "manutencao"],
+      expedicao_picking_status: [
+        "aguardando",
+        "em_separacao",
+        "em_conferencia",
+        "conferido",
+        "faturado",
+        "cancelado",
+      ],
     },
   },
 } as const

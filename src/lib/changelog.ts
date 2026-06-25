@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.6.0',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'feature', text: 'Fase 2 — Fundação do módulo Expedição: tabelas (pickings, itens, carrinhos, transportadoras) com RLS por módulo, telas reais de Painel, Carrinhos e Configurações, e dialog de novo picking.' },
+    ],
+  },
+  {
     version: '3.5.0',
     date: '2026-06-25',
     highlights: [
