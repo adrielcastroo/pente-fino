@@ -647,16 +647,17 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        setIsAdding(true); 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startResumeConference(conf);
+                        navigate(routeForConference(conf));
                       }}
                       className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Adicionar novo registro</TooltipContent>
+                  <TooltipContent>Reabrir esta conferência para incluir novos itens</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
