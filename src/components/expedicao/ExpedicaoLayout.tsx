@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Settings,
   ArrowLeftRight,
+  History,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -29,6 +30,7 @@ const NAV_SECONDARY = [
   { to: '/expedicao/dashboard', label: 'Dashboard Operacional', icon: BarChart3 },
   { to: '/expedicao/logistica', label: 'Dashboard Logístico', icon: Truck },
   { to: '/expedicao/carrinhos', label: 'Carrinhos', icon: ShoppingCart },
+  { to: '/expedicao/historico', label: 'Histórico', icon: History },
   { to: '/expedicao/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
