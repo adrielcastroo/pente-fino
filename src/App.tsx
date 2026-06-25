@@ -92,6 +92,9 @@ const App = () => (
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
+                <Route path="/selecionar-modulo" element={<ProtectedRoute><SelecionarModuloPage /></ProtectedRoute>} />
+
+                {/* ===== MÓDULO ESTOQUE (app atual) ===== */}
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="/" element={<RoleHomeRedirect />} />
                   <Route path="/operacao" element={<OperacaoHomePage />} />
@@ -124,8 +127,44 @@ const App = () => (
                   />
                   <Route path="/minha-atividade" element={<MinhaAtividadePage />} />
 
+                  {/* Aliases canônicos /estoque/* (rotas antigas permanecem ativas) */}
+                  <Route path="/estoque/dashboard" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/estoque/operacao" element={<Navigate to="/operacao" replace />} />
+                  <Route path="/estoque/conferencia" element={<Navigate to="/conferencia" replace />} />
+                  <Route path="/estoque/tecido" element={<Navigate to="/tecido" replace />} />
+                  <Route path="/estoque/madeira" element={<Navigate to="/madeira" replace />} />
+                  <Route path="/estoque/motor" element={<Navigate to="/motor" replace />} />
+                  <Route path="/estoque/mapa" element={<Navigate to="/estoque" replace />} />
+                  <Route path="/estoque/saida" element={<Navigate to="/saida" replace />} />
+                  <Route path="/estoque/reservas" element={<Navigate to="/reservas" replace />} />
+                  <Route path="/estoque/historico" element={<Navigate to="/historico" replace />} />
+                  <Route path="/estoque/cadastros" element={<Navigate to="/cadastros" replace />} />
+                  <Route path="/estoque/configuracoes" element={<Navigate to="/configuracoes" replace />} />
+                  <Route path="/estoque/minha-atividade" element={<Navigate to="/minha-atividade" replace />} />
                 </Route>
 
+                {/* ===== MÓDULO EXPEDIÇÃO (novo) ===== */}
+                <Route
+                  path="/expedicao"
+                  element={
+                    <ProtectedRoute>
+                      <RequireRole action="view:auditoria" fallback={<Navigate to="/" replace />}>
+                        <ExpedicaoLayout />
+                      </RequireRole>
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Navigate to="/expedicao/painel" replace />} />
+                  <Route path="painel" element={<ExpedicaoPlaceholder title="Painel da expedição" description="Pickings aguardando movimentação e conferência." />} />
+                  <Route path="pickings" element={<ExpedicaoPlaceholder title="Pickings" description="Associação picking ↔ carrinho por dupla bipagem." />} />
+                  <Route path="conferencia" element={<ExpedicaoPlaceholder title="Conferência de peças" description="Bipagem de peças por QR Code." />} />
+                  <Route path="romaneio" element={<ExpedicaoPlaceholder title="Romaneio" description="Transportadora → Região → Cidade → Cliente." />} />
+                  <Route path="faturamento" element={<ExpedicaoPlaceholder title="Faturamento" description="Fila de pickings liberados para faturar." />} />
+                  <Route path="dashboard" element={<ExpedicaoPlaceholder title="Dashboard operacional" description="KPIs do dia, produtividade e tempos por etapa." />} />
+                  <Route path="logistica" element={<ExpedicaoPlaceholder title="Dashboard logístico" description="Volumes por transportadora, região e cidade." />} />
+                  <Route path="carrinhos" element={<ExpedicaoPlaceholder title="Carrinhos" description="Gestão dos carrinhos da expedição." />} />
+                  <Route path="configuracoes" element={<ExpedicaoPlaceholder title="Configurações da expedição" description="SLAs, transportadoras, regiões e alertas." />} />
+                </Route>
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
