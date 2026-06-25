@@ -392,6 +392,18 @@ function getModeBadges(conf: Conference): string[] {
   return Array.from(badges);
 }
 
+function pluralize(count: number, singular: string, plural: string): string {
+  return `${count.toLocaleString('pt-BR')} ${count === 1 ? singular : plural}`;
+}
+
+function formatMLDisplay(v: number): string {
+  if (typeof v !== 'number' || v === 0) return '';
+  const rounded = Math.round(v * 10) / 10;
+  if (rounded === 0) return '';
+  const numStr = rounded.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  return `${numStr} M`;
+}
+
 function getSmartCount(conf: Conference): string {
   const regs = conf.registros;
   const allMadeira = regs.every(r => r.modoOrigem === 'madeira');
@@ -402,26 +414,26 @@ function getSmartCount(conf: Conference): string {
 
   if (allMadeira) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
-    return `${regs.length} caixas${totalQtd > 0 ? ` (${totalQtd} und)` : ''}`;
+    return `${pluralize(regs.length, 'caixa', 'caixas')}${totalQtd > 0 ? ` (${pluralize(totalQtd, 'unidade', 'unidades')})` : ''}`;
   }
   if (allMotor) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
-    return totalQtd > 0 ? `${totalQtd} motores` : `${regs.length} motores`;
+    return pluralize(totalQtd > 0 ? totalQtd : regs.length, 'motor', 'motores');
   }
   if (allControle) {
     const totalQtd = regs.reduce((sum, r) => sum + (r.quantidade || 0), 0);
-    return totalQtd > 0 ? `${totalQtd} controles` : `${regs.length} controles`;
+    return pluralize(totalQtd > 0 ? totalQtd : regs.length, 'controle', 'controles');
   }
   if (allMotorControle) {
     const motors = regs.filter(r => r.modoOrigem === 'motor').reduce((s, r) => s + (r.quantidade || 1), 0);
     const ctrls = regs.filter(r => r.modoOrigem === 'controle').reduce((s, r) => s + (r.quantidade || 1), 0);
-    return `${motors} motores · ${ctrls} controles`;
+    return `${pluralize(motors, 'motor', 'motores')} · ${pluralize(ctrls, 'controle', 'controles')}`;
   }
-  if (allCelular) return `${regs.length} rolos (Celular)`;
+  if (allCelular) return `${pluralize(regs.length, 'rolo', 'rolos')} (Celular)`;
 
   const hasMixed = new Set(regs.map(r => r.modoOrigem)).size > 1;
-  if (hasMixed) return `${regs.length} itens`;
-  return `${regs.length} rolos`;
+  if (hasMixed) return pluralize(regs.length, 'item', 'itens');
+  return pluralize(regs.length, 'rolo', 'rolos');
 }
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
@@ -434,9 +446,9 @@ function formatDuration(start: string | null | undefined, end: string | null | u
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(mins / 60);
     const remainMins = mins % 60;
-    if (hours > 0) return `${hours}h ${remainMins}min`;
-    if (mins < 1) return '< 1min';
-    return `${mins}min`;
+    if (hours > 0) return remainMins === 0 ? `${hours} h` : `${hours} h ${remainMins} min`;
+    if (mins < 1) return '< 1 min';
+    return `${mins} min`;
   } catch { return '—'; }
 }
 
@@ -562,7 +574,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                         {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-semibold uppercase tracking-tighter px-1.5 h-4 w-fit bg-primary/5 border-primary/10 text-primary/60">{r.tipoTecido}</Badge>}
                       </div>
                     ) : column.key === 'mLinear' ? (
-                      <span className="font-semibold text-foreground/80">{formatML(r.mLinear)}</span>
+                      <span className="font-semibold text-foreground/80 tabular-nums">{formatMLDisplay(r.mLinear)}</span>
                     ) : column.key === 'm2' ? (
                       <span className="font-bold">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</span>
                     ) : column.key === 'largura' ? (
@@ -696,7 +708,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 </span>
                 
                 {totalML > 0 && (
-                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md">{formatML(totalML)}</span>
+                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md tabular-nums">{formatMLDisplay(totalML)}</span>
                 )}
               </div>
             </div>
@@ -1013,7 +1025,7 @@ export default function HistoryPanel() {
                 Histórico de conferências
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Acompanhe e gerencie todos os registros de conferência realizados.
+                Conferências finalizadas por data e conferente.
               </p>
             </div>
           </div>
@@ -1108,10 +1120,10 @@ export default function HistoryPanel() {
             </AnimatePresence>
             {grouped.length > paged.length && (
               <div className="flex flex-col items-center gap-2 py-6">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                  Exibindo {paged.length} de {grouped.length}
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  Exibindo <span className="font-semibold text-foreground">{paged.length}</span> de <span className="font-semibold text-foreground">{grouped.length}</span>
                 </p>
-                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-md font-semibold text-xs uppercase tracking-wider h-11 px-6">
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-md font-medium text-sm h-10 px-4">
                   Carregar mais
                 </Button>
               </div>
