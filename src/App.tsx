@@ -28,6 +28,8 @@ const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlace
 const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
 const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
 const ExpedicaoConfiguracoesPage = lazy(() => import("@/pages/expedicao/ConfiguracoesPage"));
+const ExpedicaoPickingsPage = lazy(() => import("@/pages/expedicao/PickingsPage"));
+const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
