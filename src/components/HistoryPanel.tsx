@@ -764,8 +764,9 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 )}
               </div>
 
-              <div className={`p-2 rounded-full transition-all duration-500 ${open ? 'rotate-180 bg-primary/10 text-primary' : 'bg-muted/50 text-muted-foreground/50'}`}>
-                 <ChevronDown className="w-5 h-5" />
+              <div className={`p-1.5 rounded-md transition-transform duration-150 text-muted-foreground ${open ? 'rotate-180' : ''}`}>
+                 <ChevronDown className="w-4 h-4" />
+
               </div>
             </div>
           </div>
