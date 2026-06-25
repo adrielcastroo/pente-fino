@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.0.0',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'improvement', text: 'Rodapé ultra-compacto e oculto em páginas operacionais (/conferencia, /tecido, /motor, /madeira) para liberar área útil.' },
+      { type: 'fix', text: 'Botão "Nova conferência" da home agora abre /conferencia (hub) em vez de pular direto para /tecido.' },
+      { type: 'feature', text: 'Versionamento dinâmico exibido no rodapé (vX.Y.Z) seguindo SemVer: patch para bugs, minor para features, major para mudanças amplas.' },
+      { type: 'feature', text: 'Webhook e orientação de etiqueta separados por tipo (Tecido / Motor) — sem mexer no n8n.' },
+      { type: 'improvement', text: 'Glossário de abreviações reorganizado com cabeçalho claro e busca em tempo real.' },
+      { type: 'fix', text: 'Suite de testes do projeto restaurada (40/40 verdes): mock de matchMedia e colunas de registro atualizadas.' },
+    ],
+  },
+  {
     version: '2.6.0',
     date: '2026-06-22',
     highlights: [
