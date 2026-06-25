@@ -1120,10 +1120,10 @@ export default function HistoryPanel() {
             </AnimatePresence>
             {grouped.length > paged.length && (
               <div className="flex flex-col items-center gap-2 py-6">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                  Exibindo {paged.length} de {grouped.length}
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  Exibindo <span className="font-semibold text-foreground">{paged.length}</span> de <span className="font-semibold text-foreground">{grouped.length}</span>
                 </p>
-                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-md font-semibold text-xs uppercase tracking-wider h-11 px-6">
+                <Button variant="outline" onClick={() => setPageSize(p => p + 20)} className="rounded-md font-medium text-sm h-10 px-4">
                   Carregar mais
                 </Button>
               </div>
