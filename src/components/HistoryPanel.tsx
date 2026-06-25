@@ -546,9 +546,22 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const [open, setOpen] = useState(highlight);
   const navigate = useNavigate();
   const startResumeConference = useAppStore(s => s.startResumeConference);
+  const historyAll = useAppStore(s => s.history);
   const merged = conf as MergedConference;
   const isGrouped = (merged._underlyingIds?.length ?? 0) > 1;
   const resolveConfId = (regId: string) => merged._regToConfId?.[regId] || conf.id;
+  const resolveResumeTarget = (): Conference => {
+    if (!isGrouped) return conf;
+    // Para grupos de NF: retoma a conferência primária (mais recente) do grupo.
+    // Os novos itens são inseridos nela e o trigger de audit_logs registra tudo em /auditoria.
+    const ids = merged._underlyingIds || [];
+    const candidates = historyAll.filter(h => ids.includes(h.id));
+    candidates.sort((a, b) =>
+      new Date(b.finishedAt || b.startedAt || b.date).getTime() -
+      new Date(a.finishedAt || a.startedAt || a.date).getTime()
+    );
+    return candidates[0] || conf;
+  };
 
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
@@ -740,19 +753,19 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={isGrouped}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (isGrouped) return;
-                        startResumeConference(conf);
-                        navigate(routeForConference(conf));
+                        const target = resolveResumeTarget();
+                        startResumeConference(target);
+                        navigate(routeForConference(target));
                       }}
-                      className="h-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors font-medium text-xs px-3 disabled:opacity-50"
+                      className="h-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors font-medium text-xs px-3"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir item</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{isGrouped ? 'Grupo de NFs unificado — abra cada conferência individualmente para incluir itens.' : 'Reabrir esta conferência para incluir novos itens'}</TooltipContent>
+                  <TooltipContent>{isGrouped ? 'Retoma a conferência mais recente deste grupo de NFs. Você pode incluir itens quantas vezes quiser — tudo fica registrado em /auditoria.' : 'Reabrir esta conferência para incluir novos itens'}</TooltipContent>
+
                 </Tooltip>
 
                 <Tooltip>
