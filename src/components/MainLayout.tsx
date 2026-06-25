@@ -10,6 +10,7 @@ import BottomTabBar from '@/components/BottomTabBar';
 import NavRail from '@/components/NavRail';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import UndoBanner from '@/components/UndoBanner';
+import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LATEST_VERSION } from '@/lib/changelog';
@@ -79,6 +80,7 @@ export default function MainLayout() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
           <Breadcrumbs />
+          <ResumeBanner />
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 tablet-landscape:pb-0 desktop:pb-0">
 

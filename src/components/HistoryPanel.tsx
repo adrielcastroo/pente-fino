@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
@@ -16,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { routeForConference } from '@/lib/conferenceRouting';
 
 
 
@@ -456,6 +458,8 @@ function isTestConference(conf: Conference): boolean {
 
 const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
   const [open, setOpen] = useState(highlight);
+  const navigate = useNavigate();
+  const startResumeConference = useAppStore(s => s.startResumeConference);
 
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
@@ -643,16 +647,17 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        setIsAdding(true); 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startResumeConference(conf);
+                        navigate(routeForConference(conf));
                       }}
                       className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Adicionar novo registro</TooltipContent>
+                  <TooltipContent>Reabrir esta conferência para incluir novos itens</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>

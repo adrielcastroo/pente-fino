@@ -94,6 +94,14 @@ export interface AppState {
   historyError: string | null;
   lastArchivedConferenceId: string | null;
 
+  /**
+   * Quando ≠ null, o usuário está retomando uma conferência arquivada via
+   * "Incluir Item" em /historico. Os registros com id em `lockedIds` foram
+   * herdados do histórico e NÃO podem ser removidos pela página operacional
+   * — somente pela página /historico.
+   */
+  resumeMode: { conferenceId: string; folderName: string; lockedIds: string[] } | null;
+
 
   setMode: (mode: AppMode) => void;
   updateRegistro: (id: string, updates: Partial<Registro>) => void;
@@ -147,6 +155,12 @@ export interface AppState {
   addHistoryRegistro: (conferenceId: string, reg: Omit<Registro, 'id'>) => Promise<void>;
   setLastArchivedConferenceId: (id: string | null) => void;
 
+  /** Inicia a retomada de uma conferência arquivada na página operacional. */
+  startResumeConference: (conf: Conference) => void;
+  /** Persiste os novos registros adicionados em modo retomada e volta ao histórico. */
+  finishResumeConference: () => Promise<void>;
+  /** Aborta a retomada sem persistir nada novo. */
+  cancelResumeConference: () => void;
 }
 
 const INITIAL_FORM_DATA: FormData = {
@@ -237,6 +251,7 @@ export const useAppStore = create<AppState>()(
       isHistoryLoading: false,
       historyError: null,
       lastArchivedConferenceId: null,
+      resumeMode: null,
 
 
       setMode: (mode) => set({ currentMode: mode }),
@@ -385,14 +400,23 @@ export const useAppStore = create<AppState>()(
         return { registros: newRegs, sessionStartedAt };
       }),
       
-      deleteRegistro: (id) => set(state => {
-        const idx = state.registros.findIndex(r => r.id === id);
-        if (idx === -1) return state;
-        const reg = state.registros[idx];
-        const newRegs = [...state.registros];
-        newRegs.splice(idx, 1);
-        return { registros: newRegs, undoStack: [...state.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
-      }),
+      deleteRegistro: (id) => {
+        const state = get();
+        // Em modo retomada, itens herdados do histórico não podem ser removidos
+        // pela página operacional. Só /historico permite.
+        if (state.resumeMode && state.resumeMode.lockedIds.includes(id)) {
+          toast.info('Item já conferido — remova pelo histórico (/historico).');
+          return;
+        }
+        set(s => {
+          const idx = s.registros.findIndex(r => r.id === id);
+          if (idx === -1) return s;
+          const reg = s.registros[idx];
+          const newRegs = [...s.registros];
+          newRegs.splice(idx, 1);
+          return { registros: newRegs, undoStack: [...s.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
+        });
+      },
       
       undo: () => {
         const state = get();
@@ -452,6 +476,11 @@ export const useAppStore = create<AppState>()(
       
       archiveAndClear: async (name: string, bypassLengthCheck = false) => {
         const state = get();
+        // Em modo retomada, "finalizar" significa anexar à conferência existente.
+        if (state.resumeMode) {
+          await get().finishResumeConference();
+          return;
+        }
         if ((!state.registros.length && !bypassLengthCheck) || state.isArchiving) return;
         const registrosToArchive = [...state.registros];
         const processoToArchive = state.processo.trim() || name;
@@ -729,6 +758,81 @@ export const useAppStore = create<AppState>()(
       },
 
       setLastArchivedConferenceId: (id) => set({ lastArchivedConferenceId: id }),
+
+      startResumeConference: (conf) => {
+        const state = get();
+        if (state.registros.length > 0 && !state.resumeMode) {
+          // Há uma conferência em andamento. Avisa e segue (substitui).
+          toast.warning('Sessão em andamento substituída pela retomada do histórico.');
+        }
+        const lockedIds = conf.registros.map(r => r.id);
+        // Deep clone leve dos registros — mantém ids para o bloqueio funcionar.
+        const registros = conf.registros.map(r => ({ ...r }));
+        const inferredMode =
+          registros.find(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle')?.modoOrigem ??
+          registros.find(r => r.modoOrigem === 'madeira')?.modoOrigem ??
+          registros[0]?.modoOrigem ??
+          'manual';
+        set({
+          registros,
+          undoStack: [],
+          processo: conf.processo || '',
+          conferente: conf.conferente || state.conferente,
+          currentMode: inferredMode as AppMode,
+          sessionStartedAt: conf.startedAt || new Date().toISOString(),
+          resumeMode: {
+            conferenceId: conf.id,
+            folderName: conf.processo || conf.name,
+            lockedIds,
+          },
+        });
+      },
+
+      finishResumeConference: async () => {
+        const state = get();
+        if (!state.resumeMode) return;
+        const { conferenceId, lockedIds } = state.resumeMode;
+        const locked = new Set(lockedIds);
+        const newRegs = state.registros.filter(r => !locked.has(r.id));
+
+        try {
+          if (newRegs.length > 0) {
+            // Agrupa por modoOrigem para preservar o mode correto no insert.
+            const byMode = new Map<string, Registro[]>();
+            for (const r of newRegs) {
+              const m = r.modoOrigem || state.currentMode || 'manual';
+              if (!byMode.has(m)) byMode.set(m, []);
+              byMode.get(m)!.push(r);
+            }
+            for (const [mode, regs] of byMode) {
+              await apiService.insertRegistros(conferenceId, regs, mode);
+            }
+            toast.success(`${newRegs.length} item(ns) adicionado(s) à conferência.`);
+          } else {
+            toast.info('Nenhum item novo para adicionar.');
+          }
+          set({
+            registros: [],
+            undoStack: [],
+            sessionStartedAt: null,
+            resumeMode: null,
+          });
+          await get().loadHistory();
+        } catch (e: any) {
+          console.error('Error finishing resume conference:', e);
+          toast.error(e?.message || 'Falha ao salvar os novos itens.');
+          throw e;
+        }
+      },
+
+      cancelResumeConference: () => {
+        set({
+          registros: [],
+          undoStack: [],
+          sessionStartedAt: null,
+          resumeMode: null,
+        });
+      },
     }),
 
     {
