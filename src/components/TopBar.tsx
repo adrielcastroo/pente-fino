@@ -21,7 +21,8 @@ const TopBar = memo(function TopBar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, isGuest, guestName, signOut, profile } = useAuth();
+  const { user, isGuest, guestName, signOut, profile, modules } = useAuth();
+  const canSwitchModule = modules.length > 1;
   const [isExporting, setIsExporting] = useState(false);
    const currentMode = useAppStore(s => s.currentMode);
    const processo = useAppStore(s => s.processo);
