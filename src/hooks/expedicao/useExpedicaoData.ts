@@ -25,6 +25,9 @@ export interface Picking {
   observacao: string | null;
   created_at: string;
   finished_at: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  motivo_cancelamento?: string | null;
   transportadora?: { nome: string } | null;
   carrinho?: { codigo: string } | null;
 }
