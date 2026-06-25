@@ -13,7 +13,7 @@ import UndoBanner from '@/components/UndoBanner';
 import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { LATEST_VERSION } from '@/lib/changelog';
+import { LATEST_VERSION, BUILD_TIME } from '@/lib/changelog';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { AppTab } from '@/types';
