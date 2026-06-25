@@ -94,54 +94,58 @@ const App = () => (
                 
                 <Route path="/selecionar-modulo" element={<ProtectedRoute><SelecionarModuloPage /></ProtectedRoute>} />
 
-                {/* ===== MÓDULO ESTOQUE (app atual) ===== */}
+                {/* ===== MÓDULO ESTOQUE (canônico /estoque/*) ===== */}
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="/" element={<RoleHomeRedirect />} />
-                  <Route path="/operacao" element={<OperacaoHomePage />} />
+
+                  {/* Rotas canônicas /estoque/* */}
+                  <Route path="/estoque/operacao" element={<OperacaoHomePage />} />
                   <Route
-                    path="/dashboard"
+                    path="/estoque/dashboard"
                     element={
-                      <RequireRole role="supervisor" fallback={<Navigate to="/operacao" replace />}>
+                      <RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}>
                         <DashboardPage />
                       </RequireRole>
                     }
                   />
-                  <Route path="/conferencia" element={<ConferenciaHubPage />} />
-                  <Route path="/tecido" element={<TecidoPage />} />
-                  <Route path="/madeira" element={<MadeiraPage />} />
-                  <Route path="/motor" element={<MotorControlePage />} />
-                  <Route path="/motor-controle" element={<Navigate to="/motor" replace />} />
-                  <Route path="/estoque" element={<EstoquePage />} />
-                  <Route path="/saida" element={<SaidaPage />} />
-                  <Route path="/reservas" element={<ReservasPage />} />
-                  <Route path="/historico" element={<HistoricoPage />} />
-                  <Route path="/configuracoes" element={<SettingsPage />} />
-                  <Route path="/cadastros" element={<CadastrosPage />} />
+                  <Route path="/estoque/conferencia" element={<ConferenciaHubPage />} />
+                  <Route path="/estoque/tecido" element={<TecidoPage />} />
+                  <Route path="/estoque/madeira" element={<MadeiraPage />} />
+                  <Route path="/estoque/motor" element={<MotorControlePage />} />
+                  <Route path="/estoque/mapa" element={<EstoquePage />} />
+                  <Route path="/estoque/saida" element={<SaidaPage />} />
+                  <Route path="/estoque/reservas" element={<ReservasPage />} />
+                  <Route path="/estoque/historico" element={<HistoricoPage />} />
+                  <Route path="/estoque/configuracoes" element={<SettingsPage />} />
+                  <Route path="/estoque/cadastros" element={<CadastrosPage />} />
                   <Route
-                    path="/auditoria"
+                    path="/estoque/auditoria"
                     element={
                       <RequireRole action="view:auditoria" fallback={<Navigate to="/" replace />}>
                         <AuditoriaPage />
                       </RequireRole>
                     }
                   />
-                  <Route path="/minha-atividade" element={<MinhaAtividadePage />} />
+                  <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
 
-                  {/* Aliases canônicos /estoque/* (rotas antigas permanecem ativas) */}
-                  <Route path="/estoque/dashboard" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/estoque/operacao" element={<Navigate to="/operacao" replace />} />
-                  <Route path="/estoque/conferencia" element={<Navigate to="/conferencia" replace />} />
-                  <Route path="/estoque/tecido" element={<Navigate to="/tecido" replace />} />
-                  <Route path="/estoque/madeira" element={<Navigate to="/madeira" replace />} />
-                  <Route path="/estoque/motor" element={<Navigate to="/motor" replace />} />
-                  <Route path="/estoque/mapa" element={<Navigate to="/estoque" replace />} />
-                  <Route path="/estoque/saida" element={<Navigate to="/saida" replace />} />
-                  <Route path="/estoque/reservas" element={<Navigate to="/reservas" replace />} />
-                  <Route path="/estoque/historico" element={<Navigate to="/historico" replace />} />
-                  <Route path="/estoque/cadastros" element={<Navigate to="/cadastros" replace />} />
-                  <Route path="/estoque/configuracoes" element={<Navigate to="/configuracoes" replace />} />
-                  <Route path="/estoque/minha-atividade" element={<Navigate to="/minha-atividade" replace />} />
+                  {/* Redirects 301 — rotas legadas → /estoque/* */}
+                  <Route path="/operacao" element={<Navigate to="/estoque/operacao" replace />} />
+                  <Route path="/dashboard" element={<Navigate to="/estoque/dashboard" replace />} />
+                  <Route path="/conferencia" element={<Navigate to="/estoque/conferencia" replace />} />
+                  <Route path="/tecido" element={<Navigate to="/estoque/tecido" replace />} />
+                  <Route path="/madeira" element={<Navigate to="/estoque/madeira" replace />} />
+                  <Route path="/motor" element={<Navigate to="/estoque/motor" replace />} />
+                  <Route path="/motor-controle" element={<Navigate to="/estoque/motor" replace />} />
+                  <Route path="/estoque" element={<Navigate to="/estoque/mapa" replace />} />
+                  <Route path="/saida" element={<Navigate to="/estoque/saida" replace />} />
+                  <Route path="/reservas" element={<Navigate to="/estoque/reservas" replace />} />
+                  <Route path="/historico" element={<Navigate to="/estoque/historico" replace />} />
+                  <Route path="/configuracoes" element={<Navigate to="/estoque/configuracoes" replace />} />
+                  <Route path="/cadastros" element={<Navigate to="/estoque/cadastros" replace />} />
+                  <Route path="/auditoria" element={<Navigate to="/estoque/auditoria" replace />} />
+                  <Route path="/minha-atividade" element={<Navigate to="/estoque/minha-atividade" replace />} />
                 </Route>
+
 
                 {/* ===== MÓDULO EXPEDIÇÃO (novo) ===== */}
                 <Route

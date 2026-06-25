@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.4.0',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'improvement', text: "Fase 1B: rotas canônicas /estoque/* com redirects 301 das URLs legadas" },
+    ],
+  },
+  {
     version: '3.3.0',
     date: '2026-06-25',
     highlights: [
