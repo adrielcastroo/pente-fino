@@ -36,26 +36,26 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Operações',
     items: [
-      { key: 'inicio', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', minRole: 'supervisor' },
-      { key: 'inicio', label: 'Início', icon: Home, path: '/operacao' },
-      { key: 'tecido', label: 'Conferência', icon: ScanLine, path: '/conferencia' },
-      { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/saida' },
+      { key: 'inicio', label: 'Dashboard', icon: LayoutDashboard, path: '/estoque/dashboard', minRole: 'supervisor' },
+      { key: 'inicio', label: 'Início', icon: Home, path: '/estoque/operacao' },
+      { key: 'tecido', label: 'Conferência', icon: ScanLine, path: '/estoque/conferencia' },
+      { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/estoque/saida' },
     ],
   },
   {
     label: 'Estoque',
     items: [
-      { key: 'estoque', label: 'Estoque', icon: Package, path: '/estoque' },
-      { key: 'reservas', label: 'Reservas', icon: Table, path: '/reservas' },
-      { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/historico' },
+      { key: 'estoque', label: 'Estoque', icon: Package, path: '/estoque/mapa' },
+      { key: 'reservas', label: 'Reservas', icon: Table, path: '/estoque/reservas' },
+      { key: 'history', label: 'Histórico', icon: FolderOpen, path: '/estoque/historico' },
     ],
   },
   {
     label: 'Admin',
     minRole: 'supervisor',
     items: [
-      { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/cadastros', minRole: 'supervisor' },
-      { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/auditoria', minRole: 'gerente' },
+      { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/estoque/cadastros', minRole: 'supervisor' },
+      { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/estoque/auditoria', minRole: 'gerente' },
     ],
   },
 ];
@@ -212,7 +212,7 @@ const AppSidebar = memo(({ activeTab, onTabChange }: AppSidebarProps) => {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              onClick={() => handleTabClick('settings', '/configuracoes')}
+              onClick={() => handleTabClick('settings', '/estoque/configuracoes')}
               isActive={activeTab === 'settings'}
               tooltip="Configurações"
               aria-label="Abrir Configurações"

@@ -35,7 +35,7 @@ export default function Breadcrumbs() {
   const crumbs = effectiveSegments.map((seg, i) => {
     const to = '/' + effectiveSegments.slice(0, i + 1).join('/').replace(/^conferencia\/conferencia/, 'conferencia');
     // When we injected 'conferencia', that crumb maps to /conferencia explicitly
-    const resolvedTo = i === 0 && seg === 'conferencia' && segments[0] !== 'conferencia' ? '/conferencia' : to;
+    const resolvedTo = i === 0 && seg === 'conferencia' && segments[0] !== 'conferencia' ? '/estoque/conferencia' : to;
     const label = LABELS[seg] ?? decodeURIComponent(seg);
     const isLast = i === effectiveSegments.length - 1;
     return { to: resolvedTo, label, isLast };
@@ -47,7 +47,7 @@ export default function Breadcrumbs() {
       className="hidden lg:flex items-center gap-1.5 px-6 py-2 text-xs text-muted-foreground border-b border-border/30 bg-background/40"
     >
       <Link
-        to="/dashboard"
+        to="/estoque/dashboard"
         className="flex items-center gap-1 hover:text-primary transition-colors"
       >
         <Home className="w-3.5 h-3.5" />

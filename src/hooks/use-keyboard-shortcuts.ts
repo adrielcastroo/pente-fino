@@ -101,7 +101,7 @@ export function useKeyboardShortcuts({
       // Ctrl+N → nova conferência (Tecido)
       if (cmdKey && e.key.toLowerCase() === 'n' && !isTyping) {
         e.preventDefault();
-        window.location.assign('/tecido');
+        window.location.assign('/estoque/tecido');
       }
     };
 

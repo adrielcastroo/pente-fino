@@ -361,7 +361,7 @@ export default function EstoquePage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/estoque/dashboard')}
             className="rounded-md hover:bg-muted/50 transition-colors w-9 h-9"
           >
             <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />

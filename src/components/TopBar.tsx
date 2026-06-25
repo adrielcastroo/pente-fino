@@ -36,7 +36,7 @@ const TopBar = memo(function TopBar() {
    const { registros } = useAppStore(useShallow(s => ({ registros: s.registros })));
 
    const path = location.pathname.replace(/\/$/, '');
-   const isRegistroRoute = path === '/tecido' || path === '/madeira' || path === '/motor';
+   const isRegistroRoute = path === '/estoque/tecido' || path === '/estoque/madeira' || path === '/estoque/motor';
 
     // Ensure conferente is synced with auth profile or guest name
     useEffect(() => {
@@ -132,7 +132,7 @@ const TopBar = memo(function TopBar() {
         icon: <CheckCircle2 className="w-4 h-4 text-primary" />,
         action: {
           label: 'Ver no histórico',
-          onClick: () => navigate('/historico'),
+          onClick: () => navigate('/estoque/historico'),
         },
       });
 
@@ -157,7 +157,7 @@ const TopBar = memo(function TopBar() {
               <div className="flex flex-col leading-tight">
                 <span className="hidden sm:block text-[11px] sm:text-sm font-semibold text-foreground tracking-tight whitespace-nowrap">Registro &amp; Bipagem</span>
                 <span className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-bold">
-                  {path === '/tecido' ? 'Tecido' : path === '/madeira' ? 'Madeira' : 'Motor / Controle'}
+                  {path === '/estoque/tecido' ? 'Tecido' : path === '/estoque/madeira' ? 'Madeira' : 'Motor / Controle'}
                 </span>
               </div>
             </div>
@@ -192,7 +192,7 @@ const TopBar = memo(function TopBar() {
 
           {!isGuest && user && (
             <Link
-              to="/minha-atividade"
+              to="/estoque/minha-atividade"
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 rounded-md border border-primary/10 transition-colors"
               aria-label="Ver minha atividade do dia"
             >
@@ -212,7 +212,7 @@ const TopBar = memo(function TopBar() {
               <TooltipTrigger asChild>
                 <Button
                   onClick={() => {
-                    if (path === '/motor') resetMotorFormData();
+                    if (path === '/estoque/motor') resetMotorFormData();
                     else resetFormData();
                     toast.success('Pronto para um novo registro');
                   }}

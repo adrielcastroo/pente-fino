@@ -38,7 +38,7 @@ export default function ResumeBanner() {
     setSaving(true);
     try {
       await finish();
-      navigate('/historico');
+      navigate('/estoque/historico');
     } catch {
       /* toast já exibido */
     } finally {
@@ -52,7 +52,7 @@ export default function ResumeBanner() {
       return;
     }
     cancel();
-    navigate('/historico');
+    navigate('/estoque/historico');
   };
 
   return (
@@ -127,7 +127,7 @@ export default function ResumeBanner() {
             <AlertDialogAction
               onClick={() => {
                 cancel();
-                navigate('/historico');
+                navigate('/estoque/historico');
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

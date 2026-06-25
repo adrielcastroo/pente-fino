@@ -91,7 +91,7 @@ export default function MainLayout() {
                     <Outlet />
                   </ErrorBoundary>
                 </div>
-                {!['/tecido', '/madeira', '/motor', '/conferencia'].includes(location.pathname) && (
+                {!['/estoque/tecido', '/estoque/madeira', '/estoque/motor', '/estoque/conferencia'].includes(location.pathname) && (
                   <footer
                     role="contentinfo"
                     className="mt-4 border-t border-border/60 bg-card/30"
@@ -122,7 +122,7 @@ export default function MainLayout() {
         </div>
         <BottomTabBar />
       </div>
-      {!['/tecido', '/madeira', '/motor'].includes(location.pathname) && <UndoBanner />}
+      {!['/estoque/tecido', '/estoque/madeira', '/estoque/motor'].includes(location.pathname) && <UndoBanner />}
       <CommandPalette />
 
 
