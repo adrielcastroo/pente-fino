@@ -19,10 +19,11 @@ function evaluateQuery(query: string): boolean {
       if (maxH) return h <= Number(maxH[1]);
       if (cond === "orientation: landscape") return w > h;
       if (cond === "orientation: portrait") return h >= w;
-      if (cond === "hover: hover") return false;
-      if (cond === "hover: none") return true;
-      if (cond === "pointer: fine") return false;
-      if (cond === "pointer: coarse") return true;
+      // jsdom has no real pointer; assume desktop-like environment for tests
+      if (cond === "hover: hover") return true;
+      if (cond === "hover: none") return false;
+      if (cond === "pointer: fine") return true;
+      if (cond === "pointer: coarse") return false;
       return false;
     });
   });
