@@ -51,6 +51,12 @@ export type Action =
   | 'view:dashboard-executivo'
   | 'export:relatorio'
   | 'view:auditoria'
+  // Expedição
+  | 'expedicao:cancel-picking'
+  | 'expedicao:estorno-faturado'
+  | 'expedicao:faturar'
+  | 'expedicao:manage-cadastros'
+  | 'expedicao:configuracoes'
   // Admin
   | 'manage:users'
   | 'manage:system';
@@ -66,6 +72,11 @@ const REQUIRED: Record<Action, Role> = {
   'view:dashboard-executivo': 'gerente',
   'export:relatorio': 'gerente',
   'view:auditoria': 'gerente',
+  'expedicao:cancel-picking': 'supervisor',
+  'expedicao:estorno-faturado': 'admin',
+  'expedicao:faturar': 'supervisor',
+  'expedicao:manage-cadastros': 'supervisor',
+  'expedicao:configuracoes': 'supervisor',
   'manage:users': 'admin',
   'manage:system': 'admin',
 };
