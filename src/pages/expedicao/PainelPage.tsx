@@ -22,6 +22,7 @@ const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
 export default function PainelPage() {
   const { data, isLoading } = usePickings();
   const [novo, setNovo] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
 
   const filtered = useMemo(() => {
