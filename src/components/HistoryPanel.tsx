@@ -458,6 +458,8 @@ function isTestConference(conf: Conference): boolean {
 
 const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
   const [open, setOpen] = useState(highlight);
+  const navigate = useNavigate();
+  const startResumeConference = useAppStore(s => s.startResumeConference);
 
   const { isGuest, isAdmin } = useAuth();
   const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
