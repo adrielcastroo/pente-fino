@@ -657,17 +657,17 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm sm:text-sm font-semibold tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
+                <span className="text-sm font-semibold tracking-tight text-foreground truncate max-w-[200px] sm:max-w-none">{folderName}</span>
                 {!conf.finishedAt && (
-                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-amber-500/10 text-amber-600 border border-amber-500/20">
                     Aberta
-                  </Badge>
+                  </span>
                 )}
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex gap-1 flex-wrap">
                   {modeBadges.map(b => (
-                    <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
+                    <span key={b} className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-primary/10 text-primary">
                       {b}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               </div>
