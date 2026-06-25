@@ -665,7 +665,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 )}
                 <div className="flex gap-1 flex-wrap">
                   {modeBadges.map(b => (
-                    <span key={b} className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-primary/10 text-primary">
+                    <span key={b} className={`text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide ${getBadgeClass(b)}`}>
                       {b}
                     </span>
                   ))}
