@@ -708,17 +708,19 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={isGrouped}
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (isGrouped) return;
                         startResumeConference(conf);
                         navigate(routeForConference(conf));
                       }}
-                      className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3"
+                      className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3 disabled:opacity-50"
                     >
                       <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Reabrir esta conferência para incluir novos itens</TooltipContent>
+                  <TooltipContent>{isGrouped ? 'Grupo de NFs unificado — abra cada conferência individualmente para incluir itens.' : 'Reabrir esta conferência para incluir novos itens'}</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
