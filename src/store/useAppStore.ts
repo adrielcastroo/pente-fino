@@ -400,14 +400,23 @@ export const useAppStore = create<AppState>()(
         return { registros: newRegs, sessionStartedAt };
       }),
       
-      deleteRegistro: (id) => set(state => {
-        const idx = state.registros.findIndex(r => r.id === id);
-        if (idx === -1) return state;
-        const reg = state.registros[idx];
-        const newRegs = [...state.registros];
-        newRegs.splice(idx, 1);
-        return { registros: newRegs, undoStack: [...state.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
-      }),
+      deleteRegistro: (id) => {
+        const state = get();
+        // Em modo retomada, itens herdados do histórico não podem ser removidos
+        // pela página operacional. Só /historico permite.
+        if (state.resumeMode && state.resumeMode.lockedIds.includes(id)) {
+          toast.info('Item já conferido — remova pelo histórico (/historico).');
+          return;
+        }
+        set(s => {
+          const idx = s.registros.findIndex(r => r.id === id);
+          if (idx === -1) return s;
+          const reg = s.registros[idx];
+          const newRegs = [...s.registros];
+          newRegs.splice(idx, 1);
+          return { registros: newRegs, undoStack: [...s.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
+        });
+      },
       
       undo: () => {
         const state = get();
