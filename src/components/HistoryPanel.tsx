@@ -574,7 +574,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                         {r.tipoTecido && <Badge variant="outline" className="text-[8px] font-semibold uppercase tracking-tighter px-1.5 h-4 w-fit bg-primary/5 border-primary/10 text-primary/60">{r.tipoTecido}</Badge>}
                       </div>
                     ) : column.key === 'mLinear' ? (
-                      <span className="font-semibold text-foreground/80">{formatML(r.mLinear)}</span>
+                      <span className="font-semibold text-foreground/80 tabular-nums">{formatMLDisplay(r.mLinear)}</span>
                     ) : column.key === 'm2' ? (
                       <span className="font-bold">{r.m2 > 0 ? r.m2.toFixed(1) : '—'}</span>
                     ) : column.key === 'largura' ? (
