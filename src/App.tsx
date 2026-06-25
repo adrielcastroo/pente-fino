@@ -35,6 +35,7 @@ const ExpedicaoFaturamentoPage = lazy(() => import("@/pages/expedicao/Faturament
 const ExpedicaoDashboardOperacionalPage = lazy(() => import("@/pages/expedicao/DashboardOperacionalPage"));
 const ExpedicaoDashboardLogisticoPage = lazy(() => import("@/pages/expedicao/DashboardLogisticoPage"));
 const ExpedicaoHistoricoPage = lazy(() => import("@/pages/expedicao/HistoricoPage"));
+const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
@@ -178,6 +179,7 @@ const App = () => (
                   <Route path="logistica" element={<ExpedicaoDashboardLogisticoPage />} />
                   <Route path="carrinhos" element={<ExpedicaoCarrinhosPage />} />
                   <Route path="historico" element={<ExpedicaoHistoricoPage />} />
+                  <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
                   <Route path="configuracoes" element={<ExpedicaoConfiguracoesPage />} />
 
                 </Route>
