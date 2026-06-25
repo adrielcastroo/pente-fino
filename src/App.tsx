@@ -28,6 +28,8 @@ const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlace
 const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
 const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
 const ExpedicaoConfiguracoesPage = lazy(() => import("@/pages/expedicao/ConfiguracoesPage"));
+const ExpedicaoPickingsPage = lazy(() => import("@/pages/expedicao/PickingsPage"));
+const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
@@ -163,8 +165,8 @@ const App = () => (
                 >
                   <Route index element={<Navigate to="/expedicao/painel" replace />} />
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
-                  <Route path="pickings" element={<ExpedicaoPlaceholder title="Pickings" description="Associação picking ↔ carrinho por dupla bipagem." />} />
-                  <Route path="conferencia" element={<ExpedicaoPlaceholder title="Conferência de peças" description="Bipagem de peças por QR Code." />} />
+                  <Route path="pickings" element={<ExpedicaoPickingsPage />} />
+                  <Route path="conferencia" element={<ExpedicaoConferenciaPage />} />
                   <Route path="romaneio" element={<ExpedicaoPlaceholder title="Romaneio" description="Transportadora → Região → Cidade → Cliente." />} />
                   <Route path="faturamento" element={<ExpedicaoPlaceholder title="Faturamento" description="Fila de pickings liberados para faturar." />} />
                   <Route path="dashboard" element={<ExpedicaoPlaceholder title="Dashboard operacional" description="KPIs do dia, produtividade e tempos por etapa." />} />
