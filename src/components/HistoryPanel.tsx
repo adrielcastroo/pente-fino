@@ -816,7 +816,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         open={!!editingRegistro}
         onOpenChange={(nextOpen) => { if (!nextOpen) setEditingRegistro(null); }}
         registro={editingRegistro}
-        conferenceId={conf.id}
+        conferenceId={editingRegistro ? resolveConfId(editingRegistro.id) : conf.id}
       />
 
       <AddHistoryRegistroDialog
