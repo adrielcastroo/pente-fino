@@ -739,9 +739,9 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                         startResumeConference(conf);
                         navigate(routeForConference(conf));
                       }}
-                      className="h-9 sm:h-10 rounded-md border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all font-semibold text-[10px] uppercase tracking-wider px-3 disabled:opacity-50"
+                      className="h-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors font-medium text-xs px-3 disabled:opacity-50"
                     >
-                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir Item</span>
+                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir item</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>{isGrouped ? 'Grupo de NFs unificado — abra cada conferência individualmente para incluir itens.' : 'Reabrir esta conferência para incluir novos itens'}</TooltipContent>
@@ -750,12 +750,12 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
                       onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
-                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-md hover:bg-primary/10 text-primary transition-all border border-border/40 group/btn"
+                      className="h-9 w-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
                     >
-                      <Download className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
+                      <Download className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Exportar para Excel</TooltipContent>
@@ -766,15 +766,15 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-md hover:bg-destructive/10 text-destructive transition-all border border-border/40 group/delete"
+                          className="h-9 w-9 rounded-md border-border/40 bg-transparent text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
                         >
-                          <Trash2 className="w-4 h-4 transition-transform group-hover/delete:scale-110" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Excluir Conferência</TooltipContent>
+                      <TooltipContent>Excluir conferência</TooltipContent>
                     </Tooltip>
                   </RequireRole>
                 )}
