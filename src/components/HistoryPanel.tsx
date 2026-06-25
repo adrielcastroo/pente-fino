@@ -1025,7 +1025,7 @@ export default function HistoryPanel() {
                 Histórico de conferências
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Acompanhe e gerencie todos os registros de conferência realizados.
+                Conferências finalizadas por data e conferente.
               </p>
             </div>
           </div>
