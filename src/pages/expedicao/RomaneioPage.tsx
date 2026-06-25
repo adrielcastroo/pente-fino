@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ChevronRight, Loader2, Truck } from 'lucide-react';
+import { ChevronRight, Loader2, Printer, Truck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { usePickings } from '@/hooks/expedicao/useExpedicaoData';
