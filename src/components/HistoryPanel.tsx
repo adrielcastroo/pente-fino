@@ -456,6 +456,64 @@ function isTestConference(conf: Conference): boolean {
   return false;
 }
 
+type MergedConference = Conference & { _underlyingIds?: string[]; _regToConfId?: Record<string, string> };
+
+function groupConferencesByNF(confs: Conference[]): MergedConference[] {
+  const parent: number[] = confs.map((_, i) => i);
+  const find = (i: number): number => parent[i] === i ? i : (parent[i] = find(parent[i]));
+  const union = (a: number, b: number) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+
+  const nfToIdx = new Map<string, number>();
+  confs.forEach((c, i) => {
+    const nfs = new Set(c.registros.map(r => (r.nf || '').trim().toUpperCase()).filter(Boolean));
+    nfs.forEach(nf => {
+      if (nfToIdx.has(nf)) union(nfToIdx.get(nf)!, i);
+      else nfToIdx.set(nf, i);
+    });
+  });
+
+  const groups = new Map<number, number[]>();
+  confs.forEach((_, i) => {
+    const r = find(i);
+    if (!groups.has(r)) groups.set(r, []);
+    groups.get(r)!.push(i);
+  });
+
+  const result: MergedConference[] = [];
+  for (const idxs of groups.values()) {
+    if (idxs.length === 1) { result.push(confs[idxs[0]]); continue; }
+    const members = idxs.map(i => confs[i]).sort((a, b) =>
+      new Date(b.finishedAt || b.startedAt || b.date).getTime() -
+      new Date(a.finishedAt || a.startedAt || a.date).getTime()
+    );
+    const primary = members[0];
+    const allRegs = members.flatMap(m => m.registros);
+    const regToConfId: Record<string, string> = {};
+    members.forEach(m => m.registros.forEach(r => { regToConfId[r.id] = m.id; }));
+    const nfs = Array.from(new Set(allRegs.map(r => (r.nf || '').trim()).filter(Boolean)));
+    const starts = members.map(m => m.startedAt).filter(Boolean).sort();
+    const finishes = members.map(m => m.finishedAt).filter(Boolean).sort();
+    const conferentes = Array.from(new Set(members.map(m => m.conferente).filter(Boolean)));
+    result.push({
+      ...primary,
+      id: `nfgroup:${members.map(m => m.id).join('|')}`,
+      name: nfs.length ? `NF ${nfs.join(', ')}` : primary.name,
+      processo: nfs.length ? `NF ${nfs.join(', ')}` : primary.processo,
+      conferente: conferentes.join(', '),
+      registros: allRegs,
+      startedAt: starts[0] || primary.startedAt,
+      finishedAt: finishes[finishes.length - 1] || primary.finishedAt,
+      _underlyingIds: members.map(m => m.id),
+      _regToConfId: regToConfId,
+    });
+  }
+  result.sort((a, b) =>
+    new Date(b.finishedAt || b.startedAt || b.date).getTime() -
+    new Date(a.finishedAt || a.startedAt || a.date).getTime()
+  );
+  return result;
+}
+
 const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
   const [open, setOpen] = useState(highlight);
   const navigate = useNavigate();
