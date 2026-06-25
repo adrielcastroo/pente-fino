@@ -251,6 +251,7 @@ export const useAppStore = create<AppState>()(
       isHistoryLoading: false,
       historyError: null,
       lastArchivedConferenceId: null,
+      resumeMode: null,
 
 
       setMode: (mode) => set({ currentMode: mode }),
