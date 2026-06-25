@@ -20,21 +20,21 @@ describe('getRegistroColumns', () => {
   it('should return default layout columns when rows are empty', () => {
     const columns = getRegistroColumns([], 'manual');
     const keys = columns.map(c => c.key);
-    expect(keys).toEqual(['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema']);
+    expect(keys).toEqual(['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema']);
   });
 
   it('should return specific layout for manual mode', () => {
     const rows: Registro[] = [mockRegistro({ modoOrigem: 'manual' })];
     const columns = getRegistroColumns(rows);
     const keys = columns.map(c => c.key);
-    expect(keys).toEqual(['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema']);
+    expect(keys).toEqual(['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema']);
   });
 
   it('should return specific layout for openrouter (IA) mode', () => {
     const rows: Registro[] = [mockRegistro({ modoOrigem: 'openrouter' })];
     const columns = getRegistroColumns(rows);
     const keys = columns.map(c => c.key);
-    expect(keys).toEqual(['item', 'largura', 'mLinear', 'endereco', 'loteSistema']);
+    expect(keys).toEqual(['item', 'largura', 'mLinear', 'endereco', 'posicao', 'loteSistema']);
   });
 
   it('should handle diversos mode with specific types (pvt)', () => {
