@@ -25,6 +25,9 @@ const ConferenciaHubPage = lazy(() => import("@/pages/ConferenciaHubPage"));
 const SelecionarModuloPage = lazy(() => import("@/pages/SelecionarModuloPage"));
 const ExpedicaoLayout = lazy(() => import("@/components/expedicao/ExpedicaoLayout"));
 const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlaceholder"));
+const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
+const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
+const ExpedicaoConfiguracoesPage = lazy(() => import("@/pages/expedicao/ConfiguracoesPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
