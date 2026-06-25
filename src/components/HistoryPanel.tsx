@@ -771,7 +771,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
 
   const handleDeleteItem = async (registroId: string) => {
     try {
-      await deleteHistoryRegistro(conf.id, registroId);
+      await deleteHistoryRegistro(resolveConfId(registroId), registroId);
       toast.success('Item removido do histórico.');
     } catch {
       toast.error('Erro ao remover item do histórico.');
