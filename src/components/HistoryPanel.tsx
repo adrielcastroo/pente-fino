@@ -647,68 +647,64 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
     <div className="group/header">
       <button 
         onClick={() => setOpen(!open)} 
-        className="w-full px-4 sm:px-6 py-5 flex items-center gap-4 hover:bg-muted/40 transition-all text-left relative overflow-hidden"
+        className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/20 transition-colors duration-150 text-left"
       >
-        <div className={`p-2.5 sm:p-4 rounded-md sm:rounded-md transition-all duration-500 shrink-0 ${open ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'bg-primary/10 text-primary group-hover/header:bg-primary/20'}`}>
-          <FolderOpen className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 ${open ? 'scale-110' : 'group-hover/header:scale-110'}`} />
+        <div className={`p-2 rounded-md shrink-0 transition-colors duration-150 ${open ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+          <FolderOpen className="w-4 h-4" />
         </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm sm:text-sm font-semibold tracking-tight truncate max-w-[200px] sm:max-w-none">{folderName}</span>
+                <span className="text-sm font-semibold tracking-tight text-foreground truncate max-w-[200px] sm:max-w-none">{folderName}</span>
                 {!conf.finishedAt && (
-                  <Badge variant="outline" className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-amber-500/10 text-amber-600 border border-amber-500/20">
                     Aberta
-                  </Badge>
+                  </span>
                 )}
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex gap-1 flex-wrap">
                   {modeBadges.map(b => (
-                    <Badge key={b} variant="secondary" className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 bg-primary/5 text-primary/70 border-primary/10 transition-colors group-hover/header:bg-primary/10">
+                    <span key={b} className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-primary/10 text-primary">
                       {b}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 text-[10px] sm:text-xs text-muted-foreground font-bold flex-wrap">
-                <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md"><Calendar className="w-3.5 h-3.5 opacity-60" /> {formatDateBR(conf.date)}</span>
-                
+              <div className="flex items-center gap-x-3 gap-y-1 text-xs text-muted-foreground flex-wrap">
+                <span className="tabular-nums">{formatDateBR(conf.date)}</span>
+
                 {conf.conferente && (
-                  <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-md">
-                    <User className="w-3.5 h-3.5" /> {conf.conferente}
-                  </span>
+                  <span className="text-foreground/70">{conf.conferente}</span>
                 )}
-                
+
                 {conf.startedAt && (
-                  <span className="flex items-center gap-1.5 text-emerald-600/80 bg-emerald-500/5 px-2 py-0.5 rounded-md">
-                    <Clock className="w-3.5 h-3.5" /> {formatTimeBR(conf.startedAt)}
-                    {conf.finishedAt && <span className="text-muted-foreground/60">→ {formatTimeBR(conf.finishedAt)}</span>}
+                  <span className="tabular-nums">
+                    {formatTimeBR(conf.startedAt)}
+                    {conf.finishedAt && <span className="text-muted-foreground/60"> → {formatTimeBR(conf.finishedAt)}</span>}
                   </span>
                 )}
-                
+
                 {conf.startedAt && conf.finishedAt && (() => {
                   const h = getDurationHours(conf.startedAt, conf.finishedAt);
                   const suspect = h > 8;
                   return (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-semibold px-2 py-0 h-5 cursor-help ${suspect ? 'border-amber-500/40 text-amber-600 bg-amber-500/10' : 'border-primary/10 text-primary/60 bg-primary/5'}`}>
+                        <span className={`tabular-nums cursor-help ${suspect ? 'font-semibold text-amber-600' : ''}`}>
                           {suspect && '⚠ '}{formatDuration(conf.startedAt, conf.finishedAt)}
-                        </Badge>
+                        </span>
                       </TooltipTrigger>
                       {suspect && <TooltipContent>Duração anormal ({h.toFixed(1)}h). Possível sessão esquecida aberta.</TooltipContent>}
                     </Tooltip>
                   );
                 })()}
-                
-                <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md">
-                  <Package className="w-3.5 h-3.5 opacity-60" /> {getSmartCount(conf)}
-                </span>
-                
+
+                <span className="tabular-nums">{getSmartCount(conf)}</span>
+
                 {totalML > 0 && (
-                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md tabular-nums">{formatMLDisplay(totalML)}</span>
+                  <span className="font-semibold text-foreground tabular-nums">{formatMLDisplay(totalML)}</span>
                 )}
               </div>
             </div>
@@ -768,8 +764,9 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 )}
               </div>
 
-              <div className={`p-2 rounded-full transition-all duration-500 ${open ? 'rotate-180 bg-primary/10 text-primary' : 'bg-muted/50 text-muted-foreground/50'}`}>
-                 <ChevronDown className="w-5 h-5" />
+              <div className={`p-1.5 rounded-md transition-transform duration-150 text-muted-foreground ${open ? 'rotate-180' : ''}`}>
+                 <ChevronDown className="w-4 h-4" />
+
               </div>
             </div>
           </div>
@@ -797,8 +794,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        whileHover={{ y: -2 }}
-        className={`border rounded-md sm:rounded-[2.5rem] overflow-hidden bg-card/60 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 backdrop-blur-sm group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30 shadow-lg shadow-primary/10' : 'border-border/40 hover:border-primary/40'}`}
+        className={`border rounded-md overflow-hidden bg-card hover:bg-muted/30 transition-colors duration-150 group/card ${highlight ? 'border-primary/60 ring-2 ring-primary/30' : 'border-border/50'}`}
       >
         {highlight && (
           <div className="bg-primary/10 text-primary px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-2 border-b border-primary/20">
@@ -1115,7 +1111,7 @@ export default function HistoryPanel() {
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 gap-5 max-w-[1400px] mx-auto pb-8">
+          <div className="grid grid-cols-1 gap-3 max-w-[1400px] mx-auto pb-8">
             <AnimatePresence mode="popLayout">
               {paged.map((conf, index) => (
                 <motion.div
