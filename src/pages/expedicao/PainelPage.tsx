@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Plus, Loader2, PackageSearch } from 'lucide-react';
+import { Plus, Loader2, PackageSearch, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { usePickings, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
 import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
+import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 
 const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
   aguardando:     { label: 'Aguardando',     cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
