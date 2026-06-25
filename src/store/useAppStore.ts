@@ -94,6 +94,14 @@ export interface AppState {
   historyError: string | null;
   lastArchivedConferenceId: string | null;
 
+  /**
+   * Quando ≠ null, o usuário está retomando uma conferência arquivada via
+   * "Incluir Item" em /historico. Os registros com id em `lockedIds` foram
+   * herdados do histórico e NÃO podem ser removidos pela página operacional
+   * — somente pela página /historico.
+   */
+  resumeMode: { conferenceId: string; folderName: string; lockedIds: string[] } | null;
+
 
   setMode: (mode: AppMode) => void;
   updateRegistro: (id: string, updates: Partial<Registro>) => void;
