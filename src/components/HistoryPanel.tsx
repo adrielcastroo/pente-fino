@@ -672,43 +672,39 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 text-[10px] sm:text-xs text-muted-foreground font-bold flex-wrap">
-                <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md"><Calendar className="w-3.5 h-3.5 opacity-60" /> {formatDateBR(conf.date)}</span>
-                
+              <div className="flex items-center gap-x-3 gap-y-1 text-xs text-muted-foreground flex-wrap">
+                <span className="tabular-nums">{formatDateBR(conf.date)}</span>
+
                 {conf.conferente && (
-                  <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-md">
-                    <User className="w-3.5 h-3.5" /> {conf.conferente}
-                  </span>
+                  <span className="text-foreground/70">{conf.conferente}</span>
                 )}
-                
+
                 {conf.startedAt && (
-                  <span className="flex items-center gap-1.5 text-emerald-600/80 bg-emerald-500/5 px-2 py-0.5 rounded-md">
-                    <Clock className="w-3.5 h-3.5" /> {formatTimeBR(conf.startedAt)}
-                    {conf.finishedAt && <span className="text-muted-foreground/60">→ {formatTimeBR(conf.finishedAt)}</span>}
+                  <span className="tabular-nums">
+                    {formatTimeBR(conf.startedAt)}
+                    {conf.finishedAt && <span className="text-muted-foreground/60"> → {formatTimeBR(conf.finishedAt)}</span>}
                   </span>
                 )}
-                
+
                 {conf.startedAt && conf.finishedAt && (() => {
                   const h = getDurationHours(conf.startedAt, conf.finishedAt);
                   const suspect = h > 8;
                   return (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="outline" className={`text-[8px] sm:text-[9px] font-semibold px-2 py-0 h-5 cursor-help ${suspect ? 'border-amber-500/40 text-amber-600 bg-amber-500/10' : 'border-primary/10 text-primary/60 bg-primary/5'}`}>
+                        <span className={`tabular-nums cursor-help ${suspect ? 'font-semibold text-amber-600' : ''}`}>
                           {suspect && '⚠ '}{formatDuration(conf.startedAt, conf.finishedAt)}
-                        </Badge>
+                        </span>
                       </TooltipTrigger>
                       {suspect && <TooltipContent>Duração anormal ({h.toFixed(1)}h). Possível sessão esquecida aberta.</TooltipContent>}
                     </Tooltip>
                   );
                 })()}
-                
-                <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-0.5 rounded-md">
-                  <Package className="w-3.5 h-3.5 opacity-60" /> {getSmartCount(conf)}
-                </span>
-                
+
+                <span className="tabular-nums">{getSmartCount(conf)}</span>
+
                 {totalML > 0 && (
-                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md tabular-nums">{formatMLDisplay(totalML)}</span>
+                  <span className="font-semibold text-foreground tabular-nums">{formatMLDisplay(totalML)}</span>
                 )}
               </div>
             </div>
