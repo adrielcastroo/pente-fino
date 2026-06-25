@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.13.0',
+    date: '2026-06-25',
+    highlights: [
+      { type: 'feature', text: "Fase 9 — Expedição: permissões por papel. Cancelar/Faturar/Estornar e cadastros (carrinhos, transportadoras) agora exigem Supervisor+ (Estorno = Admin) tanto na UI quanto via RLS." },
+    ],
+  },
+  {
     version: '3.12.0',
     date: '2026-06-25',
     highlights: [

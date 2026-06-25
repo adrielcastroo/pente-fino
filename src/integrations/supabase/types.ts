@@ -1387,6 +1387,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      expedicao_has_at_least: {
+        Args: { _min: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
       get_my_modules: { Args: never; Returns: string[] }
       get_my_role: {
         Args: never

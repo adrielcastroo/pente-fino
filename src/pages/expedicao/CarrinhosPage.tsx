@@ -7,6 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useCarrinhos, useCreateCarrinho, type CarrinhoStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { RequireRole } from '@/components/auth/RequireRole';
 
 const STATUS: Record<CarrinhoStatus, { label: string; cls: string }> = {
   livre:       { label: 'Livre',       cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
@@ -33,16 +34,25 @@ export default function CarrinhosPage() {
         <p className="text-sm text-muted-foreground mt-1">Gestão dos carrinhos da expedição.</p>
       </div>
 
-      <form onSubmit={submit} className="flex gap-2 max-w-md">
-        <Input
-          placeholder="Código do carrinho (ex: C001)"
-          value={codigo}
-          onChange={e => setCodigo(e.target.value)}
-        />
-        <Button type="submit" disabled={create.isPending} className="gap-2 shrink-0">
-          <Plus className="w-4 h-4" /> Adicionar
-        </Button>
-      </form>
+      <RequireRole
+        action="expedicao:manage-cadastros"
+        fallback={
+          <p className="text-xs text-muted-foreground italic">
+            Somente Supervisor+ pode cadastrar carrinhos.
+          </p>
+        }
+      >
+        <form onSubmit={submit} className="flex gap-2 max-w-md">
+          <Input
+            placeholder="Código do carrinho (ex: C001)"
+            value={codigo}
+            onChange={e => setCodigo(e.target.value)}
+          />
+          <Button type="submit" disabled={create.isPending} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" /> Adicionar
+          </Button>
+        </form>
+      </RequireRole>
 
       <div className="bg-card border border-border rounded-md overflow-hidden">
         {isLoading ? (
