@@ -7,6 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useCarrinhos, useCreateCarrinho, type CarrinhoStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { RequireRole } from '@/components/auth/RequireRole';
 
 const STATUS: Record<CarrinhoStatus, { label: string; cls: string }> = {
   livre:       { label: 'Livre',       cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },

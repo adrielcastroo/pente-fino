@@ -49,7 +49,8 @@ export default function ExpedicaoConfiguracoesPage() {
             </Button>
           </form>
         </RequireRole>
-        </form>
+
+
 
         <div className="bg-card border border-border rounded-md overflow-hidden">
           {isLoading ? (
