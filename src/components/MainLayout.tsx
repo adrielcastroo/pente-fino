@@ -89,27 +89,28 @@ export default function MainLayout() {
                     <Outlet />
                   </ErrorBoundary>
                 </div>
-                <footer
-                  role="contentinfo"
-                  className="mt-8 border-t border-border bg-card/50"
-                >
-                  <div className="max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-2">
-                      <span className="relative flex h-2 w-2" aria-hidden="true">
-                        <span className="absolute inline-flex h-full w-full rounded-full bg-success/60 animate-ping" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                {!['/tecido', '/madeira', '/motor', '/conferencia'].includes(location.pathname) && (
+                  <footer
+                    role="contentinfo"
+                    className="mt-4 border-t border-border/60 bg-card/30"
+                  >
+                    <div className="max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground/80">
+                      <span className="flex items-center gap-1.5">
+                        <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-success/60 animate-ping" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+                        </span>
+                        <span className="hidden sm:inline">Sistema operacional</span>
                       </span>
-                      <span>Sistema operacional</span>
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="text-foreground font-semibold tracking-tight">Pente Fino</span>
-                      <span className="text-border" aria-hidden="true">·</span>
-                      <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border font-mono text-[11px]">
-                        v{LATEST_VERSION}
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-foreground/80 font-medium tracking-tight">Pente Fino</span>
+                        <span className="px-1.5 py-0 rounded bg-muted/60 text-muted-foreground border border-border/40 font-mono text-[10px] leading-4">
+                          v{LATEST_VERSION}
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                </footer>
+                    </div>
+                  </footer>
+                )}
               </Suspense>
             </div>
           </main>

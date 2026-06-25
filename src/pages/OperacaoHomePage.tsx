@@ -54,7 +54,7 @@ export default function OperacaoHomePage() {
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             size="lg"
-            onClick={() => navigate('/tecido')}
+            onClick={() => navigate('/conferencia')}
             className="h-12 px-5 text-base font-semibold gap-2"
             aria-label="Iniciar nova conferência"
           >
