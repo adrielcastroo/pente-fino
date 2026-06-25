@@ -968,7 +968,8 @@ export default function HistoryPanel() {
     return result;
   }, [visibleHistory, debouncedSearch]);
 
-  const paged = useMemo(() => filtered.slice(0, pageSize), [filtered, pageSize]);
+  const grouped = useMemo(() => groupConferencesByNF(filtered), [filtered]);
+  const paged = useMemo(() => grouped.slice(0, pageSize), [grouped, pageSize]);
 
   useEffect(() => { setPageSize(20); }, [debouncedSearch, periodo, showTestData]);
 
