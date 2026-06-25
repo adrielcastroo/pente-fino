@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "bump:patch": "node scripts/bump-changelog.mjs patch",
+    "bump:minor": "node scripts/bump-changelog.mjs minor",
+    "bump:major": "node scripts/bump-changelog.mjs major"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
