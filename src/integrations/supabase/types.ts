@@ -475,6 +475,8 @@ export type Database = {
       }
       expedicao_pickings: {
         Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
           carrinho_id: string | null
           cidade: string | null
           cliente: string
@@ -482,6 +484,7 @@ export type Database = {
           created_by: string | null
           finished_at: string | null
           id: string
+          motivo_cancelamento: string | null
           numero: string
           observacao: string | null
           regiao: string | null
@@ -491,6 +494,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           carrinho_id?: string | null
           cidade?: string | null
           cliente: string
@@ -498,6 +503,7 @@ export type Database = {
           created_by?: string | null
           finished_at?: string | null
           id?: string
+          motivo_cancelamento?: string | null
           numero: string
           observacao?: string | null
           regiao?: string | null
@@ -507,6 +513,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           carrinho_id?: string | null
           cidade?: string | null
           cliente?: string
@@ -514,6 +522,7 @@ export type Database = {
           created_by?: string | null
           finished_at?: string | null
           id?: string
+          motivo_cancelamento?: string | null
           numero?: string
           observacao?: string | null
           regiao?: string | null

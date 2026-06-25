@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Plus, Loader2, PackageSearch } from 'lucide-react';
+import { Plus, Loader2, PackageSearch, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { usePickings, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
 import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
+import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 
 const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
   aguardando:     { label: 'Aguardando',     cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
@@ -21,6 +22,7 @@ const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
 export default function PainelPage() {
   const { data, isLoading } = usePickings();
   const [novo, setNovo] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
 
   const filtered = useMemo(() => {
@@ -102,11 +104,13 @@ export default function PainelPage() {
                 <TableHead>Carrinho</TableHead>
                 <TableHead className="text-right">Peças</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(p => {
                 const s = STATUS_LABEL[p.status];
+                const canCancel = !['faturado', 'cancelado'].includes(p.status);
                 return (
                   <TableRow key={p.id}>
                     <TableCell className="font-mono text-xs">{p.numero}</TableCell>
@@ -118,6 +122,19 @@ export default function PainelPage() {
                     <TableCell>
                       <Badge variant="outline" className={`${s.cls} border-transparent`}>{s.label}</Badge>
                     </TableCell>
+                    <TableCell className="text-right">
+                      {canCancel && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-destructive"
+                          title="Cancelar picking"
+                          onClick={() => setCancelTarget(p)}
+                        >
+                          <Ban className="size-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -127,6 +144,11 @@ export default function PainelPage() {
       </div>
 
       <NovoPickingDialog open={novo} onOpenChange={setNovo} />
+      <CancelPickingDialog
+        picking={cancelTarget}
+        open={!!cancelTarget}
+        onOpenChange={(o) => !o && setCancelTarget(null)}
+      />
     </div>
   );
 }

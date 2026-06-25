@@ -25,6 +25,9 @@ export interface Picking {
   observacao: string | null;
   created_at: string;
   finished_at: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  motivo_cancelamento?: string | null;
   transportadora?: { nome: string } | null;
   carrinho?: { codigo: string } | null;
 }
@@ -369,6 +372,53 @@ export function useFinalizarConferencia() {
       toast.success('Conferência finalizada');
     },
     onError: (e: any) => toast.error(e.message ?? 'Falha ao finalizar'),
+  });
+}
+
+export function useCancelarPicking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { pickingId: string; motivo: string; estorno?: boolean }) => {
+      const motivo = input.motivo.trim();
+      if (motivo.length < 5) throw new Error('Informe um motivo (mín. 5 caracteres).');
+
+      const { data: p, error: errP } = await supabase
+        .from('expedicao_pickings')
+        .select('id, status, carrinho_id, numero')
+        .eq('id', input.pickingId)
+        .maybeSingle();
+      if (errP) throw errP;
+      if (!p) throw new Error('Picking não encontrado.');
+      if (p.status === 'cancelado') throw new Error('Picking já está cancelado.');
+      if (p.status === 'faturado' && !input.estorno) {
+        throw new Error('Picking faturado exige estorno explícito.');
+      }
+
+      const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+      const { error } = await supabase
+        .from('expedicao_pickings')
+        .update({
+          status: 'cancelado',
+          motivo_cancelamento: motivo,
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: uid,
+        })
+        .eq('id', input.pickingId);
+      if (error) throw error;
+
+      if (p.carrinho_id) {
+        await supabase.from('expedicao_carrinhos').update({ status: 'livre' }).eq('id', p.carrinho_id);
+        await supabase.from('expedicao_pickings').update({ carrinho_id: null }).eq('id', input.pickingId);
+      }
+
+      return { numero: p.numero, estorno: !!input.estorno };
+    },
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: KEYS.pickings });
+      qc.invalidateQueries({ queryKey: KEYS.carrinhos });
+      toast.success(r.estorno ? `Estorno de ${r.numero} concluído` : `Picking ${r.numero} cancelado`);
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Falha ao cancelar'),
   });
 }
 
