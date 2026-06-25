@@ -872,6 +872,7 @@ export type Database = {
           display_name: string | null
           email_notifications: boolean | null
           id: string
+          modules: string[]
           opt_out_reports: boolean | null
           preferences: Json
           setor: string | null
@@ -887,6 +888,7 @@ export type Database = {
           display_name?: string | null
           email_notifications?: boolean | null
           id: string
+          modules?: string[]
           opt_out_reports?: boolean | null
           preferences?: Json
           setor?: string | null
@@ -902,6 +904,7 @@ export type Database = {
           display_name?: string | null
           email_notifications?: boolean | null
           id?: string
+          modules?: string[]
           opt_out_reports?: boolean | null
           preferences?: Json
           setor?: string | null
@@ -1214,6 +1217,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_my_modules: { Args: never; Returns: string[] }
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
