@@ -1,66 +1,36 @@
-# Impressão direta no navegador (remover n8n)
+## Problema
 
-## Objetivo
-Substituir o envio da etiqueta (PNG via webhook `http://localhost:5678/...` do n8n) por impressão direta no navegador, mantendo **exatamente o mesmo layout** atual (templates `TecidoPreview` / `MotorPreview` em `LabelTemplates.tsx`).
+Em telas grandes (≥1280px), o grid de ações da `OperacaoHomePage` é limitado por `max-w-5xl` + `lg:grid-cols-3`, deixando a faixa direita vazia (área vermelha do print).
 
-## Como vai funcionar
+## Causa
 
-O `labelRenderer.ts` já gera um PNG em alta resolução (8 px/mm, com fonte IBM Plex Mono embutida) com a dimensão real em mm da etiqueta. Vamos reaproveitar esse PNG e mandar para a impressora pelo diálogo nativo do navegador.
-
-Fluxo:
-1. Usuário conclui um registro (Tecido ou Motor/Controle).
-2. `printTecidoLabel` / `printMotorLabel` renderizam o PNG (igual hoje).
-3. Em vez de `fetch` para o n8n, abrimos uma janela oculta (`iframe` invisível no `document`) contendo apenas:
-   - `@page { size: <w>mm <h>mm; margin: 0 }`
-   - `<img>` com o PNG ocupando 100% da página.
-4. Disparamos `iframe.contentWindow.print()`.
-5. Diálogo de impressão do navegador abre já com o tamanho certo — usuário escolhe a impressora térmica (uma vez, depois pode ativar "imprimir sem prévia" no Chrome via `--kiosk-printing` se quiser silencioso).
-6. Após `afterprint` (ou timeout), removemos o iframe.
-
-## Arquivos alterados
-
-### `src/services/printService.ts`
-- Remover `sendToWebhook()` e a constante `PRINT_WEBHOOK_URL`.
-- Remover o `fetch` para o n8n em `printTecidoLabel` e `printMotorLabel`.
-- Criar helper `printImageInBrowser(dataUrl, widthMm, heightMm, filename)`:
-  - Cria `<iframe>` invisível (`position:fixed; left:-9999px; width:0; height:0; border:0`).
-  - Escreve HTML com `@page` no tamanho exato em mm, margens 0, e `<img src="data:..." style="width:100%;height:100%;display:block">`.
-  - Aguarda `img.onload` → `iframe.contentWindow.focus()` + `print()`.
-  - Remove o iframe em `afterprint` (com fallback `setTimeout` ~60s).
-- Mensagens de toast atualizadas: "Enviando para impressora..." / "Etiqueta enviada para impressão" / em caso de erro, "Falha ao abrir diálogo de impressão".
-- Manter `autoPrint` como gate (se desligado, não imprime — comportamento atual).
-- Manter `resolverItem()` e toda a lógica de resolução de código de fornecedor.
-- Manter assinatura pública (`PrintConfig`, `TecidoPrintInput`, `MotorPrintInput`) para não quebrar chamadores. Campo `webhookUrl` em `PrintConfig` vira opcional/ignorado (mantido por compatibilidade — não removo do tipo neste passo).
-
-### `src/services/labelRenderer.ts`
-- Sem mudanças. Continua gerando o PNG igual.
-
-### `src/components/labels/LabelTemplates.tsx`
-- Sem mudanças. Layout preservado.
-
-### Configurações (`useAppStore` / painel de Label)
-- Sem mudanças funcionais. Se houver UI mostrando a URL do webhook, deixo a flag `autoPrint` significar agora "imprimir automaticamente no navegador". (Posso esconder o campo "webhook" em um passo seguinte se você quiser — não incluído neste plano para manter o escopo enxuto.)
-
-## Detalhes técnicos
-
-HTML injetado no iframe:
-
-```text
-<!doctype html>
-<html><head><style>
-  @page { size: {W}mm {H}mm; margin: 0; }
-  html, body { margin: 0; padding: 0; background: #fff; }
-  img { width: {W}mm; height: {H}mm; display: block; }
-</style></head>
-<body><img src="{dataUrl}"></body></html>
+`src/pages/OperacaoHomePage.tsx` linha 77:
 ```
+grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 max-w-5xl
+```
+O `<main>` ocupa toda a largura disponível, mas o grid é travado em ~1024px.
 
-- `size: Wmm Hmm` força o navegador a usar exatamente o tamanho da etiqueta (60×50, 100×60, etc., respeitando `orientation`).
-- `pixelRatio` do PNG já é calculado para ~8 px/mm → impressão térmica 203 dpi fica nítida.
-- A primeira impressão exigirá que o usuário escolha a impressora térmica no diálogo do Chrome; para silenciar, basta marcar a impressora como padrão e ativar "Print preview disabled" (ou rodar Chrome com `--kiosk-printing`).
+## Opções (escolher 1 antes de implementar)
 
-## Validação
-1. Conferir uma etiqueta de Tecido → diálogo de impressão abre com tamanho correto e PNG idêntico ao preview.
-2. Conferir uma etiqueta de Motor 60×50 → "SERIE" e demais textos íntegros (fonte embutida).
-3. Desligar `autoPrint` → nada acontece (igual hoje).
-4. Verificar console: nenhum `fetch` para `localhost:5678`.
+**A. Centralizar (mínimo esforço, mantém densidade atual)**
+- Adicionar `mx-auto` ao grid.
+- Resultado: cartões ficam centralizados; some a "faixa" assimétrica à direita.
+
+**B. Esticar para preencher (aproveita o espaço sem novo conteúdo)**
+- Remover `max-w-5xl`, manter `lg:grid-cols-3` e adicionar `xl:grid-cols-3 2xl:grid-cols-3` com `gap` maior; cartões ficam mais largos (uniforme 3×2).
+- Header também passa a respirar a largura toda.
+
+**C. 4 colunas em telas largas (mais ações visíveis)**
+- `lg:grid-cols-3 xl:grid-cols-4` + remover `max-w-5xl`.
+- Com 6 itens vira 4+2 (assimetria na 2ª linha). Pode-se compensar com `justify-items-stretch` ou reordenar.
+
+**D. Painel lateral informativo (usa o espaço com conteúdo útil)**
+- Em `xl:`, transformar layout em `xl:grid-cols-[1fr_320px]`: à esquerda o grid de ações (3 cols), à direita um cartão "Atividade recente" / "Resumo do dia" (últimas conferências, contagem do turno).
+- Mais valor para o usuário, mas requer query (já existe em `useDashboard`/`HistoryPanel`).
+
+## Recomendação
+
+**Opção A** se a prioridade é puramente cosmética (1 linha de código).  
+**Opção D** se quiser aproveitar o espaço com algo útil (recomendado, alinhado com padrões SaaS modernos — Linear/Stripe).
+
+Qual aplicar?
