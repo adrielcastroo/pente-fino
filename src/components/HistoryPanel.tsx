@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, memo } from 'react';
+import { useEffect, useState, useMemo, memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
@@ -909,6 +909,7 @@ export default function HistoryPanel() {
   const [showTestData, setShowTestData] = useState(false);
   const [periodo, setPeriodo] = useState<'todos' | '7' | '30' | '90'>('30');
   const [pageSize, setPageSize] = useState(20);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
@@ -982,6 +983,23 @@ export default function HistoryPanel() {
 
   const grouped = useMemo(() => groupConferencesByNF(filtered), [filtered]);
   const paged = useMemo(() => grouped.slice(0, pageSize), [grouped, pageSize]);
+
+  // Infinite scroll: auto-load more when sentinel enters viewport
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node) return;
+    if (grouped.length <= pageSize) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0]?.isIntersecting) {
+          setPageSize(p => p + 20);
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [grouped.length, pageSize]);
 
   useEffect(() => { setPageSize(20); }, [debouncedSearch, periodo, showTestData]);
 
@@ -1119,7 +1137,7 @@ export default function HistoryPanel() {
               ))}
             </AnimatePresence>
             {grouped.length > paged.length && (
-              <div className="flex flex-col items-center gap-2 py-6">
+              <div ref={loadMoreRef} className="flex flex-col items-center gap-2 py-6">
                 <p className="text-sm text-muted-foreground tabular-nums">
                   Exibindo <span className="font-semibold text-foreground">{paged.length}</span> de <span className="font-semibold text-foreground">{grouped.length}</span>
                 </p>
