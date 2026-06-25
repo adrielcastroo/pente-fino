@@ -708,7 +708,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                 </span>
                 
                 {totalML > 0 && (
-                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md">{formatML(totalML)}</span>
+                  <span className="font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md tabular-nums">{formatMLDisplay(totalML)}</span>
                 )}
               </div>
             </div>
