@@ -984,6 +984,23 @@ export default function HistoryPanel() {
   const grouped = useMemo(() => groupConferencesByNF(filtered), [filtered]);
   const paged = useMemo(() => grouped.slice(0, pageSize), [grouped, pageSize]);
 
+  // Infinite scroll: auto-load more when sentinel enters viewport
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node) return;
+    if (grouped.length <= pageSize) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0]?.isIntersecting) {
+          setPageSize(p => p + 20);
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [grouped.length, pageSize]);
+
   useEffect(() => { setPageSize(20); }, [debouncedSearch, periodo, showTestData]);
 
   const handleClear = async () => {
