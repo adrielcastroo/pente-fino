@@ -12,21 +12,21 @@ type HubOption = {
 
 const options: HubOption[] = [
   {
-    to: '/tecido',
+    to: '/estoque/tecido',
     label: 'Tecido',
     description: 'Bipar etiquetas de rolos de tecido e registrar conferência.',
     icon: ScanLine,
     accent: 'from-sky-500/20 to-cyan-500/10 border-sky-500/30',
   },
   {
-    to: '/madeira',
+    to: '/estoque/madeira',
     label: 'Madeira',
     description: 'Conferir lâminas, bases e bandôs por lote mestre.',
     icon: TreePine,
     accent: 'from-amber-500/20 to-orange-500/10 border-amber-500/30',
   },
   {
-    to: '/motor',
+    to: '/estoque/motor',
     label: 'Motor / Controle',
     description: 'Bipar números de série de motores, controles e coulisses.',
     icon: Zap,

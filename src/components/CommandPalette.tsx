@@ -32,15 +32,15 @@ type Conferencia = { id: string; processo: string | null; conferente: string | n
 
 const ROUTES: Array<{ label: string; path: string; icon: React.ComponentType<{ className?: string }>; keywords?: string }> = [
   { label: 'Início (Dashboard)', path: '/', icon: LayoutDashboard, keywords: 'dashboard inicio home' },
-  { label: 'Conferência de Tecido', path: '/tecido', icon: Shirt, keywords: 'tecido conferencia' },
-  { label: 'Conferência de Madeira', path: '/madeira', icon: TreePine, keywords: 'madeira' },
-  { label: 'Motor / Controle', path: '/motor', icon: Box, keywords: 'motor controle' },
-  { label: 'Estoque', path: '/estoque', icon: Warehouse },
-  { label: 'Saída', path: '/saida', icon: LogOut },
-  { label: 'Reservas', path: '/reservas', icon: Calendar },
-  { label: 'Histórico', path: '/historico', icon: Archive },
-  { label: 'Cadastros', path: '/cadastros', icon: Package },
-  { label: 'Configurações', path: '/configuracoes', icon: Settings },
+  { label: 'Conferência de Tecido', path: '/estoque/tecido', icon: Shirt, keywords: 'tecido conferencia' },
+  { label: 'Conferência de Madeira', path: '/estoque/madeira', icon: TreePine, keywords: 'madeira' },
+  { label: 'Motor / Controle', path: '/estoque/motor', icon: Box, keywords: 'motor controle' },
+  { label: 'Estoque', path: '/estoque/mapa', icon: Warehouse },
+  { label: 'Saída', path: '/estoque/saida', icon: LogOut },
+  { label: 'Reservas', path: '/estoque/reservas', icon: Calendar },
+  { label: 'Histórico', path: '/estoque/historico', icon: Archive },
+  { label: 'Cadastros', path: '/estoque/cadastros', icon: Package },
+  { label: 'Configurações', path: '/estoque/configuracoes', icon: Settings },
 ];
 
 export default function CommandPalette() {

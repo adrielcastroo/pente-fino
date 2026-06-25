@@ -103,7 +103,7 @@ export default function DashboardPage() {
 
   // Pop-out: abre o dashboard em janela separada (multi-monitor)
   const handlePopOut = () => {
-    window.open('/dashboard', 'pente-fino-dashboard', 'width=1400,height=900,noopener');
+    window.open('/estoque/dashboard', 'pente-fino-dashboard', 'width=1400,height=900,noopener');
   };
 
   // Export PDF do dashboard via html2canvas + jspdf

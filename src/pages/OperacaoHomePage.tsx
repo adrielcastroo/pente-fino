@@ -22,12 +22,12 @@ interface OpAction {
 }
 
 const actions: OpAction[] = [
-  { to: '/saida', label: 'Conferir saída', description: 'Bipar documento e itens', icon: Archive },
-  { to: '/estoque', label: 'Consultar estoque', description: 'Localizar posições', icon: Warehouse },
-  { to: '/reservas', label: 'Reservas', description: 'Visualizar e registrar reservas', icon: TableIcon },
-  { to: '/cadastros', label: 'Cadastros', description: 'Consultar itens cadastrados', icon: Package },
-  { to: '/historico', label: 'Histórico recente', description: 'Últimas conferências', icon: FolderOpen },
-  { to: '/configuracoes', label: 'Configurações', description: 'Preferências pessoais', icon: SettingsIcon },
+  { to: '/estoque/saida', label: 'Conferir saída', description: 'Bipar documento e itens', icon: Archive },
+  { to: '/estoque/mapa', label: 'Consultar estoque', description: 'Localizar posições', icon: Warehouse },
+  { to: '/estoque/reservas', label: 'Reservas', description: 'Visualizar e registrar reservas', icon: TableIcon },
+  { to: '/estoque/cadastros', label: 'Cadastros', description: 'Consultar itens cadastrados', icon: Package },
+  { to: '/estoque/historico', label: 'Histórico recente', description: 'Últimas conferências', icon: FolderOpen },
+  { to: '/estoque/configuracoes', label: 'Configurações', description: 'Preferências pessoais', icon: SettingsIcon },
 ];
 
 export default function OperacaoHomePage() {
@@ -54,7 +54,7 @@ export default function OperacaoHomePage() {
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             size="lg"
-            onClick={() => navigate('/conferencia')}
+            onClick={() => navigate('/estoque/conferencia')}
             className="h-12 px-5 text-base font-semibold gap-2"
             aria-label="Iniciar nova conferência"
           >
@@ -64,7 +64,7 @@ export default function OperacaoHomePage() {
           <Button
             size="lg"
             variant="outline"
-            onClick={() => navigate('/configuracoes')}
+            onClick={() => navigate('/estoque/configuracoes')}
             className="h-12 px-5 text-base font-semibold"
             aria-label="Abrir configurações pessoais"
           >

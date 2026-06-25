@@ -9,33 +9,33 @@ import { atLeast } from '@/lib/permissions';
 type Tab = { to: string; label: string; icon: any };
 
 const primaryOperacao: Tab[] = [
-  { to: '/operacao', label: 'Início', icon: Home },
-  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
-  { to: '/estoque', label: 'Estoque', icon: Package },
-  { to: '/historico', label: 'Histórico', icon: FolderOpen },
+  { to: '/estoque/operacao', label: 'Início', icon: Home },
+  { to: '/estoque/saida', label: 'Saída', icon: ArrowUpRight },
+  { to: '/estoque/mapa', label: 'Estoque', icon: Package },
+  { to: '/estoque/historico', label: 'Histórico', icon: FolderOpen },
 ];
 
 const primaryGestao: Tab[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
-  { to: '/estoque', label: 'Estoque', icon: Package },
-  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
+  { to: '/estoque/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/estoque/conferencia', label: 'Conferência', icon: ScanLine },
+  { to: '/estoque/mapa', label: 'Estoque', icon: Package },
+  { to: '/estoque/saida', label: 'Saída', icon: ArrowUpRight },
 ];
 
 const overflowOperacao: Tab[] = [
-  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
-  { to: '/reservas', label: 'Reservas', icon: Table },
-  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
-  { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
+  { to: '/estoque/conferencia', label: 'Conferência', icon: ScanLine },
+  { to: '/estoque/reservas', label: 'Reservas', icon: Table },
+  { to: '/estoque/cadastros', label: 'Cadastros', icon: ClipboardList },
+  { to: '/estoque/configuracoes', label: 'Configurações', icon: SettingsIcon },
 ];
 
 
 const overflowGestao: Tab[] = [
-  { to: '/reservas', label: 'Reservas', icon: Table },
-  { to: '/historico', label: 'Histórico', icon: FolderOpen },
-  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
-  { to: '/auditoria', label: 'Auditoria', icon: ShieldAlert },
-  { to: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
+  { to: '/estoque/reservas', label: 'Reservas', icon: Table },
+  { to: '/estoque/historico', label: 'Histórico', icon: FolderOpen },
+  { to: '/estoque/cadastros', label: 'Cadastros', icon: ClipboardList },
+  { to: '/estoque/auditoria', label: 'Auditoria', icon: ShieldAlert },
+  { to: '/estoque/configuracoes', label: 'Configurações', icon: SettingsIcon },
 ];
 
 export default function BottomTabBar() {
@@ -48,11 +48,11 @@ export default function BottomTabBar() {
   const primary = useMemo(() => (isGestao ? primaryGestao : primaryOperacao), [isGestao]);
   const overflow = useMemo(() => (isGestao ? overflowGestao : overflowOperacao), [isGestao]);
 
-  const CONFERENCIA_PATHS = ['/conferencia', '/tecido', '/madeira', '/motor'];
+  const CONFERENCIA_PATHS = ['/estoque/conferencia', '/estoque/tecido', '/estoque/madeira', '/estoque/motor'];
   const isActive = (to: string) =>
     pathname === to
-    || (to === '/operacao' && pathname === '/')
-    || (to === '/conferencia' && CONFERENCIA_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')));
+    || (to === '/estoque/operacao' && pathname === '/')
+    || (to === '/estoque/conferencia' && CONFERENCIA_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')));
 
 
   return (

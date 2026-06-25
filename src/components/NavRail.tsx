@@ -23,22 +23,22 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 type RailItem = { to: string; label: string; icon: any };
 
 const railOperacao: RailItem[] = [
-  { to: '/operacao', label: 'Início', icon: Home },
-  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
-  { to: '/estoque', label: 'Estoque', icon: Package },
-  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
-  { to: '/historico', label: 'Histórico', icon: FolderOpen },
+  { to: '/estoque/operacao', label: 'Início', icon: Home },
+  { to: '/estoque/conferencia', label: 'Conferência', icon: ScanLine },
+  { to: '/estoque/mapa', label: 'Estoque', icon: Package },
+  { to: '/estoque/saida', label: 'Saída', icon: ArrowUpRight },
+  { to: '/estoque/historico', label: 'Histórico', icon: FolderOpen },
 ];
 
 const railGestao: RailItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/conferencia', label: 'Conferência', icon: ScanLine },
-  { to: '/estoque', label: 'Estoque', icon: Package },
-  { to: '/saida', label: 'Saída', icon: ArrowUpRight },
-  { to: '/historico', label: 'Histórico', icon: FolderOpen },
-  { to: '/reservas', label: 'Reservas', icon: Table },
-  { to: '/cadastros', label: 'Cadastros', icon: ClipboardList },
-  { to: '/auditoria', label: 'Auditoria', icon: ShieldAlert },
+  { to: '/estoque/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/estoque/conferencia', label: 'Conferência', icon: ScanLine },
+  { to: '/estoque/mapa', label: 'Estoque', icon: Package },
+  { to: '/estoque/saida', label: 'Saída', icon: ArrowUpRight },
+  { to: '/estoque/historico', label: 'Histórico', icon: FolderOpen },
+  { to: '/estoque/reservas', label: 'Reservas', icon: Table },
+  { to: '/estoque/cadastros', label: 'Cadastros', icon: ClipboardList },
+  { to: '/estoque/auditoria', label: 'Auditoria', icon: ShieldAlert },
 ];
 
 /**
@@ -53,11 +53,11 @@ export default function NavRail() {
   const isGestao = atLeast(role, 'supervisor');
   const items = useMemo(() => (isGestao ? railGestao : railOperacao), [isGestao]);
 
-  const CONFERENCIA_PATHS = ['/conferencia', '/tecido', '/madeira', '/motor'];
+  const CONFERENCIA_PATHS = ['/estoque/conferencia', '/estoque/tecido', '/estoque/madeira', '/estoque/motor'];
   const isActive = (to: string) =>
     pathname === to
-    || (to === '/operacao' && pathname === '/')
-    || (to === '/conferencia' && CONFERENCIA_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')));
+    || (to === '/estoque/operacao' && pathname === '/')
+    || (to === '/estoque/conferencia' && CONFERENCIA_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')));
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -103,12 +103,12 @@ export default function NavRail() {
             <TooltipTrigger asChild>
               <button
                 type="button"
-                onClick={() => navigate('/configuracoes')}
+                onClick={() => navigate('/estoque/configuracoes')}
                 aria-label="Configurações"
                 className={cn(
                   'flex items-center justify-center w-12 h-12 rounded-lg transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  pathname === '/configuracoes'
+                  pathname === '/estoque/configuracoes'
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}

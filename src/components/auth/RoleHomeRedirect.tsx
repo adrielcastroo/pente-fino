@@ -19,7 +19,7 @@ export default function RoleHomeRedirect() {
   }
 
   // Guests have no role — default to operational home.
-  if (isGuest) return <Navigate to="/operacao" replace />;
+  if (isGuest) return <Navigate to="/estoque/operacao" replace />;
 
   // Bifurcação de módulos: se tem acesso a ambos, mostra seletor
   const hasEstoque = modules.includes('estoque');
@@ -28,5 +28,5 @@ export default function RoleHomeRedirect() {
   if (hasExpedicao && !hasEstoque) return <Navigate to="/expedicao/painel" replace />;
 
   const isGestao = atLeast(role, 'supervisor');
-  return <Navigate to={isGestao ? '/dashboard' : '/operacao'} replace />;
+  return <Navigate to={isGestao ? '/estoque/dashboard' : '/estoque/operacao'} replace />;
 }
