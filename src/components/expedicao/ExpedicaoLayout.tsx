@@ -50,7 +50,7 @@ export default function ExpedicaoLayout() {
 
   return (
     <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
-      <aside className="hidden md:flex w-60 flex-col border-r border-border bg-card/40">
+      <aside className="hidden desktop:flex w-60 flex-col border-r border-border bg-card/40">
         <div className="px-4 py-4 border-b border-border">
           <Link to="/expedicao/painel" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center">
