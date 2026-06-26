@@ -194,6 +194,6 @@ export default function PainelPage() {
         open={!!cancelTarget}
         onOpenChange={(o) => !o && setCancelTarget(null)}
       />
-    </div>
+    </PageShell>
   );
 }
