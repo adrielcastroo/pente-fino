@@ -76,6 +76,7 @@ export default function PainelPage() {
     }
   }, [kpis.atrasados]);
 
+  return (
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
@@ -89,16 +90,29 @@ export default function PainelPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {kpis.atrasados > 0 && (
+        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 rounded-md px-3 py-2 text-sm">
+          <AlertTriangle className="w-4 h-4" />
+          <span><strong className="tabular-nums">{kpis.atrasados}</strong> picking(s) com SLA estourado</span>
+          {kpis.atencao > 0 && (
+            <span className="text-rose-700/80 dark:text-rose-300/80">
+              · {kpis.atencao} em atenção
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {([
-          ['Total', kpis.total],
-          ['Aguardando', kpis.aguardando],
-          ['Em andamento', kpis.em_andamento],
-          ['Conferidos', kpis.conferidos],
-        ] as const).map(([label, value]) => (
+          ['Total', kpis.total, ''],
+          ['Aguardando', kpis.aguardando, ''],
+          ['Em andamento', kpis.em_andamento, ''],
+          ['Atenção', kpis.atencao, kpis.atencao > 0 ? 'text-amber-600 dark:text-amber-400' : ''],
+          ['Atrasados', kpis.atrasados, kpis.atrasados > 0 ? 'text-rose-600 dark:text-rose-400' : ''],
+        ] as const).map(([label, value, cls]) => (
           <div key={label} className="bg-card border border-border rounded-md p-3">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className="text-2xl font-semibold text-foreground tabular-nums mt-0.5">{value}</p>
+            <p className={`text-2xl font-semibold tabular-nums mt-0.5 ${cls || 'text-foreground'}`}>{value}</p>
           </div>
         ))}
       </div>
@@ -134,11 +148,12 @@ export default function PainelPage() {
                 <TableHead>Carrinho</TableHead>
                 <TableHead className="text-right">Peças</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>SLA</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(p => {
+              {filtered.map(({ p, sla }) => {
                 const s = STATUS_LABEL[p.status];
                 const canCancel = allowCancel && !['faturado', 'cancelado'].includes(p.status);
                 return (
@@ -151,6 +166,15 @@ export default function PainelPage() {
                     <TableCell className="text-right tabular-nums">{p.total_pecas}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`${s.cls} border-transparent`}>{s.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {sla.level === 'none' ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        <Badge variant="outline" className={`${sla.cls} border-transparent text-[11px]`}>
+                          {sla.label}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       {canCancel && (
