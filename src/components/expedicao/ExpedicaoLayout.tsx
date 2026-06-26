@@ -118,7 +118,7 @@ export default function ExpedicaoLayout() {
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar pb-16 md:pb-0">
+        <main className="flex-1 overflow-y-auto custom-scrollbar pb-16 desktop:pb-0">
           <div className="p-4 lg:p-6 xl:p-8 max-w-[1600px] mx-auto">
             <Suspense
               fallback={
