@@ -106,7 +106,7 @@ export default function ExpedicaoLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="md:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
+        <header className="desktop:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
           <Link to="/expedicao/painel" className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
             <span className="text-sm font-semibold">Expedição</span>
