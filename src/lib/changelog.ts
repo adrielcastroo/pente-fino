@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.15.0',
+    date: '2026-06-26',
+    highlights: [
+      { type: 'feature', text: "Design system do módulo Expedição alinhado ao Estoque (PageShell, PageHeader, StatCard, StatusBadge, TabsBar) — tokens semânticos em 100% das páginas" },
+    ],
+  },
+  {
     version: '3.14.0',
     date: '2026-06-26',
     highlights: [
