@@ -76,7 +76,9 @@ export default function CarrinhosPage() {
                   <TableRow key={c.id}>
                     <TableCell className="font-mono">{c.codigo}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${s.cls} border-transparent`}>{s.label}</Badge>
+                      <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', s.cls)}>
+                        {s.label}
+                      </span>
                     </TableCell>
                   </TableRow>
                 );
@@ -85,6 +87,7 @@ export default function CarrinhosPage() {
           </Table>
         )}
       </div>
+    </PageShell>
     </div>
   );
 }
