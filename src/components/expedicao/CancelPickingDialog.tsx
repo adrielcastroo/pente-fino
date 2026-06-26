@@ -40,7 +40,7 @@ export default function CancelPickingDialog({ picking, open, onOpenChange }: Pro
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="size-5 text-amber-600" />
+            <AlertTriangle className="size-5 text-warning" />
             {isEstorno ? 'Estornar picking faturado' : 'Cancelar picking'}
           </DialogTitle>
           <DialogDescription>

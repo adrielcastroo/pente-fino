@@ -113,10 +113,10 @@ export default function ExpedicaoDashboardOperacionalPage() {
       </header>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={Package} label="Pickings hoje" value={stats.hoje} color="text-sky-600" />
-        <KpiCard icon={CheckCircle2} label="Conferidos hoje" value={stats.conferidosHoje} color="text-emerald-600" />
-        <KpiCard icon={DollarSign} label="Faturados hoje" value={stats.faturadosHoje} color="text-indigo-600" />
-        <KpiCard icon={Clock} label="Tempo médio" value={fmtMin(stats.tempoMedio)} color="text-amber-600" />
+        <KpiCard icon={Package} label="Pickings hoje" value={stats.hoje} color="text-primary" />
+        <KpiCard icon={CheckCircle2} label="Conferidos hoje" value={stats.conferidosHoje} color="text-success" />
+        <KpiCard icon={DollarSign} label="Faturados hoje" value={stats.faturadosHoje} color="text-primary" />
+        <KpiCard icon={Clock} label="Tempo médio" value={fmtMin(stats.tempoMedio)} color="text-warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

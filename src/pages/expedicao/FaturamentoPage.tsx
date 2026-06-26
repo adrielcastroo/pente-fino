@@ -105,7 +105,7 @@ export default function FaturamentoPage() {
               <li key={p.id} className="flex items-center justify-between px-4 py-2 text-sm">
                 <span className="font-mono">{p.numero}</span>
                 <span className="text-muted-foreground">{p.cliente}</span>
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">faturado</Badge>
+                <span className="inline-flex items-center rounded-md bg-success/15 text-success px-2 py-0.5 text-xs font-medium">faturado</span>
               </li>
             ))}
           </ul>

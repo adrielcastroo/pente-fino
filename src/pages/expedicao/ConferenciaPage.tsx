@@ -139,7 +139,7 @@ export default function ConferenciaPage() {
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
-                className={`h-full transition-all ${completo ? 'bg-emerald-500' : 'bg-primary'}`}
+                className={`h-full transition-all ${completo ? 'bg-success' : 'bg-primary'}`}
                 style={{ width: `${totals.pct}%` }}
               />
             </div>

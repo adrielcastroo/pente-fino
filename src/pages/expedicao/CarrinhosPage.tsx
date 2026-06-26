@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useCarrinhos, useCreateCarrinho, type CarrinhoStatus } from '@/hooks/expedicao/useExpedicaoData';
 import { RequireRole } from '@/components/auth/RequireRole';
+import { PageShell, PageHeader } from '@/components/expedicao/ui';
+import { cn } from '@/lib/utils';
 
 const STATUS: Record<CarrinhoStatus, { label: string; cls: string }> = {
-  livre:       { label: 'Livre',       cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
-  em_uso:      { label: 'Em uso',      cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' },
-  manutencao:  { label: 'Manutenção',  cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' },
+  livre:       { label: 'Livre',       cls: 'bg-success/15 text-success' },
+  em_uso:      { label: 'Em uso',      cls: 'bg-warning/15 text-warning' },
+  manutencao:  { label: 'Manutenção',  cls: 'bg-destructive/15 text-destructive' },
 };
 
 export default function CarrinhosPage() {
@@ -28,11 +29,8 @@ export default function CarrinhosPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Carrinhos</h1>
-        <p className="text-sm text-muted-foreground mt-1">Gestão dos carrinhos da expedição.</p>
-      </div>
+    <PageShell>
+      <PageHeader title="Carrinhos" subtitle="Gestão dos carrinhos da expedição." />
 
       <RequireRole
         action="expedicao:manage-cadastros"
@@ -78,7 +76,9 @@ export default function CarrinhosPage() {
                   <TableRow key={c.id}>
                     <TableCell className="font-mono">{c.codigo}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${s.cls} border-transparent`}>{s.label}</Badge>
+                      <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', s.cls)}>
+                        {s.label}
+                      </span>
                     </TableCell>
                   </TableRow>
                 );
@@ -87,6 +87,6 @@ export default function CarrinhosPage() {
           </Table>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

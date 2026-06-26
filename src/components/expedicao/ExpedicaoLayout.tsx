@@ -53,8 +53,8 @@ export default function ExpedicaoLayout() {
       <aside className="hidden desktop:flex w-60 flex-col border-r border-border bg-card/40">
         <div className="px-4 py-4 border-b border-border">
           <Link to="/expedicao/painel" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center">
-              <Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
+            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+              <Truck className="w-4 h-4 text-primary" />
             </div>
             <div className="leading-tight">
               <p className="text-sm font-semibold text-foreground">Pente Fino</p>
@@ -108,7 +108,7 @@ export default function ExpedicaoLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="desktop:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
           <Link to="/expedicao/painel" className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
+            <Truck className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold">Expedição</span>
           </Link>
           {canSwitch && (
