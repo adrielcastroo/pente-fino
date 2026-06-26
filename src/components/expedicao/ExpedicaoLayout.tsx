@@ -135,7 +135,7 @@ export default function ExpedicaoLayout() {
 
         {/* Bottom tab bar (mobile/tablet) */}
         <nav
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-border bg-card/95 backdrop-blur grid grid-cols-5"
+          className="desktop:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-border bg-card/95 backdrop-blur grid grid-cols-5"
           aria-label="Navegação Expedição"
         >
           {NAV.map(({ to, label, icon: Icon }) => (
