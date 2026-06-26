@@ -7,20 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { usePickings, type Picking } from '@/hooks/expedicao/useExpedicaoData';
 import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
+import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { computeSla } from '@/lib/expedicao/sla';
-
-const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
-  aguardando:     { label: 'Aguardando',     cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
-  em_separacao:   { label: 'Em separação',   cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' },
-  em_conferencia: { label: 'Em conferência', cls: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' },
-  conferido:      { label: 'Conferido',      cls: 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' },
-  faturado:       { label: 'Faturado',       cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
-  cancelado:      { label: 'Cancelado',      cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' },
-};
 
 export default function PainelPage() {
   const { data, isLoading } = usePickings();
