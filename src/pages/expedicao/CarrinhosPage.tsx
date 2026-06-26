@@ -88,6 +88,5 @@ export default function CarrinhosPage() {
         )}
       </div>
     </PageShell>
-    </div>
   );
 }
