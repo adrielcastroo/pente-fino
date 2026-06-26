@@ -158,7 +158,7 @@ export default function ExpedicaoLayout() {
         {/* Footer */}
         <footer
           role="contentinfo"
-          className="hidden md:flex border-t border-border bg-card/30 px-4 py-1.5 items-center justify-between text-[10px] text-muted-foreground/80"
+          className="hidden desktop:flex border-t border-border bg-card/30 px-4 py-1.5 items-center justify-between text-[10px] text-muted-foreground/80"
         >
           <span>{profile?.display_name || 'Operador'} · Módulo Expedição</span>
           <span className="font-mono">Pente Fino · v{LATEST_VERSION}</span>
