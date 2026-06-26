@@ -50,7 +50,7 @@ export default function ExpedicaoLayout() {
 
   return (
     <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
-      <aside className="hidden md:flex w-60 flex-col border-r border-border bg-card/40">
+      <aside className="hidden desktop:flex w-60 flex-col border-r border-border bg-card/40">
         <div className="px-4 py-4 border-b border-border">
           <Link to="/expedicao/painel" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center">
@@ -106,7 +106,7 @@ export default function ExpedicaoLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="md:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
+        <header className="desktop:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
           <Link to="/expedicao/painel" className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
             <span className="text-sm font-semibold">Expedição</span>
@@ -118,7 +118,7 @@ export default function ExpedicaoLayout() {
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar pb-16 md:pb-0">
+        <main className="flex-1 overflow-y-auto custom-scrollbar pb-16 desktop:pb-0">
           <div className="p-4 lg:p-6 xl:p-8 max-w-[1600px] mx-auto">
             <Suspense
               fallback={
@@ -135,7 +135,7 @@ export default function ExpedicaoLayout() {
 
         {/* Bottom tab bar (mobile/tablet) */}
         <nav
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-border bg-card/95 backdrop-blur grid grid-cols-5"
+          className="desktop:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-border bg-card/95 backdrop-blur grid grid-cols-5"
           aria-label="Navegação Expedição"
         >
           {NAV.map(({ to, label, icon: Icon }) => (
@@ -158,7 +158,7 @@ export default function ExpedicaoLayout() {
         {/* Footer */}
         <footer
           role="contentinfo"
-          className="hidden md:flex border-t border-border bg-card/30 px-4 py-1.5 items-center justify-between text-[10px] text-muted-foreground/80"
+          className="hidden desktop:flex border-t border-border bg-card/30 px-4 py-1.5 items-center justify-between text-[10px] text-muted-foreground/80"
         >
           <span>{profile?.display_name || 'Operador'} · Módulo Expedição</span>
           <span className="font-mono">Pente Fino · v{LATEST_VERSION}</span>
