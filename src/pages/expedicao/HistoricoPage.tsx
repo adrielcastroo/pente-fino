@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
+import { PageShell, PageHeader, StatusBadge } from '@/components/expedicao/ui';
 import { useAuth } from '@/hooks/use-auth';
 
 const STATUS_LABEL: Record<PickingStatus, string> = {
@@ -14,15 +15,6 @@ const STATUS_LABEL: Record<PickingStatus, string> = {
   conferido: 'Conferido',
   faturado: 'Faturado',
   cancelado: 'Cancelado',
-};
-
-const STATUS_TONE: Record<PickingStatus, string> = {
-  aguardando: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  em_separacao: 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
-  em_conferencia: 'bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300',
-  conferido: 'bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300',
-  faturado: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300',
-  cancelado: 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300',
 };
 
 type Filter = 'todos' | 'faturado' | 'cancelado';
@@ -58,39 +50,36 @@ export default function HistoricoPage() {
   }, [data, rows]);
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Histórico</h1>
-          <p className="text-sm text-muted-foreground">
-            Pickings finalizados ·{' '}
-            <span className="font-mono">{rows.length}</span> registros ·{' '}
-            <span className="font-mono">{totals.pecas}</span> peças
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {(['faturado', 'cancelado', 'todos'] as Filter[]).map((f) => (
-            <Button
-              key={f}
-              variant={filter === f ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter(f)}
-            >
-              {f === 'todos' ? 'Todos' : STATUS_LABEL[f as PickingStatus]}
-              {f === 'faturado' && (
-                <Badge variant="secondary" className="ml-2 font-mono">
-                  {totals.faturado}
-                </Badge>
-              )}
-              {f === 'cancelado' && (
-                <Badge variant="secondary" className="ml-2 font-mono">
-                  {totals.cancelado}
-                </Badge>
-              )}
-            </Button>
-          ))}
-        </div>
-      </header>
+    <PageShell>
+      <PageHeader
+        title="Histórico"
+        subtitle={`Pickings finalizados · ${rows.length} registros · ${totals.pecas} peças`}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {(['faturado', 'cancelado', 'todos'] as Filter[]).map((f) => (
+              <Button
+                key={f}
+                variant={filter === f ? 'default' : 'outline'}
+                size="sm"
+                className="h-9"
+                onClick={() => setFilter(f)}
+              >
+                {f === 'todos' ? 'Todos' : STATUS_LABEL[f as PickingStatus]}
+                {f === 'faturado' && (
+                  <Badge variant="secondary" className="ml-2 font-mono tabular-nums">
+                    {totals.faturado}
+                  </Badge>
+                )}
+                {f === 'cancelado' && (
+                  <Badge variant="secondary" className="ml-2 font-mono tabular-nums">
+                    {totals.cancelado}
+                  </Badge>
+                )}
+              </Button>
+            ))}
+          </div>
+        }
+      />
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -107,7 +96,7 @@ export default function HistoricoPage() {
           <Loader2 className="size-4 animate-spin" /> Carregando…
         </div>
       ) : rows.length === 0 ? (
-        <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           Nenhum picking encontrado para os filtros selecionados.
         </p>
       ) : (
@@ -136,11 +125,7 @@ export default function HistoricoPage() {
                   <td className="px-3 py-2 text-muted-foreground">{p.cidade ?? '—'}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{p.total_pecas ?? 0}</td>
                   <td className="px-3 py-2">
-                    <span
-                      className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_TONE[p.status]}`}
-                    >
-                      {STATUS_LABEL[p.status]}
-                    </span>
+                    <StatusBadge status={p.status} />
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">
                     {p.finished_at
@@ -171,6 +156,6 @@ export default function HistoricoPage() {
         open={!!estornoTarget}
         onOpenChange={(o) => !o && setEstornoTarget(null)}
       />
-    </div>
+    </PageShell>
   );
 }
