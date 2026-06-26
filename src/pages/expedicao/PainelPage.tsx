@@ -29,28 +29,53 @@ export default function PainelPage() {
   const [novo, setNovo] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
+  const [tick, setTick] = useState(0);
+
+  // Refresh SLA badges every 30s
+  useEffect(() => {
+    const t = setInterval(() => setTick(v => v + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const slaList = useMemo(() => {
+    void tick;
+    return (data ?? []).map(p => ({ p, sla: computeSla(p.status, p.created_at) }));
+  }, [data, tick]);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return data ?? [];
-    return (data ?? []).filter(p =>
+    if (!q) return slaList;
+    return slaList.filter(({ p }) =>
       p.numero.toLowerCase().includes(q) ||
       p.cliente.toLowerCase().includes(q) ||
       (p.cidade ?? '').toLowerCase().includes(q)
     );
-  }, [data, filter]);
+  }, [slaList, filter]);
 
   const kpis = useMemo(() => {
     const arr = data ?? [];
+    const late = slaList.filter(x => x.sla.level === 'late').length;
+    const warn = slaList.filter(x => x.sla.level === 'warn').length;
     return {
       total: arr.length,
       aguardando: arr.filter(p => p.status === 'aguardando').length,
       em_andamento: arr.filter(p => ['em_separacao','em_conferencia'].includes(p.status)).length,
-      conferidos: arr.filter(p => p.status === 'conferido').length,
+      atrasados: late,
+      atencao: warn,
     };
-  }, [data]);
+  }, [data, slaList]);
 
-  return (
+  // Toast once when overdue pickings are detected
+  const warnedRef = useRef(false);
+  useEffect(() => {
+    if (!warnedRef.current && kpis.atrasados > 0) {
+      warnedRef.current = true;
+      toast.warning(`${kpis.atrasados} picking(s) com SLA estourado`, {
+        description: 'Verifique o painel — itens marcados como Atrasado.',
+      });
+    }
+  }, [kpis.atrasados]);
+
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
