@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Plus, Loader2, PackageSearch, Ban } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Loader2, PackageSearch, Ban, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { usePickings, type Picking, type PickingStatus } from '@/hooks/expedicao
 import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 import { useAuth } from '@/hooks/use-auth';
+import { computeSla } from '@/lib/expedicao/sla';
 
 const STATUS_LABEL: Record<PickingStatus, { label: string; cls: string }> = {
   aguardando:     { label: 'Aguardando',     cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
@@ -27,26 +29,52 @@ export default function PainelPage() {
   const [novo, setNovo] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
+  const [tick, setTick] = useState(0);
+
+  // Refresh SLA badges every 30s
+  useEffect(() => {
+    const t = setInterval(() => setTick(v => v + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const slaList = useMemo(() => {
+    void tick;
+    return (data ?? []).map(p => ({ p, sla: computeSla(p.status, p.created_at) }));
+  }, [data, tick]);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return data ?? [];
-    return (data ?? []).filter(p =>
+    if (!q) return slaList;
+    return slaList.filter(({ p }) =>
       p.numero.toLowerCase().includes(q) ||
       p.cliente.toLowerCase().includes(q) ||
       (p.cidade ?? '').toLowerCase().includes(q)
     );
-  }, [data, filter]);
+  }, [slaList, filter]);
 
   const kpis = useMemo(() => {
     const arr = data ?? [];
+    const late = slaList.filter(x => x.sla.level === 'late').length;
+    const warn = slaList.filter(x => x.sla.level === 'warn').length;
     return {
       total: arr.length,
       aguardando: arr.filter(p => p.status === 'aguardando').length,
       em_andamento: arr.filter(p => ['em_separacao','em_conferencia'].includes(p.status)).length,
-      conferidos: arr.filter(p => p.status === 'conferido').length,
+      atrasados: late,
+      atencao: warn,
     };
-  }, [data]);
+  }, [data, slaList]);
+
+  // Toast once when overdue pickings are detected
+  const warnedRef = useRef(false);
+  useEffect(() => {
+    if (!warnedRef.current && kpis.atrasados > 0) {
+      warnedRef.current = true;
+      toast.warning(`${kpis.atrasados} picking(s) com SLA estourado`, {
+        description: 'Verifique o painel — itens marcados como Atrasado.',
+      });
+    }
+  }, [kpis.atrasados]);
 
   return (
     <div className="space-y-4">
@@ -62,16 +90,29 @@ export default function PainelPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {kpis.atrasados > 0 && (
+        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 rounded-md px-3 py-2 text-sm">
+          <AlertTriangle className="w-4 h-4" />
+          <span><strong className="tabular-nums">{kpis.atrasados}</strong> picking(s) com SLA estourado</span>
+          {kpis.atencao > 0 && (
+            <span className="text-rose-700/80 dark:text-rose-300/80">
+              · {kpis.atencao} em atenção
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {([
-          ['Total', kpis.total],
-          ['Aguardando', kpis.aguardando],
-          ['Em andamento', kpis.em_andamento],
-          ['Conferidos', kpis.conferidos],
-        ] as const).map(([label, value]) => (
+          ['Total', kpis.total, ''],
+          ['Aguardando', kpis.aguardando, ''],
+          ['Em andamento', kpis.em_andamento, ''],
+          ['Atenção', kpis.atencao, kpis.atencao > 0 ? 'text-amber-600 dark:text-amber-400' : ''],
+          ['Atrasados', kpis.atrasados, kpis.atrasados > 0 ? 'text-rose-600 dark:text-rose-400' : ''],
+        ] as const).map(([label, value, cls]) => (
           <div key={label} className="bg-card border border-border rounded-md p-3">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className="text-2xl font-semibold text-foreground tabular-nums mt-0.5">{value}</p>
+            <p className={`text-2xl font-semibold tabular-nums mt-0.5 ${cls || 'text-foreground'}`}>{value}</p>
           </div>
         ))}
       </div>
@@ -107,11 +148,12 @@ export default function PainelPage() {
                 <TableHead>Carrinho</TableHead>
                 <TableHead className="text-right">Peças</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>SLA</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(p => {
+              {filtered.map(({ p, sla }) => {
                 const s = STATUS_LABEL[p.status];
                 const canCancel = allowCancel && !['faturado', 'cancelado'].includes(p.status);
                 return (
@@ -124,6 +166,15 @@ export default function PainelPage() {
                     <TableCell className="text-right tabular-nums">{p.total_pecas}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`${s.cls} border-transparent`}>{s.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {sla.level === 'none' ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        <Badge variant="outline" className={`${sla.cls} border-transparent text-[11px]`}>
+                          {sla.label}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       {canCancel && (
