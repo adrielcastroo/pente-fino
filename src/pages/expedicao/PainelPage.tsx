@@ -69,54 +69,54 @@ export default function PainelPage() {
   }, [kpis.atrasados]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Painel da expedição</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Pickings aguardando movimentação e conferência.
-          </p>
-        </div>
-        <Button onClick={() => setNovo(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> Novo picking
-        </Button>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Painel da expedição"
+        subtitle="Pickings aguardando movimentação e conferência."
+        actions={
+          <Button onClick={() => setNovo(true)} className="gap-2 h-9">
+            <Plus className="w-4 h-4" /> Novo picking
+          </Button>
+        }
+      />
 
       {kpis.atrasados > 0 && (
-        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 rounded-md px-3 py-2 text-sm">
+        <div
+          role="alert"
+          className="flex items-center gap-2 bg-destructive/10 border border-destructive/30 text-destructive rounded-md px-3 py-2 text-sm"
+        >
           <AlertTriangle className="w-4 h-4" />
           <span><strong className="tabular-nums">{kpis.atrasados}</strong> picking(s) com SLA estourado</span>
           {kpis.atencao > 0 && (
-            <span className="text-rose-700/80 dark:text-rose-300/80">
-              · {kpis.atencao} em atenção
-            </span>
+            <span className="opacity-80">· {kpis.atencao} em atenção</span>
           )}
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {([
-          ['Total', kpis.total, ''],
-          ['Aguardando', kpis.aguardando, ''],
-          ['Em andamento', kpis.em_andamento, ''],
-          ['Atenção', kpis.atencao, kpis.atencao > 0 ? 'text-amber-600 dark:text-amber-400' : ''],
-          ['Atrasados', kpis.atrasados, kpis.atrasados > 0 ? 'text-rose-600 dark:text-rose-400' : ''],
-        ] as const).map(([label, value, cls]) => (
-          <div key={label} className="bg-card border border-border rounded-md p-3">
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className={`text-2xl font-semibold tabular-nums mt-0.5 ${cls || 'text-foreground'}`}>{value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 tablet-portrait:gap-2">
+        <StatCard label="Total" value={kpis.total} />
+        <StatCard label="Aguardando" value={kpis.aguardando} variant="muted" />
+        <StatCard label="Em andamento" value={kpis.em_andamento} variant="primary" />
+        <StatCard
+          label="Atenção"
+          value={kpis.atencao}
+          variant={kpis.atencao > 0 ? 'warning' : 'default'}
+        />
+        <StatCard
+          label="Atrasados"
+          value={kpis.atrasados}
+          variant={kpis.atrasados > 0 ? 'destructive' : 'default'}
+        />
       </div>
 
       <Input
         placeholder="Filtrar por número, cliente ou cidade..."
         value={filter}
         onChange={e => setFilter(e.target.value)}
-        className="max-w-sm"
+        className="max-w-sm h-10"
       />
 
-      <div className="bg-card border border-border rounded-md overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="p-12 flex items-center justify-center text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -146,7 +146,6 @@ export default function PainelPage() {
             </TableHeader>
             <TableBody>
               {filtered.map(({ p, sla }) => {
-                const s = STATUS_LABEL[p.status];
                 const canCancel = allowCancel && !['faturado', 'cancelado'].includes(p.status);
                 return (
                   <TableRow key={p.id}>
@@ -157,7 +156,7 @@ export default function PainelPage() {
                     <TableCell className="text-muted-foreground">{p.carrinho?.codigo ?? '—'}</TableCell>
                     <TableCell className="text-right tabular-nums">{p.total_pecas}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${s.cls} border-transparent`}>{s.label}</Badge>
+                      <StatusBadge status={p.status} />
                     </TableCell>
                     <TableCell>
                       {sla.level === 'none' ? (
@@ -173,8 +172,8 @@ export default function PainelPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Cancelar picking"
                           className="size-8 text-muted-foreground hover:text-destructive"
-                          title="Cancelar picking"
                           onClick={() => setCancelTarget(p)}
                         >
                           <Ban className="size-4" />
