@@ -92,7 +92,13 @@ function EditRegistroDialog({
             Editar Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
-            {form?.modoOrigem ? `${form.modoOrigem === 'motor' ? 'Motor' : form.modoOrigem === 'controle' ? 'Controle' : form.tipoTecido || ''} • ` : ''}Ajuste as especificações deste item no histórico.
+            {(() => {
+              const tipo = form?.modoOrigem === 'motor' ? 'Motor'
+                : form?.modoOrigem === 'controle' ? 'Controle'
+                : form?.tipoTecido === 'Coulisse' ? 'Coulisse'
+                : form?.tipoTecido || '';
+              return `${tipo ? tipo + ' • ' : ''}Ajuste as especificações deste item no histórico.`;
+            })()}
           </DialogDescription>
         </DialogHeader>
 
