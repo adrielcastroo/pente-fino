@@ -42,7 +42,7 @@ function EditRegistroDialog({
 
   const isPVT = form?.tipoTecido === 'PVT';
   const isDiversos = form?.modoOrigem === 'diversos';
-  void isControle;
+  
   // 'isMotor' agrupa motor/controle/coulisse — todos compartilham o mesmo layout
   // (Lote Final, QTD, NF) e NÃO devem cair no fluxo de tecidos (M²/Largura/Endereço).
   const isMotor = form?.modoOrigem === 'motor' || form?.modoOrigem === 'controle' || form?.tipoTecido === 'Coulisse';
