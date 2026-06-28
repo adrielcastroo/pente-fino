@@ -42,7 +42,10 @@ function EditRegistroDialog({
 
   const isPVT = form?.tipoTecido === 'PVT';
   const isDiversos = form?.modoOrigem === 'diversos';
-  const isMotor = form?.modoOrigem === 'motor';
+  
+  // 'isMotor' agrupa motor/controle/coulisse — todos compartilham o mesmo layout
+  // (Lote Final, QTD, NF) e NÃO devem cair no fluxo de tecidos (M²/Largura/Endereço).
+  const isMotor = form?.modoOrigem === 'motor' || form?.modoOrigem === 'controle' || form?.tipoTecido === 'Coulisse';
 
   const updateField = <K extends keyof Registro>(key: K, value: Registro[K]) => {
     setForm(current => current ? { ...current, [key]: value } : current);
@@ -89,7 +92,13 @@ function EditRegistroDialog({
             Editar Registro
           </DialogTitle>
           <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
-            {form?.modoOrigem ? `${form.modoOrigem === 'motor' ? 'Motor' : form.modoOrigem === 'controle' ? 'Controle' : form.tipoTecido || ''} • ` : ''}Ajuste as especificações deste item no histórico.
+            {(() => {
+              const tipo = form?.modoOrigem === 'motor' ? 'Motor'
+                : form?.modoOrigem === 'controle' ? 'Controle'
+                : form?.tipoTecido === 'Coulisse' ? 'Coulisse'
+                : form?.tipoTecido || '';
+              return `${tipo ? tipo + ' • ' : ''}Ajuste as especificações deste item no histórico.`;
+            })()}
           </DialogDescription>
         </DialogHeader>
 
