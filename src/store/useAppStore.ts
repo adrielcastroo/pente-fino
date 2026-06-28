@@ -773,6 +773,19 @@ export const useAppStore = create<AppState>()(
           registros.find(r => r.modoOrigem === 'madeira')?.modoOrigem ??
           registros[0]?.modoOrigem ??
           'manual';
+
+        // Pré-configura sub-mode de motor (motor/controle/coulisse) e activeTab
+        // para que a página correta abra com a aba certa e o useEffect de
+        // MotorControlePage não force 'motor' sobre 'controle'.
+        const hasCoulisse = registros.some(r => r.tipoTecido === 'Coulisse');
+        const hasControle = registros.some(r => r.modoOrigem === 'controle');
+        const motorSubMode: 'motor' | 'controle' | 'coulisse' =
+          hasControle ? 'controle' : hasCoulisse ? 'coulisse' : 'motor';
+        const activeTab: AppTab =
+          inferredMode === 'motor' || inferredMode === 'controle' ? 'motor'
+            : inferredMode === 'madeira' ? 'madeira'
+            : 'tecido';
+
         set({
           registros,
           undoStack: [],
@@ -780,6 +793,11 @@ export const useAppStore = create<AppState>()(
           conferente: conf.conferente || state.conferente,
           currentMode: inferredMode as AppMode,
           sessionStartedAt: conf.startedAt || new Date().toISOString(),
+          formData: {
+            ...state.formData,
+            activeTab,
+            motorSubMode,
+          },
           resumeMode: {
             conferenceId: conf.id,
             folderName: conf.processo || conf.name,
