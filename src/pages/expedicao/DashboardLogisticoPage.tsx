@@ -73,6 +73,17 @@ export default function ExpedicaoDashboardLogisticoPage() {
         loading={isLoading}
         height={Math.max(300, stats.cidades.length * 28)}
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="size-4 text-muted-foreground" /> Mapa de entregas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EntregasMap cidades={stats.cidades} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
