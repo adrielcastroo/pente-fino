@@ -122,6 +122,7 @@ export default function MainLayout() {
           </main>
         </div>
         <BottomTabBar />
+        <ModuleSwitchFab />
       </div>
       {!['/estoque/tecido', '/estoque/madeira', '/estoque/motor'].includes(location.pathname) && <UndoBanner />}
       <CommandPalette />
