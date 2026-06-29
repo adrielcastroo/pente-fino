@@ -11,6 +11,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { Truck, MapPin, Building2 } from 'lucide-react';
+import { EntregasMap } from '@/components/expedicao/EntregasMap';
 
 function topN<T extends { nome: string; total: number }>(arr: T[], n = 10) {
   return [...arr].sort((a, b) => b.total - a.total).slice(0, n);
@@ -72,6 +73,17 @@ export default function ExpedicaoDashboardLogisticoPage() {
         loading={isLoading}
         height={Math.max(300, stats.cidades.length * 28)}
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="size-4 text-muted-foreground" /> Mapa de entregas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EntregasMap cidades={stats.cidades} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

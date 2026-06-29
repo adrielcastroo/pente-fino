@@ -1,16 +1,23 @@
 import { useMemo, useState } from 'react';
-import { ChevronRight, Loader2, Printer, Truck } from 'lucide-react';
+import { ChevronRight, Loader2, Mail, Printer, Truck } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import { usePickings } from '@/hooks/expedicao/useExpedicaoData';
-
-type Node = Map<string, Map<string, Map<string, typeof emptyArr>>>;
-const emptyArr: { id: string; numero: string; cliente: string }[] = [];
+import {
+  buildRomaneioHtml,
+  getAppsScriptWebhook,
+  sendRomaneioEmail,
+} from '@/lib/expedicao-webhook';
 
 export default function RomaneioPage() {
   const { data, isLoading } = usePickings();
   const [filter, setFilter] = useState('');
+
+  const [emailTo, setEmailTo] = useState('');
+  const [sending, setSending] = useState(false);
 
   const tree = useMemo(() => {
     const map = new Map<string, Map<string, Map<string, { id: string; numero: string; cliente: string }[]>>>();
@@ -58,13 +65,56 @@ export default function RomaneioPage() {
             Emitido em {new Date().toLocaleString('pt-BR')}
           </p>
         </div>
-        <div className="flex items-center gap-2 no-print">
+        <div className="flex flex-wrap items-center gap-2 no-print">
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filtrar por número ou cliente"
-            className="h-10 w-full md:w-72"
+            className="h-10 w-full md:w-60"
           />
+          <Input
+            value={emailTo}
+            onChange={(e) => setEmailTo(e.target.value)}
+            placeholder="email@destino.com"
+            type="email"
+            className="h-10 w-full md:w-56"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={sending || !emailTo.trim() || totalPickings === 0}
+            onClick={async () => {
+              if (!getAppsScriptWebhook()) {
+                toast.error('Configure o webhook do Apps Script em Configurações.');
+                return;
+              }
+              setSending(true);
+              try {
+                const treeForEmail = new Map<string, Map<string, Map<string, { numero: string; cliente: string }[]>>>();
+                tree.forEach((reg, t) => {
+                  const r2 = new Map<string, Map<string, { numero: string; cliente: string }[]>>();
+                  reg.forEach((cid, k) => {
+                    const c2 = new Map<string, { numero: string; cliente: string }[]>();
+                    cid.forEach((arr, c) => c2.set(c, arr.map(({ numero, cliente }) => ({ numero, cliente }))));
+                    r2.set(k, c2);
+                  });
+                  treeForEmail.set(t, r2);
+                });
+                await sendRomaneioEmail({
+                  to: emailTo.trim(),
+                  subject: `Romaneio · ${totalPickings} pickings · ${new Date().toLocaleDateString('pt-BR')}`,
+                  html: buildRomaneioHtml({ totalPickings, tree: treeForEmail }),
+                });
+                toast.success('Romaneio enviado para ' + emailTo.trim());
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : 'Falha ao enviar e-mail');
+              } finally {
+                setSending(false);
+              }
+            }}
+          >
+            <Mail className="size-4 mr-1.5" /> Enviar
+          </Button>
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="size-4 mr-1.5" /> Imprimir
           </Button>
@@ -104,9 +154,12 @@ export default function RomaneioPage() {
                           <p className="text-xs uppercase tracking-wide text-muted-foreground">{cid}</p>
                           <ul className="ml-2 divide-y">
                             {pickings.map((p) => (
-                              <li key={p.id} className="flex items-center justify-between py-1.5 text-sm">
+                              <li key={p.id} className="flex items-center justify-between gap-3 py-1.5 text-sm">
                                 <span className="font-mono">{p.numero}</span>
-                                <span className="text-muted-foreground">{p.cliente}</span>
+                                <span className="flex-1 text-muted-foreground truncate">{p.cliente}</span>
+                                <span className="shrink-0 rounded bg-background p-1 print:bg-white">
+                                  <QRCodeSVG value={`PICKING:${p.id}|${p.numero}`} size={36} level="M" />
+                                </span>
                               </li>
                             ))}
                           </ul>
