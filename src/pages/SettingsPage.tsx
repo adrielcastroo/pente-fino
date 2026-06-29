@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -69,12 +69,19 @@ import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 
+type ModuleScope = 'estoque' | 'expedicao';
 type Category = {
   id: string;
   name: string;
   icon: any;
   description: string;
   minRole?: Role;
+  module?: ModuleScope; // se definido, só aparece dentro daquele módulo
+};
+
+const MODULE_LABEL: Record<ModuleScope, string> = {
+  estoque: 'Estoque',
+  expedicao: 'Expedição',
 };
 
 const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role; items: Category[] }[] = [
@@ -95,8 +102,8 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
       { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.', minRole: 'supervisor' },
       { id: 'security', name: 'Segurança', icon: Shield, description: 'Senha, autenticação de dois fatores e sessões.' },
       { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.', minRole: 'supervisor' },
-      { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', minRole: 'supervisor' },
-      { id: 'expedicao', name: 'Expedição', icon: Truck, description: 'Transportadoras, webhooks de e-mail e importação automática de NF-e.', minRole: 'supervisor' },
+      { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', minRole: 'supervisor', module: 'estoque' },
+      { id: 'expedicao', name: 'Expedição', icon: Truck, description: 'Transportadoras, webhooks de e-mail e importação automática de NF-e.', minRole: 'supervisor', module: 'expedicao' },
     ],
   },
 ];
@@ -458,14 +465,24 @@ export default function SettingsPage() {
   const labelSettings = useAppStore(s => s.labelSettings);
   const setLabelSettings = useAppStore(s => s.setLabelSettings);
 
+  const location = useLocation();
+  const currentModule: ModuleScope | null = location.pathname.startsWith('/expedicao')
+    ? 'expedicao'
+    : location.pathname.startsWith('/estoque')
+      ? 'estoque'
+      : null;
+
   const visibleGroups = useMemo(
     () => CATEGORY_GROUPS
       .map(g => ({
         ...g,
-        items: g.items.filter(item => !item.minRole || atLeast(role, item.minRole)),
+        items: g.items.filter(item =>
+          (!item.minRole || atLeast(role, item.minRole)) &&
+          (!item.module || item.module === currentModule)
+        ),
       }))
       .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole))),
-    [role]
+    [role, currentModule]
   );
   const allVisible = useMemo(() => visibleGroups.flatMap(g => g.items), [visibleGroups]);
   const activeMeta = allVisible.find(c => c.id === activeCategory) ?? allVisible[0];
@@ -518,6 +535,14 @@ export default function SettingsPage() {
               >
                 <Icon className="w-4 h-4" />
                 <span>{cat.name}</span>
+                {cat.module && (
+                  <span
+                    className="ml-1 inline-flex items-center rounded-sm border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-primary"
+                    title={`Configuração exclusiva do módulo ${MODULE_LABEL[cat.module]}`}
+                  >
+                    {MODULE_LABEL[cat.module]}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -546,7 +571,17 @@ export default function SettingsPage() {
                        })()
                       }
                     </div>
-                    <CardTitle className="text-lg font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                    <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
+                      {categories.find(c => c.id === activeCategory)?.name}
+                      {(() => {
+                        const mod = categories.find(c => c.id === activeCategory)?.module;
+                        return mod ? (
+                          <span className="inline-flex items-center rounded-sm border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            Somente {MODULE_LABEL[mod]}
+                          </span>
+                        ) : null;
+                      })()}
+                    </CardTitle>
                   </div>
                   <CardDescription className="text-sm text-muted-foreground">
                     {categories.find(c => c.id === activeCategory)?.description}
