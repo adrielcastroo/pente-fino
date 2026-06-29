@@ -35,20 +35,36 @@ function EditRegistroDialog({
   const updateHistoryRegistro = useAppStore(s => s.updateHistoryRegistro);
   const [form, setForm] = useState<Registro | null>(registro);
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Não sobrescrever edições do usuário quando o pai re-renderiza
+  useEffect(() => {
+    if (!isDirty) setForm(registro);
+  }, [registro, isDirty]);
 
   useEffect(() => {
-    setForm(registro);
-  }, [registro]);
+    if (!open) setIsDirty(false);
+  }, [open]);
 
   const isPVT = form?.tipoTecido === 'PVT';
   const isDiversos = form?.modoOrigem === 'diversos';
-  
-  // 'isMotor' agrupa motor/controle/coulisse — todos compartilham o mesmo layout
-  // (Lote Final, QTD, NF) e NÃO devem cair no fluxo de tecidos (M²/Largura/Endereço).
   const isMotor = form?.modoOrigem === 'motor' || form?.modoOrigem === 'controle' || form?.tipoTecido === 'Coulisse';
 
   const updateField = <K extends keyof Registro>(key: K, value: Registro[K]) => {
+    setIsDirty(true);
     setForm(current => current ? { ...current, [key]: value } : current);
+  };
+
+  const hasChanges = useMemo(() => {
+    if (!form || !registro) return false;
+    return JSON.stringify(form) !== JSON.stringify(registro);
+  }, [form, registro]);
+
+  const handleClose = (nextOpen: boolean) => {
+    if (!nextOpen && hasChanges) {
+      if (!window.confirm('Descartar alterações não salvas?')) return;
+    }
+    onOpenChange(nextOpen);
   };
 
   const handleSave = async () => {
@@ -58,6 +74,22 @@ function EditRegistroDialog({
       return;
     }
 
+    const m2 = Number(form.m2);
+    const mLinear = Number(form.mLinear);
+    const largura = Number(form.largura);
+    const quantidade = Number(form.quantidade);
+
+    if (!isMotor) {
+      if (m2 < 0) { toast.warning('Metragem não pode ser negativa.'); return; }
+      if (largura < 0 || largura > 10) { toast.warning('Largura deve estar entre 0 e 10m.'); return; }
+      if (mLinear < 0) { toast.warning('Metro linear não pode ser negativo.'); return; }
+    }
+    if (isMotor && form.quantidade !== undefined && quantidade < 1) {
+      toast.warning('Quantidade deve ser pelo menos 1.');
+      return;
+    }
+
+    const snapshot = registro ? { ...registro } : null;
     setSaving(true);
     try {
       await updateHistoryRegistro(conferenceId, form.id, {
@@ -74,24 +106,55 @@ function EditRegistroDialog({
         loteSistema: form.loteSistema || '',
         posicao: Number(form.posicao) || null,
       });
-      toast.success('Registro histórico atualizado com sucesso.');
+      toast.success('Registro atualizado.', {
+        action: snapshot ? {
+          label: 'Desfazer',
+          onClick: async () => {
+            try {
+              await updateHistoryRegistro(conferenceId, snapshot.id, snapshot as any);
+              toast.info('Alteração desfeita.');
+            } catch (err) {
+              console.error('[HistoryPanel] Erro ao desfazer:', err);
+              toast.error('Não foi possível desfazer.');
+            }
+          },
+        } : undefined,
+        duration: 8000,
+      });
+      setIsDirty(false);
       onOpenChange(false);
-    } catch {
-      toast.error('Erro ao salvar as alterações no histórico.');
+    } catch (err) {
+      console.error('[HistoryPanel] Erro ao salvar registro:', err);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error(`Erro ao salvar: ${message}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const inputCls = "h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors";
+  const labelCls = "text-xs font-medium text-muted-foreground ml-1";
+
+  const fieldWithOriginal = (key: keyof Registro, label: string, extra?: React.ReactNode) => (
+    <div className="space-y-1">
+      <label className={labelCls}>{label}</label>
+      {extra}
+      {form && registro && String(form[key] ?? '') !== String(registro[key] ?? '') && (
+        <span className="block text-[10px] text-amber-600 ml-1">
+          Anterior: {String(registro[key] ?? '—') || '—'}
+        </span>
+      )}
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
-        <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-md p-0 overflow-hidden border border-border max-h-[90vh] overflow-y-auto bg-background">
+        <DialogHeader className="p-4 border-b border-border">
           <DialogTitle className="text-lg font-semibold tracking-tight">
             Editar Registro
           </DialogTitle>
-          <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
             {(() => {
               const tipo = form?.modoOrigem === 'motor' ? 'Motor'
                 : form?.modoOrigem === 'controle' ? 'Controle'
@@ -102,79 +165,69 @@ function EditRegistroDialog({
           </DialogDescription>
         </DialogHeader>
 
-
         {form && (
-          <div className="p-8 space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground ml-1">Referência do Item</label>
-              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.item} onChange={e => updateField('item', e.target.value)} />
-            </div>
+          <div className="p-4 space-y-4">
+            {fieldWithOriginal('item', 'Referência do Item',
+              <Input className={inputCls} value={form.item} onChange={e => updateField('item', e.target.value)} />
+            )}
 
-            {(isDiversos || isMotor) && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Nota Fiscal</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
-              </div>
+            {fieldWithOriginal('nf', 'Nota Fiscal',
+              <Input className={inputCls} value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
             )}
 
             {isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">QTD</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
-                </div>
+                {fieldWithOriginal('lote', 'Lote / Batch',
+                  <Input className={inputCls} value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                )}
+                {fieldWithOriginal('quantidade', 'QTD',
+                  <Input className={inputCls} type="number" min={1} value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
+                )}
               </div>
             )}
 
-            {isMotor && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Lote Final</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors font-mono text-sm tabular-nums" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
-              </div>
+            {isMotor && fieldWithOriginal('loteSistema', 'Lote Final',
+              <Input className={`${inputCls} font-mono text-sm tabular-nums`} value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
             )}
 
             {!isPVT && !isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Largura (m)</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
-                </div>
+                {fieldWithOriginal('m2', 'Metragem Quadrada (M²)',
+                  <Input className={inputCls} type="number" min={0} step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
+                )}
+                {fieldWithOriginal('largura', 'Largura (m)',
+                  <Input className={inputCls} type="number" min={0} max={10} step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
+                )}
               </div>
             )}
 
             {!isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Metro Linear</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
-                </div>
+                {fieldWithOriginal('mLinear', 'Metro Linear',
+                  <Input className={inputCls} type="number" min={0} step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
+                )}
+                {fieldWithOriginal('lote', 'Lote / Batch',
+                  <Input className={inputCls} value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                )}
               </div>
             )}
 
             {!isPVT && !isMotor && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Endereço de Armazenagem</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors uppercase" value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {fieldWithOriginal('endereco', 'Endereço de Armazenagem',
+                  <Input className={`${inputCls} uppercase`} value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
+                )}
+                {fieldWithOriginal('posicao', 'Posição no Estoque',
+                  <Input className={inputCls} type="number" value={String(form.posicao ?? '')} onChange={e => updateField('posicao', (e.target.value === '' ? null : Number(e.target.value)) as any)} />
+                )}
               </div>
             )}
           </div>
         )}
 
-        <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-          <Button variant="outline" className="rounded-md font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
-          <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
+        <DialogFooter className="p-4 bg-muted/10 border-t border-border gap-3">
+          <Button variant="outline" className="rounded-md font-medium px-6 h-10" onClick={() => handleClose(false)} disabled={saving}>Descartar</Button>
+          <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
