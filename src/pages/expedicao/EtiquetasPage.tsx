@@ -283,7 +283,7 @@ export default function ExpedicaoEtiquetasPage() {
 
   if (!active) return null;
 
-  const dims = PAGE_DIMS[active.pageSize];
+  const dims = resolveDims(active);
 
   return (
     <div className="space-y-4">
