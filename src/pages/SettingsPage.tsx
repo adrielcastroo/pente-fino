@@ -64,6 +64,8 @@ import { ROLE_LABEL, atLeast, type Role } from '@/lib/permissions';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
+import ExpedicaoPanel from '@/components/settings/ExpedicaoPanel';
+import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 
