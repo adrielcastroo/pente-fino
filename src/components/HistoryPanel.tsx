@@ -1136,18 +1136,13 @@ export default function HistoryPanel() {
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
-              <FolderOpen className="h-5 w-5" strokeWidth={1.75} />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground leading-tight truncate">
-                Histórico de conferências
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Conferências finalizadas por data e conferente.
-              </p>
-            </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground leading-tight truncate">
+              Histórico de conferências
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Conferências finalizadas por data e conferente.
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
