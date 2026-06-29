@@ -47,6 +47,10 @@ interface LabelTemplate {
   observacoes: string;
   customFields: CustomField[];
   logoDataUrl: string | null;
+  // BarTender import (imagem exportada do BarTender ocupa a etiqueta inteira)
+  bartenderImage: string | null;     // dataURL PNG/JPG
+  bartenderFileName: string | null;  // nome original (.btw guardado só como referência)
+  bartenderEnabled: boolean;         // quando true, esconde campos e imprime só a imagem
   // Código (QR/Barcode)
   codeMode: CodeMode;
   codePayload: string;
@@ -82,6 +86,9 @@ const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   observacoes: '',
   customFields: [],
   logoDataUrl: null,
+  bartenderImage: null,
+  bartenderFileName: null,
+  bartenderEnabled: false,
   codeMode: 'qr',
   codePayload: '',
   barcodeFmt: 'CODE128',
@@ -220,6 +227,37 @@ export default function ExpedicaoEtiquetasPage() {
     if (file.size > 1024 * 1024) return toast.error('Logo deve ter até 1MB.');
     const reader = new FileReader();
     reader.onload = () => update('logoDataUrl', String(reader.result));
+    reader.readAsDataURL(file);
+  }
+
+  function uploadBartender(file: File) {
+    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(file.name) || file.type.startsWith('image/');
+    const isBtw = /\.(btw|btxml)$/i.test(file.name);
+    if (!isImage && !isBtw) {
+      return toast.error('Envie uma imagem (PNG/JPG) exportada do BarTender ou um arquivo .btw.');
+    }
+    if (file.size > 4 * 1024 * 1024) return toast.error('Arquivo deve ter até 4MB.');
+    if (isBtw) {
+      // .btw é binário proprietário do BarTender — guardamos só a referência do nome
+      setTemplates((list) => list.map((t) => t.id === activeId
+        ? { ...t, bartenderFileName: file.name, updatedAt: Date.now() }
+        : t));
+      toast.info('Arquivo .btw salvo como referência. Para imprimir, exporte como PNG no BarTender e envie a imagem.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTemplates((list) => list.map((t) => t.id === activeId
+        ? {
+            ...t,
+            bartenderImage: String(reader.result),
+            bartenderFileName: file.name,
+            bartenderEnabled: true,
+            updatedAt: Date.now(),
+          }
+        : t));
+      toast.success('Etiqueta BarTender importada.');
+    };
     reader.readAsDataURL(file);
   }
 
@@ -433,6 +471,54 @@ export default function ExpedicaoEtiquetasPage() {
                   )}
                 </div>
 
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground">Etiqueta BarTender</Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Envie a imagem exportada do BarTender (PNG/JPG) — ocupa toda a etiqueta. Arquivos .btw ficam só como referência.
+                      </p>
+                    </div>
+                    {active.bartenderImage && (
+                      <div className="flex items-center gap-2">
+                        <Label className="text-[11px] text-muted-foreground">Usar</Label>
+                        <Switch checked={active.bartenderEnabled}
+                          onCheckedChange={(v) => update('bartenderEnabled', v)} />
+                      </div>
+                    )}
+                  </div>
+                  {active.bartenderImage ? (
+                    <div className="flex items-center gap-3 border border-border rounded-md p-2">
+                      <img src={active.bartenderImage} alt="BarTender"
+                        className="h-16 w-16 object-contain bg-white rounded border border-border" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-mono truncate">{active.bartenderFileName ?? 'etiqueta'}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {active.bartenderEnabled ? 'Substituindo conteúdo na impressão' : 'Salva mas desativada'}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => {
+                        update('bartenderImage', null);
+                        update('bartenderFileName', null);
+                        update('bartenderEnabled', false);
+                      }}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center gap-2 border border-dashed border-border rounded-md px-3 py-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                      <Upload className="size-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Enviar PNG/JPG do BarTender {active.bartenderFileName ? `· ref: ${active.bartenderFileName}` : ''}
+                      </span>
+                      <input type="file" accept="image/*,.btw,.btxml" className="hidden"
+                        onChange={(e) => e.target.files?.[0] && uploadBartender(e.target.files[0])} />
+                    </label>
+                  )}
+                </div>
+
+
                 <SliderField label="Cópias" suffix=""
                   min={1} max={50} step={1}
                   value={active.copias} onChange={(v) => update('copias', v)} />
@@ -603,6 +689,18 @@ function LabelSheet({ t }: { t: LabelTemplate }) {
     t.borderStyle === 'none' ? 'border-0'
     : t.borderStyle === 'dashed' ? 'border border-dashed border-border'
     : 'border border-border';
+
+  if (t.bartenderEnabled && t.bartenderImage) {
+    return (
+      <div
+        className={`label-sheet bg-white text-black ${borderClass} rounded-md mx-auto mb-4 overflow-hidden`}
+        style={{ width: `${dims.w}mm`, height: `${dims.h}mm`, padding: 0 }}
+      >
+        <img src={t.bartenderImage} alt="BarTender"
+          className="w-full h-full object-contain bg-white" />
+      </div>
+    );
+  }
 
   return (
     <div
