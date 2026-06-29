@@ -758,9 +758,6 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         onClick={() => setOpen(!open)} 
         className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/20 transition-colors duration-150 text-left"
       >
-        <div className={`p-2 rounded-md shrink-0 transition-colors duration-150 ${open ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-          <FolderOpen className="w-4 h-4" />
-        </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-4">
