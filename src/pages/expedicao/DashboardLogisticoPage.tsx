@@ -11,6 +11,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { Truck, MapPin, Building2 } from 'lucide-react';
+import { EntregasMap } from '@/components/expedicao/EntregasMap';
 
 function topN<T extends { nome: string; total: number }>(arr: T[], n = 10) {
   return [...arr].sort((a, b) => b.total - a.total).slice(0, n);
