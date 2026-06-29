@@ -970,6 +970,10 @@ export default function SettingsPage() {
                     <LabelLayoutPanel />
                   )}
 
+                  {activeCategory === 'expedicao' && (
+                    <ExpedicaoPanel />
+                  )}
+
 
 
 
