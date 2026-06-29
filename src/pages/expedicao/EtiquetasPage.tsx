@@ -400,14 +400,13 @@ export default function ExpedicaoEtiquetasPage() {
       barcodeFmt: interpolated.barcodeFmt,
       payload, copies: interpolated.copias,
     });
-    const result: { ok: true; method: PrintHistoryEntry['method'] } | { ok: false; error: string } =
-      transport === 'usb' ? await sendZplViaUsb(zpl) : await sendZplViaSerial(zpl);
-    if (result.ok) {
+    const result = transport === 'usb' ? await sendZplViaUsb(zpl) : await sendZplViaSerial(zpl);
+    if (result.ok === true) {
       recordPrint(result.method);
       toast.success(`Enviado para impressora via ${transport.toUpperCase()}`);
-    } else {
-      toast.error(result.error);
+      return;
     }
+    toast.error(result.error);
   }
 
   function reprintFromHistory(entry: PrintHistoryEntry) {
