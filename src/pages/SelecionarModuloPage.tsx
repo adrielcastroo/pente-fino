@@ -1,8 +1,34 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Package, Truck } from 'lucide-react';
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { LATEST_VERSION } from '@/lib/changelog';
+import { supabase } from '@/integrations/supabase/client';
+
+function useModuleBadges(enabled: boolean) {
+  return useQuery({
+    queryKey: ['module-badges'],
+    enabled,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [estoqueRes, expedRes] = await Promise.all([
+        supabase
+          .from('conferences')
+          .select('id', { count: 'exact', head: true })
+          .is('finished_at', null),
+        supabase
+          .from('expedicao_pickings' as any)
+          .select('id', { count: 'exact', head: true })
+          .in('status', ['pendente', 'em_separacao']),
+      ]);
+      return {
+        estoque: estoqueRes.count ?? 0,
+        expedicao: expedRes.count ?? 0,
+      };
+    },
+  });
+}
 
 export default function SelecionarModuloPage() {
   const { profile, user, isGuest, modules, loading, signOut } = useAuth();
