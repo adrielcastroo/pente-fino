@@ -1,1 +1,4 @@
 project_id = "dlehrhqfbwvgpurpmmht"
+
+[functions.nfe-import]
+verify_jwt = false
