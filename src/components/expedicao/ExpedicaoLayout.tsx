@@ -165,6 +165,7 @@ export default function ExpedicaoLayout() {
           <span className="font-mono">Pente Fino · v{LATEST_VERSION}</span>
         </footer>
       </div>
+      <ModuleSwitchFab />
     </div>
   );
 }
