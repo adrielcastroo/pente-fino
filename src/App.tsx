@@ -36,7 +36,7 @@ const ExpedicaoDashboardOperacionalPage = lazy(() => import("@/pages/expedicao/D
 const ExpedicaoDashboardLogisticoPage = lazy(() => import("@/pages/expedicao/DashboardLogisticoPage"));
 const ExpedicaoHistoricoPage = lazy(() => import("@/pages/expedicao/HistoricoPage"));
 const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosPage"));
-const ExpedicaoConfiguracoesV2Page = lazy(() => import("@/pages/expedicao/ConfiguracoesV2Page"));
+
 const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
