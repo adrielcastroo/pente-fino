@@ -1,12 +1,14 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Package, Truck, ArrowRight, WifiOff } from 'lucide-react';
+import { Package, Truck, ArrowRight, WifiOff, Plus, Pin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
-import { LATEST_VERSION } from '@/lib/changelog';
+import { LATEST_VERSION, CHANGELOG_STORAGE_KEY } from '@/lib/changelog';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ChangelogDialog } from '@/components/ChangelogDialog';
 import logoComb from '@/assets/logo-comb.png';
 
 function getGreeting(): string {
@@ -28,14 +30,54 @@ function getShift(): string {
   return '3º Turno';
 }
 
+function getShiftEnd(): Date {
+  const h = new Date().getHours();
+  const end = new Date();
+  if (h >= 6 && h < 14) end.setHours(14, 0, 0, 0);
+  else if (h >= 14 && h < 22) end.setHours(22, 0, 0, 0);
+  else {
+    if (h >= 22) end.setDate(end.getDate() + 1);
+    end.setHours(6, 0, 0, 0);
+  }
+  return end;
+}
+
+function formatRemaining(end: Date): string {
+  const diff = end.getTime() - Date.now();
+  if (diff <= 0) return 'turno encerrado';
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}min restantes` : `${m}min restantes`;
+}
+
 function formatTimeAgo(dateStr: string): string {
   const diffMin = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
-  if (diffMin < 1) return 'agora mesmo';
-  if (diffMin < 60) return `há ${diffMin} min`;
+  if (diffMin < 1) return 'agora';
+  if (diffMin < 60) return `há ${diffMin}min`;
   const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `há ${diffH} h`;
+  if (diffH < 24) return `há ${diffH}h`;
   const diffD = Math.floor(diffH / 24);
-  return `há ${diffD} dia${diffD > 1 ? 's' : ''}`;
+  return `há ${diffD}d`;
+}
+
+const ACTION_LABEL: Record<string, string> = {
+  INSERT: 'Criou',
+  UPDATE: 'Editou',
+  DELETE: 'Removeu',
+};
+const ENTITY_LABEL: Record<string, string> = {
+  registros: 'registro',
+  conferences: 'conferência',
+  estoque_posicoes: 'posição',
+  estoque_saidas: 'saída',
+  expedicao_pickings: 'picking',
+  itens_cadastro: 'item',
+};
+function formatAuditAction(item: { action: string; entity: string; entity_id: string | null }) {
+  const verb = ACTION_LABEL[item.action] ?? item.action;
+  const entity = ENTITY_LABEL[item.entity] ?? item.entity;
+  const ref = item.entity_id ? ` ${item.entity_id.slice(0, 8)}` : '';
+  return `${verb} ${entity}${ref}`;
 }
 
 function useModuleStats(enabled: boolean) {
@@ -74,6 +116,67 @@ function useModuleStats(enabled: boolean) {
   });
 }
 
+function useMyDayStats(userId?: string) {
+  return useQuery({
+    queryKey: ['my-day-stats', userId],
+    enabled: !!userId,
+    staleTime: 120_000,
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const iso = today.toISOString();
+      try {
+        const [mySessions, myRegs] = await Promise.all([
+          supabase.from('conferences').select('id', { count: 'exact', head: true }).eq('created_by', userId!).gte('started_at', iso),
+          supabase.from('registros')
+            .select('id, conferences!inner(created_by)', { count: 'exact', head: true })
+            .eq('conferences.created_by', userId!)
+            .gte('created_at', iso) as any,
+        ]);
+        return { sessions: mySessions.count ?? 0, registros: (myRegs as any).count ?? 0 };
+      } catch { return { sessions: 0, registros: 0 }; }
+    },
+  });
+}
+
+function useRecentActivity(userId?: string) {
+  return useQuery({
+    queryKey: ['recent-activity', userId],
+    enabled: !!userId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      try {
+        const { data } = await supabase
+          .from('audit_logs')
+          .select('action, entity, entity_id, occurred_at')
+          .eq('user_id', userId!)
+          .order('occurred_at', { ascending: false })
+          .limit(3);
+        return data ?? [];
+      } catch { return []; }
+    },
+  });
+}
+
+function usePendingNotifications(role: string | null) {
+  return useQuery({
+    queryKey: ['pending-notifications'],
+    enabled: role === 'admin' || role === 'gerente',
+    staleTime: 300_000,
+    queryFn: async () => {
+      try {
+        const fourHoursAgo = new Date(Date.now() - 4 * 3600000).toISOString();
+        const { count } = await supabase
+          .from('conferences')
+          .select('id', { count: 'exact', head: true })
+          .is('finished_at', null)
+          .lt('started_at', fourHoursAgo);
+        return count ?? 0;
+      } catch { return 0; }
+    },
+  });
+}
+
 export default function SelecionarModuloPage() {
   const { profile, user, role, isGuest, modules, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -83,8 +186,20 @@ export default function SelecionarModuloPage() {
   const sessionStartedAt = useAppStore(s => s.sessionStartedAt);
 
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [now, setNow] = useState(new Date());
+  const [hasNewVersion, setHasNewVersion] = useState(false);
   const firstCardRef = useRef<HTMLAnchorElement>(null);
   const lastModule = typeof window !== 'undefined' ? localStorage.getItem('pf_lastModule') : null;
+  const defaultModule = typeof window !== 'undefined' ? localStorage.getItem('pf_defaultModule') : null;
+
+  useEffect(() => {
+    try { setHasNewVersion(localStorage.getItem(CHANGELOG_STORAGE_KEY) !== LATEST_VERSION); } catch {}
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -128,6 +243,9 @@ export default function SelecionarModuloPage() {
   }, []);
 
   const { data: stats, isLoading: statsLoading } = useModuleStats(!loading && !isGuest && showBoth);
+  const { data: myStats } = useMyDayStats(user?.id);
+  const { data: recent } = useRecentActivity(user?.id);
+  const { data: alertsCount } = usePendingNotifications(role);
 
   if (loading) {
     return (
@@ -141,6 +259,9 @@ export default function SelecionarModuloPage() {
   if (isGuest) return <Navigate to="/estoque/operacao" replace />;
   if (hasEstoque && !hasExpedicao) return <Navigate to="/estoque" replace />;
   if (hasExpedicao && !hasEstoque) return <Navigate to="/expedicao/painel" replace />;
+  // Feature 5: módulo padrão (skip automático)
+  if (defaultModule === 'estoque' && hasEstoque) return <Navigate to="/estoque" replace />;
+  if (defaultModule === 'expedicao' && hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Operador';
   const roleName =
@@ -161,6 +282,16 @@ export default function SelecionarModuloPage() {
     if (key === 'estoque') import('@/pages/DashboardPage').catch(() => {});
     if (key === 'expedicao') import('@/pages/expedicao/PainelPage').catch(() => {});
   };
+
+  const setDefaultModule = (mod: 'estoque' | 'expedicao', label: string) => {
+    localStorage.setItem('pf_defaultModule', mod);
+    toast.success(`${label} definido como módulo padrão`, {
+      description: 'Você pode alterar isso em Configurações.',
+    });
+  };
+
+  const dateTimeLabel = `${now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })} · ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  const shiftRemaining = formatRemaining(getShiftEnd());
 
   const renderMetric = (value: number | undefined, label: string, accent?: string) => (
     <div>
@@ -206,13 +337,24 @@ export default function SelecionarModuloPage() {
             <div className="w-12 h-12 rounded-full bg-muted text-foreground inline-flex items-center justify-center text-sm font-semibold tabular-nums shrink-0">
               {getInitials(displayName)}
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight text-foreground truncate">
-                {getGreeting()}, {displayName}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-semibold tracking-tight text-foreground truncate flex items-center gap-2">
+                <span className="truncate">{getGreeting()}, {displayName}</span>
+                {(alertsCount ?? 0) > 0 && (
+                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 tabular-nums shrink-0">
+                    {alertsCount} alerta{(alertsCount ?? 0) > 1 ? 's' : ''}
+                  </span>
+                )}
               </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {roleName} · {getShift()}
+              <p className="text-xs text-muted-foreground mt-0.5 first-letter:capitalize">
+                {roleName} · {dateTimeLabel} · {getShift()} · {shiftRemaining}
               </p>
+              {!!myStats && (myStats.sessions > 0 || myStats.registros > 0) && (
+                <p className="text-[11px] text-muted-foreground/80 mt-1 tabular-nums">
+                  Hoje: {myStats.sessions} sessão{myStats.sessions !== 1 ? 'ões' : ''}
+                  {' · '}{myStats.registros} registro{myStats.registros !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
           </div>
 
@@ -246,7 +388,7 @@ export default function SelecionarModuloPage() {
               onClick={() => localStorage.setItem('pf_lastModule', 'estoque')}
               onMouseEnter={() => prefetchModule('estoque')}
               onFocus={() => prefetchModule('estoque')}
-              className={`group min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`group relative min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 lastModule === 'estoque' ? 'ring-1 ring-sky-400/40' : ''
               }`}
             >
@@ -286,6 +428,15 @@ export default function SelecionarModuloPage() {
                   1
                 </kbd>
               </div>
+
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDefaultModule('estoque', 'Estoque'); }}
+                className="absolute bottom-1.5 left-1.5 text-[9px] text-muted-foreground/40 hover:text-muted-foreground transition-colors inline-flex items-center gap-1"
+                title="Definir como módulo padrão"
+              >
+                <Pin className="w-2.5 h-2.5" /> padrão
+              </button>
             </Link>
 
             {/* Expedição */}
@@ -294,7 +445,7 @@ export default function SelecionarModuloPage() {
               onClick={() => localStorage.setItem('pf_lastModule', 'expedicao')}
               onMouseEnter={() => prefetchModule('expedicao')}
               onFocus={() => prefetchModule('expedicao')}
-              className={`group min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`group relative min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 lastModule === 'expedicao' ? 'ring-1 ring-emerald-400/40' : ''
               }`}
             >
@@ -319,8 +470,46 @@ export default function SelecionarModuloPage() {
                   2
                 </kbd>
               </div>
+
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDefaultModule('expedicao', 'Expedição'); }}
+                className="absolute bottom-1.5 left-1.5 text-[9px] text-muted-foreground/40 hover:text-muted-foreground transition-colors inline-flex items-center gap-1"
+                title="Definir como módulo padrão"
+              >
+                <Pin className="w-2.5 h-2.5" /> padrão
+              </button>
             </Link>
           </div>
+
+          {/* Acesso rápido: nova conferência */}
+          {hasEstoque && !hasActiveSession && (
+            <div className="mt-4 flex justify-center">
+              <Link
+                to="/estoque/operacao"
+                className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Iniciar nova conferência
+              </Link>
+            </div>
+          )}
+
+          {/* Atividade recente */}
+          {recent && recent.length > 0 && (
+            <div className="mt-8 space-y-1">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Sua atividade recente</p>
+              {recent.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground py-0.5">
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                  <span className="truncate">{formatAuditAction(item as any)}</span>
+                  <span className="text-muted-foreground/40 tabular-nums shrink-0 ml-auto">
+                    {formatTimeAgo((item as any).occurred_at)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Ações secundárias */}
           <div className="flex items-center justify-center gap-3 mt-8 text-xs text-muted-foreground/60">
@@ -335,10 +524,16 @@ export default function SelecionarModuloPage() {
         </div>
       </main>
 
-      <footer className="py-4 text-center">
+      <footer className="py-4 flex items-center justify-center gap-2">
         <p className="text-[10px] text-muted-foreground/50 font-mono">
           Pente Fino · v{LATEST_VERSION}
         </p>
+        {hasNewVersion && (
+          <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
+            Novo
+          </span>
+        )}
+        <ChangelogDialog />
       </footer>
     </div>
   );
