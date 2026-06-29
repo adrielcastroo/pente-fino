@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { Loader2 } from 'lucide-react';
 
 interface CityAgg {
-  cidade: string;
+  nome: string;
   total: number;
 }
 
@@ -46,7 +46,7 @@ export function EntregasMap({ cidades }: { cidades: CityAgg[] }) {
   const [loading, setLoading] = useState(true);
 
   const targets = useMemo(
-    () => cidades.filter((c) => c.cidade && c.cidade !== '(sem cadastro)').slice(0, 30),
+    () => cidades.filter((c) => c.nome && c.nome !== '(sem cadastro)').slice(0, 30),
     [cidades],
   );
 
@@ -58,11 +58,11 @@ export function EntregasMap({ cidades }: { cidades: CityAgg[] }) {
       setLoading(true);
       const out: MarkerData[] = [];
       for (const c of targets) {
-        const key = c.cidade.toLowerCase();
+        const key = c.nome.toLowerCase();
         let coord = cache[key];
         if (coord === undefined) {
           try {
-            coord = await geocode(c.cidade);
+            coord = await geocode(c.nome);
           } catch {
             coord = null;
           }
@@ -101,13 +101,13 @@ export function EntregasMap({ cidades }: { cidades: CityAgg[] }) {
         />
         {markers.map((m) => (
           <CircleMarker
-            key={m.cidade}
+            key={m.nome}
             center={[m.lat, m.lng]}
             radius={6 + (m.total / maxTotal) * 18}
             pathOptions={{ color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.55, weight: 1 }}
           >
             <Tooltip direction="top">
-              <span className="font-medium">{m.cidade}</span> · {m.total} picking{m.total > 1 ? 's' : ''}
+              <span className="font-medium">{m.nome}</span> · {m.total} picking{m.total > 1 ? 's' : ''}
             </Tooltip>
           </CircleMarker>
         ))}
