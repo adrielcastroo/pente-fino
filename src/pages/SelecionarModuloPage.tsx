@@ -49,8 +49,8 @@ function useModuleStats(enabled: boolean) {
       today.setHours(0, 0, 0, 0);
       const isoToday = today.toISOString();
 
-      const safeCount = async (p: Promise<{ count: number | null }>) => {
-        try { const r = await p; return r.count ?? 0; } catch { return 0; }
+      const safeCount = async (q: any): Promise<number> => {
+        try { const r = await q; return (r?.count as number | null) ?? 0; } catch { return 0; }
       };
 
       const [openConfs, sessionsToday, regsToday, pendPickings, emSeparacao, expedHoje, occupied, totalSlots] = await Promise.all([
