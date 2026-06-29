@@ -96,6 +96,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
       { id: 'security', name: 'Segurança', icon: Shield, description: 'Senha, autenticação de dois fatores e sessões.' },
       { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.', minRole: 'supervisor' },
       { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', minRole: 'supervisor' },
+      { id: 'expedicao', name: 'Expedição', icon: Truck, description: 'Transportadoras, webhooks de e-mail e importação automática de NF-e.', minRole: 'supervisor' },
     ],
   },
 ];
