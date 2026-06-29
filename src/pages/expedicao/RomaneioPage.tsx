@@ -1,16 +1,23 @@
 import { useMemo, useState } from 'react';
-import { ChevronRight, Loader2, Printer, Truck } from 'lucide-react';
+import { ChevronRight, Loader2, Mail, Printer, Truck } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import { usePickings } from '@/hooks/expedicao/useExpedicaoData';
-
-type Node = Map<string, Map<string, Map<string, typeof emptyArr>>>;
-const emptyArr: { id: string; numero: string; cliente: string }[] = [];
+import {
+  buildRomaneioHtml,
+  getAppsScriptWebhook,
+  sendRomaneioEmail,
+} from '@/lib/expedicao-webhook';
 
 export default function RomaneioPage() {
   const { data, isLoading } = usePickings();
   const [filter, setFilter] = useState('');
+
+  const [emailTo, setEmailTo] = useState('');
+  const [sending, setSending] = useState(false);
 
   const tree = useMemo(() => {
     const map = new Map<string, Map<string, Map<string, { id: string; numero: string; cliente: string }[]>>>();
