@@ -112,6 +112,8 @@ const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   barcodeFmt: 'CODE128',
   codeSize: 200,
   pageSize: '100x150',
+  customWidth: 100,
+  customHeight: 150,
   titleSize: 12,
   codeFontSize: 26,
   align: 'center',
