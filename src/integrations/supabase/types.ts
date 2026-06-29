@@ -482,9 +482,13 @@ export type Database = {
           cliente: string
           created_at: string
           created_by: string | null
+          faturado_at: string | null
           finished_at: string | null
           id: string
           motivo_cancelamento: string | null
+          nfe_chave: string | null
+          nfe_numero: string | null
+          nfe_valor: number | null
           numero: string
           observacao: string | null
           regiao: string | null
@@ -492,6 +496,7 @@ export type Database = {
           total_pecas: number
           transportadora_id: string | null
           updated_at: string
+          valor_estimado: number | null
         }
         Insert: {
           cancelled_at?: string | null
@@ -501,9 +506,13 @@ export type Database = {
           cliente: string
           created_at?: string
           created_by?: string | null
+          faturado_at?: string | null
           finished_at?: string | null
           id?: string
           motivo_cancelamento?: string | null
+          nfe_chave?: string | null
+          nfe_numero?: string | null
+          nfe_valor?: number | null
           numero: string
           observacao?: string | null
           regiao?: string | null
@@ -511,6 +520,7 @@ export type Database = {
           total_pecas?: number
           transportadora_id?: string | null
           updated_at?: string
+          valor_estimado?: number | null
         }
         Update: {
           cancelled_at?: string | null
@@ -520,9 +530,13 @@ export type Database = {
           cliente?: string
           created_at?: string
           created_by?: string | null
+          faturado_at?: string | null
           finished_at?: string | null
           id?: string
           motivo_cancelamento?: string | null
+          nfe_chave?: string | null
+          nfe_numero?: string | null
+          nfe_valor?: number | null
           numero?: string
           observacao?: string | null
           regiao?: string | null
@@ -530,6 +544,7 @@ export type Database = {
           total_pecas?: number
           transportadora_id?: string | null
           updated_at?: string
+          valor_estimado?: number | null
         }
         Relationships: [
           {
@@ -998,6 +1013,92 @@ export type Database = {
           tipo_estoque?: string | null
         }
         Relationships: []
+      }
+      nfe_importadas: {
+        Row: {
+          chave_acesso: string
+          cnpj_destinatario: string | null
+          cnpj_emitente: string | null
+          created_at: string
+          data_emissao: string | null
+          id: string
+          imported_at: string
+          imported_by: string | null
+          itens: Json | null
+          nome_destinatario: string | null
+          nome_emitente: string | null
+          numero: string
+          peso_bruto: number | null
+          peso_liquido: number | null
+          picking_id: string | null
+          serie: string | null
+          transportadora: string | null
+          updated_at: string
+          valor_frete: number | null
+          valor_produtos: number | null
+          valor_total: number | null
+          volumes: number | null
+          xml_raw: string | null
+        }
+        Insert: {
+          chave_acesso: string
+          cnpj_destinatario?: string | null
+          cnpj_emitente?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          itens?: Json | null
+          nome_destinatario?: string | null
+          nome_emitente?: string | null
+          numero: string
+          peso_bruto?: number | null
+          peso_liquido?: number | null
+          picking_id?: string | null
+          serie?: string | null
+          transportadora?: string | null
+          updated_at?: string
+          valor_frete?: number | null
+          valor_produtos?: number | null
+          valor_total?: number | null
+          volumes?: number | null
+          xml_raw?: string | null
+        }
+        Update: {
+          chave_acesso?: string
+          cnpj_destinatario?: string | null
+          cnpj_emitente?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          itens?: Json | null
+          nome_destinatario?: string | null
+          nome_emitente?: string | null
+          numero?: string
+          peso_bruto?: number | null
+          peso_liquido?: number | null
+          picking_id?: string | null
+          serie?: string | null
+          transportadora?: string | null
+          updated_at?: string
+          valor_frete?: number | null
+          valor_produtos?: number | null
+          valor_total?: number | null
+          volumes?: number | null
+          xml_raw?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_importadas_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pickings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       operation_logs: {
         Row: {

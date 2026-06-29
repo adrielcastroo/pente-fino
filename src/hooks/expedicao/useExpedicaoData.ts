@@ -28,6 +28,11 @@ export interface Picking {
   cancelled_at?: string | null;
   cancelled_by?: string | null;
   motivo_cancelamento?: string | null;
+  valor_estimado?: number | null;
+  nfe_numero?: string | null;
+  nfe_valor?: number | null;
+  nfe_chave?: string | null;
+  faturado_at?: string | null;
   transportadora?: { nome: string } | null;
   carrinho?: { codigo: string } | null;
 }
@@ -338,7 +343,7 @@ export function useFaturarPicking() {
 
       const { error } = await supabase
         .from('expedicao_pickings')
-        .update({ status: 'faturado' })
+        .update({ status: 'faturado', faturado_at: new Date().toISOString() } as never)
         .eq('id', pickingId);
       if (error) throw error;
 
@@ -422,3 +427,133 @@ export function useCancelarPicking() {
   });
 }
 
+
+// ============================================================
+// Faturamento em lote + Importação de NF-e (XML)
+// ============================================================
+
+export function useFaturarEmLote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (pickingIds: string[]) => {
+      if (pickingIds.length === 0) throw new Error('Selecione ao menos um picking.');
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('expedicao_pickings')
+        .update({ status: 'faturado', faturado_at: now } as never)
+        .in('id', pickingIds)
+        .eq('status', 'conferido');
+      if (error) throw error;
+
+      const { data: ps } = await supabase
+        .from('expedicao_pickings')
+        .select('id, carrinho_id')
+        .in('id', pickingIds);
+      const carrinhoIds = (ps ?? []).map((p) => p.carrinho_id).filter(Boolean) as string[];
+      if (carrinhoIds.length > 0) {
+        await supabase.from('expedicao_carrinhos').update({ status: 'livre' }).in('id', carrinhoIds);
+        await supabase.from('expedicao_pickings').update({ carrinho_id: null }).in('id', pickingIds);
+      }
+      return pickingIds.length;
+    },
+    onSuccess: (n) => {
+      qc.invalidateQueries({ queryKey: KEYS.pickings });
+      qc.invalidateQueries({ queryKey: KEYS.carrinhos });
+      toast.success(`${n} picking(s) faturado(s)`);
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Falha ao faturar em lote'),
+  });
+}
+
+export interface NFeImportada {
+  id: string;
+  picking_id: string | null;
+  numero: string;
+  serie: string | null;
+  chave_acesso: string;
+  data_emissao: string | null;
+  nome_destinatario: string | null;
+  valor_total: number | null;
+  valor_produtos: number | null;
+  valor_frete: number | null;
+  transportadora: string | null;
+  volumes: number | null;
+  imported_at: string;
+}
+
+export function useNFesImportadas() {
+  return useQuery({
+    queryKey: ['expedicao', 'nfes'],
+    queryFn: async (): Promise<NFeImportada[]> => {
+      const { data, error } = await (supabase as any)
+        .from('nfe_importadas')
+        .select('id, picking_id, numero, serie, chave_acesso, data_emissao, nome_destinatario, valor_total, valor_produtos, valor_frete, transportadora, volumes, imported_at')
+        .order('imported_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as NFeImportada[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useImportNFe() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { nfe: import('@/lib/nfe-parser').NFeData; xmlRaw: string; pickingId: string | null }) => {
+      const { nfe, xmlRaw, pickingId } = input;
+      if (!nfe.chaveAcesso || nfe.chaveAcesso.length < 40) {
+        throw new Error('Chave de acesso inválida no XML.');
+      }
+      const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+
+      const { data: existing } = await (supabase as any)
+        .from('nfe_importadas')
+        .select('id')
+        .eq('chave_acesso', nfe.chaveAcesso)
+        .maybeSingle();
+      if (existing) throw new Error(`NF-e ${nfe.numero} já foi importada.`);
+
+      const { error } = await (supabase as any).from('nfe_importadas').insert({
+        picking_id: pickingId,
+        numero: nfe.numero,
+        serie: nfe.serie || null,
+        chave_acesso: nfe.chaveAcesso,
+        data_emissao: nfe.dataEmissao || null,
+        cnpj_emitente: nfe.cnpjEmitente || null,
+        nome_emitente: nfe.nomeEmitente || null,
+        cnpj_destinatario: nfe.cnpjDestinatario || null,
+        nome_destinatario: nfe.nomeDestinatario || null,
+        valor_total: nfe.valorTotal,
+        valor_produtos: nfe.valorProdutos,
+        valor_frete: nfe.valorFrete,
+        transportadora: nfe.transportadora || null,
+        volumes: nfe.volumes || null,
+        peso_liquido: nfe.pesoLiquido || null,
+        peso_bruto: nfe.pesoBruto || null,
+        itens: nfe.itens,
+        xml_raw: xmlRaw,
+        imported_by: uid,
+      });
+      if (error) throw error;
+
+      if (pickingId) {
+        await supabase
+          .from('expedicao_pickings')
+          .update({
+            nfe_numero: nfe.numero,
+            nfe_valor: nfe.valorTotal,
+            nfe_chave: nfe.chaveAcesso,
+          } as never)
+          .eq('id', pickingId);
+      }
+      return { numero: nfe.numero, valor: nfe.valorTotal };
+    },
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: KEYS.pickings });
+      qc.invalidateQueries({ queryKey: ['expedicao', 'nfes'] });
+      toast.success(`NF-e ${r.numero} importada (${r.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`);
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Falha ao importar NF-e'),
+  });
+}
