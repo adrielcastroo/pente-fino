@@ -230,6 +230,37 @@ export default function ExpedicaoEtiquetasPage() {
     reader.readAsDataURL(file);
   }
 
+  function uploadBartender(file: File) {
+    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(file.name) || file.type.startsWith('image/');
+    const isBtw = /\.(btw|btxml)$/i.test(file.name);
+    if (!isImage && !isBtw) {
+      return toast.error('Envie uma imagem (PNG/JPG) exportada do BarTender ou um arquivo .btw.');
+    }
+    if (file.size > 4 * 1024 * 1024) return toast.error('Arquivo deve ter até 4MB.');
+    if (isBtw) {
+      // .btw é binário proprietário do BarTender — guardamos só a referência do nome
+      setTemplates((list) => list.map((t) => t.id === activeId
+        ? { ...t, bartenderFileName: file.name, updatedAt: Date.now() }
+        : t));
+      toast.info('Arquivo .btw salvo como referência. Para imprimir, exporte como PNG no BarTender e envie a imagem.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTemplates((list) => list.map((t) => t.id === activeId
+        ? {
+            ...t,
+            bartenderImage: String(reader.result),
+            bartenderFileName: file.name,
+            bartenderEnabled: true,
+            updatedAt: Date.now(),
+          }
+        : t));
+      toast.success('Etiqueta BarTender importada.');
+    };
+    reader.readAsDataURL(file);
+  }
+
   if (!active) return null;
 
   const dims = PAGE_DIMS[active.pageSize];
