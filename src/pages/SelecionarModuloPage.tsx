@@ -63,11 +63,18 @@ export default function SelecionarModuloPage() {
   if (hasExpedicao && !hasEstoque) return <Navigate to="/expedicao/painel" replace />;
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Operador';
+  const { data: badges } = useModuleBadges(true);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
   };
+
+  const Badge = ({ count }: { count: number }) => (
+    <span className="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold tabular-nums">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -83,12 +90,15 @@ export default function SelecionarModuloPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link
               to="/estoque"
-              className="group min-h-[160px] flex flex-col items-center justify-center text-center p-6 rounded-md border border-border border-t-2 border-t-sky-500 bg-card hover:bg-muted/30 transition-colors"
+              className="relative group min-h-[160px] flex flex-col items-center justify-center text-center p-6 rounded-md border border-border border-t-2 border-t-sky-500 bg-card hover:bg-muted/30 transition-colors"
             >
+              {badges && badges.estoque > 0 && <Badge count={badges.estoque} />}
               <Package className="w-8 h-8 text-sky-600 dark:text-sky-400 mb-3" />
               <h2 className="text-sm font-semibold text-foreground">Estoque</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Conferência, armazém e saídas
+                {badges?.estoque
+                  ? `${badges.estoque} conferência${badges.estoque > 1 ? 's' : ''} aberta${badges.estoque > 1 ? 's' : ''}`
+                  : 'Conferência, armazém e saídas'}
               </p>
               <span className="mt-3 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70 border border-border rounded px-1.5 py-0.5">
                 Tecle 1
@@ -97,12 +107,15 @@ export default function SelecionarModuloPage() {
 
             <Link
               to="/expedicao/painel"
-              className="group min-h-[160px] flex flex-col items-center justify-center text-center p-6 rounded-md border border-border border-t-2 border-t-emerald-500 bg-card hover:bg-muted/30 transition-colors"
+              className="relative group min-h-[160px] flex flex-col items-center justify-center text-center p-6 rounded-md border border-border border-t-2 border-t-emerald-500 bg-card hover:bg-muted/30 transition-colors"
             >
+              {badges && badges.expedicao > 0 && <Badge count={badges.expedicao} />}
               <Truck className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mb-3" />
               <h2 className="text-sm font-semibold text-foreground">Expedição</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Picking, conferência e romaneio
+                {badges?.expedicao
+                  ? `${badges.expedicao} picking${badges.expedicao > 1 ? 's' : ''} pendente${badges.expedicao > 1 ? 's' : ''}`
+                  : 'Picking, conferência e romaneio'}
               </p>
               <span className="mt-3 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70 border border-border rounded px-1.5 py-0.5">
                 Tecle 2
