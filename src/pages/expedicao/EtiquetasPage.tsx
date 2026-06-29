@@ -58,6 +58,8 @@ interface LabelTemplate {
   codeSize: number; // 80–320 px aprox
   // Layout
   pageSize: PageSize;
+  customWidth: number;  // mm (usado quando pageSize='custom')
+  customHeight: number; // mm
   titleSize: number; // pt
   codeFontSize: number; // pt
   align: Align;
@@ -76,7 +78,23 @@ const PAGE_DIMS: Record<PageSize, { w: number; h: number; label: string }> = {
   '80x60':   { w: 80,  h: 60,  label: '80×60 mm' },
   '60x40':   { w: 60,  h: 40,  label: '60×40 mm (pequena)' },
   '50x30':   { w: 50,  h: 30,  label: '50×30 mm (mini)' },
+  'custom':  { w: 100, h: 150, label: 'Personalizado…' },
 };
+
+const MIN_MM = 10;
+const MAX_MM = 300;
+
+function clampMm(v: number) {
+  if (!Number.isFinite(v)) return MIN_MM;
+  return Math.min(MAX_MM, Math.max(MIN_MM, Math.round(v)));
+}
+
+function resolveDims(t: { pageSize: PageSize; customWidth: number; customHeight: number }) {
+  if (t.pageSize === 'custom') {
+    return { w: clampMm(t.customWidth), h: clampMm(t.customHeight), label: 'Personalizado' };
+  }
+  return PAGE_DIMS[t.pageSize];
+}
 
 const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   titulo: 'EXPEDIÇÃO',
