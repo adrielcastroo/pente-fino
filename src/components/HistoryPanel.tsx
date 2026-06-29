@@ -650,7 +650,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
 
   const tableContent = (
     <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
-      <div className="rounded-md sm:rounded-md lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
+      <div className="rounded-md overflow-hidden border border-border/30 bg-card">
         <table className="w-full text-xs min-w-[520px] sm:min-w-[800px] border-separate border-spacing-0">
 
           <thead>
