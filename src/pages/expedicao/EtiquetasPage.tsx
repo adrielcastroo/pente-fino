@@ -24,7 +24,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 // Types
 // ============================================================================
 
-type PageSize = '100x150' | '100x100' | '80x60' | '60x40' | '50x30';
+type PageSize = '100x150' | '100x100' | '80x60' | '60x40' | '50x30' | 'custom';
 type CodeMode = 'none' | 'qr' | 'barcode';
 type BarcodeFmt = 'CODE128' | 'CODE39' | 'EAN13' | 'EAN8' | 'ITF14' | 'UPC';
 type Align = 'left' | 'center' | 'right';
@@ -58,6 +58,8 @@ interface LabelTemplate {
   codeSize: number; // 80–320 px aprox
   // Layout
   pageSize: PageSize;
+  customWidth: number;  // mm (usado quando pageSize='custom')
+  customHeight: number; // mm
   titleSize: number; // pt
   codeFontSize: number; // pt
   align: Align;
@@ -76,7 +78,23 @@ const PAGE_DIMS: Record<PageSize, { w: number; h: number; label: string }> = {
   '80x60':   { w: 80,  h: 60,  label: '80×60 mm' },
   '60x40':   { w: 60,  h: 40,  label: '60×40 mm (pequena)' },
   '50x30':   { w: 50,  h: 30,  label: '50×30 mm (mini)' },
+  'custom':  { w: 100, h: 150, label: 'Personalizado…' },
 };
+
+const MIN_MM = 10;
+const MAX_MM = 300;
+
+function clampMm(v: number) {
+  if (!Number.isFinite(v)) return MIN_MM;
+  return Math.min(MAX_MM, Math.max(MIN_MM, Math.round(v)));
+}
+
+function resolveDims(t: { pageSize: PageSize; customWidth: number; customHeight: number }) {
+  if (t.pageSize === 'custom') {
+    return { w: clampMm(t.customWidth), h: clampMm(t.customHeight), label: 'Personalizado' };
+  }
+  return PAGE_DIMS[t.pageSize];
+}
 
 const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   titulo: 'EXPEDIÇÃO',
@@ -94,6 +112,8 @@ const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   barcodeFmt: 'CODE128',
   codeSize: 200,
   pageSize: '100x150',
+  customWidth: 100,
+  customHeight: 150,
   titleSize: 12,
   codeFontSize: 26,
   align: 'center',
@@ -263,7 +283,7 @@ export default function ExpedicaoEtiquetasPage() {
 
   if (!active) return null;
 
-  const dims = PAGE_DIMS[active.pageSize];
+  const dims = resolveDims(active);
 
   return (
     <div className="space-y-4">
@@ -408,6 +428,38 @@ export default function ExpedicaoEtiquetasPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {active.pageSize === 'custom' && (
+                  <div className="grid grid-cols-2 gap-3 rounded-md border border-dashed border-border bg-muted/30 p-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-muted-foreground">Largura (mm)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={MIN_MM}
+                        max={MAX_MM}
+                        step={1}
+                        value={active.customWidth}
+                        onChange={(e) => update('customWidth', clampMm(Number(e.target.value)))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-muted-foreground">Altura (mm)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={MIN_MM}
+                        max={MAX_MM}
+                        step={1}
+                        value={active.customHeight}
+                        onChange={(e) => update('customHeight', clampMm(Number(e.target.value)))}
+                      />
+                    </div>
+                    <p className="col-span-2 text-[11px] text-muted-foreground">
+                      Aceita valores de {MIN_MM} a {MAX_MM} mm. Pré-visualização e impressão se ajustam automaticamente.
+                    </p>
+                  </div>
+                )}
 
                 <SliderField label="Tamanho do título" suffix="pt"
                   min={8} max={24} step={1}
@@ -681,7 +733,7 @@ function Barcode({ value, format, width }: { value: string; format: BarcodeFmt; 
 }
 
 function LabelSheet({ t }: { t: LabelTemplate }) {
-  const dims = PAGE_DIMS[t.pageSize];
+  const dims = resolveDims(t);
   const codeValue = (t.codePayload || t.codigo || t.titulo || '').slice(0, 700);
   const alignClass = t.align === 'left' ? 'text-left' : t.align === 'right' ? 'text-right' : 'text-center';
   const flexAlign = t.align === 'left' ? 'items-start' : t.align === 'right' ? 'items-end' : 'items-center';
