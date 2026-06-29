@@ -18,7 +18,7 @@ export default function PainelPage() {
   const { data, isLoading } = usePickings();
   const { can } = useAuth();
   const allowCancel = can('expedicao:cancel-picking');
-  const [cancelTarget0, _setCancel0] = [null, null] as any;
+  
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
   const [tick, setTick] = useState(0);
