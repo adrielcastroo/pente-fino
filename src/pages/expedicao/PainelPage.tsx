@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Loader2, PackageSearch, Ban, AlertTriangle } from 'lucide-react';
+import { Loader2, PackageSearch, Ban, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { usePickings, type Picking } from '@/hooks/expedicao/useExpedicaoData';
-import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
+
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
 import { useAuth } from '@/hooks/use-auth';
@@ -18,7 +18,7 @@ export default function PainelPage() {
   const { data, isLoading } = usePickings();
   const { can } = useAuth();
   const allowCancel = can('expedicao:cancel-picking');
-  const [novo, setNovo] = useState(false);
+  
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
   const [tick, setTick] = useState(0);
@@ -73,11 +73,6 @@ export default function PainelPage() {
       <PageHeader
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
-        actions={
-          <Button onClick={() => setNovo(true)} className="gap-2 h-9">
-            <Plus className="w-4 h-4" /> Novo picking
-          </Button>
-        }
       />
 
       {kpis.atrasados > 0 && (
@@ -188,7 +183,7 @@ export default function PainelPage() {
         )}
       </div>
 
-      <NovoPickingDialog open={novo} onOpenChange={setNovo} />
+      
       <CancelPickingDialog
         picking={cancelTarget}
         open={!!cancelTarget}
