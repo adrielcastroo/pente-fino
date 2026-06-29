@@ -18,6 +18,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { LATEST_VERSION } from '@/lib/changelog';
 import { Button } from '@/components/ui/button';
+import ModuleSwitchFab from '@/components/ModuleSwitchFab';
 
 const NAV = [
   { to: '/expedicao/painel', label: 'Painel', icon: ClipboardList },
