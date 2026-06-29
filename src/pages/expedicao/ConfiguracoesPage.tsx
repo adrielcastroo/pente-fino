@@ -1,18 +1,21 @@
 import { useState } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { toast } from 'sonner';
 import { useTransportadoras, useCreateTransportadora } from '@/hooks/expedicao/useExpedicaoData';
 import { RequireRole } from '@/components/auth/RequireRole';
+import { getAppsScriptWebhook, setAppsScriptWebhook } from '@/lib/expedicao-webhook';
 
 export default function ExpedicaoConfiguracoesPage() {
   const { data = [], isLoading } = useTransportadoras();
   const create = useCreateTransportadora();
   const [nome, setNome] = useState('');
+  const [webhook, setWebhook] = useState(getAppsScriptWebhook());
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +86,34 @@ export default function ExpedicaoConfiguracoesPage() {
               </TableBody>
             </Table>
           )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Mail className="size-4 text-muted-foreground" /> Webhook de e-mail (Google Apps Script)
+        </h2>
+        <p className="text-xs text-muted-foreground max-w-2xl">
+          Cole aqui a URL pública de um Apps Script publicado como Web App. Será usado para
+          enviar romaneios por e-mail sem custo. Endpoint deve aceitar POST com JSON{' '}
+          <code>{'{ to, subject, html }'}</code>.
+        </p>
+        <div className="flex gap-2 max-w-2xl">
+          <Input
+            placeholder="https://script.google.com/macros/s/.../exec"
+            value={webhook}
+            onChange={(e) => setWebhook(e.target.value)}
+          />
+          <Button
+            type="button"
+            onClick={() => {
+              setAppsScriptWebhook(webhook);
+              toast.success(webhook.trim() ? 'Webhook salvo' : 'Webhook removido');
+            }}
+            className="shrink-0"
+          >
+            Salvar
+          </Button>
         </div>
       </section>
     </div>
