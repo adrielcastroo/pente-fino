@@ -731,11 +731,14 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     {r.wasEdited && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="ml-1 p-1.5 rounded-full bg-primary/10 text-primary cursor-help">
-                            <CheckCircle2 className="w-4 h-4" />
-                          </div>
+                          <span className="ml-1 text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase tracking-wide cursor-help">
+                            Editado
+                          </span>
                         </TooltipTrigger>
-                        <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
+                        <TooltipContent>
+                          Editado por {r.editedBy || 'Conferente'}
+                          {r.editedAt && ` em ${formatDateBR(r.editedAt)} às ${formatTimeBR(r.editedAt)}`}
+                        </TooltipContent>
                       </Tooltip>
                     )}
                   </div>
