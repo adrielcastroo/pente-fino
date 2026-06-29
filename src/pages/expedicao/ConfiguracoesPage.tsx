@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Loader2, Mail } from 'lucide-react';
+import { Plus, Loader2, Mail, Inbox, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -114,6 +114,45 @@ export default function ExpedicaoConfiguracoesPage() {
           >
             Salvar
           </Button>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Inbox className="size-4 text-muted-foreground" /> Importação automática de NF-e por e-mail
+        </h2>
+        <p className="text-xs text-muted-foreground max-w-2xl">
+          O Google Apps Script monitora um label do Gmail (ex.: <code>NFe/Importar</code>),
+          extrai os XMLs anexados e envia para o endpoint abaixo. Cada NF-e é deduplicada
+          pela chave de acesso e aparece na aba <strong>Faturamento</strong> automaticamente.
+        </p>
+        <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs break-all">
+              {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe-import`}
+            </code>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              onClick={() => {
+                navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe-import`);
+                toast.success('Endpoint copiado');
+              }}
+            >
+              <Copy className="size-3.5" />
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Header: <code>X-Import-Token: &lt;NFE_IMPORT_TOKEN&gt;</code> · Body:{' '}
+            <code>{'{ xmls: string[] }'}</code>
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Script pronto em <code>docs/apps-script-nfe-import.gs</code> — cole no
+            script.google.com, configure as Propriedades do Script (ENDPOINT, TOKEN, LABEL)
+            e crie um Trigger temporizado a cada 5 min.
+          </p>
         </div>
       </section>
     </div>
