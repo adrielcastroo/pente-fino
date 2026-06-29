@@ -182,7 +182,8 @@ const App = () => (
                   <Route path="carrinhos" element={<ExpedicaoCarrinhosPage />} />
                   <Route path="historico" element={<ExpedicaoHistoricoPage />} />
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
-                  <Route path="configuracoes" element={<ExpedicaoConfiguracoesPage />} />
+                  <Route path="configuracoes" element={<SettingsPage />} />
+                  <Route path="configuracoes-legacy" element={<ExpedicaoConfiguracoesPage />} />
                   <Route path="configuracoes-v2" element={<ExpedicaoConfiguracoesV2Page />} />
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
 
