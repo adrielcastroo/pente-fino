@@ -1,7 +1,7 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Package, Truck } from 'lucide-react';
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { LATEST_VERSION } from '@/lib/changelog';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +33,22 @@ function useModuleBadges(enabled: boolean) {
 export default function SelecionarModuloPage() {
   const { profile, user, isGuest, modules, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Invalida badges ao montar (voltando de um módulo) e ao focar a janela
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['module-badges'] });
+    const onFocus = () => queryClient.invalidateQueries({ queryKey: ['module-badges'] });
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') onFocus();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [queryClient]);
 
   const hasEstoque = modules.includes('estoque');
   const hasExpedicao = modules.includes('expedicao');
