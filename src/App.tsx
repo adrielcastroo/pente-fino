@@ -36,6 +36,8 @@ const ExpedicaoDashboardOperacionalPage = lazy(() => import("@/pages/expedicao/D
 const ExpedicaoDashboardLogisticoPage = lazy(() => import("@/pages/expedicao/DashboardLogisticoPage"));
 const ExpedicaoHistoricoPage = lazy(() => import("@/pages/expedicao/HistoricoPage"));
 const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosPage"));
+const ExpedicaoConfiguracoesV2Page = lazy(() => import("@/pages/expedicao/ConfiguracoesV2Page"));
+const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 
@@ -181,6 +183,8 @@ const App = () => (
                   <Route path="historico" element={<ExpedicaoHistoricoPage />} />
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
                   <Route path="configuracoes" element={<ExpedicaoConfiguracoesPage />} />
+                  <Route path="configuracoes-v2" element={<ExpedicaoConfiguracoesV2Page />} />
+                  <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
 
                 </Route>
 
