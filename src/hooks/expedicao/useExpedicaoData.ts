@@ -28,6 +28,11 @@ export interface Picking {
   cancelled_at?: string | null;
   cancelled_by?: string | null;
   motivo_cancelamento?: string | null;
+  valor_estimado?: number | null;
+  nfe_numero?: string | null;
+  nfe_valor?: number | null;
+  nfe_chave?: string | null;
+  faturado_at?: string | null;
   transportadora?: { nome: string } | null;
   carrinho?: { codigo: string } | null;
 }
