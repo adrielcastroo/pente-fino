@@ -7,6 +7,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { LATEST_VERSION } from '@/lib/changelog';
 import { formatDateBR } from '@/lib/app-utils';
 import { supabase } from '@/integrations/supabase/client';
+import logoComb from '@/assets/logo-comb.png';
 
 function getGreeting(): string {
   const h = new Date().getHours();
