@@ -400,8 +400,8 @@ export default function ExpedicaoEtiquetasPage() {
       barcodeFmt: interpolated.barcodeFmt,
       payload, copies: interpolated.copias,
     });
-    const fn = transport === 'usb' ? sendZplViaUsb : sendZplViaSerial;
-    const result = await fn(zpl);
+    const result: { ok: true; method: PrintHistoryEntry['method'] } | { ok: false; error: string } =
+      transport === 'usb' ? await sendZplViaUsb(zpl) : await sendZplViaSerial(zpl);
     if (result.ok) {
       recordPrint(result.method);
       toast.success(`Enviado para impressora via ${transport.toUpperCase()}`);
