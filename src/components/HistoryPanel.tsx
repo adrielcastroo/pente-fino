@@ -691,7 +691,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   </td>
                 ))}
                 <td className="px-2 sm:px-6 py-2 sm:py-4">
-                  <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
+                  <div className="flex items-center justify-end gap-2 opacity-70 hover:opacity-100 transition-opacity duration-150">
                     {!isGuest && (
                       <RequireRole action="edit:registro-antigo" showLocked>
                         <Tooltip>
