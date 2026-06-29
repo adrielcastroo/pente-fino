@@ -465,14 +465,24 @@ export default function SettingsPage() {
   const labelSettings = useAppStore(s => s.labelSettings);
   const setLabelSettings = useAppStore(s => s.setLabelSettings);
 
+  const location = useLocation();
+  const currentModule: ModuleScope | null = location.pathname.startsWith('/expedicao')
+    ? 'expedicao'
+    : location.pathname.startsWith('/estoque')
+      ? 'estoque'
+      : null;
+
   const visibleGroups = useMemo(
     () => CATEGORY_GROUPS
       .map(g => ({
         ...g,
-        items: g.items.filter(item => !item.minRole || atLeast(role, item.minRole)),
+        items: g.items.filter(item =>
+          (!item.minRole || atLeast(role, item.minRole)) &&
+          (!item.module || item.module === currentModule)
+        ),
       }))
       .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole))),
-    [role]
+    [role, currentModule]
   );
   const allVisible = useMemo(() => visibleGroups.flatMap(g => g.items), [visibleGroups]);
   const activeMeta = allVisible.find(c => c.id === activeCategory) ?? allVisible[0];
@@ -525,6 +535,14 @@ export default function SettingsPage() {
               >
                 <Icon className="w-4 h-4" />
                 <span>{cat.name}</span>
+                {cat.module && (
+                  <span
+                    className="ml-1 inline-flex items-center rounded-sm border border-primary/30 bg-primary/10 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-primary"
+                    title={`Configuração exclusiva do módulo ${MODULE_LABEL[cat.module]}`}
+                  >
+                    {MODULE_LABEL[cat.module]}
+                  </span>
+                )}
               </button>
             );
           })}
