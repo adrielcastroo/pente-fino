@@ -571,7 +571,17 @@ export default function SettingsPage() {
                        })()
                       }
                     </div>
-                    <CardTitle className="text-lg font-semibold tracking-tight text-foreground">{categories.find(c => c.id === activeCategory)?.name}</CardTitle>
+                    <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
+                      {categories.find(c => c.id === activeCategory)?.name}
+                      {(() => {
+                        const mod = categories.find(c => c.id === activeCategory)?.module;
+                        return mod ? (
+                          <span className="inline-flex items-center rounded-sm border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            Somente {MODULE_LABEL[mod]}
+                          </span>
+                        ) : null;
+                      })()}
+                    </CardTitle>
                   </div>
                   <CardDescription className="text-sm text-muted-foreground">
                     {categories.find(c => c.id === activeCategory)?.description}
