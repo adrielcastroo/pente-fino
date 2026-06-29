@@ -183,6 +183,8 @@ const App = () => (
                   <Route path="historico" element={<ExpedicaoHistoricoPage />} />
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
                   <Route path="configuracoes" element={<ExpedicaoConfiguracoesPage />} />
+                  <Route path="configuracoes-v2" element={<ExpedicaoConfiguracoesV2Page />} />
+                  <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
 
                 </Route>
 
