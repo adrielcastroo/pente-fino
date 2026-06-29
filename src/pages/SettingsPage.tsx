@@ -64,6 +64,8 @@ import { ROLE_LABEL, atLeast, type Role } from '@/lib/permissions';
 import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
+import ExpedicaoPanel from '@/components/settings/ExpedicaoPanel';
+import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 
@@ -94,6 +96,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
       { id: 'security', name: 'Segurança', icon: Shield, description: 'Senha, autenticação de dois fatores e sessões.' },
       { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.', minRole: 'supervisor' },
       { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', minRole: 'supervisor' },
+      { id: 'expedicao', name: 'Expedição', icon: Truck, description: 'Transportadoras, webhooks de e-mail e importação automática de NF-e.', minRole: 'supervisor' },
     ],
   },
 ];
@@ -965,6 +968,10 @@ export default function SettingsPage() {
                   
                   {activeCategory === 'label-layout' && (
                     <LabelLayoutPanel />
+                  )}
+
+                  {activeCategory === 'expedicao' && (
+                    <ExpedicaoPanel />
                   )}
 
 

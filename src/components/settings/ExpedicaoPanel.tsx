@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Loader2, Mail, Inbox, Copy } from 'lucide-react';
+import { Plus, Loader2, Mail, Inbox, Copy, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import { useTransportadoras, useCreateTransportadora } from '@/hooks/expedicao/u
 import { RequireRole } from '@/components/auth/RequireRole';
 import { getAppsScriptWebhook, setAppsScriptWebhook } from '@/lib/expedicao-webhook';
 
-export default function ExpedicaoConfiguracoesPage() {
+export default function ExpedicaoPanel() {
   const { data = [], isLoading } = useTransportadoras();
   const create = useCreateTransportadora();
   const [nome, setNome] = useState('');
@@ -24,15 +24,15 @@ export default function ExpedicaoConfiguracoesPage() {
     setNome('');
   };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Configurações da expedição</h1>
-        <p className="text-sm text-muted-foreground mt-1">Transportadoras, SLAs e alertas.</p>
-      </div>
+  const nfeEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe-import`;
 
+  return (
+    <div className="space-y-8">
+      {/* Transportadoras */}
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">Transportadoras</h2>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Truck className="size-4 text-muted-foreground" /> Transportadoras
+        </h3>
         <RequireRole
           action="expedicao:manage-cadastros"
           fallback={
@@ -45,15 +45,13 @@ export default function ExpedicaoConfiguracoesPage() {
             <Input
               placeholder="Nome da transportadora"
               value={nome}
-              onChange={e => setNome(e.target.value)}
+              onChange={(e) => setNome(e.target.value)}
             />
             <Button type="submit" disabled={create.isPending} className="gap-2 shrink-0">
               <Plus className="w-4 h-4" /> Adicionar
             </Button>
           </form>
         </RequireRole>
-
-
 
         <div className="bg-card border border-border rounded-md overflow-hidden">
           {isLoading ? (
@@ -73,7 +71,7 @@ export default function ExpedicaoConfiguracoesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map(t => (
+                {data.map((t) => (
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{t.nome}</TableCell>
                     <TableCell>
@@ -89,12 +87,13 @@ export default function ExpedicaoConfiguracoesPage() {
         </div>
       </section>
 
+      {/* Webhook de e-mail */}
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Mail className="size-4 text-muted-foreground" /> Webhook de e-mail (Google Apps Script)
-        </h2>
+        </h3>
         <p className="text-xs text-muted-foreground max-w-2xl">
-          Cole aqui a URL pública de um Apps Script publicado como Web App. Será usado para
+          Cole a URL pública de um Apps Script publicado como Web App. Será usado para
           enviar romaneios por e-mail sem custo. Endpoint deve aceitar POST com JSON{' '}
           <code>{'{ to, subject, html }'}</code>.
         </p>
@@ -117,10 +116,11 @@ export default function ExpedicaoConfiguracoesPage() {
         </div>
       </section>
 
+      {/* Importação automática de NF-e */}
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Inbox className="size-4 text-muted-foreground" /> Importação automática de NF-e por e-mail
-        </h2>
+        </h3>
         <p className="text-xs text-muted-foreground max-w-2xl">
           O Google Apps Script monitora um label do Gmail (ex.: <code>NFe/Importar</code>),
           extrai os XMLs anexados e envia para o endpoint abaixo. Cada NF-e é deduplicada
@@ -128,16 +128,14 @@ export default function ExpedicaoConfiguracoesPage() {
         </p>
         <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 max-w-2xl">
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs break-all">
-              {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe-import`}
-            </code>
+            <code className="flex-1 text-xs break-all">{nfeEndpoint}</code>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               className="shrink-0"
               onClick={() => {
-                navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nfe-import`);
+                navigator.clipboard.writeText(nfeEndpoint);
                 toast.success('Endpoint copiado');
               }}
             >
