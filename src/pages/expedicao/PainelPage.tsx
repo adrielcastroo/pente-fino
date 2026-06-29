@@ -73,11 +73,6 @@ export default function PainelPage() {
       <PageHeader
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
-        actions={
-          <Button onClick={() => setNovo(true)} className="gap-2 h-9">
-            <Plus className="w-4 h-4" /> Novo picking
-          </Button>
-        }
       />
 
       {kpis.atrasados > 0 && (
