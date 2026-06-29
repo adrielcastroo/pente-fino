@@ -138,9 +138,16 @@ export default function SelecionarModuloPage() {
       <main className="flex-1 flex items-center justify-center px-6 py-8 sm:px-10 sm:py-12">
         <div className="w-full max-w-2xl">
           {/* Branding */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <img src={logoComb} alt="Pente Fino" className="h-8 w-8 object-contain" />
-            <span className="text-base font-semibold tracking-tight text-foreground">Pente Fino</span>
+          <div className="flex flex-col items-center justify-center gap-2 mb-8 sm:mb-10">
+            <img
+              src={logoComb}
+              alt="Pente Fino"
+              className="h-12 w-12 sm:h-14 sm:w-14 object-contain select-none"
+              draggable={false}
+            />
+            <span className="text-sm sm:text-base font-semibold tracking-tight text-foreground">
+              Pente Fino
+            </span>
           </div>
 
           {/* Identidade do operador */}
