@@ -24,7 +24,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 // Types
 // ============================================================================
 
-type PageSize = '100x150' | '100x100' | '80x60' | '60x40' | '50x30';
+type PageSize = '100x150' | '100x100' | '80x60' | '60x40' | '50x30' | 'custom';
 type CodeMode = 'none' | 'qr' | 'barcode';
 type BarcodeFmt = 'CODE128' | 'CODE39' | 'EAN13' | 'EAN8' | 'ITF14' | 'UPC';
 type Align = 'left' | 'center' | 'right';
