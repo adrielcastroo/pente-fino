@@ -343,7 +343,7 @@ export function useFaturarPicking() {
 
       const { error } = await supabase
         .from('expedicao_pickings')
-        .update({ status: 'faturado' })
+        .update({ status: 'faturado', faturado_at: new Date().toISOString() } as never)
         .eq('id', pickingId);
       if (error) throw error;
 
