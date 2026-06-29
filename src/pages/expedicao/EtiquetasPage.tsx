@@ -47,6 +47,10 @@ interface LabelTemplate {
   observacoes: string;
   customFields: CustomField[];
   logoDataUrl: string | null;
+  // BarTender import (imagem exportada do BarTender ocupa a etiqueta inteira)
+  bartenderImage: string | null;     // dataURL PNG/JPG
+  bartenderFileName: string | null;  // nome original (.btw guardado só como referência)
+  bartenderEnabled: boolean;         // quando true, esconde campos e imprime só a imagem
   // Código (QR/Barcode)
   codeMode: CodeMode;
   codePayload: string;
