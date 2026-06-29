@@ -183,7 +183,7 @@ export default function PainelPage() {
         )}
       </div>
 
-      <NovoPickingDialog open={novo} onOpenChange={setNovo} />
+      
       <CancelPickingDialog
         picking={cancelTarget}
         open={!!cancelTarget}
