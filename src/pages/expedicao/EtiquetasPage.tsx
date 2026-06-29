@@ -429,6 +429,38 @@ export default function ExpedicaoEtiquetasPage() {
                   </Select>
                 </div>
 
+                {active.pageSize === 'custom' && (
+                  <div className="grid grid-cols-2 gap-3 rounded-md border border-dashed border-border bg-muted/30 p-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-muted-foreground">Largura (mm)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={MIN_MM}
+                        max={MAX_MM}
+                        step={1}
+                        value={active.customWidth}
+                        onChange={(e) => update('customWidth', clampMm(Number(e.target.value)))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-muted-foreground">Altura (mm)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={MIN_MM}
+                        max={MAX_MM}
+                        step={1}
+                        value={active.customHeight}
+                        onChange={(e) => update('customHeight', clampMm(Number(e.target.value)))}
+                      />
+                    </div>
+                    <p className="col-span-2 text-[11px] text-muted-foreground">
+                      Aceita valores de {MIN_MM} a {MAX_MM} mm. Pré-visualização e impressão se ajustam automaticamente.
+                    </p>
+                  </div>
+                )}
+
                 <SliderField label="Tamanho do título" suffix="pt"
                   min={8} max={24} step={1}
                   value={active.titleSize} onChange={(v) => update('titleSize', v)} />
