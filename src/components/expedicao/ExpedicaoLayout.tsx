@@ -39,18 +39,23 @@ const EXPEDICAO_NAV: ModuleSidebarConfig = {
       ],
     },
     {
-      label: 'Gestão',
+      label: 'Análises',
       items: [
-        { key: 'dashboard', label: 'Dashboard Operacional', icon: BarChart3, path: '/expedicao/dashboard' },
-        { key: 'logistica', label: 'Dashboard Logístico', icon: Truck, path: '/expedicao/logistica' },
-        { key: 'carrinhos', label: 'Carrinhos', icon: ShoppingCart, path: '/expedicao/carrinhos' },
-        { key: 'historico', label: 'Histórico', icon: History, path: '/expedicao/historico' },
+        { key: 'dashboard', label: 'Operacional', icon: BarChart3, path: '/expedicao/dashboard' },
+        { key: 'logistica', label: 'Logístico', icon: Truck, path: '/expedicao/logistica' },
       ],
     },
     {
-      label: 'Ferramentas',
+      label: 'Recursos',
       items: [
+        { key: 'carrinhos', label: 'Carrinhos', icon: ShoppingCart, path: '/expedicao/carrinhos' },
         { key: 'etiquetas', label: 'Etiquetas', icon: Tag, path: '/expedicao/etiquetas' },
+      ],
+    },
+    {
+      label: 'Admin',
+      items: [
+        { key: 'historico', label: 'Histórico', icon: History, path: '/expedicao/historico' },
         { key: 'relatorios', label: 'Relatórios', icon: FileDown, path: '/expedicao/relatorios' },
       ],
     },
