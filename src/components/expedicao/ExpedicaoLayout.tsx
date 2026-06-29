@@ -12,163 +12,147 @@ import {
   Settings,
   ArrowLeftRight,
   History,
-  LogOut,
   FileDown,
   Tag,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { LATEST_VERSION } from '@/lib/changelog';
+import { LATEST_VERSION, BUILD_TIME } from '@/lib/changelog';
 import { Button } from '@/components/ui/button';
 import ModuleSwitchFab from '@/components/ModuleSwitchFab';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
+import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 
-const NAV = [
-  { to: '/expedicao/painel', label: 'Painel', icon: ClipboardList },
-  { to: '/expedicao/pickings', label: 'Pickings', icon: Package },
-  { to: '/expedicao/conferencia', label: 'Conferência', icon: ScanLine },
-  { to: '/expedicao/romaneio', label: 'Romaneio', icon: FileText },
-  { to: '/expedicao/faturamento', label: 'Faturamento', icon: DollarSign },
-];
+const EXPEDICAO_NAV: ModuleSidebarConfig = {
+  moduleLabel: 'EXPEDIÇÃO',
+  homePath: '/expedicao/painel',
+  settingsPath: '/expedicao/configuracoes',
+  groups: [
+    {
+      label: 'Operações',
+      items: [
+        { key: 'painel', label: 'Painel', icon: ClipboardList, path: '/expedicao/painel' },
+        { key: 'pickings', label: 'Pickings', icon: Package, path: '/expedicao/pickings' },
+        { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/expedicao/conferencia' },
+        { key: 'romaneio', label: 'Romaneio', icon: FileText, path: '/expedicao/romaneio' },
+        { key: 'faturamento', label: 'Faturamento', icon: DollarSign, path: '/expedicao/faturamento' },
+      ],
+    },
+    {
+      label: 'Gestão',
+      items: [
+        { key: 'dashboard', label: 'Dashboard Operacional', icon: BarChart3, path: '/expedicao/dashboard' },
+        { key: 'logistica', label: 'Dashboard Logístico', icon: Truck, path: '/expedicao/logistica' },
+        { key: 'carrinhos', label: 'Carrinhos', icon: ShoppingCart, path: '/expedicao/carrinhos' },
+        { key: 'historico', label: 'Histórico', icon: History, path: '/expedicao/historico' },
+      ],
+    },
+    {
+      label: 'Ferramentas',
+      items: [
+        { key: 'etiquetas', label: 'Etiquetas', icon: Tag, path: '/expedicao/etiquetas' },
+        { key: 'relatorios', label: 'Relatórios', icon: FileDown, path: '/expedicao/relatorios' },
+      ],
+    },
+  ],
+};
 
-const NAV_SECONDARY = [
-  { to: '/expedicao/dashboard', label: 'Dashboard Operacional', icon: BarChart3 },
-  { to: '/expedicao/logistica', label: 'Dashboard Logístico', icon: Truck },
-  { to: '/expedicao/carrinhos', label: 'Carrinhos', icon: ShoppingCart },
-  { to: '/expedicao/historico', label: 'Histórico', icon: History },
-  { to: '/expedicao/etiquetas', label: 'Etiquetas', icon: Tag },
-  { to: '/expedicao/relatorios', label: 'Relatórios', icon: FileDown },
-  { to: '/expedicao/configuracoes', label: 'Configurações', icon: Settings },
-
-];
-
-const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-    isActive
-      ? 'bg-primary/10 text-primary font-medium'
-      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-  }`;
+// Bottom tab bar (mobile/tablet) — itens primários
+const MOBILE_NAV = EXPEDICAO_NAV.groups[0].items.slice(0, 5);
 
 export default function ExpedicaoLayout() {
-  const { profile, modules, signOut } = useAuth();
+  const { profile, modules } = useAuth();
   const navigate = useNavigate();
   const canSwitch = modules.length > 1;
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+
+  const prefStartCollapsed =
+    typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
+  const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
+
+  const handleOpenChange = (open: boolean) => {
+    try {
+      localStorage.setItem('pref_sidebar_collapsed', open ? 'false' : 'true');
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
-    <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
-      <aside className="hidden desktop:flex w-60 flex-col border-r border-border bg-card/40">
-        <div className="px-4 py-4 border-b border-border">
-          <Link to="/expedicao/painel" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+    <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
+      <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
+        {/* Sidebar shadcn padronizada — apenas em desktop real */}
+        <div className="hidden desktop:contents">
+          <ModuleSidebar config={EXPEDICAO_NAV} />
+        </div>
+
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <header className="desktop:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
+            <Link to="/expedicao/painel" className="flex items-center gap-2">
               <Truck className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Expedição</span>
+            </Link>
+            {canSwitch && (
+              <Button variant="ghost" size="sm" onClick={() => navigate('/selecionar-modulo')}>
+                <ArrowLeftRight className="w-4 h-4" />
+              </Button>
+            )}
+          </header>
+
+          <main className="flex-1 overflow-y-auto custom-scrollbar pb-16 desktop:pb-0">
+            <div className="p-4 lg:p-6 xl:p-8 max-w-[1600px] mx-auto">
+              <Suspense
+                fallback={
+                  <div className="space-y-3">
+                    <div className="h-8 bg-muted rounded w-1/4" />
+                    <div className="h-32 bg-muted rounded" />
+                  </div>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </div>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-foreground">Pente Fino</p>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
-                Expedição
-              </p>
-            </div>
-          </Link>
-        </div>
+          </main>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={linkClass} end>
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-
-          <div className="my-2 border-t border-border/60" />
-
-          {NAV_SECONDARY.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={linkClass} end>
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="border-t border-border p-2 space-y-1">
-          {canSwitch && (
-            <button
-              type="button"
-              onClick={() => navigate('/selecionar-modulo')}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <ArrowLeftRight className="w-4 h-4" />
-              <span>Trocar módulo</span>
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          {/* Bottom tab bar (mobile/tablet) */}
+          <nav
+            className="desktop:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-border bg-card/95 backdrop-blur grid grid-cols-5"
+            aria-label="Navegação Expedição"
           >
-            <LogOut className="w-4 h-4" />
-            <span>Sair</span>
-          </button>
+            {MOBILE_NAV.map(({ path, label, icon: Icon }) => (
+              <NavLink
+                key={path}
+                to={path}
+                end
+                className={({ isActive }) =>
+                  `flex flex-col items-center justify-center gap-0.5 text-[10px] ${
+                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4" />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <footer
+            role="contentinfo"
+            className="hidden desktop:flex border-t border-border bg-card/30 px-4 py-1.5 items-center justify-between text-[10px] text-muted-foreground/80"
+          >
+            <span>{profile?.display_name || 'Operador'} · Módulo Expedição</span>
+            <span
+              className="font-mono"
+              title={BUILD_TIME ? `Build: ${new Date(BUILD_TIME).toLocaleString('pt-BR')}` : undefined}
+            >
+              Pente Fino · v{LATEST_VERSION}
+            </span>
+          </footer>
         </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="desktop:hidden h-12 border-b border-border bg-card/40 flex items-center justify-between px-3">
-          <Link to="/expedicao/painel" className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold">Expedição</span>
-          </Link>
-          {canSwitch && (
-            <Button variant="ghost" size="sm" onClick={() => navigate('/selecionar-modulo')}>
-              <ArrowLeftRight className="w-4 h-4" />
-            </Button>
-          )}
-        </header>
-
-        <main className="flex-1 overflow-y-auto custom-scrollbar pb-16 desktop:pb-0">
-          <div className="p-4 lg:p-6 xl:p-8 max-w-[1600px] mx-auto">
-            <Suspense
-              fallback={
-                <div className="space-y-3">
-                  <div className="h-8 bg-muted rounded w-1/4" />
-                  <div className="h-32 bg-muted rounded" />
-                </div>
-              }
-            >
-              <Outlet />
-            </Suspense>
-          </div>
-        </main>
-
-        {/* Bottom tab bar (mobile/tablet) */}
-        <nav
-          className="desktop:hidden fixed bottom-0 inset-x-0 z-40 h-14 border-t border-border bg-card/95 backdrop-blur grid grid-cols-5"
-          aria-label="Navegação Expedição"
-        >
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-0.5 text-[10px] ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
-                }`
-              }
-            >
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Footer */}
-        <footer
-          role="contentinfo"
-          className="hidden desktop:flex border-t border-border bg-card/30 px-4 py-1.5 items-center justify-between text-[10px] text-muted-foreground/80"
-        >
-          <span>{profile?.display_name || 'Operador'} · Módulo Expedição</span>
-          <span className="font-mono">Pente Fino · v{LATEST_VERSION}</span>
-        </footer>
+        <ModuleSwitchFab />
       </div>
-      <ModuleSwitchFab />
-    </div>
+    </SidebarProvider>
   );
 }
