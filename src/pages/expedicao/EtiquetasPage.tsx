@@ -733,7 +733,7 @@ function Barcode({ value, format, width }: { value: string; format: BarcodeFmt; 
 }
 
 function LabelSheet({ t }: { t: LabelTemplate }) {
-  const dims = PAGE_DIMS[t.pageSize];
+  const dims = resolveDims(t);
   const codeValue = (t.codePayload || t.codigo || t.titulo || '').slice(0, 700);
   const alignClass = t.align === 'left' ? 'text-left' : t.align === 'right' ? 'text-right' : 'text-center';
   const flexAlign = t.align === 'left' ? 'items-start' : t.align === 'right' ? 'items-end' : 'items-center';
