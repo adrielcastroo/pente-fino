@@ -14,6 +14,7 @@ import {
   History,
   LogOut,
   FileDown,
+  Tag,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { LATEST_VERSION } from '@/lib/changelog';
