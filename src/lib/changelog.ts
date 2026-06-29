@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.17.0',
+    date: '2026-06-29',
+    highlights: [
+      { type: 'feature', text: "Faturamento: importação de XML de NF-e, KPIs, faturamento em lote e timeline de status" },
+    ],
+  },
+  {
     version: '3.16.0',
     date: '2026-06-29',
     highlights: [
