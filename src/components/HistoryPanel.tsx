@@ -1217,9 +1217,9 @@ export default function HistoryPanel() {
               {paged.map((conf, index) => (
                 <motion.div
                   key={conf.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={isLow ? false : { opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                  transition={isLow ? { duration: 0 } : { delay: Math.min(index * 0.05, 0.5), duration: 0.3 }}
                 >
                   <ConferenceCard 
                     conf={conf} 
