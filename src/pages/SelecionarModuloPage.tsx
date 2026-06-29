@@ -127,10 +127,10 @@ function useMyDayStats(userId?: string) {
       const iso = today.toISOString();
       try {
         const [mySessions, myRegs] = await Promise.all([
-          supabase.from('conferences').select('id', { count: 'exact', head: true }).eq('conferente_id', userId!).gte('started_at', iso),
+          supabase.from('conferences').select('id', { count: 'exact', head: true }).eq('created_by', userId!).gte('started_at', iso),
           supabase.from('registros')
-            .select('id, conferences!inner(conferente_id)', { count: 'exact', head: true })
-            .eq('conferences.conferente_id', userId!)
+            .select('id, conferences!inner(created_by)', { count: 'exact', head: true })
+            .eq('conferences.created_by', userId!)
             .gte('created_at', iso) as any,
         ]);
         return { sessions: mySessions.count ?? 0, registros: (myRegs as any).count ?? 0 };
