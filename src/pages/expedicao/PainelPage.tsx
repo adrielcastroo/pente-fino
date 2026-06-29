@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { usePickings, type Picking } from '@/hooks/expedicao/useExpedicaoData';
-import NovoPickingDialog from '@/components/expedicao/NovoPickingDialog';
+
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
 import { useAuth } from '@/hooks/use-auth';
