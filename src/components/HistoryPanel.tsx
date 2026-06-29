@@ -6,7 +6,7 @@ import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
-import { FolderOpen, ChevronDown, Package, Trash2, User, Pencil, CheckCircle2, Search, Calendar, FileSpreadsheet, Clock, Plus, X, Download } from 'lucide-react';
+import { FolderOpen, ChevronDown, Trash2, Pencil, CheckCircle2, Search, Plus, X, Download } from 'lucide-react';
 import { RequireRole } from '@/components/auth/RequireRole';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -35,20 +35,36 @@ function EditRegistroDialog({
   const updateHistoryRegistro = useAppStore(s => s.updateHistoryRegistro);
   const [form, setForm] = useState<Registro | null>(registro);
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Não sobrescrever edições do usuário quando o pai re-renderiza
+  useEffect(() => {
+    if (!isDirty) setForm(registro);
+  }, [registro, isDirty]);
 
   useEffect(() => {
-    setForm(registro);
-  }, [registro]);
+    if (!open) setIsDirty(false);
+  }, [open]);
 
   const isPVT = form?.tipoTecido === 'PVT';
   const isDiversos = form?.modoOrigem === 'diversos';
-  
-  // 'isMotor' agrupa motor/controle/coulisse — todos compartilham o mesmo layout
-  // (Lote Final, QTD, NF) e NÃO devem cair no fluxo de tecidos (M²/Largura/Endereço).
   const isMotor = form?.modoOrigem === 'motor' || form?.modoOrigem === 'controle' || form?.tipoTecido === 'Coulisse';
 
   const updateField = <K extends keyof Registro>(key: K, value: Registro[K]) => {
+    setIsDirty(true);
     setForm(current => current ? { ...current, [key]: value } : current);
+  };
+
+  const hasChanges = useMemo(() => {
+    if (!form || !registro) return false;
+    return JSON.stringify(form) !== JSON.stringify(registro);
+  }, [form, registro]);
+
+  const handleClose = (nextOpen: boolean) => {
+    if (!nextOpen && hasChanges) {
+      if (!window.confirm('Descartar alterações não salvas?')) return;
+    }
+    onOpenChange(nextOpen);
   };
 
   const handleSave = async () => {
@@ -58,6 +74,22 @@ function EditRegistroDialog({
       return;
     }
 
+    const m2 = Number(form.m2);
+    const mLinear = Number(form.mLinear);
+    const largura = Number(form.largura);
+    const quantidade = Number(form.quantidade);
+
+    if (!isMotor) {
+      if (m2 < 0) { toast.warning('Metragem não pode ser negativa.'); return; }
+      if (largura < 0 || largura > 10) { toast.warning('Largura deve estar entre 0 e 10m.'); return; }
+      if (mLinear < 0) { toast.warning('Metro linear não pode ser negativo.'); return; }
+    }
+    if (isMotor && form.quantidade !== undefined && quantidade < 1) {
+      toast.warning('Quantidade deve ser pelo menos 1.');
+      return;
+    }
+
+    const snapshot = registro ? { ...registro } : null;
     setSaving(true);
     try {
       await updateHistoryRegistro(conferenceId, form.id, {
@@ -74,24 +106,55 @@ function EditRegistroDialog({
         loteSistema: form.loteSistema || '',
         posicao: Number(form.posicao) || null,
       });
-      toast.success('Registro histórico atualizado com sucesso.');
+      toast.success('Registro atualizado.', {
+        action: snapshot ? {
+          label: 'Desfazer',
+          onClick: async () => {
+            try {
+              await updateHistoryRegistro(conferenceId, snapshot.id, snapshot as any);
+              toast.info('Alteração desfeita.');
+            } catch (err) {
+              console.error('[HistoryPanel] Erro ao desfazer:', err);
+              toast.error('Não foi possível desfazer.');
+            }
+          },
+        } : undefined,
+        duration: 8000,
+      });
+      setIsDirty(false);
       onOpenChange(false);
-    } catch {
-      toast.error('Erro ao salvar as alterações no histórico.');
+    } catch (err) {
+      console.error('[HistoryPanel] Erro ao salvar registro:', err);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error(`Erro ao salvar: ${message}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const inputCls = "h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors";
+  const labelCls = "text-xs font-medium text-muted-foreground ml-1";
+
+  const fieldWithOriginal = (key: keyof Registro, label: string, extra?: React.ReactNode) => (
+    <div className="space-y-1">
+      <label className={labelCls}>{label}</label>
+      {extra}
+      {form && registro && String(form[key] ?? '') !== String(registro[key] ?? '') && (
+        <span className="block text-[10px] text-amber-600 ml-1">
+          Anterior: {String(registro[key] ?? '—') || '—'}
+        </span>
+      )}
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
-        <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-md p-0 overflow-hidden border border-border max-h-[90vh] overflow-y-auto bg-background">
+        <DialogHeader className="p-4 border-b border-border">
           <DialogTitle className="text-lg font-semibold tracking-tight">
             Editar Registro
           </DialogTitle>
-          <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
             {(() => {
               const tipo = form?.modoOrigem === 'motor' ? 'Motor'
                 : form?.modoOrigem === 'controle' ? 'Controle'
@@ -102,79 +165,69 @@ function EditRegistroDialog({
           </DialogDescription>
         </DialogHeader>
 
-
         {form && (
-          <div className="p-8 space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground ml-1">Referência do Item</label>
-              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.item} onChange={e => updateField('item', e.target.value)} />
-            </div>
+          <div className="p-4 space-y-4">
+            {fieldWithOriginal('item', 'Referência do Item',
+              <Input className={inputCls} value={form.item} onChange={e => updateField('item', e.target.value)} />
+            )}
 
-            {(isDiversos || isMotor) && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Nota Fiscal</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
-              </div>
+            {fieldWithOriginal('nf', 'Nota Fiscal',
+              <Input className={inputCls} value={form.nf || ''} onChange={e => updateField('nf', e.target.value)} />
             )}
 
             {isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">QTD</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
-                </div>
+                {fieldWithOriginal('lote', 'Lote / Batch',
+                  <Input className={inputCls} value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                )}
+                {fieldWithOriginal('quantidade', 'QTD',
+                  <Input className={inputCls} type="number" min={1} value={String(form.quantidade ?? '')} onChange={e => updateField('quantidade', Number(e.target.value) || 0)} />
+                )}
               </div>
             )}
 
-            {isMotor && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Lote Final</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors font-mono text-sm tabular-nums" value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
-              </div>
+            {isMotor && fieldWithOriginal('loteSistema', 'Lote Final',
+              <Input className={`${inputCls} font-mono text-sm tabular-nums`} value={form.loteSistema || ''} onChange={e => updateField('loteSistema', e.target.value)} />
             )}
 
             {!isPVT && !isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Largura (m)</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
-                </div>
+                {fieldWithOriginal('m2', 'Metragem Quadrada (M²)',
+                  <Input className={inputCls} type="number" min={0} step="0.1" value={String(form.m2 ?? '')} onChange={e => updateField('m2', Number(e.target.value) || 0)} />
+                )}
+                {fieldWithOriginal('largura', 'Largura (m)',
+                  <Input className={inputCls} type="number" min={0} max={10} step="0.01" value={String(form.largura ?? '')} onChange={e => updateField('largura', Number(e.target.value) || 0)} />
+                )}
               </div>
             )}
 
             {!isMotor && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Metro Linear</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
-                  <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
-                </div>
+                {fieldWithOriginal('mLinear', 'Metro Linear',
+                  <Input className={inputCls} type="number" min={0} step="0.1" value={String(form.mLinear ?? '')} onChange={e => updateField('mLinear', Number(e.target.value) || 0)} />
+                )}
+                {fieldWithOriginal('lote', 'Lote / Batch',
+                  <Input className={inputCls} value={form.lote || ''} onChange={e => updateField('lote', e.target.value)} />
+                )}
               </div>
             )}
 
             {!isPVT && !isMotor && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Endereço de Armazenagem</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors uppercase" value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {fieldWithOriginal('endereco', 'Endereço de Armazenagem',
+                  <Input className={`${inputCls} uppercase`} value={form.endereco || ''} onChange={e => updateField('endereco', e.target.value.toUpperCase())} />
+                )}
+                {fieldWithOriginal('posicao', 'Posição no Estoque',
+                  <Input className={inputCls} type="number" value={String(form.posicao ?? '')} onChange={e => updateField('posicao', (e.target.value === '' ? null : Number(e.target.value)) as any)} />
+                )}
               </div>
             )}
           </div>
         )}
 
-        <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-          <Button variant="outline" className="rounded-md font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
-          <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar Alterações'}</Button>
+        <DialogFooter className="p-4 bg-muted/10 border-t border-border gap-3">
+          <Button variant="outline" className="rounded-md font-medium px-6 h-10" onClick={() => handleClose(false)} disabled={saving}>Descartar</Button>
+          <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Confirmar'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -195,7 +248,7 @@ function AddHistoryRegistroDialog({
   isMotor: boolean;
 }) {
   const addHistoryRegistro = useAppStore(s => s.addHistoryRegistro);
-  const [form, setForm] = useState({
+  const initial = () => ({
     item: '',
     m2: '',
     mLinear: '',
@@ -206,12 +259,29 @@ function AddHistoryRegistroDialog({
     tipoTecido: isMotor ? 'Motor' : isDiversos ? 'Cortina' : '',
     modoOrigem: isMotor ? 'motor' : isDiversos ? 'diversos' : 'manual',
     quantidade: '',
+    loteSistema: '',
   });
+  const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!form.item.trim()) {
       toast.warning('Informe o Item/Referência.');
+      return;
+    }
+
+    const m2 = Number(form.m2);
+    const mLinear = Number(form.mLinear);
+    const largura = Number(form.largura);
+    const quantidade = Number(form.quantidade);
+
+    if (!isMotor) {
+      if (m2 < 0) { toast.warning('Metragem não pode ser negativa.'); return; }
+      if (largura < 0 || largura > 10) { toast.warning('Largura deve estar entre 0 e 10m.'); return; }
+      if (mLinear < 0) { toast.warning('Metro linear não pode ser negativo.'); return; }
+    }
+    if (isMotor && form.quantidade !== '' && quantidade < 1) {
+      toast.warning('Quantidade deve ser pelo menos 1.');
       return;
     }
 
@@ -228,106 +298,96 @@ function AddHistoryRegistroDialog({
         tipoTecido: form.tipoTecido,
         modoOrigem: form.modoOrigem,
         quantidade: Number(form.quantidade) || undefined,
-        processo: '', // Will be filled by store using conference processo
-        loteSistema: '', // Will be generated by store
+        processo: '',
+        loteSistema: form.loteSistema || '',
       });
       toast.success('Registro adicionado ao histórico.');
-      setForm({
-        item: '',
-        m2: '',
-        mLinear: '',
-        largura: '',
-        lote: '',
-        nf: '',
-        endereco: '',
-        tipoTecido: isMotor ? 'Motor' : isDiversos ? 'Cortina' : '',
-        modoOrigem: isMotor ? 'motor' : isDiversos ? 'diversos' : 'manual',
-        quantidade: '',
-      });
+      setForm(initial());
       onOpenChange(false);
-    } catch {
-      toast.error('Erro ao adicionar registro ao histórico.');
+    } catch (err) {
+      console.error('[HistoryPanel] Erro ao adicionar registro:', err);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error(`Erro ao adicionar: ${message}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const inputCls = "h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors";
+  const labelCls = "text-xs font-medium text-muted-foreground ml-1";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-lg p-0 overflow-hidden border border-border/40 max-h-[90vh] overflow-y-auto bg-background">
-        <DialogHeader className="p-8 sm:p-10 bg-gradient-to-br from-muted/50 to-muted/20 relative overflow-hidden border-b border-border/10">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            Novo Registro
-          </DialogTitle>
-          <DialogDescription className="text-sm font-semibold mt-2 opacity-70 relative">
-            Adicione um item esquecido a esta conferência de forma rápida e precisa.
+      <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-xl rounded-md p-0 overflow-hidden border border-border max-h-[90vh] overflow-y-auto bg-background">
+        <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle className="text-lg font-semibold tracking-tight">Novo Registro</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
+            Adicione um item esquecido a esta conferência.
           </DialogDescription>
         </DialogHeader>
 
-
-        <div className="p-8 space-y-6">
+        <div className="p-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground ml-1">Referência do Item</label>
-            <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.item} onChange={e => setForm({ ...form, item: e.target.value })} />
+            <label className={labelCls}>Referência do Item</label>
+            <Input className={inputCls} value={form.item} onChange={e => setForm({ ...form, item: e.target.value })} />
           </div>
 
-          {(isDiversos || isMotor) && (
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground ml-1">Nota Fiscal</label>
-              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.nf} onChange={e => setForm({ ...form, nf: e.target.value })} />
-            </div>
-          )}
+          <div className="space-y-2">
+            <label className={labelCls}>Nota Fiscal</label>
+            <Input className={inputCls} value={form.nf} onChange={e => setForm({ ...form, nf: e.target.value })} />
+          </div>
 
           {isMotor && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className={labelCls}>Lote / Batch</label>
+                  <Input className={inputCls} value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className={labelCls}>QTD</label>
+                  <Input className={inputCls} type="number" min={1} value={form.quantidade} onChange={e => setForm({ ...form, quantidade: e.target.value })} />
+                </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">QTD</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: e.target.value })} />
+                <label className={labelCls}>Lote Final</label>
+                <Input className={`${inputCls} font-mono text-sm tabular-nums`} value={form.loteSistema} onChange={e => setForm({ ...form, loteSistema: e.target.value })} />
               </div>
-            </div>
+            </>
           )}
 
           {!isMotor && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Metragem Quadrada (M²)</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={form.m2} onChange={e => setForm({ ...form, m2: e.target.value })} />
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className={labelCls}>Metragem Quadrada (M²)</label>
+                  <Input className={inputCls} type="number" min={0} step="0.1" value={form.m2} onChange={e => setForm({ ...form, m2: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className={labelCls}>Largura (m)</label>
+                  <Input className={inputCls} type="number" min={0} max={10} step="0.01" value={form.largura} onChange={e => setForm({ ...form, largura: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className={labelCls}>Metro Linear</label>
+                  <Input className={inputCls} type="number" min={0} step="0.1" value={form.mLinear} onChange={e => setForm({ ...form, mLinear: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className={labelCls}>Lote / Batch</label>
+                  <Input className={inputCls} value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
+                </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Largura (m)</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.01" value={form.largura} onChange={e => setForm({ ...form, largura: e.target.value })} />
+                <label className={labelCls}>Endereço de Armazenagem</label>
+                <Input className={`${inputCls} uppercase`} value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value.toUpperCase() })} />
               </div>
-            </div>
-          )}
-
-          {!isMotor && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Metro Linear</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" type="number" step="0.1" value={form.mLinear} onChange={e => setForm({ ...form, mLinear: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground ml-1">Lote / Batch</label>
-                <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors" value={form.lote} onChange={e => setForm({ ...form, lote: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {!isMotor && (
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground ml-1">Endereço de Armazenagem</label>
-              <Input className="h-10 rounded-md border-border/40 bg-muted/20 focus:bg-background transition-colors uppercase" value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value.toUpperCase() })} />
-            </div>
+            </>
           )}
         </div>
 
-        <DialogFooter className="p-6 bg-muted/20 border-t border-border/30 gap-3">
-          <Button variant="outline" className="rounded-md font-bold px-6 h-11" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
+        <DialogFooter className="p-4 bg-muted/10 border-t border-border gap-3">
+          <Button variant="outline" className="rounded-md font-medium px-6 h-10" onClick={() => onOpenChange(false)} disabled={saving}>Descartar</Button>
           <Button className="rounded-md font-medium px-6 h-10 bg-primary" onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Adicionar Item'}</Button>
         </DialogFooter>
       </DialogContent>
@@ -590,7 +650,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
 
   const tableContent = (
     <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
-      <div className="rounded-md sm:rounded-md lg:rounded-[2rem] overflow-hidden border border-border/20 shadow-2xl bg-background/40 backdrop-blur-2xl">
+      <div className="rounded-md overflow-hidden border border-border/30 bg-card">
         <table className="w-full text-xs min-w-[520px] sm:min-w-[800px] border-separate border-spacing-0">
 
           <thead>
@@ -631,7 +691,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   </td>
                 ))}
                 <td className="px-2 sm:px-6 py-2 sm:py-4">
-                  <div className="flex items-center justify-end gap-2 sm:opacity-0 group-hover/row:opacity-100 transition-all duration-300">
+                  <div className="flex items-center justify-end gap-2 opacity-70 hover:opacity-100 transition-opacity duration-150">
                     {!isGuest && (
                       <RequireRole action="edit:registro-antigo" showLocked>
                         <Tooltip>
@@ -671,11 +731,14 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     {r.wasEdited && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="ml-1 p-1.5 rounded-full bg-primary/10 text-primary cursor-help">
-                            <CheckCircle2 className="w-4 h-4" />
-                          </div>
+                          <span className="ml-1 text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase tracking-wide cursor-help">
+                            Editado
+                          </span>
                         </TooltipTrigger>
-                        <TooltipContent>Editado por {r.editedBy || 'Conferente'}</TooltipContent>
+                        <TooltipContent>
+                          Editado por {r.editedBy || 'Conferente'}
+                          {r.editedAt && ` em ${formatDateBR(r.editedAt)} às ${formatTimeBR(r.editedAt)}`}
+                        </TooltipContent>
                       </Tooltip>
                     )}
                   </div>
@@ -695,9 +758,6 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
         onClick={() => setOpen(!open)} 
         className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/20 transition-colors duration-150 text-left"
       >
-        <div className={`p-2 rounded-md shrink-0 transition-colors duration-150 ${open ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-          <FolderOpen className="w-4 h-4" />
-        </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-4">
@@ -882,7 +942,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       />
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-md rounded-md p-6 border border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-md flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
@@ -900,7 +960,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       </Dialog>
 
       <Dialog open={!!confirmDeleteItem} onOpenChange={(o) => { if (!o) setConfirmDeleteItem(null); }}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-md rounded-md p-6 border border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-md flex items-center justify-center mb-6 mx-auto">
               <Trash2 className="w-8 h-8" />
@@ -1076,18 +1136,13 @@ export default function HistoryPanel() {
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
-              <FolderOpen className="h-5 w-5" strokeWidth={1.75} />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground leading-tight truncate">
-                Histórico de conferências
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Conferências finalizadas por data e conferente.
-              </p>
-            </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground leading-tight truncate">
+              Histórico de conferências
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Conferências finalizadas por data e conferente.
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
@@ -1162,9 +1217,9 @@ export default function HistoryPanel() {
               {paged.map((conf, index) => (
                 <motion.div
                   key={conf.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={isLow ? false : { opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                  transition={isLow ? { duration: 0 } : { delay: Math.min(index * 0.05, 0.5), duration: 0.3 }}
                 >
                   <ConferenceCard 
                     conf={conf} 
@@ -1206,7 +1261,7 @@ export default function HistoryPanel() {
       </div>
 
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-        <DialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-sm rounded-md border border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-2">
             <DialogTitle className="text-lg font-semibold tracking-tight text-center">Limpar Tudo?</DialogTitle>
             <DialogDescription className="font-bold text-sm leading-relaxed mt-2 text-muted-foreground text-center">

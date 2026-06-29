@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.16.0',
+    date: '2026-06-29',
+    highlights: [
+      { type: 'feature', text: "Pente fino /historico: edição refatorada (validação, dirty-guard, NF/posição/lote final, undo pós-save, badge Editado visível, modais e tabela padronizados ao DS, animações respeitam low-perf)" },
+    ],
+  },
+  {
     version: '3.15.0',
     date: '2026-06-26',
     highlights: [
