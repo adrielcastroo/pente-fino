@@ -13,6 +13,7 @@ import UndoBanner from '@/components/UndoBanner';
 import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import ModuleSwitchFab from '@/components/ModuleSwitchFab';
 import { LATEST_VERSION, BUILD_TIME } from '@/lib/changelog';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
