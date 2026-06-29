@@ -1,7 +1,7 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Package, Truck } from 'lucide-react';
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { LATEST_VERSION } from '@/lib/changelog';
 import { supabase } from '@/integrations/supabase/client';
