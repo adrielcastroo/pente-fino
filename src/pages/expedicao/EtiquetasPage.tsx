@@ -690,6 +690,18 @@ function LabelSheet({ t }: { t: LabelTemplate }) {
     : t.borderStyle === 'dashed' ? 'border border-dashed border-border'
     : 'border border-border';
 
+  if (t.bartenderEnabled && t.bartenderImage) {
+    return (
+      <div
+        className={`label-sheet bg-white text-black ${borderClass} rounded-md mx-auto mb-4 overflow-hidden`}
+        style={{ width: `${dims.w}mm`, height: `${dims.h}mm`, padding: 0 }}
+      >
+        <img src={t.bartenderImage} alt="BarTender"
+          className="w-full h-full object-contain bg-white" />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`label-sheet bg-white text-black ${borderClass} rounded-md mx-auto mb-4 overflow-hidden`}
