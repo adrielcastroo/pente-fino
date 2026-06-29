@@ -471,6 +471,54 @@ export default function ExpedicaoEtiquetasPage() {
                   )}
                 </div>
 
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground">Etiqueta BarTender</Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Envie a imagem exportada do BarTender (PNG/JPG) — ocupa toda a etiqueta. Arquivos .btw ficam só como referência.
+                      </p>
+                    </div>
+                    {active.bartenderImage && (
+                      <div className="flex items-center gap-2">
+                        <Label className="text-[11px] text-muted-foreground">Usar</Label>
+                        <Switch checked={active.bartenderEnabled}
+                          onCheckedChange={(v) => update('bartenderEnabled', v)} />
+                      </div>
+                    )}
+                  </div>
+                  {active.bartenderImage ? (
+                    <div className="flex items-center gap-3 border border-border rounded-md p-2">
+                      <img src={active.bartenderImage} alt="BarTender"
+                        className="h-16 w-16 object-contain bg-white rounded border border-border" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-mono truncate">{active.bartenderFileName ?? 'etiqueta'}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {active.bartenderEnabled ? 'Substituindo conteúdo na impressão' : 'Salva mas desativada'}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => {
+                        update('bartenderImage', null);
+                        update('bartenderFileName', null);
+                        update('bartenderEnabled', false);
+                      }}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center gap-2 border border-dashed border-border rounded-md px-3 py-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                      <Upload className="size-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Enviar PNG/JPG do BarTender {active.bartenderFileName ? `· ref: ${active.bartenderFileName}` : ''}
+                      </span>
+                      <input type="file" accept="image/*,.btw,.btxml" className="hidden"
+                        onChange={(e) => e.target.files?.[0] && uploadBartender(e.target.files[0])} />
+                    </label>
+                  )}
+                </div>
+
+
                 <SliderField label="Cópias" suffix=""
                   min={1} max={50} step={1}
                   value={active.copias} onChange={(v) => update('copias', v)} />
