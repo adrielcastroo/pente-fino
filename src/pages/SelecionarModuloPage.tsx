@@ -1,12 +1,12 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Package, Truck, ArrowRight } from 'lucide-react';
-import { useEffect } from 'react';
+import { Package, Truck, ArrowRight, WifiOff } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
 import { LATEST_VERSION } from '@/lib/changelog';
-import { formatDateBR } from '@/lib/app-utils';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 import logoComb from '@/assets/logo-comb.png';
 
 function getGreeting(): string {
@@ -18,13 +18,7 @@ function getGreeting(): string {
 }
 
 function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map(w => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  return name.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
 function getShift(): string {
@@ -34,34 +28,47 @@ function getShift(): string {
   return '3º Turno';
 }
 
+function formatTimeAgo(dateStr: string): string {
+  const diffMin = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  if (diffMin < 1) return 'agora mesmo';
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `há ${diffH} h`;
+  const diffD = Math.floor(diffH / 24);
+  return `há ${diffD} dia${diffD > 1 ? 's' : ''}`;
+}
+
 function useModuleStats(enabled: boolean) {
   return useQuery({
     queryKey: ['module-stats'],
     enabled,
     staleTime: 60_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const isoToday = today.toISOString();
 
-      const [openConfs, sessionsToday, regsToday, pendPickings, expedHoje] = await Promise.all([
-        supabase.from('conferences').select('id', { count: 'exact', head: true }).is('finished_at', null),
-        supabase.from('conferences').select('id', { count: 'exact', head: true }).gte('started_at', isoToday),
-        supabase.from('registros').select('id', { count: 'exact', head: true }).gte('created_at', isoToday),
-        supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).in('status', ['pendente', 'em_separacao']),
-        supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).eq('status', 'faturado').gte('updated_at', isoToday),
+      const safeCount = async (p: Promise<{ count: number | null }>) => {
+        try { const r = await p; return r.count ?? 0; } catch { return 0; }
+      };
+
+      const [openConfs, sessionsToday, regsToday, pendPickings, emSeparacao, expedHoje, occupied, totalSlots] = await Promise.all([
+        safeCount(supabase.from('conferences').select('id', { count: 'exact', head: true }).is('finished_at', null)),
+        safeCount(supabase.from('conferences').select('id', { count: 'exact', head: true }).gte('started_at', isoToday)),
+        safeCount(supabase.from('registros').select('id', { count: 'exact', head: true }).gte('created_at', isoToday)),
+        safeCount(supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).in('status', ['pendente', 'em_separacao']) as any),
+        safeCount(supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).eq('status', 'em_separacao') as any),
+        safeCount(supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).eq('status', 'faturado').gte('updated_at', isoToday) as any),
+        safeCount(supabase.from('estoque_posicoes').select('id', { count: 'exact', head: true }).not('item_id', 'is', null)),
+        safeCount(supabase.from('estoque_posicoes').select('id', { count: 'exact', head: true })),
       ]);
 
+      const ocupacao = totalSlots ? Math.round((occupied / totalSlots) * 100) : 0;
+
       return {
-        estoque: {
-          openConferences: openConfs.count ?? 0,
-          sessionsToday: sessionsToday.count ?? 0,
-          registrosToday: regsToday.count ?? 0,
-        },
-        expedicao: {
-          pendentes: pendPickings.count ?? 0,
-          expedidosHoje: expedHoje.count ?? 0,
-        },
+        estoque: { openConferences: openConfs, sessionsToday, registrosToday: regsToday, ocupacao },
+        expedicao: { pendentes: pendPickings, emSeparacao, expedidosHoje: expedHoje },
       };
     },
   });
@@ -75,19 +82,30 @@ export default function SelecionarModuloPage() {
   const processo = useAppStore(s => s.processo);
   const sessionStartedAt = useAppStore(s => s.sessionStartedAt);
 
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const firstCardRef = useRef<HTMLAnchorElement>(null);
+  const lastModule = typeof window !== 'undefined' ? localStorage.getItem('pf_lastModule') : null;
+
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['module-stats'] });
-    const onFocus = () => queryClient.invalidateQueries({ queryKey: ['module-stats'] });
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') onFocus();
+      if (document.visibilityState === 'visible') {
+        queryClient.invalidateQueries({ queryKey: ['module-stats'] });
+      }
     };
-    window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [queryClient]);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
 
   const hasEstoque = modules.includes('estoque');
   const hasExpedicao = modules.includes('expedicao');
@@ -104,7 +122,12 @@ export default function SelecionarModuloPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [navigate, showBoth]);
 
-  const { data: stats } = useModuleStats(!loading && !isGuest && showBoth);
+  useEffect(() => {
+    const t = setTimeout(() => firstCardRef.current?.focus(), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  const { data: stats, isLoading: statsLoading } = useModuleStats(!loading && !isGuest && showBoth);
 
   if (loading) {
     return (
@@ -127,21 +150,42 @@ export default function SelecionarModuloPage() {
     'Conferente';
 
   const hasActiveSession = registros.length > 0;
+  const ocupacao = stats?.estoque.ocupacao ?? 0;
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
   };
 
+  const prefetchModule = (key: 'estoque' | 'expedicao') => {
+    if (key === 'estoque') import('@/pages/DashboardPage').catch(() => {});
+    if (key === 'expedicao') import('@/pages/expedicao/PainelPage').catch(() => {});
+  };
+
+  const renderMetric = (value: number | undefined, label: string, accent?: string) => (
+    <div>
+      {statsLoading ? (
+        <Skeleton className="h-7 w-12 mb-1" />
+      ) : (
+        <p className={`text-xl font-semibold tabular-nums ${accent ?? 'text-foreground'}`}>
+          {value?.toLocaleString('pt-BR') ?? 0}
+        </p>
+      )}
+      <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background animate-in fade-in duration-300">
       <main className="flex-1 flex items-center justify-center px-6 py-8 sm:px-10 sm:py-12">
         <div className="w-full max-w-2xl">
           {/* Branding */}
-          <div className="flex flex-col items-center justify-center gap-2 mb-8 sm:mb-10">
+          <div className="flex flex-col items-center justify-center gap-2 mb-6">
             <img
               src={logoComb}
               alt="Pente Fino"
+              width={56}
+              height={56}
               className="h-12 w-12 sm:h-14 sm:w-14 object-contain select-none"
               draggable={false}
             />
@@ -150,8 +194,15 @@ export default function SelecionarModuloPage() {
             </span>
           </div>
 
+          {!isOnline && (
+            <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+              <WifiOff className="w-3.5 h-3.5" />
+              Sem conexão — dados podem estar desatualizados
+            </div>
+          )}
+
           {/* Identidade do operador */}
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-muted text-foreground inline-flex items-center justify-center text-sm font-semibold tabular-nums shrink-0">
               {getInitials(displayName)}
             </div>
@@ -160,7 +211,7 @@ export default function SelecionarModuloPage() {
                 {getGreeting()}, {displayName}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {roleName} · {formatDateBR(new Date().toISOString())} · {getShift()}
+                {roleName} · {getShift()}
               </p>
             </div>
           </div>
@@ -169,7 +220,7 @@ export default function SelecionarModuloPage() {
           {hasActiveSession && (
             <Link
               to="/estoque/operacao"
-              className="mb-6 flex items-center justify-between gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 px-4 py-3 hover:bg-amber-500/10 transition-colors"
+              className="mb-6 flex items-center justify-between gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 hover:bg-amber-500/10 transition-colors"
             >
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
@@ -177,7 +228,7 @@ export default function SelecionarModuloPage() {
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">
                   {registros.length} {registros.length === 1 ? 'registro' : 'registros'}
-                  {sessionStartedAt ? ` · iniciada ${formatDateBR(new Date(sessionStartedAt).toISOString())}` : ''}
+                  {sessionStartedAt ? ` · iniciada ${formatTimeAgo(new Date(sessionStartedAt).toISOString())}` : ''}
                 </p>
               </div>
               <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300 shrink-0">
@@ -190,33 +241,44 @@ export default function SelecionarModuloPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Estoque */}
             <Link
+              ref={firstCardRef}
               to="/estoque"
-              className="group min-h-[200px] flex flex-col p-5 rounded-md border border-border border-t-2 border-t-sky-500 bg-card hover:bg-muted/30 transition-colors"
+              onClick={() => localStorage.setItem('pf_lastModule', 'estoque')}
+              onMouseEnter={() => prefetchModule('estoque')}
+              onFocus={() => prefetchModule('estoque')}
+              className={`group min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lastModule === 'estoque' ? 'ring-1 ring-sky-400/40' : ''
+              }`}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Package className="w-5 h-5 text-sky-600 dark:text-sky-400" strokeWidth={1.75} />
+                <Package className="w-5 h-5 text-sky-600" strokeWidth={1.75} />
                 <h2 className="text-sm font-semibold text-foreground">Estoque</h2>
-                {stats?.estoque.openConferences ? (
+                {!!stats?.estoque.openConferences && (
                   <span className="ml-auto text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 tabular-nums">
                     {stats.estoque.openConferences} aberta{stats.estoque.openConferences > 1 ? 's' : ''}
                   </span>
-                ) : null}
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <p className="text-xl font-semibold text-foreground tabular-nums">
-                    {stats?.estoque.sessionsToday ?? '—'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">sessões hoje</p>
-                </div>
-                <div>
-                  <p className="text-xl font-semibold text-foreground tabular-nums">
-                    {stats?.estoque.registrosToday?.toLocaleString('pt-BR') ?? '—'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">registros hoje</p>
-                </div>
+                {renderMetric(stats?.estoque.sessionsToday, 'sessões hoje')}
+                {renderMetric(stats?.estoque.registrosToday, 'registros hoje')}
               </div>
+
+              {ocupacao > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className="text-muted-foreground">Ocupação</span>
+                    <span className="tabular-nums text-foreground font-medium">{ocupacao}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${ocupacao > 80 ? 'bg-amber-500' : 'bg-sky-500'}`}
+                      style={{ width: `${ocupacao}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="mt-auto flex items-center justify-between">
                 <span className="text-[11px] text-muted-foreground">Conferência, armazém e saídas</span>
@@ -229,31 +291,26 @@ export default function SelecionarModuloPage() {
             {/* Expedição */}
             <Link
               to="/expedicao/painel"
-              className="group min-h-[200px] flex flex-col p-5 rounded-md border border-border border-t-2 border-t-emerald-500 bg-card hover:bg-muted/30 transition-colors"
+              onClick={() => localStorage.setItem('pf_lastModule', 'expedicao')}
+              onMouseEnter={() => prefetchModule('expedicao')}
+              onFocus={() => prefetchModule('expedicao')}
+              className={`group min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lastModule === 'expedicao' ? 'ring-1 ring-emerald-400/40' : ''
+              }`}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
+                <Truck className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
                 <h2 className="text-sm font-semibold text-foreground">Expedição</h2>
-                {stats?.expedicao.pendentes ? (
+                {!!stats?.expedicao.pendentes && (
                   <span className="ml-auto text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 tabular-nums">
                     {stats.expedicao.pendentes} pendente{stats.expedicao.pendentes > 1 ? 's' : ''}
                   </span>
-                ) : null}
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <p className="text-xl font-semibold text-foreground tabular-nums">
-                    {stats?.expedicao.pendentes ?? '—'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">pickings pendentes</p>
-                </div>
-                <div>
-                  <p className="text-xl font-semibold text-foreground tabular-nums">
-                    {stats?.expedicao.expedidosHoje ?? '—'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">expedidos hoje</p>
-                </div>
+                {renderMetric(stats?.expedicao.emSeparacao, 'em separação')}
+                {renderMetric(stats?.expedicao.expedidosHoje, 'expedidos hoje')}
               </div>
 
               <div className="mt-auto flex items-center justify-between">
@@ -267,11 +324,7 @@ export default function SelecionarModuloPage() {
 
           {/* Ações secundárias */}
           <div className="flex items-center justify-center gap-3 mt-8 text-xs text-muted-foreground/60">
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="hover:text-foreground transition-colors"
-            >
+            <button type="button" onClick={handleSignOut} className="hover:text-foreground transition-colors">
               Trocar conta
             </button>
             <span aria-hidden>·</span>
