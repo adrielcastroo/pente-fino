@@ -9,6 +9,7 @@ import {
   ClipboardList,
   ShieldAlert,
   LayoutDashboard,
+  Tag,
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 import { useAppStore } from '@/store/useAppStore';
@@ -41,6 +42,12 @@ const EstoqueSidebar = memo(() => {
             { key: 'mapa', label: 'Estoque', icon: Package, path: '/estoque/mapa' },
             { key: 'reservas', label: 'Reservas', icon: Table, path: '/estoque/reservas', badge: reservasCount },
             { key: 'historico', label: 'Histórico', icon: FolderOpen, path: '/estoque/historico' },
+          ],
+        },
+        {
+          label: 'Recursos',
+          items: [
+            { key: 'etiquetas', label: 'Etiquetas', icon: Tag, path: '/estoque/etiquetas' },
           ],
         },
         {
