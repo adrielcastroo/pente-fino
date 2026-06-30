@@ -27,7 +27,7 @@ export function TabsBar<T extends string>({
     <div
       role="tablist"
       className={cn(
-        'flex bg-card/40 backdrop-blur rounded-lg p-1 gap-1 border border-border/30 w-full sm:max-w-md',
+        'flex bg-card/40 backdrop-blur rounded-md p-1 gap-1 border border-border/30 w-full sm:max-w-md',
         className,
       )}
     >

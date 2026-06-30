@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { PageHeader } from '@/components/ui/page-header';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { routeForConference } from '@/lib/conferenceRouting';
@@ -1135,18 +1136,12 @@ export default function HistoryPanel() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground leading-tight truncate">
-              Histórico de conferências
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Conferências finalizadas por data e conferente.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-             <div className="relative flex-1 min-w-[180px] lg:w-72">
+        <PageHeader
+          title="Histórico de conferências"
+          subtitle="Conferências finalizadas por data e conferente."
+          actions={
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+              <div className="relative flex-1 min-w-[180px] lg:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
                 <Input
                   value={localSearch}
@@ -1154,49 +1149,50 @@ export default function HistoryPanel() {
                   placeholder="Pesquisar por item, conferente ou NF..."
                   className="pl-9 h-9 rounded-md border-border/40 bg-card/50 text-sm w-full"
                 />
-             </div>
-             <select
-               value={periodo}
-               onChange={e => setPeriodo(e.target.value as any)}
-               className="h-9 rounded-md border border-border/40 bg-card/50 px-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0"
-             >
-               <option value="7">Últimos 7 dias</option>
-               <option value="30">Últimos 30 dias</option>
-               <option value="90">Últimos 90 dias</option>
-               <option value="todos">Todo período</option>
-             </select>
-             {testCount > 0 && (
-               <Tooltip>
-                 <TooltipTrigger asChild>
-                   <Button
-                     variant={showTestData ? 'default' : 'outline'}
-                     size="sm"
-                     onClick={() => setShowTestData(v => !v)}
-                     className="h-9 rounded-md px-2.5 text-xs font-medium shrink-0"
-                   >
-                     {showTestData ? 'Ocultar' : 'Mostrar'} testes ({testCount})
-                   </Button>
-                 </TooltipTrigger>
-                 <TooltipContent>Conferências marcadas como dados de teste</TooltipContent>
-               </Tooltip>
-             )}
-             {history.length > 0 && !isGuest && (
-               <Tooltip>
-                 <TooltipTrigger asChild>
-                   <Button
-                     variant="outline"
-                     size="icon"
-                     onClick={() => setShowClearConfirm(true)}
-                     className="h-9 w-9 rounded-md border-destructive/30 text-destructive hover:bg-destructive/10 shrink-0"
-                   >
-                     <Trash2 className="w-4 h-4" strokeWidth={1.75} />
-                   </Button>
-                 </TooltipTrigger>
-                 <TooltipContent>Limpar todo o histórico</TooltipContent>
-               </Tooltip>
-             )}
-          </div>
-        </header>
+              </div>
+              <select
+                value={periodo}
+                onChange={e => setPeriodo(e.target.value as any)}
+                className="h-9 rounded-md border border-border/40 bg-card/50 px-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0"
+              >
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+                <option value="todos">Todo período</option>
+              </select>
+              {testCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={showTestData ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setShowTestData(v => !v)}
+                      className="h-9 rounded-md px-2.5 text-xs font-medium shrink-0"
+                    >
+                      {showTestData ? 'Ocultar' : 'Mostrar'} testes ({testCount})
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Conferências marcadas como dados de teste</TooltipContent>
+                </Tooltip>
+              )}
+              {history.length > 0 && !isGuest && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowClearConfirm(true)}
+                      className="h-9 w-9 rounded-md border-destructive/30 text-destructive hover:bg-destructive/10 shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Limpar todo o histórico</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          }
+        />
 
 
 

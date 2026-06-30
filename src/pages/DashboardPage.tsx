@@ -22,6 +22,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { CyclicNotification } from '@/components/inventory/CyclicNotification';
 import { motion } from 'framer-motion';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PageHeader } from '@/components/ui/page-header';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -248,85 +249,68 @@ export default function DashboardPage() {
     >
       {/* Header - Simple and Clean */}
       <header className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-8 pt-4 sm:pt-2 no-print">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
-              Dashboard
-            </h1>
-          </motion.div>
+        <div className="px-4 sm:px-6">
+          <PageHeader title="Dashboard" actions={(
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setAutoRefresh(v => !v)}
+                className="hidden sm:inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-md shrink-0"
+                title={autoRefresh ? 'Pausar atualização automática (30s)' : 'Ativar atualização automática (30s)'}
+              >
+                <RefreshCw className={cn('w-4 h-4 lg:w-5 lg:h-5', autoRefresh && 'text-primary animate-spin-slow')} />
+              </Button>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center gap-2 sm:gap-4 self-end sm:self-center"
-          >
-            {/* "Média de Sessão" removida do header — agora aparece como KPI dentro de PeriodComparisonCard (Duração média) */}
-            
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setAutoRefresh(v => !v)}
-              className="hidden sm:inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-md shrink-0"
-              title={autoRefresh ? 'Pausar atualização automática (30s)' : 'Ativar atualização automática (30s)'}
-            >
-              <RefreshCw className={cn('w-4 h-4 lg:w-5 lg:h-5', autoRefresh && 'text-primary animate-spin-slow')} />
-            </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleExportPdf}
+                disabled={isExportingPdf}
+                className="hidden sm:inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-md shrink-0"
+                title="Exportar dashboard como PDF"
+              >
+                {isExportingPdf ? <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 animate-spin" /> : <FileDown className="w-4 h-4 lg:w-5 lg:h-5" />}
+              </Button>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleExportPdf}
-              disabled={isExportingPdf}
-              className="hidden sm:inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-md shrink-0"
-              title="Exportar dashboard como PDF"
-            >
-              {isExportingPdf ? <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 animate-spin" /> : <FileDown className="w-4 h-4 lg:w-5 lg:h-5" />}
-            </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePopOut}
+                className="hidden lg:inline-flex h-12 w-12 rounded-md shrink-0"
+                title="Abrir em janela separada (multi-monitor)"
+              >
+                <ExternalLink className="w-5 h-5" />
+              </Button>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePopOut}
-              className="hidden lg:inline-flex h-12 w-12 rounded-md shrink-0"
-              title="Abrir em janela separada (multi-monitor)"
-            >
-              <ExternalLink className="w-5 h-5" />
-            </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={togglePresentation}
+                className="hidden lg:inline-flex h-12 w-12 rounded-md shrink-0"
+                title={presentationMode ? 'Sair do modo apresentação (Esc)' : 'Modo apresentação (F11)'}
+              >
+                {presentationMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+              </Button>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={togglePresentation}
-              className="hidden lg:inline-flex h-12 w-12 rounded-md shrink-0"
-              title={presentationMode ? 'Sair do modo apresentação (Esc)' : 'Modo apresentação (F11)'}
-            >
-              {presentationMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-            </Button>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="default" 
-                  size="lg"
-                  disabled={isExporting}
-                  className="h-10 sm:h-12 px-4 sm:px-6 rounded-md font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap shrink-0"
-                  onClick={handleFullExportExcel}
-                >
-                  {isExporting && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />}
-                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" strokeWidth={2} />
-                  <span>{isExporting ? 'Processando...' : 'Exportar'}</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="font-medium text-xs py-1.5">Gerar Relatório Completo de Atividades</TooltipContent>
-            </Tooltip>
-
-          </motion.div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="lg"
+                    disabled={isExporting}
+                    className="h-10 sm:h-12 px-4 sm:px-6 rounded-md font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap shrink-0"
+                    onClick={handleFullExportExcel}
+                  >
+                    {isExporting && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />}
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" strokeWidth={2} />
+                    <span>{isExporting ? 'Processando...' : 'Exportar'}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="font-medium text-xs py-1.5">Gerar Relatório Completo de Atividades</TooltipContent>
+              </Tooltip>
+            </div>
+          )} />
         </div>
         
       </header>
