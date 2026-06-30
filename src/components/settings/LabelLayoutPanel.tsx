@@ -160,6 +160,14 @@ export default function LabelLayoutPanel() {
             Motores / Controles
           </TabsTrigger>
         </TabsList>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">Padrão atual:</span>
+            <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-medium text-primary">
+              {isMotor ? 'Motor' : 'Tecido'} · {w}×{h} mm · {(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}
+            </span>
+          </div>
+        </div>
+
 
         <TabsContent value={kind} className="mt-4 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 items-start">
