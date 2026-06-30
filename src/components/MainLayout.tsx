@@ -5,7 +5,7 @@ import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import TopBar from '@/components/TopBar';
-import AppSidebar from '@/components/AppSidebar';
+import EstoqueSidebar from '@/components/EstoqueSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
 import NavRail from '@/components/NavRail';
 import Breadcrumbs from '@/components/Breadcrumbs';
@@ -73,7 +73,7 @@ export default function MainLayout() {
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
         {/* Sidebar: desktop real (mouse + hover). Tablets touch recebem NavRail; portrait/mobile usam BottomTabBar */}
         <div className="hidden desktop:contents">
-          <AppSidebar activeTab={activeTab} onTabChange={() => {}} />
+          <EstoqueSidebar />
         </div>
 
         <NavRail />
