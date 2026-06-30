@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,18 @@ import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 type LabelKind = 'tecido' | 'motor';
+
+const LABEL_KIND_STORAGE_KEY = 'pf_label_layout_kind_v1';
+
+const readPersistedKind = (): LabelKind => {
+  if (typeof window === 'undefined') return 'tecido';
+  try {
+    const v = window.localStorage.getItem(LABEL_KIND_STORAGE_KEY);
+    return v === 'motor' || v === 'tecido' ? v : 'tecido';
+  } catch {
+    return 'tecido';
+  }
+};
 
 const TECIDO_FIELDS = [
   { id: 'sku', label: 'SKU (Código)' },
@@ -44,7 +56,13 @@ const MOTOR_DEFAULT = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'da
 
 export default function LabelLayoutPanel() {
   const { labelSettings, setLabelSettings } = useAppStore();
-  const [kind, setKind] = useState<LabelKind>('tecido');
+  const [kind, setKind] = useState<LabelKind>(readPersistedKind);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LABEL_KIND_STORAGE_KEY, kind);
+    } catch { /* ignore */ }
+  }, [kind]);
 
   const isMotor = kind === 'motor';
   const fields = isMotor ? (labelSettings.motorFields ?? MOTOR_DEFAULT) : labelSettings.fields;
