@@ -9,8 +9,8 @@ import {
   ClipboardList,
   ShieldAlert,
   LayoutDashboard,
-  Tag,
 } from 'lucide-react';
+
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -45,13 +45,8 @@ const EstoqueSidebar = memo(() => {
           ],
         },
         {
-          label: 'Recursos',
-          items: [
-            { key: 'etiquetas', label: 'Etiquetas', icon: Tag, path: '/estoque/etiquetas' },
-          ],
-        },
-        {
           label: 'Admin',
+
           minRole: 'supervisor',
           items: [
             { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/estoque/cadastros', minRole: 'supervisor' },
