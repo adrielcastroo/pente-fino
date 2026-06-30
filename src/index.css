@@ -486,3 +486,65 @@ html.compact main .gap-4 { gap: 0.75rem; }
 html.compact main .gap-6 { gap: 1rem; }
 html.compact main .space-y-4 > * + * { margin-top: 0.75rem; }
 html.compact main .space-y-6 > * + * { margin-top: 1rem; }
+
+/* ─── Turno 1 — Fundamentos responsivos globais ───────────────────────────── */
+
+/* Tipografia fluida para headings principais (PageHeader, dialogs, hero) */
+@layer base {
+  h1, .h1 {
+    font-size: clamp(1.375rem, 1.05rem + 1.6vw, 2rem);
+    line-height: 1.15;
+  }
+  h2, .h2 {
+    font-size: clamp(1.125rem, 0.95rem + 1.1vw, 1.5rem);
+    line-height: 1.2;
+  }
+  h3, .h3 {
+    font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+    line-height: 1.25;
+  }
+  /* Quebra inteligente para textos longos sem hifenização agressiva */
+  p, span, td, th, li, label {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  /* Mídia fluida por padrão */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Wrapper utilitário para tabelas — scroll horizontal seguro em mobile */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.table-responsive > table {
+  min-width: 100%;
+}
+
+/* Touch target reforçado (44x44 mínimo Apple HIG / 48x48 Material) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Container responsivo padrão para páginas internas */
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: 0.5rem;
+}
+@media (min-width: 640px) { .page-container { padding-inline: 1rem; } }
+@media (min-width: 1024px) { .page-container { padding-inline: 1.5rem; } }
+@media (min-width: 1280px) { .page-container { padding-inline: 2rem; } }
+
+/* Garante que flex children não estourem o pai (já está em *, reforça em flex utilitários comuns) */
+.flex > *, .inline-flex > *, .grid > * {
+  min-width: 0;
+}
+
