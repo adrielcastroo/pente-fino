@@ -801,12 +801,21 @@ function Header({
 
   const usbOk = isWebUsbSupported();
   const serialOk = isWebSerialSupported();
+  const headerDims = resolveDims(active);
 
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 print:hidden">
       <div>
-        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2 flex-wrap">
           <Tag className="size-5 text-primary" /> Etiquetas
+          <Badge
+            variant="secondary"
+            className="ml-1 font-mono text-[11px] gap-1"
+            title="Tamanho padrão atual — usado na próxima impressão até ser alterado"
+          >
+            <span className="text-muted-foreground">Padrão:</span>
+            {headerDims.w}×{headerDims.h} mm
+          </Badge>
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Personalize, salve modelos e imprima via navegador ou ZPL direto na impressora.
