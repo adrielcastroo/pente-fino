@@ -56,7 +56,13 @@ const MOTOR_DEFAULT = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'da
 
 export default function LabelLayoutPanel() {
   const { labelSettings, setLabelSettings } = useAppStore();
-  const [kind, setKind] = useState<LabelKind>('tecido');
+  const [kind, setKind] = useState<LabelKind>(readPersistedKind);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LABEL_KIND_STORAGE_KEY, kind);
+    } catch { /* ignore */ }
+  }, [kind]);
 
   const isMotor = kind === 'motor';
   const fields = isMotor ? (labelSettings.motorFields ?? MOTOR_DEFAULT) : labelSettings.fields;
