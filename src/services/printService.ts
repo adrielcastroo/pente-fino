@@ -144,9 +144,12 @@ async function dispatchPrint(
   const browserDisabled = typeof localStorage !== 'undefined'
     && localStorage.getItem('pref_disable_browser_print') === 'true';
 
-  // Webhook por tipo: motor usa `motorWebhookUrl` se definido; tecido usa `webhookUrl`.
+  // Webhook por tipo: cada tipo SÓ usa o webhook do seu próprio template.
+  // Motor NÃO faz fallback para o webhook de tecido — o fluxo n8n do tecido
+  // renderiza no tamanho de tecido e ignora o payload de motor, fazendo a
+  // etiqueta de motor sair fisicamente no tamanho da tecido.
   const resolvedWebhook = payload.type === 'motor'
-    ? (cfg.motorWebhookUrl?.trim() || cfg.webhookUrl?.trim() || '')
+    ? (cfg.motorWebhookUrl?.trim() || '')
     : (cfg.webhookUrl?.trim() || '');
   const hasWebhook = !!resolvedWebhook;
   const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
