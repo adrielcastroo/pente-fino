@@ -342,6 +342,22 @@ export default function ExpedicaoEtiquetasPage() {
     setPresetsOpen(false);
   }
 
+  // Aplica o preset e dispara impressão automaticamente — comportamento "driver de impressora":
+  // a escolha do preset substitui o template ativo e imediatamente envia para impressão
+  // usando as dimensões/margens/orientação do próprio preset.
+  function applyPresetAndPrint(presetId: string) {
+    const preset = LABEL_PRESETS.find((p) => p.id === presetId);
+    if (!preset || !active) return;
+    patchActive(preset.patch as Partial<LabelTemplate>);
+    setPresetsOpen(false);
+    toast.success(`Imprimindo com preset "${preset.label}"…`);
+    // Aguarda o React commitar o patch (dimensões e @page) antes de chamar window.print().
+    setTimeout(() => {
+      recordPrint('browser');
+      window.print();
+    }, 250);
+  }
+
   // Combinação: vars globais + vars do template (template tem prioridade)
   const mergedVars: Vars = useMemo(
     () => ({ ...globalVars, ...(active?.vars ?? {}) }),
@@ -750,7 +766,7 @@ export default function ExpedicaoEtiquetasPage() {
         </div>
       </div>
 
-      <PresetsDialog open={presetsOpen} onOpenChange={setPresetsOpen} onApply={applyPreset} />
+      <PresetsDialog open={presetsOpen} onOpenChange={setPresetsOpen} onApply={applyPreset} onApplyAndPrint={applyPresetAndPrint} />
       <HistoryDialog
         open={historyOpen} onOpenChange={setHistoryOpen}
         history={history}
@@ -1089,24 +1105,39 @@ function KeyValueEditor({
 }
 
 function PresetsDialog({
-  open, onOpenChange, onApply,
-}: { open: boolean; onOpenChange: (v: boolean) => void; onApply: (id: string) => void }) {
+  open, onOpenChange, onApply, onApplyAndPrint,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onApply: (id: string) => void;
+  onApplyAndPrint: (id: string) => void;
+}) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Presets de etiqueta</DialogTitle>
           <DialogDescription>
-            Carregue um modelo pré-configurado em 1 clique. Você pode ajustar tudo depois.
+            Selecione um modelo pré-configurado. "Aplicar e imprimir" usa as dimensões, margens e orientação do preset automaticamente — como um driver de impressora.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {LABEL_PRESETS.map((p) => (
-            <button key={p.id} type="button" onClick={() => onApply(p.id)}
-              className="text-left rounded-md border border-border bg-card hover:bg-accent/30 hover:border-primary/40 transition-colors p-3 space-y-1">
-              <p className="text-sm font-medium">{p.label}</p>
-              <p className="text-xs text-muted-foreground">{p.description}</p>
-            </button>
+            <div key={p.id}
+              className="rounded-md border border-border bg-card hover:border-primary/40 transition-colors p-3 space-y-2">
+              <button type="button" onClick={() => onApply(p.id)} className="w-full text-left space-y-1">
+                <p className="text-sm font-medium">{p.label}</p>
+                <p className="text-xs text-muted-foreground">{p.description}</p>
+              </button>
+              <div className="flex gap-1.5 pt-1 border-t border-border/60">
+                <Button size="sm" variant="ghost" className="h-7 text-xs flex-1" onClick={() => onApply(p.id)}>
+                  Aplicar
+                </Button>
+                <Button size="sm" className="h-7 text-xs flex-1" onClick={() => onApplyAndPrint(p.id)}>
+                  Aplicar e imprimir
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       </DialogContent>
