@@ -1121,33 +1121,79 @@ function PresetsDialog({
   onApply: (id: string) => void;
   onApplyAndPrint: (id: string) => void;
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Reseta seleção sempre que o diálogo abre, evitando estado "preso" entre aberturas.
+  useEffect(() => {
+    if (open) setSelectedId(null);
+  }, [open]);
+
+  const selectedPreset = selectedId
+    ? LABEL_PRESETS.find((p) => p.id === selectedId) ?? null
+    : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Presets de etiqueta</DialogTitle>
           <DialogDescription>
-            Selecione um modelo pré-configurado. "Aplicar e imprimir" usa as dimensões, margens e orientação do preset automaticamente — como um driver de impressora.
+            Selecione um modelo na lista abaixo e escolha uma ação. "Aplicar e imprimir" usa as dimensões, margens e orientação do preset automaticamente — como um driver de impressora.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {LABEL_PRESETS.map((p) => (
-            <div key={p.id}
-              className="rounded-md border border-border bg-card hover:border-primary/40 transition-colors p-3 space-y-2">
-              <button type="button" onClick={() => onApply(p.id)} className="w-full text-left space-y-1">
-                <p className="text-sm font-medium">{p.label}</p>
-                <p className="text-xs text-muted-foreground">{p.description}</p>
+
+        <div
+          role="radiogroup"
+          aria-label="Presets de etiqueta"
+          className="flex flex-col gap-1.5 max-h-[55vh] overflow-y-auto pr-1"
+        >
+          {LABEL_PRESETS.map((p) => {
+            const isSelected = selectedId === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                onClick={() => setSelectedId(p.id)}
+                onDoubleClick={() => onApply(p.id)}
+                className={`group flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors ${
+                  isSelected
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                    : 'border-border bg-card hover:border-primary/40 hover:bg-accent/30'
+                }`}
+              >
+                <span
+                  className={`flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    isSelected
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background text-transparent group-hover:border-primary/40'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <CheckCircle2 className="size-3.5" />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium truncate">{p.label}</span>
+                  <span className="block text-xs text-muted-foreground truncate">{p.description}</span>
+                </span>
               </button>
-              <div className="flex gap-1.5 pt-1 border-t border-border/60">
-                <Button size="sm" variant="ghost" className="h-7 text-xs flex-1" onClick={() => onApply(p.id)}>
-                  Aplicar
-                </Button>
-                <Button size="sm" className="h-7 text-xs flex-1" onClick={() => onApplyAndPrint(p.id)}>
-                  Aplicar e imprimir
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-border/60">
+          <p className="text-xs text-muted-foreground min-h-[1rem]">
+            {selectedPreset ? <>Selecionado: <span className="font-medium text-foreground">{selectedPreset.label}</span></> : 'Nenhum preset selecionado'}
+          </p>
+          <div className="flex gap-2 sm:justify-end">
+            <Button variant="outline" size="sm" disabled={!selectedId} onClick={() => selectedId && onApply(selectedId)}>
+              Aplicar
+            </Button>
+            <Button size="sm" disabled={!selectedId} onClick={() => selectedId && onApplyAndPrint(selectedId)}>
+              <Printer className="size-4" /> Aplicar e imprimir
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
