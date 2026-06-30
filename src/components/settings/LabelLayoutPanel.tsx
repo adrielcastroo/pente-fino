@@ -15,6 +15,18 @@ import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/label
 
 type LabelKind = 'tecido' | 'motor';
 
+const LABEL_KIND_STORAGE_KEY = 'pf_label_layout_kind_v1';
+
+const readPersistedKind = (): LabelKind => {
+  if (typeof window === 'undefined') return 'tecido';
+  try {
+    const v = window.localStorage.getItem(LABEL_KIND_STORAGE_KEY);
+    return v === 'motor' || v === 'tecido' ? v : 'tecido';
+  } catch {
+    return 'tecido';
+  }
+};
+
 const TECIDO_FIELDS = [
   { id: 'sku', label: 'SKU (Código)' },
   { id: 'descricao', label: 'Descrição do Item' },
