@@ -6,12 +6,13 @@ import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
-import { FolderOpen, ChevronDown, Trash2, Pencil, CheckCircle2, Search, Plus, X, Download } from 'lucide-react';
+import { FolderOpen, ChevronDown, Trash2, Pencil, CheckCircle2, Search, Plus, X, Download, Printer } from 'lucide-react';
 import { RequireRole } from '@/components/auth/RequireRole';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,6 +20,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { routeForConference } from '@/lib/conferenceRouting';
+import { printTecidoLabel, printMotorLabel } from '@/services/printService';
 
 
 
@@ -612,10 +614,39 @@ function groupConferencesByNF(confs: Conference[]): MergedConference[] {
   return result;
 }
 
+async function printRegistro(r: Registro, labelSettings: any) {
+  const isMotorCtrl = r.modoOrigem === 'motor' || r.modoOrigem === 'controle' || r.tipoTecido === 'Coulisse';
+  const settings = { ...labelSettings, autoPrint: true };
+  if (isMotorCtrl) {
+    await printMotorLabel({
+      item: r.item,
+      descricao: r.modoOrigem === 'motor' ? 'Motor' : r.modoOrigem === 'controle' ? 'Controle' : 'Coulisse',
+      lote: r.lote,
+      loteSistema: r.loteSistema,
+      nf: r.nf,
+      cx: (r as any).caixaNum ?? null,
+    }, settings);
+  } else {
+    await printTecidoLabel({
+      item: r.item,
+      descricao: r.tipoTecido || '',
+      lote: r.lote,
+      loteSistema: r.loteSistema,
+      processo: r.processo,
+      nf: r.nf,
+      m2: r.m2,
+      mLinear: r.mLinear,
+      largura: r.largura,
+      endereco: r.endereco,
+    }, settings);
+  }
+}
+
 const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
   const [open, setOpen] = useState(highlight);
   const navigate = useNavigate();
   const startResumeConference = useAppStore(s => s.startResumeConference);
+  const labelSettings = useAppStore(s => s.labelSettings);
   const historyAll = useAppStore(s => s.history);
   const merged = conf as MergedConference;
   const isGrouped = (merged._underlyingIds?.length ?? 0) > 1;
@@ -638,6 +669,43 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmDeleteItem, setConfirmDeleteItem] = useState<Registro | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [printing, setPrinting] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAll = () => {
+    setSelected(prev => prev.size === conf.registros.length ? new Set() : new Set(conf.registros.map(r => r.id)));
+  };
+
+  const handlePrint = async (regs: Registro[]) => {
+    if (regs.length === 0) {
+      toast.warning('Nenhum item selecionado.');
+      return;
+    }
+    setPrinting(true);
+    const tid = toast.loading(`Imprimindo ${regs.length} etiqueta(s)...`);
+    let ok = 0;
+    for (const r of regs) {
+      try {
+        await printRegistro(r, labelSettings);
+        ok++;
+        // pequena pausa para o navegador processar diálogo de impressão
+        await new Promise(res => setTimeout(res, 300));
+      } catch (e) {
+        console.error('Falha ao imprimir', r.id, e);
+      }
+    }
+    toast.dismiss(tid);
+    if (ok === regs.length) toast.success(`${ok} etiqueta(s) enviada(s) para impressão.`);
+    else toast.warning(`${ok}/${regs.length} etiqueta(s) impressas — verifique o console.`);
+    setPrinting(false);
+  };
 
   const { isLow } = usePerformance();
   const totalML = useMemo(() => {
@@ -649,13 +717,47 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const folderName = useMemo(() => getConferenceFolderName(conf), [conf]);
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
+  const allSelected = selected.size === conf.registros.length && conf.registros.length > 0;
+  const someSelected = selected.size > 0 && !allSelected;
+
   const tableContent = (
     <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Checkbox
+            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+            onCheckedChange={toggleSelectAll}
+            aria-label="Selecionar todos"
+          />
+          <span>{selected.size > 0 ? `${selected.size} selecionado(s)` : 'Selecionar todos'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={printing || selected.size === 0}
+            onClick={() => handlePrint(conf.registros.filter(r => selected.has(r.id)))}
+            className="h-9 rounded-md text-xs"
+          >
+            <Printer className="w-4 h-4 mr-1.5" /> Imprimir selecionados ({selected.size})
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            disabled={printing || conf.registros.length === 0}
+            onClick={() => handlePrint(conf.registros)}
+            className="h-9 rounded-md text-xs"
+          >
+            <Printer className="w-4 h-4 mr-1.5" /> Imprimir todos ({conf.registros.length})
+          </Button>
+        </div>
+      </div>
       <div className="rounded-md overflow-hidden border border-border/30 bg-card">
         <table className="w-full text-xs min-w-[520px] sm:min-w-[800px] border-separate border-spacing-0">
 
           <thead>
             <tr className="bg-muted/40">
+              <th className="px-2 sm:px-4 py-2 sm:py-4 border-b border-border/20 w-[40px]"></th>
               {columns.map(column => (
                 <th key={column.key} className="px-2 sm:px-6 py-2 sm:py-4 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
               ))}
@@ -664,7 +766,14 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           </thead>
           <tbody className="divide-y divide-border/10">
             {conf.registros.map((r, i) => (
-              <tr key={r.id} className="group/row hover:bg-primary/5 transition-colors">
+              <tr key={r.id} className={`group/row hover:bg-primary/5 transition-colors ${selected.has(r.id) ? 'bg-primary/5' : ''}`}>
+                <td className="px-2 sm:px-4 py-2 sm:py-4 align-middle">
+                  <Checkbox
+                    checked={selected.has(r.id)}
+                    onCheckedChange={() => toggleSelect(r.id)}
+                    aria-label={`Selecionar ${r.item}`}
+                  />
+                </td>
                 {columns.map(column => (
                   <td key={column.key} className={`px-2 sm:px-6 py-2 sm:py-4 ${column.key === 'item' ? 'font-semibold text-foreground' : 'font-mono text-muted-foreground/90'}`}>
                     {column.key === 'item' ? (
