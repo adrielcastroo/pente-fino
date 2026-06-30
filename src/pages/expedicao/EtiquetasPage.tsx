@@ -463,7 +463,7 @@ export default function ExpedicaoEtiquetasPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="conteudo" className="w-full">
-              <TabsList className="grid grid-cols-5 mb-4">
+              <TabsList className="grid grid-cols-3 sm:grid-cols-5 mb-4 h-auto gap-1">
                 <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
                 <TabsTrigger value="codigo">Códigos</TabsTrigger>
                 <TabsTrigger value="layout">Layout</TabsTrigger>
