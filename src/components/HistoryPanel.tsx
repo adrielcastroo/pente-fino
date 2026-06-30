@@ -717,13 +717,47 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const folderName = useMemo(() => getConferenceFolderName(conf), [conf]);
   const modeBadges = useMemo(() => getModeBadges(conf), [conf.registros]);
 
+  const allSelected = selected.size === conf.registros.length && conf.registros.length > 0;
+  const someSelected = selected.size > 0 && !allSelected;
+
   const tableContent = (
     <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Checkbox
+            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+            onCheckedChange={toggleSelectAll}
+            aria-label="Selecionar todos"
+          />
+          <span>{selected.size > 0 ? `${selected.size} selecionado(s)` : 'Selecionar todos'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={printing || selected.size === 0}
+            onClick={() => handlePrint(conf.registros.filter(r => selected.has(r.id)))}
+            className="h-9 rounded-md text-xs"
+          >
+            <Printer className="w-4 h-4 mr-1.5" /> Imprimir selecionados ({selected.size})
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            disabled={printing || conf.registros.length === 0}
+            onClick={() => handlePrint(conf.registros)}
+            className="h-9 rounded-md text-xs"
+          >
+            <Printer className="w-4 h-4 mr-1.5" /> Imprimir todos ({conf.registros.length})
+          </Button>
+        </div>
+      </div>
       <div className="rounded-md overflow-hidden border border-border/30 bg-card">
         <table className="w-full text-xs min-w-[520px] sm:min-w-[800px] border-separate border-spacing-0">
 
           <thead>
             <tr className="bg-muted/40">
+              <th className="px-2 sm:px-4 py-2 sm:py-4 border-b border-border/20 w-[40px]"></th>
               {columns.map(column => (
                 <th key={column.key} className="px-2 sm:px-6 py-2 sm:py-4 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] border-b border-border/20">{column.shortLabel || column.label}</th>
               ))}
