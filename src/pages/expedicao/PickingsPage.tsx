@@ -105,7 +105,7 @@ export default function PickingsPage() {
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ativos.map((p) => (
-              <li key={p.id} className="rounded-lg border bg-card p-4">
+              <li key={p.id} className="rounded-md border bg-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-mono text-sm font-semibold">{p.numero}</p>

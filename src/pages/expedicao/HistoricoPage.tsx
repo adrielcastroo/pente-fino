@@ -100,7 +100,7 @@ export default function HistoricoPage() {
           Nenhum picking encontrado para os filtros selecionados.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <div className="overflow-x-auto rounded-md border border-border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>

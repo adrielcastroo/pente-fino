@@ -132,7 +132,7 @@ export default function RomaneioPage() {
       ) : (
         <div className="space-y-3">
           {Array.from(tree.entries()).map(([transp, regioes]) => (
-            <details key={transp} open className="group rounded-lg border bg-card">
+            <details key={transp} open className="group rounded-md border bg-card">
               <summary className="flex cursor-pointer list-none items-center gap-2 p-4 font-medium">
                 <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                 <Truck className="size-4 text-muted-foreground" />

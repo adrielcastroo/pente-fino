@@ -191,7 +191,7 @@ export default function FaturamentoPage() {
         />
       </section>
 
-      <section className="rounded-lg border bg-card">
+      <section className="rounded-md border bg-card">
         <header className="flex items-center justify-between gap-2 border-b px-4 py-3 text-sm font-medium">
           <span className="inline-flex items-center gap-2">
             <FileCheck className="size-4" /> Aguardando faturamento
@@ -327,7 +327,7 @@ export default function FaturamentoPage() {
       </section>
 
       {faturados.length > 0 && (
-        <section className="rounded-lg border bg-card">
+        <section className="rounded-md border bg-card">
           <header className="border-b px-4 py-3 text-sm font-medium">
             Últimos faturados
           </header>

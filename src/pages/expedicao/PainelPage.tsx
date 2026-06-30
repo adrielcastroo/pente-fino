@@ -111,7 +111,7 @@ export default function PainelPage() {
         className="max-w-sm h-10"
       />
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-md overflow-hidden">
         {isLoading ? (
           <div className="p-12 flex items-center justify-center text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin" />
