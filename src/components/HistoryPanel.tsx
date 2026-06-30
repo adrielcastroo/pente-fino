@@ -731,24 +731,28 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           />
           <span>{selected.size > 0 ? `${selected.size} selecionado(s)` : 'Selecionar todos'}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             disabled={printing || selected.size === 0}
             onClick={() => handlePrint(conf.registros.filter(r => selected.has(r.id)))}
-            className="h-9 rounded-md text-xs"
+            className="h-9 rounded-md text-xs flex-1 sm:flex-none whitespace-nowrap"
           >
-            <Printer className="w-4 h-4 mr-1.5" /> Imprimir selecionados ({selected.size})
+            <Printer className="w-4 h-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">Imprimir selecionados</span>
+            <span className="ml-1">({selected.size})</span>
           </Button>
           <Button
             variant="default"
             size="sm"
             disabled={printing || conf.registros.length === 0}
             onClick={() => handlePrint(conf.registros)}
-            className="h-9 rounded-md text-xs"
+            className="h-9 rounded-md text-xs flex-1 sm:flex-none whitespace-nowrap"
           >
-            <Printer className="w-4 h-4 mr-1.5" /> Imprimir todos ({conf.registros.length})
+            <Printer className="w-4 h-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">Imprimir todos</span>
+            <span className="ml-1">({conf.registros.length})</span>
           </Button>
         </div>
       </div>
@@ -940,7 +944,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       }}
                       className="h-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors font-medium text-xs px-3"
                     >
-                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir item</span>
+                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Incluir item</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>{isGrouped ? 'Retoma a conferência mais recente deste grupo de NFs. Você pode incluir itens quantas vezes quiser — tudo fica registrado em /auditoria.' : 'Reabrir esta conferência para incluir novos itens'}</TooltipContent>
