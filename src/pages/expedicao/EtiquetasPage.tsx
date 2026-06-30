@@ -342,6 +342,22 @@ export default function ExpedicaoEtiquetasPage() {
     setPresetsOpen(false);
   }
 
+  // Aplica o preset e dispara impressão automaticamente — comportamento "driver de impressora":
+  // a escolha do preset substitui o template ativo e imediatamente envia para impressão
+  // usando as dimensões/margens/orientação do próprio preset.
+  function applyPresetAndPrint(presetId: string) {
+    const preset = LABEL_PRESETS.find((p) => p.id === presetId);
+    if (!preset || !active) return;
+    patchActive(preset.patch as Partial<LabelTemplate>);
+    setPresetsOpen(false);
+    toast.success(`Imprimindo com preset "${preset.label}"…`);
+    // Aguarda o React commitar o patch (dimensões e @page) antes de chamar window.print().
+    setTimeout(() => {
+      recordPrint('browser');
+      window.print();
+    }, 250);
+  }
+
   // Combinação: vars globais + vars do template (template tem prioridade)
   const mergedVars: Vars = useMemo(
     () => ({ ...globalVars, ...(active?.vars ?? {}) }),
