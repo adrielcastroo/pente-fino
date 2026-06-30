@@ -940,7 +940,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                       }}
                       className="h-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors font-medium text-xs px-3"
                     >
-                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden lg:inline">Incluir item</span>
+                      <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Incluir item</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>{isGrouped ? 'Retoma a conferência mais recente deste grupo de NFs. Você pode incluir itens quantas vezes quiser — tudo fica registrado em /auditoria.' : 'Reabrir esta conferência para incluir novos itens'}</TooltipContent>
