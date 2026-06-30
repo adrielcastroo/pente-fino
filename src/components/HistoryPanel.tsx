@@ -614,10 +614,39 @@ function groupConferencesByNF(confs: Conference[]): MergedConference[] {
   return result;
 }
 
+async function printRegistro(r: Registro, labelSettings: any) {
+  const isMotorCtrl = r.modoOrigem === 'motor' || r.modoOrigem === 'controle' || r.tipoTecido === 'Coulisse';
+  const settings = { ...labelSettings, autoPrint: true };
+  if (isMotorCtrl) {
+    await printMotorLabel({
+      item: r.item,
+      descricao: r.modoOrigem === 'motor' ? 'Motor' : r.modoOrigem === 'controle' ? 'Controle' : 'Coulisse',
+      lote: r.lote,
+      loteSistema: r.loteSistema,
+      nf: r.nf,
+      cx: (r as any).caixaNum ?? null,
+    }, settings);
+  } else {
+    await printTecidoLabel({
+      item: r.item,
+      descricao: r.tipoTecido || '',
+      lote: r.lote,
+      loteSistema: r.loteSistema,
+      processo: r.processo,
+      nf: r.nf,
+      m2: r.m2,
+      mLinear: r.mLinear,
+      largura: r.largura,
+      endereco: r.endereco,
+    }, settings);
+  }
+}
+
 const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conference; onDelete: () => void; highlight?: boolean }) => {
   const [open, setOpen] = useState(highlight);
   const navigate = useNavigate();
   const startResumeConference = useAppStore(s => s.startResumeConference);
+  const labelSettings = useAppStore(s => s.labelSettings);
   const historyAll = useAppStore(s => s.history);
   const merged = conf as MergedConference;
   const isGrouped = (merged._underlyingIds?.length ?? 0) > 1;
@@ -640,6 +669,43 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmDeleteItem, setConfirmDeleteItem] = useState<Registro | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [printing, setPrinting] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAll = () => {
+    setSelected(prev => prev.size === conf.registros.length ? new Set() : new Set(conf.registros.map(r => r.id)));
+  };
+
+  const handlePrint = async (regs: Registro[]) => {
+    if (regs.length === 0) {
+      toast.warning('Nenhum item selecionado.');
+      return;
+    }
+    setPrinting(true);
+    const tid = toast.loading(`Imprimindo ${regs.length} etiqueta(s)...`);
+    let ok = 0;
+    for (const r of regs) {
+      try {
+        await printRegistro(r, labelSettings);
+        ok++;
+        // pequena pausa para o navegador processar diálogo de impressão
+        await new Promise(res => setTimeout(res, 300));
+      } catch (e) {
+        console.error('Falha ao imprimir', r.id, e);
+      }
+    }
+    toast.dismiss(tid);
+    if (ok === regs.length) toast.success(`${ok} etiqueta(s) enviada(s) para impressão.`);
+    else toast.warning(`${ok}/${regs.length} etiqueta(s) impressas — verifique o console.`);
+    setPrinting(false);
+  };
 
   const { isLow } = usePerformance();
   const totalML = useMemo(() => {
