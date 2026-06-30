@@ -145,7 +145,16 @@ export default function LabelLayoutPanel() {
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={kind} onValueChange={(v) => setKind(v as LabelKind)}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-md bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-md bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">{/* tabs */}</TabsList>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">Padrão atual:</span>
+            <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-medium text-primary">
+              {isMotor ? 'Motor' : 'Tecido'} · {w}×{h} mm · {(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}
+            </span>
+          </div>
+        </div>
+        <TabsList className="hidden grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-md bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
           <TabsTrigger
             value="tecido"
             className="font-medium rounded-md transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary"
