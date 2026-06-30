@@ -766,7 +766,7 @@ export default function ExpedicaoEtiquetasPage() {
         </div>
       </div>
 
-      <PresetsDialog open={presetsOpen} onOpenChange={setPresetsOpen} onApply={applyPreset} />
+      <PresetsDialog open={presetsOpen} onOpenChange={setPresetsOpen} onApply={applyPreset} onApplyAndPrint={applyPresetAndPrint} />
       <HistoryDialog
         open={historyOpen} onOpenChange={setHistoryOpen}
         history={history}
