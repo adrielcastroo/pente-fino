@@ -774,6 +774,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                     aria-label={`Selecionar ${r.item}`}
                   />
                 </td>
+                {columns.map(column => (
                   <td key={column.key} className={`px-2 sm:px-6 py-2 sm:py-4 ${column.key === 'item' ? 'font-semibold text-foreground' : 'font-mono text-muted-foreground/90'}`}>
                     {column.key === 'item' ? (
                       <div className="flex flex-col gap-1.5">
