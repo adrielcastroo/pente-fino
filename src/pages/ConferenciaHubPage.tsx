@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ScanLine, TreePine, Zap, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/ui/page-header';
 
 type HubOption = {
   to: string;
