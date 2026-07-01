@@ -1134,7 +1134,7 @@ function PresetsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="w-[95vw] max-w-xl">
         <DialogHeader>
           <DialogTitle>Presets de etiqueta</DialogTitle>
           <DialogDescription>
