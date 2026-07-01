@@ -146,6 +146,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                         aria-current={isActive ? 'page' : undefined}
                         className={`
                           relative h-10 rounded-md transition-colors duration-150 active:scale-[0.97]
+                          group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0
+                          group-data-[collapsible=icon]:justify-center
                           ${isActive
                             ? 'text-primary font-bold'
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
@@ -205,6 +207,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               aria-label="Abrir Configurações"
               className={`
                 relative h-10 rounded-md transition-colors duration-150
+                group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0
+                group-data-[collapsible=icon]:justify-center
                 ${settingsActive
                   ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
@@ -229,7 +233,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                 onClick={() => navigate('/selecionar-modulo')}
                 tooltip="Trocar módulo"
                 aria-label="Trocar módulo"
-                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150"
+                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center"
               >
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                   <ArrowLeftRight className="h-[18px] w-[18px]" />
@@ -247,7 +251,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               onClick={() => signOut()}
               tooltip="Sair"
               aria-label="Sair da conta"
-              className="h-10 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-150"
+              className="h-10 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-150 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center"
             >
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <LogOut className="h-[18px] w-[18px]" />
