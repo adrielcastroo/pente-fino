@@ -233,7 +233,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                 onClick={() => navigate('/selecionar-modulo')}
                 tooltip="Trocar módulo"
                 aria-label="Trocar módulo"
-                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150"
+                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center"
               >
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                   <ArrowLeftRight className="h-[18px] w-[18px]" />
