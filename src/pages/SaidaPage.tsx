@@ -208,12 +208,24 @@ export default function SaidaPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
+        <PageHeader
+          title="Saídas"
+          className="lg:items-center"
+          actions={
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
+              <Button
+                onClick={() => setScanMode(true)}
+                variant="outline"
+                className="w-full sm:w-auto h-12 px-6 font-semibold rounded-md border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-95 text-base shrink-0"
+              >
+                <span>Dar saída</span>
+              </Button>
+            </div>
+          }
+        />
         <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-          <div className="space-y-0.5 sm:space-y-1 text-left">
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-none">
-              Saídas
-            </h1>
-          </div>
+          <div className="hidden">
+
           
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
             <Button 
