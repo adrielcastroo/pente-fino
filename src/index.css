@@ -214,7 +214,33 @@
   [data-radix-popper-content-wrapper] .shadow-2xl {
     box-shadow: 0 10px 25px -5px rgb(15 23 42 / 0.15), 0 8px 10px -6px rgb(15 23 42 / 0.1) !important;
   }
+
+  /* Fluid typography — headings escalam suavemente entre 375px e 1440px */
+  h1, .h1 { font-size: clamp(1.5rem, 1.15rem + 1.5vw, 2.25rem); line-height: 1.15; }
+  h2, .h2 { font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem); line-height: 1.2; }
+  h3, .h3 { font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.35rem); line-height: 1.25; }
+
+  /* Elementos que costumam vazar em mobile */
+  img, svg, video, canvas { max-width: 100%; height: auto; }
+  table { max-width: 100%; }
 }
+
+@layer utilities {
+  /* Container global padrão de página */
+  .page-container {
+    @apply w-full max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8;
+  }
+  /* Wrapper para tabelas densas */
+  .table-scroll {
+    @apply w-full overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Padding-bottom que respeita safe-area (útil junto de fixed bars) */
+  .safe-pb {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px));
+  }
+}
+
 
 @layer components {
   .glass-card {
