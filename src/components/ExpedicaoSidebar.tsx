@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import {
+  Home,
   ClipboardList,
   Package,
   ScanLine,
@@ -16,12 +17,13 @@ import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSide
 
 export const EXPEDICAO_NAV: ModuleSidebarConfig = {
   moduleLabel: 'EXPEDIÇÃO',
-  homePath: '/expedicao/painel',
+  homePath: '/expedicao/operacao',
   settingsPath: '/expedicao/configuracoes',
   groups: [
     {
       label: 'Operações',
       items: [
+        { key: 'inicio', label: 'Início', icon: Home, path: '/expedicao/operacao' },
         { key: 'painel', label: 'Painel', icon: ClipboardList, path: '/expedicao/painel' },
         { key: 'pickings', label: 'Pickings', icon: Package, path: '/expedicao/pickings' },
         { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/expedicao/conferencia' },
