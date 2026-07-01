@@ -721,7 +721,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const someSelected = selected.size > 0 && !allSelected;
 
   const tableContent = (
-    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
+    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8 min-w-0">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Checkbox
