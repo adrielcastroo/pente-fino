@@ -207,6 +207,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               aria-label="Abrir Configurações"
               className={`
                 relative h-10 rounded-md transition-colors duration-150
+                group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0
+                group-data-[collapsible=icon]:justify-center
                 ${settingsActive
                   ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
