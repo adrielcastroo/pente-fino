@@ -146,6 +146,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                         aria-current={isActive ? 'page' : undefined}
                         className={`
                           relative h-10 rounded-md transition-colors duration-150 active:scale-[0.97]
+                          group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0
+                          group-data-[collapsible=icon]:justify-center
                           ${isActive
                             ? 'text-primary font-bold'
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
