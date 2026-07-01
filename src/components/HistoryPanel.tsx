@@ -721,7 +721,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const someSelected = selected.size > 0 && !allSelected;
 
   const tableContent = (
-    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8">
+    <div className="overflow-x-auto custom-scrollbar p-2 sm:p-4 lg:p-8 min-w-0">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Checkbox
@@ -1248,7 +1248,7 @@ export default function HistoryPanel() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-6 sm:p-10 space-y-8 flex-shrink-0">
+      <div className="p-3 sm:p-6 lg:p-10 space-y-4 sm:space-y-8 flex-shrink-0">
         <PageHeader
           title="Histórico de conferências"
           subtitle="Conferências finalizadas por data e conferente."
