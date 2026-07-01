@@ -40,12 +40,12 @@ export default function ConferenciaHubPage() {
 
   return (
     <div className="container max-w-5xl mx-auto px-4 py-8">
-      <header className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Conferência</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Escolha o tipo de item que deseja bipar.
-        </p>
-      </header>
+      <PageHeader
+        title="Conferência"
+        subtitle="Escolha o tipo de item que deseja bipar."
+        className="mb-8"
+      />
+
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {options.map(({ to, label, description, icon: Icon, accent }) => (
