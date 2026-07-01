@@ -1,6 +1,5 @@
-
-import { Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Suspense, ReactNode } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import { useNetworkStatus } from '@/hooks/use-network-status';
@@ -16,9 +15,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import ModuleSwitchFab from '@/components/ModuleSwitchFab';
 import { LATEST_VERSION, BUILD_TIME } from '@/lib/changelog';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { useLocation } from 'react-router-dom';
-import { AppTab } from '@/types';
-
 
 const PageSkeleton = () => (
   <div className="p-4 sm:p-8 space-y-4">
@@ -32,32 +28,34 @@ const PageSkeleton = () => (
   </div>
 );
 
-export default function MainLayout() {
+export interface MainLayoutProps {
+  /** Sidebar renderizada no breakpoint desktop. Default: EstoqueSidebar. */
+  sidebar?: ReactNode;
+  /** Bottom tab bar (mobile/tablet portrait). Default: BottomTabBar do Estoque. */
+  bottomNav?: ReactNode;
+  /** Rail lateral (tablet landscape). Default: NavRail do Estoque. */
+  navRail?: ReactNode;
+  /** Mostrar ResumeBanner (specifico de fluxo de conferência). Default: true. */
+  showResumeBanner?: boolean;
+  /** Mostrar UndoBanner. Default: true (exceto em rotas de registro). */
+  showUndoBanner?: boolean;
+  /** Rotas onde o footer é omitido. */
+  hideFooterOn?: string[];
+}
+
+export default function MainLayout({
+  sidebar = <EstoqueSidebar />,
+  bottomNav = <BottomTabBar />,
+  navRail = <NavRail />,
+  showResumeBanner = true,
+  showUndoBanner = true,
+  hideFooterOn = ['/estoque/tecido', '/estoque/madeira', '/estoque/motor', '/estoque/conferencia'],
+}: MainLayoutProps) {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const location = useLocation();
   usePresenceTracker();
   useNetworkStatus();
-
-  // Map path to active tab
-  const getActiveTab = (path: string): AppTab => {
-    const p = path.replace('/', '');
-    if (!p || p === 'dashboard') return 'inicio';
-    if (p === 'tecido') return 'tecido';
-    if (p === 'madeira') return 'madeira';
-    if (p === 'motor') return 'motor';
-    if (p === 'estoque') return 'estoque';
-    if (p === 'saida') return 'saida';
-    if (p === 'reservas') return 'reservas';
-    if (p === 'historico') return 'history';
-    if (p === 'configuracoes') return 'settings';
-    if (p === 'cadastros') return 'cadastros';
-    
-    return 'inicio';
-
-  };
-
-  const activeTab = getActiveTab(location.pathname);
 
   const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
   const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
@@ -68,23 +66,22 @@ export default function MainLayout() {
     } catch { /* ignore */ }
   };
 
+  const showFooter = !hideFooterOn.includes(location.pathname);
+  const showUndo = showUndoBanner && !['/estoque/tecido', '/estoque/madeira', '/estoque/motor'].includes(location.pathname);
+
   return (
     <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
-        {/* Sidebar: desktop real (mouse + hover). Tablets touch recebem NavRail; portrait/mobile usam BottomTabBar */}
-        <div className="hidden desktop:contents">
-          <EstoqueSidebar />
-        </div>
+        <div className="hidden desktop:contents">{sidebar}</div>
 
-        <NavRail />
+        {navRail}
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
           <Breadcrumbs />
-          <ResumeBanner />
+          {showResumeBanner && <ResumeBanner />}
 
           <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 tablet-landscape:pb-0 desktop:pb-0">
-
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 max-w-[1600px] 2xl:max-w-[1800px] mx-auto">
@@ -92,11 +89,8 @@ export default function MainLayout() {
                     <Outlet />
                   </ErrorBoundary>
                 </div>
-                {!['/estoque/tecido', '/estoque/madeira', '/estoque/motor', '/estoque/conferencia'].includes(location.pathname) && (
-                  <footer
-                    role="contentinfo"
-                    className="mt-4 border-t border-border/60 bg-card/30"
-                  >
+                {showFooter && (
+                  <footer role="contentinfo" className="mt-4 border-t border-border/60 bg-card/30">
                     <div className="max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground/80">
                       <span className="flex items-center gap-1.5">
                         <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
@@ -121,13 +115,11 @@ export default function MainLayout() {
             </div>
           </main>
         </div>
-        <BottomTabBar />
+        {bottomNav}
         <ModuleSwitchFab />
       </div>
-      {!['/estoque/tecido', '/estoque/madeira', '/estoque/motor'].includes(location.pathname) && <UndoBanner />}
+      {showUndo && <UndoBanner />}
       <CommandPalette />
-
-
     </SidebarProvider>
   );
 }
