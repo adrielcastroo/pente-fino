@@ -176,7 +176,8 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<Navigate to="/expedicao/painel" replace />} />
+                  <Route index element={<Navigate to="/expedicao/operacao" replace />} />
+                  <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
                   <Route path="pickings" element={<ExpedicaoPickingsPage />} />
                   <Route path="conferencia" element={<ExpedicaoConferenciaPage />} />
