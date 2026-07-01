@@ -205,20 +205,18 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               aria-label="Abrir Configurações"
               className={`
                 relative h-10 rounded-md transition-colors duration-150
-                group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
-                group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
                 ${settingsActive
                   ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
               `}
             >
               {settingsActive && (
-                <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[state=collapsed]:hidden" />
+                <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[collapsible=icon]:hidden" />
               )}
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
               </div>
-              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[state=collapsed]:hidden">
+              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
                 Configurações
               </span>
             </SidebarMenuButton>
@@ -231,12 +229,12 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                 onClick={() => navigate('/selecionar-modulo')}
                 tooltip="Trocar módulo"
                 aria-label="Trocar módulo"
-                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto"
+                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150"
               >
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                   <ArrowLeftRight className="h-[18px] w-[18px]" />
                 </div>
-                <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[state=collapsed]:hidden">
+                <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
                   Trocar módulo
                 </span>
               </SidebarMenuButton>
@@ -249,12 +247,12 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               onClick={() => signOut()}
               tooltip="Sair"
               aria-label="Sair da conta"
-              className="h-10 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-150 group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto"
+              className="h-10 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-150"
             >
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <LogOut className="h-[18px] w-[18px]" />
               </div>
-              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[state=collapsed]:hidden">
+              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
                 Sair
               </span>
             </SidebarMenuButton>
