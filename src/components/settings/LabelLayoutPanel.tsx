@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square } from 'lucide-react';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
@@ -163,22 +163,44 @@ export default function LabelLayoutPanel() {
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={kind} onValueChange={(v) => setKind(v as LabelKind)}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList className="grid w-full max-w-md grid-cols-2 h-12 p-1 rounded-md bg-muted/40 backdrop-blur-sm border border-border/40 shadow-sm">
-          <TabsTrigger
-            value="tecido"
-            className="font-medium rounded-md transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary"
-          >
-            Tecidos
-          </TabsTrigger>
-          <TabsTrigger
-            value="motor"
-            className="font-medium rounded-md transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary"
-          >
-            Motores / Controles
-          </TabsTrigger>
-        </TabsList>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex-1 max-w-xl">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Tipo de etiqueta para imprimir
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Selecione para editar
+              </span>
+            </div>
+            <TabsList className="flex h-auto w-full flex-col gap-2 bg-transparent p-0">
+              {([
+                { value: 'tecido', icon: Shirt, title: 'Tecidos', desc: 'Etiqueta 100×60 mm com QR de SKU e Lote.' },
+                { value: 'motor', icon: Cog, title: 'Motores / Controles', desc: 'Etiqueta 60×50 mm com QR Lote+SKU.' },
+              ] as const).map(({ value, icon: Icon, title, desc }) => {
+                const active = kind === value;
+                return (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className={`group w-full items-center gap-3 rounded-md border px-3 py-3 text-left transition-all duration-200 data-[state=inactive]:bg-background/40 data-[state=inactive]:border-border/40 data-[state=active]:border-primary/50 data-[state=active]:bg-primary/5 data-[state=active]:shadow-sm hover:border-primary/40 hover:bg-primary/5 justify-start`}
+                  >
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ring-1 transition-colors ${active ? 'bg-primary/15 text-primary ring-primary/30' : 'bg-muted/60 text-muted-foreground ring-border/40'}`}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-foreground">{title}</span>
+                      <span className="block text-[11px] font-normal text-muted-foreground truncate">{desc}</span>
+                    </span>
+                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'}`}>
+                      {active && <Check className="h-3 w-3" strokeWidth={3} />}
+                    </span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
+          <div className="flex items-center gap-2 lg:pt-7">
             <span className="text-[11px] text-muted-foreground">Padrão atual:</span>
             <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-medium text-primary">
               {isMotor ? 'Motor' : 'Tecido'} · {w}×{h} mm · {(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}
