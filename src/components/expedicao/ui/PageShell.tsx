@@ -9,7 +9,7 @@ export function PageShell({ className, children, ...rest }: ComponentProps<'div'
   return (
     <div
       className={cn(
-        'max-w-full mx-auto space-y-4 sm:space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden',
+        'max-w-full mx-auto space-y-4 sm:space-y-6 lg:space-y-8 pb-20 p-3 sm:p-4 lg:p-0 overflow-x-hidden min-w-0',
         className,
       )}
       {...rest}

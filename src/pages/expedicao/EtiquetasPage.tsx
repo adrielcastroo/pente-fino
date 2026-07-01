@@ -466,7 +466,7 @@ export default function ExpedicaoEtiquetasPage() {
         historyCount={history.length}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_460px] gap-6 print:block">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_460px] gap-4 lg:gap-6 print:block min-w-0">
         {/* Form */}
         <Card className="print:hidden">
           <CardHeader className="pb-3">
@@ -1134,7 +1134,7 @@ function PresetsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="w-[95vw] max-w-xl">
         <DialogHeader>
           <DialogTitle>Presets de etiqueta</DialogTitle>
           <DialogDescription>
@@ -1212,7 +1212,7 @@ function HistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="w-[95vw] max-w-3xl">
         <DialogHeader>
           <DialogTitle>Histórico de impressões</DialogTitle>
           <DialogDescription>
