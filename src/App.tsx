@@ -167,9 +167,7 @@ const App = () => (
                   path="/expedicao"
                   element={
                     <ProtectedRoute>
-                      <RequireRole action="view:auditoria" fallback={<Navigate to="/" replace />}>
-                        <ExpedicaoLayout />
-                      </RequireRole>
+                      <ExpedicaoLayout />
                     </ProtectedRoute>
                   }
                 >
