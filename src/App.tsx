@@ -109,7 +109,7 @@ const App = () => (
                 <Route path="/selecionar-modulo" element={<ProtectedRoute><SelecionarModuloPage /></ProtectedRoute>} />
 
                 {/* ===== MÓDULO ESTOQUE (canônico /estoque/*) ===== */}
-                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                <Route element={<ProtectedRoute><RequireModule module="estoque"><MainLayout /></RequireModule></ProtectedRoute>}>
                   <Route path="/" element={<RoleHomeRedirect />} />
 
                   {/* Rotas canônicas /estoque/* */}
