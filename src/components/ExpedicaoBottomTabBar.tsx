@@ -7,7 +7,7 @@ const MOBILE_NAV = EXPEDICAO_NAV.groups[0].items.slice(0, 5);
 export default function ExpedicaoBottomTabBar() {
   return (
     <nav
-      className="flex desktop:hidden tablet-landscape:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl"
+      className="flex desktop:hidden tablet-landscape:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl pb-[env(safe-area-inset-bottom,0px)]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navegação Expedição"
     >
