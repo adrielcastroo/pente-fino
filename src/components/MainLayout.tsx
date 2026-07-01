@@ -81,10 +81,10 @@ export default function MainLayout({
           <Breadcrumbs />
           {showResumeBanner && <ResumeBanner />}
 
-          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-16 tablet-landscape:pb-0 desktop:pb-0">
+          <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-[calc(4rem+env(safe-area-inset-bottom,0px))] tablet-landscape:pb-0 desktop:pb-0">
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
-                <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 max-w-[1600px] 2xl:max-w-[1800px] mx-auto">
+                <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto min-w-0">
                   <ErrorBoundary>
                     <Outlet />
                   </ErrorBoundary>
