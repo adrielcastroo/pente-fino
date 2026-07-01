@@ -41,6 +41,8 @@ const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPag
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
+import RequireModule from "@/components/auth/RequireModule";
+
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
@@ -109,7 +111,7 @@ const App = () => (
                 <Route path="/selecionar-modulo" element={<ProtectedRoute><SelecionarModuloPage /></ProtectedRoute>} />
 
                 {/* ===== MÓDULO ESTOQUE (canônico /estoque/*) ===== */}
-                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                <Route element={<ProtectedRoute><RequireModule module="estoque"><MainLayout /></RequireModule></ProtectedRoute>}>
                   <Route path="/" element={<RoleHomeRedirect />} />
 
                   {/* Rotas canônicas /estoque/* */}
