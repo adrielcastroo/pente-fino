@@ -87,7 +87,7 @@ export function EntregasMap({ cidades }: { cidades: CityAgg[] }) {
   const maxTotal = Math.max(1, ...markers.map((m) => m.total));
 
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-lg border border-border">
+    <div className="relative h-[320px] sm:h-[380px] lg:h-[460px] w-full overflow-hidden rounded-lg border border-border">
       <MapContainer
         center={[-15.78, -47.93]}
         zoom={4}
