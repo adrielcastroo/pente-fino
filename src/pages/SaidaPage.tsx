@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { usePerformance } from '@/hooks/use-performance';
 import { formatDateBR } from '@/lib/app-utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PageHeader } from '@/components/ui/page-header';
 
 interface SaidaRegistro {
   id: string;
@@ -207,45 +208,44 @@ export default function SaidaPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-          <div className="space-y-0.5 sm:space-y-1 text-left">
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-none">
-              Saídas
-            </h1>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
-            <Button 
-              onClick={() => setScanMode(true)} 
-              variant="outline" 
-              className="w-full sm:w-auto h-12 px-6 font-semibold rounded-md border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-95 text-base shrink-0"
-            >
-              <span>Dar saída</span>
-            </Button>
+        <PageHeader
+          title="Saídas"
+          className="lg:items-center"
+          actions={
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
+              <Button
+                onClick={() => setScanMode(true)}
+                variant="outline"
+                className="w-full sm:w-auto h-12 px-6 font-semibold rounded-md border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-95 text-base shrink-0"
+              >
+                <span>Dar saída</span>
+              </Button>
 
-            <div className="relative group w-full sm:flex-1 lg:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
-              <Input 
-                value={search} 
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Filtrar item, PROC, conferente..."
-                className="pl-10 h-11 sm:h-12 rounded-md border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
-              />
+              <div className="relative group w-full sm:flex-1 lg:w-80">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                <Input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Filtrar item, PROC, conferente..."
+                  className="pl-10 h-11 sm:h-12 rounded-md border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
+                />
+              </div>
+
+              <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
+                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-md border-border/40 font-bold text-xs sm:text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
+                  <SelectItem value="todos">Todo o período</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          }
+        />
 
-            <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
-              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-md border-border/40 font-bold text-xs sm:text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Últimos 7 dias</SelectItem>
-                <SelectItem value="30">Últimos 30 dias</SelectItem>
-                <SelectItem value="90">Últimos 90 dias</SelectItem>
-                <SelectItem value="todos">Todo o período</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </header>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
