@@ -1212,7 +1212,7 @@ function HistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="w-[95vw] max-w-3xl">
         <DialogHeader>
           <DialogTitle>Histórico de impressões</DialogTitle>
           <DialogDescription>
