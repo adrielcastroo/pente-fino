@@ -103,34 +103,34 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
       onMouseLeave={handleMouseLeave}
       aria-label={`Menu ${config.moduleLabel}`}
     >
-      <SidebarHeader className="px-3 py-4 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:py-3">
+      <SidebarHeader className="px-3 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-3 overflow-hidden">
         <button
           onClick={() => handleNavigate(config.homePath)}
-          className="flex items-center gap-3 rounded-md px-2 py-1.5 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:mx-auto hover:opacity-80 transition-opacity cursor-pointer"
+          className="flex items-center gap-3 rounded-md px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:mx-auto hover:opacity-80 transition-opacity cursor-pointer min-w-0"
           aria-label={`Ir para ${config.moduleLabel}`}
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center">
             <img src={logoComb} alt="Pente Fino" className="h-7 w-7 object-contain" />
           </div>
-          <div className="flex flex-col overflow-hidden transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
-            <span className="text-sm font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
+          <div className="flex flex-col min-w-0 overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span className="text-sm font-bold leading-tight tracking-tight text-foreground truncate">
               Pente Fino
             </span>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground truncate">
               {config.moduleLabel}
             </span>
           </div>
         </button>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 group-data-[state=collapsed]:px-0 custom-scrollbar">
+      <SidebarContent className="px-3 group-data-[collapsible=icon]:px-0 custom-scrollbar overflow-x-hidden">
         {visibleGroups.map(group => (
           <SidebarGroup key={group.label} className="p-0 mb-2">
-            <SidebarGroupLabel className="px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 group-data-[state=collapsed]:hidden">
+            <SidebarGroupLabel className="px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
+              <SidebarMenu className="gap-0.5 group-data-[collapsible=icon]:items-center">
                 {group.items.map(item => {
                   const Icon = item.icon;
                   const isActive = isItemActive(item.path);
@@ -145,17 +145,14 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                         isActive={isActive}
                         aria-current={isActive ? 'page' : undefined}
                         className={`
-                          relative flex h-10 w-full items-center gap-2 rounded-md pl-3 pr-2 transition-all duration-150 active:scale-[0.97]
-                          group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
-                          group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto group-data-[state=collapsed]:!px-0
+                          relative h-10 rounded-md transition-colors duration-150 active:scale-[0.97]
                           ${isActive
                             ? 'text-primary font-bold'
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
-                          ${hasBadge && !isActive ? 'ring-1 ring-primary/30 ring-offset-1 ring-offset-sidebar' : ''}
                         `}
                       >
                         {isActive && (
-                          <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[state=collapsed]:hidden" />
+                          <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[collapsible=icon]:hidden" />
                         )}
 
                         <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
@@ -172,13 +169,13 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                           )}
                         </div>
 
-                        <span className="min-w-0 flex-1 truncate text-left text-[13px] transition-opacity duration-200 group-data-[state=collapsed]:hidden">
+                        <span className="min-w-0 flex-1 truncate text-left text-[13px] group-data-[collapsible=icon]:hidden">
                           {item.label}
                         </span>
 
                         {hasBadge && (
                           <span
-                            className={`ml-auto flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums group-data-[state=collapsed]:hidden ${
+                            className={`ml-auto flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums group-data-[collapsible=icon]:hidden ${
                               isActive
                                 ? 'bg-primary-foreground/20 text-primary-foreground'
                                 : 'bg-primary/10 text-primary'
@@ -197,8 +194,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="px-3 py-3 group-data-[state=collapsed]:px-0 border-t border-border/30">
-        <SidebarMenu className="gap-0.5 group-data-[state=collapsed]:items-center">
+      <SidebarFooter className="px-3 py-3 group-data-[collapsible=icon]:px-0 border-t border-border/30 overflow-hidden">
+        <SidebarMenu className="gap-0.5 group-data-[collapsible=icon]:items-center">
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
