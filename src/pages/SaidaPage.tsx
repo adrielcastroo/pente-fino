@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { usePerformance } from '@/hooks/use-performance';
 import { formatDateBR } from '@/lib/app-utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PageHeader } from '@/components/ui/page-header';
 
 interface SaidaRegistro {
   id: string;
