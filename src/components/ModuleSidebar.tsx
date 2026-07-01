@@ -145,9 +145,9 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                         isActive={isActive}
                         aria-current={isActive ? 'page' : undefined}
                         className={`
-                          relative h-10 rounded-md transition-all duration-150 active:scale-[0.97]
+                          relative flex h-10 w-full items-center gap-2 rounded-md pl-3 pr-2 transition-all duration-150 active:scale-[0.97]
                           group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10
-                          group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto
+                          group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mx-auto group-data-[state=collapsed]:!px-0
                           ${isActive
                             ? 'text-primary font-bold'
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
@@ -155,7 +155,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                         `}
                       >
                         {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
+                          <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[state=collapsed]:hidden" />
                         )}
 
                         <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
@@ -172,13 +172,13 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                           )}
                         </div>
 
-                        <span className="truncate text-[13px] transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
+                        <span className="min-w-0 flex-1 truncate text-left text-[13px] transition-opacity duration-200 group-data-[state=collapsed]:hidden">
                           {item.label}
                         </span>
 
                         {hasBadge && (
                           <span
-                            className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 ${
+                            className={`ml-auto flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums group-data-[state=collapsed]:hidden ${
                               isActive
                                 ? 'bg-primary-foreground/20 text-primary-foreground'
                                 : 'bg-primary/10 text-primary'
