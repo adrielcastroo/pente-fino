@@ -110,9 +110,11 @@ const App = () => (
                 
                 <Route path="/selecionar-modulo" element={<ProtectedRoute><SelecionarModuloPage /></ProtectedRoute>} />
 
+                {/* Home redirect fora de qualquer guard de módulo — evita loop para usuários sem estoque */}
+                <Route path="/" element={<ProtectedRoute><RoleHomeRedirect /></ProtectedRoute>} />
+
                 {/* ===== MÓDULO ESTOQUE (canônico /estoque/*) ===== */}
                 <Route element={<ProtectedRoute><RequireModule module="estoque"><MainLayout /></RequireModule></ProtectedRoute>}>
-                  <Route path="/" element={<RoleHomeRedirect />} />
 
                   {/* Rotas canônicas /estoque/* */}
                   <Route path="/estoque/operacao" element={<OperacaoHomePage />} />
