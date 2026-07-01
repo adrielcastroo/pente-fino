@@ -257,7 +257,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <LogOut className="h-[18px] w-[18px]" />
               </div>
-              <span className="text-xs font-medium transition-all duration-300 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 overflow-hidden whitespace-nowrap">
+              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[state=collapsed]:hidden">
                 Sair
               </span>
             </SidebarMenuButton>
