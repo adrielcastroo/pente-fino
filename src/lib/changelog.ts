@@ -195,11 +195,14 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
 ];
 
-// Prefer the build-time injected version (always reflects the deployed bundle).
-// Falls back to the top changelog entry during tests/dev where __APP_VERSION__ is absent.
+// The CHANGELOG array is the single source of truth: LATEST_VERSION always
+// reflects the top entry so the footer and the notification bell stay in sync
+// with what was actually shipped. __APP_VERSION__ (injected by Vite at build
+// time from the same file) is only a fallback for edge cases where the array
+// import gets tree-shaken or mocked.
 export const LATEST_VERSION: string =
-  (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : undefined) ??
   CHANGELOG[0]?.version ??
+  (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : undefined) ??
   '0.0.0';
 export const BUILD_TIME: string =
   typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
