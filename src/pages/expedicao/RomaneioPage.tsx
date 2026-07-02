@@ -172,7 +172,6 @@ export default function RomaneioPage() {
   return (
     <PageShell>
       <PageHeader
-        icon={FileText}
         title="Romaneio"
         subtitle="Agrupe carrinhos conferidos e emita romaneios de expedição."
         actions={
