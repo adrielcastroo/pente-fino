@@ -277,51 +277,54 @@ export function useAssociarCarrinho() {
   });
 }
 
+export async function bipPecaCall(pickingId: string, codigoPeca: string) {
+  const codigo = codigoPeca.trim().toUpperCase();
+  if (!codigo) throw new Error('Código vazio.');
+
+  const { data: existente, error: errF } = await supabase
+    .from('expedicao_picking_itens')
+    .select('id, qtd_bipada, qtd_prevista')
+    .eq('picking_id', pickingId)
+    .eq('codigo_peca', codigo)
+    .maybeSingle();
+  if (errF) throw errF;
+
+  const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+  const now = new Date().toISOString();
+
+  if (existente) {
+    const { error } = await supabase
+      .from('expedicao_picking_itens')
+      .update({
+        qtd_bipada: existente.qtd_bipada + 1,
+        bipado_at: now,
+        bipado_por: uid,
+      })
+      .eq('id', existente.id);
+    if (error) throw error;
+    return { codigo, novo: false };
+  }
+
+  const { error } = await supabase
+    .from('expedicao_picking_itens')
+    .insert({
+      picking_id: pickingId,
+      codigo_peca: codigo,
+      qtd_prevista: 1,
+      qtd_bipada: 1,
+      bipado_at: now,
+      bipado_por: uid,
+    });
+  if (error) throw error;
+  return { codigo, novo: true };
+}
+
 export function useBipPeca() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { pickingId: string; codigoPeca: string }) => {
-      const codigo = input.codigoPeca.trim().toUpperCase();
-      if (!codigo) throw new Error('Código vazio.');
-
-      const { data: existente, error: errF } = await supabase
-        .from('expedicao_picking_itens')
-        .select('id, qtd_bipada, qtd_prevista')
-        .eq('picking_id', input.pickingId)
-        .eq('codigo_peca', codigo)
-        .maybeSingle();
-      if (errF) throw errF;
-
-      const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
-      const now = new Date().toISOString();
-
-      if (existente) {
-        const { error } = await supabase
-          .from('expedicao_picking_itens')
-          .update({
-            qtd_bipada: existente.qtd_bipada + 1,
-            bipado_at: now,
-            bipado_por: uid,
-          })
-          .eq('id', existente.id);
-        if (error) throw error;
-        return { codigo, novo: false };
-      }
-
-      const { error } = await supabase
-        .from('expedicao_picking_itens')
-        .insert({
-          picking_id: input.pickingId,
-          codigo_peca: codigo,
-          qtd_prevista: 1,
-          qtd_bipada: 1,
-          bipado_at: now,
-          bipado_por: uid,
-        });
-      if (error) throw error;
-      return { codigo, novo: true };
-    },
-    onSuccess: (r, vars) => {
+    mutationFn: (input: { pickingId: string; codigoPeca: string }) =>
+      bipPecaCall(input.pickingId, input.codigoPeca),
+    onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ['expedicao', 'picking-itens', vars.pickingId] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Falha ao bipar peça'),
