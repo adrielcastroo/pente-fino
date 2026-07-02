@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { usePickings, type PickingStatus } from '@/hooks/expedicao/useExpedicaoData';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   BarChart,
@@ -14,24 +15,36 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { Clock, Package, CheckCircle2, DollarSign } from 'lucide-react';
+import { Clock, Tag, PackageCheck, ClipboardCheck, Truck } from 'lucide-react';
 
-const STATUS_LABEL: Record<PickingStatus, string> = {
-  aguardando: 'Aguardando',
-  em_separacao: 'Em separação',
-  em_conferencia: 'Em conferência',
-  conferido: 'Conferido',
-  faturado: 'Faturado',
-  cancelado: 'Cancelado',
+type PecaStatus = 'etiquetada' | 'alocada' | 'conferida' | 'no_romaneio' | 'faturada' | 'cancelada';
+
+interface Peca {
+  id: string;
+  status: PecaStatus;
+  etiquetada_at: string | null;
+  alocada_at: string | null;
+  conferida_at: string | null;
+  faturada_at: string | null;
+  created_at: string;
+}
+
+const STATUS_LABEL: Record<PecaStatus, string> = {
+  etiquetada: 'Etiquetadas',
+  alocada: 'Alocadas',
+  conferida: 'Conferidas',
+  no_romaneio: 'Em romaneio',
+  faturada: 'Faturadas',
+  cancelada: 'Canceladas',
 };
 
-const STATUS_COLOR: Record<PickingStatus, string> = {
-  aguardando: '#94a3b8',
-  em_separacao: '#0ea5e9',
-  em_conferencia: '#f59e0b',
-  conferido: '#10b981',
-  faturado: '#6366f1',
-  cancelado: '#ef4444',
+const STATUS_COLOR: Record<PecaStatus, string> = {
+  etiquetada: '#94a3b8',
+  alocada: '#0ea5e9',
+  conferida: '#10b981',
+  no_romaneio: '#f59e0b',
+  faturada: '#6366f1',
+  cancelada: '#ef4444',
 };
 
 function fmtMin(ms: number) {
@@ -43,86 +56,109 @@ function fmtMin(ms: number) {
   return `${h}h ${m}m`;
 }
 
+function usePecas() {
+  return useQuery({
+    queryKey: ['expedicao_pecas_dashboard'],
+    queryFn: async (): Promise<Peca[]> => {
+      const { data, error } = await supabase
+        .from('expedicao_pecas')
+        .select('id, status, etiquetada_at, alocada_at, conferida_at, faturada_at, created_at')
+        .order('created_at', { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return (data ?? []) as Peca[];
+    },
+    staleTime: 15_000,
+  });
+}
+
 export default function ExpedicaoDashboardOperacionalPage() {
-  const { data: pickings = [], isLoading } = usePickings();
+  const { data: pecas = [], isLoading } = usePecas();
 
   const stats = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayMs = today.getTime();
 
-    const hoje = pickings.filter((p) => new Date(p.created_at).getTime() >= todayMs);
-    const conferidosHoje = hoje.filter((p) => p.status === 'conferido' || p.status === 'faturado');
-    const faturadosHoje = hoje.filter((p) => p.status === 'faturado');
-    const ativos = pickings.filter((p) =>
-      ['aguardando', 'em_separacao', 'em_conferencia'].includes(p.status)
-    );
+    const inToday = (iso: string | null) =>
+      !!iso && new Date(iso).getTime() >= todayMs;
 
-    const tempos = pickings
-      .filter((p) => p.finished_at)
-      .map((p) => new Date(p.finished_at!).getTime() - new Date(p.created_at).getTime());
-    const tempoMedio = tempos.length
-      ? tempos.reduce((a, b) => a + b, 0) / tempos.length
+    const etiquetadasHoje = pecas.filter((p) => inToday(p.etiquetada_at)).length;
+    const conferidasHoje = pecas.filter((p) => inToday(p.conferida_at)).length;
+    const faturadasHoje = pecas.filter((p) => inToday(p.faturada_at)).length;
+
+    const emAndamento = pecas.filter((p) =>
+      ['etiquetada', 'alocada', 'conferida', 'no_romaneio'].includes(p.status)
+    ).length;
+
+    // Tempo médio: etiquetada → faturada
+    const ciclos = pecas
+      .filter((p) => p.etiquetada_at && p.faturada_at)
+      .map(
+        (p) =>
+          new Date(p.faturada_at!).getTime() - new Date(p.etiquetada_at!).getTime()
+      );
+    const tempoMedio = ciclos.length
+      ? ciclos.reduce((a, b) => a + b, 0) / ciclos.length
       : 0;
 
-    const porStatus = (Object.keys(STATUS_LABEL) as PickingStatus[]).map((s) => ({
-      status: STATUS_LABEL[s],
+    const porStatus = (Object.keys(STATUS_LABEL) as PecaStatus[]).map((s) => ({
       key: s,
-      total: pickings.filter((p) => p.status === s).length,
+      status: STATUS_LABEL[s],
+      total: pecas.filter((p) => p.status === s).length,
     }));
 
-    // Produção últimos 7 dias
-    const dias: { dia: string; criados: number; conferidos: number }[] = [];
+    // Produção últimos 7 dias (peças etiquetadas x faturadas)
+    const dias: { dia: string; etiquetadas: number; faturadas: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setHours(0, 0, 0, 0);
       d.setDate(d.getDate() - i);
       const ini = d.getTime();
-      const fim = ini + 86400000;
-      const label = d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' });
+      const fim = ini + 86_400_000;
+      const inRange = (iso: string | null) => {
+        if (!iso) return false;
+        const t = new Date(iso).getTime();
+        return t >= ini && t < fim;
+      };
       dias.push({
-        dia: label,
-        criados: pickings.filter((p) => {
-          const t = new Date(p.created_at).getTime();
-          return t >= ini && t < fim;
-        }).length,
-        conferidos: pickings.filter((p) => {
-          if (!p.finished_at) return false;
-          const t = new Date(p.finished_at).getTime();
-          return t >= ini && t < fim;
-        }).length,
+        dia: d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+        etiquetadas: pecas.filter((p) => inRange(p.etiquetada_at)).length,
+        faturadas: pecas.filter((p) => inRange(p.faturada_at)).length,
       });
     }
 
     return {
-      hoje: hoje.length,
-      conferidosHoje: conferidosHoje.length,
-      faturadosHoje: faturadosHoje.length,
-      ativos: ativos.length,
+      etiquetadasHoje,
+      conferidasHoje,
+      faturadasHoje,
+      emAndamento,
       tempoMedio,
       porStatus,
       dias,
     };
-  }, [pickings]);
+  }, [pecas]);
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard Operacional</h1>
-        <p className="text-sm text-muted-foreground">KPIs do dia, produtividade e tempos por etapa.</p>
+        <p className="text-sm text-muted-foreground">
+          Peças em fluxo — Embalagem → Alocação → Conferência → Romaneio → Faturamento.
+        </p>
       </header>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={Package} label="Pickings hoje" value={stats.hoje} color="text-primary" />
-        <KpiCard icon={CheckCircle2} label="Conferidos hoje" value={stats.conferidosHoje} color="text-success" />
-        <KpiCard icon={DollarSign} label="Faturados hoje" value={stats.faturadosHoje} color="text-primary" />
-        <KpiCard icon={Clock} label="Tempo médio" value={fmtMin(stats.tempoMedio)} color="text-warning" />
+        <KpiCard icon={Tag} label="Etiquetadas hoje" value={stats.etiquetadasHoje} color="text-primary" />
+        <KpiCard icon={ClipboardCheck} label="Conferidas hoje" value={stats.conferidasHoje} color="text-success" />
+        <KpiCard icon={Truck} label="Faturadas hoje" value={stats.faturadasHoje} color="text-primary" />
+        <KpiCard icon={Clock} label="Ciclo médio" value={fmtMin(stats.tempoMedio)} color="text-warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Pickings por status</CardTitle>
+            <CardTitle className="text-base">Peças por status</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {isLoading ? (
@@ -167,8 +203,8 @@ export default function ExpedicaoDashboardOperacionalPage() {
                   <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="criados" name="Criados" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="conferidos" name="Conferidos" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="etiquetadas" name="Etiquetadas" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="faturadas" name="Faturadas" fill="#6366f1" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -178,12 +214,15 @@ export default function ExpedicaoDashboardOperacionalPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Pickings ativos</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <PackageCheck className="w-4 h-4 text-muted-foreground" />
+            Peças em andamento
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-semibold tabular-nums">{stats.ativos}</p>
+          <p className="text-3xl font-semibold tabular-nums">{stats.emAndamento}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Aguardando, em separação ou em conferência.
+            Etiquetadas, alocadas, conferidas ou aguardando faturamento em romaneio.
           </p>
         </CardContent>
       </Card>
