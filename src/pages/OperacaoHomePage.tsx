@@ -27,7 +27,6 @@ const actions: OpAction[] = [
   { to: '/estoque/reservas', label: 'Reservas', description: 'Visualizar e registrar reservas', icon: TableIcon },
   { to: '/estoque/cadastros', label: 'Cadastros', description: 'Consultar itens cadastrados', icon: Package },
   { to: '/estoque/historico', label: 'Histórico recente', description: 'Últimas conferências', icon: FolderOpen },
-  { to: '/estoque/configuracoes', label: 'Configurações', description: 'Preferências pessoais', icon: SettingsIcon },
 ];
 
 export default function OperacaoHomePage() {
