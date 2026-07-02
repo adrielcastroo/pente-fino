@@ -107,7 +107,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
 
       <SidebarContent className={cn('custom-scrollbar overflow-x-hidden', isIconCollapsed ? 'px-0' : 'px-3')}>
         {visibleGroups.map(group => (
-          <SidebarGroup key={group.label} className="mb-2 p-0">
+          <SidebarGroup key={group.label} className="mb-2 p-0 shrink-0">
             {!isIconCollapsed && (
               <div
                 data-sidebar="module-group-label"
