@@ -38,7 +38,6 @@ const actions: OpAction[] = [
   { to: '/expedicao/etiquetas', label: 'Etiquetas', description: 'Layout e impressão', icon: Tag },
   { to: '/expedicao/historico', label: 'Histórico', description: 'Expedições anteriores', icon: History },
   { to: '/expedicao/relatorios', label: 'Relatórios', description: 'Exportações e análises', icon: FileDown },
-  { to: '/expedicao/configuracoes', label: 'Configurações', description: 'Preferências do módulo', icon: SettingsIcon },
 ];
 
 export default function ExpedicaoOperacaoHomePage() {
