@@ -11,7 +11,6 @@ import {
   History,
   FileDown,
   Tag,
-  Settings as SettingsIcon,
   PlayCircle,
   LucideIcon,
 } from 'lucide-react';
