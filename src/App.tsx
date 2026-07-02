@@ -39,6 +39,8 @@ const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosP
 
 const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
 const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoHomePage"));
+const ExpedicaoEmbalagemPage = lazy(() => import("@/pages/expedicao/EmbalagemPage"));
+const ExpedicaoAlocacaoPage = lazy(() => import("@/pages/expedicao/AlocacaoPage"));
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
