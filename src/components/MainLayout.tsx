@@ -13,7 +13,7 @@ import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ModuleSwitchFab from '@/components/ModuleSwitchFab';
-import { LATEST_VERSION, BUILD_TIME } from '@/lib/changelog';
+import AppFooter from '@/components/shared/AppFooter';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const PageSkeleton = () => (
@@ -89,28 +89,7 @@ export default function MainLayout({
                     <Outlet />
                   </ErrorBoundary>
                 </div>
-                {showFooter && (
-                  <footer role="contentinfo" className="mt-4 border-t border-border/60 bg-card/30">
-                    <div className="max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground/80">
-                      <span className="flex items-center gap-1.5">
-                        <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-                          <span className="absolute inline-flex h-full w-full rounded-full bg-success/60 animate-ping" />
-                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
-                        </span>
-                        <span className="hidden sm:inline">Sistema operacional</span>
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-foreground/80 font-medium tracking-tight">Pente Fino</span>
-                        <span
-                          className="px-1.5 py-0 rounded bg-muted/60 text-muted-foreground border border-border/40 font-mono text-[10px] leading-4"
-                          title={BUILD_TIME ? `Build: ${new Date(BUILD_TIME).toLocaleString('pt-BR')}` : undefined}
-                        >
-                          v{LATEST_VERSION}
-                        </span>
-                      </span>
-                    </div>
-                  </footer>
-                )}
+                {showFooter && <AppFooter />}
               </Suspense>
             </div>
           </main>
