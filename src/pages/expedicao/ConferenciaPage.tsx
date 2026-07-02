@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Loader2, ScanLine, X } from 'lucide-react';
+import { CheckCircle2, CloudOff, Loader2, RefreshCw, ScanLine, Wifi, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import {
   useBipPeca,
   useFinalizarConferencia,
 } from '@/hooks/expedicao/useExpedicaoData';
+import { useOfflineBipQueue } from '@/hooks/expedicao/useOfflineBipQueue';
 import { toast } from 'sonner';
 
 export default function ConferenciaPage() {
@@ -24,6 +25,7 @@ export default function ConferenciaPage() {
   const { data: itens } = usePickingItens(pickingId);
   const bip = useBipPeca();
   const finalizar = useFinalizarConferencia();
+  const { online, pending, syncing, queueBip, flush } = useOfflineBipQueue();
 
   useEffect(() => { pickingRef.current?.focus(); }, []);
   useEffect(() => { if (picking) pecaRef.current?.focus(); }, [picking]);
@@ -47,10 +49,19 @@ export default function ConferenciaPage() {
       e.preventDefault();
       const codigo = peca;
       setPeca('');
-      try {
-        const r = await bip.mutateAsync({ pickingId, codigoPeca: codigo });
-        if (r.novo) toast.success(`Nova peça ${r.codigo}`);
-      } catch { /* toast no hook */ }
+      if (!online) {
+        await queueBip(pickingId, codigo);
+        toast.info(`Offline — ${codigo.trim().toUpperCase()} na fila`);
+      } else {
+        try {
+          const r = await bip.mutateAsync({ pickingId, codigoPeca: codigo });
+          if (r.novo) toast.success(`Nova peça ${r.codigo}`);
+        } catch {
+          // Network error → enqueue as fallback
+          await queueBip(pickingId, codigo);
+          toast.warning(`Sem conexão — ${codigo.trim().toUpperCase()} na fila`);
+        }
+      }
       pecaRef.current?.focus();
     }
   };
