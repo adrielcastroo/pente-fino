@@ -56,7 +56,7 @@ export function HistoricoPecaTimeline({ pecaId, open, onOpenChange }: Props) {
             {data.map((e: any) => (
               <li key={e.id} className="text-xs relative">
                 <span className="absolute -left-[17px] top-1 w-2 h-2 rounded-full bg-primary" />
-                <div className="font-medium">{formatEvento(e.evento)}</div>
+                <div className="font-medium">{formatEvento(e.acao)}</div>
                 <div className="text-muted-foreground">
                   {new Date(e.created_at).toLocaleString('pt-BR')}
                 </div>
