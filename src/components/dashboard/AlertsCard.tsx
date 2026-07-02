@@ -126,10 +126,18 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
               <div className={`p-1.5 rounded-md ${style.bg} ${style.text} shrink-0`}>
                 <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
               </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                 <span className={`text-sm font-medium ${style.text} truncate`}>{alert.title}</span>
                 <span className="text-xs text-muted-foreground">{alert.description}</span>
               </div>
+              <button
+                type="button"
+                onClick={() => dismiss(alert.id)}
+                aria-label={`Fechar alerta: ${alert.title}`}
+                className="shrink-0 p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="w-3.5 h-3.5" strokeWidth={2} />
+              </button>
             </div>
           );
         })}
