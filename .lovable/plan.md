@@ -1,73 +1,54 @@
-# Design System — Módulo Expedição (paridade com Estoque)
+## Reformulação do Módulo Expedição — Fluxo Linear de 5 Etapas
 
-## Objetivo
-Padronizar visual, layout e componentes de todas as páginas em `src/pages/expedicao/*` e `src/components/expedicao/*` para refletir o padrão já estabelecido em `EstoquePage` e demais páginas do módulo Estoque, usando exclusivamente tokens semânticos do design system.
+Refatoração completa: o modelo "picking ↔ carrinho" sai; entra o fluxo **peça → etiqueta → carrinho → double-check → romaneio → NF**. Escopo grande, então proponho fasear em 4 turnos para você validar cada camada antes de avançar.
 
-## Auditoria rápida (pontos divergentes encontrados)
-- `HistoricoPage.tsx` e `PainelPage.tsx` usam `bg-slate-100/700/300/800` hard-coded nos badges de status — violação da regra de tokens semânticos.
-- Páginas de Expedição não compartilham um cabeçalho padrão (título 2xl/3xl semibold + subtítulo `text-xs text-muted-foreground` + botão de voltar `w-9 h-9`) como o Estoque.
-- Cards de KPI/stats não seguem o estilo do Estoque (`rounded-[1.5rem] sm:rounded-[2rem] border-2`, `backdrop-blur-xl`, tipografia `tabular-nums tracking-tighter`, label `text-[9px] uppercase tracking-[0.2em]`).
-- Barra de abas (quando existe) não usa o padrão `bg-card/40 backdrop-blur rounded-lg p-1 border border-border/30`.
-- Espaçamento de página inconsistente (falta `space-y-4 sm:space-y-8 pb-20 p-2 sm:p-0`).
-- `ExpedicaoLayout` já está alinhado ao mobile/desktop do Estoque (turno anterior); manter.
+---
 
-## Escopo da entrega (v3.15.0 — minor, melhoria visual sem quebra)
+### Turno 1 — Fundação de dados (backend)
 
-### 1. Tokens & utilitários compartilhados
-Criar `src/components/expedicao/ui/`:
-- `PageShell.tsx` — wrapper padrão (`max-w-full mx-auto space-y-4 sm:space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden`).
-- `PageHeader.tsx` — título + subtítulo + botão voltar + slot de ações, idêntico ao Estoque.
-- `StatCard.tsx` — card de KPI com variantes de cor por tokens semânticos (`primary`, `success`, `warning`, `destructive`, `muted`), respeitando `tablet-portrait:` breakpoints.
-- `TabsBar.tsx` — barra de abas no estilo `bg-card/40 backdrop-blur`.
-- `StatusBadge.tsx` — mapa centralizado de status (`aguardando`, `em_separacao`, `separado`, `faturado`, `cancelado`) usando tokens (`bg-muted text-muted-foreground`, `bg-primary/10 text-primary`, `bg-success/10 text-success`, `bg-warning/10 text-warning`, `bg-destructive/10 text-destructive`).
+Novas tabelas + migrações RLS/GRANT no padrão do projeto:
 
-### 2. Refatorar páginas para consumir os novos primitivos
-- `PainelPage.tsx`, `HistoricoPage.tsx`, `PickingsPage.tsx`, `ConferenciaPage.tsx`, `FaturamentoPage.tsx`, `RomaneioPage.tsx`, `CarrinhosPage.tsx`, `ConfiguracoesPage.tsx`, `RelatoriosPage.tsx`, `DashboardLogisticoPage.tsx`, `DashboardOperacionalPage.tsx`:
-  - Trocar wrapper raiz por `<PageShell>`.
-  - Trocar cabeçalho manual por `<PageHeader title subtitle backTo actions>`.
-  - Substituir badges de status por `<StatusBadge status=… />`.
-  - Substituir cards de KPI por `<StatCard variant value label icon trend>`.
-  - Remover toda classe `bg-slate-*`, `text-slate-*`, `bg-white`, `text-black` — usar `bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`.
+- `expedicao_pecas` — id, codigo_etiqueta (único), status (`etiquetada|no_carrinho|conferida|no_romaneio|faturada`), embalador_id, carrinho_id (FK nullable), romaneio_id (FK nullable), timestamps.
+- `expedicao_carrinhos` — adicionar `status` (`montando|aguardando_conferencia|em_conferencia|conferido|romaneio_gerado`), `conferente_id`.
+- `expedicao_romaneios` — id, numero, transportadora_id, status, criado_por, timestamps.
+- `expedicao_romaneio_nfe` — tabela associativa N:N (romaneio_id, nfe_id).
+- `expedicao_transportadoras` — adicionar `regra_nf` (`uma_nf|multiplas_nf`).
+- `expedicao_pecas_historico` — auditoria (peça, ação, usuário, timestamp) para rastreabilidade.
 
-### 3. Diálogos
-- `NovoPickingDialog.tsx` e `CancelPickingDialog.tsx`: alinhar ao `DialogContent` global já padronizado (sem overrides locais), botões em `variant="default"/"outline"/"destructive"`.
+Preserva `expedicao_pickings` como legado (não deletar dados existentes) mas marca a rota atual como deprecated.
 
-### 4. Acessibilidade
-- Todo botão icon-only com `aria-label`.
-- `StatusBadge` com `role="status"` quando indicar estado dinâmico (SLA).
-- Contraste verificado em dark mode para cada variante.
+### Turno 2 — Etapas 1 e 2 (Embalagem + Carrinhos)
 
-### 5. Documentação
-- `src/components/expedicao/ui/README.md` listando primitivos, props e exemplos de uso.
+- **`/expedicao/embalagem`** (nova) — campo único de bipagem, gera etiqueta, som/vibração, botão "Reimprimir".
+- **`/expedicao/carrinhos`** (refatorada) — bipagem híbrida (peça ou carrinho, qualquer ordem), lista de peças alocadas em tempo real, confirmação de transferência quando peça já está em outro carrinho.
+- Hook `useExpedicaoPecas` + mutações `etiquetarPeca`, `alocarPecaCarrinho`, `transferirPeca`.
+- Aposentar a UI atual de `/expedicao/pickings` → redireciona para `/expedicao/embalagem` com aviso.
 
-### 6. Versionamento
-- `npm run bump:minor` → v3.15.0.
-- Entrada no changelog: "Design system do módulo Expedição alinhado ao Estoque".
+### Turno 3 — Etapa 3 (Double-check com bloqueio)
 
-## Estrutura de arquivos resultante
-```text
-src/components/expedicao/
-  ui/
-    PageShell.tsx
-    PageHeader.tsx
-    StatCard.tsx
-    TabsBar.tsx
-    StatusBadge.tsx
-    README.md
-  ExpedicaoLayout.tsx        (mantido)
-  NovoPickingDialog.tsx      (refatorado)
-  CancelPickingDialog.tsx    (refatorado)
-src/pages/expedicao/*.tsx    (todas refatoradas para usar ui/)
-src/lib/changelog.ts         (v3.15.0)
-```
+- **`/expedicao/conferencia`** (refatorada) — lista carrinhos aguardando; ao abrir, mostra checklist de peças esperadas.
+- Bipar peça:
+  - ✅ correta → verde, contador `X/Y`.
+  - ❌ pertence a outro carrinho → **alerta vermelho bloqueante** com ação "Realocar" (abre dialog para escolher carrinho correto).
+  - ❌ faltando → destaque pendente, bloqueia fechamento.
+- Só fecha com 100%. Registra resultado por peça em `expedicao_conferencias_itens` (nova).
 
-## Não-escopo
-- Sem alterações em regras de negócio, hooks (`useExpedicaoData`), SLA, RLS, ou rotas.
-- Sem novas features funcionais.
-- Sem alterações em `MainLayout`, `AppSidebar` ou em páginas fora de `/expedicao/*`.
+### Turno 4 — Etapas 4 e 5 (Romaneio + NF) + Hub
 
-## Critérios de aceite
-- `rg "bg-(slate|gray|white|blue|green|red)-[0-9]" src/pages/expedicao src/components/expedicao` retorna vazio.
-- Todas as páginas de Expedição apresentam o mesmo header, espaçamento e estilo de KPI que `EstoquePage`.
-- Dark mode validado em todas as páginas.
-- Build e typecheck passam.
+- **`/expedicao/romaneio`** (refatorada) — gera automaticamente após conferência; lista peças, carrinhos, transportadora; exportar/imprimir.
+- Vínculo com NF respeitando `regra_nf` da transportadora (1:1 ou 1:N via `expedicao_romaneio_nfe`).
+- Validação: soma peças vs. itens NF → alerta divergência.
+- **`/expedicao/operacao`** (hub) — atualizar cards para as 5 etapas + Painel.
+- **`ModuleSidebar` Expedição** — renomear "Pickings"→"Embalagem", reordenar itens conforme fluxo.
+
+---
+
+### Perguntas abertas (respondo com defaults se não indicar)
+
+1. **Cancelamento de romaneio/NF**: default = permitir estorno via botão restrito a `supervisor+`, com log em histórico.
+2. **Permissões**: default = qualquer `operador` bipa/etiqueta; realocação e fechamento de conferência exigem `supervisor+`.
+3. **Rastreabilidade**: default = `expedicao_pecas_historico` grava toda ação (etiquetar, alocar, transferir, conferir, faturar).
+
+### Confirmação
+
+Posso começar pelo **Turno 1 (migrações)** já? Ou prefere ajustar algo na modelagem antes?
