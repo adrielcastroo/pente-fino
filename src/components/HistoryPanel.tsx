@@ -464,10 +464,8 @@ function getModeBadges(conf: Conference): string[] {
   return Array.from(badges);
 }
 
-export { BADGE_COLOR_MAP, getBadgeClass } from '@/lib/badge-colors';
-import { getBadgeClass as _getBadgeClass } from '@/lib/badge-colors';
-// Alias local mantido para minimizar diff no restante do arquivo.
-const getBadgeClassLocal = _getBadgeClass;
+import { BADGE_COLOR_MAP, getBadgeClass } from '@/lib/badge-colors';
+export { BADGE_COLOR_MAP, getBadgeClass };
 
 function pluralize(count: number, singular: string, plural: string): string {
   return `${count.toLocaleString('pt-BR')} ${count === 1 ? singular : plural}`;
