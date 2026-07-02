@@ -18,18 +18,24 @@ export default function ConferenciaPage() {
   const [numero, setNumero] = useState('');
   const [confirmado, setConfirmado] = useState<string | null>(null);
   const [peca, setPeca] = useState('');
+  const [carrinhoCodigo, setCarrinhoCodigo] = useState('');
+  // etiqueta bipada aguardando alocação em um carrinho
+  const [pendingEtiqueta, setPendingEtiqueta] = useState<string | null>(null);
   const pickingRef = useRef<HTMLInputElement>(null);
   const pecaRef = useRef<HTMLInputElement>(null);
+  const carrinhoRef = useRef<HTMLInputElement>(null);
 
   const { data: picking, isFetching: loadingPicking } = usePickingByNumero(confirmado);
   const pickingId = picking?.id ?? null;
   const { data: itens } = usePickingItens(pickingId);
   const bip = useBipPeca();
+  const alocar = useAlocarPecaNoCarrinho();
   const finalizar = useFinalizarConferencia();
   const { online, pending, syncing, queueBip, flush } = useOfflineBipQueue();
 
   useEffect(() => { pickingRef.current?.focus(); }, []);
-  useEffect(() => { if (picking) pecaRef.current?.focus(); }, [picking]);
+  useEffect(() => { if (picking && !pendingEtiqueta) pecaRef.current?.focus(); }, [picking, pendingEtiqueta]);
+  useEffect(() => { if (pendingEtiqueta) carrinhoRef.current?.focus(); }, [pendingEtiqueta]);
 
   const totals = useMemo(() => {
     const list = itens ?? [];
@@ -48,27 +54,52 @@ export default function ConferenciaPage() {
   const handlePecaEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && peca.trim() && pickingId) {
       e.preventDefault();
-      const codigo = peca;
+      const codigo = peca.trim();
       setPeca('');
       if (!online) {
         await queueBip(pickingId, codigo);
-        toast.info(`Offline — ${codigo.trim().toUpperCase()} na fila`);
-      } else {
-        try {
-          const r = await bip.mutateAsync({ pickingId, codigoPeca: codigo });
-          if (r.novo) toast.success(`Nova peça ${r.codigo}`);
-        } catch {
-          // Network error → enqueue as fallback
-          await queueBip(pickingId, codigo);
-          toast.warning(`Sem conexão — ${codigo.trim().toUpperCase()} na fila`);
-        }
+        toast.info(`Offline — ${codigo.toUpperCase()} na fila`);
+        pecaRef.current?.focus();
+        return;
       }
-      pecaRef.current?.focus();
+      try {
+        const r = await bip.mutateAsync({ pickingId, codigoPeca: codigo });
+        if (r.novo) toast.success(`Nova peça ${r.codigo}`);
+        // Passa para o passo de vincular carrinho
+        setPendingEtiqueta(codigo);
+      } catch {
+        await queueBip(pickingId, codigo);
+        toast.warning(`Sem conexão — ${codigo.toUpperCase()} na fila`);
+        pecaRef.current?.focus();
+      }
     }
   };
 
+  const handleCarrinhoEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && carrinhoCodigo.trim() && pendingEtiqueta) {
+      e.preventDefault();
+      const codCar = carrinhoCodigo.trim();
+      setCarrinhoCodigo('');
+      try {
+        await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: codCar });
+        toast.success(`Peça ${pendingEtiqueta.toUpperCase()} → carrinho ${codCar.toUpperCase()}`);
+        setPendingEtiqueta(null);
+        setTimeout(() => pecaRef.current?.focus(), 0);
+      } catch {
+        // toast já emitido pelo hook
+        carrinhoRef.current?.focus();
+      }
+    }
+  };
+
+  const cancelarPendente = () => {
+    setPendingEtiqueta(null);
+    setCarrinhoCodigo('');
+    setTimeout(() => pecaRef.current?.focus(), 0);
+  };
+
   const reset = () => {
-    setConfirmado(null); setNumero(''); setPeca('');
+    setConfirmado(null); setNumero(''); setPeca(''); setPendingEtiqueta(null); setCarrinhoCodigo('');
     setTimeout(() => pickingRef.current?.focus(), 0);
   };
 
