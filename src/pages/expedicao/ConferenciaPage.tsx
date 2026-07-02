@@ -93,20 +93,24 @@ export default function ConferenciaPage() {
     }
   };
 
+  const alocarCarrinho = async (codCar: string) => {
+    if (!pendingEtiqueta) return;
+    try {
+      await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: codCar });
+      toast.success(`Peça ${pendingEtiqueta.toUpperCase()} → carrinho ${codCar.toUpperCase()}`);
+      setPendingEtiqueta(null);
+      setCarrinhoCodigo('');
+      setTimeout(() => pecaRef.current?.focus(), 0);
+    } catch {
+      // toast já emitido pelo hook
+    }
+  };
+
   const handleCarrinhoEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && carrinhoCodigo.trim() && pendingEtiqueta) {
       e.preventDefault();
-      const codCar = carrinhoCodigo.trim();
-      setCarrinhoCodigo('');
-      try {
-        await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: codCar });
-        toast.success(`Peça ${pendingEtiqueta.toUpperCase()} → carrinho ${codCar.toUpperCase()}`);
-        setPendingEtiqueta(null);
-        setTimeout(() => pecaRef.current?.focus(), 0);
-      } catch {
-        // toast já emitido pelo hook
-        carrinhoRef.current?.focus();
-      }
+      await alocarCarrinho(carrinhoCodigo.trim());
+      carrinhoRef.current?.focus();
     }
   };
 
