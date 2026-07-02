@@ -238,6 +238,33 @@ export default function ConferenciaPage() {
                   disabled={alocar.isPending}
                 />
               </div>
+              {carrinhosDisponiveis.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Ou selecione um carrinho
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {carrinhosDisponiveis.map((c) => (
+                      <Button
+                        key={c.id}
+                        type="button"
+                        size="sm"
+                        variant={c.status === 'livre' ? 'outline' : 'secondary'}
+                        disabled={alocar.isPending}
+                        onClick={() => alocarCarrinho(c.codigo)}
+                        className={cn(
+                          'h-9 gap-1.5 font-mono text-xs',
+                          c.status === 'em_uso' && 'border-primary/40',
+                        )}
+                        title={`Status: ${c.status}`}
+                      >
+                        <ShoppingCart className="size-3" />
+                        {c.codigo}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <div className="space-y-1">
