@@ -5,7 +5,6 @@ import {
   Table as TableIcon,
   FolderOpen,
   Package,
-  Settings as SettingsIcon,
   PlayCircle,
   LucideIcon,
 } from 'lucide-react';
