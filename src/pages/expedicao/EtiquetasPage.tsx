@@ -962,6 +962,7 @@ function BlocksEditor({ blocks, onChange }: { blocks: BlockKey[]; onChange: (b: 
 
   const labels: Record<BlockKey, string> = {
     header: 'Cabeçalho (logo + título + subtítulo)',
+    carga:  'Carga (transportadora + NF + volumes)',
     code:   'Códigos (QR / barras / texto)',
     fields: 'Campos personalizados',
     destino: 'Destino / Cliente',
