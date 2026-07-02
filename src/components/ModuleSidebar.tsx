@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, ArrowLeftRight, type LucideIcon } from 'lucide-react';
 import {
   Sidebar,
