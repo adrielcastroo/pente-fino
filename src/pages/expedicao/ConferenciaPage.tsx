@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Loader2, ScanLine, ShoppingCart, X } from 'lucide-react';
+import { CheckCircle2, Loader2, ScanLine, ShoppingCart, Trash2, X } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,9 @@ export default function ConferenciaPage() {
   const qc = useQueryClient();
   const [peca, setPeca] = useState('');
   const [carrinhoCodigo, setCarrinhoCodigo] = useState('');
-  const [pendingEtiqueta, setPendingEtiqueta] = useState<string | null>(null);
+  const [pendingList, setPendingList] = useState<string[]>([]);
+  const [step, setStep] = useState<'bipar' | 'carrinho'>('bipar');
+  const [alocando, setAlocando] = useState(false);
   const [recentes, setRecentes] = useState<Alocacao[]>([]);
 
   const pecaRef = useRef<HTMLInputElement>(null);
@@ -41,52 +43,72 @@ export default function ConferenciaPage() {
 
   useEffect(() => { pecaRef.current?.focus(); }, []);
   useEffect(() => {
-    if (pendingEtiqueta) carrinhoRef.current?.focus();
+    if (step === 'carrinho') carrinhoRef.current?.focus();
     else pecaRef.current?.focus();
-  }, [pendingEtiqueta]);
+  }, [step]);
 
-  // 1. Bipar peça — apenas registra a etiqueta pendente (sem procurar picking)
+  // 1. Bipar peça — acumula na lista pendente
   const handlePecaEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
-    const codigo = peca.trim();
+    const codigo = peca.trim().toUpperCase();
     if (!codigo) return;
     e.preventDefault();
-    setPendingEtiqueta(codigo);
+    if (pendingList.includes(codigo)) {
+      toast.warning(`${codigo} já bipada nesta sessão`);
+      setPeca('');
+      return;
+    }
+    setPendingList((prev) => [codigo, ...prev]);
     setPeca('');
   };
 
-  // 2/3. Alocar peça no carrinho
-  const alocarCarrinho = async (codCar: string) => {
-    if (!pendingEtiqueta) return;
-    const carrinho = codCar.trim();
-    if (!carrinho) return;
+  const removerPendente = (codigo: string) => {
+    setPendingList((prev) => prev.filter((c) => c !== codigo));
+  };
+
+  const limparTudo = () => {
+    setPendingList([]);
+    setStep('bipar');
+    setCarrinhoCodigo('');
+    setTimeout(() => pecaRef.current?.focus(), 0);
+  };
+
+  // 2. Alocar todas as peças pendentes em um carrinho
+  const alocarLote = async (codCar: string) => {
+    const carrinho = codCar.trim().toUpperCase();
+    if (!carrinho || pendingList.length === 0) return;
+    setAlocando(true);
+    let sucesso = 0;
+    const alocadas: Alocacao[] = [];
     try {
-      await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: carrinho });
-      toast.success(`${pendingEtiqueta.toUpperCase()} → ${carrinho.toUpperCase()}`);
-      setRecentes((prev) => [
-        { etiqueta: pendingEtiqueta, carrinho: carrinho.toUpperCase(), ts: Date.now() },
-        ...prev.slice(0, 19),
-      ]);
-      setPendingEtiqueta(null);
-      setCarrinhoCodigo('');
-      qc.invalidateQueries({ queryKey: ['expedicao_carrinhos_disponiveis'] });
-      setTimeout(() => pecaRef.current?.focus(), 0);
-    } catch {
-      // toast já emitido pelo hook
+      for (const etiqueta of pendingList) {
+        try {
+          await alocar.mutateAsync({ codigoEtiqueta: etiqueta, codigoCarrinho: carrinho });
+          alocadas.push({ etiqueta, carrinho, ts: Date.now() });
+          sucesso++;
+        } catch {
+          // toast já emitido pelo hook
+        }
+      }
+      if (sucesso > 0) {
+        toast.success(`${sucesso}/${pendingList.length} peça(s) alocada(s) em ${carrinho}`);
+        setRecentes((prev) => [...alocadas, ...prev].slice(0, 30));
+        setPendingList([]);
+        setStep('bipar');
+        setCarrinhoCodigo('');
+        qc.invalidateQueries({ queryKey: ['expedicao_carrinhos_disponiveis'] });
+        setTimeout(() => pecaRef.current?.focus(), 0);
+      }
+    } finally {
+      setAlocando(false);
     }
   };
 
   const handleCarrinhoEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && carrinhoCodigo.trim() && pendingEtiqueta) {
+    if (e.key === 'Enter' && carrinhoCodigo.trim()) {
       e.preventDefault();
-      await alocarCarrinho(carrinhoCodigo.trim());
+      await alocarLote(carrinhoCodigo);
     }
-  };
-
-  const cancelarPendente = () => {
-    setPendingEtiqueta(null);
-    setCarrinhoCodigo('');
-    setTimeout(() => pecaRef.current?.focus(), 0);
   };
 
   return (
@@ -94,7 +116,7 @@ export default function ConferenciaPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Alocação de peças</h1>
         <p className="text-sm text-muted-foreground">
-          Bipe a peça e, em seguida, o carrinho onde ela será armazenada até a conferência da expedição.
+          Bipe todas as peças e, ao final, escolha o carrinho onde elas serão alocadas.
         </p>
       </header>
 
@@ -102,33 +124,72 @@ export default function ConferenciaPage() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <ScanLine className="size-4" />
-            {pendingEtiqueta ? 'Passo 2 — Bipar carrinho' : 'Passo 1 — Bipar peça'}
+            {step === 'bipar' ? `Passo 1 — Bipar peças (${pendingList.length})` : 'Passo 2 — Escolher carrinho'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {!pendingEtiqueta ? (
-            <Input
-              ref={pecaRef}
-              value={peca}
-              onChange={(e) => setPeca(e.target.value)}
-              onKeyDown={handlePecaEnter}
-              placeholder="Bipe o QR / código da peça"
-              autoComplete="off"
-              className="h-12 font-mono uppercase text-base"
-            />
+          {step === 'bipar' ? (
+            <>
+              <Input
+                ref={pecaRef}
+                value={peca}
+                onChange={(e) => setPeca(e.target.value)}
+                onKeyDown={handlePecaEnter}
+                placeholder="Bipe o QR / código da peça e pressione Enter"
+                autoComplete="off"
+                className="h-12 font-mono uppercase text-base"
+              />
+
+              {pendingList.length > 0 && (
+                <>
+                  <div className="rounded-md border bg-muted/30 max-h-60 overflow-y-auto divide-y">
+                    {pendingList.map((codigo) => (
+                      <div key={codigo} className="flex items-center justify-between px-3 py-1.5 text-sm">
+                        <span className="font-mono">{codigo}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          onClick={() => removerPendente(codigo)}
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 gap-2"
+                      onClick={() => setStep('carrinho')}
+                    >
+                      <ShoppingCart className="size-4" />
+                      Escolher carrinho ({pendingList.length})
+                    </Button>
+                    <Button variant="outline" onClick={limparTudo}>
+                      Limpar
+                    </Button>
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
                 <span className="text-muted-foreground">
-                  Etiqueta pendente:{' '}
-                  <span className="font-mono font-semibold text-foreground">
-                    {pendingEtiqueta.toUpperCase()}
-                  </span>
+                  <span className="font-semibold text-foreground">{pendingList.length}</span> peça(s) para alocar
                 </span>
-                <Button size="sm" variant="ghost" className="h-6" onClick={cancelarPendente}>
-                  <X className="size-3" /> Cancelar
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6"
+                  onClick={() => setStep('bipar')}
+                  disabled={alocando}
+                >
+                  <X className="size-3" /> Voltar
                 </Button>
               </div>
+
               <div className="relative">
                 <ShoppingCart className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -139,9 +200,10 @@ export default function ConferenciaPage() {
                   placeholder="Bipe o código do carrinho"
                   autoComplete="off"
                   className="h-12 pl-9 font-mono uppercase text-base"
-                  disabled={alocar.isPending}
+                  disabled={alocando}
                 />
               </div>
+
               {carrinhos.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -154,8 +216,8 @@ export default function ConferenciaPage() {
                         type="button"
                         size="sm"
                         variant={c.status === 'livre' ? 'outline' : 'secondary'}
-                        disabled={alocar.isPending}
-                        onClick={() => alocarCarrinho(c.codigo)}
+                        disabled={alocando}
+                        onClick={() => alocarLote(c.codigo)}
                         className={cn(
                           'h-9 gap-1.5 font-mono text-xs',
                           c.status === 'em_uso' && 'border-primary/40',
@@ -169,9 +231,10 @@ export default function ConferenciaPage() {
                   </div>
                 </div>
               )}
-              {alocar.isPending && (
+
+              {alocando && (
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" /> Alocando…
+                  <Loader2 className="size-3 animate-spin" /> Alocando {pendingList.length} peça(s)…
                 </p>
               )}
             </div>
@@ -192,7 +255,7 @@ export default function ConferenciaPage() {
             <ul className="divide-y">
               {recentes.map((r, idx) => (
                 <li key={`${r.ts}-${idx}`} className="flex items-center justify-between py-2 text-sm">
-                  <span className="font-mono">{r.etiqueta.toUpperCase()}</span>
+                  <span className="font-mono">{r.etiqueta}</span>
                   <Badge variant="outline" className="gap-1 font-mono">
                     <ShoppingCart className="size-3" /> {r.carrinho}
                   </Badge>
