@@ -36,7 +36,7 @@ import {
 
 type PageSize = '100x150' | '100x100' | '80x60' | '60x40' | '50x30' | 'custom';
 type Align = 'left' | 'center' | 'right';
-type BlockKey = 'header' | 'code' | 'fields' | 'destino' | 'obs';
+type BlockKey = 'header' | 'carga' | 'code' | 'fields' | 'destino' | 'obs';
 
 interface CustomField {
   id: string;
