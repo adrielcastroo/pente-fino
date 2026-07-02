@@ -54,6 +54,10 @@ interface LabelTemplate {
   codigo: string;
   destino: string;
   observacoes: string;
+  transportadora: string;
+  nfNumero: string;
+  volumeAtual: string;
+  volumeTotal: string;
   customFields: CustomField[];
   logoDataUrl: string | null;
   // Variáveis dinâmicas por template (sobreescrevem vars do picking ativo)
