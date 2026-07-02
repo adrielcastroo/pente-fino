@@ -13,7 +13,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
+import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { CargaDetailDialog } from '@/components/expedicao/CargaDetailDialog';
 
 type CargaStatus = 'planejada' | 'em_transito' | 'entregue' | 'cancelada';
@@ -369,9 +370,7 @@ function NovaCargaDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   onCheckedChange={() => toggleRom(r.id)}
                 />
                 <span className="font-mono">{r.numero}</span>
-                <StatusBadge variant={r.status === 'faturado' ? 'success' : 'default'}>
-                  {r.status}
-                </StatusBadge>
+                <StatusBadge label={r.status} tone={r.status === 'faturado' ? 'success' : 'neutral'} />
                 <span className="text-muted-foreground ml-auto">
                   {new Date(r.created_at).toLocaleDateString('pt-BR')}
                 </span>
