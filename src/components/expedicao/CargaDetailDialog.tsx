@@ -277,29 +277,46 @@ function RastreioButton({ cargaId, codigo, tipo }: { cargaId: string; codigo: st
   const qc = useQueryClient();
   const [loading, setLoading] = useState(false);
 
+  const externalUrl = () => {
+    const urls: Record<string, string> = {
+      correios: `https://rastreamento.correios.com.br/app/index.php?objeto=${codigo}`,
+      jadlog: `https://www.jadlog.com.br/tracking?cte=${codigo}`,
+      total: `https://tracking.totalexpress.com.br/poder_rastro.php?ND=${codigo}`,
+    };
+    return urls[tipo ?? ''] ?? `https://www.google.com/search?q=rastreio+${codigo}`;
+  };
+
   const consultar = async () => {
     setLoading(true);
     try {
-      // Placeholder — a edge function `rastreio-consulta` será criada no próximo turno.
-      // Por enquanto, permite registro manual: abre o site do Correios / rastreio externo.
-      const urls: Record<string, string> = {
-        correios: `https://rastreamento.correios.com.br/app/index.php?objeto=${codigo}`,
-        jadlog: `https://www.jadlog.com.br/tracking?cte=${codigo}`,
-        total: `https://tracking.totalexpress.com.br/poder_rastro.php?ND=${codigo}`,
-      };
-      const url = urls[tipo ?? ''] ?? `https://www.google.com/search?q=rastreio+${codigo}`;
-      window.open(url, '_blank');
-      toast.info('Abrindo rastreio externo. Integração automática em breve.');
+      const { data, error } = await supabase.functions.invoke('rastreio-consulta', {
+        body: { carga_id: cargaId },
+      });
+      if (error) {
+        // Se a função retorna 501 (sem token), abre o portal externo como fallback.
+        window.open(externalUrl(), '_blank');
+        toast.info('Rastreio automático indisponível — abrindo portal externo.');
+      } else {
+        toast.success(`Rastreio atualizado: ${data?.novos ?? 0} novo(s) evento(s).`);
+        qc.invalidateQueries({ queryKey: ['expedicao_rastreio_eventos', cargaId] });
+      }
+    } catch (e) {
+      window.open(externalUrl(), '_blank');
+      toast.info('Erro na consulta automática — abrindo portal externo.');
     } finally {
       setLoading(false);
     }
-    qc.invalidateQueries({ queryKey: ['expedicao_rastreio_eventos', cargaId] });
   };
 
   return (
-    <Button size="sm" variant="outline" onClick={consultar} disabled={loading} className="gap-1 h-7 text-xs">
-      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ExternalLink className="w-3 h-3" />}
-      Consultar
-    </Button>
+    <div className="flex items-center gap-1">
+      <Button size="sm" variant="outline" onClick={consultar} disabled={loading} className="gap-1 h-7 text-xs">
+        {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ExternalLink className="w-3 h-3" />}
+        Consultar
+      </Button>
+      <Button size="sm" variant="ghost" onClick={() => window.open(externalUrl(), '_blank')} className="gap-1 h-7 text-xs">
+        Portal
+      </Button>
+    </div>
   );
 }
