@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { ExportRomaneioButton } from '@/components/expedicao/ExportRomaneioButton';
 
 type Carrinho = { id: string; codigo: string; transportadora_id: string | null; conferido_at: string | null };
 type Transportadora = { id: string; nome: string };
@@ -255,6 +256,7 @@ export default function RomaneioPage() {
                 <span className="ml-auto text-xs text-muted-foreground tabular-nums">
                   {new Date(r.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </span>
+                <ExportRomaneioButton romaneioId={r.id} numero={r.numero} />
               </li>
             ))}
           </ul>
