@@ -1337,6 +1337,37 @@ function LabelSheet({ t }: { t: LabelTemplate }) {
             )}
           </div>
         );
+      case 'carga': {
+        const hasAny = t.transportadora || t.nfNumero || t.volumeAtual || t.volumeTotal;
+        if (!hasAny) return null;
+        return (
+          <div key="carga" className="border-b-2 border-black py-2 text-center flex flex-col items-center gap-1">
+            {t.transportadora && (
+              <p className="font-extrabold uppercase leading-tight break-words"
+                style={{ fontSize: `${t.titleSize + 4}pt` }}>
+                {t.transportadora}
+              </p>
+            )}
+            {t.nfNumero && (
+              <p className="font-bold leading-tight" style={{ fontSize: `${t.titleSize + 2}pt` }}>
+                NF <span className="font-mono">{t.nfNumero}</span>
+              </p>
+            )}
+            {(t.volumeAtual || t.volumeTotal) && (
+              <div className="mt-1 inline-flex items-baseline gap-1 border-2 border-black rounded px-3 py-1">
+                <span className="text-[8pt] uppercase tracking-wider font-semibold">Vol.</span>
+                <span className="font-mono font-extrabold leading-none" style={{ fontSize: `${t.titleSize + 10}pt` }}>
+                  {t.volumeAtual || '?'}
+                </span>
+                <span className="font-mono font-bold" style={{ fontSize: `${t.titleSize + 4}pt` }}>/</span>
+                <span className="font-mono font-extrabold leading-none" style={{ fontSize: `${t.titleSize + 10}pt` }}>
+                  {t.volumeTotal || '?'}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      }
       case 'code':
         return (
           <div key="code" className={`flex-1 flex flex-col ${flexAlign} justify-center gap-2 py-2`}>
