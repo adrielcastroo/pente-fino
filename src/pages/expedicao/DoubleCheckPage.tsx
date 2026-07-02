@@ -72,6 +72,24 @@ export default function DoubleCheckPage() {
     carrinhoRef.current?.focus();
   };
 
+  const logConferencia = async (
+    resultado: 'ok' | 'erro_outro_carrinho' | 'erro_nao_encontrada' | 'realocada',
+    codigo: string,
+    pecaId: string | null,
+    detalhes: Record<string, any> = {},
+  ) => {
+    if (!carrinho) return;
+    const { data: userData } = await supabase.auth.getUser();
+    await supabase.from('expedicao_conferencias_itens').insert([{
+      carrinho_id: carrinho.id,
+      peca_id: pecaId,
+      codigo_bipado: codigo,
+      resultado,
+      conferente_id: userData.user?.id ?? null,
+      detalhes,
+    }]);
+  };
+
   const conferir = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!carrinho || blockedEtiqueta) return;
@@ -85,13 +103,24 @@ export default function DoubleCheckPage() {
         .eq('codigo_etiqueta', codigo)
         .maybeSingle();
       if (fetchErr) throw fetchErr;
-      if (!peca) throw new Error(`Etiqueta ${codigo} não encontrada`);
-      if (peca.status === 'cancelada') throw new Error('Etiqueta cancelada');
+
+      if (!peca) {
+        await logConferencia('erro_nao_encontrada', codigo, null);
+        throw new Error(`Etiqueta ${codigo} não encontrada`);
+      }
+      if (peca.status === 'cancelada') {
+        await logConferencia('erro_nao_encontrada', codigo, peca.id, { status: 'cancelada' });
+        throw new Error('Etiqueta cancelada');
+      }
 
       // HARD BLOCK — peça em outro carrinho
       if (peca.carrinho_id && peca.carrinho_id !== carrinho.id) {
         const { data: outro } = await supabase
           .from('expedicao_carrinhos').select('codigo').eq('id', peca.carrinho_id).maybeSingle();
+        await logConferencia('erro_outro_carrinho', codigo, peca.id, {
+          carrinho_correto_id: peca.carrinho_id,
+          carrinho_correto_codigo: outro?.codigo ?? null,
+        });
         setBlockedEtiqueta({
           codigo,
           motivo: 'Peça pertence a outro carrinho',
@@ -103,6 +132,7 @@ export default function DoubleCheckPage() {
 
       // HARD BLOCK — peça sem alocação
       if (!peca.carrinho_id) {
+        await logConferencia('erro_nao_encontrada', codigo, peca.id, { motivo: 'sem_carrinho' });
         setBlockedEtiqueta({ codigo, motivo: 'Peça não foi alocada em nenhum carrinho' });
         setEtiquetaInput('');
         return;
@@ -133,6 +163,8 @@ export default function DoubleCheckPage() {
         usuario_id: userData.user?.id ?? null,
         usuario_email: userData.user?.email ?? null,
       });
+
+      await logConferencia('ok', codigo, peca.id);
 
       toast.success(`✓ ${codigo}`);
       setEtiquetaInput('');
