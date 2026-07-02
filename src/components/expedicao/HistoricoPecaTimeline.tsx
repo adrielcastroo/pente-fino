@@ -25,7 +25,7 @@ export function HistoricoPecaTimeline({ pecaId, open, onOpenChange }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('expedicao_pecas_historico')
-        .select('id, evento, detalhes, user_id, created_at')
+        .select('id, acao, detalhes, usuario_id, created_at')
         .eq('peca_id', pecaId)
         .order('created_at', { ascending: false });
       if (error) throw error;
