@@ -509,6 +509,21 @@ export default function ExpedicaoEtiquetasPage() {
                   onChange={(v) => update('codigo', v)} placeholder="ROM-00123" />
                 <TextField label="Destino / Cliente" value={active.destino}
                   onChange={(v) => update('destino', v)} placeholder="Nome · Cidade · UF" />
+
+                <Separator />
+                <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/30 p-3">
+                  <p className="text-xs font-semibold text-foreground">Dados da carga</p>
+                  <TextField label="Transportadora" value={active.transportadora}
+                    onChange={(v) => update('transportadora', v)} placeholder="Ex.: JAMEF, BRASPRESS…" />
+                  <TextField label="Nº da NF" mono value={active.nfNumero}
+                    onChange={(v) => update('nfNumero', v)} placeholder="148551" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <TextField label="Volume atual" mono value={active.volumeAtual}
+                      onChange={(v) => update('volumeAtual', v)} placeholder="1" />
+                    <TextField label="Total de volumes" mono value={active.volumeTotal}
+                      onChange={(v) => update('volumeTotal', v)} placeholder="5" />
+                  </div>
+                </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Observações</Label>
                   <Textarea rows={3} value={active.observacoes}
