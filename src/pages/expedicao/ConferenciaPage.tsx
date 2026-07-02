@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, CloudOff, Loader2, RefreshCw, ScanLine, Wifi, X } from 'lucide-react';
+import { CheckCircle2, CloudOff, Loader2, RefreshCw, ScanLine, ShoppingCart, Wifi, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import {
   usePickingItens,
   useBipPeca,
   useFinalizarConferencia,
+  useAlocarPecaNoCarrinho,
 } from '@/hooks/expedicao/useExpedicaoData';
 import { useOfflineBipQueue } from '@/hooks/expedicao/useOfflineBipQueue';
 import { toast } from 'sonner';
