@@ -36,6 +36,21 @@ export default function ConferenciaPage() {
   const finalizar = useFinalizarConferencia();
   const { online, pending, syncing, queueBip, flush } = useOfflineBipQueue();
 
+  const { data: carrinhosDisponiveis = [] } = useQuery({
+    queryKey: ['expedicao_carrinhos_disponiveis'],
+    enabled: !!pickingId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expedicao_carrinhos')
+        .select('id, codigo, status')
+        .in('status', ['livre', 'em_uso'])
+        .order('codigo', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   useEffect(() => { pickingRef.current?.focus(); }, []);
   useEffect(() => { if (picking && !pendingEtiqueta) pecaRef.current?.focus(); }, [picking, pendingEtiqueta]);
   useEffect(() => { if (pendingEtiqueta) carrinhoRef.current?.focus(); }, [pendingEtiqueta]);
