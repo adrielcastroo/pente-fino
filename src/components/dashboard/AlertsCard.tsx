@@ -1,6 +1,19 @@
-import { memo, useMemo } from 'react';
-import { AlertTriangle, CheckCircle2, Info, PackageX } from 'lucide-react';
+import { memo, useMemo, useState, useEffect, useCallback } from 'react';
+import { AlertTriangle, CheckCircle2, Info, PackageX, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const DISMISSED_KEY = 'pf_dashboard_dismissed_alerts_v1';
+
+function loadDismissed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
 
 type AlertSeverity = 'critical' | 'warning' | 'info';
 
@@ -22,7 +35,23 @@ const SEVERITY_STYLES: Record<AlertSeverity, { bg: string; text: string; border:
 };
 
 export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
-  const alerts = useMemo<AlertItem[]>(() => {
+  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(Array.from(dismissed)));
+    } catch { /* ignore */ }
+  }, [dismissed]);
+
+  const dismiss = useCallback((id: string) => {
+    setDismissed(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const allAlerts = useMemo<AlertItem[]>(() => {
     const list: AlertItem[] = [];
     const tecido = stats?.occupation?.tecido;
     const madeira = stats?.occupation?.madeira;
@@ -61,6 +90,8 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
     return list;
   }, [stats]);
 
+  const alerts = useMemo(() => allAlerts.filter(a => !dismissed.has(a.id)), [allAlerts, dismissed]);
+
   if (alerts.length === 0) {
     return (
       <div className="rounded-lg border border-border/40 bg-card/50 px-4 py-3 flex items-center gap-3">
@@ -95,10 +126,18 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
               <div className={`p-1.5 rounded-md ${style.bg} ${style.text} shrink-0`}>
                 <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
               </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                 <span className={`text-sm font-medium ${style.text} truncate`}>{alert.title}</span>
                 <span className="text-xs text-muted-foreground">{alert.description}</span>
               </div>
+              <button
+                type="button"
+                onClick={() => dismiss(alert.id)}
+                aria-label={`Fechar alerta: ${alert.title}`}
+                className="shrink-0 p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="w-3.5 h-3.5" strokeWidth={2} />
+              </button>
             </div>
           );
         })}
