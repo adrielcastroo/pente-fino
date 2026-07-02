@@ -331,6 +331,103 @@ export function useBipPeca() {
   });
 }
 
+/**
+ * Aloca uma peça (por código de etiqueta) em um carrinho (por código).
+ * - Se a peça não existe em `expedicao_pecas`, é criada com status `no_carrinho`.
+ * - Se já existe e ainda não foi alocada, é vinculada.
+ * - Se já está no MESMO carrinho, no-op.
+ * - Se está em OUTRO carrinho ou já conferida/faturada, lança erro.
+ */
+async function alocarPecaCall(codigoEtiqueta: string, codigoCarrinho: string) {
+  const etq = codigoEtiqueta.trim();
+  const codCar = codigoCarrinho.trim().toUpperCase();
+  if (!etq) throw new Error('Etiqueta vazia');
+  if (!codCar) throw new Error('Carrinho vazio');
+
+  const { data: carrinho, error: errC } = await supabase
+    .from('expedicao_carrinhos')
+    .select('id, codigo, status')
+    .eq('codigo', codCar)
+    .maybeSingle();
+  if (errC) throw errC;
+  if (!carrinho) throw new Error(`Carrinho ${codCar} não encontrado`);
+
+  const { data: peca, error: errP } = await supabase
+    .from('expedicao_pecas')
+    .select('id, status, carrinho_id, codigo_etiqueta')
+    .eq('codigo_etiqueta', etq)
+    .maybeSingle();
+  if (errP) throw errP;
+
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id ?? null;
+  const now = new Date().toISOString();
+
+  // Nova peça — cria já alocada
+  if (!peca) {
+    const { data: nova, error } = await supabase
+      .from('expedicao_pecas')
+      .insert({
+        codigo_etiqueta: etq,
+        status: 'no_carrinho',
+        carrinho_id: carrinho.id,
+        embalador_id: uid,
+        etiquetada_at: now,
+        alocada_at: now,
+      })
+      .select('id, codigo_etiqueta')
+      .single();
+    if (error) throw error;
+    return { peca: nova, carrinho, novo: true, reAlocado: false };
+  }
+
+  if (peca.status === 'cancelada') throw new Error('Etiqueta cancelada');
+  if (peca.status === 'conferida' || peca.status === 'no_romaneio' || peca.status === 'faturada') {
+    throw new Error(`Peça já ${peca.status.replace('_', ' ')} — não pode ser realocada`);
+  }
+
+  // Mesmo carrinho — no-op
+  if (peca.carrinho_id === carrinho.id) {
+    return { peca, carrinho, novo: false, reAlocado: false };
+  }
+
+  // Outro carrinho — bloqueio
+  if (peca.carrinho_id && peca.carrinho_id !== carrinho.id) {
+    const { data: outro } = await supabase
+      .from('expedicao_carrinhos')
+      .select('codigo')
+      .eq('id', peca.carrinho_id)
+      .maybeSingle();
+    throw new Error(`Peça ${etq} já está no carrinho ${outro?.codigo ?? '???'}`);
+  }
+
+  // Etiquetada sem carrinho — vincula
+  const { error: errU } = await supabase
+    .from('expedicao_pecas')
+    .update({
+      carrinho_id: carrinho.id,
+      status: 'no_carrinho',
+      alocada_at: now,
+    })
+    .eq('id', peca.id);
+  if (errU) throw errU;
+
+  return { peca, carrinho, novo: false, reAlocado: false };
+}
+
+export function useAlocarPecaNoCarrinho() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { codigoEtiqueta: string; codigoCarrinho: string }) =>
+      alocarPecaCall(input.codigoEtiqueta, input.codigoCarrinho),
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ['expedicao_double_check', r.carrinho.id] });
+      qc.invalidateQueries({ queryKey: ['expedicao', 'alert-counts'] });
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Falha ao alocar peça'),
+  });
+}
+
 export function useFaturarPicking() {
   const qc = useQueryClient();
   return useMutation({
