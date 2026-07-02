@@ -127,6 +127,22 @@ export default function ConferenciaPage() {
         </Button>
       </header>
 
+      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs">
+        <Badge variant={online ? 'default' : 'destructive'} className="gap-1">
+          {online ? <Wifi className="size-3" /> : <CloudOff className="size-3" />}
+          {online ? 'Online' : 'Offline'}
+        </Badge>
+        <span className="text-muted-foreground">
+          Fila local: <span className="font-mono">{pending.length}</span>
+        </span>
+        {pending.length > 0 && (
+          <Button size="sm" variant="ghost" className="ml-auto h-7" disabled={syncing || !online} onClick={() => flush()}>
+            {syncing ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
+            Sincronizar
+          </Button>
+        )}
+      </div>
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
