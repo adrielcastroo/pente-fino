@@ -1506,6 +1506,107 @@ export type Database = {
         }
         Relationships: []
       }
+      nfe_entrada: {
+        Row: {
+          chave_acesso: string
+          cnpj_emitente: string | null
+          created_at: string
+          danfe_path: string | null
+          data_emissao: string | null
+          id: string
+          manifestada_at: string | null
+          manifestada_por: string | null
+          nome_emitente: string | null
+          nsu: string | null
+          numero: string | null
+          observacao: string | null
+          origem: string | null
+          protocolo_manifestacao: string | null
+          serie: string | null
+          situacao_manifestacao: string | null
+          updated_at: string
+          valor_total: number | null
+          xml_path: string | null
+        }
+        Insert: {
+          chave_acesso: string
+          cnpj_emitente?: string | null
+          created_at?: string
+          danfe_path?: string | null
+          data_emissao?: string | null
+          id?: string
+          manifestada_at?: string | null
+          manifestada_por?: string | null
+          nome_emitente?: string | null
+          nsu?: string | null
+          numero?: string | null
+          observacao?: string | null
+          origem?: string | null
+          protocolo_manifestacao?: string | null
+          serie?: string | null
+          situacao_manifestacao?: string | null
+          updated_at?: string
+          valor_total?: number | null
+          xml_path?: string | null
+        }
+        Update: {
+          chave_acesso?: string
+          cnpj_emitente?: string | null
+          created_at?: string
+          danfe_path?: string | null
+          data_emissao?: string | null
+          id?: string
+          manifestada_at?: string | null
+          manifestada_por?: string | null
+          nome_emitente?: string | null
+          nsu?: string | null
+          numero?: string | null
+          observacao?: string | null
+          origem?: string | null
+          protocolo_manifestacao?: string | null
+          serie?: string | null
+          situacao_manifestacao?: string | null
+          updated_at?: string
+          valor_total?: number | null
+          xml_path?: string | null
+        }
+        Relationships: []
+      }
+      nfe_entrada_eventos: {
+        Row: {
+          created_at: string
+          detalhes: Json | null
+          id: string
+          nfe_entrada_id: string
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          nfe_entrada_id: string
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          nfe_entrada_id?: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_entrada_eventos_nfe_entrada_id_fkey"
+            columns: ["nfe_entrada_id"]
+            isOneToOne: false
+            referencedRelation: "nfe_entrada"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nfe_importadas: {
         Row: {
           chave_acesso: string

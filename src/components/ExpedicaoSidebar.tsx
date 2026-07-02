@@ -15,6 +15,7 @@ import {
   PackageCheck,
   Boxes,
   ShieldCheck,
+  Inbox,
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 
@@ -36,6 +37,7 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
         { key: 'romaneio', label: 'Romaneio', icon: FileText, path: '/expedicao/romaneio' },
         { key: 'cargas', label: 'Cargas', icon: Truck, path: '/expedicao/cargas' },
         { key: 'faturamento', label: 'Faturamento', icon: DollarSign, path: '/expedicao/faturamento' },
+        { key: 'nfe-entrada', label: 'NF-e Entrada', icon: Inbox, path: '/expedicao/nfe-entrada' },
       ],
     },
     {
