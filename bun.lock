@@ -50,6 +50,7 @@
         "html2canvas": "^1.4.1",
         "html5-qrcode": "^2.3.8",
         "idb": "^8.0.3",
+        "idb-keyval": "^6.2.6",
         "input-otp": "^1.4.2",
         "jsbarcode": "^3.12.3",
         "jspdf": "^4.2.1",
@@ -1204,6 +1205,8 @@
     "iconv-lite": ["iconv-lite@0.6.3", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw=="],
 
     "idb": ["idb@8.0.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/idb/-/idb-8.0.3.tgz", {}, "sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg=="],
+
+    "idb-keyval": ["idb-keyval@6.2.6", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/idb-keyval/-/idb-keyval-6.2.6.tgz", {}, "sha512-FY64UEhw+5liMzMQ1R9Mw6AF0+wyBrg1CIA1z4CjI/EvT5ty/SvQcWZgd8s9sgaNhX10Y8UzScTh89tEAls5nA=="],
 
     "ieee754": ["ieee754@1.2.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/ieee754/-/ieee754-1.2.1.tgz", {}, "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="],
 
