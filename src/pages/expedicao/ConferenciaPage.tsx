@@ -178,19 +178,46 @@ export default function ConferenciaPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <ScanLine className="size-4" /> Bipar peça
+            <ScanLine className="size-4" /> {pendingEtiqueta ? 'Bipar carrinho' : 'Bipar peça'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Input
-            ref={pecaRef}
-            value={peca}
-            onChange={(e) => setPeca(e.target.value)}
-            onKeyDown={handlePecaEnter}
-            placeholder="Bipe o QR / código da peça"
-            autoComplete="off"
-            className="h-12 font-mono uppercase text-base"
-          />
+          {!pendingEtiqueta ? (
+            <Input
+              ref={pecaRef}
+              value={peca}
+              onChange={(e) => setPeca(e.target.value)}
+              onKeyDown={handlePecaEnter}
+              placeholder="Bipe o QR / código da peça"
+              autoComplete="off"
+              className="h-12 font-mono uppercase text-base"
+              disabled={bip.isPending}
+            />
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+                <span className="text-muted-foreground">
+                  Etiqueta pendente: <span className="font-mono font-semibold text-foreground">{pendingEtiqueta.toUpperCase()}</span>
+                </span>
+                <Button size="sm" variant="ghost" className="h-6" onClick={cancelarPendente}>
+                  <X className="size-3" /> Cancelar
+                </Button>
+              </div>
+              <div className="relative">
+                <ShoppingCart className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  ref={carrinhoRef}
+                  value={carrinhoCodigo}
+                  onChange={(e) => setCarrinhoCodigo(e.target.value)}
+                  onKeyDown={handleCarrinhoEnter}
+                  placeholder="Bipe o código do carrinho"
+                  autoComplete="off"
+                  className="h-12 pl-9 font-mono uppercase text-base"
+                  disabled={alocar.isPending}
+                />
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Progresso</span>
