@@ -107,7 +107,6 @@ export default function EmbalagemPage() {
       <PageHeader
         title="Embalagem"
         subtitle="Etapa 1 — bipe a peça e gere a etiqueta única de expedição."
-        icon={<Tag className="w-5 h-5" />}
       />
 
       <form onSubmit={gerarEtiqueta} className="grid gap-3 md:grid-cols-[1fr_1fr_auto] max-w-3xl bg-card border border-border rounded-md p-4">
