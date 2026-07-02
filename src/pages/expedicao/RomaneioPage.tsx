@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
+import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 type Carrinho = { id: string; codigo: string; transportadora_id: string | null; conferido_at: string | null };
 type Transportadora = { id: string; nome: string };
