@@ -80,14 +80,14 @@ export default function DoubleCheckPage() {
   ) => {
     if (!carrinho) return;
     const { data: userData } = await supabase.auth.getUser();
-    await supabase.from('expedicao_conferencias_itens').insert({
+    await supabase.from('expedicao_conferencias_itens').insert([{
       carrinho_id: carrinho.id,
       peca_id: pecaId,
       codigo_bipado: codigo,
       resultado,
       conferente_id: userData.user?.id ?? null,
       detalhes,
-    });
+    }]);
   };
 
   const conferir = async (e: React.FormEvent) => {
