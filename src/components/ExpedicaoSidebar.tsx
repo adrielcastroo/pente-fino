@@ -88,12 +88,16 @@ const ExpedicaoSidebar = memo(() => {
           switch (i.key) {
             case 'painel':
               return { ...i, badge: counts.painel };
-            case 'nfe-entrada':
-              return { ...i, badge: counts.nfeEntrada };
+            case 'pickings':
+              return { ...i, badge: counts.pickings };
+            case 'conferencia':
+              return { ...i, badge: counts.conferencia };
             case 'cargas':
               return { ...i, badge: counts.cargas };
             case 'romaneio':
               return { ...i, badge: counts.romaneio };
+            case 'nfe-entrada':
+              return { ...i, badge: counts.nfeEntrada };
             default:
               return i;
           }
