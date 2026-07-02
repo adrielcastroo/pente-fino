@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, ArrowLeftRight } from 'lucide-react';
 import {
@@ -49,7 +49,7 @@ interface ModuleSidebarProps {
 }
 
 const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
-  const { state, setOpen, isMobile, setOpenMobile, open } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const { signOut, role, modules } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,34 +60,13 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
     .map(g => ({ ...g, items: g.items.filter(i => !i.minRole || atLeast(role, i.minRole)) }))
     .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole)));
 
-  const [isHovered, setIsHovered] = useState(false);
-  const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleMouseEnter = useCallback(() => {
-    if (hoverTimeout) clearTimeout(hoverTimeout);
-    if (!isMobile && !open) {
-      setOpen(true);
-      setIsHovered(true);
-    }
-  }, [hoverTimeout, isMobile, open, setOpen]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (!isMobile && isHovered) {
-      const t = setTimeout(() => {
-        setOpen(false);
-        setIsHovered(false);
-      }, 300);
-      setHoverTimeout(t);
-    }
-  }, [isMobile, isHovered, setOpen]);
-
   const handleNavigate = useCallback(
     (path: string) => {
       navigate(path);
+      // Fecha apenas o drawer mobile após navegar; desktop respeita o estado escolhido pelo usuário no trigger.
       if (isMobile) setOpenMobile(false);
-      else if (window.innerWidth < 1024) setOpen(false);
     },
-    [navigate, isMobile, setOpenMobile, setOpen],
+    [navigate, isMobile, setOpenMobile],
   );
 
   const isItemActive = (path: string) =>
@@ -99,8 +78,6 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
     <Sidebar
       collapsible="icon"
       className="border-r border-border/40 bg-sidebar"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       aria-label={`Menu ${config.moduleLabel}`}
     >
       <SidebarHeader className="px-3 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-3 overflow-hidden">
