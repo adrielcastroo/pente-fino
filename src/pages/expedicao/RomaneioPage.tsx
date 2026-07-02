@@ -245,7 +245,7 @@ export default function RomaneioPage() {
             {romaneiosAbertos.map(r => (
               <li key={r.id} className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
                 <span className="font-mono font-medium">{r.numero}</span>
-                <StatusBadge tone="info">{r.status}</StatusBadge>
+                <StatusBadge tone="info" label={r.status} />
                 <span className="text-muted-foreground">{r.total_pecas} peça(s)</span>
                 {r.transportadora_nome && (
                   <span className="text-muted-foreground flex items-center gap-1">
