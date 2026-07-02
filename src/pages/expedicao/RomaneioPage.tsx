@@ -1,178 +1,265 @@
-import { useMemo, useState } from 'react';
-import { ChevronRight, Loader2, Mail, Printer, Truck } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { useMemo, useState, useEffect } from 'react';
+import { FileText, Loader2, Printer, Truck, Check } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { usePickings } from '@/hooks/expedicao/useExpedicaoData';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  buildRomaneioHtml,
-  getAppsScriptWebhook,
-  sendRomaneioEmail,
-} from '@/lib/expedicao-webhook';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
+import { StatusBadge } from '@/components/ui/status-badge';
+
+type Carrinho = { id: string; codigo: string; transportadora_id: string | null; conferido_at: string | null };
+type Transportadora = { id: string; nome: string };
+type Peca = { id: string; codigo_etiqueta: string; carrinho_id: string; carrinho_codigo?: string };
+type Romaneio = {
+  id: string;
+  numero: string;
+  status: string;
+  created_at: string;
+  transportadora_id: string | null;
+  transportadora_nome?: string;
+  total_pecas: number;
+};
+
+function gerarNumeroRomaneio(): string {
+  const d = new Date();
+  const ymd = `${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const rand = String(Math.floor(Math.random() * 9000) + 1000);
+  return `ROM-${ymd}-${rand}`;
+}
 
 export default function RomaneioPage() {
-  const { data, isLoading } = usePickings();
-  const [filter, setFilter] = useState('');
+  const qc = useQueryClient();
+  const [selectedCarts, setSelectedCarts] = useState<Set<string>>(new Set());
+  const [transportadoraId, setTransportadoraId] = useState<string>('');
 
-  const [emailTo, setEmailTo] = useState('');
-  const [sending, setSending] = useState(false);
+  // Carrinhos prontos (em_uso, ainda sem romaneio) – detectados via pecas.romaneio_id null
+  const { data: carrinhos = [], isLoading: loadingCarts } = useQuery({
+    queryKey: ['expedicao_romaneio_carrinhos_prontos'],
+    queryFn: async () => {
+      const { data: carts, error } = await supabase
+        .from('expedicao_carrinhos')
+        .select('id, codigo, transportadora_id, conferido_at, status')
+        .eq('status', 'em_uso')
+        .order('conferido_at', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      if (!carts?.length) return [] as (Carrinho & { pecas_count: number })[];
 
-  const tree = useMemo(() => {
-    const map = new Map<string, Map<string, Map<string, { id: string; numero: string; cliente: string }[]>>>();
-    const q = filter.trim().toLowerCase();
-    (data ?? [])
-      .filter(p => ['conferido', 'em_conferencia'].includes(p.status))
-      .filter(p => !q || p.numero.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q))
-      .forEach((p) => {
-        const t = p.transportadora?.nome ?? 'Sem transportadora';
-        const r = p.regiao ?? 'Sem região';
-        const c = p.cidade ?? 'Sem cidade';
-        if (!map.has(t)) map.set(t, new Map());
-        const tNode = map.get(t)!;
-        if (!tNode.has(r)) tNode.set(r, new Map());
-        const rNode = tNode.get(r)!;
-        if (!rNode.has(c)) rNode.set(c, []);
-        rNode.get(c)!.push({ id: p.id, numero: p.numero, cliente: p.cliente });
+      const { data: pecas } = await supabase
+        .from('expedicao_pecas')
+        .select('carrinho_id, romaneio_id, status')
+        .in('carrinho_id', carts.map(c => c.id))
+        .in('status', ['conferida']);
+
+      const grouped = new Map<string, number>();
+      (pecas ?? []).forEach(p => {
+        if (p.romaneio_id) return;
+        grouped.set(p.carrinho_id!, (grouped.get(p.carrinho_id!) ?? 0) + 1);
       });
-    return map;
-  }, [data, filter]);
+      return carts
+        .filter(c => (grouped.get(c.id) ?? 0) > 0)
+        .map(c => ({ ...c, pecas_count: grouped.get(c.id) ?? 0 }));
+    },
+    refetchInterval: 15000,
+  });
 
-  const totalPickings = useMemo(
-    () => Array.from(tree.values()).flatMap(r => Array.from(r.values()).flatMap(c => Array.from(c.values()))).reduce((s, arr) => s + arr.length, 0),
-    [tree]
+  const { data: transportadoras = [] } = useQuery({
+    queryKey: ['expedicao_transportadoras'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expedicao_transportadoras')
+        .select('id, nome')
+        .order('nome');
+      if (error) throw error;
+      return data as Transportadora[];
+    },
+  });
+
+  const { data: romaneiosAbertos = [], isLoading: loadingRom } = useQuery({
+    queryKey: ['expedicao_romaneios_abertos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expedicao_romaneios')
+        .select('id, numero, status, created_at, transportadora_id')
+        .eq('status', 'aberto')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!data?.length) return [] as Romaneio[];
+
+      const [{ data: pecas }, { data: transps }] = await Promise.all([
+        supabase.from('expedicao_pecas').select('romaneio_id').in('romaneio_id', data.map(r => r.id)),
+        supabase.from('expedicao_transportadoras').select('id, nome'),
+      ]);
+      const tMap = new Map((transps ?? []).map(t => [t.id, t.nome]));
+      const counts = new Map<string, number>();
+      (pecas ?? []).forEach(p => counts.set(p.romaneio_id!, (counts.get(p.romaneio_id!) ?? 0) + 1));
+
+      return data.map(r => ({
+        ...r,
+        transportadora_nome: r.transportadora_id ? tMap.get(r.transportadora_id) : undefined,
+        total_pecas: counts.get(r.id) ?? 0,
+      })) as Romaneio[];
+    },
+    refetchInterval: 15000,
+  });
+
+  // Sync transportadora sugerida quando seleciona um carrinho
+  useEffect(() => {
+    if (transportadoraId) return;
+    const first = carrinhos.find(c => selectedCarts.has(c.id) && c.transportadora_id);
+    if (first?.transportadora_id) setTransportadoraId(first.transportadora_id);
+  }, [selectedCarts, carrinhos, transportadoraId]);
+
+  const toggleCart = (id: string) => {
+    setSelectedCarts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const totalPecasSelecionadas = useMemo(
+    () => carrinhos.filter(c => selectedCarts.has(c.id)).reduce((s, c) => s + c.pecas_count, 0),
+    [carrinhos, selectedCarts]
   );
 
-  return (
-    <div className="space-y-6 print:space-y-3">
-      <style>{`
-        @media print {
-          body { background: #fff !important; }
-          aside, header.md\\:hidden, nav[aria-label="Navegação Expedição"], footer, .no-print { display: none !important; }
-          details > * { display: block !important; }
-          details summary > svg { display: none !important; }
-          .romaneio-print { padding: 0 !important; }
-        }
-      `}</style>
-      <header className="flex flex-wrap items-end justify-between gap-3 print:border-b print:pb-2">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Romaneio</h1>
-          <p className="text-sm text-muted-foreground">
-            Transportadora → Região → Cidade → Cliente · <span className="font-mono">{totalPickings}</span> pickings
-          </p>
-          <p className="hidden print:block text-xs text-muted-foreground">
-            Emitido em {new Date().toLocaleString('pt-BR')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 no-print">
-          <Input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Filtrar por número ou cliente"
-            className="h-10 w-full md:w-60"
-          />
-          <Input
-            value={emailTo}
-            onChange={(e) => setEmailTo(e.target.value)}
-            placeholder="email@destino.com"
-            type="email"
-            className="h-10 w-full md:w-56"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={sending || !emailTo.trim() || totalPickings === 0}
-            onClick={async () => {
-              if (!getAppsScriptWebhook()) {
-                toast.error('Configure o webhook do Apps Script em Configurações.');
-                return;
-              }
-              setSending(true);
-              try {
-                const treeForEmail = new Map<string, Map<string, Map<string, { numero: string; cliente: string }[]>>>();
-                tree.forEach((reg, t) => {
-                  const r2 = new Map<string, Map<string, { numero: string; cliente: string }[]>>();
-                  reg.forEach((cid, k) => {
-                    const c2 = new Map<string, { numero: string; cliente: string }[]>();
-                    cid.forEach((arr, c) => c2.set(c, arr.map(({ numero, cliente }) => ({ numero, cliente }))));
-                    r2.set(k, c2);
-                  });
-                  treeForEmail.set(t, r2);
-                });
-                await sendRomaneioEmail({
-                  to: emailTo.trim(),
-                  subject: `Romaneio · ${totalPickings} pickings · ${new Date().toLocaleDateString('pt-BR')}`,
-                  html: buildRomaneioHtml({ totalPickings, tree: treeForEmail }),
-                });
-                toast.success('Romaneio enviado para ' + emailTo.trim());
-              } catch (err) {
-                toast.error(err instanceof Error ? err.message : 'Falha ao enviar e-mail');
-              } finally {
-                setSending(false);
-              }
-            }}
-          >
-            <Mail className="size-4 mr-1.5" /> Enviar
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="size-4 mr-1.5" /> Imprimir
-          </Button>
-        </div>
-      </header>
+  const gerar = useMutation({
+    mutationFn: async () => {
+      if (selectedCarts.size === 0) throw new Error('Selecione ao menos um carrinho.');
+      const cartIds = Array.from(selectedCarts);
+      const { data: user } = await supabase.auth.getUser();
 
-      {isLoading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Carregando…
-        </div>
-      ) : tree.size === 0 ? (
-        <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Nenhum picking conferido no momento.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {Array.from(tree.entries()).map(([transp, regioes]) => (
-            <details key={transp} open className="group rounded-md border bg-card">
-              <summary className="flex cursor-pointer list-none items-center gap-2 p-4 font-medium">
-                <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
-                <Truck className="size-4 text-muted-foreground" />
-                <span>{transp}</span>
-                <Badge variant="outline" className="ml-auto font-mono">
-                  {Array.from(regioes.values()).flatMap(c => Array.from(c.values())).reduce((s, a) => s + a.length, 0)}
-                </Badge>
-              </summary>
-              <div className="space-y-2 border-t px-4 py-3">
-                {Array.from(regioes.entries()).map(([reg, cidades]) => (
-                  <details key={reg} open className="group/r ml-4">
-                    <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm font-medium text-muted-foreground">
-                      <ChevronRight className="size-3 transition-transform group-open/r:rotate-90" />
-                      {reg}
-                    </summary>
-                    <div className="ml-5 space-y-2 py-1">
-                      {Array.from(cidades.entries()).map(([cid, pickings]) => (
-                        <div key={cid}>
-                          <p className="text-xs uppercase tracking-wide text-muted-foreground">{cid}</p>
-                          <ul className="ml-2 divide-y">
-                            {pickings.map((p) => (
-                              <li key={p.id} className="flex items-center justify-between gap-3 py-1.5 text-sm">
-                                <span className="font-mono">{p.numero}</span>
-                                <span className="flex-1 text-muted-foreground truncate">{p.cliente}</span>
-                                <span className="shrink-0 rounded bg-background p-1 print:bg-white">
-                                  <QRCodeSVG value={`PICKING:${p.id}|${p.numero}`} size={36} level="M" />
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
+      const { data: romaneio, error: rErr } = await supabase
+        .from('expedicao_romaneios')
+        .insert({
+          numero: gerarNumeroRomaneio(),
+          transportadora_id: transportadoraId || null,
+          status: 'aberto',
+          created_by: user.user?.id ?? null,
+        })
+        .select('id, numero')
+        .single();
+      if (rErr) throw rErr;
+
+      const { error: pErr } = await supabase
+        .from('expedicao_pecas')
+        .update({ romaneio_id: romaneio.id, status: 'no_romaneio' })
+        .in('carrinho_id', cartIds)
+        .is('romaneio_id', null)
+        .eq('status', 'conferida');
+      if (pErr) throw pErr;
+
+      return romaneio;
+    },
+    onSuccess: (rom) => {
+      toast.success(`Romaneio ${rom.numero} gerado.`);
+      setSelectedCarts(new Set());
+      setTransportadoraId('');
+      qc.invalidateQueries({ queryKey: ['expedicao_romaneio_carrinhos_prontos'] });
+      qc.invalidateQueries({ queryKey: ['expedicao_romaneios_abertos'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Erro ao gerar romaneio.'),
+  });
+
+  return (
+    <PageShell>
+      <PageHeader
+        title="Romaneio"
+        subtitle="Agrupe carrinhos conferidos e emita romaneios de expedição."
+        actions={
+          <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5">
+            <Printer className="w-4 h-4" /> Imprimir
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard label="Carrinhos prontos" value={carrinhos.length} icon={Truck} />
+        <StatCard label="Peças selecionadas" value={totalPecasSelecionadas} />
+        <StatCard label="Romaneios abertos" value={romaneiosAbertos.length} />
+      </div>
+
+      <section className="bg-card border border-border rounded-md">
+        <header className="px-4 py-3 border-b border-border flex flex-wrap items-center gap-3">
+          <h2 className="text-sm font-medium">Carrinhos prontos para romaneio</h2>
+          <div className="ml-auto flex items-center gap-2">
+            <Select value={transportadoraId} onValueChange={setTransportadoraId}>
+              <SelectTrigger className="h-9 w-56"><SelectValue placeholder="Transportadora (opcional)" /></SelectTrigger>
+              <SelectContent>
+                {transportadoras.map(t => (
+                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
                 ))}
-              </div>
-            </details>
-          ))}
-        </div>
-      )}
-    </div>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              disabled={selectedCarts.size === 0 || gerar.isPending}
+              onClick={() => gerar.mutate()}
+              className="gap-1.5"
+            >
+              {gerar.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Gerar romaneio ({selectedCarts.size})
+            </Button>
+          </div>
+        </header>
+        {loadingCarts ? (
+          <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+        ) : carrinhos.length === 0 ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">Nenhum carrinho conferido aguardando romaneio.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {carrinhos.map(c => (
+              <li key={c.id} className="px-4 py-3 flex items-center gap-3 text-sm">
+                <Checkbox checked={selectedCarts.has(c.id)} onCheckedChange={() => toggleCart(c.id)} />
+                <span className="font-mono font-medium">{c.codigo}</span>
+                <span className="text-muted-foreground">{c.pecas_count} peça(s)</span>
+                {c.conferido_at && (
+                  <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                    conferido {new Date(c.conferido_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="bg-card border border-border rounded-md">
+        <header className="px-4 py-3 border-b border-border">
+          <h2 className="text-sm font-medium">Romaneios abertos (aguardando faturamento)</h2>
+        </header>
+        {loadingRom ? (
+          <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+        ) : romaneiosAbertos.length === 0 ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">Nenhum romaneio aberto.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {romaneiosAbertos.map(r => (
+              <li key={r.id} className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
+                <span className="font-mono font-medium">{r.numero}</span>
+                <StatusBadge tone="info" label={r.status} />
+                <span className="text-muted-foreground">{r.total_pecas} peça(s)</span>
+                {r.transportadora_nome && (
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Truck className="w-3 h-3" /> {r.transportadora_nome}
+                  </span>
+                )}
+                <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                  {new Date(r.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </PageShell>
   );
 }
