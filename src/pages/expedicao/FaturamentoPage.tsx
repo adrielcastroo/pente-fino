@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { DollarSign, Loader2, Link2, Check, FileText, Truck } from 'lucide-react';
+import { DollarSign, Loader2, Link2, Check, FileText, Truck, Shield } from 'lucide-react';
+import { NFeSefazDialog } from '@/components/expedicao/NFeSefazDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
