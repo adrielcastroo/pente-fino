@@ -1,12 +1,11 @@
 import { memo, useCallback } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, LogOut, ArrowLeftRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Settings, LogOut, ArrowLeftRight, type LucideIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -16,12 +15,13 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { atLeast, type Role } from '@/lib/permissions';
+import { cn } from '@/lib/utils';
 import logoComb from '@/assets/logo-comb.png';
 
 export type ModuleSidebarItem = {
   key: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   path: string;
   minRole?: Role;
   /** Badge numérico (ex.: contagem de pendentes). */
@@ -53,7 +53,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
   const { signOut, role, modules } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const collapsed = state === 'collapsed';
+  const isIconCollapsed = state === 'collapsed' && !isMobile;
   const canSwitch = (modules?.length ?? 0) > 1;
 
   const visibleGroups = config.groups
@@ -80,16 +80,20 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
       className="border-r border-border/40 bg-sidebar"
       aria-label={`Menu ${config.moduleLabel}`}
     >
-      <SidebarHeader className="px-3 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-3 overflow-hidden">
+      <SidebarHeader className={cn('overflow-hidden py-4', isIconCollapsed ? 'px-0 py-3' : 'px-3')}>
         <button
           onClick={() => handleNavigate(config.homePath)}
-          className="flex items-center gap-3 rounded-md px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:mx-auto hover:opacity-80 transition-opacity cursor-pointer min-w-0"
+          className={cn(
+            'flex min-w-0 cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80',
+            isIconCollapsed && 'mx-auto justify-center px-0',
+          )}
           aria-label={`Ir para ${config.moduleLabel}`}
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center">
             <img src={logoComb} alt="Pente Fino" className="h-7 w-7 object-contain" />
           </div>
-          <div className="flex flex-col min-w-0 overflow-hidden group-data-[collapsible=icon]:hidden">
+          {!isIconCollapsed && (
+          <div className="flex min-w-0 flex-col overflow-hidden">
             <span className="text-sm font-bold leading-tight tracking-tight text-foreground truncate">
               Pente Fino
             </span>
@@ -97,17 +101,23 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               {config.moduleLabel}
             </span>
           </div>
+          )}
         </button>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 group-data-[collapsible=icon]:px-0 custom-scrollbar overflow-x-hidden">
+      <SidebarContent className={cn('custom-scrollbar overflow-x-hidden', isIconCollapsed ? 'px-0' : 'px-3')}>
         {visibleGroups.map(group => (
-          <SidebarGroup key={group.label} className="p-0 mb-2">
-            <SidebarGroupLabel className="px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
-              {group.label}
-            </SidebarGroupLabel>
+          <SidebarGroup key={group.label} className="mb-2 p-0">
+            {!isIconCollapsed && (
+              <div
+                data-sidebar="module-group-label"
+                className="flex h-8 shrink-0 items-center px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60"
+              >
+                {group.label}
+              </div>
+            )}
             <SidebarGroupContent>
-              <SidebarMenu className="gap-0.5 group-data-[collapsible=icon]:items-center">
+              <SidebarMenu className={cn('gap-0.5', isIconCollapsed && 'items-center')}>
                 {group.items.map(item => {
                   const Icon = item.icon;
                   const isActive = isItemActive(item.path);
@@ -121,17 +131,16 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                         tooltip={item.label}
                         isActive={isActive}
                         aria-current={isActive ? 'page' : undefined}
-                        className={`
-                          relative h-10 rounded-md transition-colors duration-150 active:scale-[0.97]
-                          group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0
-                          group-data-[collapsible=icon]:justify-center
-                          ${isActive
-                            ? 'text-primary font-bold'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'}
-                        `}
+                        className={cn(
+                          'relative h-10 rounded-md transition-colors duration-150 active:scale-[0.97]',
+                          isIconCollapsed && '!size-10 !p-0 justify-center',
+                          isActive
+                            ? 'font-bold text-primary'
+                            : 'font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                        )}
                       >
-                        {isActive && (
-                          <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[collapsible=icon]:hidden" />
+                        {isActive && !isIconCollapsed && (
+                          <div className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
                         )}
 
                         <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
@@ -141,24 +150,27 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                             fill={isActive ? 'currentColor' : 'none'}
                             fillOpacity={isActive ? 0.18 : 0}
                           />
-                          {hasBadge && collapsed && (
-                            <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
+                          {hasBadge && isIconCollapsed && (
+                            <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
                               {item.badge}
                             </span>
                           )}
                         </div>
 
-                        <span className="min-w-0 flex-1 truncate text-left text-[13px] group-data-[collapsible=icon]:hidden">
-                          {item.label}
-                        </span>
+                        {!isIconCollapsed && (
+                          <span className="min-w-0 flex-1 truncate text-left text-[13px]">
+                            {item.label}
+                          </span>
+                        )}
 
-                        {hasBadge && (
+                        {hasBadge && !isIconCollapsed && (
                           <span
-                            className={`ml-auto flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums group-data-[collapsible=icon]:hidden ${
+                            className={cn(
+                              'ml-auto flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-md px-1.5 text-[10px] font-bold tabular-nums',
                               isActive
                                 ? 'bg-primary-foreground/20 text-primary-foreground'
-                                : 'bg-primary/10 text-primary'
-                            }`}
+                                : 'bg-primary/10 text-primary',
+                            )}
                           >
                             {item.badge}
                           </span>
@@ -173,8 +185,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="px-3 py-3 group-data-[collapsible=icon]:px-0 border-t border-border/30 overflow-hidden">
-        <SidebarMenu className="gap-0.5 group-data-[collapsible=icon]:items-center">
+      <SidebarFooter className={cn('overflow-hidden border-t border-border/30 py-3', isIconCollapsed ? 'px-0' : 'px-3')}>
+        <SidebarMenu className={cn('gap-0.5', isIconCollapsed && 'items-center')}>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
@@ -182,24 +194,25 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               isActive={settingsActive}
               tooltip="Configurações"
               aria-label="Abrir Configurações"
-              className={`
-                relative h-10 rounded-md transition-colors duration-150
-                group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0
-                group-data-[collapsible=icon]:justify-center
-                ${settingsActive
-                  ? 'text-primary font-bold'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
-              `}
+              className={cn(
+                'relative h-10 rounded-md transition-colors duration-150',
+                isIconCollapsed && '!size-10 !p-0 justify-center',
+                settingsActive
+                  ? 'font-bold text-primary'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+              )}
             >
-              {settingsActive && (
-                <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary group-data-[collapsible=icon]:hidden" />
+              {settingsActive && !isIconCollapsed && (
+                <div className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
               )}
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <Settings className="h-[18px] w-[18px]" />
               </div>
-              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
-                Configurações
-              </span>
+              {!isIconCollapsed && (
+                <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                  Configurações
+                </span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -210,14 +223,19 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                 onClick={() => navigate('/selecionar-modulo')}
                 tooltip="Trocar módulo"
                 aria-label="Trocar módulo"
-                className="h-10 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center"
+                className={cn(
+                  'h-10 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground',
+                  isIconCollapsed && '!size-10 !p-0 justify-center',
+                )}
               >
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                   <ArrowLeftRight className="h-[18px] w-[18px]" />
                 </div>
-                <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
-                  Trocar módulo
-                </span>
+                {!isIconCollapsed && (
+                  <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                    Trocar módulo
+                  </span>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -228,14 +246,19 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               onClick={() => signOut()}
               tooltip="Sair"
               aria-label="Sair da conta"
-              className="h-10 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-150 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center"
+              className={cn(
+                'h-10 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive',
+                isIconCollapsed && '!size-10 !p-0 justify-center',
+              )}
             >
               <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                 <LogOut className="h-[18px] w-[18px]" />
               </div>
-              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium group-data-[collapsible=icon]:hidden">
-                Sair
-              </span>
+              {!isIconCollapsed && (
+                <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                  Sair
+                </span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
