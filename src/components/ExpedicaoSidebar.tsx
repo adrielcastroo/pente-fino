@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   Home,
   ClipboardList,
@@ -18,24 +18,35 @@ import {
   Inbox,
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
+import { useExpedicaoAlertCounts } from '@/hooks/expedicao/useExpedicaoAlertCounts';
 
+/**
+ * Configuração base (sem badges dinâmicas).
+ * Reorganizada em 5 grupos: Operação / Fiscal / Análises / Recursos / Admin.
+ * Exportada para uso na tab bar mobile.
+ */
 export const EXPEDICAO_NAV: ModuleSidebarConfig = {
   moduleLabel: 'EXPEDIÇÃO',
   homePath: '/expedicao/operacao',
   settingsPath: '/expedicao/configuracoes',
   groups: [
     {
-      label: 'Operações',
+      label: 'Operação',
       items: [
         { key: 'inicio', label: 'Início', icon: Home, path: '/expedicao/operacao' },
-        { key: 'embalagem', label: 'Embalagem', icon: PackageCheck, path: '/expedicao/embalagem' },
-        { key: 'alocacao', label: 'Alocação', icon: Boxes, path: '/expedicao/alocacao' },
-        { key: 'double-check', label: 'Double-Check', icon: ShieldCheck, path: '/expedicao/double-check' },
         { key: 'painel', label: 'Painel', icon: ClipboardList, path: '/expedicao/painel' },
         { key: 'pickings', label: 'Pickings', icon: Package, path: '/expedicao/pickings' },
         { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/expedicao/conferencia' },
+        { key: 'embalagem', label: 'Embalagem', icon: PackageCheck, path: '/expedicao/embalagem' },
+        { key: 'alocacao', label: 'Alocação', icon: Boxes, path: '/expedicao/alocacao' },
+        { key: 'double-check', label: 'Double-Check', icon: ShieldCheck, path: '/expedicao/double-check' },
         { key: 'romaneio', label: 'Romaneio', icon: FileText, path: '/expedicao/romaneio' },
         { key: 'cargas', label: 'Cargas', icon: Truck, path: '/expedicao/cargas' },
+      ],
+    },
+    {
+      label: 'Fiscal',
+      items: [
         { key: 'faturamento', label: 'Faturamento', icon: DollarSign, path: '/expedicao/faturamento' },
         { key: 'nfe-entrada', label: 'NF-e Entrada', icon: Inbox, path: '/expedicao/nfe-entrada' },
       ],
@@ -64,6 +75,34 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
   ],
 };
 
-const ExpedicaoSidebar = memo(() => <ModuleSidebar config={EXPEDICAO_NAV} />);
+const ExpedicaoSidebar = memo(() => {
+  const { data: counts } = useExpedicaoAlertCounts();
+
+  const config = useMemo<ModuleSidebarConfig>(() => {
+    if (!counts) return EXPEDICAO_NAV;
+    return {
+      ...EXPEDICAO_NAV,
+      groups: EXPEDICAO_NAV.groups.map((g) => ({
+        ...g,
+        items: g.items.map((i) => {
+          switch (i.key) {
+            case 'painel':
+              return { ...i, badge: counts.painel };
+            case 'nfe-entrada':
+              return { ...i, badge: counts.nfeEntrada };
+            case 'cargas':
+              return { ...i, badge: counts.cargas };
+            case 'romaneio':
+              return { ...i, badge: counts.romaneio };
+            default:
+              return i;
+          }
+        }),
+      })),
+    };
+  }, [counts]);
+
+  return <ModuleSidebar config={config} />;
+});
 ExpedicaoSidebar.displayName = 'ExpedicaoSidebar';
 export default ExpedicaoSidebar;
