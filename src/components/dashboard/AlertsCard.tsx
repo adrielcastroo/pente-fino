@@ -1,6 +1,19 @@
-import { memo, useMemo } from 'react';
-import { AlertTriangle, CheckCircle2, Info, PackageX } from 'lucide-react';
+import { memo, useMemo, useState, useEffect, useCallback } from 'react';
+import { AlertTriangle, CheckCircle2, Info, PackageX, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const DISMISSED_KEY = 'pf_dashboard_dismissed_alerts_v1';
+
+function loadDismissed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
 
 type AlertSeverity = 'critical' | 'warning' | 'info';
 
