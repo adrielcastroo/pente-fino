@@ -61,16 +61,20 @@ const SidebarProvider = React.forwardRef<
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
-      if (setOpenProp) {
-        setOpenProp(openState);
-      } else {
+
+      // Keep the component usable in both modes:
+      // - controlled: parent owns `open` and receives the change callback;
+      // - uncontrolled with `onOpenChange`: internal state still changes, while parent can persist the preference.
+      if (openProp === undefined) {
         _setOpen(openState);
       }
+
+      setOpenProp?.(openState);
 
       // This sets the cookie to keep the sidebar state.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
-    [setOpenProp, open],
+    [setOpenProp, open, openProp],
   );
 
   // Helper to toggle the sidebar.
