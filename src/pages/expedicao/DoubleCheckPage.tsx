@@ -76,7 +76,7 @@ export default function DoubleCheckPage() {
     resultado: 'ok' | 'erro_outro_carrinho' | 'erro_nao_encontrada' | 'realocada',
     codigo: string,
     pecaId: string | null,
-    detalhes: Record<string, unknown> = {},
+    detalhes: Record<string, any> = {},
   ) => {
     if (!carrinho) return;
     const { data: userData } = await supabase.auth.getUser();
