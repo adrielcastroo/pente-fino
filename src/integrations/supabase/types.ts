@@ -1511,7 +1511,10 @@ export type Database = {
           chave_acesso: string
           cnpj_destinatario: string | null
           cnpj_emitente: string | null
+          consultado_sefaz_at: string | null
           created_at: string
+          danfe_path: string | null
+          data_autorizacao: string | null
           data_emissao: string | null
           id: string
           imported_at: string
@@ -1523,20 +1526,26 @@ export type Database = {
           peso_bruto: number | null
           peso_liquido: number | null
           picking_id: string | null
+          protocolo_autorizacao: string | null
           serie: string | null
+          situacao_sefaz: string | null
           transportadora: string | null
           updated_at: string
           valor_frete: number | null
           valor_produtos: number | null
           valor_total: number | null
           volumes: number | null
+          xml_path: string | null
           xml_raw: string | null
         }
         Insert: {
           chave_acesso: string
           cnpj_destinatario?: string | null
           cnpj_emitente?: string | null
+          consultado_sefaz_at?: string | null
           created_at?: string
+          danfe_path?: string | null
+          data_autorizacao?: string | null
           data_emissao?: string | null
           id?: string
           imported_at?: string
@@ -1548,20 +1557,26 @@ export type Database = {
           peso_bruto?: number | null
           peso_liquido?: number | null
           picking_id?: string | null
+          protocolo_autorizacao?: string | null
           serie?: string | null
+          situacao_sefaz?: string | null
           transportadora?: string | null
           updated_at?: string
           valor_frete?: number | null
           valor_produtos?: number | null
           valor_total?: number | null
           volumes?: number | null
+          xml_path?: string | null
           xml_raw?: string | null
         }
         Update: {
           chave_acesso?: string
           cnpj_destinatario?: string | null
           cnpj_emitente?: string | null
+          consultado_sefaz_at?: string | null
           created_at?: string
+          danfe_path?: string | null
+          data_autorizacao?: string | null
           data_emissao?: string | null
           id?: string
           imported_at?: string
@@ -1573,13 +1588,16 @@ export type Database = {
           peso_bruto?: number | null
           peso_liquido?: number | null
           picking_id?: string | null
+          protocolo_autorizacao?: string | null
           serie?: string | null
+          situacao_sefaz?: string | null
           transportadora?: string | null
           updated_at?: string
           valor_frete?: number | null
           valor_produtos?: number | null
           valor_total?: number | null
           volumes?: number | null
+          xml_path?: string | null
           xml_raw?: string | null
         }
         Relationships: [
