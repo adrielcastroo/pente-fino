@@ -35,7 +35,23 @@ const SEVERITY_STYLES: Record<AlertSeverity, { bg: string; text: string; border:
 };
 
 export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
-  const alerts = useMemo<AlertItem[]>(() => {
+  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(Array.from(dismissed)));
+    } catch { /* ignore */ }
+  }, [dismissed]);
+
+  const dismiss = useCallback((id: string) => {
+    setDismissed(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const allAlerts = useMemo<AlertItem[]>(() => {
     const list: AlertItem[] = [];
     const tecido = stats?.occupation?.tecido;
     const madeira = stats?.occupation?.madeira;
@@ -73,6 +89,8 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
 
     return list;
   }, [stats]);
+
+  const alerts = useMemo(() => allAlerts.filter(a => !dismissed.has(a.id)), [allAlerts, dismissed]);
 
   if (alerts.length === 0) {
     return (
