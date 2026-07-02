@@ -404,27 +404,211 @@ export type Database = {
       }
       expedicao_carrinhos: {
         Row: {
+          aguardando_desde: string | null
           codigo: string
+          conferente_id: string | null
+          conferido_at: string | null
           created_at: string
           id: string
           status: Database["public"]["Enums"]["expedicao_carrinho_status"]
+          transportadora_id: string | null
           updated_at: string
         }
         Insert: {
+          aguardando_desde?: string | null
           codigo: string
+          conferente_id?: string | null
+          conferido_at?: string | null
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["expedicao_carrinho_status"]
+          transportadora_id?: string | null
           updated_at?: string
         }
         Update: {
+          aguardando_desde?: string | null
           codigo?: string
+          conferente_id?: string | null
+          conferido_at?: string | null
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["expedicao_carrinho_status"]
+          transportadora_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_carrinhos_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_conferencias_itens: {
+        Row: {
+          carrinho_id: string
+          codigo_bipado: string
+          conferente_id: string | null
+          created_at: string
+          detalhes: Json | null
+          id: string
+          peca_id: string | null
+          resultado: string
+        }
+        Insert: {
+          carrinho_id: string
+          codigo_bipado: string
+          conferente_id?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          peca_id?: string | null
+          resultado: string
+        }
+        Update: {
+          carrinho_id?: string
+          codigo_bipado?: string
+          conferente_id?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          peca_id?: string | null
+          resultado?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_conferencias_itens_carrinho_id_fkey"
+            columns: ["carrinho_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_carrinhos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_conferencias_itens_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pecas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_pecas: {
+        Row: {
+          alocada_at: string | null
+          carrinho_id: string | null
+          codigo_etiqueta: string
+          codigo_peca: string | null
+          conferente_id: string | null
+          conferida_at: string | null
+          created_at: string
+          descricao: string | null
+          embalador_id: string | null
+          etiquetada_at: string
+          faturada_at: string | null
+          id: string
+          romaneio_id: string | null
+          status: Database["public"]["Enums"]["expedicao_peca_status"]
+          updated_at: string
+        }
+        Insert: {
+          alocada_at?: string | null
+          carrinho_id?: string | null
+          codigo_etiqueta: string
+          codigo_peca?: string | null
+          conferente_id?: string | null
+          conferida_at?: string | null
+          created_at?: string
+          descricao?: string | null
+          embalador_id?: string | null
+          etiquetada_at?: string
+          faturada_at?: string | null
+          id?: string
+          romaneio_id?: string | null
+          status?: Database["public"]["Enums"]["expedicao_peca_status"]
+          updated_at?: string
+        }
+        Update: {
+          alocada_at?: string | null
+          carrinho_id?: string | null
+          codigo_etiqueta?: string
+          codigo_peca?: string | null
+          conferente_id?: string | null
+          conferida_at?: string | null
+          created_at?: string
+          descricao?: string | null
+          embalador_id?: string | null
+          etiquetada_at?: string
+          faturada_at?: string | null
+          id?: string
+          romaneio_id?: string | null
+          status?: Database["public"]["Enums"]["expedicao_peca_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_pecas_carrinho_id_fkey"
+            columns: ["carrinho_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_carrinhos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_pecas_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_romaneios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_pecas_historico: {
+        Row: {
+          acao: string
+          carrinho_destino_id: string | null
+          carrinho_origem_id: string | null
+          created_at: string
+          detalhes: Json | null
+          id: string
+          peca_id: string
+          romaneio_id: string | null
+          usuario_email: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          carrinho_destino_id?: string | null
+          carrinho_origem_id?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          peca_id: string
+          romaneio_id?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          carrinho_destino_id?: string | null
+          carrinho_origem_id?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          peca_id?: string
+          romaneio_id?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_pecas_historico_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pecas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expedicao_picking_itens: {
         Row: {
@@ -563,12 +747,102 @@ export type Database = {
           },
         ]
       }
+      expedicao_romaneio_nfe: {
+        Row: {
+          nfe_id: string
+          romaneio_id: string
+          vinculada_at: string
+          vinculada_por: string | null
+        }
+        Insert: {
+          nfe_id: string
+          romaneio_id: string
+          vinculada_at?: string
+          vinculada_por?: string | null
+        }
+        Update: {
+          nfe_id?: string
+          romaneio_id?: string
+          vinculada_at?: string
+          vinculada_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_romaneio_nfe_nfe_id_fkey"
+            columns: ["nfe_id"]
+            isOneToOne: false
+            referencedRelation: "nfe_importadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_romaneio_nfe_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_romaneios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_romaneios: {
+        Row: {
+          cancelado_at: string | null
+          cancelado_por: string | null
+          created_at: string
+          created_by: string | null
+          faturado_at: string | null
+          id: string
+          motivo_cancelamento: string | null
+          numero: string
+          observacao: string | null
+          status: Database["public"]["Enums"]["expedicao_romaneio_status"]
+          transportadora_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancelado_at?: string | null
+          cancelado_por?: string | null
+          created_at?: string
+          created_by?: string | null
+          faturado_at?: string | null
+          id?: string
+          motivo_cancelamento?: string | null
+          numero: string
+          observacao?: string | null
+          status?: Database["public"]["Enums"]["expedicao_romaneio_status"]
+          transportadora_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancelado_at?: string | null
+          cancelado_por?: string | null
+          created_at?: string
+          created_by?: string | null
+          faturado_at?: string | null
+          id?: string
+          motivo_cancelamento?: string | null
+          numero?: string
+          observacao?: string | null
+          status?: Database["public"]["Enums"]["expedicao_romaneio_status"]
+          transportadora_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_romaneios_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_transportadoras: {
         Row: {
           ativo: boolean
           created_at: string
           id: string
           nome: string
+          regra_nf: Database["public"]["Enums"]["expedicao_regra_nf"]
           updated_at: string
         }
         Insert: {
@@ -576,6 +850,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome: string
+          regra_nf?: Database["public"]["Enums"]["expedicao_regra_nf"]
           updated_at?: string
         }
         Update: {
@@ -583,6 +858,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome?: string
+          regra_nf?: Database["public"]["Enums"]["expedicao_regra_nf"]
           updated_at?: string
         }
         Relationships: []
@@ -1523,6 +1799,20 @@ export type Database = {
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"
       expedicao_carrinho_status: "livre" | "em_uso" | "manutencao"
+      expedicao_carrinho_status_v2:
+        | "montando"
+        | "aguardando_conferencia"
+        | "em_conferencia"
+        | "conferido"
+        | "romaneio_gerado"
+        | "livre"
+      expedicao_peca_status:
+        | "etiquetada"
+        | "no_carrinho"
+        | "conferida"
+        | "no_romaneio"
+        | "faturada"
+        | "cancelada"
       expedicao_picking_status:
         | "aguardando"
         | "em_separacao"
@@ -1530,6 +1820,8 @@ export type Database = {
         | "conferido"
         | "faturado"
         | "cancelado"
+      expedicao_regra_nf: "uma_nf" | "multiplas_nf"
+      expedicao_romaneio_status: "aberto" | "faturado" | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1659,6 +1951,22 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "operador", "user", "supervisor", "gerente"],
       expedicao_carrinho_status: ["livre", "em_uso", "manutencao"],
+      expedicao_carrinho_status_v2: [
+        "montando",
+        "aguardando_conferencia",
+        "em_conferencia",
+        "conferido",
+        "romaneio_gerado",
+        "livre",
+      ],
+      expedicao_peca_status: [
+        "etiquetada",
+        "no_carrinho",
+        "conferida",
+        "no_romaneio",
+        "faturada",
+        "cancelada",
+      ],
       expedicao_picking_status: [
         "aguardando",
         "em_separacao",
@@ -1667,6 +1975,8 @@ export const Constants = {
         "faturado",
         "cancelado",
       ],
+      expedicao_regra_nf: ["uma_nf", "multiplas_nf"],
+      expedicao_romaneio_status: ["aberto", "faturado", "cancelado"],
     },
   },
 } as const
