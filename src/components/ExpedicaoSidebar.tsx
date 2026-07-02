@@ -12,6 +12,8 @@ import {
   History,
   FileDown,
   Tag,
+  PackageCheck,
+  Boxes,
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 
