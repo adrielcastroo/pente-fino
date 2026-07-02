@@ -114,7 +114,7 @@ function resolveDims(t: { pageSize: PageSize; customWidth: number; customHeight:
   return PAGE_DIMS[t.pageSize];
 }
 
-const DEFAULT_BLOCKS: BlockKey[] = ['header', 'code', 'fields', 'destino', 'obs'];
+const DEFAULT_BLOCKS: BlockKey[] = ['header', 'carga', 'code', 'fields', 'destino', 'obs'];
 
 const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   titulo: 'EXPEDIÇÃO',
