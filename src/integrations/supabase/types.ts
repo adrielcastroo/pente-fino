@@ -402,6 +402,101 @@ export type Database = {
         }
         Relationships: []
       }
+      expedicao_carga_romaneios: {
+        Row: {
+          carga_id: string
+          created_at: string
+          romaneio_id: string
+        }
+        Insert: {
+          carga_id: string
+          created_at?: string
+          romaneio_id: string
+        }
+        Update: {
+          carga_id?: string
+          created_at?: string
+          romaneio_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_carga_romaneios_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_carga_romaneios_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_romaneios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_cargas: {
+        Row: {
+          codigo_rastreio: string | null
+          created_at: string
+          criado_por: string | null
+          custo_frete: number | null
+          data_coleta: string | null
+          id: string
+          motorista_doc: string | null
+          motorista_nome: string | null
+          numero: string
+          observacao: string | null
+          rota: string | null
+          status: string
+          transportadora_tipo: string | null
+          updated_at: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          codigo_rastreio?: string | null
+          created_at?: string
+          criado_por?: string | null
+          custo_frete?: number | null
+          data_coleta?: string | null
+          id?: string
+          motorista_doc?: string | null
+          motorista_nome?: string | null
+          numero: string
+          observacao?: string | null
+          rota?: string | null
+          status?: string
+          transportadora_tipo?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          codigo_rastreio?: string | null
+          created_at?: string
+          criado_por?: string | null
+          custo_frete?: number | null
+          data_coleta?: string | null
+          id?: string
+          motorista_doc?: string | null
+          motorista_nome?: string | null
+          numero?: string
+          observacao?: string | null
+          rota?: string | null
+          status?: string
+          transportadora_tipo?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_cargas_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_carrinhos: {
         Row: {
           aguardando_desde: string | null
@@ -442,6 +537,53 @@ export type Database = {
             columns: ["transportadora_id"]
             isOneToOne: false
             referencedRelation: "expedicao_transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expedicao_comprovantes: {
+        Row: {
+          assinatura_base64: string | null
+          carga_id: string
+          created_at: string
+          criado_por: string | null
+          data_hora: string
+          foto_path: string | null
+          id: string
+          observacao: string | null
+          recebedor_doc: string | null
+          recebedor_nome: string | null
+        }
+        Insert: {
+          assinatura_base64?: string | null
+          carga_id: string
+          created_at?: string
+          criado_por?: string | null
+          data_hora?: string
+          foto_path?: string | null
+          id?: string
+          observacao?: string | null
+          recebedor_doc?: string | null
+          recebedor_nome?: string | null
+        }
+        Update: {
+          assinatura_base64?: string | null
+          carga_id?: string
+          created_at?: string
+          criado_por?: string | null
+          data_hora?: string
+          foto_path?: string | null
+          id?: string
+          observacao?: string | null
+          recebedor_doc?: string | null
+          recebedor_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_comprovantes_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_cargas"
             referencedColumns: ["id"]
           },
         ]
@@ -747,6 +889,47 @@ export type Database = {
           },
         ]
       }
+      expedicao_rastreio_eventos: {
+        Row: {
+          carga_id: string
+          created_at: string
+          data_evento: string
+          descricao: string | null
+          id: string
+          local: string | null
+          raw: Json | null
+          status: string | null
+        }
+        Insert: {
+          carga_id: string
+          created_at?: string
+          data_evento: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          raw?: Json | null
+          status?: string | null
+        }
+        Update: {
+          carga_id?: string
+          created_at?: string
+          data_evento?: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          raw?: Json | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_rastreio_eventos_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_cargas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_romaneio_nfe: {
         Row: {
           nfe_id: string
@@ -859,6 +1042,39 @@ export type Database = {
           id?: string
           nome?: string
           regra_nf?: Database["public"]["Enums"]["expedicao_regra_nf"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expedicao_veiculos: {
+        Row: {
+          ativo: boolean
+          capacidade_kg: number | null
+          created_at: string
+          id: string
+          modelo: string | null
+          observacao: string | null
+          placa: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          capacidade_kg?: number | null
+          created_at?: string
+          id?: string
+          modelo?: string | null
+          observacao?: string | null
+          placa: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          capacidade_kg?: number | null
+          created_at?: string
+          id?: string
+          modelo?: string | null
+          observacao?: string | null
+          placa?: string
           updated_at?: string
         }
         Relationships: []
