@@ -11,6 +11,7 @@ import { usePickings, type Picking } from '@/hooks/expedicao/useExpedicaoData';
 
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
+import AlertsPanel from '@/components/expedicao/AlertsPanel';
 import { useAuth } from '@/hooks/use-auth';
 import { computeSla } from '@/lib/expedicao/sla';
 
@@ -74,6 +75,8 @@ export default function PainelPage() {
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
       />
+
+      <AlertsPanel />
 
       {kpis.atrasados > 0 && (
         <div
