@@ -36,7 +36,7 @@ import {
 
 type PageSize = '100x150' | '100x100' | '80x60' | '60x40' | '50x30' | 'custom';
 type Align = 'left' | 'center' | 'right';
-type BlockKey = 'header' | 'code' | 'fields' | 'destino' | 'obs';
+type BlockKey = 'header' | 'carga' | 'code' | 'fields' | 'destino' | 'obs';
 
 interface CustomField {
   id: string;
@@ -54,6 +54,10 @@ interface LabelTemplate {
   codigo: string;
   destino: string;
   observacoes: string;
+  transportadora: string;
+  nfNumero: string;
+  volumeAtual: string;
+  volumeTotal: string;
   customFields: CustomField[];
   logoDataUrl: string | null;
   // Variáveis dinâmicas por template (sobreescrevem vars do picking ativo)
@@ -110,7 +114,7 @@ function resolveDims(t: { pageSize: PageSize; customWidth: number; customHeight:
   return PAGE_DIMS[t.pageSize];
 }
 
-const DEFAULT_BLOCKS: BlockKey[] = ['header', 'code', 'fields', 'destino', 'obs'];
+const DEFAULT_BLOCKS: BlockKey[] = ['header', 'carga', 'code', 'fields', 'destino', 'obs'];
 
 const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   titulo: 'EXPEDIÇÃO',
@@ -118,6 +122,10 @@ const DEFAULT_TEMPLATE: Omit<LabelTemplate, 'id' | 'name' | 'updatedAt'> = {
   codigo: '',
   destino: '',
   observacoes: '',
+  transportadora: '',
+  nfNumero: '',
+  volumeAtual: '1',
+  volumeTotal: '1',
   customFields: [],
   logoDataUrl: null,
   vars: {},
@@ -374,6 +382,10 @@ export default function ExpedicaoEtiquetasPage() {
       codigo: interpolate(active.codigo, mergedVars),
       destino: interpolate(active.destino, mergedVars),
       observacoes: interpolate(active.observacoes, mergedVars),
+      transportadora: interpolate(active.transportadora, mergedVars),
+      nfNumero: interpolate(active.nfNumero, mergedVars),
+      volumeAtual: interpolate(active.volumeAtual, mergedVars),
+      volumeTotal: interpolate(active.volumeTotal, mergedVars),
       codePayload: interpolate(active.codePayload, mergedVars),
       customFields: active.customFields.map((f) => ({ ...f, value: interpolate(f.value, mergedVars) })),
     };
@@ -497,6 +509,21 @@ export default function ExpedicaoEtiquetasPage() {
                   onChange={(v) => update('codigo', v)} placeholder="ROM-00123" />
                 <TextField label="Destino / Cliente" value={active.destino}
                   onChange={(v) => update('destino', v)} placeholder="Nome · Cidade · UF" />
+
+                <Separator />
+                <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/30 p-3">
+                  <p className="text-xs font-semibold text-foreground">Dados da carga</p>
+                  <TextField label="Transportadora" value={active.transportadora}
+                    onChange={(v) => update('transportadora', v)} placeholder="Ex.: JAMEF, BRASPRESS…" />
+                  <TextField label="Nº da NF" mono value={active.nfNumero}
+                    onChange={(v) => update('nfNumero', v)} placeholder="148551" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <TextField label="Volume atual" mono value={active.volumeAtual}
+                      onChange={(v) => update('volumeAtual', v)} placeholder="1" />
+                    <TextField label="Total de volumes" mono value={active.volumeTotal}
+                      onChange={(v) => update('volumeTotal', v)} placeholder="5" />
+                  </div>
+                </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Observações</Label>
                   <Textarea rows={3} value={active.observacoes}
@@ -962,6 +989,7 @@ function BlocksEditor({ blocks, onChange }: { blocks: BlockKey[]; onChange: (b: 
 
   const labels: Record<BlockKey, string> = {
     header: 'Cabeçalho (logo + título + subtítulo)',
+    carga:  'Carga (transportadora + NF + volumes)',
     code:   'Códigos (QR / barras / texto)',
     fields: 'Campos personalizados',
     destino: 'Destino / Cliente',
@@ -1324,6 +1352,37 @@ function LabelSheet({ t }: { t: LabelTemplate }) {
             )}
           </div>
         );
+      case 'carga': {
+        const hasAny = t.transportadora || t.nfNumero || t.volumeAtual || t.volumeTotal;
+        if (!hasAny) return null;
+        return (
+          <div key="carga" className="border-b-2 border-black py-2 text-center flex flex-col items-center gap-1">
+            {t.transportadora && (
+              <p className="font-extrabold uppercase leading-tight break-words"
+                style={{ fontSize: `${t.titleSize + 4}pt` }}>
+                {t.transportadora}
+              </p>
+            )}
+            {t.nfNumero && (
+              <p className="font-bold leading-tight" style={{ fontSize: `${t.titleSize + 2}pt` }}>
+                NF <span className="font-mono">{t.nfNumero}</span>
+              </p>
+            )}
+            {(t.volumeAtual || t.volumeTotal) && (
+              <div className="mt-1 inline-flex items-baseline gap-1 border-2 border-black rounded px-3 py-1">
+                <span className="text-[8pt] uppercase tracking-wider font-semibold">Vol.</span>
+                <span className="font-mono font-extrabold leading-none" style={{ fontSize: `${t.titleSize + 10}pt` }}>
+                  {t.volumeAtual || '?'}
+                </span>
+                <span className="font-mono font-bold" style={{ fontSize: `${t.titleSize + 4}pt` }}>/</span>
+                <span className="font-mono font-extrabold leading-none" style={{ fontSize: `${t.titleSize + 10}pt` }}>
+                  {t.volumeTotal || '?'}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      }
       case 'code':
         return (
           <div key="code" className={`flex-1 flex flex-col ${flexAlign} justify-center gap-2 py-2`}>
