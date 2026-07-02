@@ -1,44 +1,32 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, CloudOff, Loader2, RefreshCw, ScanLine, ShoppingCart, Wifi, X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { CheckCircle2, Loader2, ScanLine, ShoppingCart, X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  usePickingByNumero,
-  usePickingItens,
-  useBipPeca,
-  useFinalizarConferencia,
-  useAlocarPecaNoCarrinho,
-} from '@/hooks/expedicao/useExpedicaoData';
-import { useOfflineBipQueue } from '@/hooks/expedicao/useOfflineBipQueue';
+import { useAlocarPecaNoCarrinho } from '@/hooks/expedicao/useExpedicaoData';
 import { toast } from 'sonner';
 
+type CarrinhoOpt = { id: string; codigo: string; status: string };
+type Alocacao = { etiqueta: string; carrinho: string; ts: number };
+
 export default function ConferenciaPage() {
-  const [numero, setNumero] = useState('');
-  const [confirmado, setConfirmado] = useState<string | null>(null);
+  const qc = useQueryClient();
   const [peca, setPeca] = useState('');
   const [carrinhoCodigo, setCarrinhoCodigo] = useState('');
-  // etiqueta bipada aguardando alocação em um carrinho
   const [pendingEtiqueta, setPendingEtiqueta] = useState<string | null>(null);
-  const pickingRef = useRef<HTMLInputElement>(null);
+  const [recentes, setRecentes] = useState<Alocacao[]>([]);
+
   const pecaRef = useRef<HTMLInputElement>(null);
   const carrinhoRef = useRef<HTMLInputElement>(null);
 
-  const { data: picking, isFetching: loadingPicking } = usePickingByNumero(confirmado);
-  const pickingId = picking?.id ?? null;
-  const { data: itens } = usePickingItens(pickingId);
-  const bip = useBipPeca();
   const alocar = useAlocarPecaNoCarrinho();
-  const finalizar = useFinalizarConferencia();
-  const { online, pending, syncing, queueBip, flush } = useOfflineBipQueue();
 
-  const { data: carrinhosDisponiveis = [] } = useQuery({
+  const { data: carrinhos = [] } = useQuery({
     queryKey: ['expedicao_carrinhos_disponiveis'],
-    enabled: !!pickingId,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,59 +35,41 @@ export default function ConferenciaPage() {
         .in('status', ['livre', 'em_uso'])
         .order('codigo', { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as CarrinhoOpt[];
     },
   });
 
-  useEffect(() => { pickingRef.current?.focus(); }, []);
-  useEffect(() => { if (picking && !pendingEtiqueta) pecaRef.current?.focus(); }, [picking, pendingEtiqueta]);
-  useEffect(() => { if (pendingEtiqueta) carrinhoRef.current?.focus(); }, [pendingEtiqueta]);
+  useEffect(() => { pecaRef.current?.focus(); }, []);
+  useEffect(() => {
+    if (pendingEtiqueta) carrinhoRef.current?.focus();
+    else pecaRef.current?.focus();
+  }, [pendingEtiqueta]);
 
-  const totals = useMemo(() => {
-    const list = itens ?? [];
-    const prevista = list.reduce((s, i) => s + i.qtd_prevista, 0);
-    const bipada = list.reduce((s, i) => s + i.qtd_bipada, 0);
-    return { prevista, bipada, pct: prevista > 0 ? Math.min(100, (bipada / prevista) * 100) : 0 };
-  }, [itens]);
-
-  const handlePickingEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && numero.trim()) {
-      e.preventDefault();
-      setConfirmado(numero.trim().toUpperCase());
-    }
+  // 1. Bipar peça — apenas registra a etiqueta pendente (sem procurar picking)
+  const handlePecaEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    const codigo = peca.trim();
+    if (!codigo) return;
+    e.preventDefault();
+    setPendingEtiqueta(codigo);
+    setPeca('');
   };
 
-  const handlePecaEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && peca.trim() && pickingId) {
-      e.preventDefault();
-      const codigo = peca.trim();
-      setPeca('');
-      if (!online) {
-        await queueBip(pickingId, codigo);
-        toast.info(`Offline — ${codigo.toUpperCase()} na fila`);
-        pecaRef.current?.focus();
-        return;
-      }
-      try {
-        const r = await bip.mutateAsync({ pickingId, codigoPeca: codigo });
-        if (r.novo) toast.success(`Nova peça ${r.codigo}`);
-        // Passa para o passo de vincular carrinho
-        setPendingEtiqueta(codigo);
-      } catch {
-        await queueBip(pickingId, codigo);
-        toast.warning(`Sem conexão — ${codigo.toUpperCase()} na fila`);
-        pecaRef.current?.focus();
-      }
-    }
-  };
-
+  // 2/3. Alocar peça no carrinho
   const alocarCarrinho = async (codCar: string) => {
     if (!pendingEtiqueta) return;
+    const carrinho = codCar.trim();
+    if (!carrinho) return;
     try {
-      await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: codCar });
-      toast.success(`Peça ${pendingEtiqueta.toUpperCase()} → carrinho ${codCar.toUpperCase()}`);
+      await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: carrinho });
+      toast.success(`${pendingEtiqueta.toUpperCase()} → ${carrinho.toUpperCase()}`);
+      setRecentes((prev) => [
+        { etiqueta: pendingEtiqueta, carrinho: carrinho.toUpperCase(), ts: Date.now() },
+        ...prev.slice(0, 19),
+      ]);
       setPendingEtiqueta(null);
       setCarrinhoCodigo('');
+      qc.invalidateQueries({ queryKey: ['expedicao_carrinhos_disponiveis'] });
       setTimeout(() => pecaRef.current?.focus(), 0);
     } catch {
       // toast já emitido pelo hook
@@ -110,7 +80,6 @@ export default function ConferenciaPage() {
     if (e.key === 'Enter' && carrinhoCodigo.trim() && pendingEtiqueta) {
       e.preventDefault();
       await alocarCarrinho(carrinhoCodigo.trim());
-      carrinhoRef.current?.focus();
     }
   };
 
@@ -120,87 +89,20 @@ export default function ConferenciaPage() {
     setTimeout(() => pecaRef.current?.focus(), 0);
   };
 
-  const reset = () => {
-    setConfirmado(null); setNumero(''); setPeca(''); setPendingEtiqueta(null); setCarrinhoCodigo('');
-    setTimeout(() => pickingRef.current?.focus(), 0);
-  };
-
-  if (!picking || !pickingId) {
-    return (
-      <div className="space-y-6">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Conferência de peças</h1>
-          <p className="text-sm text-muted-foreground">Bipe o picking para iniciar a conferência.</p>
-        </header>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ScanLine className="size-4" /> Picking
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Input
-              ref={pickingRef}
-              value={numero}
-              onChange={(e) => setNumero(e.target.value)}
-              onKeyDown={handlePickingEnter}
-              placeholder="Bipe o número do picking"
-              autoComplete="off"
-              className="h-12 font-mono uppercase text-base"
-            />
-            {loadingPicking && confirmado && (
-              <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="size-3 animate-spin" /> Buscando {confirmado}…
-              </p>
-            )}
-            {confirmado && !loadingPicking && !picking && (
-              <p className="mt-2 text-xs text-destructive">Picking {confirmado} não encontrado.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const completo = totals.prevista > 0 && totals.bipada >= totals.prevista;
-
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            <span className="font-mono">{picking.numero}</span>
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {picking.cliente}
-            {picking.carrinho?.codigo && <> · Carrinho <span className="font-mono">{picking.carrinho.codigo}</span></>}
-          </p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={reset}>
-          <X className="size-4" /> Trocar picking
-        </Button>
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Alocação de peças</h1>
+        <p className="text-sm text-muted-foreground">
+          Bipe a peça e, em seguida, o carrinho onde ela será armazenada até a conferência da expedição.
+        </p>
       </header>
-
-      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs">
-        <Badge variant={online ? 'default' : 'destructive'} className="gap-1">
-          {online ? <Wifi className="size-3" /> : <CloudOff className="size-3" />}
-          {online ? 'Online' : 'Offline'}
-        </Badge>
-        <span className="text-muted-foreground">
-          Fila local: <span className="font-mono">{pending.length}</span>
-        </span>
-        {pending.length > 0 && (
-          <Button size="sm" variant="ghost" className="ml-auto h-7" disabled={syncing || !online} onClick={() => flush()}>
-            {syncing ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
-            Sincronizar
-          </Button>
-        )}
-      </div>
 
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <ScanLine className="size-4" /> {pendingEtiqueta ? 'Bipar carrinho' : 'Bipar peça'}
+            <ScanLine className="size-4" />
+            {pendingEtiqueta ? 'Passo 2 — Bipar carrinho' : 'Passo 1 — Bipar peça'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -213,13 +115,15 @@ export default function ConferenciaPage() {
               placeholder="Bipe o QR / código da peça"
               autoComplete="off"
               className="h-12 font-mono uppercase text-base"
-              disabled={bip.isPending}
             />
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
                 <span className="text-muted-foreground">
-                  Etiqueta pendente: <span className="font-mono font-semibold text-foreground">{pendingEtiqueta.toUpperCase()}</span>
+                  Etiqueta pendente:{' '}
+                  <span className="font-mono font-semibold text-foreground">
+                    {pendingEtiqueta.toUpperCase()}
+                  </span>
                 </span>
                 <Button size="sm" variant="ghost" className="h-6" onClick={cancelarPendente}>
                   <X className="size-3" /> Cancelar
@@ -238,13 +142,13 @@ export default function ConferenciaPage() {
                   disabled={alocar.isPending}
                 />
               </div>
-              {carrinhosDisponiveis.length > 0 && (
+              {carrinhos.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                     Ou selecione um carrinho
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {carrinhosDisponiveis.map((c) => (
+                    {carrinhos.map((c) => (
                       <Button
                         key={c.id}
                         type="button"
@@ -265,61 +169,39 @@ export default function ConferenciaPage() {
                   </div>
                 </div>
               )}
+              {alocar.isPending && (
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="size-3 animate-spin" /> Alocando…
+                </p>
+              )}
             </div>
           )}
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Progresso</span>
-              <span className="font-mono">{totals.bipada} / {totals.prevista}</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className={`h-full transition-all ${completo ? 'bg-success' : 'bg-primary'}`}
-                style={{ width: `${totals.pct}%` }}
-              />
-            </div>
-          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Peças ({itens?.length ?? 0})</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CheckCircle2 className="size-4" /> Últimas alocações ({recentes.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {!itens || itens.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma peça bipada ainda.</p>
+          {recentes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma peça alocada nesta sessão.</p>
           ) : (
             <ul className="divide-y">
-              {itens.map((i) => {
-                const ok = i.qtd_bipada >= i.qtd_prevista;
-                return (
-                  <li key={i.id} className="flex items-center justify-between py-2">
-                    <div>
-                      <p className="font-mono text-sm">{i.codigo_peca}</p>
-                      {i.descricao && <p className="text-xs text-muted-foreground">{i.descricao}</p>}
-                    </div>
-                    <Badge variant={ok ? 'default' : 'outline'} className="font-mono">
-                      {i.qtd_bipada} / {i.qtd_prevista}
-                    </Badge>
-                  </li>
-                );
-              })}
+              {recentes.map((r, idx) => (
+                <li key={`${r.ts}-${idx}`} className="flex items-center justify-between py-2 text-sm">
+                  <span className="font-mono">{r.etiqueta.toUpperCase()}</span>
+                  <Badge variant="outline" className="gap-1 font-mono">
+                    <ShoppingCart className="size-3" /> {r.carrinho}
+                  </Badge>
+                </li>
+              ))}
             </ul>
           )}
         </CardContent>
       </Card>
-
-      <div className="flex justify-end">
-        <Button
-          size="lg"
-          disabled={!completo || finalizar.isPending}
-          onClick={() => finalizar.mutate(pickingId, { onSuccess: reset })}
-        >
-          {finalizar.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-          Finalizar conferência
-        </Button>
-      </div>
     </div>
   );
 }
