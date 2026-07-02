@@ -382,6 +382,10 @@ export default function ExpedicaoEtiquetasPage() {
       codigo: interpolate(active.codigo, mergedVars),
       destino: interpolate(active.destino, mergedVars),
       observacoes: interpolate(active.observacoes, mergedVars),
+      transportadora: interpolate(active.transportadora, mergedVars),
+      nfNumero: interpolate(active.nfNumero, mergedVars),
+      volumeAtual: interpolate(active.volumeAtual, mergedVars),
+      volumeTotal: interpolate(active.volumeTotal, mergedVars),
       codePayload: interpolate(active.codePayload, mergedVars),
       customFields: active.customFields.map((f) => ({ ...f, value: interpolate(f.value, mergedVars) })),
     };
