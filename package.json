@@ -61,6 +61,7 @@
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
     "idb": "^8.0.3",
+    "idb-keyval": "^6.2.6",
     "input-otp": "^1.4.2",
     "jsbarcode": "^3.12.3",
     "jspdf": "^4.2.1",
