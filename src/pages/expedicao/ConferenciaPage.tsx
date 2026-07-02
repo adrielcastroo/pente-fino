@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, CloudOff, Loader2, RefreshCw, ScanLine, ShoppingCart, Wifi, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import {
   usePickingByNumero,
   usePickingItens,
@@ -32,6 +35,21 @@ export default function ConferenciaPage() {
   const alocar = useAlocarPecaNoCarrinho();
   const finalizar = useFinalizarConferencia();
   const { online, pending, syncing, queueBip, flush } = useOfflineBipQueue();
+
+  const { data: carrinhosDisponiveis = [] } = useQuery({
+    queryKey: ['expedicao_carrinhos_disponiveis'],
+    enabled: !!pickingId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expedicao_carrinhos')
+        .select('id, codigo, status')
+        .in('status', ['livre', 'em_uso'])
+        .order('codigo', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   useEffect(() => { pickingRef.current?.focus(); }, []);
   useEffect(() => { if (picking && !pendingEtiqueta) pecaRef.current?.focus(); }, [picking, pendingEtiqueta]);
@@ -75,20 +93,24 @@ export default function ConferenciaPage() {
     }
   };
 
+  const alocarCarrinho = async (codCar: string) => {
+    if (!pendingEtiqueta) return;
+    try {
+      await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: codCar });
+      toast.success(`Peça ${pendingEtiqueta.toUpperCase()} → carrinho ${codCar.toUpperCase()}`);
+      setPendingEtiqueta(null);
+      setCarrinhoCodigo('');
+      setTimeout(() => pecaRef.current?.focus(), 0);
+    } catch {
+      // toast já emitido pelo hook
+    }
+  };
+
   const handleCarrinhoEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && carrinhoCodigo.trim() && pendingEtiqueta) {
       e.preventDefault();
-      const codCar = carrinhoCodigo.trim();
-      setCarrinhoCodigo('');
-      try {
-        await alocar.mutateAsync({ codigoEtiqueta: pendingEtiqueta, codigoCarrinho: codCar });
-        toast.success(`Peça ${pendingEtiqueta.toUpperCase()} → carrinho ${codCar.toUpperCase()}`);
-        setPendingEtiqueta(null);
-        setTimeout(() => pecaRef.current?.focus(), 0);
-      } catch {
-        // toast já emitido pelo hook
-        carrinhoRef.current?.focus();
-      }
+      await alocarCarrinho(carrinhoCodigo.trim());
+      carrinhoRef.current?.focus();
     }
   };
 
@@ -216,6 +238,33 @@ export default function ConferenciaPage() {
                   disabled={alocar.isPending}
                 />
               </div>
+              {carrinhosDisponiveis.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Ou selecione um carrinho
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {carrinhosDisponiveis.map((c) => (
+                      <Button
+                        key={c.id}
+                        type="button"
+                        size="sm"
+                        variant={c.status === 'livre' ? 'outline' : 'secondary'}
+                        disabled={alocar.isPending}
+                        onClick={() => alocarCarrinho(c.codigo)}
+                        className={cn(
+                          'h-9 gap-1.5 font-mono text-xs',
+                          c.status === 'em_uso' && 'border-primary/40',
+                        )}
+                        title={`Status: ${c.status}`}
+                      >
+                        <ShoppingCart className="size-3" />
+                        {c.codigo}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <div className="space-y-1">
