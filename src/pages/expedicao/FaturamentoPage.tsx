@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { DollarSign, Loader2, Link2, Check, FileText, Truck } from 'lucide-react';
+import { DollarSign, Loader2, Link2, Check, FileText, Truck, Shield } from 'lucide-react';
+import { NFeSefazDialog } from '@/components/expedicao/NFeSefazDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +32,8 @@ type Romaneio = {
 export default function FaturamentoPage() {
   const qc = useQueryClient();
   const [selectedNfe, setSelectedNfe] = useState<Record<string, string>>({});
+  const [sefazNfeId, setSefazNfeId] = useState<string | null>(null);
+
 
   const { data: romaneios = [], isLoading } = useQuery({
     queryKey: ['expedicao_faturamento_romaneios'],
@@ -204,6 +207,14 @@ export default function FaturamentoPage() {
                             <span className="ml-auto tabular-nums">
                               {(n?.valor_total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </span>
+                            <button
+                              type="button"
+                              onClick={() => setSefazNfeId(id)}
+                              className="text-muted-foreground hover:text-foreground"
+                              title="SEFAZ / arquivos"
+                            >
+                              <Shield className="w-3.5 h-3.5" />
+                            </button>
                           </li>
                         );
                       })}
@@ -281,6 +292,8 @@ export default function FaturamentoPage() {
           </ul>
         )}
       </section>
+
+      <NFeSefazDialog nfeId={sefazNfeId} onClose={() => setSefazNfeId(null)} />
     </PageShell>
   );
 }
