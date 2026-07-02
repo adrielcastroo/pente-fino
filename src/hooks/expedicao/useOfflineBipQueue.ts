@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { bipPecaCall } from '@/hooks/expedicao/useExpedicaoData';
 import { toast } from 'sonner';
 import {
   BipQueueItem,
@@ -37,16 +37,10 @@ export function useOfflineBipQueue() {
     let fail = 0;
     for (const item of q) {
       try {
-        const { data, error } = await supabase.rpc('expedicao_bip_peca', {
-          _picking_id: item.pickingId,
-          _codigo_peca: item.codigoPeca,
-        });
-        if (error) throw error;
+        await bipPecaCall(item.pickingId, item.codigoPeca);
         await removeFromQueue(item.id);
         ok += 1;
-        // Invalidate related queries
         qc.invalidateQueries({ queryKey: ['expedicao', 'picking-itens', item.pickingId] });
-        void data;
       } catch (err) {
         await bumpTries(item.id);
         fail += 1;
