@@ -433,9 +433,14 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Importação interrompida</AlertTitle>
-            <AlertDescription className="text-xs whitespace-pre-wrap break-words">
-              {errorMsg}
-              {'\n\n'}Dicas: verifique sua conexão, reduza o tamanho do arquivo (o sistema já processa em lotes de 200) ou remova linhas com dados inválidos.
+            <AlertDescription className="text-xs whitespace-pre-wrap break-words space-y-2">
+              <div>
+                {errorMsg}
+                {'\n\n'}Dicas: verifique sua conexão, reduza o tamanho do arquivo (o sistema já processa em lotes de 200) ou remova linhas com dados inválidos.
+              </div>
+              <Button size="sm" variant="outline" onClick={downloadErrorCsv} className="gap-2">
+                <Download className="h-3 w-3" /> Baixar log de erros (CSV)
+              </Button>
             </AlertDescription>
           </Alert>
         )}
