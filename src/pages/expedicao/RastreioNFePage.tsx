@@ -41,10 +41,13 @@ async function logConsulta(nfe: NFeData, tipo: 'emitido' | 'recebido') {
   }
 }
 
+const MAX_XML_BYTES = 10 * 1024 * 1024; // 10 MB
+
 export default function RastreioNFePage() {
   const [xmlText, setXmlText] = useState('');
   const [nfe, setNfe] = useState<NFeData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const processarXml = useCallback((xml: string) => {
@@ -65,6 +68,12 @@ export default function RastreioNFePage() {
 
   const onFile = useCallback(async (f: File | null) => {
     if (!f) return;
+    if (f.size > MAX_XML_BYTES) {
+      const msg = `Arquivo excede o limite de ${(MAX_XML_BYTES / 1024 / 1024).toFixed(0)} MB.`;
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     const text = await f.text();
     setXmlText(text);
     processarXml(text);
@@ -77,6 +86,7 @@ export default function RastreioNFePage() {
     if (fileRef.current) fileRef.current.value = '';
   };
 
+
   const totalItens = useMemo(() => nfe?.itens.length ?? 0, [nfe]);
 
   return (
@@ -86,7 +96,20 @@ export default function RastreioNFePage() {
         subtitle="Importe o XML da NF-e para consultar os dados fiscais e itens."
       />
 
-      <div className="rounded-md border border-border bg-card p-4 space-y-4 max-w-4xl">
+      
+      <div
+        className={`rounded-md border p-4 space-y-4 max-w-4xl transition-colors ${
+          dragOver ? 'border-primary bg-primary/5' : 'border-border bg-card'
+        }`}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          const f = e.dataTransfer.files?.[0];
+          if (f) void onFile(f);
+        }}
+      >
         <div className="flex flex-wrap gap-2">
           <input
             ref={fileRef}
@@ -111,6 +134,9 @@ export default function RastreioNFePage() {
               <Trash2 className="w-4 h-4" /> Limpar
             </Button>
           )}
+          <span className="text-[11px] text-muted-foreground self-center ml-auto">
+            Arraste e solte o .xml aqui (máx. 10 MB)
+          </span>
         </div>
 
         <div>
@@ -125,7 +151,7 @@ export default function RastreioNFePage() {
         </div>
 
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" role="alert" aria-live="assertive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Erro ao processar XML</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
@@ -134,7 +160,13 @@ export default function RastreioNFePage() {
       </div>
 
       {nfe && (
-        <div className="rounded-md border border-border bg-card p-4 space-y-4 max-w-4xl">
+        <div
+          className="rounded-md border border-border bg-card p-4 space-y-4 max-w-4xl"
+          role="region"
+          aria-live="polite"
+          aria-label="Resultado da NF-e"
+        >
+
           <div className="flex items-center gap-2 flex-wrap">
             <CheckCircle2 className="w-5 h-5 text-success" />
             <span className="font-medium">NF-e {nfe.numero} — Série {nfe.serie}</span>

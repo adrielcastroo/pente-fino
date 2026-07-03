@@ -127,9 +127,18 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
   const [updatingDesc, setUpdatingDesc] = useState(false);
 
   const [parsing, setParsing] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
   const handleFile = async (file: File) => {
     setErrorMsg(null);
+    if (file.size > MAX_FILE_BYTES) {
+      const msg = `Arquivo excede o limite de ${(MAX_FILE_BYTES / 1024 / 1024).toFixed(0)} MB.`;
+      setErrorMsg(msg);
+      toast.error(msg);
+      return;
+    }
     setFileName(file.name);
     setParsing(true);
     try {
@@ -157,6 +166,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
       setParsing(false);
     }
   };
+
 
   const updateCodigosText = (idx: number, text: string) => {
     setRows((rs) =>
@@ -332,7 +342,19 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-3 rounded-md border-2 border-dashed p-3 transition-colors ${
+            dragOver ? 'border-primary bg-primary/5' : 'border-transparent'
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            const f = e.dataTransfer.files?.[0];
+            if (f) handleFile(f);
+          }}
+        >
           <input
             ref={inputRef}
             type="file"
