@@ -164,10 +164,11 @@ export const itensCadastroService = {
     inserted: number;
     skipped: number;
     duplicatesInFile: number;
+    fornecedorUpdated: number;
     descChanges: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }>;
   }> {
     if (!inputs.length) {
-      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, descChanges: [] };
+      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, fornecedorUpdated: 0, descChanges: [] };
     }
     // Mescla linhas duplicadas por codigo_interno (acumula códigos de fornecedor)
     const map = new Map<string, ItemCadastroInput>();
@@ -188,35 +189,84 @@ export const itensCadastroService = {
     const skipExisting = opts?.skipExisting !== false;
     const descChanges: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }> = [];
     let skipped = 0;
+    let fornecedorUpdated = 0;
     let toInsert = Array.from(map.values());
 
     if (skipExisting) {
       // Busca códigos internos existentes em lotes (evita URL gigante)
       const keys = toInsert.map((i) => i.codigo_interno.trim());
-      const existing = new Map<string, string>(); // codigo_interno -> descricao
+      type Existing = { descricao: string; codigos: string[]; normalizados: string[] };
+      const existing = new Map<string, Existing>();
       const lookupChunk = 500;
       for (let i = 0; i < keys.length; i += lookupChunk) {
         const slice = keys.slice(i, i + lookupChunk);
         const { data, error } = await supabase
           .from('itens_cadastro')
-          .select('codigo_interno, descricao')
+          .select('codigo_interno, descricao, codigos_fornecedor, codigos_fornecedor_normalizado')
           .in('codigo_interno', slice);
         if (error) throw new Error(`Falha ao verificar cadastros existentes: ${error.message}`);
-        for (const r of data || []) existing.set(r.codigo_interno, r.descricao || '');
+        for (const r of data || []) {
+          existing.set(r.codigo_interno, {
+            descricao: r.descricao || '',
+            codigos: (r as any).codigos_fornecedor || [],
+            normalizados: (r as any).codigos_fornecedor_normalizado || [],
+          });
+        }
       }
+
       const kept: ItemCadastroInput[] = [];
+      // Itens já existentes que ganharam novos códigos de fornecedor → precisam update parcial
+      const mergeFornecedor: Array<{ codigo_interno: string; codigos: string[]; normalizados: string[] }> = [];
+
       for (const it of toInsert) {
-        const old = existing.get(it.codigo_interno.trim());
-        if (old !== undefined) {
+        const key = it.codigo_interno.trim();
+        const old = existing.get(key);
+        if (old) {
           skipped++;
           const newDesc = (it.descricao || '').trim();
-          if (newDesc && newDesc !== (old || '').trim()) {
-            descChanges.push({ codigo_interno: it.codigo_interno.trim(), oldDesc: old, newDesc });
+          if (newDesc && newDesc !== (old.descricao || '').trim()) {
+            descChanges.push({ codigo_interno: key, oldDesc: old.descricao, newDesc });
+          }
+          // Mescla codigos_fornecedor: adiciona somente os que ainda não existem
+          const { codigos: novosCodigos, normalizados: novosNorm } = normalizeList(it.codigos_fornecedor || []);
+          const oldNormSet = new Set(old.normalizados);
+          const addCodigos: string[] = [];
+          const addNorm: string[] = [];
+          novosCodigos.forEach((c, idx) => {
+            const n = novosNorm[idx];
+            if (n && !oldNormSet.has(n)) {
+              addCodigos.push(c);
+              addNorm.push(n);
+              oldNormSet.add(n);
+            }
+          });
+          if (addCodigos.length) {
+            mergeFornecedor.push({
+              codigo_interno: key,
+              codigos: [...old.codigos, ...addCodigos],
+              normalizados: [...old.normalizados, ...addNorm],
+            });
           }
         } else {
           kept.push(it);
         }
       }
+
+      // Aplica updates de codigos_fornecedor um a um (rápido: só linhas alteradas)
+      for (const m of mergeFornecedor) {
+        const { error } = await supabase
+          .from('itens_cadastro')
+          .update({
+            codigos_fornecedor: m.codigos,
+            codigos_fornecedor_normalizado: m.normalizados,
+            codigo_fornecedor: m.codigos[0] || null,
+            codigo_fornecedor_normalizado: m.normalizados[0] || null,
+          })
+          .eq('codigo_interno', m.codigo_interno);
+        if (error) throw new Error(`Falha ao atualizar códigos de fornecedor de ${m.codigo_interno}: ${error.message}`);
+        fornecedorUpdated++;
+      }
+
       toInsert = kept;
     }
 
@@ -258,7 +308,7 @@ export const itensCadastroService = {
         throw e;
       }
     }
-    return { count: inserted, inserted, skipped, duplicatesInFile, descChanges };
+    return { count: inserted, inserted, skipped, duplicatesInFile, fornecedorUpdated, descChanges };
   },
 
   async bulkUpdateDescricoes(items: Array<{ codigo_interno: string; descricao: string }>): Promise<{ count: number }> {

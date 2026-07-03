@@ -200,10 +200,11 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         signal: controller.signal,
         onProgress: (done, total) => setProgress({ done, total }),
       });
-      const { inserted = 0, skipped = 0, duplicatesInFile = 0, descChanges = [] } = res || {};
+      const { inserted = 0, skipped = 0, duplicatesInFile = 0, fornecedorUpdated = 0, descChanges = [] } = res || {};
       const parts = [
         `${inserted} novo(s) importado(s)`,
         skipped > 0 ? `${skipped} já cadastrado(s) ignorado(s)` : null,
+        fornecedorUpdated > 0 ? `${fornecedorUpdated} com novo(s) código(s) de fornecedor adicionado(s)` : null,
         duplicatesInFile > 0 ? `${duplicatesInFile} duplicata(s) na planilha mescladas` : null,
       ].filter(Boolean).join(' · ');
       toast.success(parts || 'Nada a importar');
