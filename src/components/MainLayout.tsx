@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useUserScopedPrefs } from '@/hooks/useUserScopedPrefs';
 import TopBar from '@/components/TopBar';
 import EstoqueSidebar from '@/components/EstoqueSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
@@ -56,6 +57,7 @@ export default function MainLayout({
   const location = useLocation();
   usePresenceTracker();
   useNetworkStatus();
+  useUserScopedPrefs();
 
   const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
   const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
