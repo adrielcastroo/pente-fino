@@ -1,6 +1,6 @@
 import {
   ClipboardList,
-  Package,
+  
   ScanLine,
   FileText,
   DollarSign,
