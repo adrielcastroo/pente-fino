@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { useBulkUpsertItensCadastro } from '@/hooks/useItensCadastro';
 import { toast } from 'sonner';
-import { Upload, FileSpreadsheet } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react';
 
 interface Row {
   codigo_interno: string;
