@@ -109,23 +109,50 @@ export default function RastreioNFePage() {
     }
   }, [carregarEventos]);
 
-  const atualizarRastreio = useCallback(async () => {
+  const atualizarRastreio = useCallback(async (silent = false) => {
     if (!nfe?.chaveAcesso) return;
     setTracking(true);
+    const t0 = performance.now();
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('tracking-fetch', {
         body: { chave: nfe.chaveAcesso },
       });
       if (fnErr) throw fnErr;
       const r = data?.results?.[0];
-      toast.success(`Rastreio atualizado: ${r?.eventos ?? 0} evento(s) — status ${r?.status ?? '—'}.`);
+      const latency = Math.round(performance.now() - t0);
+      // Auditoria da consulta
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await (supabase as any).from('nfe_consulta_log').insert({
+            user_id: user.id,
+            user_email: user.email,
+            cnpj: nfe.cnpjEmitente,
+            tipo: 'rastreio',
+            chave_acesso: nfe.chaveAcesso,
+            status: r?.status ?? 'desconhecido',
+            motivo: silent ? 'polling automático' : 'atualização manual',
+            cache_hit: false,
+            detalhes: { eventos: r?.eventos ?? 0, latency_ms: latency },
+          });
+        }
+      } catch { /* auditoria não bloqueia */ }
+      if (!silent) toast.success(`Rastreio atualizado: ${r?.eventos ?? 0} evento(s) — status ${r?.status ?? '—'}.`);
       await carregarEventos(nfe.chaveAcesso);
     } catch (e: any) {
-      toast.error(e?.message || 'Falha ao consultar rastreio.');
+      if (!silent) toast.error(e?.message || 'Falha ao consultar rastreio.');
     } finally {
       setTracking(false);
     }
-  }, [nfe?.chaveAcesso, carregarEventos]);
+  }, [nfe?.chaveAcesso, nfe?.cnpjEmitente, carregarEventos]);
+
+  // F-EXP-02: Polling automático a cada 10 min enquanto status não for final
+  useEffect(() => {
+    if (!nfe?.chaveAcesso) return;
+    if (trackingStatus === 'ENTREGUE' || trackingStatus === 'EXCECAO') return;
+    const id = setInterval(() => { void atualizarRastreio(true); }, 10 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [nfe?.chaveAcesso, trackingStatus, atualizarRastreio]);
 
   const onFile = useCallback(async (f: File | null) => {
     if (!f) return;
