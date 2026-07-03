@@ -117,6 +117,7 @@ export default function MainLayout({
       </div>
       {showUndo && <UndoBanner />}
       <CommandPalette />
+      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </SidebarProvider>
   );
 }
