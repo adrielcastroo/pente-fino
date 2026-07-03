@@ -11,6 +11,11 @@ import {
   AlertCircle,
   FileText,
   Plus,
+  Truck,
+  MapPin,
+  Clock,
+  AlertOctagon,
+  PackageCheck,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -32,13 +37,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
-import { StatusBadge } from '@/components/ui/status-badge';
+import { StatusBadge, type StatusTone } from '@/components/ui/status-badge';
 import { parseNFeXML } from '@/lib/nfe-parser';
 
 const BUCKET = 'nfe-arquivos';
 
 type Situacao = 'pendente' | 'ciencia' | 'confirmada' | 'desconhecida' | 'nao_realizada';
+
+type TrackingStatus =
+  | 'POSTADO' | 'EM_TRANSITO' | 'SAIU_PARA_ENTREGA'
+  | 'ENTREGUE' | 'TENTATIVA_FALHA' | 'EXCECAO' | 'DESCONHECIDO';
 
 interface NFeEntrada {
   id: string;
@@ -56,6 +66,20 @@ interface NFeEntrada {
   danfe_path: string | null;
   nsu: string | null;
   created_at: string;
+  transportadora: string | null;
+  tracking_status: TrackingStatus;
+  tracking_provider: string | null;
+  tracking_last_sync_at: string | null;
+  tracking_url: string | null;
+}
+
+interface TrackingEvento {
+  id: string;
+  data_evento: string;
+  status: TrackingStatus | null;
+  local: string | null;
+  descricao: string | null;
+  fonte: string | null;
 }
 
 const SITUACAO_LABEL: Record<Situacao, string> = {
@@ -73,6 +97,27 @@ const SITUACAO_TONE: Record<Situacao, 'info' | 'warning' | 'success' | 'danger'>
   desconhecida: 'warning',
   nao_realizada: 'danger',
 };
+
+const TRACKING_LABEL: Record<TrackingStatus, string> = {
+  POSTADO: 'Postado',
+  EM_TRANSITO: 'Em trânsito',
+  SAIU_PARA_ENTREGA: 'Saiu p/ entrega',
+  ENTREGUE: 'Entregue',
+  TENTATIVA_FALHA: 'Tentativa falha',
+  EXCECAO: 'Exceção',
+  DESCONHECIDO: 'Sem rastreio',
+};
+
+const TRACKING_TONE: Record<TrackingStatus, StatusTone> = {
+  POSTADO: 'info',
+  EM_TRANSITO: 'info',
+  SAIU_PARA_ENTREGA: 'primary',
+  ENTREGUE: 'success',
+  TENTATIVA_FALHA: 'warning',
+  EXCECAO: 'danger',
+  DESCONHECIDO: 'neutral',
+};
+
 
 export default function NFeEntradaPage() {
   const qc = useQueryClient();
