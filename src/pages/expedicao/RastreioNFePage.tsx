@@ -96,7 +96,7 @@ export default function RastreioNFePage() {
         subtitle="Importe o XML da NF-e para consultar os dados fiscais e itens."
       />
 
-      <div className="rounded-md border border-border bg-card p-4 space-y-4 max-w-4xl">
+      
       <div
         className={`rounded-md border p-4 space-y-4 max-w-4xl transition-colors ${
           dragOver ? 'border-primary bg-primary/5' : 'border-border bg-card'
