@@ -31,9 +31,17 @@ const HEADER_ALIASES: Record<string, string[]> = {
 };
 
 function findKey(headers: string[], aliases: string[]): string | null {
-  const norm = (s: string) => s.toLowerCase().trim();
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[_\-.]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const wanted = new Set(aliases.map(norm));
   for (const h of headers) {
-    if (aliases.includes(norm(h))) return h;
+    if (wanted.has(norm(h))) return h;
   }
   return null;
 }
