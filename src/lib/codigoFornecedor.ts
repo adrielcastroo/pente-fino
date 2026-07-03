@@ -18,7 +18,11 @@ const BLACKLIST = new Set([
  */
 export function normalizarCodigo(value: string | null | undefined): string {
   if (!value) return '';
-  return String(value).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const clean = String(value).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // Códigos puramente numéricos (ex.: "002.001.004.001.119" e "2.001.004.001.119")
+  // são equivalentes ignorando zeros à esquerda.
+  if (/^\d+$/.test(clean)) return clean.replace(/^0+/, '') || '0';
+  return clean;
 }
 
 function isValidCandidate(candidate: string): boolean {
