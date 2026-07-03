@@ -1003,6 +1003,78 @@ export default function SettingsPage() {
                           </p>
                         </div>
                       </div>
+
+                      <div className="space-y-4 pt-4 border-t border-border/10">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <h4 className="text-sm font-bold flex items-center gap-2">
+                              Consulta Item SAP (n8n)
+                              <Badge variant="outline" className={n8nSapEnabled && n8nSapUrl ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
+                                {n8nSapEnabled && n8nSapUrl ? "Ativa" : "Desativada"}
+                              </Badge>
+                            </h4>
+                            <p className="text-xs text-muted-foreground">Webhook n8n que autentica no Auge e retorna código, descrição e estoque atual do item consultado.</p>
+                          </div>
+                          <Switch
+                            checked={n8nSapEnabled}
+                            onCheckedChange={(val) => { setN8nSapEnabled(val); setHasUnsavedChanges(true); }}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">URL do Webhook</Label>
+                          <div className="relative">
+                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              value={n8nSapUrl}
+                              onChange={(e) => { setN8nSapUrl(e.target.value); setHasUnsavedChanges(true); }}
+                              placeholder="https://n8n.seudominio.com/webhook/consultar-item-sap"
+                              className="pl-9 text-sm bg-muted/20 font-mono"
+                            />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Envie POST com JSON <code className="font-mono">{'{ "codigo_pesquisado": "..." }'}</code>. Retorno esperado: <code className="font-mono">{'{ codigo, descricao, estoque_atual }'}</code>.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Testar Consulta</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={n8nSapTestCode}
+                              onChange={(e) => setN8nSapTestCode(e.target.value)}
+                              placeholder="Código do item (ex.: 000123)"
+                              className="text-sm bg-muted/20 font-mono"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={!n8nSapUrl || !n8nSapTestCode.trim() || n8nSapTesting}
+                              onClick={async () => {
+                                setN8nSapTesting(true);
+                                try {
+                                  const res = await fetch(n8nSapUrl.trim(), {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ codigo_pesquisado: n8nSapTestCode.trim() }),
+                                  });
+                                  const text = await res.text();
+                                  let data: any = text;
+                                  try { data = JSON.parse(text); } catch {}
+                                  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 120)}`);
+                                  toast.success(`OK: ${data?.descricao ?? 'sem descrição'} • Estoque: ${data?.estoque_atual ?? '—'}`);
+                                } catch (e: any) {
+                                  toast.error('Falha: ' + (e?.message || 'erro desconhecido'));
+                                } finally {
+                                  setN8nSapTesting(false);
+                                }
+                              }}
+                            >
+                              {n8nSapTesting ? 'Testando…' : 'Testar'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
