@@ -37,7 +37,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         // Mobile: bottom-sheet ocupando 90vh, sobe de baixo, cantos arredondados no topo
-        "fixed left-0 right-0 bottom-0 z-50 flex flex-col w-full max-h-[90vh] overflow-y-auto gap-4 border-t border-border/60 bg-card/95 backdrop-blur-xl p-4 shadow-2xl rounded-t-2xl",
+        "fixed left-0 right-0 bottom-0 z-50 flex flex-col w-full max-h-[90vh] overflow-y-auto gap-4 border-t border-border/60 bg-card p-4 shadow-2xl rounded-t-2xl",
         // Animações mobile (slide de baixo)
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom duration-300",
         // Desktop (sm+): centralizado, override total da posição mobile
