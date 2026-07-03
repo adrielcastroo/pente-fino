@@ -1076,8 +1076,9 @@ export default function SettingsPage() {
                                     },
                                   });
                                   if (proxyError) throw new Error(proxyError.message || 'Erro no proxy');
-                                  const data: any = proxyData;
-                                  if (data?.error) throw new Error(data.error);
+                                  const res: any = proxyData;
+                                  if (!res?.ok) throw new Error(res?.error || 'Falha no webhook');
+                                  const data: any = res.data ?? {};
                                   toast.success(`OK: ${data?.descricao ?? 'sem descrição'} • Estoque: ${data?.estoque_atual ?? '—'}`);
                                 } catch (e: any) {
                                   toast.error('Falha: ' + (e?.message || 'erro desconhecido'));
