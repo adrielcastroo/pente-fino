@@ -42,7 +42,7 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
       label: 'Fiscal',
       items: [
         { key: 'faturamento', label: 'Faturamento', icon: DollarSign, path: '/expedicao/faturamento' },
-        { key: 'nfe-entrada', label: 'NF-e Entrada', icon: Inbox, path: '/expedicao/nfe-entrada' },
+        { key: 'tracking', label: 'Tracking', icon: Inbox, path: '/expedicao/tracking' },
       ],
     },
     {
