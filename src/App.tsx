@@ -42,6 +42,7 @@ const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoH
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
 const ExpedicaoCargasPage = lazy(() => import("@/pages/expedicao/CargasPage"));
 const ExpedicaoNFeEntradaPage = lazy(() => import("@/pages/expedicao/NFeEntradaPage"));
+const ExpedicaoRastreioNFePage = lazy(() => import("@/pages/expedicao/RastreioNFePage"));
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
@@ -196,6 +197,7 @@ const App = () => (
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
                   <Route path="cargas" element={<ExpedicaoCargasPage />} />
                   <Route path="tracking" element={<ExpedicaoNFeEntradaPage />} />
+                  <Route path="rastreio-nfe" element={<ExpedicaoRastreioNFePage />} />
                   <Route path="nfe-entrada" element={<Navigate to="/expedicao/tracking" replace />} />
 
                 </Route>

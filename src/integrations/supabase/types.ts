@@ -1551,6 +1551,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nfe_cache: {
+        Row: {
+          cache_key: string
+          cnpj: string
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json
+          tipo: string
+        }
+        Insert: {
+          cache_key: string
+          cnpj: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          payload: Json
+          tipo: string
+        }
+        Update: {
+          cache_key?: string
+          cnpj?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          tipo?: string
+        }
+        Relationships: []
+      }
       nfe_consulta_log: {
         Row: {
           cache_hit: boolean
