@@ -12,7 +12,6 @@ import {
   FileDown,
   Tag,
   ShieldCheck,
-  Inbox,
   Radar,
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
