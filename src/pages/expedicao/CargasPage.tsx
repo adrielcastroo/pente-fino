@@ -130,33 +130,22 @@ export default function CargasPage() {
             Nenhuma carga cadastrada. Clique em "Nova carga" para começar.
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Coleta</TableHead>
-                <TableHead>Motorista</TableHead>
-                <TableHead>Rota</TableHead>
-                <TableHead>Rastreio</TableHead>
-                <TableHead className="text-right">Frete (R$)</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile: cards */}
+            <ul className="md:hidden divide-y divide-border">
               {cargas.map(c => (
-                <TableRow
+                <li
                   key={c.id}
-                  className="cursor-pointer hover:bg-muted/40"
+                  className="p-3 flex flex-col gap-2 min-h-[64px] cursor-pointer hover:bg-muted/40"
                   onClick={() => setDetailId(c.id)}
                 >
-                  <TableCell className="font-mono text-xs">{c.numero}</TableCell>
-                  <TableCell>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">{c.numero}</span>
                     <Select
                       value={c.status}
                       onValueChange={v => updateStatus.mutate({ id: c.id, status: v as CargaStatus })}
                     >
-                      <SelectTrigger className="h-7 w-32 text-xs" onClick={e => e.stopPropagation()}>
+                      <SelectTrigger className="h-8 w-32 text-xs" onClick={e => e.stopPropagation()}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -165,21 +154,70 @@ export default function CargasPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </TableCell>
-                  <TableCell className="text-xs">{c.data_coleta ?? '—'}</TableCell>
-                  <TableCell className="text-xs">{c.motorista_nome ?? '—'}</TableCell>
-                  <TableCell className="text-xs flex items-center gap-1">
-                    {c.rota ? <><MapPin className="w-3 h-3" />{c.rota}</> : '—'}
-                  </TableCell>
-                  <TableCell className="text-xs font-mono">{c.codigo_rastreio ?? '—'}</TableCell>
-                  <TableCell className="text-right text-xs">
-                    {c.custo_frete ? Number(c.custo_frete).toFixed(2) : '—'}
-                  </TableCell>
-                  <TableCell><ChevronRight className="w-4 h-4 text-muted-foreground" /></TableCell>
-                </TableRow>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {c.motorista_nome && <span>{c.motorista_nome}</span>}
+                    {c.rota && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{c.rota}</span>}
+                    {c.data_coleta && <span>Coleta: {c.data_coleta}</span>}
+                    {c.codigo_rastreio && <span className="font-mono">{c.codigo_rastreio}</span>}
+                    {c.custo_frete && <span className="ml-auto tabular-nums font-medium text-foreground">R$ {Number(c.custo_frete).toFixed(2)}</span>}
+                  </div>
+                </li>
               ))}
-            </TableBody>
-          </Table>
+            </ul>
+
+            {/* Desktop: tabela */}
+            <Table className="hidden md:table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Coleta</TableHead>
+                  <TableHead>Motorista</TableHead>
+                  <TableHead>Rota</TableHead>
+                  <TableHead>Rastreio</TableHead>
+                  <TableHead className="text-right">Frete (R$)</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cargas.map(c => (
+                  <TableRow
+                    key={c.id}
+                    className="cursor-pointer hover:bg-muted/40"
+                    onClick={() => setDetailId(c.id)}
+                  >
+                    <TableCell className="font-mono text-xs">{c.numero}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={c.status}
+                        onValueChange={v => updateStatus.mutate({ id: c.id, status: v as CargaStatus })}
+                      >
+                        <SelectTrigger className="h-7 w-32 text-xs" onClick={e => e.stopPropagation()}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.keys(STATUS_LABELS) as CargaStatus[]).map(s => (
+                            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-xs">{c.data_coleta ?? '—'}</TableCell>
+                    <TableCell className="text-xs">{c.motorista_nome ?? '—'}</TableCell>
+                    <TableCell className="text-xs flex items-center gap-1">
+                      {c.rota ? <><MapPin className="w-3 h-3" />{c.rota}</> : '—'}
+                    </TableCell>
+                    <TableCell className="text-xs font-mono">{c.codigo_rastreio ?? '—'}</TableCell>
+                    <TableCell className="text-right text-xs">
+                      {c.custo_frete ? Number(c.custo_frete).toFixed(2) : '—'}
+                    </TableCell>
+                    <TableCell><ChevronRight className="w-4 h-4 text-muted-foreground" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
         )}
       </div>
 
