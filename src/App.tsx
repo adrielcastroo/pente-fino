@@ -182,7 +182,7 @@ const App = () => (
                   <Route index element={<Navigate to="/expedicao/operacao" replace />} />
                   <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
-                  <Route path="pickings" element={<ExpedicaoPickingsPage />} />
+                  
                   <Route path="conferencia" element={<ExpedicaoConferenciaPage />} />
                   <Route path="romaneio" element={<ExpedicaoRomaneioPage />} />
                   <Route path="faturamento" element={<ExpedicaoFaturamentoPage />} />
