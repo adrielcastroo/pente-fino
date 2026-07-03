@@ -24,7 +24,7 @@ const LABELS: Record<string, string> = {
   carrinhos: 'Carrinhos',
   etiquetas: 'Etiquetas',
   faturamento: 'Faturamento',
-  'nfe-entrada': 'NF-e Entrada',
+  tracking: 'Tracking',
   logistica: 'Logístico',
   relatorios: 'Relatórios',
   'double-check': 'Double-Check',

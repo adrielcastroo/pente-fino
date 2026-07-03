@@ -8,7 +8,7 @@ const TABS = [
   { path: '/expedicao/painel', label: 'Painel', icon: ClipboardList, badgeKey: 'painel' },
   { path: '/expedicao/conferencia', label: 'Conferir', icon: ScanLine, badgeKey: 'conferencia' },
   { path: '/expedicao/cargas', label: 'Cargas', icon: Truck, badgeKey: 'cargas' },
-  { path: '/expedicao/nfe-entrada', label: 'NF-e', icon: Inbox, badgeKey: 'nfeEntrada' },
+  { path: '/expedicao/tracking', label: 'Tracking', icon: Inbox, badgeKey: 'nfeEntrada' },
 ] as const;
 
 export default function ExpedicaoBottomTabBar() {

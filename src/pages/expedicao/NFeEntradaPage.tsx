@@ -155,8 +155,8 @@ export default function NFeEntradaPage() {
   return (
     <PageShell>
       <PageHeader
-        title="NF-e Entrada"
-        subtitle="Distribuição DFe da SEFAZ e Manifestação do Destinatário."
+        title="Rastreamento de NF-e"
+        subtitle="Adicione NF-e por XML ou chave de acesso e acompanhe o status logístico da entrega."
         actions={
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => consultarDFe.mutate()} disabled={consultarDFe.isPending}>
