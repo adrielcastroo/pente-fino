@@ -35,10 +35,7 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
       items: [
         { key: 'inicio', label: 'Início', icon: Home, path: '/expedicao/operacao' },
         { key: 'painel', label: 'Painel', icon: ClipboardList, path: '/expedicao/painel' },
-        { key: 'pickings', label: 'Pickings', icon: Package, path: '/expedicao/pickings' },
         { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/expedicao/conferencia' },
-        { key: 'embalagem', label: 'Embalagem', icon: PackageCheck, path: '/expedicao/embalagem' },
-        { key: 'alocacao', label: 'Alocação', icon: Boxes, path: '/expedicao/alocacao' },
         { key: 'double-check', label: 'Double-Check', icon: ShieldCheck, path: '/expedicao/double-check' },
         { key: 'romaneio', label: 'Romaneio', icon: FileText, path: '/expedicao/romaneio' },
         { key: 'cargas', label: 'Cargas', icon: Truck, path: '/expedicao/cargas' },
