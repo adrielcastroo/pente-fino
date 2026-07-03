@@ -28,7 +28,7 @@ const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlace
 const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
 const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
 
-const ExpedicaoPickingsPage = lazy(() => import("@/pages/expedicao/PickingsPage"));
+
 const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
 const ExpedicaoRomaneioPage = lazy(() => import("@/pages/expedicao/RomaneioPage"));
 const ExpedicaoFaturamentoPage = lazy(() => import("@/pages/expedicao/FaturamentoPage"));
@@ -39,8 +39,6 @@ const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosP
 
 const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
 const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoHomePage"));
-const ExpedicaoEmbalagemPage = lazy(() => import("@/pages/expedicao/EmbalagemPage"));
-const ExpedicaoAlocacaoPage = lazy(() => import("@/pages/expedicao/AlocacaoPage"));
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
 const ExpedicaoCargasPage = lazy(() => import("@/pages/expedicao/CargasPage"));
 const ExpedicaoNFeEntradaPage = lazy(() => import("@/pages/expedicao/NFeEntradaPage"));
@@ -184,7 +182,7 @@ const App = () => (
                   <Route index element={<Navigate to="/expedicao/operacao" replace />} />
                   <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
-                  <Route path="pickings" element={<ExpedicaoPickingsPage />} />
+                  
                   <Route path="conferencia" element={<ExpedicaoConferenciaPage />} />
                   <Route path="romaneio" element={<ExpedicaoRomaneioPage />} />
                   <Route path="faturamento" element={<ExpedicaoFaturamentoPage />} />
@@ -195,8 +193,6 @@ const App = () => (
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
                   <Route path="configuracoes" element={<SettingsPage />} />
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
-                  <Route path="embalagem" element={<ExpedicaoEmbalagemPage />} />
-                  <Route path="alocacao" element={<ExpedicaoAlocacaoPage />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
                   <Route path="cargas" element={<ExpedicaoCargasPage />} />
                   <Route path="nfe-entrada" element={<ExpedicaoNFeEntradaPage />} />
