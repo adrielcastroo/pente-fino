@@ -281,8 +281,33 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           </div>
         )}
 
+        {errorMsg && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Importação interrompida</AlertTitle>
+            <AlertDescription className="text-xs whitespace-pre-wrap break-words">
+              {errorMsg}
+              {'\n\n'}Dicas: verifique sua conexão, reduza o tamanho do arquivo (o sistema já processa em lotes de 200) ou remova linhas com dados inválidos.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {progress && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Importando lote a lote…</span>
+              <span>{progress.done} / {progress.total}</span>
+            </div>
+            <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} className="h-2" />
+          </div>
+        )}
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          {bulk.isPending ? (
+            <Button variant="destructive" onClick={handleCancel}>Cancelar importação</Button>
+          ) : (
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>Fechar</Button>
+          )}
           <Button onClick={handleImport} disabled={!rows.length || bulk.isPending}>
             {bulk.isPending ? 'Importando...' : `Importar ${rows.length} itens`}
           </Button>
