@@ -228,14 +228,22 @@ export default function NFeEntradaPage() {
         subtitle="Adicione NF-e por XML ou chave de acesso e acompanhe o status logístico da entrega."
         actions={
           <div className="flex gap-2">
+            <Button size="sm" variant="outline"
+              onClick={() => atualizarRastreio.mutate({ all: true })}
+              disabled={atualizarRastreio.isPending}>
+              {atualizarRastreio.isPending && !refreshingId
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <RefreshCw className="w-4 h-4" />}
+              Atualizar todas
+            </Button>
             <Button size="sm" variant="outline" onClick={() => consultarDFe.mutate()} disabled={consultarDFe.isPending}>
               {consultarDFe.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Consultar DFe
+              Sincronizar SEFAZ
             </Button>
             <Dialog open={importOpen} onOpenChange={setImportOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1.5">
-                  <Plus className="w-4 h-4" /> Nova entrada
+                  <Plus className="w-4 h-4" /> Nova NF
                 </Button>
               </DialogTrigger>
               <ImportEntradaDialog onDone={() => { setImportOpen(false); qc.invalidateQueries({ queryKey: ['nfe-entrada'] }); }} />
@@ -245,28 +253,42 @@ export default function NFeEntradaPage() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <StatCard label="Total" value={stats.total} icon={Inbox} />
-        <StatCard label="Pendentes" value={stats.pendentes} icon={AlertCircle} />
-        <StatCard label="Confirmadas" value={stats.confirmadas} icon={CheckCircle2} />
-        <StatCard label="Valor total" value={stats.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} icon={FileText} />
+        <StatCard label="Total monitoradas" value={stats.total} icon={Inbox} />
+        <StatCard label="Em trânsito" value={stats.emTransito} icon={Truck} variant={stats.emTransito > 0 ? 'warning' : undefined} />
+        <StatCard label="Entregues" value={stats.entregues} icon={PackageCheck} variant={stats.entregues > 0 ? 'success' : undefined} />
+        <StatCard label="Exceções" value={stats.excecoes} icon={AlertOctagon} variant={stats.excecoes > 0 ? 'destructive' : undefined} />
       </div>
 
       <section className="bg-card border border-border rounded-md">
-        <header className="px-4 py-3 border-b border-border">
-          <h2 className="text-sm font-medium">Notas recebidas</h2>
+        <header className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <h2 className="text-sm font-medium">Notas monitoradas</h2>
+          <span className="text-xs text-muted-foreground">{notas.length} registro(s)</span>
         </header>
         {isLoading ? (
           <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
         ) : notas.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Nenhuma NF-e de entrada registrada.</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">Nenhuma NF-e monitorada. Clique em "Nova NF" para adicionar.</p>
         ) : (
           <ul className="divide-y divide-border">
             {notas.map((n) => (
-              <NotaRow key={n.id} nota={n} onManifestar={(tipo) => manifestar.mutate({ id: n.id, tipo })} busy={manifestar.isPending} />
+              <NotaRow key={n.id} nota={n}
+                onManifestar={(tipo) => manifestar.mutate({ id: n.id, tipo })}
+                onAtualizarRastreio={() => atualizarRastreio.mutate({ id: n.id })}
+                onDetalhes={() => setSelectedId(n.id)}
+                refreshingRastreio={refreshingId === n.id && atualizarRastreio.isPending}
+                busy={manifestar.isPending} />
             ))}
           </ul>
         )}
       </section>
+
+      <TrackingDetailDialog
+        nota={notas.find((n) => n.id === selectedId) ?? null}
+        onClose={() => setSelectedId(null)}
+        onAtualizar={(id) => atualizarRastreio.mutate({ id })}
+        refreshing={atualizarRastreio.isPending}
+      />
+
     </PageShell>
   );
 }
