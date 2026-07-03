@@ -57,6 +57,7 @@ export default function MainLayout({
   const location = useLocation();
   usePresenceTracker();
   useNetworkStatus();
+  useUserScopedPrefs();
 
   const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
   const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
