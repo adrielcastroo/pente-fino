@@ -11,6 +11,11 @@ import {
   AlertCircle,
   FileText,
   Plus,
+  Truck,
+  MapPin,
+  Clock,
+  AlertOctagon,
+  PackageCheck,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -32,13 +37,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
-import { StatusBadge } from '@/components/ui/status-badge';
+import { StatusBadge, type StatusTone } from '@/components/ui/status-badge';
 import { parseNFeXML } from '@/lib/nfe-parser';
 
 const BUCKET = 'nfe-arquivos';
 
 type Situacao = 'pendente' | 'ciencia' | 'confirmada' | 'desconhecida' | 'nao_realizada';
+
+type TrackingStatus =
+  | 'POSTADO' | 'EM_TRANSITO' | 'SAIU_PARA_ENTREGA'
+  | 'ENTREGUE' | 'TENTATIVA_FALHA' | 'EXCECAO' | 'DESCONHECIDO';
 
 interface NFeEntrada {
   id: string;
@@ -56,6 +66,20 @@ interface NFeEntrada {
   danfe_path: string | null;
   nsu: string | null;
   created_at: string;
+  transportadora: string | null;
+  tracking_status: TrackingStatus;
+  tracking_provider: string | null;
+  tracking_last_sync_at: string | null;
+  tracking_url: string | null;
+}
+
+interface TrackingEvento {
+  id: string;
+  data_evento: string;
+  status: TrackingStatus | null;
+  local: string | null;
+  descricao: string | null;
+  fonte: string | null;
 }
 
 const SITUACAO_LABEL: Record<Situacao, string> = {
@@ -74,16 +98,39 @@ const SITUACAO_TONE: Record<Situacao, 'info' | 'warning' | 'success' | 'danger'>
   nao_realizada: 'danger',
 };
 
+const TRACKING_LABEL: Record<TrackingStatus, string> = {
+  POSTADO: 'Postado',
+  EM_TRANSITO: 'Em trânsito',
+  SAIU_PARA_ENTREGA: 'Saiu p/ entrega',
+  ENTREGUE: 'Entregue',
+  TENTATIVA_FALHA: 'Tentativa falha',
+  EXCECAO: 'Exceção',
+  DESCONHECIDO: 'Sem rastreio',
+};
+
+const TRACKING_TONE: Record<TrackingStatus, StatusTone> = {
+  POSTADO: 'info',
+  EM_TRANSITO: 'info',
+  SAIU_PARA_ENTREGA: 'primary',
+  ENTREGUE: 'success',
+  TENTATIVA_FALHA: 'warning',
+  EXCECAO: 'danger',
+  DESCONHECIDO: 'neutral',
+};
+
+
 export default function NFeEntradaPage() {
   const qc = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   const { data: notas = [], isLoading } = useQuery({
     queryKey: ['nfe-entrada'],
     queryFn: async (): Promise<NFeEntrada[]> => {
       const { data, error } = await (supabase as any)
         .from('nfe_entrada')
-        .select('id, chave_acesso, numero, serie, nome_emitente, cnpj_emitente, data_emissao, valor_total, situacao_manifestacao, manifestada_at, protocolo_manifestacao, xml_path, danfe_path, nsu, created_at')
+        .select('id, chave_acesso, numero, serie, nome_emitente, cnpj_emitente, data_emissao, valor_total, situacao_manifestacao, manifestada_at, protocolo_manifestacao, xml_path, danfe_path, nsu, created_at, transportadora, tracking_status, tracking_provider, tracking_last_sync_at, tracking_url')
         .order('data_emissao', { ascending: false, nullsFirst: false })
         .limit(200);
       if (error) throw error;
@@ -94,11 +141,33 @@ export default function NFeEntradaPage() {
 
   const stats = useMemo(() => {
     const total = notas.length;
-    const pendentes = notas.filter((n) => n.situacao_manifestacao === 'pendente').length;
-    const confirmadas = notas.filter((n) => n.situacao_manifestacao === 'confirmada').length;
-    const valor = notas.reduce((s, n) => s + (n.valor_total ?? 0), 0);
-    return { total, pendentes, confirmadas, valor };
+    const emTransito = notas.filter((n) => ['EM_TRANSITO', 'SAIU_PARA_ENTREGA', 'POSTADO'].includes(n.tracking_status)).length;
+    const entregues = notas.filter((n) => n.tracking_status === 'ENTREGUE').length;
+    const excecoes = notas.filter((n) => ['EXCECAO', 'TENTATIVA_FALHA'].includes(n.tracking_status)).length;
+    return { total, emTransito, entregues, excecoes };
   }, [notas]);
+
+  const atualizarRastreio = useMutation({
+    mutationFn: async (params: { id?: string; all?: boolean }) => {
+      if (params.id) setRefreshingId(params.id);
+      const { data, error } = await supabase.functions.invoke('tracking-fetch', {
+        body: params.all ? { all: true } : { nfeEntradaId: params.id },
+      });
+      if (error) throw error;
+      return data as { ok: boolean; results: Array<{ status: string; eventos: number; error?: string }> };
+    },
+    onSuccess: (r) => {
+      const total = r.results?.length ?? 0;
+      const erros = r.results?.filter((x) => x.error).length ?? 0;
+      if (erros > 0) toast.warning(`${total} nota(s) sincronizada(s), ${erros} com erro.`);
+      else toast.success(`${total} nota(s) atualizadas.`);
+      qc.invalidateQueries({ queryKey: ['nfe-entrada'] });
+      qc.invalidateQueries({ queryKey: ['tracking-eventos'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Falha ao atualizar rastreio.'),
+    onSettled: () => setRefreshingId(null),
+  });
+
 
   const consultarDFe = useMutation({
     mutationFn: async () => {
@@ -159,14 +228,22 @@ export default function NFeEntradaPage() {
         subtitle="Adicione NF-e por XML ou chave de acesso e acompanhe o status logístico da entrega."
         actions={
           <div className="flex gap-2">
+            <Button size="sm" variant="outline"
+              onClick={() => atualizarRastreio.mutate({ all: true })}
+              disabled={atualizarRastreio.isPending}>
+              {atualizarRastreio.isPending && !refreshingId
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <RefreshCw className="w-4 h-4" />}
+              Atualizar todas
+            </Button>
             <Button size="sm" variant="outline" onClick={() => consultarDFe.mutate()} disabled={consultarDFe.isPending}>
               {consultarDFe.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Consultar DFe
+              Sincronizar SEFAZ
             </Button>
             <Dialog open={importOpen} onOpenChange={setImportOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1.5">
-                  <Plus className="w-4 h-4" /> Nova entrada
+                  <Plus className="w-4 h-4" /> Nova NF
                 </Button>
               </DialogTrigger>
               <ImportEntradaDialog onDone={() => { setImportOpen(false); qc.invalidateQueries({ queryKey: ['nfe-entrada'] }); }} />
@@ -176,28 +253,42 @@ export default function NFeEntradaPage() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <StatCard label="Total" value={stats.total} icon={Inbox} />
-        <StatCard label="Pendentes" value={stats.pendentes} icon={AlertCircle} />
-        <StatCard label="Confirmadas" value={stats.confirmadas} icon={CheckCircle2} />
-        <StatCard label="Valor total" value={stats.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} icon={FileText} />
+        <StatCard label="Total monitoradas" value={stats.total} icon={Inbox} />
+        <StatCard label="Em trânsito" value={stats.emTransito} icon={Truck} variant={stats.emTransito > 0 ? 'warning' : undefined} />
+        <StatCard label="Entregues" value={stats.entregues} icon={PackageCheck} variant={stats.entregues > 0 ? 'success' : undefined} />
+        <StatCard label="Exceções" value={stats.excecoes} icon={AlertOctagon} variant={stats.excecoes > 0 ? 'destructive' : undefined} />
       </div>
 
       <section className="bg-card border border-border rounded-md">
-        <header className="px-4 py-3 border-b border-border">
-          <h2 className="text-sm font-medium">Notas recebidas</h2>
+        <header className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <h2 className="text-sm font-medium">Notas monitoradas</h2>
+          <span className="text-xs text-muted-foreground">{notas.length} registro(s)</span>
         </header>
         {isLoading ? (
           <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
         ) : notas.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Nenhuma NF-e de entrada registrada.</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">Nenhuma NF-e monitorada. Clique em "Nova NF" para adicionar.</p>
         ) : (
           <ul className="divide-y divide-border">
             {notas.map((n) => (
-              <NotaRow key={n.id} nota={n} onManifestar={(tipo) => manifestar.mutate({ id: n.id, tipo })} busy={manifestar.isPending} />
+              <NotaRow key={n.id} nota={n}
+                onManifestar={(tipo) => manifestar.mutate({ id: n.id, tipo })}
+                onAtualizarRastreio={() => atualizarRastreio.mutate({ id: n.id })}
+                onDetalhes={() => setSelectedId(n.id)}
+                refreshingRastreio={refreshingId === n.id && atualizarRastreio.isPending}
+                busy={manifestar.isPending} />
             ))}
           </ul>
         )}
       </section>
+
+      <TrackingDetailDialog
+        nota={notas.find((n) => n.id === selectedId) ?? null}
+        onClose={() => setSelectedId(null)}
+        onAtualizar={(id) => atualizarRastreio.mutate({ id })}
+        refreshing={atualizarRastreio.isPending}
+      />
+
     </PageShell>
   );
 }
@@ -205,10 +296,16 @@ export default function NFeEntradaPage() {
 function NotaRow({
   nota,
   onManifestar,
+  onAtualizarRastreio,
+  onDetalhes,
+  refreshingRastreio,
   busy,
 }: {
   nota: NFeEntrada;
   onManifestar: (tipo: Situacao) => void;
+  onAtualizarRastreio: () => void;
+  onDetalhes: () => void;
+  refreshingRastreio: boolean;
   busy: boolean;
 }) {
   const [tipo, setTipo] = useState<Situacao>('ciencia');
@@ -221,15 +318,34 @@ function NotaRow({
   return (
     <li className="p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="font-mono font-medium">NF {nota.numero ?? '—'}/{nota.serie ?? '—'}</span>
+        <button onClick={onDetalhes} className="font-mono font-medium hover:underline text-left">
+          NF {nota.numero ?? '—'}/{nota.serie ?? '—'}
+        </button>
+        <StatusBadge tone={TRACKING_TONE[nota.tracking_status]} label={TRACKING_LABEL[nota.tracking_status]} />
         <StatusBadge tone={SITUACAO_TONE[nota.situacao_manifestacao]} label={SITUACAO_LABEL[nota.situacao_manifestacao]} />
         <span className="text-muted-foreground truncate">{nota.nome_emitente ?? '—'}</span>
+        {nota.transportadora && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Truck className="w-3 h-3" /> {nota.transportadora}
+          </span>
+        )}
         <span className="ml-auto tabular-nums text-muted-foreground">
           {(nota.valor_total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
         </span>
       </div>
       <p className="font-mono text-[11px] text-muted-foreground break-all">{nota.chave_acesso}</p>
+      {nota.tracking_last_sync_at && (
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <Clock className="w-3 h-3" /> Sincronizado {new Date(nota.tracking_last_sync_at).toLocaleString('pt-BR')}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 pt-1">
+        <Button size="sm" variant="outline" onClick={onAtualizarRastreio} disabled={refreshingRastreio} className="gap-1">
+          {refreshingRastreio ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Atualizar rastreio
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDetalhes}>Detalhes</Button>
+
         <Select value={tipo} onValueChange={(v) => setTipo(v as Situacao)}>
           <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -372,3 +488,108 @@ function ImportEntradaDialog({ onDone }: { onDone: () => void }) {
     </DialogContent>
   );
 }
+
+function TrackingDetailDialog({
+  nota,
+  onClose,
+  onAtualizar,
+  refreshing,
+}: {
+  nota: NFeEntrada | null;
+  onClose: () => void;
+  onAtualizar: (id: string) => void;
+  refreshing: boolean;
+}) {
+  const { data: eventos = [], isLoading } = useQuery({
+    queryKey: ['tracking-eventos', nota?.id],
+    queryFn: async (): Promise<TrackingEvento[]> => {
+      if (!nota) return [];
+      const { data, error } = await (supabase as any)
+        .from('nfe_entrada_tracking_eventos')
+        .select('id, data_evento, status, local, descricao, fonte')
+        .eq('nfe_entrada_id', nota.id)
+        .order('data_evento', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as TrackingEvento[];
+    },
+    enabled: !!nota,
+    staleTime: 10_000,
+  });
+
+  if (!nota) return null;
+
+  return (
+    <Dialog open={!!nota} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            NF {nota.numero ?? '—'}/{nota.serie ?? '—'}
+            <StatusBadge tone={TRACKING_TONE[nota.tracking_status]} label={TRACKING_LABEL[nota.tracking_status]} />
+          </DialogTitle>
+          <DialogDescription className="font-mono text-[11px] break-all">{nota.chave_acesso}</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <InfoBlock label="Emitente" value={nota.nome_emitente} />
+          <InfoBlock label="Transportadora" value={nota.transportadora} />
+          <InfoBlock label="Emissão" value={nota.data_emissao ? new Date(nota.data_emissao).toLocaleString('pt-BR') : null} />
+          <InfoBlock label="Valor" value={(nota.valor_total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+          <InfoBlock label="Provedor" value={nota.tracking_provider?.toUpperCase() ?? null} />
+          <InfoBlock label="Última sync" value={nota.tracking_last_sync_at ? new Date(nota.tracking_last_sync_at).toLocaleString('pt-BR') : null} />
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          <h3 className="text-sm font-medium">Linha do tempo</h3>
+          <Button size="sm" variant="outline" onClick={() => onAtualizar(nota.id)} disabled={refreshing} className="gap-1">
+            {refreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Atualizar
+          </Button>
+        </div>
+
+        <ScrollArea className="max-h-[45vh] pr-3">
+          {isLoading ? (
+            <div className="py-8 flex justify-center"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+          ) : eventos.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">
+              Nenhum evento de rastreio ainda. Clique em "Atualizar" para consultar o provedor.
+            </p>
+          ) : (
+            <ol className="relative border-l border-border ml-2 space-y-4 py-2">
+              {eventos.map((ev) => (
+                <li key={ev.id} className="ml-4">
+                  <span className="absolute -left-1.5 w-3 h-3 rounded-full bg-primary" aria-hidden />
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {new Date(ev.data_evento).toLocaleString('pt-BR')}
+                    {ev.status && (
+                      <StatusBadge
+                        tone={TRACKING_TONE[(ev.status as TrackingStatus) ?? 'DESCONHECIDO'] ?? 'neutral'}
+                        label={TRACKING_LABEL[(ev.status as TrackingStatus) ?? 'DESCONHECIDO'] ?? ev.status}
+                      />
+                    )}
+                  </div>
+                  {ev.descricao && <p className="text-sm mt-0.5">{ev.descricao}</p>}
+                  {ev.local && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3" /> {ev.local}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InfoBlock({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm">{value ?? '—'}</p>
+    </div>
+  );
+}
+

@@ -1524,6 +1524,11 @@ export type Database = {
           protocolo_manifestacao: string | null
           serie: string | null
           situacao_manifestacao: string | null
+          tracking_last_sync_at: string | null
+          tracking_provider: string | null
+          tracking_status: string
+          tracking_url: string | null
+          transportadora: string | null
           updated_at: string
           valor_total: number | null
           xml_path: string | null
@@ -1545,6 +1550,11 @@ export type Database = {
           protocolo_manifestacao?: string | null
           serie?: string | null
           situacao_manifestacao?: string | null
+          tracking_last_sync_at?: string | null
+          tracking_provider?: string | null
+          tracking_status?: string
+          tracking_url?: string | null
+          transportadora?: string | null
           updated_at?: string
           valor_total?: number | null
           xml_path?: string | null
@@ -1566,6 +1576,11 @@ export type Database = {
           protocolo_manifestacao?: string | null
           serie?: string | null
           situacao_manifestacao?: string | null
+          tracking_last_sync_at?: string | null
+          tracking_provider?: string | null
+          tracking_status?: string
+          tracking_url?: string | null
+          transportadora?: string | null
           updated_at?: string
           valor_total?: number | null
           xml_path?: string | null
@@ -1600,6 +1615,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "nfe_entrada_eventos_nfe_entrada_id_fkey"
+            columns: ["nfe_entrada_id"]
+            isOneToOne: false
+            referencedRelation: "nfe_entrada"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfe_entrada_tracking_eventos: {
+        Row: {
+          created_at: string
+          data_evento: string
+          descricao: string | null
+          fonte: string | null
+          id: string
+          local: string | null
+          nfe_entrada_id: string
+          raw: Json | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_evento: string
+          descricao?: string | null
+          fonte?: string | null
+          id?: string
+          local?: string | null
+          nfe_entrada_id: string
+          raw?: Json | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_evento?: string
+          descricao?: string | null
+          fonte?: string | null
+          id?: string
+          local?: string | null
+          nfe_entrada_id?: string
+          raw?: Json | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_entrada_tracking_eventos_nfe_entrada_id_fkey"
             columns: ["nfe_entrada_id"]
             isOneToOne: false
             referencedRelation: "nfe_entrada"
