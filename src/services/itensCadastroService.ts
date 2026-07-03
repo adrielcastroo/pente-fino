@@ -164,10 +164,11 @@ export const itensCadastroService = {
     inserted: number;
     skipped: number;
     duplicatesInFile: number;
+    fornecedorUpdated: number;
     descChanges: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }>;
   }> {
     if (!inputs.length) {
-      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, descChanges: [] };
+      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, fornecedorUpdated: 0, descChanges: [] };
     }
     // Mescla linhas duplicadas por codigo_interno (acumula códigos de fornecedor)
     const map = new Map<string, ItemCadastroInput>();
