@@ -15,7 +15,7 @@ import ModuleHub, { type HubAction } from '@/components/shared/ModuleHub';
 
 const actions: HubAction[] = [
   { to: '/expedicao/painel', label: 'Painel', description: 'Visão geral e SLA', icon: ClipboardList },
-  { to: '/expedicao/pickings', label: 'Pickings', description: 'Separações em andamento', icon: Package },
+  
   { to: '/expedicao/conferencia', label: 'Conferência', description: 'Bipar itens do picking', icon: ScanLine },
   { to: '/expedicao/romaneio', label: 'Romaneio', description: 'Gerar e imprimir romaneios', icon: FileText },
   { to: '/expedicao/faturamento', label: 'Faturamento', description: 'NF-e importadas', icon: DollarSign },
