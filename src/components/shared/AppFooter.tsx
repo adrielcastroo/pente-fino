@@ -19,9 +19,10 @@ export default function AppFooter({ className }: AppFooterProps) {
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
           </span>
           <span className="hidden sm:inline">Sistema operacional</span>
+          <span className="hidden sm:inline" aria-hidden="true">·</span>
+          <span className="text-foreground/80 font-medium tracking-tight">Pente Fino</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-foreground/80 font-medium tracking-tight">Pente Fino</span>
           <span
             className="px-1.5 py-0 rounded bg-muted/60 text-muted-foreground border border-border/40 font-mono text-[10px] leading-4"
             title={BUILD_TIME ? `Build: ${new Date(BUILD_TIME).toLocaleString('pt-BR')}` : undefined}
