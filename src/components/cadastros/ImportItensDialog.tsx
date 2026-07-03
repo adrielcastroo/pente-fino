@@ -10,7 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { useBulkUpsertItensCadastro } from '@/hooks/useItensCadastro';
 import { toast } from 'sonner';
-import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Row {
   codigo_interno: string;
