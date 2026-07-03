@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, ClipboardList, ScanLine, Truck, Inbox } from 'lucide-react';
+import { Home, ClipboardList, ScanLine, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExpedicaoAlertCounts } from '@/hooks/expedicao/useExpedicaoAlertCounts';
 
@@ -7,7 +7,6 @@ const TABS = [
   { path: '/expedicao/operacao', label: 'Início', icon: Home, badgeKey: null },
   { path: '/expedicao/painel', label: 'Painel', icon: ClipboardList, badgeKey: 'painel' },
   { path: '/expedicao/conferencia', label: 'Conferir', icon: ScanLine, badgeKey: 'conferencia' },
-  { path: '/expedicao/cargas', label: 'Cargas', icon: Truck, badgeKey: 'cargas' },
   { path: '/expedicao/tracking', label: 'Tracking', icon: Inbox, badgeKey: 'nfeEntrada' },
 ] as const;
 
