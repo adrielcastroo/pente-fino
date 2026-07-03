@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import * as XLSX from 'xlsx';
+import { List, type RowComponentProps } from 'react-window';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,7 @@ import { useBulkUpsertItensCadastro } from '@/hooks/useItensCadastro';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, AlertCircle, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import XlsxWorker from '@/workers/xlsxParser.worker.ts?worker';
 
 interface Row {
   codigo_interno: string;
