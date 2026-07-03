@@ -18,7 +18,7 @@ const actions: HubAction[] = [
   
   { to: '/expedicao/conferencia', label: 'Conferência', description: 'Bipar itens do picking', icon: ScanLine },
   { to: '/expedicao/romaneio', label: 'Romaneio', description: 'Gerar e imprimir romaneios', icon: FileText },
-  { to: '/expedicao/faturamento', label: 'Faturamento', description: 'NF-e importadas', icon: DollarSign },
+  
   { to: '/expedicao/dashboard', label: 'Operacional', description: 'Indicadores da operação', icon: BarChart3 },
   { to: '/expedicao/logistica', label: 'Logístico', description: 'Rotas e entregas', icon: Truck },
   { to: '/expedicao/carrinhos', label: 'Carrinhos', description: 'Gestão de carrinhos', icon: ShoppingCart },
