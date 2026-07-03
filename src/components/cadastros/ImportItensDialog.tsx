@@ -342,7 +342,19 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-3 rounded-md border-2 border-dashed p-3 transition-colors ${
+            dragOver ? 'border-primary bg-primary/5' : 'border-transparent'
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            const f = e.dataTransfer.files?.[0];
+            if (f) handleFile(f);
+          }}
+        >
           <input
             ref={inputRef}
             type="file"
