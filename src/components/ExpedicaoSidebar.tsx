@@ -85,8 +85,6 @@ const ExpedicaoSidebar = memo(() => {
               return { ...i, badge: counts.painel };
             case 'conferencia':
               return { ...i, badge: counts.conferencia };
-            case 'cargas':
-              return { ...i, badge: counts.cargas };
             case 'romaneio':
               return { ...i, badge: counts.romaneio };
             case 'tracking':
