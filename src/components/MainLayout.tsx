@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useUserScopedPrefs } from '@/hooks/useUserScopedPrefs';
 import TopBar from '@/components/TopBar';
 import EstoqueSidebar from '@/components/EstoqueSidebar';
 import BottomTabBar from '@/components/BottomTabBar';
