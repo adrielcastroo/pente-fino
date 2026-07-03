@@ -58,6 +58,25 @@ async function fetchSSW(chave: string): Promise<{ eventos: SswEvento[]; raw: unk
   return { eventos: Array.isArray(list) ? list : [], raw: data };
 }
 
+async function fetchSeuRastreio(chave: string): Promise<{ eventos: SswEvento[]; raw: unknown } | null> {
+  const token = Deno.env.get('SEURASTREIO_TOKEN');
+  if (!token) return null;
+  const res = await fetch(`https://api.seurastreio.com.br/v1/rastreios/${chave}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  const list = data?.eventos ?? data?.tracking ?? [];
+  const eventos: SswEvento[] = (Array.isArray(list) ? list : []).map((e: any) => ({
+    data: e.data ?? e.dataHora ?? e.data_hora,
+    ocorrencia: e.status ?? e.ocorrencia,
+    descricao: e.descricao ?? e.mensagem,
+    cidade: e.cidade ?? e.local,
+    filial: e.uf ?? '',
+  }));
+  return { eventos, raw: data };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -118,7 +137,12 @@ Deno.serve(async (req) => {
 
     for (const t of targets) {
       try {
-        const { eventos, raw } = await fetchSSW(t.chave_acesso);
+        let provider: 'ssw' | 'seurastreio' = 'ssw';
+        let { eventos } = await fetchSSW(t.chave_acesso).catch(() => ({ eventos: [] as SswEvento[] }));
+        if (eventos.length === 0) {
+          const fb = await fetchSeuRastreio(t.chave_acesso);
+          if (fb && fb.eventos.length > 0) { eventos = fb.eventos; provider = 'seurastreio'; }
+        }
         let latestStatus: TrackingStatus = 'DESCONHECIDO';
         let latestAt = new Date(0);
 
@@ -134,14 +158,15 @@ Deno.serve(async (req) => {
             status,
             local: [ev.cidade, ev.filial].filter(Boolean).join(' - ') || null,
             descricao: [ev.ocorrencia, ev.descricao].filter(Boolean).join(' — ') || null,
-            fonte: 'ssw',
+            fonte: provider,
             raw: ev as any,
           }, { onConflict: 'nfe_entrada_id,data_evento,status,descricao', ignoreDuplicates: true });
         }
 
+
         await supabase.from('nfe_entrada').update({
           tracking_status: latestStatus,
-          tracking_provider: 'ssw',
+          tracking_provider: provider,
           tracking_last_sync_at: new Date().toISOString(),
         }).eq('id', t.id);
 
