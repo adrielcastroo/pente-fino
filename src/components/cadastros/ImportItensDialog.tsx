@@ -353,49 +353,27 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           )}
         </div>
 
+        {parsing && (
+          <div className="text-xs text-muted-foreground">Processando planilha em segundo plano…</div>
+        )}
+
         {rows.length > 0 && (
-          <div className="flex-1 overflow-auto border rounded-md">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  <TableHead className="w-[180px]">Código interno</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="w-[260px]">Códigos fornecedor (; ou |)</TableHead>
-                  <TableHead className="w-[60px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.slice(0, 200).map((r, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell className="font-mono text-xs">{r.codigo_interno}</TableCell>
-                    <TableCell className="text-xs max-w-md truncate" title={r.descricao}>
-                      {r.descricao}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Input
-                          value={r.codigos_fornecedor.join('; ')}
-                          onChange={(e) => updateCodigosText(idx, e.target.value)}
-                          className="h-8 font-mono text-xs"
-                          placeholder="—"
-                        />
-                        {r.detectado && (
-                          <Badge variant="outline" className="text-[9px] px-1">auto</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => removeRow(idx)} className="h-7 text-xs">×</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {rows.length > 200 && (
-              <div className="p-2 text-xs text-center text-muted-foreground">
-                ...e mais {rows.length - 200} linhas (todas serão importadas)
-              </div>
-            )}
+          <div className="flex-1 flex flex-col border rounded-md overflow-hidden min-h-[300px]">
+            <div className="grid grid-cols-[180px_1fr_260px_60px] gap-2 px-3 py-2 border-b bg-muted/40 text-xs font-medium">
+              <div>Código interno</div>
+              <div>Descrição</div>
+              <div>Códigos fornecedor (; ou |)</div>
+              <div />
+            </div>
+            <div className="flex-1">
+              <List
+                rowCount={rows.length}
+                rowHeight={40}
+                rowComponent={ImportRow}
+                rowProps={{ rows, updateCodigosText, removeRow }}
+                style={{ height: '100%', width: '100%' }}
+              />
+            </div>
           </div>
         )}
 
