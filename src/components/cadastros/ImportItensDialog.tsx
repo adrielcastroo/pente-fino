@@ -85,6 +85,12 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [descPrompt, setDescPrompt] = useState<{
+    changes: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }>;
+    selected: Set<string>;
+    summary: { inserted: number; skipped: number; duplicatesInFile: number };
+  } | null>(null);
+  const [updatingDesc, setUpdatingDesc] = useState(false);
 
   const handleFile = async (file: File) => {
     setErrorMsg(null);
