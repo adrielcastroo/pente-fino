@@ -89,7 +89,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         return;
       }
 
-      const headers = Object.keys(json[0]);
+      const headers = Array.from(new Set(json.slice(0, 20).flatMap((r) => Object.keys(r))));
       const kInterno = findKey(headers, HEADER_ALIASES.codigo_interno);
       const kDesc = findKey(headers, HEADER_ALIASES.descricao);
       const kForn = findKey(headers, HEADER_ALIASES.codigo_fornecedor);
