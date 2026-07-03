@@ -39,8 +39,6 @@ const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosP
 
 const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
 const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoHomePage"));
-const ExpedicaoEmbalagemPage = lazy(() => import("@/pages/expedicao/EmbalagemPage"));
-const ExpedicaoAlocacaoPage = lazy(() => import("@/pages/expedicao/AlocacaoPage"));
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
 const ExpedicaoCargasPage = lazy(() => import("@/pages/expedicao/CargasPage"));
 const ExpedicaoNFeEntradaPage = lazy(() => import("@/pages/expedicao/NFeEntradaPage"));
