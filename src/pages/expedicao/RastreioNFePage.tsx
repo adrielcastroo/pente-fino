@@ -64,6 +64,12 @@ export default function RastreioNFePage() {
   const [eventos, setEventos] = useState<TrackingEvento[]>([]);
   const [trackingStatus, setTrackingStatus] = useState<string | null>(null);
   const [tracking, setTracking] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualStatus, setManualStatus] = useState('EM_TRANSITO');
+  const [manualDescricao, setManualDescricao] = useState('');
+  const [manualLocal, setManualLocal] = useState('');
+  const [manualData, setManualData] = useState(() => new Date().toISOString().slice(0, 16));
+  const [manualSaving, setManualSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const carregarEventos = useCallback(async (chave: string) => {
