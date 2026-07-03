@@ -316,6 +316,50 @@ export default function RastreioNFePage() {
               <RefreshCw className={`w-4 h-4 ${tracking ? 'animate-spin' : ''}`} />
               Atualizar rastreamento
             </Button>
+            <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="secondary" disabled={!nfe.chaveAcesso} className="gap-2">
+                  <PlusCircle className="w-4 h-4" /> Evento manual
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Registrar evento manual de rastreio</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Status</Label>
+                    <Select value={manualStatus} onValueChange={setManualStatus}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="POSTADO">Postado</SelectItem>
+                        <SelectItem value="EM_TRANSITO">Em trânsito</SelectItem>
+                        <SelectItem value="SAIU_PARA_ENTREGA">Saiu para entrega</SelectItem>
+                        <SelectItem value="ENTREGUE">Entregue</SelectItem>
+                        <SelectItem value="TENTATIVA_FALHA">Tentativa falha</SelectItem>
+                        <SelectItem value="EXCECAO">Exceção</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Data / hora</Label>
+                    <Input type="datetime-local" value={manualData} onChange={(e) => setManualData(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Local (cidade/UF)</Label>
+                    <Input value={manualLocal} onChange={(e) => setManualLocal(e.target.value)} placeholder="Ex.: São Paulo - SP" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Descrição</Label>
+                    <Textarea value={manualDescricao} onChange={(e) => setManualDescricao(e.target.value)} placeholder="Ex.: Confirmado por telefone com a transportadora" className="h-20 text-xs" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setManualOpen(false)} disabled={manualSaving}>Cancelar</Button>
+                  <Button onClick={salvarEventoManual} disabled={manualSaving}>Salvar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {eventos.length > 0 && (
