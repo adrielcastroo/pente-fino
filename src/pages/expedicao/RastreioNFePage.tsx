@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Upload, FileText, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle2, Trash2, RefreshCw, Truck } from 'lucide-react';
+
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,20 +44,62 @@ async function logConsulta(nfe: NFeData, tipo: 'emitido' | 'recebido') {
 
 const MAX_XML_BYTES = 10 * 1024 * 1024; // 10 MB
 
+type TrackingEvento = {
+  id: string;
+  data_evento: string;
+  status: string;
+  local: string | null;
+  descricao: string | null;
+  fonte: string | null;
+};
+
 export default function RastreioNFePage() {
   const [xmlText, setXmlText] = useState('');
   const [nfe, setNfe] = useState<NFeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [eventos, setEventos] = useState<TrackingEvento[]>([]);
+  const [trackingStatus, setTrackingStatus] = useState<string | null>(null);
+  const [tracking, setTracking] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const processarXml = useCallback((xml: string) => {
+  const carregarEventos = useCallback(async (chave: string) => {
+    const { data } = await (supabase as any)
+      .from('nfe_entrada')
+      .select('id, tracking_status, nfe_entrada_tracking_eventos(id, data_evento, status, local, descricao, fonte)')
+      .eq('chave_acesso', chave)
+      .maybeSingle();
+    if (data) {
+      setTrackingStatus(data.tracking_status ?? null);
+      const list: TrackingEvento[] = (data.nfe_entrada_tracking_eventos ?? []) as TrackingEvento[];
+      list.sort((a, b) => (b.data_evento ?? '').localeCompare(a.data_evento ?? ''));
+      setEventos(list);
+    }
+  }, []);
+
+  const processarXml = useCallback(async (xml: string) => {
     setError(null);
+    setEventos([]);
+    setTrackingStatus(null);
     try {
       const parsed = parseNFeXML(xml);
       setNfe(parsed);
-      const tipo: 'emitido' | 'recebido' = 'emitido';
-      void logConsulta(parsed, tipo);
+      void logConsulta(parsed, 'emitido');
+      // Registra a NF-e para permitir rastreamento posterior
+      if (parsed.chaveAcesso) {
+        await (supabase as any).from('nfe_entrada').upsert({
+          chave_acesso: parsed.chaveAcesso,
+          numero: parsed.numero,
+          serie: parsed.serie,
+          cnpj_emitente: parsed.cnpjEmitente,
+          nome_emitente: parsed.nomeEmitente,
+          data_emissao: parsed.dataEmissao || null,
+          valor_total: parsed.valorTotal,
+          transportadora: parsed.transportadora || null,
+          origem: 'xml_manual',
+        }, { onConflict: 'chave_acesso' });
+        void carregarEventos(parsed.chaveAcesso);
+      }
       toast.success(`NF-e ${parsed.numero} importada.`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Falha ao processar XML.';
@@ -64,7 +107,25 @@ export default function RastreioNFePage() {
       setNfe(null);
       toast.error(msg);
     }
-  }, []);
+  }, [carregarEventos]);
+
+  const atualizarRastreio = useCallback(async () => {
+    if (!nfe?.chaveAcesso) return;
+    setTracking(true);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('tracking-fetch', {
+        body: { chave: nfe.chaveAcesso },
+      });
+      if (fnErr) throw fnErr;
+      const r = data?.results?.[0];
+      toast.success(`Rastreio atualizado: ${r?.eventos ?? 0} evento(s) — status ${r?.status ?? '—'}.`);
+      await carregarEventos(nfe.chaveAcesso);
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao consultar rastreio.');
+    } finally {
+      setTracking(false);
+    }
+  }, [nfe?.chaveAcesso, carregarEventos]);
 
   const onFile = useCallback(async (f: File | null) => {
     if (!f) return;
@@ -76,18 +137,20 @@ export default function RastreioNFePage() {
     }
     const text = await f.text();
     setXmlText(text);
-    processarXml(text);
+    void processarXml(text);
   }, [processarXml]);
 
   const limpar = () => {
     setXmlText('');
     setNfe(null);
     setError(null);
+    setEventos([]);
+    setTrackingStatus(null);
     if (fileRef.current) fileRef.current.value = '';
   };
 
-
   const totalItens = useMemo(() => nfe?.itens.length ?? 0, [nfe]);
+
 
   return (
     <PageShell>
@@ -171,7 +234,39 @@ export default function RastreioNFePage() {
             <CheckCircle2 className="w-5 h-5 text-success" />
             <span className="font-medium">NF-e {nfe.numero} — Série {nfe.serie}</span>
             <Badge variant="secondary">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</Badge>
+            {trackingStatus && <Badge variant="outline" className="gap-1"><Truck className="w-3 h-3" /> {trackingStatus}</Badge>}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={atualizarRastreio}
+              disabled={tracking || !nfe.chaveAcesso}
+              className="ml-auto gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${tracking ? 'animate-spin' : ''}`} />
+              Atualizar rastreamento
+            </Button>
           </div>
+
+          {eventos.length > 0 && (
+            <div className="border border-border rounded-md">
+              <div className="px-3 py-1.5 text-xs font-medium bg-muted/40 border-b border-border">
+                Eventos de rastreamento ({eventos.length})
+              </div>
+              <ul className="divide-y divide-border max-h-64 overflow-y-auto">
+                {eventos.map((ev) => (
+                  <li key={ev.id} className="px-3 py-2 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium">{ev.status}</span>
+                      <span className="text-muted-foreground">{new Date(ev.data_evento).toLocaleString('pt-BR')}</span>
+                    </div>
+                    {ev.descricao && <div className="text-muted-foreground">{ev.descricao}</div>}
+                    {ev.local && <div className="text-muted-foreground">{ev.local}</div>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
 
           <dl className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <div><dt className="text-muted-foreground text-xs">Chave de acesso</dt><dd className="font-mono text-xs break-all">{nfe.chaveAcesso || '—'}</dd></div>
