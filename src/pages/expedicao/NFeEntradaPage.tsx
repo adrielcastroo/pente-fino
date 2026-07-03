@@ -488,3 +488,108 @@ function ImportEntradaDialog({ onDone }: { onDone: () => void }) {
     </DialogContent>
   );
 }
+
+function TrackingDetailDialog({
+  nota,
+  onClose,
+  onAtualizar,
+  refreshing,
+}: {
+  nota: NFeEntrada | null;
+  onClose: () => void;
+  onAtualizar: (id: string) => void;
+  refreshing: boolean;
+}) {
+  const { data: eventos = [], isLoading } = useQuery({
+    queryKey: ['tracking-eventos', nota?.id],
+    queryFn: async (): Promise<TrackingEvento[]> => {
+      if (!nota) return [];
+      const { data, error } = await (supabase as any)
+        .from('nfe_entrada_tracking_eventos')
+        .select('id, data_evento, status, local, descricao, fonte')
+        .eq('nfe_entrada_id', nota.id)
+        .order('data_evento', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as TrackingEvento[];
+    },
+    enabled: !!nota,
+    staleTime: 10_000,
+  });
+
+  if (!nota) return null;
+
+  return (
+    <Dialog open={!!nota} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            NF {nota.numero ?? '—'}/{nota.serie ?? '—'}
+            <StatusBadge tone={TRACKING_TONE[nota.tracking_status]} label={TRACKING_LABEL[nota.tracking_status]} />
+          </DialogTitle>
+          <DialogDescription className="font-mono text-[11px] break-all">{nota.chave_acesso}</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <InfoBlock label="Emitente" value={nota.nome_emitente} />
+          <InfoBlock label="Transportadora" value={nota.transportadora} />
+          <InfoBlock label="Emissão" value={nota.data_emissao ? new Date(nota.data_emissao).toLocaleString('pt-BR') : null} />
+          <InfoBlock label="Valor" value={(nota.valor_total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+          <InfoBlock label="Provedor" value={nota.tracking_provider?.toUpperCase() ?? null} />
+          <InfoBlock label="Última sync" value={nota.tracking_last_sync_at ? new Date(nota.tracking_last_sync_at).toLocaleString('pt-BR') : null} />
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          <h3 className="text-sm font-medium">Linha do tempo</h3>
+          <Button size="sm" variant="outline" onClick={() => onAtualizar(nota.id)} disabled={refreshing} className="gap-1">
+            {refreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Atualizar
+          </Button>
+        </div>
+
+        <ScrollArea className="max-h-[45vh] pr-3">
+          {isLoading ? (
+            <div className="py-8 flex justify-center"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+          ) : eventos.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">
+              Nenhum evento de rastreio ainda. Clique em "Atualizar" para consultar o provedor.
+            </p>
+          ) : (
+            <ol className="relative border-l border-border ml-2 space-y-4 py-2">
+              {eventos.map((ev) => (
+                <li key={ev.id} className="ml-4">
+                  <span className="absolute -left-1.5 w-3 h-3 rounded-full bg-primary" aria-hidden />
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {new Date(ev.data_evento).toLocaleString('pt-BR')}
+                    {ev.status && (
+                      <StatusBadge
+                        tone={TRACKING_TONE[(ev.status as TrackingStatus) ?? 'DESCONHECIDO'] ?? 'neutral'}
+                        label={TRACKING_LABEL[(ev.status as TrackingStatus) ?? 'DESCONHECIDO'] ?? ev.status}
+                      />
+                    )}
+                  </div>
+                  {ev.descricao && <p className="text-sm mt-0.5">{ev.descricao}</p>}
+                  {ev.local && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3" /> {ev.local}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InfoBlock({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm">{value ?? '—'}</p>
+    </div>
+  );
+}
+
