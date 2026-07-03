@@ -137,7 +137,12 @@ Deno.serve(async (req) => {
 
     for (const t of targets) {
       try {
-        const { eventos, raw } = await fetchSSW(t.chave_acesso);
+        let provider: 'ssw' | 'seurastreio' = 'ssw';
+        let { eventos } = await fetchSSW(t.chave_acesso).catch(() => ({ eventos: [] as SswEvento[] }));
+        if (eventos.length === 0) {
+          const fb = await fetchSeuRastreio(t.chave_acesso);
+          if (fb && fb.eventos.length > 0) { eventos = fb.eventos; provider = 'seurastreio'; }
+        }
         let latestStatus: TrackingStatus = 'DESCONHECIDO';
         let latestAt = new Date(0);
 
@@ -153,10 +158,11 @@ Deno.serve(async (req) => {
             status,
             local: [ev.cidade, ev.filial].filter(Boolean).join(' - ') || null,
             descricao: [ev.ocorrencia, ev.descricao].filter(Boolean).join(' — ') || null,
-            fonte: 'ssw',
+            fonte: provider,
             raw: ev as any,
           }, { onConflict: 'nfe_entrada_id,data_evento,status,descricao', ignoreDuplicates: true });
         }
+
 
         await supabase.from('nfe_entrada').update({
           tracking_status: latestStatus,
