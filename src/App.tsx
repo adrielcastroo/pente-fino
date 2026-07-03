@@ -195,10 +195,11 @@ const App = () => (
                   <Route path="configuracoes" element={<SettingsPage />} />
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
-                  
-                  <Route path="tracking" element={<ExpedicaoNFeEntradaPage />} />
+
                   <Route path="rastreio-nfe" element={<ExpedicaoRastreioNFePage />} />
-                  <Route path="nfe-entrada" element={<Navigate to="/expedicao/tracking" replace />} />
+                  <Route path="tracking" element={<Navigate to="/expedicao/rastreio-nfe" replace />} />
+                  <Route path="nfe-entrada" element={<Navigate to="/expedicao/rastreio-nfe" replace />} />
+
 
                 </Route>
 
