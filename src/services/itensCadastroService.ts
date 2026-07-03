@@ -156,11 +156,22 @@ export const itensCadastroService = {
       timeoutMs?: number;
       onProgress?: (done: number, total: number) => void;
       signal?: AbortSignal;
+      /** Se true (padrão), pula códigos internos já cadastrados e retorna diffs de descrição. */
+      skipExisting?: boolean;
     },
-  ): Promise<{ count: number }> {
-    if (!inputs.length) return { count: 0 };
+  ): Promise<{
+    count: number;
+    inserted: number;
+    skipped: number;
+    duplicatesInFile: number;
+    descChanges: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }>;
+  }> {
+    if (!inputs.length) {
+      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, descChanges: [] };
+    }
     // Mescla linhas duplicadas por codigo_interno (acumula códigos de fornecedor)
     const map = new Map<string, ItemCadastroInput>();
+    let duplicatesInFile = 0;
     for (const it of inputs) {
       const key = (it.codigo_interno || '').trim();
       if (!key) continue;
@@ -168,15 +179,51 @@ export const itensCadastroService = {
       if (!cur) {
         map.set(key, { ...it, codigos_fornecedor: [...(it.codigos_fornecedor || [])] });
       } else {
+        duplicatesInFile++;
         cur.descricao = cur.descricao || it.descricao;
         cur.codigos_fornecedor = [...(cur.codigos_fornecedor || []), ...(it.codigos_fornecedor || [])];
       }
     }
-    const payload = Array.from(map.values()).map(prepare);
 
+    const skipExisting = opts?.skipExisting !== false;
+    const descChanges: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }> = [];
+    let skipped = 0;
+    let toInsert = Array.from(map.values());
+
+    if (skipExisting) {
+      // Busca códigos internos existentes em lotes (evita URL gigante)
+      const keys = toInsert.map((i) => i.codigo_interno.trim());
+      const existing = new Map<string, string>(); // codigo_interno -> descricao
+      const lookupChunk = 500;
+      for (let i = 0; i < keys.length; i += lookupChunk) {
+        const slice = keys.slice(i, i + lookupChunk);
+        const { data, error } = await supabase
+          .from('itens_cadastro')
+          .select('codigo_interno, descricao')
+          .in('codigo_interno', slice);
+        if (error) throw new Error(`Falha ao verificar cadastros existentes: ${error.message}`);
+        for (const r of data || []) existing.set(r.codigo_interno, r.descricao || '');
+      }
+      const kept: ItemCadastroInput[] = [];
+      for (const it of toInsert) {
+        const old = existing.get(it.codigo_interno.trim());
+        if (old !== undefined) {
+          skipped++;
+          const newDesc = (it.descricao || '').trim();
+          if (newDesc && newDesc !== (old || '').trim()) {
+            descChanges.push({ codigo_interno: it.codigo_interno.trim(), oldDesc: old, newDesc });
+          }
+        } else {
+          kept.push(it);
+        }
+      }
+      toInsert = kept;
+    }
+
+    const payload = toInsert.map(prepare);
     const chunkSize = Math.max(1, opts?.chunkSize ?? 200);
     const timeoutMs = opts?.timeoutMs ?? 30_000;
-    let total = 0;
+    let inserted = 0;
 
     for (let i = 0; i < payload.length; i += chunkSize) {
       if (opts?.signal?.aborted) throw new Error('Importação cancelada pelo usuário.');
@@ -191,7 +238,7 @@ export const itensCadastroService = {
       let timer: any;
       const timeout = new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error(`Timeout: lote ${chunkIndex}/${totalChunks} (${chunk.length} itens) não respondeu em ${Math.round(timeoutMs / 1000)}s. Verifique sua conexão e tente reduzir o tamanho do arquivo.`)),
+          () => reject(new Error(`Timeout: lote ${chunkIndex}/${totalChunks} (${chunk.length} itens) não respondeu em ${Math.round(timeoutMs / 1000)}s.`)),
           timeoutMs,
         );
       });
@@ -200,24 +247,32 @@ export const itensCadastroService = {
         const { error, count } = (await Promise.race([req, timeout])) as any;
         clearTimeout(timer);
         if (error) {
-          const details = [
-            `Falha no lote ${chunkIndex}/${totalChunks} (itens ${i + 1}–${i + chunk.length}).`,
-            error.message ? `Motivo: ${error.message}` : null,
-            (error as any).details ? `Detalhes: ${(error as any).details}` : null,
-            (error as any).hint ? `Sugestão: ${(error as any).hint}` : null,
-          ]
-            .filter(Boolean)
-            .join(' ');
-          throw new Error(details);
+          throw new Error(
+            `Falha no lote ${chunkIndex}/${totalChunks} (itens ${i + 1}–${i + chunk.length}). ${error.message || ''}`.trim(),
+          );
         }
-        total += count ?? chunk.length;
+        inserted += count ?? chunk.length;
         opts?.onProgress?.(Math.min(i + chunk.length, payload.length), payload.length);
       } catch (e) {
         clearTimeout(timer);
         throw e;
       }
     }
-    return { count: total };
+    return { count: inserted, inserted, skipped, duplicatesInFile, descChanges };
+  },
+
+  async bulkUpdateDescricoes(items: Array<{ codigo_interno: string; descricao: string }>): Promise<{ count: number }> {
+    if (!items.length) return { count: 0 };
+    let count = 0;
+    for (const it of items) {
+      const { error } = await supabase
+        .from('itens_cadastro')
+        .update({ descricao: it.descricao })
+        .eq('codigo_interno', it.codigo_interno);
+      if (error) throw new Error(`Falha ao atualizar ${it.codigo_interno}: ${error.message}`);
+      count++;
+    }
+    return { count };
   },
 
   async remove(id: string): Promise<void> {
