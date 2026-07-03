@@ -98,12 +98,14 @@ export default function PainelPage() {
         <StatCard
           label="Atenção"
           value={kpis.atencao}
-          variant={kpis.atencao > 0 ? 'warning' : 'default'}
+          icon={kpis.atencao > 0 ? AlertTriangle : CheckCircle2}
+          variant={kpis.atencao > 0 ? 'warning' : 'success'}
         />
         <StatCard
           label="Atrasados"
           value={kpis.atrasados}
-          variant={kpis.atrasados > 0 ? 'destructive' : 'default'}
+          icon={kpis.atrasados > 0 ? AlertOctagon : CheckCircle2}
+          variant={kpis.atrasados > 0 ? 'destructive' : 'success'}
         />
       </div>
 
