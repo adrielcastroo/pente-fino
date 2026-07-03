@@ -41,10 +41,13 @@ async function logConsulta(nfe: NFeData, tipo: 'emitido' | 'recebido') {
   }
 }
 
+const MAX_XML_BYTES = 10 * 1024 * 1024; // 10 MB
+
 export default function RastreioNFePage() {
   const [xmlText, setXmlText] = useState('');
   const [nfe, setNfe] = useState<NFeData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const processarXml = useCallback((xml: string) => {
@@ -65,6 +68,12 @@ export default function RastreioNFePage() {
 
   const onFile = useCallback(async (f: File | null) => {
     if (!f) return;
+    if (f.size > MAX_XML_BYTES) {
+      const msg = `Arquivo excede o limite de ${(MAX_XML_BYTES / 1024 / 1024).toFixed(0)} MB.`;
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     const text = await f.text();
     setXmlText(text);
     processarXml(text);
@@ -76,6 +85,7 @@ export default function RastreioNFePage() {
     setError(null);
     if (fileRef.current) fileRef.current.value = '';
   };
+
 
   const totalItens = useMemo(() => nfe?.itens.length ?? 0, [nfe]);
 
