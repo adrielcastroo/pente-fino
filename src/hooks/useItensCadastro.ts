@@ -28,7 +28,20 @@ export function useUpsertItemCadastro() {
 export function useBulkUpsertItensCadastro() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (inputs: ItemCadastroInput[]) => itensCadastroService.bulkUpsert(inputs),
+    mutationFn: (
+      vars:
+        | ItemCadastroInput[]
+        | {
+            inputs: ItemCadastroInput[];
+            onProgress?: (done: number, total: number) => void;
+            signal?: AbortSignal;
+          },
+    ) => {
+      const isWrapped = !Array.isArray(vars);
+      const inputs = isWrapped ? vars.inputs : vars;
+      const opts = isWrapped ? { onProgress: vars.onProgress, signal: vars.signal } : undefined;
+      return itensCadastroService.bulkUpsert(inputs, opts);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
