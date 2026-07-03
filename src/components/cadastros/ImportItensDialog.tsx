@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import * as XLSX from 'xlsx';
+import { List, type RowComponentProps } from 'react-window';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,7 @@ import { useBulkUpsertItensCadastro } from '@/hooks/useItensCadastro';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, AlertCircle, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import XlsxWorker from '@/workers/xlsxParser.worker.ts?worker';
 
 interface Row {
   codigo_interno: string;
@@ -78,6 +79,38 @@ function dedupeCodes(list: string[]): string[] {
   return out;
 }
 
+type RowProps = {
+  rows: Row[];
+  updateCodigosText: (idx: number, text: string) => void;
+  removeRow: (idx: number) => void;
+};
+
+function ImportRow({ index, style, rows, updateCodigosText, removeRow }: RowComponentProps<RowProps>) {
+  const r = rows[index];
+  if (!r) return null;
+  return (
+    <div
+      style={style}
+      className="grid grid-cols-[180px_1fr_260px_60px] gap-2 px-3 items-center border-b text-xs"
+    >
+      <div className="font-mono truncate" title={r.codigo_interno}>{r.codigo_interno}</div>
+      <div className="truncate" title={r.descricao}>{r.descricao}</div>
+      <div className="flex items-center gap-1">
+        <Input
+          value={r.codigos_fornecedor.join('; ')}
+          onChange={(e) => updateCodigosText(index, e.target.value)}
+          className="h-8 font-mono text-xs"
+          placeholder="—"
+        />
+        {r.detectado && <Badge variant="outline" className="text-[9px] px-1">auto</Badge>}
+      </div>
+      <div>
+        <Button variant="ghost" size="sm" onClick={() => removeRow(index)} className="h-7 text-xs">×</Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ImportItensDialog({ open, onOpenChange }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
   const [fileName, setFileName] = useState('');
@@ -93,66 +126,35 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
   } | null>(null);
   const [updatingDesc, setUpdatingDesc] = useState(false);
 
+  const [parsing, setParsing] = useState(false);
+
   const handleFile = async (file: File) => {
     setErrorMsg(null);
     setFileName(file.name);
+    setParsing(true);
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const json: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-      if (!json.length) {
-        toast.error('Planilha vazia');
+      const worker = new XlsxWorker();
+      const result: any = await new Promise((resolve, reject) => {
+        worker.onmessage = (ev) => resolve(ev.data);
+        worker.onerror = (err) => reject(err);
+        worker.postMessage({ buffer: buf }, [buf]);
+      });
+      worker.terminate();
+      if (!result?.ok) {
+        toast.error(result?.error || 'Falha ao ler planilha');
         return;
       }
-
-      const headers = Array.from(new Set(json.slice(0, 20).flatMap((r) => Object.keys(r))));
-      const kInterno = findKey(headers, HEADER_ALIASES.codigo_interno);
-      const kDesc = findKey(headers, HEADER_ALIASES.descricao);
-      const kForn = findKey(headers, HEADER_ALIASES.codigo_fornecedor);
-
-      if (!kInterno) {
-        toast.error('Planilha precisa ter ao menos a coluna: codigo_interno');
-        return;
-      }
-
-      // Mescla múltiplas linhas com mesmo codigo_interno.
-      // Campos em branco são preservados como string vazia (não invalidam a linha).
-      const byInterno = new Map<string, Row>();
-      let ignoradas = 0;
-      for (const r of json) {
-        const codigo_interno = String(r[kInterno] ?? '').trim();
-        if (!codigo_interno) {
-          ignoradas++;
-          continue;
-        }
-        const descricao = kDesc ? String(r[kDesc] ?? '').trim() : '';
-        const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
-        const codigos = splitCodes(fornRaw);
-        const detectado = false;
-        const existing = byInterno.get(codigo_interno);
-        if (existing) {
-          existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
-          if (!existing.descricao && descricao) existing.descricao = descricao;
-        } else {
-          byInterno.set(codigo_interno, {
-            codigo_interno,
-            descricao,
-            codigos_fornecedor: dedupeCodes(codigos),
-            detectado,
-          });
-        }
-      }
-
-      const parsed = Array.from(byInterno.values());
+      const parsed: Row[] = result.rows;
       setRows(parsed);
       toast.success(
-        `${parsed.length} itens carregados${ignoradas ? ` (${ignoradas} linhas sem código interno ignoradas)` : ''}`,
+        `${parsed.length} itens carregados${result.ignoradas ? ` (${result.ignoradas} linhas sem código interno ignoradas)` : ''}`,
       );
     } catch (e: any) {
       setErrorMsg(`Falha ao ler planilha: ${e?.message || e}`);
       toast.error('Não foi possível ler a planilha');
+    } finally {
+      setParsing(false);
     }
   };
 
@@ -383,49 +385,27 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           )}
         </div>
 
+        {parsing && (
+          <div className="text-xs text-muted-foreground">Processando planilha em segundo plano…</div>
+        )}
+
         {rows.length > 0 && (
-          <div className="flex-1 overflow-auto border rounded-md">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  <TableHead className="w-[180px]">Código interno</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="w-[260px]">Códigos fornecedor (; ou |)</TableHead>
-                  <TableHead className="w-[60px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.slice(0, 200).map((r, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell className="font-mono text-xs">{r.codigo_interno}</TableCell>
-                    <TableCell className="text-xs max-w-md truncate" title={r.descricao}>
-                      {r.descricao}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Input
-                          value={r.codigos_fornecedor.join('; ')}
-                          onChange={(e) => updateCodigosText(idx, e.target.value)}
-                          className="h-8 font-mono text-xs"
-                          placeholder="—"
-                        />
-                        {r.detectado && (
-                          <Badge variant="outline" className="text-[9px] px-1">auto</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => removeRow(idx)} className="h-7 text-xs">×</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {rows.length > 200 && (
-              <div className="p-2 text-xs text-center text-muted-foreground">
-                ...e mais {rows.length - 200} linhas (todas serão importadas)
-              </div>
-            )}
+          <div className="flex-1 flex flex-col border rounded-md overflow-hidden min-h-[300px]">
+            <div className="grid grid-cols-[180px_1fr_260px_60px] gap-2 px-3 py-2 border-b bg-muted/40 text-xs font-medium">
+              <div>Código interno</div>
+              <div>Descrição</div>
+              <div>Códigos fornecedor (; ou |)</div>
+              <div />
+            </div>
+            <div className="flex-1">
+              <List
+                rowCount={rows.length}
+                rowHeight={40}
+                rowComponent={ImportRow}
+                rowProps={{ rows, updateCodigosText, removeRow }}
+                style={{ height: '100%', width: '100%' }}
+              />
+            </div>
           </div>
         )}
 
