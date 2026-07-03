@@ -318,15 +318,34 @@ function NotaRow({
   return (
     <li className="p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="font-mono font-medium">NF {nota.numero ?? '—'}/{nota.serie ?? '—'}</span>
+        <button onClick={onDetalhes} className="font-mono font-medium hover:underline text-left">
+          NF {nota.numero ?? '—'}/{nota.serie ?? '—'}
+        </button>
+        <StatusBadge tone={TRACKING_TONE[nota.tracking_status]} label={TRACKING_LABEL[nota.tracking_status]} />
         <StatusBadge tone={SITUACAO_TONE[nota.situacao_manifestacao]} label={SITUACAO_LABEL[nota.situacao_manifestacao]} />
         <span className="text-muted-foreground truncate">{nota.nome_emitente ?? '—'}</span>
+        {nota.transportadora && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Truck className="w-3 h-3" /> {nota.transportadora}
+          </span>
+        )}
         <span className="ml-auto tabular-nums text-muted-foreground">
           {(nota.valor_total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
         </span>
       </div>
       <p className="font-mono text-[11px] text-muted-foreground break-all">{nota.chave_acesso}</p>
+      {nota.tracking_last_sync_at && (
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <Clock className="w-3 h-3" /> Sincronizado {new Date(nota.tracking_last_sync_at).toLocaleString('pt-BR')}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 pt-1">
+        <Button size="sm" variant="outline" onClick={onAtualizarRastreio} disabled={refreshingRastreio} className="gap-1">
+          {refreshingRastreio ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Atualizar rastreio
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDetalhes}>Detalhes</Button>
+
         <Select value={tipo} onValueChange={(v) => setTipo(v as Situacao)}>
           <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
