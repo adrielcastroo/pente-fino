@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
 
         await supabase.from('nfe_entrada').update({
           tracking_status: latestStatus,
-          tracking_provider: 'ssw',
+          tracking_provider: provider,
           tracking_last_sync_at: new Date().toISOString(),
         }).eq('id', t.id);
 
