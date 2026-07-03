@@ -57,9 +57,23 @@ export default function MainLayout({
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const location = useLocation();
+  const navigate = useNavigate();
   usePresenceTracker();
   useNetworkStatus();
   useUserScopedPrefs();
+
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  useKeyboardShortcuts({
+    shortcutsOpen,
+    setShortcutsOpen,
+    configOpen: false,
+    setConfigOpen: (open) => {
+      if (open) {
+        const isExpedicao = location.pathname.startsWith('/expedicao');
+        navigate(isExpedicao ? '/expedicao/configuracoes' : '/estoque/configuracoes');
+      }
+    },
+  });
 
   const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
   const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
