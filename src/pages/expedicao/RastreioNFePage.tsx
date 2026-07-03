@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Upload, FileText, AlertCircle, CheckCircle2, Trash2, RefreshCw, Truck } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle2, Trash2, RefreshCw, Truck, PlusCircle } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { parseNFeXML, formatBRL, type NFeData } from '@/lib/nfe-parser';
 
