@@ -79,6 +79,38 @@ function dedupeCodes(list: string[]): string[] {
   return out;
 }
 
+type RowProps = {
+  rows: Row[];
+  updateCodigosText: (idx: number, text: string) => void;
+  removeRow: (idx: number) => void;
+};
+
+function ImportRow({ index, style, rows, updateCodigosText, removeRow }: RowComponentProps<RowProps>) {
+  const r = rows[index];
+  if (!r) return null;
+  return (
+    <div
+      style={style}
+      className="grid grid-cols-[180px_1fr_260px_60px] gap-2 px-3 items-center border-b text-xs"
+    >
+      <div className="font-mono truncate" title={r.codigo_interno}>{r.codigo_interno}</div>
+      <div className="truncate" title={r.descricao}>{r.descricao}</div>
+      <div className="flex items-center gap-1">
+        <Input
+          value={r.codigos_fornecedor.join('; ')}
+          onChange={(e) => updateCodigosText(index, e.target.value)}
+          className="h-8 font-mono text-xs"
+          placeholder="—"
+        />
+        {r.detectado && <Badge variant="outline" className="text-[9px] px-1">auto</Badge>}
+      </div>
+      <div>
+        <Button variant="ghost" size="sm" onClick={() => removeRow(index)} className="h-7 text-xs">×</Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ImportItensDialog({ open, onOpenChange }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
   const [fileName, setFileName] = useState('');
