@@ -1123,6 +1123,51 @@ export type Database = {
           },
         ]
       }
+      import_log: {
+        Row: {
+          atualizados: number
+          created_at: string
+          detalhes: Json | null
+          erro: string | null
+          file_name: string | null
+          id: string
+          ignorados: number
+          inseridos: number
+          resultado: string
+          total_linhas: number
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          atualizados?: number
+          created_at?: string
+          detalhes?: Json | null
+          erro?: string | null
+          file_name?: string | null
+          id?: string
+          ignorados?: number
+          inseridos?: number
+          resultado: string
+          total_linhas?: number
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          atualizados?: number
+          created_at?: string
+          detalhes?: Json | null
+          erro?: string | null
+          file_name?: string | null
+          id?: string
+          ignorados?: number
+          inseridos?: number
+          resultado?: string
+          total_linhas?: number
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       independent_reservations: {
         Row: {
           caixa_num: string | null
@@ -1503,6 +1548,48 @@ export type Database = {
           quantidade?: number | null
           status_integracao?: string | null
           tipo_estoque?: string | null
+        }
+        Relationships: []
+      }
+      nfe_consulta_log: {
+        Row: {
+          cache_hit: boolean
+          chave_acesso: string | null
+          cnpj: string
+          created_at: string
+          detalhes: Json | null
+          id: string
+          motivo: string | null
+          status: string | null
+          tipo: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cache_hit?: boolean
+          chave_acesso?: string | null
+          cnpj: string
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          motivo?: string | null
+          status?: string | null
+          tipo: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cache_hit?: boolean
+          chave_acesso?: string | null
+          cnpj?: string
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          motivo?: string | null
+          status?: string | null
+          tipo?: string
+          user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
