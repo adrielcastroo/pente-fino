@@ -25,18 +25,29 @@ interface Props {
 }
 
 const HEADER_ALIASES: Record<string, string[]> = {
-  codigo_interno: ['codigo_interno', 'codigo interno', 'cod interno', 'codigo', 'cod', 'sku'],
-  descricao: ['descricao', 'descrição', 'descricao_completa', 'descrição do item', 'descricao do item', 'descricao completa'],
-  codigo_fornecedor: ['codigo_fornecedor', 'codigo fornecedor', 'cod fornecedor', 'codigo do fornecedor', 'codigos_fornecedor', 'codigos fornecedor', 'referencia', 'referência'],
+  codigo_interno: [
+    'codigo_interno', 'codigo interno', 'cod interno', 'codigo', 'cod', 'sku',
+    'n do item', 'no do item', 'numero do item', 'num do item', 'item',
+    'n item', 'no item', 'numero item',
+  ],
+  descricao: [
+    'descricao', 'descrição', 'descricao_completa', 'descrição do item',
+    'descricao do item', 'descricao completa', 'descricao do produto', 'produto',
+  ],
+  codigo_fornecedor: [
+    'codigo_fornecedor', 'codigo fornecedor', 'cod fornecedor', 'codigo do fornecedor',
+    'codigos_fornecedor', 'codigos fornecedor', 'referencia', 'referência', 'ref',
+  ],
 };
 
 function findKey(headers: string[], aliases: string[]): string | null {
   const norm = (s: string) =>
-    s
+    (s || '')
+      .toString()
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[_\-.]/g, ' ')
+      .replace(/[^a-z0-9\s]/g, ' ') // remove º, #, ., _, -, etc.
       .replace(/\s+/g, ' ')
       .trim();
   const wanted = new Set(aliases.map(norm));
