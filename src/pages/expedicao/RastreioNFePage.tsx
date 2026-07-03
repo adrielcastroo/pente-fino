@@ -234,7 +234,39 @@ export default function RastreioNFePage() {
             <CheckCircle2 className="w-5 h-5 text-success" />
             <span className="font-medium">NF-e {nfe.numero} — Série {nfe.serie}</span>
             <Badge variant="secondary">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</Badge>
+            {trackingStatus && <Badge variant="outline" className="gap-1"><Truck className="w-3 h-3" /> {trackingStatus}</Badge>}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={atualizarRastreio}
+              disabled={tracking || !nfe.chaveAcesso}
+              className="ml-auto gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${tracking ? 'animate-spin' : ''}`} />
+              Atualizar rastreamento
+            </Button>
           </div>
+
+          {eventos.length > 0 && (
+            <div className="border border-border rounded-md">
+              <div className="px-3 py-1.5 text-xs font-medium bg-muted/40 border-b border-border">
+                Eventos de rastreamento ({eventos.length})
+              </div>
+              <ul className="divide-y divide-border max-h-64 overflow-y-auto">
+                {eventos.map((ev) => (
+                  <li key={ev.id} className="px-3 py-2 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium">{ev.status}</span>
+                      <span className="text-muted-foreground">{new Date(ev.data_evento).toLocaleString('pt-BR')}</span>
+                    </div>
+                    {ev.descricao && <div className="text-muted-foreground">{ev.descricao}</div>}
+                    {ev.local && <div className="text-muted-foreground">{ev.local}</div>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
 
           <dl className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <div><dt className="text-muted-foreground text-xs">Chave de acesso</dt><dd className="font-mono text-xs break-all">{nfe.chaveAcesso || '—'}</dd></div>
