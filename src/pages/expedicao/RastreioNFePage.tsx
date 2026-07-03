@@ -137,7 +137,14 @@ export default function RastreioNFePage() {
           });
         }
       } catch { /* auditoria não bloqueia */ }
-      if (!silent) toast.success(`Rastreio atualizado: ${r?.eventos ?? 0} evento(s) — status ${r?.status ?? '—'}.`);
+      if (!silent) {
+        const eventosAtualizados = r?.eventos ?? 0;
+        if (eventosAtualizados === 0 && r?.message) {
+          toast.warning(`Rastreio consultado, mas nenhum evento foi localizado. ${r.message}`);
+        } else {
+          toast.success(`Rastreio atualizado: ${eventosAtualizados} evento(s) — status ${r?.status ?? '—'}.`);
+        }
+      }
       await carregarEventos(nfe.chaveAcesso);
     } catch (e: any) {
       if (!silent) toast.error(e?.message || 'Falha ao consultar rastreio.');

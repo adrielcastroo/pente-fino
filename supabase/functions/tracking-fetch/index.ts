@@ -20,6 +20,12 @@ interface SswEvento {
   dominio?: string;
 }
 
+interface ProviderResult {
+  eventos: SswEvento[];
+  raw: unknown;
+  message?: string;
+}
+
 function normalizeStatus(ocorrencia: string, descricao: string): TrackingStatus {
   const s = `${ocorrencia} ${descricao}`.toLowerCase();
   if (/entregue|entrega efetuada|finalizad/i.test(s)) return 'ENTREGUE';
@@ -42,7 +48,7 @@ function parseSswDate(d?: string): string {
   return new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:00-03:00`).toISOString();
 }
 
-async function fetchSSW(chave: string): Promise<{ eventos: SswEvento[]; raw: unknown }> {
+async function fetchSSW(chave: string): Promise<ProviderResult> {
   const res = await fetch('https://ssw.inf.br/api/trackingdanfe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -52,7 +58,11 @@ async function fetchSSW(chave: string): Promise<{ eventos: SswEvento[]; raw: unk
   let data: any;
   try { data = JSON.parse(text); } catch { data = { raw: text }; }
   if (!res.ok || data?.success === false) {
-    throw new Error(data?.message ?? `SSW erro ${res.status}`);
+    return {
+      eventos: [],
+      raw: data,
+      message: data?.message ?? `SSW retornou ${res.status}`,
+    };
   }
   // SSW normalmente devolve { success: true, documento: { tracking: [...] } }
   const list: SswEvento[] =
@@ -62,13 +72,20 @@ async function fetchSSW(chave: string): Promise<{ eventos: SswEvento[]; raw: unk
   return { eventos: Array.isArray(list) ? list : [], raw: data };
 }
 
-async function fetchSeuRastreio(chave: string): Promise<{ eventos: SswEvento[]; raw: unknown } | null> {
+async function fetchSeuRastreio(chave: string): Promise<ProviderResult | null> {
   const token = Deno.env.get('SEURASTREIO_TOKEN');
-  if (!token) return null;
+  if (!token) return { eventos: [], raw: null, message: 'SEURASTREIO_TOKEN não configurado' };
   const res = await fetch(`https://api.seurastreio.com.br/v1/rastreios/${chave}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    return {
+      eventos: [],
+      raw: detail,
+      message: `Seu Rastreio retornou ${res.status}`,
+    };
+  }
   const data = await res.json().catch(() => null);
   const list = data?.eventos ?? data?.tracking ?? [];
   const eventos: SswEvento[] = (Array.isArray(list) ? list : []).map((e: any) => ({
@@ -78,7 +95,7 @@ async function fetchSeuRastreio(chave: string): Promise<{ eventos: SswEvento[]; 
     cidade: e.cidade ?? e.local,
     filial: e.uf ?? '',
   }));
-  return { eventos, raw: data };
+  return { eventos, raw: data, message: eventos.length === 0 ? 'Seu Rastreio não retornou eventos para esta chave' : undefined };
 }
 
 Deno.serve(async (req) => {
@@ -147,14 +164,18 @@ Deno.serve(async (req) => {
       throw new Error('Informe nfeEntradaId, chave ou all=true');
     }
 
-    const results: Array<{ id: string; status: TrackingStatus; eventos: number; error?: string }> = [];
+    const results: Array<{ id: string; status: TrackingStatus; eventos: number; provider?: string; message?: string; error?: string }> = [];
 
     for (const t of targets) {
       try {
         let provider: 'ssw' | 'seurastreio' = 'ssw';
-        let { eventos } = await fetchSSW(t.chave_acesso).catch(() => ({ eventos: [] as SswEvento[] }));
+        const diagnostics: string[] = [];
+        const sswResult = await fetchSSW(t.chave_acesso);
+        let eventos = sswResult.eventos;
+        if (sswResult.message) diagnostics.push(`SSW: ${sswResult.message}`);
         if (eventos.length === 0) {
           const fb = await fetchSeuRastreio(t.chave_acesso);
+          if (fb?.message) diagnostics.push(`Seu Rastreio: ${fb.message}`);
           if (fb && fb.eventos.length > 0) { eventos = fb.eventos; provider = 'seurastreio'; }
         }
         let latestStatus: TrackingStatus = 'DESCONHECIDO';
@@ -166,7 +187,7 @@ Deno.serve(async (req) => {
           const dt = new Date(dataIso);
           if (dt > latestAt) { latestAt = dt; latestStatus = status; }
 
-          await supabase.from('nfe_entrada_tracking_eventos').upsert({
+          const { error: eventErr } = await supabase.from('nfe_entrada_tracking_eventos').upsert({
             nfe_entrada_id: t.id,
             data_evento: dataIso,
             status,
@@ -175,16 +196,26 @@ Deno.serve(async (req) => {
             fonte: provider,
             raw: ev as any,
           }, { onConflict: 'nfe_entrada_id,data_evento,status,descricao', ignoreDuplicates: true });
+          if (eventErr) throw new Error(`Falha ao gravar evento: ${eventErr.message}`);
         }
 
 
-        await supabase.from('nfe_entrada').update({
+        const { error: updateErr } = await supabase.from('nfe_entrada').update({
           tracking_status: latestStatus,
           tracking_provider: provider,
           tracking_last_sync_at: new Date().toISOString(),
         }).eq('id', t.id);
+        if (updateErr) throw new Error(`Falha ao atualizar NF-e: ${updateErr.message}`);
 
-        results.push({ id: t.id, status: latestStatus, eventos: eventos.length });
+        results.push({
+          id: t.id,
+          status: latestStatus,
+          eventos: eventos.length,
+          provider,
+          message: eventos.length === 0
+            ? diagnostics.join(' | ') || 'Nenhum evento encontrado nos provedores de rastreio'
+            : undefined,
+        });
       } catch (e) {
         // marca sync mesmo em erro para não repetir imediatamente
         await supabase.from('nfe_entrada').update({
