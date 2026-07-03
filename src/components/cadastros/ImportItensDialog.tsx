@@ -63,61 +63,78 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
   const [fileName, setFileName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const bulk = useBulkUpsertItensCadastro();
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const handleFile = async (file: File) => {
+    setErrorMsg(null);
     setFileName(file.name);
-    const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const json: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
-    if (!json.length) {
-      toast.error('Planilha vazia');
-      return;
-    }
+      if (!json.length) {
+        toast.error('Planilha vazia');
+        return;
+      }
 
-    const headers = Object.keys(json[0]);
-    const kInterno = findKey(headers, HEADER_ALIASES.codigo_interno);
-    const kDesc = findKey(headers, HEADER_ALIASES.descricao);
-    const kForn = findKey(headers, HEADER_ALIASES.codigo_fornecedor);
+      const headers = Object.keys(json[0]);
+      const kInterno = findKey(headers, HEADER_ALIASES.codigo_interno);
+      const kDesc = findKey(headers, HEADER_ALIASES.descricao);
+      const kForn = findKey(headers, HEADER_ALIASES.codigo_fornecedor);
 
-    if (!kInterno || !kDesc) {
-      toast.error('Planilha precisa ter colunas: codigo_interno e descricao');
-      return;
-    }
+      if (!kInterno) {
+        toast.error('Planilha precisa ter ao menos a coluna: codigo_interno');
+        return;
+      }
 
-    // Mescla múltiplas linhas com mesmo codigo_interno
-    const byInterno = new Map<string, Row>();
-    for (const r of json) {
-      const codigo_interno = String(r[kInterno] ?? '').trim();
-      const descricao = String(r[kDesc] ?? '').trim();
-      if (!codigo_interno || !descricao) continue;
-      const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
-      let codigos = splitCodes(fornRaw);
-      let detectado = false;
-      if (!codigos.length) {
-        const ext = extractCodigoFornecedor(descricao);
-        if (ext) {
-          codigos = [ext.codigo];
-          detectado = true;
+      // Mescla múltiplas linhas com mesmo codigo_interno.
+      // Campos em branco são preservados como string vazia (não invalidam a linha).
+      const byInterno = new Map<string, Row>();
+      let ignoradas = 0;
+      for (const r of json) {
+        const codigo_interno = String(r[kInterno] ?? '').trim();
+        if (!codigo_interno) {
+          ignoradas++;
+          continue;
+        }
+        const descricao = kDesc ? String(r[kDesc] ?? '').trim() : '';
+        const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
+        let codigos = splitCodes(fornRaw);
+        let detectado = false;
+        if (!codigos.length && descricao) {
+          const ext = extractCodigoFornecedor(descricao);
+          if (ext) {
+            codigos = [ext.codigo];
+            detectado = true;
+          }
+        }
+        const existing = byInterno.get(codigo_interno);
+        if (existing) {
+          existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
+          if (!existing.descricao && descricao) existing.descricao = descricao;
+        } else {
+          byInterno.set(codigo_interno, {
+            codigo_interno,
+            descricao,
+            codigos_fornecedor: dedupeCodes(codigos),
+            detectado,
+          });
         }
       }
-      const existing = byInterno.get(codigo_interno);
-      if (existing) {
-        existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
-      } else {
-        byInterno.set(codigo_interno, {
-          codigo_interno,
-          descricao,
-          codigos_fornecedor: dedupeCodes(codigos),
-          detectado,
-        });
-      }
-    }
 
-    const parsed = Array.from(byInterno.values());
-    setRows(parsed);
-    toast.success(`${parsed.length} itens carregados`);
+      const parsed = Array.from(byInterno.values());
+      setRows(parsed);
+      toast.success(
+        `${parsed.length} itens carregados${ignoradas ? ` (${ignoradas} linhas sem código interno ignoradas)` : ''}`,
+      );
+    } catch (e: any) {
+      setErrorMsg(`Falha ao ler planilha: ${e?.message || e}`);
+      toast.error('Não foi possível ler a planilha');
+    }
   };
 
   const updateCodigosText = (idx: number, text: string) => {
@@ -134,26 +151,42 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
     setRows((rs) => rs.filter((_, i) => i !== idx));
   };
 
+  const handleCancel = () => {
+    abortRef.current?.abort();
+  };
+
   const handleImport = async () => {
-    const validRows = rows.filter((r) => r.codigo_interno && r.descricao);
+    setErrorMsg(null);
+    const validRows = rows.filter((r) => r.codigo_interno);
     if (!validRows.length) {
-      toast.error('Nenhuma linha válida');
+      toast.error('Nenhuma linha válida (código interno é obrigatório)');
       return;
     }
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setProgress({ done: 0, total: validRows.length });
     try {
-      const res = await bulk.mutateAsync(
-        validRows.map((r) => ({
+      const res = await bulk.mutateAsync({
+        inputs: validRows.map((r) => ({
           codigo_interno: r.codigo_interno,
           descricao: r.descricao,
           codigos_fornecedor: r.codigos_fornecedor,
         })),
-      );
+        signal: controller.signal,
+        onProgress: (done, total) => setProgress({ done, total }),
+      });
       toast.success(`${res.count} itens importados`);
       setRows([]);
       setFileName('');
+      setProgress(null);
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e?.message || 'Erro ao importar');
+      const msg = e?.message || 'Erro desconhecido ao importar';
+      setErrorMsg(msg);
+      toast.error('Importação interrompida — veja detalhes no diálogo');
+    } finally {
+      abortRef.current = null;
+      setProgress(null);
     }
   };
 
