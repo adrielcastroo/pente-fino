@@ -36,7 +36,19 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     reportCompressedSize: false,
     rollupOptions: {
-      output: {},
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("react-dom") || id.includes("react/") || id.includes("scheduler")) return "react-vendor";
+          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul") || id.includes("sonner")) return "ui-vendor";
+          if (id.includes("@supabase")) return "supabase-vendor";
+          if (id.includes("recharts") || id.includes("d3-")) return "charts-vendor";
+          if (id.includes("framer-motion")) return "motion-vendor";
+          if (id.includes("xlsx") || id.includes("exceljs")) return "xlsx-vendor";
+          if (id.includes("date-fns")) return "date-vendor";
+          if (id.includes("@tanstack")) return "query-vendor";
+        },
+      },
     },
   },
   plugins: [
