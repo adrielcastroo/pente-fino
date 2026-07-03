@@ -129,9 +129,19 @@ Deno.serve(async (req) => {
     } else if (chaveInput) {
       const clean = chaveInput.replace(/\D/g, '');
       if (clean.length !== 44) throw new Error('Chave deve ter 44 dígitos');
-      const { data } = await supabase
+      let { data } = await supabase
         .from('nfe_entrada').select('id, chave_acesso').eq('chave_acesso', clean).maybeSingle();
-      if (!data) throw new Error('NF-e ainda não registrada');
+      if (!data) {
+        // Auto-registra para permitir rastreio quando a NF-e ainda não está no banco
+        const cnpjEmit = clean.substring(6, 20);
+        const numero = clean.substring(25, 34).replace(/^0+/, '') || '0';
+        const { data: inserted, error: insErr } = await supabase
+          .from('nfe_entrada')
+          .insert({ chave_acesso: clean, cnpj_emitente: cnpjEmit, numero, origem: 'tracking_auto' })
+          .select('id, chave_acesso').single();
+        if (insErr) throw new Error(`Falha ao registrar NF-e: ${insErr.message}`);
+        data = inserted;
+      }
       targets = [data];
     } else {
       throw new Error('Informe nfeEntradaId, chave ou all=true');
