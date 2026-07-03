@@ -296,10 +296,16 @@ export default function NFeEntradaPage() {
 function NotaRow({
   nota,
   onManifestar,
+  onAtualizarRastreio,
+  onDetalhes,
+  refreshingRastreio,
   busy,
 }: {
   nota: NFeEntrada;
   onManifestar: (tipo: Situacao) => void;
+  onAtualizarRastreio: () => void;
+  onDetalhes: () => void;
+  refreshingRastreio: boolean;
   busy: boolean;
 }) {
   const [tipo, setTipo] = useState<Situacao>('ciencia');
