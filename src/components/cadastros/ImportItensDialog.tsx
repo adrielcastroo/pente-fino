@@ -94,66 +94,35 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
   } | null>(null);
   const [updatingDesc, setUpdatingDesc] = useState(false);
 
+  const [parsing, setParsing] = useState(false);
+
   const handleFile = async (file: File) => {
     setErrorMsg(null);
     setFileName(file.name);
+    setParsing(true);
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const json: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-      if (!json.length) {
-        toast.error('Planilha vazia');
+      const worker = new XlsxWorker();
+      const result: any = await new Promise((resolve, reject) => {
+        worker.onmessage = (ev) => resolve(ev.data);
+        worker.onerror = (err) => reject(err);
+        worker.postMessage({ buffer: buf }, [buf]);
+      });
+      worker.terminate();
+      if (!result?.ok) {
+        toast.error(result?.error || 'Falha ao ler planilha');
         return;
       }
-
-      const headers = Array.from(new Set(json.slice(0, 20).flatMap((r) => Object.keys(r))));
-      const kInterno = findKey(headers, HEADER_ALIASES.codigo_interno);
-      const kDesc = findKey(headers, HEADER_ALIASES.descricao);
-      const kForn = findKey(headers, HEADER_ALIASES.codigo_fornecedor);
-
-      if (!kInterno) {
-        toast.error('Planilha precisa ter ao menos a coluna: codigo_interno');
-        return;
-      }
-
-      // Mescla múltiplas linhas com mesmo codigo_interno.
-      // Campos em branco são preservados como string vazia (não invalidam a linha).
-      const byInterno = new Map<string, Row>();
-      let ignoradas = 0;
-      for (const r of json) {
-        const codigo_interno = String(r[kInterno] ?? '').trim();
-        if (!codigo_interno) {
-          ignoradas++;
-          continue;
-        }
-        const descricao = kDesc ? String(r[kDesc] ?? '').trim() : '';
-        const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
-        const codigos = splitCodes(fornRaw);
-        const detectado = false;
-        const existing = byInterno.get(codigo_interno);
-        if (existing) {
-          existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
-          if (!existing.descricao && descricao) existing.descricao = descricao;
-        } else {
-          byInterno.set(codigo_interno, {
-            codigo_interno,
-            descricao,
-            codigos_fornecedor: dedupeCodes(codigos),
-            detectado,
-          });
-        }
-      }
-
-      const parsed = Array.from(byInterno.values());
+      const parsed: Row[] = result.rows;
       setRows(parsed);
       toast.success(
-        `${parsed.length} itens carregados${ignoradas ? ` (${ignoradas} linhas sem código interno ignoradas)` : ''}`,
+        `${parsed.length} itens carregados${result.ignoradas ? ` (${result.ignoradas} linhas sem código interno ignoradas)` : ''}`,
       );
     } catch (e: any) {
       setErrorMsg(`Falha ao ler planilha: ${e?.message || e}`);
       toast.error('Não foi possível ler a planilha');
+    } finally {
+      setParsing(false);
     }
   };
 
