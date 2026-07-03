@@ -119,8 +119,9 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { nfeEntradaId, chave: chaveInput, all } = body as {
+    const { nfeEntradaId, chave: chaveInput, all, manual } = body as {
       nfeEntradaId?: string; chave?: string; all?: boolean;
+      manual?: { status?: string; descricao?: string; local?: string; data?: string };
     };
 
     // Modo "atualizar todas" (para cron): pega até 50 notas não-entregues
@@ -149,7 +150,6 @@ Deno.serve(async (req) => {
       let { data } = await supabase
         .from('nfe_entrada').select('id, chave_acesso').eq('chave_acesso', clean).maybeSingle();
       if (!data) {
-        // Auto-registra para permitir rastreio quando a NF-e ainda não está no banco
         const cnpjEmit = clean.substring(6, 20);
         const numero = clean.substring(25, 34).replace(/^0+/, '') || '0';
         const { data: inserted, error: insErr } = await supabase
@@ -162,6 +162,32 @@ Deno.serve(async (req) => {
       targets = [data];
     } else {
       throw new Error('Informe nfeEntradaId, chave ou all=true');
+    }
+
+    // === Modo MANUAL: registra evento informado pelo operador ===
+    if (manual && targets[0]) {
+      const t = targets[0];
+      const validStatus = new Set(['POSTADO','EM_TRANSITO','SAIU_PARA_ENTREGA','ENTREGUE','TENTATIVA_FALHA','EXCECAO','DESCONHECIDO']);
+      const status = validStatus.has(manual.status ?? '') ? (manual.status as TrackingStatus) : 'DESCONHECIDO';
+      const dataIso = manual.data ? new Date(manual.data).toISOString() : new Date().toISOString();
+      const { error: evErr } = await supabase.from('nfe_entrada_tracking_eventos').insert({
+        nfe_entrada_id: t.id,
+        data_evento: dataIso,
+        status,
+        local: manual.local || null,
+        descricao: manual.descricao || null,
+        fonte: 'manual',
+        raw: manual as any,
+      });
+      if (evErr) throw new Error(`Falha ao gravar evento manual: ${evErr.message}`);
+      await supabase.from('nfe_entrada').update({
+        tracking_status: status,
+        tracking_provider: 'manual',
+        tracking_last_sync_at: new Date().toISOString(),
+      }).eq('id', t.id);
+      return new Response(JSON.stringify({ ok: true, results: [{ id: t.id, status, eventos: 1, provider: 'manual' }] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const results: Array<{ id: string; status: TrackingStatus; eventos: number; provider?: string; message?: string; error?: string }> = [];
