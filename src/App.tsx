@@ -195,7 +195,8 @@ const App = () => (
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
                   <Route path="cargas" element={<ExpedicaoCargasPage />} />
-                  <Route path="nfe-entrada" element={<ExpedicaoNFeEntradaPage />} />
+                  <Route path="tracking" element={<ExpedicaoNFeEntradaPage />} />
+                  <Route path="nfe-entrada" element={<Navigate to="/expedicao/tracking" replace />} />
 
                 </Route>
 
