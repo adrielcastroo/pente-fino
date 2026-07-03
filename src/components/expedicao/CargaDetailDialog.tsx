@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Upload, Camera, MapPin, ExternalLink } from 'lucide-react';
@@ -69,6 +69,25 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
     },
     enabled: open,
   });
+
+  // Polling automático: atualiza rastreio a cada 15 min enquanto o dialog está aberto
+  // e a carga tem código de rastreio (em rota / saiu para entrega).
+  useEffect(() => {
+    if (!open || !carga?.codigo_rastreio) return;
+    const rodadaAtiva = ['em_rota', 'saiu_entrega'].includes(carga.status ?? '');
+    if (!rodadaAtiva) return;
+    const tick = () => {
+      supabase.functions
+        .invoke('rastreio-consulta', { body: { carga_id: cargaId } })
+        .then(({ error }) => {
+          if (!error) qc.invalidateQueries({ queryKey: ['expedicao_rastreio_eventos', cargaId] });
+        })
+        .catch(() => { /* silencioso no polling */ });
+    };
+    const id = setInterval(tick, 15 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [open, cargaId, carga?.codigo_rastreio, carga?.status, qc]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
