@@ -130,61 +130,106 @@ export default function PainelPage() {
             </p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Cidade</TableHead>
-                <TableHead>Transportadora</TableHead>
-                <TableHead>Carrinho</TableHead>
-                <TableHead className="text-right">Peças</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>SLA</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile: cards */}
+            <ul className="md:hidden divide-y divide-border">
               {filtered.map(({ p, sla }) => {
                 const canCancel = allowCancel && !['faturado', 'cancelado'].includes(p.status);
                 return (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-mono text-xs">{p.numero}</TableCell>
-                    <TableCell className="font-medium">{p.cliente}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.cidade ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.transportadora?.nome ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.carrinho?.codigo ?? '—'}</TableCell>
-                    <TableCell className="text-right tabular-nums">{p.total_pecas}</TableCell>
-                    <TableCell>
+                  <li key={p.id} className="p-3 flex flex-col gap-1.5 min-h-[64px]">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-mono text-[11px] text-muted-foreground truncate">{p.numero}</div>
+                        <div className="font-semibold text-sm truncate">{p.cliente}</div>
+                      </div>
                       <StatusBadge status={p.status} />
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {p.cidade && <span>{p.cidade}</span>}
+                      {p.transportadora?.nome && <span>· {p.transportadora.nome}</span>}
+                      {p.carrinho?.codigo && <span>· Carr. {p.carrinho.codigo}</span>}
+                      <span className="ml-auto tabular-nums font-medium text-foreground">{p.total_pecas} pç</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
                       {sla.level === 'none' ? (
                         <span className="text-xs text-muted-foreground">—</span>
                       ) : (
-                        <Badge variant="outline" className={`${sla.cls} border-transparent text-[11px]`}>
-                          {sla.label}
-                        </Badge>
+                        <Badge variant="outline" className={`${sla.cls} border-transparent text-[11px]`}>{sla.label}</Badge>
                       )}
-                    </TableCell>
-                    <TableCell className="text-right">
                       {canCancel && (
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
                           aria-label="Cancelar picking"
-                          className="size-8 text-muted-foreground hover:text-destructive"
+                          className="h-11 min-w-11 text-muted-foreground hover:text-destructive"
                           onClick={() => setCancelTarget(p)}
                         >
                           <Ban className="size-4" />
                         </Button>
                       )}
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </li>
                 );
               })}
-            </TableBody>
-          </Table>
+            </ul>
+
+            {/* Desktop: tabela */}
+            <Table className="hidden md:table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Cidade</TableHead>
+                  <TableHead>Transportadora</TableHead>
+                  <TableHead>Carrinho</TableHead>
+                  <TableHead className="text-right">Peças</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>SLA</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map(({ p, sla }) => {
+                  const canCancel = allowCancel && !['faturado', 'cancelado'].includes(p.status);
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-mono text-xs">{p.numero}</TableCell>
+                      <TableCell className="font-medium">{p.cliente}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.cidade ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.transportadora?.nome ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.carrinho?.codigo ?? '—'}</TableCell>
+                      <TableCell className="text-right tabular-nums">{p.total_pecas}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={p.status} />
+                      </TableCell>
+                      <TableCell>
+                        {sla.level === 'none' ? (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        ) : (
+                          <Badge variant="outline" className={`${sla.cls} border-transparent text-[11px]`}>
+                            {sla.label}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {canCancel && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Cancelar picking"
+                            className="size-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => setCancelTarget(p)}
+                          >
+                            <Ban className="size-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </>
         )}
       </div>
 
