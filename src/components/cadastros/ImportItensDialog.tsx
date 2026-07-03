@@ -128,15 +128,8 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         }
         const descricao = kDesc ? String(r[kDesc] ?? '').trim() : '';
         const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
-        let codigos = splitCodes(fornRaw);
-        let detectado = false;
-        if (!codigos.length && descricao) {
-          const ext = extractCodigoFornecedor(descricao);
-          if (ext) {
-            codigos = [ext.codigo];
-            detectado = true;
-          }
-        }
+        const codigos = splitCodes(fornRaw);
+        const detectado = false;
         const existing = byInterno.get(codigo_interno);
         if (existing) {
           existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
