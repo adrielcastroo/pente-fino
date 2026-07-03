@@ -308,7 +308,7 @@ export const itensCadastroService = {
         throw e;
       }
     }
-    return { count: inserted, inserted, skipped, duplicatesInFile, descChanges };
+    return { count: inserted, inserted, skipped, duplicatesInFile, fornecedorUpdated, descChanges };
   },
 
   async bulkUpdateDescricoes(items: Array<{ codigo_interno: string; descricao: string }>): Promise<{ count: number }> {
