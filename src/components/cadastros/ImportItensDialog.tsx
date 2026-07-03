@@ -174,6 +174,35 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
     abortRef.current?.abort();
   };
 
+  const logImport = async (payload: {
+    total: number;
+    inseridos: number;
+    atualizados: number;
+    ignorados: number;
+    resultado: 'sucesso' | 'parcial' | 'falha' | 'cancelado';
+    erro?: string | null;
+    detalhes?: Record<string, unknown>;
+  }) => {
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u?.user) return;
+      await (supabase as any).from('import_log').insert({
+        user_id: u.user.id,
+        user_email: u.user.email,
+        file_name: fileName || null,
+        total_linhas: payload.total,
+        inseridos: payload.inseridos,
+        atualizados: payload.atualizados,
+        ignorados: payload.ignorados,
+        resultado: payload.resultado,
+        erro: payload.erro ?? null,
+        detalhes: payload.detalhes ?? null,
+      });
+    } catch {
+      /* auditoria não deve bloquear o fluxo */
+    }
+  };
+
   const handleImport = async () => {
     setErrorMsg(null);
     const validRows = rows.filter((r) => r.codigo_interno);
@@ -204,6 +233,15 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
       toast.success(parts || 'Nada a importar');
       setProgress(null);
 
+      await logImport({
+        total: validRows.length,
+        inseridos: inserted,
+        atualizados: fornecedorUpdated,
+        ignorados: skipped,
+        resultado: 'sucesso',
+        detalhes: { duplicatesInFile, descChangesCount: descChanges.length },
+      });
+
       if (descChanges.length > 0) {
         setDescPrompt({
           changes: descChanges,
@@ -217,12 +255,36 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
       }
     } catch (e: any) {
       const msg = e?.message || 'Erro desconhecido ao importar';
+      const cancelled = controller.signal.aborted;
       setErrorMsg(msg);
-      toast.error('Importação interrompida — veja detalhes no diálogo');
+      toast.error(cancelled ? 'Importação cancelada' : 'Importação interrompida — veja detalhes no diálogo');
+      await logImport({
+        total: validRows.length,
+        inseridos: 0,
+        atualizados: 0,
+        ignorados: 0,
+        resultado: cancelled ? 'cancelado' : 'falha',
+        erro: msg,
+      });
     } finally {
       abortRef.current = null;
       setProgress(null);
     }
+  };
+
+  const downloadErrorCsv = () => {
+    if (!errorMsg) return;
+    const csv = 'linha,codigo_interno,descricao,erro\n' +
+      rows.map((r, i) =>
+        `${i + 1},"${r.codigo_interno.replace(/"/g, '""')}","${(r.descricao || '').replace(/"/g, '""')}","${errorMsg.replace(/"/g, '""')}"`
+      ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `import-erros-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const confirmDescUpdates = async () => {
