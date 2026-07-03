@@ -15,6 +15,19 @@ const LABELS: Record<string, string> = {
   cadastros: 'Cadastros',
   auditoria: 'Auditoria',
   configuracoes: 'Configurações',
+  // Expedição
+  expedicao: 'Expedição',
+  operacao: 'Operação',
+  painel: 'Painel',
+  romaneio: 'Romaneio',
+  cargas: 'Cargas',
+  carrinhos: 'Carrinhos',
+  etiquetas: 'Etiquetas',
+  faturamento: 'Faturamento',
+  'nfe-entrada': 'NF-e Entrada',
+  logistica: 'Logístico',
+  relatorios: 'Relatórios',
+  'double-check': 'Double-Check',
 };
 
 const CONFERENCIA_CHILDREN = new Set(['tecido', 'madeira', 'motor']);

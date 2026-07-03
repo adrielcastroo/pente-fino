@@ -114,7 +114,7 @@ export default function ConferenciaPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Alocação de peças</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Conferência</h1>
         <p className="text-sm text-muted-foreground">
           Bipe todas as peças e, ao final, escolha o carrinho onde elas serão alocadas.
         </p>
