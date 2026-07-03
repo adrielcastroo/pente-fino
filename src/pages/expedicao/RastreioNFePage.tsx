@@ -1,173 +1,185 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { RefreshCw, Loader2, Search, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
+import { parseNFeXML, formatBRL, type NFeData } from '@/lib/nfe-parser';
 
-type Tipo = 'emitido' | 'recebido';
-
-function maskCnpj(v: string): string {
-  const d = v.replace(/\D/g, '').slice(0, 14);
-  return d
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2');
+function formatCnpj(v: string): string {
+  const d = (v ?? '').replace(/\D/g, '').padStart(14, '0').slice(0, 14);
+  return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
 }
 
-interface Result {
-  ok?: boolean;
-  cache_hit?: boolean;
-  needs_cert?: boolean;
-  message?: string;
-  chave?: string;
-  status?: string;
-  motivo?: string;
-  emissao?: string;
-  valor?: number;
-  emitente?: string;
-  danfe_url?: string;
+async function logConsulta(nfe: NFeData, tipo: 'emitido' | 'recebido') {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await (supabase as any).from('nfe_consulta_log').insert({
+      user_id: user.id,
+      user_email: user.email,
+      cnpj: tipo === 'emitido' ? nfe.cnpjEmitente : nfe.cnpjDestinatario,
+      tipo,
+      chave_acesso: nfe.chaveAcesso,
+      status: 'xml_importado',
+      motivo: 'Importação manual de XML NF-e',
+      cache_hit: false,
+      detalhes: {
+        numero: nfe.numero,
+        serie: nfe.serie,
+        valor: nfe.valorTotal,
+        emitente: nfe.nomeEmitente,
+        destinatario: nfe.nomeDestinatario,
+      },
+    });
+  } catch {
+    /* logging não bloqueia */
+  }
 }
-
-const POLL_MS = 600_000; // 10 min
 
 export default function RastreioNFePage() {
-  const [cnpj, setCnpj] = useState('');
-  const [tipo, setTipo] = useState<Tipo>('emitido');
-  const [result, setResult] = useState<Result | null>(null);
-  const pollRef = useRef<number | null>(null);
+  const [xmlText, setXmlText] = useState('');
+  const [nfe, setNfe] = useState<NFeData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const consultar = useMutation({
-    mutationFn: async () => {
-      const digits = cnpj.replace(/\D/g, '');
-      if (digits.length !== 14) throw new Error('Informe um CNPJ válido (14 dígitos).');
-      const { data, error } = await supabase.functions.invoke('nfe-sefaz-consulta', {
-        body: { cnpj: digits, tipo },
-      });
-      if (error) throw error;
-      return data as Result;
-    },
-    onSuccess: (r) => {
-      setResult(r);
-      if (r?.needs_cert) toast.warning(r.message ?? 'Certificado A1 necessário.');
-      else if (r?.ok) toast.success(r.cache_hit ? 'Resultado (cache)' : 'Consulta realizada.');
-      else toast.info(r?.message ?? 'Sem retorno da SEFAZ.');
-    },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Falha na consulta.'),
-  });
+  const processarXml = useCallback((xml: string) => {
+    setError(null);
+    try {
+      const parsed = parseNFeXML(xml);
+      setNfe(parsed);
+      const tipo: 'emitido' | 'recebido' = 'emitido';
+      void logConsulta(parsed, tipo);
+      toast.success(`NF-e ${parsed.numero} importada.`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Falha ao processar XML.';
+      setError(msg);
+      setNfe(null);
+      toast.error(msg);
+    }
+  }, []);
 
-  // Polling automático enquanto houver resultado
-  useEffect(() => {
-    if (!result) return;
-    pollRef.current = window.setInterval(() => {
-      consultar.mutate();
-    }, POLL_MS);
-    return () => {
-      if (pollRef.current) window.clearInterval(pollRef.current);
-      pollRef.current = null;
-    };
-  }, [result, consultar]);
+  const onFile = useCallback(async (f: File | null) => {
+    if (!f) return;
+    const text = await f.text();
+    setXmlText(text);
+    processarXml(text);
+  }, [processarXml]);
 
-  const statusTone = useMemo(() => {
-    const s = (result?.status ?? '').toLowerCase();
-    if (s.includes('autoriz')) return 'success';
-    if (s.includes('cancel') || s.includes('deneg')) return 'destructive';
-    if (s === 'cache') return 'info';
-    return 'warning';
-  }, [result]);
+  const limpar = () => {
+    setXmlText('');
+    setNfe(null);
+    setError(null);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const totalItens = useMemo(() => nfe?.itens.length ?? 0, [nfe]);
 
   return (
     <PageShell>
       <PageHeader
         title="Rastreio de NF-e"
-        subtitle="Consulte NF-e emitidas ou recebidas pela SEFAZ usando o CNPJ da empresa."
+        subtitle="Importe o XML da NF-e para consultar os dados fiscais e itens."
       />
 
-      <div className="rounded-md border border-border bg-card p-4 space-y-4 max-w-3xl">
-        <div className="grid md:grid-cols-[1fr_auto] gap-3 items-end">
-          <div>
-            <Label htmlFor="cnpj" className="text-xs">CNPJ</Label>
-            <Input
-              id="cnpj"
-              value={cnpj}
-              onChange={(e) => setCnpj(maskCnpj(e.target.value))}
-              placeholder="00.000.000/0000-00"
-              className="h-10 font-mono"
-              inputMode="numeric"
-              aria-label="CNPJ para consulta"
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Tipo</Label>
-            <RadioGroup
-              value={tipo}
-              onValueChange={(v) => setTipo(v as Tipo)}
-              className="flex gap-4 h-10 items-center"
-            >
-              <label className="flex items-center gap-1 text-sm">
-                <RadioGroupItem value="emitido" /> Emitido
-              </label>
-              <label className="flex items-center gap-1 text-sm">
-                <RadioGroupItem value="recebido" /> Recebido
-              </label>
-            </RadioGroup>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button onClick={() => consultar.mutate()} disabled={consultar.isPending} className="gap-2">
-            {consultar.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            Consultar
+      <div className="rounded-md border border-border bg-card p-4 space-y-4 max-w-4xl">
+        <div className="flex flex-wrap gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xml,text/xml,application/xml"
+            className="hidden"
+            onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+          />
+          <Button onClick={() => fileRef.current?.click()} className="gap-2">
+            <Upload className="w-4 h-4" /> Enviar XML
           </Button>
-          {result && (
-            <Button variant="outline" onClick={() => consultar.mutate()} disabled={consultar.isPending} className="gap-2">
-              <RefreshCw className="w-4 h-4" /> Atualizar
+          <Button
+            variant="outline"
+            onClick={() => processarXml(xmlText)}
+            disabled={!xmlText.trim()}
+            className="gap-2"
+          >
+            <FileText className="w-4 h-4" /> Processar texto
+          </Button>
+          {(nfe || xmlText) && (
+            <Button variant="ghost" onClick={limpar} className="gap-2">
+              <Trash2 className="w-4 h-4" /> Limpar
             </Button>
           )}
         </div>
+
+        <div>
+          <Label htmlFor="xml" className="text-xs">Ou cole o conteúdo XML abaixo</Label>
+          <Textarea
+            id="xml"
+            value={xmlText}
+            onChange={(e) => setXmlText(e.target.value)}
+            placeholder="<?xml version='1.0'?><nfeProc>...</nfeProc>"
+            className="font-mono text-xs h-32"
+          />
+        </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro ao processar XML</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
       </div>
 
-      {result && (
-        <div role="alert" aria-live="polite" className="max-w-3xl">
-          {result.needs_cert ? (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertTitle>Certificado A1 necessário</AlertTitle>
-              <AlertDescription>{result.message}</AlertDescription>
-            </Alert>
-          ) : result.ok ? (
-            <div className="rounded-md border border-border bg-card p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-success" />
-                <span className="font-medium">{result.emitente ?? 'Resultado'}</span>
-                {result.status && <Badge variant={statusTone === 'destructive' ? 'destructive' : 'secondary'}>{result.status}</Badge>}
-                {result.cache_hit && <Badge variant="outline">cache</Badge>}
-              </div>
-              <dl className="grid md:grid-cols-2 gap-2 text-sm">
-                {result.chave && (<><dt className="text-muted-foreground">Chave</dt><dd className="font-mono text-xs break-all">{result.chave}</dd></>)}
-                {result.motivo && (<><dt className="text-muted-foreground">Motivo</dt><dd>{result.motivo}</dd></>)}
-                {result.emissao && (<><dt className="text-muted-foreground">Emissão</dt><dd>{new Date(result.emissao).toLocaleString('pt-BR')}</dd></>)}
-                {typeof result.valor === 'number' && (<><dt className="text-muted-foreground">Valor</dt><dd>R$ {result.valor.toFixed(2)}</dd></>)}
-              </dl>
-              {result.danfe_url && (
-                <Button asChild variant="outline" size="sm"><a href={result.danfe_url} target="_blank" rel="noreferrer">Abrir DANFE</a></Button>
-              )}
+      {nfe && (
+        <div className="rounded-md border border-border bg-card p-4 space-y-4 max-w-4xl">
+          <div className="flex items-center gap-2 flex-wrap">
+            <CheckCircle2 className="w-5 h-5 text-success" />
+            <span className="font-medium">NF-e {nfe.numero} — Série {nfe.serie}</span>
+            <Badge variant="secondary">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</Badge>
+          </div>
+
+          <dl className="grid md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div><dt className="text-muted-foreground text-xs">Chave de acesso</dt><dd className="font-mono text-xs break-all">{nfe.chaveAcesso || '—'}</dd></div>
+            <div><dt className="text-muted-foreground text-xs">Emissão</dt><dd>{nfe.dataEmissao ? new Date(nfe.dataEmissao).toLocaleString('pt-BR') : '—'}</dd></div>
+            <div><dt className="text-muted-foreground text-xs">Emitente</dt><dd>{nfe.nomeEmitente} <span className="text-muted-foreground">({formatCnpj(nfe.cnpjEmitente)})</span></dd></div>
+            <div><dt className="text-muted-foreground text-xs">Destinatário</dt><dd>{nfe.nomeDestinatario} <span className="text-muted-foreground">({formatCnpj(nfe.cnpjDestinatario)})</span></dd></div>
+            <div><dt className="text-muted-foreground text-xs">Valor total</dt><dd>{formatBRL(nfe.valorTotal)}</dd></div>
+            <div><dt className="text-muted-foreground text-xs">Frete</dt><dd>{formatBRL(nfe.valorFrete)}</dd></div>
+            <div><dt className="text-muted-foreground text-xs">Transportadora</dt><dd>{nfe.transportadora || '—'}</dd></div>
+            <div><dt className="text-muted-foreground text-xs">Volumes / Peso bruto</dt><dd>{nfe.volumes} / {nfe.pesoBruto} kg</dd></div>
+          </dl>
+
+          {nfe.itens.length > 0 && (
+            <div className="overflow-x-auto border border-border rounded-md">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left px-2 py-1.5">Código</th>
+                    <th className="text-left px-2 py-1.5">Descrição</th>
+                    <th className="text-right px-2 py-1.5">Qtd</th>
+                    <th className="text-left px-2 py-1.5">Un</th>
+                    <th className="text-right px-2 py-1.5">Vl. Unit.</th>
+                    <th className="text-right px-2 py-1.5">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nfe.itens.map((it, i) => (
+                    <tr key={i} className="border-t border-border">
+                      <td className="px-2 py-1 font-mono">{it.codigo}</td>
+                      <td className="px-2 py-1">{it.descricao}</td>
+                      <td className="px-2 py-1 text-right">{it.quantidade}</td>
+                      <td className="px-2 py-1">{it.unidade}</td>
+                      <td className="px-2 py-1 text-right">{formatBRL(it.valorUnitario)}</td>
+                      <td className="px-2 py-1 text-right">{formatBRL(it.valorTotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Nenhuma NF-e localizada</AlertTitle>
-              <AlertDescription>{result.message ?? 'Nenhuma NF-e encontrada para o CNPJ informado.'}</AlertDescription>
-            </Alert>
           )}
-          <p className="text-[11px] text-muted-foreground mt-2">Atualização automática a cada 10 minutos enquanto esta aba estiver aberta.</p>
         </div>
       )}
     </PageShell>
