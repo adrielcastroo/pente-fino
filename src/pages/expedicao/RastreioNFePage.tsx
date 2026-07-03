@@ -162,6 +162,34 @@ export default function RastreioNFePage() {
     }
   }, [nfe?.chaveAcesso, nfe?.cnpjEmitente, carregarEventos]);
 
+  const salvarEventoManual = useCallback(async () => {
+    if (!nfe?.chaveAcesso) return;
+    setManualSaving(true);
+    try {
+      const { error: fnErr } = await supabase.functions.invoke('tracking-fetch', {
+        body: {
+          chave: nfe.chaveAcesso,
+          manual: {
+            status: manualStatus,
+            descricao: manualDescricao.trim() || undefined,
+            local: manualLocal.trim() || undefined,
+            data: new Date(manualData).toISOString(),
+          },
+        },
+      });
+      if (fnErr) throw fnErr;
+      toast.success('Evento manual registrado.');
+      setManualOpen(false);
+      setManualDescricao('');
+      setManualLocal('');
+      await carregarEventos(nfe.chaveAcesso);
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao salvar evento manual.');
+    } finally {
+      setManualSaving(false);
+    }
+  }, [nfe?.chaveAcesso, manualStatus, manualDescricao, manualLocal, manualData, carregarEventos]);
+
   // F-EXP-02: Polling automático a cada 10 min enquanto status não for final
   useEffect(() => {
     if (!nfe?.chaveAcesso) return;
