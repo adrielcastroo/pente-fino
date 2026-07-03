@@ -44,6 +44,7 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
       items: [
         { key: 'faturamento', label: 'Faturamento', icon: DollarSign, path: '/expedicao/faturamento' },
         { key: 'tracking', label: 'Tracking', icon: Inbox, path: '/expedicao/tracking' },
+        { key: 'rastreio-nfe', label: 'Rastreio NF-e', icon: Radar, path: '/expedicao/rastreio-nfe' },
       ],
     },
     {
