@@ -122,13 +122,15 @@ const TRACKING_TONE: Record<TrackingStatus, StatusTone> = {
 export default function NFeEntradaPage() {
   const qc = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   const { data: notas = [], isLoading } = useQuery({
     queryKey: ['nfe-entrada'],
     queryFn: async (): Promise<NFeEntrada[]> => {
       const { data, error } = await (supabase as any)
         .from('nfe_entrada')
-        .select('id, chave_acesso, numero, serie, nome_emitente, cnpj_emitente, data_emissao, valor_total, situacao_manifestacao, manifestada_at, protocolo_manifestacao, xml_path, danfe_path, nsu, created_at')
+        .select('id, chave_acesso, numero, serie, nome_emitente, cnpj_emitente, data_emissao, valor_total, situacao_manifestacao, manifestada_at, protocolo_manifestacao, xml_path, danfe_path, nsu, created_at, transportadora, tracking_status, tracking_provider, tracking_last_sync_at, tracking_url')
         .order('data_emissao', { ascending: false, nullsFirst: false })
         .limit(200);
       if (error) throw error;
@@ -139,11 +141,33 @@ export default function NFeEntradaPage() {
 
   const stats = useMemo(() => {
     const total = notas.length;
-    const pendentes = notas.filter((n) => n.situacao_manifestacao === 'pendente').length;
-    const confirmadas = notas.filter((n) => n.situacao_manifestacao === 'confirmada').length;
-    const valor = notas.reduce((s, n) => s + (n.valor_total ?? 0), 0);
-    return { total, pendentes, confirmadas, valor };
+    const emTransito = notas.filter((n) => ['EM_TRANSITO', 'SAIU_PARA_ENTREGA', 'POSTADO'].includes(n.tracking_status)).length;
+    const entregues = notas.filter((n) => n.tracking_status === 'ENTREGUE').length;
+    const excecoes = notas.filter((n) => ['EXCECAO', 'TENTATIVA_FALHA'].includes(n.tracking_status)).length;
+    return { total, emTransito, entregues, excecoes };
   }, [notas]);
+
+  const atualizarRastreio = useMutation({
+    mutationFn: async (params: { id?: string; all?: boolean }) => {
+      if (params.id) setRefreshingId(params.id);
+      const { data, error } = await supabase.functions.invoke('tracking-fetch', {
+        body: params.all ? { all: true } : { nfeEntradaId: params.id },
+      });
+      if (error) throw error;
+      return data as { ok: boolean; results: Array<{ status: string; eventos: number; error?: string }> };
+    },
+    onSuccess: (r) => {
+      const total = r.results?.length ?? 0;
+      const erros = r.results?.filter((x) => x.error).length ?? 0;
+      if (erros > 0) toast.warning(`${total} nota(s) sincronizada(s), ${erros} com erro.`);
+      else toast.success(`${total} nota(s) atualizadas.`);
+      qc.invalidateQueries({ queryKey: ['nfe-entrada'] });
+      qc.invalidateQueries({ queryKey: ['tracking-eventos'] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Falha ao atualizar rastreio.'),
+    onSettled: () => setRefreshingId(null),
+  });
+
 
   const consultarDFe = useMutation({
     mutationFn: async () => {
