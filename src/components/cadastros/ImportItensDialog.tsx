@@ -191,7 +191,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
     abortRef.current = controller;
     setProgress({ done: 0, total: validRows.length });
     try {
-      const res = await bulk.mutateAsync({
+      const res: any = await bulk.mutateAsync({
         inputs: validRows.map((r) => ({
           codigo_interno: r.codigo_interno,
           descricao: r.descricao,
@@ -200,11 +200,26 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         signal: controller.signal,
         onProgress: (done, total) => setProgress({ done, total }),
       });
-      toast.success(`${res.count} itens importados`);
-      setRows([]);
-      setFileName('');
+      const { inserted = 0, skipped = 0, duplicatesInFile = 0, descChanges = [] } = res || {};
+      const parts = [
+        `${inserted} novo(s) importado(s)`,
+        skipped > 0 ? `${skipped} já cadastrado(s) ignorado(s)` : null,
+        duplicatesInFile > 0 ? `${duplicatesInFile} duplicata(s) na planilha mescladas` : null,
+      ].filter(Boolean).join(' · ');
+      toast.success(parts || 'Nada a importar');
       setProgress(null);
-      onOpenChange(false);
+
+      if (descChanges.length > 0) {
+        setDescPrompt({
+          changes: descChanges,
+          selected: new Set(descChanges.map((c: any) => c.codigo_interno)),
+          summary: { inserted, skipped, duplicatesInFile },
+        });
+      } else {
+        setRows([]);
+        setFileName('');
+        onOpenChange(false);
+      }
     } catch (e: any) {
       const msg = e?.message || 'Erro desconhecido ao importar';
       setErrorMsg(msg);
@@ -212,6 +227,34 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
     } finally {
       abortRef.current = null;
       setProgress(null);
+    }
+  };
+
+  const confirmDescUpdates = async () => {
+    if (!descPrompt) return;
+    const items = descPrompt.changes.filter((c) => descPrompt.selected.has(c.codigo_interno));
+    if (!items.length) {
+      setDescPrompt(null);
+      setRows([]);
+      setFileName('');
+      onOpenChange(false);
+      return;
+    }
+    setUpdatingDesc(true);
+    try {
+      const { itensCadastroService } = await import('@/services/itensCadastroService');
+      const res = await itensCadastroService.bulkUpdateDescricoes(
+        items.map((i) => ({ codigo_interno: i.codigo_interno, descricao: i.newDesc })),
+      );
+      toast.success(`${res.count} descrição(ões) atualizada(s)`);
+      setDescPrompt(null);
+      setRows([]);
+      setFileName('');
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao atualizar descrições');
+    } finally {
+      setUpdatingDesc(false);
     }
   };
 
