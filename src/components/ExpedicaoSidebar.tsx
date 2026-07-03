@@ -12,7 +12,6 @@ import {
   FileDown,
   Tag,
   ShieldCheck,
-  Inbox,
   Radar,
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
@@ -42,10 +41,10 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
     {
       label: 'Fiscal',
       items: [
-        { key: 'tracking', label: 'Tracking', icon: Inbox, path: '/expedicao/tracking' },
         { key: 'rastreio-nfe', label: 'Rastreio NF-e', icon: Radar, path: '/expedicao/rastreio-nfe' },
       ],
     },
+
     {
       label: 'Análises',
       items: [
@@ -87,8 +86,7 @@ const ExpedicaoSidebar = memo(() => {
               return { ...i, badge: counts.conferencia };
             case 'romaneio':
               return { ...i, badge: counts.romaneio };
-            case 'tracking':
-              return { ...i, badge: counts.nfeEntrada };
+
             default:
               return i;
           }
