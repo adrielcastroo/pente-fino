@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Upload, FileText, AlertCircle, CheckCircle2, Trash2, RefreshCw, Truck } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle2, Trash2, RefreshCw, Truck, PlusCircle } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { parseNFeXML, formatBRL, type NFeData } from '@/lib/nfe-parser';
 
@@ -61,6 +64,12 @@ export default function RastreioNFePage() {
   const [eventos, setEventos] = useState<TrackingEvento[]>([]);
   const [trackingStatus, setTrackingStatus] = useState<string | null>(null);
   const [tracking, setTracking] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualStatus, setManualStatus] = useState('EM_TRANSITO');
+  const [manualDescricao, setManualDescricao] = useState('');
+  const [manualLocal, setManualLocal] = useState('');
+  const [manualData, setManualData] = useState(() => new Date().toISOString().slice(0, 16));
+  const [manualSaving, setManualSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const carregarEventos = useCallback(async (chave: string) => {
@@ -152,6 +161,34 @@ export default function RastreioNFePage() {
       setTracking(false);
     }
   }, [nfe?.chaveAcesso, nfe?.cnpjEmitente, carregarEventos]);
+
+  const salvarEventoManual = useCallback(async () => {
+    if (!nfe?.chaveAcesso) return;
+    setManualSaving(true);
+    try {
+      const { error: fnErr } = await supabase.functions.invoke('tracking-fetch', {
+        body: {
+          chave: nfe.chaveAcesso,
+          manual: {
+            status: manualStatus,
+            descricao: manualDescricao.trim() || undefined,
+            local: manualLocal.trim() || undefined,
+            data: new Date(manualData).toISOString(),
+          },
+        },
+      });
+      if (fnErr) throw fnErr;
+      toast.success('Evento manual registrado.');
+      setManualOpen(false);
+      setManualDescricao('');
+      setManualLocal('');
+      await carregarEventos(nfe.chaveAcesso);
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao salvar evento manual.');
+    } finally {
+      setManualSaving(false);
+    }
+  }, [nfe?.chaveAcesso, manualStatus, manualDescricao, manualLocal, manualData, carregarEventos]);
 
   // F-EXP-02: Polling automático a cada 10 min enquanto status não for final
   useEffect(() => {
@@ -279,6 +316,50 @@ export default function RastreioNFePage() {
               <RefreshCw className={`w-4 h-4 ${tracking ? 'animate-spin' : ''}`} />
               Atualizar rastreamento
             </Button>
+            <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="secondary" disabled={!nfe.chaveAcesso} className="gap-2">
+                  <PlusCircle className="w-4 h-4" /> Evento manual
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Registrar evento manual de rastreio</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Status</Label>
+                    <Select value={manualStatus} onValueChange={setManualStatus}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="POSTADO">Postado</SelectItem>
+                        <SelectItem value="EM_TRANSITO">Em trânsito</SelectItem>
+                        <SelectItem value="SAIU_PARA_ENTREGA">Saiu para entrega</SelectItem>
+                        <SelectItem value="ENTREGUE">Entregue</SelectItem>
+                        <SelectItem value="TENTATIVA_FALHA">Tentativa falha</SelectItem>
+                        <SelectItem value="EXCECAO">Exceção</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Data / hora</Label>
+                    <Input type="datetime-local" value={manualData} onChange={(e) => setManualData(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Local (cidade/UF)</Label>
+                    <Input value={manualLocal} onChange={(e) => setManualLocal(e.target.value)} placeholder="Ex.: São Paulo - SP" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Descrição</Label>
+                    <Textarea value={manualDescricao} onChange={(e) => setManualDescricao(e.target.value)} placeholder="Ex.: Confirmado por telefone com a transportadora" className="h-20 text-xs" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setManualOpen(false)} disabled={manualSaving}>Cancelar</Button>
+                  <Button onClick={salvarEventoManual} disabled={manualSaving}>Salvar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {eventos.length > 0 && (
