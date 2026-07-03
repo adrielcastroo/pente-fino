@@ -149,7 +149,15 @@ export const itensCadastroService = {
     return data as ItemCadastro;
   },
 
-  async bulkUpsert(inputs: ItemCadastroInput[]): Promise<{ count: number }> {
+  async bulkUpsert(
+    inputs: ItemCadastroInput[],
+    opts?: {
+      chunkSize?: number;
+      timeoutMs?: number;
+      onProgress?: (done: number, total: number) => void;
+      signal?: AbortSignal;
+    },
+  ): Promise<{ count: number }> {
     if (!inputs.length) return { count: 0 };
     // Mescla linhas duplicadas por codigo_interno (acumula códigos de fornecedor)
     const map = new Map<string, ItemCadastroInput>();
@@ -165,11 +173,51 @@ export const itensCadastroService = {
       }
     }
     const payload = Array.from(map.values()).map(prepare);
-    const { error, count } = await supabase
-      .from('itens_cadastro')
-      .upsert(payload, { onConflict: 'codigo_interno', count: 'exact' });
-    if (error) throw error;
-    return { count: count ?? payload.length };
+
+    const chunkSize = Math.max(1, opts?.chunkSize ?? 200);
+    const timeoutMs = opts?.timeoutMs ?? 30_000;
+    let total = 0;
+
+    for (let i = 0; i < payload.length; i += chunkSize) {
+      if (opts?.signal?.aborted) throw new Error('Importação cancelada pelo usuário.');
+      const chunk = payload.slice(i, i + chunkSize);
+      const chunkIndex = Math.floor(i / chunkSize) + 1;
+      const totalChunks = Math.ceil(payload.length / chunkSize);
+
+      const req = supabase
+        .from('itens_cadastro')
+        .upsert(chunk, { onConflict: 'codigo_interno', count: 'exact' });
+
+      let timer: any;
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Timeout: lote ${chunkIndex}/${totalChunks} (${chunk.length} itens) não respondeu em ${Math.round(timeoutMs / 1000)}s. Verifique sua conexão e tente reduzir o tamanho do arquivo.`)),
+          timeoutMs,
+        );
+      });
+
+      try {
+        const { error, count } = (await Promise.race([req, timeout])) as any;
+        clearTimeout(timer);
+        if (error) {
+          const details = [
+            `Falha no lote ${chunkIndex}/${totalChunks} (itens ${i + 1}–${i + chunk.length}).`,
+            error.message ? `Motivo: ${error.message}` : null,
+            (error as any).details ? `Detalhes: ${(error as any).details}` : null,
+            (error as any).hint ? `Sugestão: ${(error as any).hint}` : null,
+          ]
+            .filter(Boolean)
+            .join(' ');
+          throw new Error(details);
+        }
+        total += count ?? chunk.length;
+        opts?.onProgress?.(Math.min(i + chunk.length, payload.length), payload.length);
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
+    }
+    return { count: total };
   },
 
   async remove(id: string): Promise<void> {
