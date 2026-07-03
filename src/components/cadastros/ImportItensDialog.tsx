@@ -128,15 +128,8 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         }
         const descricao = kDesc ? String(r[kDesc] ?? '').trim() : '';
         const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
-        let codigos = splitCodes(fornRaw);
-        let detectado = false;
-        if (!codigos.length && descricao) {
-          const ext = extractCodigoFornecedor(descricao);
-          if (ext) {
-            codigos = [ext.codigo];
-            detectado = true;
-          }
-        }
+        const codigos = splitCodes(fornRaw);
+        const detectado = false;
         const existing = byInterno.get(codigo_interno);
         if (existing) {
           existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
@@ -289,6 +282,29 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
             <Upload className="h-4 w-4" />
             Selecionar arquivo
           </Button>
+          {rows.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                let detected = 0;
+                setRows((rs) =>
+                  rs.map((r) => {
+                    if (r.codigos_fornecedor.length || !r.descricao) return r;
+                    const ext = extractCodigoFornecedor(r.descricao);
+                    if (!ext) return r;
+                    detected++;
+                    return { ...r, codigos_fornecedor: dedupeCodes([ext.codigo]), detectado: true };
+                  }),
+                );
+                if (detected > 0) toast.success(`${detected} código(s) detectado(s) na descrição`);
+                else toast.info('Nenhum código detectado na descrição dos itens sem código');
+              }}
+            >
+              Detectar códigos na descrição
+            </Button>
+          )}
           {fileName && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <FileSpreadsheet className="h-3 w-3" />
