@@ -42,10 +42,10 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
     {
       label: 'Fiscal',
       items: [
-        { key: 'tracking', label: 'Tracking', icon: Inbox, path: '/expedicao/tracking' },
         { key: 'rastreio-nfe', label: 'Rastreio NF-e', icon: Radar, path: '/expedicao/rastreio-nfe' },
       ],
     },
+
     {
       label: 'Análises',
       items: [
