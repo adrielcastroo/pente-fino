@@ -28,7 +28,7 @@ const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlace
 const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
 const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
 
-const ExpedicaoPickingsPage = lazy(() => import("@/pages/expedicao/PickingsPage"));
+
 const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
 const ExpedicaoRomaneioPage = lazy(() => import("@/pages/expedicao/RomaneioPage"));
 const ExpedicaoFaturamentoPage = lazy(() => import("@/pages/expedicao/FaturamentoPage"));
