@@ -62,29 +62,50 @@ export default function CarrinhosPage() {
             Nenhum carrinho cadastrado.
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile: grid de cards */}
+            <ul className="md:hidden grid grid-cols-2 gap-2 p-3">
               {data.map(c => {
                 const s = STATUS[c.status];
                 return (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-mono">{c.codigo}</TableCell>
-                    <TableCell>
-                      <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', s.cls)}>
-                        {s.label}
-                      </span>
-                    </TableCell>
-                  </TableRow>
+                  <li
+                    key={c.id}
+                    className="flex flex-col items-start gap-1 rounded-md border border-border/60 bg-background p-3 min-h-[64px]"
+                  >
+                    <span className="font-mono text-sm font-semibold">{c.codigo}</span>
+                    <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', s.cls)}>
+                      {s.label}
+                    </span>
+                  </li>
                 );
               })}
-            </TableBody>
-          </Table>
+            </ul>
+
+            {/* Desktop: tabela */}
+            <Table className="hidden md:table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map(c => {
+                  const s = STATUS[c.status];
+                  return (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-mono">{c.codigo}</TableCell>
+                      <TableCell>
+                        <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', s.cls)}>
+                          {s.label}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </>
         )}
       </div>
     </PageShell>
