@@ -36,7 +36,7 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
         { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/expedicao/conferencia' },
         { key: 'double-check', label: 'Double-Check', icon: ShieldCheck, path: '/expedicao/double-check' },
         { key: 'romaneio', label: 'Romaneio', icon: FileText, path: '/expedicao/romaneio' },
-        { key: 'cargas', label: 'Cargas', icon: Truck, path: '/expedicao/cargas' },
+        
       ],
     },
     {
