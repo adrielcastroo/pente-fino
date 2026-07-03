@@ -187,6 +187,10 @@ export default function SettingsPage() {
 
   const [orKey, setOrKey] = useState(localStorage.getItem('cft4_or_key') || '');
   const [orModel, setOrModel] = useState(localStorage.getItem('cft4_or_model') || 'anthropic/claude-3-haiku');
+  const [n8nSapUrl, setN8nSapUrl] = useState(localStorage.getItem('n8n_sap_webhook_url') || '');
+  const [n8nSapEnabled, setN8nSapEnabled] = useState(localStorage.getItem('n8n_sap_enabled') === 'true');
+  const [n8nSapTesting, setN8nSapTesting] = useState(false);
+  const [n8nSapTestCode, setN8nSapTestCode] = useState('');
 
   // Security state
   const navigate = useNavigate();
@@ -391,6 +395,8 @@ export default function SettingsPage() {
       if (activeCategory === 'integrations') {
         localStorage.setItem('cft4_or_key', orKey.trim());
         localStorage.setItem('cft4_or_model', orModel);
+        localStorage.setItem('n8n_sap_webhook_url', n8nSapUrl.trim());
+        localStorage.setItem('n8n_sap_enabled', String(n8nSapEnabled));
       } else if (activeCategory === 'profile' && !isGuest && user) {
         const telefoneTrim = telefone.trim();
         if (telefoneTrim && !/^[0-9+\-\s()]{0,20}$/.test(telefoneTrim)) {
