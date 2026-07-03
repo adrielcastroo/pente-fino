@@ -31,7 +31,7 @@ const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPag
 
 const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
 const ExpedicaoRomaneioPage = lazy(() => import("@/pages/expedicao/RomaneioPage"));
-const ExpedicaoFaturamentoPage = lazy(() => import("@/pages/expedicao/FaturamentoPage"));
+
 const ExpedicaoDashboardOperacionalPage = lazy(() => import("@/pages/expedicao/DashboardOperacionalPage"));
 const ExpedicaoDashboardLogisticoPage = lazy(() => import("@/pages/expedicao/DashboardLogisticoPage"));
 const ExpedicaoHistoricoPage = lazy(() => import("@/pages/expedicao/HistoricoPage"));
@@ -40,7 +40,7 @@ const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosP
 const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
 const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoHomePage"));
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
-const ExpedicaoCargasPage = lazy(() => import("@/pages/expedicao/CargasPage"));
+
 const ExpedicaoNFeEntradaPage = lazy(() => import("@/pages/expedicao/NFeEntradaPage"));
 const ExpedicaoRastreioNFePage = lazy(() => import("@/pages/expedicao/RastreioNFePage"));
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
@@ -186,7 +186,7 @@ const App = () => (
                   
                   <Route path="conferencia" element={<ExpedicaoConferenciaPage />} />
                   <Route path="romaneio" element={<ExpedicaoRomaneioPage />} />
-                  <Route path="faturamento" element={<ExpedicaoFaturamentoPage />} />
+                  
                   <Route path="dashboard" element={<ExpedicaoDashboardOperacionalPage />} />
                   <Route path="logistica" element={<ExpedicaoDashboardLogisticoPage />} />
                   <Route path="carrinhos" element={<ExpedicaoCarrinhosPage />} />
@@ -195,7 +195,7 @@ const App = () => (
                   <Route path="configuracoes" element={<SettingsPage />} />
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
-                  <Route path="cargas" element={<ExpedicaoCargasPage />} />
+                  
                   <Route path="tracking" element={<ExpedicaoNFeEntradaPage />} />
                   <Route path="rastreio-nfe" element={<ExpedicaoRastreioNFePage />} />
                   <Route path="nfe-entrada" element={<Navigate to="/expedicao/tracking" replace />} />

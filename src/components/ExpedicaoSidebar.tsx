@@ -36,13 +36,12 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
         { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/expedicao/conferencia' },
         { key: 'double-check', label: 'Double-Check', icon: ShieldCheck, path: '/expedicao/double-check' },
         { key: 'romaneio', label: 'Romaneio', icon: FileText, path: '/expedicao/romaneio' },
-        { key: 'cargas', label: 'Cargas', icon: Truck, path: '/expedicao/cargas' },
+        
       ],
     },
     {
       label: 'Fiscal',
       items: [
-        { key: 'faturamento', label: 'Faturamento', icon: DollarSign, path: '/expedicao/faturamento' },
         { key: 'tracking', label: 'Tracking', icon: Inbox, path: '/expedicao/tracking' },
         { key: 'rastreio-nfe', label: 'Rastreio NF-e', icon: Radar, path: '/expedicao/rastreio-nfe' },
       ],
@@ -86,8 +85,6 @@ const ExpedicaoSidebar = memo(() => {
               return { ...i, badge: counts.painel };
             case 'conferencia':
               return { ...i, badge: counts.conferencia };
-            case 'cargas':
-              return { ...i, badge: counts.cargas };
             case 'romaneio':
               return { ...i, badge: counts.romaneio };
             case 'tracking':
