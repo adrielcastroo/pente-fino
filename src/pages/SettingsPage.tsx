@@ -988,18 +988,33 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Webhook do n8n (fixo)</Label>
+                          <div className="flex items-center justify-between gap-2">
+                            <Label className="text-sm font-medium text-muted-foreground">Webhook do n8n</Label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-[11px]"
+                              onClick={() => {
+                                setLabelSettings({ webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta' });
+                                setHasUnsavedChanges(true);
+                                toast.success('Webhook restaurado para o padrão');
+                              }}
+                            >
+                              Restaurar padrão
+                            </Button>
+                          </div>
                           <div className="relative">
                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                              value="http://localhost:5678/webhook/imprimir-etiqueta"
-                              readOnly
-                              disabled
-                              className="pl-9 text-sm bg-muted/20 font-mono cursor-not-allowed"
+                              value={labelSettings.webhookUrl || ''}
+                              onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
+                              placeholder="http://localhost:5678/webhook/imprimir-etiqueta"
+                              className="pl-9 text-sm bg-muted/20 font-mono"
                             />
                           </div>
                           <p className="text-[10px] text-muted-foreground">
-                            Endereço fixo do n8n local responsável por receber o PNG e encaminhar para a impressora.
+                            Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Alterações são salvas por usuário.
                           </p>
                         </div>
                       </div>
