@@ -381,6 +381,101 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {descPrompt && (
+        <Dialog open onOpenChange={(v) => !v && setDescPrompt(null)}>
+          <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Atualizar descrições?</DialogTitle>
+              <DialogDescription>
+                {descPrompt.summary.inserted} novo(s) importado(s), {descPrompt.summary.skipped} já existente(s) ignorado(s).
+                Encontramos {descPrompt.changes.length} item(ns) já cadastrado(s) cuja descrição na planilha difere da atual.
+                Marque os que deseja atualizar (apenas a descrição será alterada).
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex items-center gap-3 text-xs">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setDescPrompt((p) => p && { ...p, selected: new Set(p.changes.map((c) => c.codigo_interno)) })
+                }
+              >
+                Marcar todos
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setDescPrompt((p) => p && { ...p, selected: new Set() })}
+              >
+                Desmarcar todos
+              </Button>
+              <span className="text-muted-foreground ml-auto">
+                {descPrompt.selected.size} de {descPrompt.changes.length} selecionados
+              </span>
+            </div>
+
+            <div className="flex-1 overflow-auto border rounded-md">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background">
+                  <TableRow>
+                    <TableHead className="w-[40px]"></TableHead>
+                    <TableHead className="w-[160px]">Código interno</TableHead>
+                    <TableHead>Descrição atual</TableHead>
+                    <TableHead>Nova descrição (planilha)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {descPrompt.changes.map((c) => {
+                    const checked = descPrompt.selected.has(c.codigo_interno);
+                    return (
+                      <TableRow key={c.codigo_interno}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setDescPrompt((p) => {
+                                if (!p) return p;
+                                const s = new Set(p.selected);
+                                if (e.target.checked) s.add(c.codigo_interno);
+                                else s.delete(c.codigo_interno);
+                                return { ...p, selected: s };
+                              });
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{c.codigo_interno}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{c.oldDesc || '—'}</TableCell>
+                        <TableCell className="text-xs">{c.newDesc}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setDescPrompt(null);
+                  setRows([]);
+                  setFileName('');
+                  onOpenChange(false);
+                }}
+                disabled={updatingDesc}
+              >
+                Não atualizar
+              </Button>
+              <Button onClick={confirmDescUpdates} disabled={updatingDesc || descPrompt.selected.size === 0}>
+                {updatingDesc ? 'Atualizando...' : `Atualizar ${descPrompt.selected.size} descrição(ões)`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
