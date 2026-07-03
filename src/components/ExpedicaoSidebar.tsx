@@ -2,7 +2,6 @@ import { memo, useMemo } from 'react';
 import {
   Home,
   ClipboardList,
-  Package,
   ScanLine,
   FileText,
   DollarSign,
@@ -12,8 +11,6 @@ import {
   History,
   FileDown,
   Tag,
-  PackageCheck,
-  Boxes,
   ShieldCheck,
   Inbox,
 } from 'lucide-react';
