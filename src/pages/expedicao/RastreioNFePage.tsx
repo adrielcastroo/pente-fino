@@ -265,7 +265,7 @@ export default function RastreioNFePage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={atualizarRastreio}
+              onClick={() => atualizarRastreio(false)}
               disabled={tracking || !nfe.chaveAcesso}
               className="ml-auto gap-2"
             >
