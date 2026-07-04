@@ -19,20 +19,32 @@ import {
   RefreshCw,
   HardDrive,
   Package,
+  Plug,
+  Eye,
+  Settings2,
+  HardDriveDownload,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
 const ReleasesPage = lazy(() => import('./ReleasesPage'));
 const TeamPanel = lazy(() => import('@/components/settings/TeamPanel'));
+const IntegrationsTab = lazy(() => import('./tabs/IntegrationsTab'));
+const ObservabilityTab = lazy(() => import('./tabs/ObservabilityTab'));
+const GlobalSettingsTab = lazy(() => import('./tabs/GlobalSettingsTab'));
+const BackupTab = lazy(() => import('./tabs/BackupTab'));
 
 declare const __APP_VERSION__: string;
 
 const TABS = [
   { key: 'overview', label: 'Visão geral', icon: Activity },
+  { key: 'integrations', label: 'Integrações', icon: Plug },
+  { key: 'observability', label: 'Observabilidade', icon: Eye },
   { key: 'flags', label: 'Feature Flags', icon: Flag },
   { key: 'releases', label: 'Releases', icon: Rocket },
   { key: 'team', label: 'Usuários & Acessos', icon: Users },
+  { key: 'settings', label: 'Configurações globais', icon: Settings2 },
   { key: 'database', label: 'Banco de Dados', icon: Database },
+  { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
   { key: 'audit', label: 'Auditoria', icon: ScrollText },
   { key: 'security', label: 'Segurança & Auth', icon: KeyRound },
 ] as const;
