@@ -30,7 +30,7 @@ const levelColor: Record<string, string> = {
 };
 
 export default function ErrorWatcherWidget() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [open, setOpen] = useState(() => localStorage.getItem(STORAGE_KEY) === '1');
   const [minimized, setMinimized] = useState(false);
   const [issues, setIssues] = useState<Issue[]>([]);
