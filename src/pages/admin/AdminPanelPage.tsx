@@ -23,6 +23,7 @@ import {
   Eye,
   Settings2,
   HardDriveDownload,
+  Bug,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
@@ -32,6 +33,7 @@ const IntegrationsTab = lazy(() => import('./tabs/IntegrationsTab'));
 const ObservabilityTab = lazy(() => import('./tabs/ObservabilityTab'));
 const GlobalSettingsTab = lazy(() => import('./tabs/GlobalSettingsTab'));
 const BackupTab = lazy(() => import('./tabs/BackupTab'));
+const SentryTab = lazy(() => import('./tabs/SentryTab'));
 
 declare const __APP_VERSION__: string;
 
@@ -39,6 +41,7 @@ const TABS = [
   { key: 'overview', label: 'Visão geral', icon: Activity },
   { key: 'integrations', label: 'Integrações', icon: Plug },
   { key: 'observability', label: 'Observabilidade', icon: Eye },
+  { key: 'sentry', label: 'Sentry', icon: Bug },
   { key: 'flags', label: 'Feature Flags', icon: Flag },
   { key: 'releases', label: 'Releases', icon: Rocket },
   { key: 'team', label: 'Usuários & Acessos', icon: Users },
@@ -99,6 +102,9 @@ export default function AdminPanelPage() {
         </TabsContent>
         <TabsContent value="observability">
           <Suspense fallback={<Skeleton className="h-96" />}><ObservabilityTab /></Suspense>
+        </TabsContent>
+        <TabsContent value="sentry">
+          <Suspense fallback={<Skeleton className="h-96" />}><SentryTab /></Suspense>
         </TabsContent>
         <TabsContent value="flags">
           <Suspense fallback={<Skeleton className="h-96" />}><FeatureFlagsPage /></Suspense>
