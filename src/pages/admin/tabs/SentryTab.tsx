@@ -41,6 +41,11 @@ async function call(params: Record<string, string>) {
   return data;
 }
 
+function getSentryErrorMessage(data: any): string | null {
+  if (!data?.error && !data?.detail) return null;
+  return [data?.error, data?.detail].filter(Boolean).join(' — ');
+}
+
 export default function SentryTab() {
   const [projects, setProjects] = useState<SentryProject[]>([]);
   const [project, setProject] = useState<string>('all');
@@ -55,6 +60,12 @@ export default function SentryTab() {
     (async () => {
       try {
         const data = await call({ action: 'projects' });
+        const sentryError = getSentryErrorMessage(data);
+        if (sentryError) {
+          setErr(sentryError);
+          setProjects([]);
+          return;
+        }
         if (Array.isArray(data)) setProjects(data);
       } catch (e: any) {
         const msg = e?.message ?? String(e);
@@ -73,8 +84,11 @@ export default function SentryTab() {
         period,
         ...(project !== 'all' ? { project } : {}),
       });
+      const sentryError = getSentryErrorMessage(data);
+      if (sentryError) setErr(sentryError);
       if (Array.isArray(data)) setIssues(data);
-      else if (data?.detail) setErr(data.detail);
+      else if (Array.isArray(data?.issues)) setIssues(data.issues);
+      else setIssues([]);
     } catch (e: any) {
       const msg = e?.message ?? String(e);
       if (msg.includes('não configurados')) setNotConfigured(true);
