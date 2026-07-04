@@ -32,7 +32,7 @@ export function AlertsPanel() {
     queryFn: async (): Promise<Alert[]> => {
       const now = Date.now();
       const h24 = new Date(now - 24 * 3600_000).toISOString();
-      const h48 = new Date(now - 48 * 3600_000).toISOString();
+      
       const h72 = new Date(now - 72 * 3600_000).toISOString();
 
       // 1) Romaneios abertos > 24h
