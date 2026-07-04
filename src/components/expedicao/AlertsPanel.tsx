@@ -42,22 +42,8 @@ export function AlertsPanel() {
         .eq('status', 'aberto')
         .lt('created_at', h24);
 
-      // 2) Cargas em_transito sem evento recente (>48h)
-      const cargasTransito = await supabase
-        .from('expedicao_cargas')
-        .select('id, numero, updated_at')
-        .eq('status', 'em_transito');
-      let semRastreio: any[] = [];
-      if ((cargasTransito.data ?? []).length > 0) {
-        const ids = cargasTransito.data!.map(c => c.id);
-        const eventos = await supabase
-          .from('expedicao_rastreio_eventos')
-          .select('carga_id, data_evento')
-          .in('carga_id', ids)
-          .gte('data_evento', h48);
-        const comEvento = new Set((eventos.data ?? []).map(e => e.carga_id));
-        semRastreio = cargasTransito.data!.filter(c => !comEvento.has(c.id));
-      }
+
+
 
       // 3) Peças etiquetadas > 72h sem alocação
       const pecasParadas = await supabase
@@ -76,15 +62,7 @@ export function AlertsPanel() {
           count: romsAbertos.data!.length,
         });
       }
-      if (semRastreio.length > 0) {
-        list.push({
-          id: 'cargas_sem_rastreio_48h',
-          severity: 'danger',
-          title: `${semRastreio.length} carga(s) em trânsito sem evento há 48h+`,
-          detail: 'Atualize o rastreio ou entre em contato com a transportadora.',
-          count: semRastreio.length,
-        });
-      }
+      if (semRastreio_removed_placeholder_never_true()) { /* removed */ }
       if ((pecasParadas.count ?? 0) > 0) {
         list.push({
           id: 'pecas_etiquetadas_72h',
