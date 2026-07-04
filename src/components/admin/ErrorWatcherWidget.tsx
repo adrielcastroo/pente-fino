@@ -54,11 +54,11 @@ export default function ErrorWatcherWidget() {
   }, []);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !user) return;
     fetchIssues();
     const id = setInterval(fetchIssues, POLL_MS);
     return () => clearInterval(id);
-  }, [isAdmin, fetchIssues]);
+  }, [isAdmin, user, fetchIssues]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, open ? '1' : '0');
