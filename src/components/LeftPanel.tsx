@@ -880,9 +880,16 @@ export const LeftPanel = memo(function LeftPanel() {
       }
     }
 
+    // Converte código fornecedor → código interno (manual/coulisse, IA, diversos, etiq. pronta)
+    const fallbackDesc = isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '';
+    const resolvedCad = await itensCadastroService.resolveItemFromScan(item, fallbackDesc);
+    if (resolvedCad.source === 'fornecedor') {
+      toast.success(`Fornecedor "${item}" → ${resolvedCad.codigoInterno}`);
+    }
+
     const reg = {
       id: crypto.randomUUID(),
-      item,
+      item: resolvedCad.codigoInterno,
       processo: resolvedProcesso,
       nf: resolvedNf,
       endereco: resolvedEndereco,
@@ -898,7 +905,7 @@ export const LeftPanel = memo(function LeftPanel() {
     };
     addRegistro(reg);
     bipSuccess();
-    toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
+    toast.success(`✓ ${reg.item} adicionado (${registros.length + 1} rolos)`);
 
     // Impressão Automática (PNG → n8n)
     if (labelSettings.autoPrint) {
