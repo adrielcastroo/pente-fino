@@ -44,8 +44,7 @@ const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módu
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
-const FeatureFlagsPage = lazy(() => import("@/pages/admin/FeatureFlagsPage"));
-const ReleasesPage = lazy(() => import("@/pages/admin/ReleasesPage"));
+const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
 
@@ -200,8 +199,10 @@ const App = () => (
                 </Route>
 
                 {/* ===== ADMIN ===== */}
-                <Route path="/admin/flags" element={<ProtectedRoute><FeatureFlagsPage /></ProtectedRoute>} />
-                <Route path="/admin/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminPanelPage /></ProtectedRoute>} />
+                <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
+                <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
+
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
