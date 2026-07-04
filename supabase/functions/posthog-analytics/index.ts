@@ -16,6 +16,15 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
+  if (!/^\d+$/.test(projectId)) {
+    return new Response(
+      JSON.stringify({
+        error:
+          "POSTHOG_PROJECT_ID inválido: deve ser o ID numérico do projeto (ex.: 12345), não a chave 'phc_...'. Encontre em Settings → Project → Project ID no PostHog.",
+      }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
 
   const url = new URL(req.url);
   const action = url.searchParams.get("action") ?? "events";
