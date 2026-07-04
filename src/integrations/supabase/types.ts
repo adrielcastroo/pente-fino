@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      app_releases: {
+        Row: {
+          created_at: string
+          id: string
+          is_current: boolean
+          is_stable: boolean
+          notes: string | null
+          released_at: string
+          released_by: string | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          is_stable?: boolean
+          notes?: string | null
+          released_at?: string
+          released_by?: string | null
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          is_stable?: boolean
+          notes?: string | null
+          released_at?: string
+          released_by?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1031,6 +1067,36 @@ export type Database = {
           modelo?: string | null
           observacao?: string | null
           placa?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          key: string
+          rollout_roles: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key: string
+          rollout_roles?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key?: string
+          rollout_roles?: string[]
           updated_at?: string
         }
         Relationships: []

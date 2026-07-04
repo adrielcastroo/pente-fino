@@ -43,6 +43,9 @@ const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleChec
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
+import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
+const FeatureFlagsPage = lazy(() => import("@/pages/admin/FeatureFlagsPage"));
+const ReleasesPage = lazy(() => import("@/pages/admin/ReleasesPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
 
@@ -196,8 +199,13 @@ const App = () => (
 
                 </Route>
 
+                {/* ===== ADMIN ===== */}
+                <Route path="/admin/flags" element={<ProtectedRoute><FeatureFlagsPage /></ProtectedRoute>} />
+                <Route path="/admin/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <UpdateAvailableBanner />
             </Suspense>
           </AuthProvider>
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
