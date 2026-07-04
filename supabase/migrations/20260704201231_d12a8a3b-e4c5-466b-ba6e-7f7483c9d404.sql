@@ -1,0 +1,1 @@
+UPDATE public.integrations SET is_coming_soon = false, enabled = true, status = 'connected' WHERE key IN ('posthog','sentry');
