@@ -94,6 +94,12 @@ export default function AdminPanelPage() {
         </div>
 
         <TabsContent value="overview"><OverviewTab /></TabsContent>
+        <TabsContent value="integrations">
+          <Suspense fallback={<Skeleton className="h-96" />}><IntegrationsTab /></Suspense>
+        </TabsContent>
+        <TabsContent value="observability">
+          <Suspense fallback={<Skeleton className="h-96" />}><ObservabilityTab /></Suspense>
+        </TabsContent>
         <TabsContent value="flags">
           <Suspense fallback={<Skeleton className="h-96" />}><FeatureFlagsPage /></Suspense>
         </TabsContent>
@@ -105,7 +111,13 @@ export default function AdminPanelPage() {
             <Suspense fallback={<Skeleton className="h-96" />}><TeamPanel /></Suspense>
           </Card>
         </TabsContent>
+        <TabsContent value="settings">
+          <Suspense fallback={<Skeleton className="h-96" />}><GlobalSettingsTab /></Suspense>
+        </TabsContent>
         <TabsContent value="database"><DatabaseTab /></TabsContent>
+        <TabsContent value="backup">
+          <Suspense fallback={<Skeleton className="h-96" />}><BackupTab /></Suspense>
+        </TabsContent>
         <TabsContent value="audit"><AuditTab /></TabsContent>
         <TabsContent value="security"><SecurityTab /></TabsContent>
       </Tabs>
