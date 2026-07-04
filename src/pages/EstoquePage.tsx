@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { normalizarCodigo } from '@/lib/codigoFornecedor';
 
 
 interface Posicao {
