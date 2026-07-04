@@ -157,7 +157,7 @@ export default function MotorControlePage() {
     serieRef.current?.focus();
   }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, resetMotorFormData, labelSettings]);
 
-  const handleAddControle = useCallback(() => {
+  const handleAddControle = useCallback(async () => {
     const resolvedModelo = mapModelo(modelo);
     if (!resolvedModelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
@@ -166,13 +166,20 @@ export default function MotorControlePage() {
     if (!cleaned) { toast.warning('Série inválida'); return; }
     if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
+    // Converte código fornecedor → código interno
+    const resolvedCad = await itensCadastroService.resolveItemFromScan(resolvedModelo.trim(), 'Controle');
+    if (resolvedCad.source === 'fornecedor') {
+      toast.success(`Fornecedor "${resolvedModelo.trim()}" → ${resolvedCad.codigoInterno}`);
+    }
+    const itemFinal = resolvedCad.codigoInterno;
+
     const seq = maxSequencial + 1;
     const reg = {
       id: crypto.randomUUID(),
-      item: resolvedModelo.trim(),
+      item: itemFinal,
       nf: nf.trim(),
       lote: cleaned,
-      loteSistema: nf.trim() ? `${resolvedModelo.trim()} NFe ${nf.trim()} ${cleaned}*${seq}` : `${resolvedModelo.trim()} ${cleaned}*${seq}`,
+      loteSistema: nf.trim() ? `${itemFinal} NFe ${nf.trim()} ${cleaned}*${seq}` : `${itemFinal} ${cleaned}*${seq}`,
       quantidade: seq,
       tipoTecido: 'Controle',
       modoOrigem: 'controle',
@@ -190,15 +197,22 @@ export default function MotorControlePage() {
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, isDuplicate, maxSequencial, addRegistro, resetMotorFormData, labelSettings]);
 
-  const handleAddCoulisse = useCallback(() => {
+  const handleAddCoulisse = useCallback(async () => {
     if (!coulisseModeloProcCx.trim()) { toast.warning('Preencha o Modelo/Proc/Cx'); return; }
     if (!coulisseLote.trim()) { toast.warning('Bipe o Lote'); return; }
     if (isDuplicate(coulisseLote)) { toast.warning('Lote já cadastrado!'); setCoulisseLote(''); return; }
 
     const parsed = parseCoulisseString(coulisseModeloProcCx);
+    const modeloRaw = parsed.modelo || coulisseModeloProcCx.trim();
+    // Converte código fornecedor → código interno
+    const resolvedCad = await itensCadastroService.resolveItemFromScan(modeloRaw, 'Coulisse');
+    if (resolvedCad.source === 'fornecedor') {
+      toast.success(`Fornecedor "${modeloRaw}" → ${resolvedCad.codigoInterno}`);
+    }
+
     const reg = {
       id: crypto.randomUUID(),
-      item: parsed.modelo || coulisseModeloProcCx.trim(),
+      item: resolvedCad.codigoInterno,
       processo: parsed.processo || '',
       nf: '',
       lote: coulisseLote.trim(),
