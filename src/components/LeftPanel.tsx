@@ -779,9 +779,14 @@ export const LeftPanel = memo(function LeftPanel() {
     if (isMadeira) {
       const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
       const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
+      // Converte código fornecedor → código interno (todos os modos)
+      const resolvedCad = await itensCadastroService.resolveItemFromScan(item, madeiraTipo);
+      if (resolvedCad.source === 'fornecedor') {
+        toast.success(`Fornecedor "${item}" → ${resolvedCad.codigoInterno}`);
+      }
       const reg: Registro = {
         id: crypto.randomUUID(),
-        item,
+        item: resolvedCad.codigoInterno,
         processo: proc,
         nf: '',
         endereco: endereco || '',
