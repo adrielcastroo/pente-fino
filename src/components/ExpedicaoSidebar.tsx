@@ -12,7 +12,7 @@ import {
   FileDown,
   Tag,
   ShieldCheck,
-  Radar,
+  
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 import { useExpedicaoAlertCounts } from '@/hooks/expedicao/useExpedicaoAlertCounts';
@@ -38,12 +38,8 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
         
       ],
     },
-    {
-      label: 'Fiscal',
-      items: [
-        { key: 'rastreio-nfe', label: 'Rastreio NF-e', icon: Radar, path: '/expedicao/rastreio-nfe' },
-      ],
-    },
+
+
 
     {
       label: 'Análises',
