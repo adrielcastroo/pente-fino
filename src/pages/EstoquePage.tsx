@@ -100,6 +100,49 @@ export default function EstoquePage() {
 
   const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
 
+  // Mapa de códigos (interno + fornecedor normalizado) → { codigo_interno, descricao }
+  // Usado para exibir a DESCRIÇÃO do item cadastrado em vez do código do fornecedor,
+  // facilitando a localização visual dos tecidos no estoque.
+  const [itensMap, setItensMap] = useState<Map<string, { codigo_interno: string; descricao: string }>>(new Map());
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('itens_cadastro')
+          .select('codigo_interno, descricao, codigos_fornecedor_normalizado');
+        if (error) throw error;
+        if (cancelled) return;
+        const map = new Map<string, { codigo_interno: string; descricao: string }>();
+        for (const row of (data as any[]) || []) {
+          const entry = { codigo_interno: row.codigo_interno, descricao: row.descricao || '' };
+          const internoNorm = normalizarCodigo(row.codigo_interno);
+          if (internoNorm) map.set(internoNorm, entry);
+          for (const n of (row.codigos_fornecedor_normalizado || []) as string[]) {
+            if (n && !map.has(n)) map.set(n, entry);
+          }
+        }
+        setItensMap(map);
+      } catch (e) {
+        console.warn('Falha ao carregar itens_cadastro:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const resolveItemInfo = useCallback((raw: string | null | undefined) => {
+    const norm = normalizarCodigo(raw || '');
+    if (!norm) return null;
+    return itensMap.get(norm) || null;
+  }, [itensMap]);
+
+  const describeItem = useCallback((raw: string | null | undefined): string => {
+    const info = resolveItemInfo(raw);
+    if (info?.descricao) return info.descricao;
+    return (raw || '').trim();
+  }, [resolveItemInfo]);
+
   const loadStats = useCallback(async () => {
     try {
       // Fetch status + estrutura (needed for per-TEC breakdown in stat dialogs)
