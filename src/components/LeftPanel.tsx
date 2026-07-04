@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { estoqueService } from '@/services/estoqueService';
+import { itensCadastroService } from '@/services/itensCadastroService';
 import { useAppStore, LabelSettings } from '@/store/useAppStore';
 import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
@@ -778,9 +779,14 @@ export const LeftPanel = memo(function LeftPanel() {
     if (isMadeira) {
       const qtd = parseInt(quantidade) || madeiraDefaults[madeiraTipo];
       const loteSistema = generateLoteSistemaCaixa(proc, item, 0, registros);
+      // Converte código fornecedor → código interno (todos os modos)
+      const resolvedCad = await itensCadastroService.resolveItemFromScan(item, madeiraTipo);
+      if (resolvedCad.source === 'fornecedor') {
+        toast.success(`Fornecedor "${item}" → ${resolvedCad.codigoInterno}`);
+      }
       const reg: Registro = {
         id: crypto.randomUUID(),
-        item,
+        item: resolvedCad.codigoInterno,
         processo: proc,
         nf: '',
         endereco: endereco || '',
@@ -874,9 +880,16 @@ export const LeftPanel = memo(function LeftPanel() {
       }
     }
 
+    // Converte código fornecedor → código interno (manual/coulisse, IA, diversos, etiq. pronta)
+    const fallbackDesc = isDiversos ? diversosTipo : isEtiqPronta ? 'Etiq. Pronta' : '';
+    const resolvedCad = await itensCadastroService.resolveItemFromScan(item, fallbackDesc);
+    if (resolvedCad.source === 'fornecedor') {
+      toast.success(`Fornecedor "${item}" → ${resolvedCad.codigoInterno}`);
+    }
+
     const reg = {
       id: crypto.randomUUID(),
-      item,
+      item: resolvedCad.codigoInterno,
       processo: resolvedProcesso,
       nf: resolvedNf,
       endereco: resolvedEndereco,
@@ -892,7 +905,7 @@ export const LeftPanel = memo(function LeftPanel() {
     };
     addRegistro(reg);
     bipSuccess();
-    toast.success(`✓ ${item} adicionado (${registros.length + 1} rolos)`);
+    toast.success(`✓ ${reg.item} adicionado (${registros.length + 1} rolos)`);
 
     // Impressão Automática (PNG → n8n)
     if (labelSettings.autoPrint) {
