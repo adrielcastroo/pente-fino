@@ -82,18 +82,20 @@ export default function ObservabilityTab() {
 
       <Card className="p-5">
         <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
-          <Zap className="h-4 w-4" /> Ferramentas externas recomendadas
+          <Zap className="h-4 w-4" /> Ferramentas externas
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <ExternalToolCard
             name="Sentry"
             desc="Captura erros de runtime em produção com stack traces e reprodução."
-            action="Conectar via aba Integrações → 'Configurar credenciais'"
+            href="/admin?tab=sentry"
+            cta="Abrir aba Sentry →"
           />
           <ExternalToolCard
             name="PostHog"
             desc="Analytics de produto: funil, retenção, session replay, A/B tests."
-            action="Conectar via aba Integrações → 'Configurar credenciais'"
+            href="/admin?tab=posthog"
+            cta="Abrir aba PostHog →"
           />
         </div>
         <p className="text-xs text-muted-foreground mt-4">
@@ -117,12 +119,15 @@ function MetricCard({ icon: Icon, label, value, highlight }: { icon: any; label:
   );
 }
 
-function ExternalToolCard({ name, desc, action }: { name: string; desc: string; action: string }) {
+function ExternalToolCard({ name, desc, href, cta }: { name: string; desc: string; href: string; cta: string }) {
   return (
-    <div className="p-3 rounded border border-border/40 bg-muted/20">
+    <a
+      href={href}
+      className="block p-3 rounded border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-primary/40 transition-colors"
+    >
       <p className="font-semibold text-sm">{name}</p>
       <p className="text-xs text-muted-foreground mt-1">{desc}</p>
-      <p className="text-[10px] text-primary mt-2">{action}</p>
-    </div>
+      <p className="text-[11px] text-primary mt-2 font-medium">{cta}</p>
+    </a>
   );
 }
