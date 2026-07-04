@@ -763,7 +763,19 @@ export default function EstoquePage() {
                                    <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
                                 </div>
                               </div>
-                              <h3 className="font-semibold text-foreground text-lg sm:text-xl group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
+                              {(() => {
+                                const info = resolveItemInfo(item.item);
+                                const titulo = info?.descricao || item.item || 'Item sem identificação';
+                                const subCodigo = info?.codigo_interno || item.item;
+                                return (
+                                  <>
+                                    <h3 className="font-semibold text-foreground text-lg sm:text-xl group-hover:text-primary transition-colors" title={item.item || ''}>{titulo}</h3>
+                                    {subCodigo && info?.descricao && (
+                                      <div className="text-[10px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-widest mt-0.5">{subCodigo}</div>
+                                    )}
+                                  </>
+                                );
+                              })()}
                               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                                 <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
                                 <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
