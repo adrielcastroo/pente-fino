@@ -2223,6 +2223,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aplicar_descricao_cadastro: {
+        Args: {
+          _codigo_interno: string
+          _codigos_norm: string[]
+          _descricao: string
+        }
+        Returns: undefined
+      }
       check_reset_rate_limit: {
         Args: {
           max_attempts?: number
@@ -2262,6 +2270,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      normalizar_codigo: { Args: { v: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"
