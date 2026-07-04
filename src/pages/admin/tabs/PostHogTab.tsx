@@ -53,7 +53,7 @@ export default function PostHogTab() {
         setInsights(ins?.results ?? []);
       } catch (e: any) {
         const msg = e?.message ?? String(e);
-        if (msg.includes('não configurados') || msg.includes('500')) setNotConfigured(true);
+        if (msg.includes('não configurados')) setNotConfigured(true);
         else setErr(msg);
       }
     })();
