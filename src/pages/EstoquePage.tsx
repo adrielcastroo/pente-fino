@@ -840,12 +840,22 @@ export default function EstoquePage() {
                       <Package className="w-10 h-10" />
                     </div>
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <DialogTitle className="text-xl font-semibold tracking-tight">
-                        {detailPos.item || 'Item sem identificação'}
-                      </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-2 opacity-60">
-                        {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
-                      </DialogDescription>
+                      {(() => {
+                        const info = resolveItemInfo(detailPos.item);
+                        const titulo = info?.descricao || detailPos.item || 'Item sem identificação';
+                        const subCodigo = info?.codigo_interno || detailPos.item;
+                        return (
+                          <>
+                            <DialogTitle className="text-xl font-semibold tracking-tight">{titulo}</DialogTitle>
+                            {subCodigo && info?.descricao && (
+                              <div className="text-xs font-mono font-semibold text-primary/80 mt-1">{subCodigo}</div>
+                            )}
+                            <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-2 opacity-60">
+                              {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
+                            </DialogDescription>
+                          </>
+                        );
+                      })()}
                     </div>
                     <Badge className={cn(
                       "text-[10px] font-semibold px-5 py-2 rounded-md shadow-lg ring-4 uppercase tracking-widest border-2",
