@@ -1,0 +1,168 @@
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Navigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+import { useAppReleases, type AppRelease } from '@/hooks/useAppReleases';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Rocket, Star, CheckCircle2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+declare const __APP_VERSION__: string;
+
+export default function ReleasesPage() {
+  const { isAdmin, loading, user } = useAuth();
+  const { data: releases, isLoading } = useAppReleases();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '',
+    notes: '',
+    is_stable: false,
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      // Marca todas as outras como não-current
+      await (supabase as any).from('app_releases').update({ is_current: false }).eq('is_current', true);
+      const { error } = await (supabase as any).from('app_releases').insert({
+        version: form.version.trim(),
+        notes: form.notes || null,
+        is_stable: form.is_stable,
+        is_current: true,
+        released_by: user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Release registrada');
+      setOpen(false);
+      setForm({ ...form, notes: '', is_stable: false });
+      qc.invalidateQueries({ queryKey: ['app_releases'] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const markStable = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from('app_releases').update({ is_stable: true }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Versão marcada como estável (referência de rollback)');
+      qc.invalidateQueries({ queryKey: ['app_releases'] });
+    },
+  });
+
+  const setCurrent = useMutation({
+    mutationFn: async (id: string) => {
+      await (supabase as any).from('app_releases').update({ is_current: false }).eq('is_current', true);
+      const { error } = await (supabase as any).from('app_releases').update({ is_current: true }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Rollback aplicado — banner aparecerá para usuários com bundle diferente');
+      qc.invalidateQueries({ queryKey: ['app_releases'] });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from('app_releases').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['app_releases'] }),
+  });
+
+  if (loading) return null;
+  if (!isAdmin) return <Navigate to="/" replace />;
+
+  return (
+    <div className="container mx-auto p-6 max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Rocket className="h-6 w-6" /> Releases
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Histórico de versões publicadas. Marque estável para referência de rollback.
+          </p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button><Plus className="h-4 w-4" /> Registrar release</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Registrar nova release</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold uppercase text-muted-foreground">Versão</label>
+                <Input value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} placeholder="3.18.0" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase text-muted-foreground">Notas</label>
+                <Textarea rows={5} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="- Correção X&#10;- Nova funcionalidade Y" />
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={form.is_stable} onChange={(e) => setForm({ ...form, is_stable: e.target.checked })} />
+                Marcar como estável
+              </label>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button onClick={() => create.mutate()} disabled={!form.version.trim() || create.isPending}>Registrar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      ) : !releases?.length ? (
+        <Card className="p-8 text-center text-muted-foreground">Nenhuma release registrada.</Card>
+      ) : (
+        <div className="space-y-2">
+          {releases.map((r: AppRelease) => (
+            <Card key={r.id} className="p-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-bold text-lg">v{r.version}</span>
+                    {r.is_current && <Badge className="bg-primary">Atual</Badge>}
+                    {r.is_stable && <Badge variant="secondary" className="gap-1"><Star className="h-3 w-3" /> Estável</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(r.released_at).toLocaleString('pt-BR')}
+                  </p>
+                  {r.notes && (
+                    <pre className="text-xs mt-2 whitespace-pre-wrap font-sans text-foreground/80">{r.notes}</pre>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1">
+                  {!r.is_stable && (
+                    <Button size="sm" variant="ghost" onClick={() => markStable.mutate(r.id)}>
+                      <Star className="h-3.5 w-3.5" /> Estável
+                    </Button>
+                  )}
+                  {!r.is_current && (
+                    <Button size="sm" variant="ghost" onClick={() => setCurrent.mutate(r.id)}>
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Tornar atual
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => confirm(`Remover v${r.version}?`) && remove.mutate(r.id)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
