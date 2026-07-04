@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
@@ -9,6 +9,7 @@ import { Search, History, FileSpreadsheet, Calendar, User, Package, Settings2, H
 import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { normalizarCodigo } from '@/lib/codigoFornecedor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyState } from '@/components/ui/empty-state';
 
