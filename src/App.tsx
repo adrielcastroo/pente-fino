@@ -44,8 +44,7 @@ const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módu
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
-const FeatureFlagsPage = lazy(() => import("@/pages/admin/FeatureFlagsPage"));
-const ReleasesPage = lazy(() => import("@/pages/admin/ReleasesPage"));
+const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
 
