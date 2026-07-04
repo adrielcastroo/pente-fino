@@ -10,6 +10,7 @@ import { usePerformance } from '@/hooks/use-performance';
 import FormPageLayout from '@/components/FormPageLayout';
 import { parseCoulisseString } from '@/lib/app-utils';
 import { printMotorLabel } from '@/services/printService';
+import { itensCadastroService } from '@/services/itensCadastroService';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type SubMode = 'motor' | 'controle' | 'coulisse';
