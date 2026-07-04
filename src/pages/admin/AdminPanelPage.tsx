@@ -24,6 +24,7 @@ import {
   Settings2,
   HardDriveDownload,
   Bug,
+  LineChart,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
@@ -34,6 +35,7 @@ const ObservabilityTab = lazy(() => import('./tabs/ObservabilityTab'));
 const GlobalSettingsTab = lazy(() => import('./tabs/GlobalSettingsTab'));
 const BackupTab = lazy(() => import('./tabs/BackupTab'));
 const SentryTab = lazy(() => import('./tabs/SentryTab'));
+const PostHogTab = lazy(() => import('./tabs/PostHogTab'));
 
 declare const __APP_VERSION__: string;
 
@@ -42,6 +44,7 @@ const TABS = [
   { key: 'integrations', label: 'Integrações', icon: Plug },
   { key: 'observability', label: 'Observabilidade', icon: Eye },
   { key: 'sentry', label: 'Sentry', icon: Bug },
+  { key: 'posthog', label: 'PostHog', icon: LineChart },
   { key: 'flags', label: 'Feature Flags', icon: Flag },
   { key: 'releases', label: 'Releases', icon: Rocket },
   { key: 'team', label: 'Usuários & Acessos', icon: Users },
@@ -105,6 +108,9 @@ export default function AdminPanelPage() {
         </TabsContent>
         <TabsContent value="sentry">
           <Suspense fallback={<Skeleton className="h-96" />}><SentryTab /></Suspense>
+        </TabsContent>
+        <TabsContent value="posthog">
+          <Suspense fallback={<Skeleton className="h-96" />}><PostHogTab /></Suspense>
         </TabsContent>
         <TabsContent value="flags">
           <Suspense fallback={<Skeleton className="h-96" />}><FeatureFlagsPage /></Suspense>
