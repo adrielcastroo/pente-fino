@@ -109,6 +109,9 @@ export default function AdminPanelPage() {
         <TabsContent value="sentry">
           <Suspense fallback={<Skeleton className="h-96" />}><SentryTab /></Suspense>
         </TabsContent>
+        <TabsContent value="posthog">
+          <Suspense fallback={<Skeleton className="h-96" />}><PostHogTab /></Suspense>
+        </TabsContent>
         <TabsContent value="flags">
           <Suspense fallback={<Skeleton className="h-96" />}><FeatureFlagsPage /></Suspense>
         </TabsContent>
