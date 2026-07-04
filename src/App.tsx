@@ -199,8 +199,10 @@ const App = () => (
                 </Route>
 
                 {/* ===== ADMIN ===== */}
-                <Route path="/admin/flags" element={<ProtectedRoute><FeatureFlagsPage /></ProtectedRoute>} />
-                <Route path="/admin/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminPanelPage /></ProtectedRoute>} />
+                <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
+                <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
+
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
