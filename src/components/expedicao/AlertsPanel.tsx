@@ -62,7 +62,7 @@ export function AlertsPanel() {
           count: romsAbertos.data!.length,
         });
       }
-      if (semRastreio_removed_placeholder_never_true()) { /* removed */ }
+      
       if ((pecasParadas.count ?? 0) > 0) {
         list.push({
           id: 'pecas_etiquetadas_72h',
