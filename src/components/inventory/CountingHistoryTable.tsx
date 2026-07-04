@@ -18,6 +18,7 @@ export function CountingHistoryTable() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [codigoMap, setCodigoMap] = useState<Map<string, string>>(new Map());
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -32,32 +33,54 @@ export function CountingHistoryTable() {
     setLoading(false);
   };
 
+  const fetchCadastro = async () => {
+    const { data } = await (supabase.from('itens_cadastro') as any)
+      .select('codigo_interno, codigos_fornecedor_normalizado');
+    if (!data) return;
+    const map = new Map<string, string>();
+    for (const it of data as any[]) {
+      const interno = it.codigo_interno as string;
+      if (!interno) continue;
+      map.set(normalizarCodigo(interno), interno);
+      const forn: string[] = it.codigos_fornecedor_normalizado || [];
+      for (const f of forn) if (f) map.set(normalizarCodigo(f), interno);
+    }
+    setCodigoMap(map);
+  };
+
   useEffect(() => {
     fetchHistory();
+    fetchCadastro();
   }, []);
 
-  const filteredHistory = history.filter(item => 
+  const resolveInterno = useCallback((code: string | null | undefined): string => {
+    if (!code) return code || '';
+    return codigoMap.get(normalizarCodigo(code)) || code;
+  }, [codigoMap]);
+
+  const filteredHistory = history.filter(item =>
     item.conferente_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.codigo_lote?.toLowerCase().includes(searchTerm.toLowerCase())
+    item.codigo_lote?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    resolveInterno(item.codigo_lote)?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleExportRow = (item: any) => {
     const details = item.divergence_details as any;
     const scans = details?.bipedLotes?.map((b: any) => ({
       timestamp: formatDateBR(item.completed_at) + ' ' + formatTimeBR(item.completed_at),
-      itemCode: b.lote,
+      itemCode: resolveInterno(b.lote),
       inspectorName: item.conferente_nome,
       quantity: b.quantity
     })) || [{
       timestamp: formatDateBR(item.completed_at) + ' ' + formatTimeBR(item.completed_at),
-      itemCode: item.codigo_lote,
+      itemCode: resolveInterno(item.codigo_lote),
       inspectorName: item.conferente_nome,
       quantity: item.counted_qty
     }];
 
     exportCyclicInventoryXLSX({
-      itemCode: item.codigo_lote || 'N/A',
+      itemCode: resolveInterno(item.codigo_lote) || 'N/A',
       referenceDate: formatDateBR(item.completed_at),
       scans: scans
     });
