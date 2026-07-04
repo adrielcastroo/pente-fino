@@ -30,7 +30,7 @@ const levelColor: Record<string, string> = {
 };
 
 export default function ErrorWatcherWidget() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [open, setOpen] = useState(() => localStorage.getItem(STORAGE_KEY) === '1');
   const [minimized, setMinimized] = useState(false);
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -54,11 +54,11 @@ export default function ErrorWatcherWidget() {
   }, []);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !user) return;
     fetchIssues();
     const id = setInterval(fetchIssues, POLL_MS);
     return () => clearInterval(id);
-  }, [isAdmin, fetchIssues]);
+  }, [isAdmin, user, fetchIssues]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, open ? '1' : '0');
