@@ -9,6 +9,8 @@ import {
   ClipboardList,
   ShieldAlert,
   LayoutDashboard,
+  Flag,
+  Rocket,
 } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
@@ -51,6 +53,8 @@ const EstoqueSidebar = memo(() => {
           items: [
             { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/estoque/cadastros', minRole: 'supervisor' },
             { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/estoque/auditoria', minRole: 'gerente' },
+            { key: 'flags', label: 'Feature Flags', icon: Flag, path: '/admin/flags', minRole: 'admin' },
+            { key: 'releases', label: 'Releases', icon: Rocket, path: '/admin/releases', minRole: 'admin' },
           ],
         },
       ],
