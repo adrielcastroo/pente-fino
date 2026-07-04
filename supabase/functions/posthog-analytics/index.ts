@@ -33,7 +33,17 @@ Deno.serve(async (req) => {
   try {
     const key = Deno.env.get("POSTHOG_API_KEY");
     const projectId = Deno.env.get("POSTHOG_PROJECT_ID");
-    const host = Deno.env.get("POSTHOG_HOST") ?? "https://us.posthog.com";
+    const rawHost = (Deno.env.get("POSTHOG_HOST") ?? "").trim();
+    const hostMap: Record<string, string> = {
+      "": "https://us.posthog.com",
+      "us": "https://us.posthog.com",
+      "us cloud": "https://us.posthog.com",
+      "eu": "https://eu.posthog.com",
+      "eu cloud": "https://eu.posthog.com",
+    };
+    const lower = rawHost.toLowerCase();
+    const host = hostMap[lower] ?? (/^https?:\/\//i.test(rawHost) ? rawHost : `https://${rawHost}`);
+
     if (!key || !projectId) {
       return json({ error: "POSTHOG_API_KEY / POSTHOG_PROJECT_ID não configurados", results: [] });
     }
