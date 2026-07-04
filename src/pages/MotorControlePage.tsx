@@ -119,7 +119,7 @@ export default function MotorControlePage() {
 
   const isDuplicate = useCallback((cleanedSerie: string): boolean => allSeriesSet.has(cleanedSerie.trim().toLowerCase()), [allSeriesSet]);
 
-  const handleAddMotor = useCallback(() => {
+  const handleAddMotor = useCallback(async () => {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
@@ -128,9 +128,15 @@ export default function MotorControlePage() {
     if (!cleaned) { toast.warning('Série inválida'); return; }
     if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
+    // Converte código fornecedor → código interno
+    const resolvedCad = await itensCadastroService.resolveItemFromScan(cleanedModelo, 'Motor');
+    if (resolvedCad.source === 'fornecedor') {
+      toast.success(`Fornecedor "${cleanedModelo}" → ${resolvedCad.codigoInterno}`);
+    }
+
     const reg = {
       id: crypto.randomUUID(),
-      item: cleanedModelo,
+      item: resolvedCad.codigoInterno,
       nf: nf.trim(),
       lote: cleaned,
       loteSistema: [temCaixa ? `CX${caixaNum.padStart(2, '0')}` : 'S/CX', nf.trim() ? `NF ${nf.trim()}` : '', cleaned].filter(Boolean).join(' '),
