@@ -10,6 +10,40 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+const sentryErrorMessage = (status: number, text: string) => {
+  let sentryDetail = text;
+  try {
+    const parsed = JSON.parse(text);
+    sentryDetail = parsed?.detail ?? parsed?.message ?? text;
+  } catch {
+    sentryDetail = text;
+  }
+
+  if (status === 403) {
+    return {
+      error: "Sentry retornou 403",
+      detail:
+        "O token do Sentry não tem permissão para listar issues/projetos. Atualize o secret SENTRY_AUTH_TOKEN com os scopes org:read, project:read, event:read e member:read; confirme também SENTRY_ORG_SLUG=pente-fino.",
+      sentryDetail,
+    };
+  }
+
+  if (status === 401) {
+    return {
+      error: "Sentry retornou 401",
+      detail:
+        "O token do Sentry foi rejeitado. Gere um novo SENTRY_AUTH_TOKEN e salve novamente nos secrets.",
+      sentryDetail,
+    };
+  }
+
+  return {
+    error: `Sentry retornou ${status}`,
+    detail: sentryDetail.slice(0, 500),
+    sentryDetail,
+  };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -59,8 +93,9 @@ Deno.serve(async (req) => {
 
     const text = await resp.text();
     if (!resp.ok) {
+      const sentryError = sentryErrorMessage(resp.status, text);
       return json(
-        { error: `Sentry retornou ${resp.status}`, detail: text.slice(0, 500), issues: [] },
+        { ...sentryError, issues: [] },
         200,
       );
     }
