@@ -199,8 +199,13 @@ const App = () => (
 
                 </Route>
 
+                {/* ===== ADMIN ===== */}
+                <Route path="/admin/flags" element={<ProtectedRoute><FeatureFlagsPage /></ProtectedRoute>} />
+                <Route path="/admin/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <UpdateAvailableBanner />
             </Suspense>
           </AuthProvider>
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
