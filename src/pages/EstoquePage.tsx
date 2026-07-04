@@ -208,7 +208,8 @@ export default function EstoquePage() {
     if (!q) return null;
     const set = new Set<string>();
     for (const p of posicoes) {
-      const hay = `${p.item ?? ''} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
+      const desc = describeItem(p.item);
+      const hay = `${p.item ?? ''} ${desc} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
       if (hay.includes(q)) set.add(`${p.coluna}-${p.nivel}`);
     }
     return set;
