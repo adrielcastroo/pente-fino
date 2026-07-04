@@ -1241,6 +1241,54 @@ export type Database = {
         }
         Relationships: []
       }
+      integrations: {
+        Row: {
+          category: string
+          config: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          is_coming_soon: boolean
+          key: string
+          last_checked_at: string | null
+          last_error: string | null
+          name: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_coming_soon?: boolean
+          key: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          name: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_coming_soon?: boolean
+          key?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          name?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           created_at: string
