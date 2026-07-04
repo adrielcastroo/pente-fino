@@ -49,6 +49,11 @@ export default function PostHogTab() {
           call({ action: 'event_definitions' }),
           call({ action: 'insights' }),
         ]);
+        const errMsg = defs?.error ?? ins?.error;
+        if (errMsg) {
+          if (String(errMsg).includes('não configurados')) setNotConfigured(true);
+          else setErr([errMsg, defs?.detail ?? ins?.detail].filter(Boolean).join(' — '));
+        }
         setEventDefs(defs?.results ?? []);
         setInsights(ins?.results ?? []);
       } catch (e: any) {
@@ -67,6 +72,8 @@ export default function PostHogTab() {
         call({ action: 'events', period, ...(ev ? { event: ev } : {}), limit: '50' }),
         call({ action: 'trend', period, ...(ev ? { event: ev } : {}) }),
       ]);
+      const errMsg = evs?.error ?? tr?.error;
+      if (errMsg) setErr([errMsg, evs?.detail ?? tr?.detail].filter(Boolean).join(' — '));
       setEvents(evs?.results ?? []);
       const series = tr?.results?.[0];
       if (series?.labels && series?.data) {
