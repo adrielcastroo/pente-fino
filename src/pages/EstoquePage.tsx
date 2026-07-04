@@ -213,7 +213,7 @@ export default function EstoquePage() {
       if (hay.includes(q)) set.add(`${p.coluna}-${p.nivel}`);
     }
     return set;
-  }, [locateQuery, posicoes]);
+  }, [locateQuery, posicoes, describeItem]);
 
 
   const handleStatusChange = useCallback(async (pos: Posicao, newStatus: string) => {
