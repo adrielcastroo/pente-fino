@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as etiqProntaUtils from '@/lib/etiq-pronta-utils';
 import { estoqueService } from '@/services/estoqueService';
+import { itensCadastroService } from '@/services/itensCadastroService';
 import { useAppStore, LabelSettings } from '@/store/useAppStore';
 import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
