@@ -44,6 +44,7 @@ const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módu
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
+import ErrorWatcherWidget from "@/components/admin/ErrorWatcherWidget";
 const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
@@ -207,6 +208,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <UpdateAvailableBanner />
+              <ErrorWatcherWidget />
             </Suspense>
           </AuthProvider>
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
