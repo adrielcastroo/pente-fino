@@ -659,7 +659,7 @@ export default function EstoquePage() {
                                 <div key={it.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
                                   <div className="text-[10px] font-semibold text-muted-foreground/70 shrink-0 w-7">P{String(it.posicao).padStart(2,'0')}</div>
-                                  <div className="text-xs font-bold text-foreground truncate flex-1">{it.item || '—'}</div>
+                                  <div className="text-xs font-bold text-foreground truncate flex-1" title={it.item || ''}>{describeItem(it.item) || it.item || '—'}</div>
                                 </div>
                               );
                             })}
