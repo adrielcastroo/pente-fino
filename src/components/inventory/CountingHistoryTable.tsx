@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
@@ -9,6 +9,7 @@ import { Search, History, FileSpreadsheet, Calendar, User, Package, Settings2, H
 import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { normalizarCodigo } from '@/lib/codigoFornecedor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -17,6 +18,7 @@ export function CountingHistoryTable() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [codigoMap, setCodigoMap] = useState<Map<string, string>>(new Map());
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -31,32 +33,54 @@ export function CountingHistoryTable() {
     setLoading(false);
   };
 
+  const fetchCadastro = async () => {
+    const { data } = await (supabase.from('itens_cadastro') as any)
+      .select('codigo_interno, codigos_fornecedor_normalizado');
+    if (!data) return;
+    const map = new Map<string, string>();
+    for (const it of data as any[]) {
+      const interno = it.codigo_interno as string;
+      if (!interno) continue;
+      map.set(normalizarCodigo(interno), interno);
+      const forn: string[] = it.codigos_fornecedor_normalizado || [];
+      for (const f of forn) if (f) map.set(normalizarCodigo(f), interno);
+    }
+    setCodigoMap(map);
+  };
+
   useEffect(() => {
     fetchHistory();
+    fetchCadastro();
   }, []);
 
-  const filteredHistory = history.filter(item => 
+  const resolveInterno = useCallback((code: string | null | undefined): string => {
+    if (!code) return code || '';
+    return codigoMap.get(normalizarCodigo(code)) || code;
+  }, [codigoMap]);
+
+  const filteredHistory = history.filter(item =>
     item.conferente_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.codigo_lote?.toLowerCase().includes(searchTerm.toLowerCase())
+    item.codigo_lote?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    resolveInterno(item.codigo_lote)?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleExportRow = (item: any) => {
     const details = item.divergence_details as any;
     const scans = details?.bipedLotes?.map((b: any) => ({
       timestamp: formatDateBR(item.completed_at) + ' ' + formatTimeBR(item.completed_at),
-      itemCode: b.lote,
+      itemCode: resolveInterno(b.lote),
       inspectorName: item.conferente_nome,
       quantity: b.quantity
     })) || [{
       timestamp: formatDateBR(item.completed_at) + ' ' + formatTimeBR(item.completed_at),
-      itemCode: item.codigo_lote,
+      itemCode: resolveInterno(item.codigo_lote),
       inspectorName: item.conferente_nome,
       quantity: item.counted_qty
     }];
 
     exportCyclicInventoryXLSX({
-      itemCode: item.codigo_lote || 'N/A',
+      itemCode: resolveInterno(item.codigo_lote) || 'N/A',
       referenceDate: formatDateBR(item.completed_at),
       scans: scans
     });
@@ -153,7 +177,7 @@ export function CountingHistoryTable() {
                         <TableCell className="px-10">
                             <div className="flex flex-col">
                                 <span className="font-semibold text-sm text-foreground truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
-                                <Badge variant="outline" className="w-fit text-[9px] font-semibold uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
+                                <Badge variant="outline" className="w-fit text-[9px] font-semibold uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {resolveInterno(item.codigo_lote)}</Badge>
                             </div>
                         </TableCell>
                         <TableCell className="px-10">
