@@ -177,7 +177,7 @@ export function CountingHistoryTable() {
                         <TableCell className="px-10">
                             <div className="flex flex-col">
                                 <span className="font-semibold text-sm text-foreground truncate max-w-[250px] group-hover:text-primary transition-colors">{item.item_name}</span>
-                                <Badge variant="outline" className="w-fit text-[9px] font-semibold uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {item.codigo_lote}</Badge>
+                                <Badge variant="outline" className="w-fit text-[9px] font-semibold uppercase tracking-[0.2em] py-0.5 px-3 border-white/10 bg-white/5 mt-1.5 rounded-lg shadow-sm">LOTE: {resolveInterno(item.codigo_lote)}</Badge>
                             </div>
                         </TableCell>
                         <TableCell className="px-10">
