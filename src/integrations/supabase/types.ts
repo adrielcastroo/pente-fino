@@ -437,7 +437,6 @@ export type Database = {
       }
       expedicao_cargas: {
         Row: {
-          codigo_rastreio: string | null
           created_at: string
           criado_por: string | null
           custo_frete: number | null
@@ -454,7 +453,6 @@ export type Database = {
           veiculo_id: string | null
         }
         Insert: {
-          codigo_rastreio?: string | null
           created_at?: string
           criado_por?: string | null
           custo_frete?: number | null
@@ -471,7 +469,6 @@ export type Database = {
           veiculo_id?: string | null
         }
         Update: {
-          codigo_rastreio?: string | null
           created_at?: string
           criado_por?: string | null
           custo_frete?: number | null
@@ -885,47 +882,6 @@ export type Database = {
             columns: ["transportadora_id"]
             isOneToOne: false
             referencedRelation: "expedicao_transportadoras"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      expedicao_rastreio_eventos: {
-        Row: {
-          carga_id: string
-          created_at: string
-          data_evento: string
-          descricao: string | null
-          id: string
-          local: string | null
-          raw: Json | null
-          status: string | null
-        }
-        Insert: {
-          carga_id: string
-          created_at?: string
-          data_evento: string
-          descricao?: string | null
-          id?: string
-          local?: string | null
-          raw?: Json | null
-          status?: string | null
-        }
-        Update: {
-          carga_id?: string
-          created_at?: string
-          data_evento?: string
-          descricao?: string | null
-          id?: string
-          local?: string | null
-          raw?: Json | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "expedicao_rastreio_eventos_carga_id_fkey"
-            columns: ["carga_id"]
-            isOneToOne: false
-            referencedRelation: "expedicao_cargas"
             referencedColumns: ["id"]
           },
         ]

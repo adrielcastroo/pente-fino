@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Upload, Camera, MapPin, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,39 +56,6 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
     enabled: open,
   });
 
-  const { data: eventos = [] } = useQuery({
-    queryKey: ['expedicao_rastreio_eventos', cargaId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expedicao_rastreio_eventos')
-        .select('*')
-        .eq('carga_id', cargaId)
-        .order('data_evento', { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: open,
-  });
-
-  // Polling automático: atualiza rastreio a cada 15 min enquanto o dialog está aberto
-  // e a carga tem código de rastreio (em rota / saiu para entrega).
-  useEffect(() => {
-    if (!open || !carga?.codigo_rastreio) return;
-    const rodadaAtiva = ['em_rota', 'saiu_entrega'].includes(carga.status ?? '');
-    if (!rodadaAtiva) return;
-    const tick = () => {
-      supabase.functions
-        .invoke('rastreio-consulta', { body: { carga_id: cargaId } })
-        .then(({ error }) => {
-          if (!error) qc.invalidateQueries({ queryKey: ['expedicao_rastreio_eventos', cargaId] });
-        })
-        .catch(() => { /* silencioso no polling */ });
-    };
-    const id = setInterval(tick, 15 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [open, cargaId, carga?.codigo_rastreio, carga?.status, qc]);
-
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
@@ -111,7 +78,6 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
               <Info label="Data coleta" value={carga.data_coleta ?? '—'} />
               <Info label="Frete" value={carga.custo_frete ? `R$ ${Number(carga.custo_frete).toFixed(2)}` : '—'} />
               <Info label="Rota" value={carga.rota ?? '—'} icon={<MapPin className="w-3 h-3" />} />
-              <Info label="Rastreio" value={carga.codigo_rastreio ?? '—'} />
             </div>
 
             <Section title={`Romaneios (${romaneios.length})`}>
@@ -128,30 +94,6 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
                     </li>
                   ))}
                 </ul>
-              )}
-            </Section>
-
-            <Section title={`Rastreio (${eventos.length})`}
-              action={
-                carga.codigo_rastreio ? (
-                  <RastreioButton cargaId={cargaId} codigo={carga.codigo_rastreio} tipo={carga.transportadora_tipo} />
-                ) : (
-                  <span className="text-xs text-muted-foreground">Sem código de rastreio</span>
-                )
-              }
-            >
-              {eventos.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum evento registrado.</p>
-              ) : (
-                <ol className="space-y-2 border-l border-border pl-3">
-                  {eventos.map((e: any) => (
-                    <li key={e.id} className="text-xs">
-                      <div className="font-medium">{e.status ?? 'Evento'} <span className="text-muted-foreground font-normal">— {new Date(e.data_evento).toLocaleString('pt-BR')}</span></div>
-                      {e.local && <div className="text-muted-foreground">{e.local}</div>}
-                      {e.descricao && <div className="text-muted-foreground">{e.descricao}</div>}
-                    </li>
-                  ))}
-                </ol>
               )}
             </Section>
 
@@ -277,65 +219,13 @@ function ComprovanteForm({ cargaId, onDone }: { cargaId: string; onDone: () => v
 }
 
 function FotoLink({ path }: { path: string }) {
-  const [url, setUrl] = useState<string | null>(null);
   const load = async () => {
     const { data } = await supabase.storage.from('expedicao-comprovantes').createSignedUrl(path, 300);
-    if (data?.signedUrl) {
-      setUrl(data.signedUrl);
-      window.open(data.signedUrl, '_blank');
-    }
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
   };
   return (
     <Button size="sm" variant="ghost" onClick={load} className="gap-1 h-7 text-xs">
       <ExternalLink className="w-3 h-3" /> Foto
     </Button>
-  );
-}
-
-function RastreioButton({ cargaId, codigo, tipo }: { cargaId: string; codigo: string; tipo: string | null }) {
-  const qc = useQueryClient();
-  const [loading, setLoading] = useState(false);
-
-  const externalUrl = () => {
-    const urls: Record<string, string> = {
-      correios: `https://rastreamento.correios.com.br/app/index.php?objeto=${codigo}`,
-      jadlog: `https://www.jadlog.com.br/tracking?cte=${codigo}`,
-      total: `https://tracking.totalexpress.com.br/poder_rastro.php?ND=${codigo}`,
-    };
-    return urls[tipo ?? ''] ?? `https://www.google.com/search?q=rastreio+${codigo}`;
-  };
-
-  const consultar = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('rastreio-consulta', {
-        body: { carga_id: cargaId },
-      });
-      if (error) {
-        // Se a função retorna 501 (sem token), abre o portal externo como fallback.
-        window.open(externalUrl(), '_blank');
-        toast.info('Rastreio automático indisponível — abrindo portal externo.');
-      } else {
-        toast.success(`Rastreio atualizado: ${data?.novos ?? 0} novo(s) evento(s).`);
-        qc.invalidateQueries({ queryKey: ['expedicao_rastreio_eventos', cargaId] });
-      }
-    } catch (e) {
-      window.open(externalUrl(), '_blank');
-      toast.info('Erro na consulta automática — abrindo portal externo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button size="sm" variant="outline" onClick={consultar} disabled={loading} className="gap-1 h-7 text-xs">
-        {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ExternalLink className="w-3 h-3" />}
-        Consultar
-      </Button>
-      <Button size="sm" variant="ghost" onClick={() => window.open(externalUrl(), '_blank')} className="gap-1 h-7 text-xs">
-        Portal
-      </Button>
-    </div>
   );
 }
