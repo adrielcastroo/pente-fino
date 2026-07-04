@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { normalizarCodigo } from '@/lib/codigoFornecedor';
 
 
 interface Posicao {
@@ -99,6 +100,49 @@ export default function EstoquePage() {
 
   const [posicoesForActiveTec, setPosicoesForActiveTec] = useState<Posicao[]>([]);
 
+  // Mapa de códigos (interno + fornecedor normalizado) → { codigo_interno, descricao }
+  // Usado para exibir a DESCRIÇÃO do item cadastrado em vez do código do fornecedor,
+  // facilitando a localização visual dos tecidos no estoque.
+  const [itensMap, setItensMap] = useState<Map<string, { codigo_interno: string; descricao: string }>>(new Map());
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('itens_cadastro')
+          .select('codigo_interno, descricao, codigos_fornecedor_normalizado');
+        if (error) throw error;
+        if (cancelled) return;
+        const map = new Map<string, { codigo_interno: string; descricao: string }>();
+        for (const row of (data as any[]) || []) {
+          const entry = { codigo_interno: row.codigo_interno, descricao: row.descricao || '' };
+          const internoNorm = normalizarCodigo(row.codigo_interno);
+          if (internoNorm) map.set(internoNorm, entry);
+          for (const n of (row.codigos_fornecedor_normalizado || []) as string[]) {
+            if (n && !map.has(n)) map.set(n, entry);
+          }
+        }
+        setItensMap(map);
+      } catch (e) {
+        console.warn('Falha ao carregar itens_cadastro:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const resolveItemInfo = useCallback((raw: string | null | undefined) => {
+    const norm = normalizarCodigo(raw || '');
+    if (!norm) return null;
+    return itensMap.get(norm) || null;
+  }, [itensMap]);
+
+  const describeItem = useCallback((raw: string | null | undefined): string => {
+    const info = resolveItemInfo(raw);
+    if (info?.descricao) return info.descricao;
+    return (raw || '').trim();
+  }, [resolveItemInfo]);
+
   const loadStats = useCallback(async () => {
     try {
       // Fetch status + estrutura (needed for per-TEC breakdown in stat dialogs)
@@ -164,11 +208,12 @@ export default function EstoquePage() {
     if (!q) return null;
     const set = new Set<string>();
     for (const p of posicoes) {
-      const hay = `${p.item ?? ''} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
+      const desc = describeItem(p.item);
+      const hay = `${p.item ?? ''} ${desc} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
       if (hay.includes(q)) set.add(`${p.coluna}-${p.nivel}`);
     }
     return set;
-  }, [locateQuery, posicoes]);
+  }, [locateQuery, posicoes, describeItem]);
 
 
   const handleStatusChange = useCallback(async (pos: Posicao, newStatus: string) => {
@@ -614,7 +659,7 @@ export default function EstoquePage() {
                                 <div key={it.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
                                   <div className="text-[10px] font-semibold text-muted-foreground/70 shrink-0 w-7">P{String(it.posicao).padStart(2,'0')}</div>
-                                  <div className="text-xs font-bold text-foreground truncate flex-1">{it.item || '—'}</div>
+                                  <div className="text-xs font-bold text-foreground truncate flex-1" title={it.item || ''}>{describeItem(it.item) || it.item || '—'}</div>
                                 </div>
                               );
                             })}
@@ -718,7 +763,19 @@ export default function EstoquePage() {
                                    <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
                                 </div>
                               </div>
-                              <h3 className="font-semibold text-foreground text-lg sm:text-xl group-hover:text-primary transition-colors">{item.item || 'Item sem identificação'}</h3>
+                              {(() => {
+                                const info = resolveItemInfo(item.item);
+                                const titulo = info?.descricao || item.item || 'Item sem identificação';
+                                const subCodigo = info?.codigo_interno || item.item;
+                                return (
+                                  <>
+                                    <h3 className="font-semibold text-foreground text-lg sm:text-xl group-hover:text-primary transition-colors" title={item.item || ''}>{titulo}</h3>
+                                    {subCodigo && info?.descricao && (
+                                      <div className="text-[10px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-widest mt-0.5">{subCodigo}</div>
+                                    )}
+                                  </>
+                                );
+                              })()}
                               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                                 <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
                                 <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
@@ -783,12 +840,22 @@ export default function EstoquePage() {
                       <Package className="w-10 h-10" />
                     </div>
                     <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <DialogTitle className="text-xl font-semibold tracking-tight">
-                        {detailPos.item || 'Item sem identificação'}
-                      </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-2 opacity-60">
-                        {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
-                      </DialogDescription>
+                      {(() => {
+                        const info = resolveItemInfo(detailPos.item);
+                        const titulo = info?.descricao || detailPos.item || 'Item sem identificação';
+                        const subCodigo = info?.codigo_interno || detailPos.item;
+                        return (
+                          <>
+                            <DialogTitle className="text-xl font-semibold tracking-tight">{titulo}</DialogTitle>
+                            {subCodigo && info?.descricao && (
+                              <div className="text-xs font-mono font-semibold text-primary/80 mt-1">{subCodigo}</div>
+                            )}
+                            <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-2 opacity-60">
+                              {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
+                            </DialogDescription>
+                          </>
+                        );
+                      })()}
                     </div>
                     <Badge className={cn(
                       "text-[10px] font-semibold px-5 py-2 rounded-md shadow-lg ring-4 uppercase tracking-widest border-2",
