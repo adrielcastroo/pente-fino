@@ -329,4 +329,42 @@ export const itensCadastroService = {
     const { error } = await supabase.from('itens_cadastro').delete().eq('id', id);
     if (error) throw error;
   },
+
+  /**
+   * Resolve um valor bipado/digitado para { codigoInterno, descricao } usando cadastro.
+   * 1) tenta como código interno; 2) tenta como código de fornecedor; 3) fallback.
+   * Garante que registros e etiquetas de TODOS os modos de conferência
+   * (tecido manual/coulisse, IA, diversos, etiq. pronta, madeira, motor, controle)
+   * gravem/imprimam o código interno em vez do código do fornecedor.
+   */
+  async resolveItemFromScan(
+    bipado: string,
+    fallbackDescricao = '',
+  ): Promise<{ codigoInterno: string; descricao: string; resolved: boolean; source: 'interno' | 'fornecedor' | 'none' }> {
+    const raw = (bipado || '').trim();
+    if (!raw) return { codigoInterno: raw, descricao: fallbackDescricao, resolved: false, source: 'none' };
+    try {
+      const porInterno = await this.findByCodigoInterno(raw);
+      if (porInterno) {
+        return {
+          codigoInterno: porInterno.codigo_interno,
+          descricao: porInterno.descricao || fallbackDescricao,
+          resolved: true,
+          source: 'interno',
+        };
+      }
+      const porFornecedor = await this.findByCodigoFornecedor(raw);
+      if (porFornecedor) {
+        return {
+          codigoInterno: porFornecedor.codigo_interno,
+          descricao: porFornecedor.descricao || fallbackDescricao,
+          resolved: true,
+          source: 'fornecedor',
+        };
+      }
+    } catch (e) {
+      console.warn('resolveItemFromScan falhou:', e);
+    }
+    return { codigoInterno: raw, descricao: fallbackDescricao, resolved: false, source: 'none' };
+  },
 };
