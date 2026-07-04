@@ -9,6 +9,8 @@ import {
   ClipboardList,
   ShieldAlert,
   LayoutDashboard,
+  Flag,
+  Rocket,
 } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
