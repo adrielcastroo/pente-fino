@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Logo from '@/components/Logo';
+import Seo from '@/components/Seo';
 import logoComb from '@/assets/logo-comb.png';
 
 const loginSchema = z.object({
