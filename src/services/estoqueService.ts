@@ -118,7 +118,6 @@ export const estoqueService = {
       }
 
       if (estoqueRows.length > 0) {
-        console.log(`Upserting ${estoqueRows.length} rows to estoque_posicoes`);
         const { error: upsertError } = await supabase
           .from('estoque_posicoes')
           .upsert(estoqueRows, { onConflict: 'estrutura,coluna,nivel,posicao' });

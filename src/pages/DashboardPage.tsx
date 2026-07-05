@@ -23,6 +23,7 @@ import { CyclicNotification } from '@/components/inventory/CyclicNotification';
 import { motion } from 'framer-motion';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/page-header';
+import Seo from '@/components/Seo';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
@@ -240,6 +241,13 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
+      <Seo
+        title="Dashboard — Pente Fino"
+        description="Painel executivo com métricas de conferência, ocupação, alertas e histórico do estoque têxtil em tempo real."
+        path="/"
+        noindex
+      />
     <motion.div 
       id="dashboard-content" 
       initial={{ opacity: 0, y: 20 }}
@@ -719,5 +727,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
     </motion.div>
+    </>
   );
 }

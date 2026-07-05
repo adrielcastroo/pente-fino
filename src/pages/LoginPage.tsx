@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Logo from '@/components/Logo';
+import Seo from '@/components/Seo';
 import logoComb from '@/assets/logo-comb.png';
 
 const loginSchema = z.object({
@@ -141,6 +142,12 @@ export default function LoginPage() {
   };
 
   return (
+    <>
+      <Seo
+        title="Login — Pente Fino | Gestão de Estoque Têxtil"
+        description="Acesse o Sistema Pente Fino: conferência, endereçamento e expedição de estoque têxtil em tempo real."
+        path="/login"
+      />
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-background overflow-hidden">
       {/* Coluna Esquerda: Visual (Desktop/Tablet Horizontal) */}
       <div className="hidden md:flex md:w-1/2 lg:w-[60%] relative flex-col items-center justify-center p-12 overflow-hidden bg-muted/30 border-r border-border/50">
@@ -209,9 +216,9 @@ export default function LoginPage() {
               animate={{ scale: 1, opacity: 1 }}
               className="p-3 bg-white dark:bg-card border border-border/50 rounded-md shadow-sm mb-4"
             >
-              <img src={logoComb} alt="Logo" className="w-10 h-10 object-contain" />
+              <img src={logoComb} alt="Logo Pente Fino" className="w-10 h-10 object-contain" />
             </motion.div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h1>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h2>
           </div>
 
           <motion.div
@@ -542,5 +549,6 @@ export default function LoginPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
