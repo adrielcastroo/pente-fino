@@ -240,6 +240,13 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
+      <Seo
+        title="Dashboard — Pente Fino"
+        description="Painel executivo com métricas de conferência, ocupação, alertas e histórico do estoque têxtil em tempo real."
+        path="/"
+        noindex
+      />
     <motion.div 
       id="dashboard-content" 
       initial={{ opacity: 0, y: 20 }}
