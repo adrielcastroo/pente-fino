@@ -23,6 +23,7 @@ import { CyclicNotification } from '@/components/inventory/CyclicNotification';
 import { motion } from 'framer-motion';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/page-header';
+import Seo from '@/components/Seo';
 
 function formatDuration(start: string | null | undefined, end: string | null | undefined): string {
   if (!start || !end) return '—';
