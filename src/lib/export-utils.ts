@@ -288,7 +288,6 @@ function generateSummaryText(title: string, data: any[], chartKey: string = 'val
 export async function exportDashboardToPDF(elementId: string, fileName: string, stats?: any) {
   const toastId = toast.loading('Preparando relatório analítico de alta fidelidade...');
   try {
-    console.log('Starting PDF Export for element:', elementId);
     const [{ jsPDF }, { default: autoTable }, html2canvas] = await Promise.all([
       import('jspdf'),
       import('jspdf-autotable'),
