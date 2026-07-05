@@ -726,5 +726,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
     </motion.div>
+    </>
   );
 }
