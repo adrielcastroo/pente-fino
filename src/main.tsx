@@ -17,9 +17,11 @@ const rootElement = document.getElementById("root");
 
 if (rootElement) {
   createRoot(rootElement).render(
-    <GlobalErrorBoundary>
-      <App />
-    </GlobalErrorBoundary>
+    <HelmetProvider>
+      <GlobalErrorBoundary>
+        <App />
+      </GlobalErrorBoundary>
+    </HelmetProvider>
   );
   registerAppServiceWorker();
 }
