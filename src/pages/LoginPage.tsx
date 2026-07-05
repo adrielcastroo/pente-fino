@@ -209,9 +209,9 @@ export default function LoginPage() {
               animate={{ scale: 1, opacity: 1 }}
               className="p-3 bg-white dark:bg-card border border-border/50 rounded-md shadow-sm mb-4"
             >
-              <img src={logoComb} alt="Logo" className="w-10 h-10 object-contain" />
+              <img src={logoComb} alt="Logo Pente Fino" className="w-10 h-10 object-contain" />
             </motion.div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h1>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h2>
           </div>
 
           <motion.div
