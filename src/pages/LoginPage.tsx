@@ -141,6 +141,12 @@ export default function LoginPage() {
   };
 
   return (
+    <>
+      <Seo
+        title="Login — Pente Fino | Gestão de Estoque Têxtil"
+        description="Acesse o Sistema Pente Fino: conferência, endereçamento e expedição de estoque têxtil em tempo real."
+        path="/login"
+      />
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-background overflow-hidden">
       {/* Coluna Esquerda: Visual (Desktop/Tablet Horizontal) */}
       <div className="hidden md:flex md:w-1/2 lg:w-[60%] relative flex-col items-center justify-center p-12 overflow-hidden bg-muted/30 border-r border-border/50">
