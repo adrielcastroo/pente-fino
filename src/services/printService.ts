@@ -126,35 +126,53 @@ async function sendToWebhook(
   };
   const payloadJson = JSON.stringify(body);
 
-  // 1) Preferir Edge Function `n8n-proxy` — nos dá status HTTP real do n8n
-  //    sem passar por CORS do browser.
-  try {
-    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-      body: {
-        url: webhookUrl,
-        method: 'POST',
-        body,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      },
-    });
-    if (error) throw error;
-    if (data && typeof data === 'object') {
-      const d = data as { ok?: boolean; status?: number; error?: string };
-      if (d.ok) {
-        void logN8nHealth(true);
-        return;
+  // Detecta URLs que só existem na máquina do usuário — a Edge Function roda
+  // nos servidores do Supabase e NÃO consegue alcançá-las. Nesses casos vamos
+  // direto pelo browser, como funcionava antes.
+  const isLocalTarget = (() => {
+    try {
+      const h = new URL(webhookUrl).hostname.toLowerCase();
+      return (
+        h === 'localhost' ||
+        h === '127.0.0.1' ||
+        h === '::1' ||
+        h.endsWith('.local') ||
+        /^10\./.test(h) ||
+        /^192\.168\./.test(h) ||
+        /^172\.(1[6-9]|2\d|3[0-1])\./.test(h)
+      );
+    } catch { return false; }
+  })();
+
+  // 1) Se a URL for pública, preferir Edge Function `n8n-proxy` — nos dá
+  //    status HTTP real do n8n sem passar por CORS do browser.
+  if (!isLocalTarget) {
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+        body: {
+          url: webhookUrl,
+          method: 'POST',
+          body,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        },
+      });
+      if (error) throw error;
+      if (data && typeof data === 'object') {
+        const d = data as { ok?: boolean; status?: number; error?: string };
+        if (d.ok) { void logN8nHealth(true); return; }
+        const msg = d.error || `n8n respondeu ${d.status ?? '???'}`;
+        void logN8nHealth(false, msg);
+        throw new Error(msg);
       }
-      const msg = d.error || `n8n respondeu ${d.status ?? '???'}`;
-      void logN8nHealth(false, msg);
-      throw new Error(msg);
+      void logN8nHealth(true);
+      return;
+    } catch (proxyErr) {
+      console.warn('[print] n8n-proxy indisponível, fallback direto:', proxyErr);
     }
-    void logN8nHealth(true);
-    return;
-  } catch (proxyErr) {
-    console.warn('[print] n8n-proxy indisponível, fallback direto:', proxyErr);
   }
 
-  // 2) Fallback: chamar o webhook diretamente (com retry no-cors em caso de bloqueio).
+  // 2) Fallback (ou caminho primário para localhost/IP privado): chamar o
+  //    webhook diretamente. Se der bloqueio de CORS, retry em no-cors.
   try {
     const res = await fetch(webhookUrl, {
       method: 'POST',
