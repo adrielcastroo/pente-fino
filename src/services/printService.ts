@@ -129,11 +129,25 @@ async function sendToWebhook(
     method: 'POST',
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify(body),
+  }).catch((e) => {
+    recordPayload({
+      sentAt: new Date().toISOString(), webhookUrl, status: 'fail',
+      errorMessage: e?.message || String(e), payload: body, title: payload.title,
+    });
+    throw e;
   });
 
   if (!res.ok) {
+    recordPayload({
+      sentAt: new Date().toISOString(), webhookUrl, status: 'fail',
+      errorMessage: `HTTP ${res.status}`, payload: body, title: payload.title,
+    });
     throw new Error(`Webhook respondeu ${res.status}`);
   }
+  recordPayload({
+    sentAt: new Date().toISOString(), webhookUrl, status: 'ok',
+    payload: body, title: payload.title,
+  });
 }
 
 
