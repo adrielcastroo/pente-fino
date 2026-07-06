@@ -115,6 +115,9 @@ export default function AdminPanelPage() {
         <TabsContent value="posthog">
           <Suspense fallback={<Skeleton className="h-96" />}><PostHogTab /></Suspense>
         </TabsContent>
+        <TabsContent value="n8n">
+          <Suspense fallback={<Skeleton className="h-96" />}><N8nMonitorPage /></Suspense>
+        </TabsContent>
         <TabsContent value="flags">
           <Suspense fallback={<Skeleton className="h-96" />}><FeatureFlagsPage /></Suspense>
         </TabsContent>
