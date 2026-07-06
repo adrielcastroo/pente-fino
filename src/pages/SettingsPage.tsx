@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
-import { validateWebhookUrl } from '@/lib/webhook-url';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
@@ -989,54 +988,19 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <Label className="text-sm font-medium text-muted-foreground">Webhook do n8n</Label>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-[11px]"
-                              onClick={() => {
-                                setLabelSettings({ webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta' });
-                                setHasUnsavedChanges(true);
-                                toast.success('Webhook restaurado para o padrão');
-                              }}
-                            >
-                              Restaurar padrão
-                            </Button>
+                          <Label className="text-sm font-medium text-muted-foreground">Webhook do n8n (fixo)</Label>
+                          <div className="relative">
+                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              value="http://localhost:5678/webhook/imprimir-etiqueta"
+                              readOnly
+                              disabled
+                              className="pl-9 text-sm bg-muted/20 font-mono cursor-not-allowed"
+                            />
                           </div>
-                          {(() => {
-                            const v = validateWebhookUrl(labelSettings.webhookUrl, { allowEmpty: true });
-                            const invalid = !v.ok;
-                            return (
-                              <>
-                                <div className="relative">
-                                  <LinkIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${invalid ? 'text-destructive' : 'text-muted-foreground'}`} />
-                                  <Input
-                                    value={labelSettings.webhookUrl || ''}
-                                    onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
-                                    placeholder="http://localhost:5678/webhook/imprimir-etiqueta"
-                                    aria-invalid={invalid}
-                                    className={`pl-9 text-sm font-mono ${invalid ? 'bg-destructive/5 border-destructive/60 focus-visible:ring-destructive/40' : 'bg-muted/20'}`}
-                                  />
-                                </div>
-                                {invalid ? (
-                                  <p className="text-[11px] text-destructive font-medium">{v.error}</p>
-                                ) : (
-                                  <p className="text-[10px] text-muted-foreground">
-                                    Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Usado para <strong>tecido</strong> e como fallback para <strong>motor</strong>. Alterações são salvas por usuário.
-                                  </p>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </div>
-
-                        <div className="rounded-md bg-muted/30 border border-border/40 px-2.5 py-1.5 text-[10px] text-muted-foreground space-y-0.5">
-                          <span className="opacity-70">Todas as etiquetas usarão:</span>{' '}
-                          <span className="font-mono text-foreground">
-                            {labelSettings.webhookUrl?.trim() || '(não configurado — impressão pelo navegador)'}
-                          </span>
+                          <p className="text-[10px] text-muted-foreground">
+                            Endereço fixo do n8n local responsável por receber o PNG e encaminhar para a impressora.
+                          </p>
                         </div>
 
                       </div>
