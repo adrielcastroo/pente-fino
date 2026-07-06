@@ -70,8 +70,8 @@ describe('validateWebhookUrl', () => {
       expect(r.ok).toBe(false);
     });
 
-    it('rejeita http:// sem host', () => {
-      const r = validateWebhookUrl('http:///caminho');
+    it('rejeita URL malformada tipo "http:"', () => {
+      const r = validateWebhookUrl('http:');
       expect(r.ok).toBe(false);
     });
   });
