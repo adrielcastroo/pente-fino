@@ -135,6 +135,88 @@ function shouldUseFormNoCors(webhookUrl: string): boolean {
   }
 }
 
+function buildWebhookForm(payload: {
+  type: 'tecido' | 'motor';
+  title: string;
+  widthMm: number;
+  heightMm: number;
+  data: Record<string, any>;
+}, base64: string, mimeType: string, sentAt: string): URLSearchParams {
+  const form = new URLSearchParams();
+  form.set('type', payload.type);
+  form.set('template', payload.type);
+  form.set('format', payload.type);
+  form.set('title', payload.title);
+  form.set('widthMm', String(payload.widthMm));
+  form.set('heightMm', String(payload.heightMm));
+  form.set('imageBase64', base64);
+  form.set('mimeType', mimeType);
+  form.set('imageSize', String(base64.length));
+  form.set('sentAt', sentAt);
+  form.set('data', JSON.stringify(payload.data));
+  return form;
+}
+
+function submitHiddenForm(webhookUrl: string, form: URLSearchParams): Promise<void> {
+  if (typeof document === 'undefined') return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const iframeName = `n8n-print-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+
+    const htmlForm = document.createElement('form');
+    htmlForm.method = 'POST';
+    htmlForm.action = webhookUrl;
+    htmlForm.target = iframeName;
+    htmlForm.enctype = 'application/x-www-form-urlencoded';
+    htmlForm.style.display = 'none';
+
+    form.forEach((value, key) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      htmlForm.appendChild(input);
+    });
+
+    let done = false;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      try { htmlForm.remove(); } catch { /* noop */ }
+      try { iframe.remove(); } catch { /* noop */ }
+      resolve();
+    };
+
+    iframe.addEventListener('load', cleanup, { once: true });
+    document.body.appendChild(iframe);
+    document.body.appendChild(htmlForm);
+    htmlForm.submit();
+    window.setTimeout(cleanup, 1500);
+  });
+}
+
+async function postFormNoCors(webhookUrl: string, form: URLSearchParams): Promise<void> {
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: form,
+    });
+  } catch (fetchError) {
+    console.warn('Envio fetch no-cors bloqueado; tentando formulário oculto:', fetchError);
+    await submitHiddenForm(webhookUrl, form);
+  }
+}
+
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -161,34 +243,27 @@ async function sendToWebhook(
   // (POST "simple request"). O workflow continua lendo $json.body.imageBase64.
   // Sem `keepalive` (descarta payloads grandes ~64KB).
   if (shouldUseFormNoCors(webhookUrl)) {
-    const form = new URLSearchParams();
-    form.set('type', payload.type);
-    form.set('template', payload.type);
-    form.set('format', payload.type);
-    form.set('title', payload.title);
-    form.set('widthMm', String(payload.widthMm));
-    form.set('heightMm', String(payload.heightMm));
-    form.set('imageBase64', base64);
-    form.set('mimeType', mimeType);
-    form.set('imageSize', String(base64.length));
-    form.set('sentAt', body.sentAt);
-    form.set('data', JSON.stringify(payload.data));
-
-    await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: form,
-    });
+    const form = buildWebhookForm(payload, base64, mimeType, body.sentAt);
+    await postFormNoCors(webhookUrl, form);
     // Resposta é opaque em no-cors — consideramos entregue.
     return;
   }
 
   // URL pública → JSON normal, com telemetria real do status HTTP.
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    // URL pública sem CORS configurado: replica o caminho antigo para garantir
+    // que o POST saia mesmo sem podermos confirmar a resposta.
+    const form = buildWebhookForm(payload, base64, mimeType, body.sentAt);
+    await postFormNoCors(webhookUrl, form);
+    return;
+  }
 
   if (!res.ok) {
     throw new Error(`Webhook respondeu ${res.status}`);
