@@ -1014,8 +1014,62 @@ export default function SettingsPage() {
                             />
                           </div>
                           <p className="text-[10px] text-muted-foreground">
-                            Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Alterações são salvas por usuário.
+                            Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Usado para <strong>tecido</strong> e como fallback para <strong>motor</strong>. Alterações são salvas por usuário.
                           </p>
+                        </div>
+
+                        {/* Override opcional para etiquetas de motor */}
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <Label className="text-sm font-medium text-muted-foreground">
+                                Webhook específico para Motor <span className="text-[10px] font-normal opacity-70">(opcional)</span>
+                              </Label>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                Deixe vazio para usar o webhook acima também para etiquetas de motor/controle/coulisse.
+                              </p>
+                            </div>
+                            {labelSettings.motorWebhookUrl?.trim() && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-[11px] shrink-0"
+                                onClick={() => {
+                                  setLabelSettings({ motorWebhookUrl: '' });
+                                  setHasUnsavedChanges(true);
+                                  toast.success('Override de motor removido — usará o webhook principal');
+                                }}
+                              >
+                                Limpar override
+                              </Button>
+                            )}
+                          </div>
+                          <div className="relative">
+                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              value={labelSettings.motorWebhookUrl || ''}
+                              onChange={(e) => { setLabelSettings({ motorWebhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
+                              placeholder="(vazio) — usa o webhook principal"
+                              className="pl-9 text-sm bg-muted/20 font-mono"
+                            />
+                          </div>
+                          <div className="rounded-md bg-muted/30 border border-border/40 px-2.5 py-1.5 text-[10px] text-muted-foreground space-y-0.5">
+                            <div>
+                              <span className="opacity-70">Tecido usará:</span>{' '}
+                              <span className="font-mono text-foreground">
+                                {labelSettings.webhookUrl?.trim() || '(não configurado — impressão pelo navegador)'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="opacity-70">Motor usará:</span>{' '}
+                              <span className="font-mono text-foreground">
+                                {labelSettings.motorWebhookUrl?.trim()
+                                  || labelSettings.webhookUrl?.trim()
+                                  || '(não configurado — impressão pelo navegador)'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
