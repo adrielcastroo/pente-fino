@@ -165,8 +165,44 @@ async function sendDirectToLocalN8n(webhookUrl: string, payloadJson: string): Pr
   }
 }
 
-  // 1) Se a URL for pública, preferir Edge Function `n8n-proxy` — nos dá
-  //    status HTTP real do n8n sem passar por CORS do browser.
+async function sendToWebhook(
+  webhookUrl: string,
+  payload: {
+    type: 'tecido' | 'motor';
+    title: string;
+    dataUrl: string;
+    widthMm: number;
+    heightMm: number;
+    data: Record<string, any>;
+  },
+): Promise<void> {
+  const { base64, mimeType } = cleanBase64(payload.dataUrl);
+  const body = {
+    ...payload,
+    template: payload.type,
+    format: payload.type,
+    imageBase64: base64,
+    mimeType,
+    imageSize: base64.length,
+    sentAt: new Date().toISOString(),
+  };
+  const payloadJson = JSON.stringify(body);
+  const target = classifyWebhookTarget(webhookUrl);
+
+  // Localhost / IP privado / .local: navegador do usuário chama o n8n direto.
+  // (Edge Function roda em nuvem e não alcança a rede local.)
+  if (target !== 'public') {
+    try {
+      await sendDirectToLocalN8n(webhookUrl, payloadJson);
+      void logN8nHealth(true);
+      return;
+    } catch (err) {
+      void logN8nHealth(false, (err as Error).message);
+      throw err;
+    }
+  }
+
+  // URL pública → Edge Function `n8n-proxy` (status HTTP real, sem CORS do browser).
   try {
     const { data, error } = await supabase.functions.invoke('n8n-proxy', {
       body: {
@@ -185,40 +221,12 @@ async function sendDirectToLocalN8n(webhookUrl: string, payloadJson: string): Pr
       throw new Error(msg);
     }
     void logN8nHealth(true);
-    return;
-  } catch (proxyErr) {
-    console.warn('[print] n8n-proxy indisponível, fallback direto:', proxyErr);
-  }
-
-  // 2) Fallback (ou caminho primário para localhost/IP privado): chamar o
-  //    webhook diretamente. Se der bloqueio de CORS, retry em no-cors.
-  try {
-    const res = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: payloadJson,
-    });
-    if (res.type === 'opaque') { void logN8nHealth(true); return; }
-    if (!res.ok) {
-      const msg = `Webhook respondeu ${res.status}`;
-      void logN8nHealth(false, msg);
-      throw new Error(msg);
-    }
-    void logN8nHealth(true);
-    return;
   } catch (err) {
-    console.warn('[print] webhook direto falhou, retry no-cors:', err);
-    await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: payloadJson,
-    });
-    // no-cors: sem status real; registrar como aviso.
-    void logN8nHealth(false, (err as Error).message || 'CORS/opaque — sem status HTTP');
-    return;
+    void logN8nHealth(false, (err as Error).message);
+    throw err;
   }
 }
+
 
 /**
  * Atualiza `integrations.last_checked_at` / `last_error` / `status` para a
