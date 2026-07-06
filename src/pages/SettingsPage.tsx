@@ -1108,8 +1108,8 @@ export default function SettingsPage() {
                                 <p className="font-semibold text-amber-300">n8n local detectado — atenção:</p>
                                 <ul className="list-disc pl-4 space-y-1 text-amber-100/90">
                                   <li>
-                                    O n8n precisa devolver <span className="font-mono">CORS</span>. Rode com a variável de ambiente{' '}
-                                    <span className="font-mono">N8N_CORS_ALLOW_ORIGIN=*</span> (ou com a origem do app).
+                                    Para n8n local, o app envia a etiqueta sem preflight de CORS. O campo principal recebido no fluxo é{' '}
+                                    <span className="font-mono">$json.body.imageBase64</span>.
                                   </li>
                                   {hasPrivateIp && pageIsHttps && (
                                     <li className="text-red-300">
