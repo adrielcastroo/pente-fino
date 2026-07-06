@@ -271,21 +271,18 @@ export default function LabelLayoutPanel() {
                       Compensa o deslocamento da impressora (faixa branca à esquerda). Padrão: 4 mm.
                     </p>
                   </div>
-                  <div className="space-y-2 pt-2">
-                    <Label className="text-xs font-bold">
-                      Webhook n8n ({isMotor ? 'Motor' : 'Tecido'})
-                    </Label>
-                    <Input
-                      type="url"
-                      placeholder={isMotor ? 'Deixe vazio para usar o webhook de Tecido' : 'http://localhost:5678/webhook/imprimir-etiqueta'}
-                      value={isMotor ? (labelSettings.motorWebhookUrl ?? '') : (labelSettings.webhookUrl ?? '')}
-                      onChange={(e) => setLabelSettings(isMotor
-                        ? { motorWebhookUrl: e.target.value }
-                        : { webhookUrl: e.target.value })}
-                      className="h-9"
-                    />
-                    <p className="text-[10px] opacity-60 leading-tight">
-                      Cada tipo pode ir para um fluxo/impressora diferente. Se o de Motor ficar vazio, usa o de Tecido.
+                  <div className="space-y-1 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
+                    <Label className="text-xs font-bold">Webhook n8n</Label>
+                    <p className="text-[10px] opacity-70 leading-tight">
+                      Configure em <strong>Configurações → Impressão</strong>. Há um único webhook principal (tecido) com override opcional para motor.
+                    </p>
+                    <p className="text-[10px] font-mono opacity-80 break-all">
+                      {isMotor
+                        ? (labelSettings.motorWebhookUrl?.trim()
+                            || labelSettings.webhookUrl?.trim()
+                            || '(nenhum — impressão pelo navegador)')
+                        : (labelSettings.webhookUrl?.trim()
+                            || '(nenhum — impressão pelo navegador)')}
                     </p>
                   </div>
                 </CardContent>
