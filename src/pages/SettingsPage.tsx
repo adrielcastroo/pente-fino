@@ -1149,17 +1149,13 @@ export default function SettingsPage() {
                               onClick={async () => {
                                 setN8nSapTesting(true);
                                 try {
-                                  const { data: proxyData, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
-                                    body: {
-                                      url: n8nSapUrl.trim(),
-                                      method: 'POST',
-                                      body: { codigo_pesquisado: n8nSapTestCode.trim() },
-                                    },
+                                  const response = await fetch(n8nSapUrl.trim(), {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                                    body: JSON.stringify({ codigo_pesquisado: n8nSapTestCode.trim() }),
                                   });
-                                  if (proxyError) throw new Error(proxyError.message || 'Erro no proxy');
-                                  const res: any = proxyData;
-                                  if (!res?.ok) throw new Error(res?.error || 'Falha no webhook');
-                                  const data: any = res.data ?? {};
+                                  if (!response.ok) throw new Error(`Webhook respondeu ${response.status}`);
+                                  const data: any = await response.json();
                                   toast.success(`OK: ${data?.descricao ?? 'sem descrição'} • Estoque: ${data?.estoque_atual ?? '—'}`);
                                 } catch (e: any) {
                                   toast.error('Falha: ' + (e?.message || 'erro desconhecido'));
