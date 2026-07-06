@@ -3,7 +3,6 @@ import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
 import { itensCadastroService } from './itensCadastroService';
 import { codigoBate } from '@/lib/codigoFornecedor';
 import { extractLarguraFromItem } from '@/lib/app-utils';
-import { supabase } from '@/integrations/supabase/client';
 import { validateWebhookUrl } from '@/lib/webhook-url';
 import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelTemplates';
 import type { LabelSettings } from '@/store/useAppStore';
@@ -99,72 +98,6 @@ function cleanBase64(input: string): { base64: string; mimeType: string } {
   return { base64: cleaned, mimeType };
 }
 
-/**
- * Classifica o destino do webhook para decidir o caminho de envio.
- *  - 'public'      → passa pelo Edge Function `n8n-proxy` (status HTTP real).
- *  - 'localhost'   → navegador permite HTTPS → http://localhost (origem segura no Chrome).
- *                    Requer CORS habilitado no n8n (N8N_CORS_ALLOW_ORIGIN=*).
- *  - 'private-ip'  → navegador BLOQUEIA por Mixed Content quando o app está em HTTPS.
- *                    Só funciona se o app for aberto por HTTP, ou o n8n exposto por HTTPS/túnel.
- */
-export type WebhookTarget = 'public' | 'localhost' | 'private-ip';
-
-export function classifyWebhookTarget(webhookUrl: string): WebhookTarget {
-  try {
-    const u = new URL(webhookUrl);
-    const h = u.hostname.toLowerCase();
-    if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return 'localhost';
-    if (
-      h.endsWith('.local') ||
-      /^10\./.test(h) ||
-      /^192\.168\./.test(h) ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(h)
-    ) return 'private-ip';
-    return 'public';
-  } catch { return 'public'; }
-}
-
-/**
- * Envia diretamente ao n8n local. O navegador precisa aceitar a requisição
- * (mixed content) e o n8n precisa responder CORS. Usa JSON puro para o payload
- * ficar em `$json.body.imageBase64` no fluxo do n8n.
- */
-async function sendDirectToLocalN8n(webhookUrl: string, payloadJson: string): Promise<void> {
-  const target = classifyWebhookTarget(webhookUrl);
-  const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-  const webhookIsHttp = webhookUrl.startsWith('http://');
-
-  // Chrome bloqueia HTTPS → http://<IP privado> por Mixed Content.
-  // localhost/127.0.0.1 são "potentially trustworthy" e permitidos.
-  if (target === 'private-ip' && pageIsHttps && webhookIsHttp) {
-    throw new Error(
-      'Navegador bloqueia HTTPS → http://IP-privado (Mixed Content). ' +
-      'Use http://localhost:5678 ou exponha o n8n via HTTPS (ex.: túnel Cloudflare/ngrok).'
-    );
-  }
-
-  let res: Response;
-  try {
-    res = await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: payloadJson,
-    });
-  } catch (err) {
-    // Falha de rede / CORS preflight recusado / Private Network Access.
-    throw new Error(
-      `Não foi possível alcançar o n8n em ${webhookUrl}. ` +
-      'Verifique se ele está rodando e com CORS habilitado ' +
-      '(N8N_CORS_ALLOW_ORIGIN=* nas variáveis de ambiente do n8n). ' +
-      `Detalhe: ${(err as Error).message || err}`,
-    );
-  }
-  if (!res.ok) {
-    throw new Error(`n8n respondeu HTTP ${res.status}`);
-  }
-}
-
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -177,6 +110,10 @@ async function sendToWebhook(
   },
 ): Promise<void> {
   const { base64, mimeType } = cleanBase64(payload.dataUrl);
+  // Comportamento restaurado da versão de 02/07/2026:
+  // o próprio navegador envia diretamente para o n8n local configurado.
+  // Não use proxy/backend aqui: ele roda fora da rede local e não alcança localhost.
+  // O fluxo n8n espera o JSON em `$json.body`, principalmente `imageBase64`.
   const body = {
     ...payload,
     template: payload.type,
@@ -186,62 +123,13 @@ async function sendToWebhook(
     imageSize: base64.length,
     sentAt: new Date().toISOString(),
   };
-  const payloadJson = JSON.stringify(body);
-  const target = classifyWebhookTarget(webhookUrl);
-
-  // Localhost / IP privado / .local: navegador do usuário chama o n8n direto.
-  // (Edge Function roda em nuvem e não alcança a rede local.)
-  if (target !== 'public') {
-    try {
-      await sendDirectToLocalN8n(webhookUrl, payloadJson);
-      void logN8nHealth(true);
-      return;
-    } catch (err) {
-      void logN8nHealth(false, (err as Error).message);
-      throw err;
-    }
-  }
-
-  // URL pública → Edge Function `n8n-proxy` (status HTTP real, sem CORS do browser).
-  try {
-    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-      body: {
-        url: webhookUrl,
-        method: 'POST',
-        body,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      },
-    });
-    if (error) throw error;
-    if (data && typeof data === 'object') {
-      const d = data as { ok?: boolean; status?: number; error?: string };
-      if (d.ok) { void logN8nHealth(true); return; }
-      const msg = d.error || `n8n respondeu ${d.status ?? '???'}`;
-      void logN8nHealth(false, msg);
-      throw new Error(msg);
-    }
-    void logN8nHealth(true);
-  } catch (err) {
-    void logN8nHealth(false, (err as Error).message);
-    throw err;
-  }
-}
-
-
-/**
- * Atualiza `integrations.last_checked_at` / `last_error` / `status` para a
- * chave `n8n_webhook`, permitindo que o card de Integrações mostre a saúde
- * real do fluxo de impressão.
- */
-async function logN8nHealth(ok: boolean, errorMsg?: string): Promise<void> {
-  try {
-    await (supabase.from('integrations' as any).update({
-      last_checked_at: new Date().toISOString(),
-      last_error: ok ? null : (errorMsg ?? 'erro desconhecido').slice(0, 500),
-      status: ok ? 'active' : 'error',
-    }).eq('key', 'n8n_webhook') as any);
-  } catch (e) {
-    console.warn('[print] falha ao registrar saúde do n8n:', e);
+  const res = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`Webhook respondeu ${res.status}`);
   }
 }
 
