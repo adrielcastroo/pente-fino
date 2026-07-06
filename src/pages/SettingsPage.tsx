@@ -1096,38 +1096,6 @@ export default function SettingsPage() {
                               </span>
                             </div>
                           </div>
-                          {(() => {
-                            const urls = [labelSettings.webhookUrl, labelSettings.motorWebhookUrl]
-                              .map((u) => u?.trim()).filter(Boolean) as string[];
-                            const hasLocalhost = urls.some((u) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(u));
-                            const hasPrivateIp = urls.some((u) => /^http:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.|[^/]+\.local)/i.test(u));
-                            const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-                            if (!hasLocalhost && !hasPrivateIp) return null;
-                            return (
-                              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200 space-y-1.5">
-                                <p className="font-semibold text-amber-300">n8n local detectado — atenção:</p>
-                                <ul className="list-disc pl-4 space-y-1 text-amber-100/90">
-                                  <li>
-                                    Para n8n local, o app envia a etiqueta sem preflight de CORS. O campo principal recebido no fluxo é{' '}
-                                    <span className="font-mono">$json.body.imageBase64</span>.
-                                  </li>
-                                  {hasPrivateIp && pageIsHttps && (
-                                    <li className="text-red-300">
-                                      URL com IP privado (ex.: <span className="font-mono">192.168.x.x</span>) <strong>é bloqueada</strong> pelo navegador
-                                      quando o app roda em HTTPS (Mixed Content). Use <span className="font-mono">http://localhost:5678</span> na
-                                      mesma máquina, ou exponha o n8n via túnel HTTPS (Cloudflare Tunnel, ngrok).
-                                    </li>
-                                  )}
-                                  {hasLocalhost && (
-                                    <li>
-                                      <span className="font-mono">http://localhost</span> só funciona quando o navegador está na{' '}
-                                      <strong>mesma máquina</strong> do n8n. Em outro computador/celular, use túnel HTTPS.
-                                    </li>
-                                  )}
-                                </ul>
-                              </div>
-                            );
-                          })()}
                         </div>
 
                       </div>
@@ -1181,17 +1149,13 @@ export default function SettingsPage() {
                               onClick={async () => {
                                 setN8nSapTesting(true);
                                 try {
-                                  const { data: proxyData, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
-                                    body: {
-                                      url: n8nSapUrl.trim(),
-                                      method: 'POST',
-                                      body: { codigo_pesquisado: n8nSapTestCode.trim() },
-                                    },
+                                  const response = await fetch(n8nSapUrl.trim(), {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                                    body: JSON.stringify({ codigo_pesquisado: n8nSapTestCode.trim() }),
                                   });
-                                  if (proxyError) throw new Error(proxyError.message || 'Erro no proxy');
-                                  const res: any = proxyData;
-                                  if (!res?.ok) throw new Error(res?.error || 'Falha no webhook');
-                                  const data: any = res.data ?? {};
+                                  if (!response.ok) throw new Error(`Webhook respondeu ${response.status}`);
+                                  const data: any = await response.json();
                                   toast.success(`OK: ${data?.descricao ?? 'sem descrição'} • Estoque: ${data?.estoque_atual ?? '—'}`);
                                 } catch (e: any) {
                                   toast.error('Falha: ' + (e?.message || 'erro desconhecido'));

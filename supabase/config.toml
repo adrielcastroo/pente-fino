@@ -3,9 +3,6 @@ project_id = "dlehrhqfbwvgpurpmmht"
 [functions.nfe-import]
 verify_jwt = false
 
-[functions.n8n-proxy]
-verify_jwt = false
-
 [functions.sentry-issues]
 verify_jwt = false
 
