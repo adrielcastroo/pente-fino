@@ -4,6 +4,7 @@ import { itensCadastroService } from './itensCadastroService';
 import { codigoBate } from '@/lib/codigoFornecedor';
 import { extractLarguraFromItem } from '@/lib/app-utils';
 import { supabase } from '@/integrations/supabase/client';
+import { validateWebhookUrl } from '@/lib/webhook-url';
 import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelTemplates';
 import type { LabelSettings } from '@/store/useAppStore';
 
