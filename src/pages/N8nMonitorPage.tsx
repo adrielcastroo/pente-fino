@@ -31,6 +31,9 @@ const statusStyle: Record<string, string> = {
 export default function N8nMonitorPage() {
   const [baseUrl, setBaseUrl] = useState(getN8nBaseUrl());
   const [apiKey, setApiKey] = useState(getN8nApiKey());
+  const [webhookOverride, setWebhookOverride] = useState(
+    typeof localStorage !== 'undefined' ? (localStorage.getItem('n8n_webhook_url') || '') : ''
+  );
   const [health, setHealth] = useState<N8nHealth | null>(null);
   const [executions, setExecutions] = useState<N8nExecution[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnosis[]>([]);
@@ -80,6 +83,8 @@ export default function N8nMonitorPage() {
   const saveConfig = () => {
     setN8nBaseUrl(baseUrl);
     setN8nApiKey(apiKey);
+    if (webhookOverride.trim()) localStorage.setItem('n8n_webhook_url', webhookOverride.trim());
+    else localStorage.removeItem('n8n_webhook_url');
     toast.success('Configuração salva');
     refresh();
   };
@@ -129,12 +134,26 @@ export default function N8nMonitorPage() {
         <h2 className="font-semibold text-sm">Configuração</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs">URL do n8n</Label>
-            <Input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="http://localhost:5678" />
+            <Label className="text-xs">URL do n8n (API)</Label>
+            <Input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://seu-tunel.trycloudflare.com" />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Se rodar no preview HTTPS, precisa ser URL pública (ex.: túnel Cloudflare/ngrok).
+            </p>
           </div>
           <div>
             <Label className="text-xs">API Key (n8n → Settings → n8n API)</Label>
             <Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Cole a API key aqui" />
+          </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs">URL do webhook de impressão (opcional)</Label>
+            <Input
+              value={webhookOverride}
+              onChange={(e) => setWebhookOverride(e.target.value)}
+              placeholder="Se vazio, usa {URL do n8n}/webhook/imprimir-etiqueta"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Sobrescreve a URL usada pelas etiquetas. Deixe vazio para derivar da URL do n8n.
+            </p>
           </div>
         </div>
         <Button size="sm" onClick={saveConfig}>Salvar e testar</Button>

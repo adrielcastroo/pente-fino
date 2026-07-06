@@ -62,7 +62,25 @@ async function resolverItem(
 
 export type PrintMethod = 'browser' | 'webhook' | 'both';
 
-const DEFAULT_N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/imprimir-etiqueta';
+const DEFAULT_N8N_WEBHOOK_PATH = '/webhook/imprimir-etiqueta';
+const DEFAULT_N8N_WEBHOOK_URL = 'http://localhost:5678' + DEFAULT_N8N_WEBHOOK_PATH;
+
+/**
+ * Resolve a URL do webhook usando (em ordem):
+ *  1. `n8n_webhook_url` no localStorage (override manual completo)
+ *  2. base do painel n8n (`n8n_api_url`) + path padrão do webhook — assim,
+ *     quando o usuário configura um túnel HTTPS no painel de monitoramento,
+ *     o webhook passa a usar automaticamente a mesma URL pública.
+ *  3. fallback: localhost:5678
+ */
+function resolveWebhookUrl(): string {
+  if (typeof localStorage === 'undefined') return DEFAULT_N8N_WEBHOOK_URL;
+  const override = localStorage.getItem('n8n_webhook_url');
+  if (override && override.trim()) return override.trim();
+  const base = localStorage.getItem('n8n_api_url');
+  if (base && base.trim()) return base.replace(/\/+$/, '') + DEFAULT_N8N_WEBHOOK_PATH;
+  return DEFAULT_N8N_WEBHOOK_URL;
+}
 
 export interface PrintConfig {
   autoPrint: boolean;
@@ -169,7 +187,7 @@ async function dispatchPrint(
   // fallback — o payload inclui `type`, `template` e `format` para que o
   // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
   // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
-  const resolvedWebhook = DEFAULT_N8N_WEBHOOK_URL;
+  const resolvedWebhook = resolveWebhookUrl();
   const hasWebhook = !!resolvedWebhook;
   const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
 
