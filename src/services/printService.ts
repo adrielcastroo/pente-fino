@@ -125,6 +125,19 @@ async function sendToWebhook(
     sentAt: new Date().toISOString(),
   };
   const payloadJson = JSON.stringify(body);
+  const n8nFormBody = new URLSearchParams({
+    imageBase64: base64,
+    mimeType,
+    type: payload.type,
+    template: payload.type,
+    format: payload.type,
+    title: payload.title,
+    widthMm: String(payload.widthMm),
+    heightMm: String(payload.heightMm),
+    imageSize: String(base64.length),
+    sentAt: body.sentAt,
+    data: JSON.stringify(payload.data),
+  });
 
   // Detecta URLs que só existem na máquina do usuário — a Edge Function roda
   // nos servidores do Supabase e NÃO consegue alcançá-las. Nesses casos vamos
@@ -144,17 +157,15 @@ async function sendToWebhook(
     } catch { return false; }
   })();
 
-  // URLs locais/privadas precisam sair direto do navegador do usuário.
-  // Usar JSON com CORS dispara preflight OPTIONS; muitos n8n locais não
-  // respondem esse preflight e o POST real nunca chega. Também evitamos
-  // `keepalive`: navegadores limitam o corpo (~64KB) e etiquetas em base64
-  // passam fácil disso, fazendo a requisição ser descartada antes de sair.
+  // URLs locais/privadas precisam sair direto do navegador do usuário. Para
+  // n8n local usamos formulário simples: evita preflight CORS e o Webhook do
+  // n8n ainda expõe o valor em `$json.body.imageBase64`, exatamente como no
+  // fluxo "Impressão Etiquetas" enviado pelo usuário.
   if (isLocalTarget) {
     await fetch(webhookUrl, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: payloadJson,
+      body: n8nFormBody,
     });
     void logN8nHealth(true);
     return;
