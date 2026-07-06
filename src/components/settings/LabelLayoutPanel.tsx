@@ -274,15 +274,10 @@ export default function LabelLayoutPanel() {
                   <div className="space-y-1 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
                     <Label className="text-xs font-bold">Webhook n8n</Label>
                     <p className="text-[10px] opacity-70 leading-tight">
-                      Configure em <strong>Configurações → Impressão</strong>. Há um único webhook principal (tecido) com override opcional para motor.
+                      Configure em <strong>Configurações → Impressão</strong>. Todas as etiquetas usam o mesmo webhook principal.
                     </p>
                     <p className="text-[10px] font-mono opacity-80 break-all">
-                      {isMotor
-                        ? (labelSettings.motorWebhookUrl?.trim()
-                            || labelSettings.webhookUrl?.trim()
-                            || '(nenhum — impressão pelo navegador)')
-                        : (labelSettings.webhookUrl?.trim()
-                            || '(nenhum — impressão pelo navegador)')}
+                      {labelSettings.webhookUrl?.trim() || '(nenhum — impressão pelo navegador)'}
                     </p>
                   </div>
                 </CardContent>
