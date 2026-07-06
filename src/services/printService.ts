@@ -154,9 +154,7 @@ async function dispatchPrint(
   // fallback — o payload inclui `type`, `template` e `format` para que o
   // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
   // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
-  const resolvedWebhook = payload.type === 'motor'
-    ? (cfg.motorWebhookUrl?.trim() || cfg.webhookUrl?.trim() || DEFAULT_N8N_WEBHOOK_URL)
-    : (cfg.webhookUrl?.trim() || DEFAULT_N8N_WEBHOOK_URL);
+  const resolvedWebhook = DEFAULT_N8N_WEBHOOK_URL;
   const hasWebhook = !!resolvedWebhook;
   const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
 
