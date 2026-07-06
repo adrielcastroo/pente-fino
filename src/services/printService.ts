@@ -120,6 +120,21 @@ function isLocalWebhookUrl(url: string): boolean {
   }
 }
 
+/**
+ * O fluxo que funcionava no n8n não tentava fazer POST JSON quando a URL era
+ * HTTP/local: isso aciona CORS/preflight (e, em deploy com HTTPS, costuma ser
+ * bloqueado antes de chegar ao n8n). Para esses destinos, mantemos exatamente
+ * o envio "simple request" por formulário.
+ */
+function shouldUseFormNoCors(webhookUrl: string): boolean {
+  try {
+    const u = new URL(webhookUrl);
+    return u.protocol === 'http:' || isLocalWebhookUrl(webhookUrl);
+  } catch {
+    return false;
+  }
+}
+
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -142,10 +157,10 @@ async function sendToWebhook(
     sentAt: new Date().toISOString(),
   };
 
-  // n8n local/LAN → evita preflight CORS usando form-urlencoded + no-cors
+  // n8n local/HTTP → evita preflight CORS usando form-urlencoded + no-cors
   // (POST "simple request"). O workflow continua lendo $json.body.imageBase64.
   // Sem `keepalive` (descarta payloads grandes ~64KB).
-  if (isLocalWebhookUrl(webhookUrl)) {
+  if (shouldUseFormNoCors(webhookUrl)) {
     const form = new URLSearchParams();
     form.set('type', payload.type);
     form.set('template', payload.type);
