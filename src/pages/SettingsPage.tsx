@@ -1059,15 +1059,27 @@ export default function SettingsPage() {
                               </Button>
                             )}
                           </div>
-                          <div className="relative">
-                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                              value={labelSettings.motorWebhookUrl || ''}
-                              onChange={(e) => { setLabelSettings({ motorWebhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
-                              placeholder="(vazio) — usa o webhook principal"
-                              className="pl-9 text-sm bg-muted/20 font-mono"
-                            />
-                          </div>
+                          {(() => {
+                            const v = validateWebhookUrl(labelSettings.motorWebhookUrl, { allowEmpty: true });
+                            const invalid = !v.ok;
+                            return (
+                              <>
+                                <div className="relative">
+                                  <LinkIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${invalid ? 'text-destructive' : 'text-muted-foreground'}`} />
+                                  <Input
+                                    value={labelSettings.motorWebhookUrl || ''}
+                                    onChange={(e) => { setLabelSettings({ motorWebhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
+                                    placeholder="(vazio) — usa o webhook principal"
+                                    aria-invalid={invalid}
+                                    className={`pl-9 text-sm font-mono ${invalid ? 'bg-destructive/5 border-destructive/60 focus-visible:ring-destructive/40' : 'bg-muted/20'}`}
+                                  />
+                                </div>
+                                {invalid && (
+                                  <p className="text-[11px] text-destructive font-medium">{v.error}</p>
+                                )}
+                              </>
+                            );
+                          })()}
                           <div className="rounded-md bg-muted/30 border border-border/40 px-2.5 py-1.5 text-[10px] text-muted-foreground space-y-0.5">
                             <div>
                               <span className="opacity-70">Tecido usará:</span>{' '}
