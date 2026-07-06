@@ -83,6 +83,8 @@ export default function N8nMonitorPage() {
   const saveConfig = () => {
     setN8nBaseUrl(baseUrl);
     setN8nApiKey(apiKey);
+    if (webhookOverride.trim()) localStorage.setItem('n8n_webhook_url', webhookOverride.trim());
+    else localStorage.removeItem('n8n_webhook_url');
     toast.success('Configuração salva');
     refresh();
   };
