@@ -1024,7 +1024,7 @@ export default function SettingsPage() {
                                   <p className="text-[11px] text-destructive font-medium">{v.error}</p>
                                 ) : (
                                   <p className="text-[10px] text-muted-foreground">
-                                    Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Usado para <strong>tecido</strong> e como fallback para <strong>motor</strong>. Alterações são salvas por usuário.
+                                    Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Usado para <strong>todas</strong> as etiquetas. Alterações são salvas por usuário.
                                   </p>
                                 )}
                               </>
