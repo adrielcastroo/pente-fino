@@ -99,6 +99,67 @@ function cleanBase64(input: string): { base64: string; mimeType: string } {
   return { base64: cleaned, mimeType };
 }
 
+function submitLocalWebhookForm(webhookUrl: string, fields: Record<string, string>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof document === 'undefined') {
+      reject(new Error('Envio local indisponível fora do navegador'));
+      return;
+    }
+
+    const token = Math.random().toString(36).slice(2);
+    const iframeName = `n8n-print-target-${token}`;
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = webhookUrl;
+    form.target = iframeName;
+    form.enctype = 'application/x-www-form-urlencoded';
+    form.acceptCharset = 'UTF-8';
+    form.style.display = 'none';
+
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    let done = false;
+    const cleanup = () => {
+      try { form.remove(); } catch { /* noop */ }
+      try { iframe.remove(); } catch { /* noop */ }
+    };
+    const finish = () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      resolve();
+    };
+
+    iframe.addEventListener('load', finish, { once: true });
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+
+    try {
+      form.submit();
+      window.setTimeout(finish, 2500);
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
+  });
+}
+
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -125,7 +186,7 @@ async function sendToWebhook(
     sentAt: new Date().toISOString(),
   };
   const payloadJson = JSON.stringify(body);
-  const n8nFormBody = new URLSearchParams({
+  const n8nFormFields = {
     imageBase64: base64,
     mimeType,
     type: payload.type,
@@ -137,7 +198,7 @@ async function sendToWebhook(
     imageSize: String(base64.length),
     sentAt: body.sentAt,
     data: JSON.stringify(payload.data),
-  });
+  } satisfies Record<string, string>;
 
   // Detecta URLs que só existem na máquina do usuário — a Edge Function roda
   // nos servidores do Supabase e NÃO consegue alcançá-las. Nesses casos vamos
@@ -157,16 +218,12 @@ async function sendToWebhook(
     } catch { return false; }
   })();
 
-  // URLs locais/privadas precisam sair direto do navegador do usuário. Para
-  // n8n local usamos formulário simples: evita preflight CORS e o Webhook do
-  // n8n ainda expõe o valor em `$json.body.imageBase64`, exatamente como no
-  // fluxo "Impressão Etiquetas" enviado pelo usuário.
+  // URLs locais/privadas precisam sair direto do navegador do usuário. Fetch
+  // para localhost/IP privado pode ser bloqueado por CORS/Private Network
+  // Access antes de chegar no n8n. Form POST em iframe oculto não faz preflight
+  // e o n8n expõe o campo como `$json.body.imageBase64`, como no fluxo enviado.
   if (isLocalTarget) {
-    await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: n8nFormBody,
-    });
+    await submitLocalWebhookForm(webhookUrl, n8nFormFields);
     void logN8nHealth(true);
     return;
   }
