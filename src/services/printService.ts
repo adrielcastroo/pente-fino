@@ -72,6 +72,23 @@ export interface PrintConfig {
   motorWebhookUrl?: string;
 }
 
+function isLocalWebhookUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    const hostname = url.hostname.toLowerCase();
+    return hostname === 'localhost'
+      || hostname === '127.0.0.1'
+      || hostname === '[::1]'
+      || hostname === '::1'
+      || hostname.endsWith('.local')
+      || /^10\./.test(hostname)
+      || /^192\.168\./.test(hostname)
+      || /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Limpa um dataURL/base64 e devolve apenas a string base64 pura.
  * Remove prefixo data:..;base64, aspas extras e qualquer whitespace.
@@ -123,13 +140,40 @@ async function sendToWebhook(
     imageSize: base64.length,
     sentAt: new Date().toISOString(),
   };
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    throw new Error(`Webhook respondeu ${res.status}`);
+  const sendJson = async () => {
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error(`Webhook respondeu ${res.status}`);
+    }
+  };
+
+  try {
+    await sendJson();
+  } catch (error) {
+    if (!isLocalWebhookUrl(webhookUrl)) {
+      throw error;
+    }
+
+    // n8n local normalmente não devolve CORS para `application/json`.
+    // Quando isso acontece, o navegador bloqueia o POST no preflight e o fluxo
+    // nem recebe a etiqueta. O fallback abaixo usa uma requisição simples
+    // (`no-cors` + form-urlencoded), mantendo `imageBase64` em `$json.body`
+    // para o workflow continuar lendo o mesmo campo.
+    const formBody = new URLSearchParams();
+    Object.entries(body).forEach(([key, value]) => {
+      formBody.set(key, typeof value === 'string' ? value : JSON.stringify(value));
+    });
+    formBody.set('payload', JSON.stringify(body));
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formBody,
+    });
   }
 }
 
