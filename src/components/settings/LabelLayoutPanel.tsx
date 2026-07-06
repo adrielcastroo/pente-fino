@@ -274,10 +274,10 @@ export default function LabelLayoutPanel() {
                   <div className="space-y-1 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
                     <Label className="text-xs font-bold">Webhook n8n</Label>
                     <p className="text-[10px] opacity-70 leading-tight">
-                      Configure em <strong>Configurações → Impressão</strong>. Todas as etiquetas usam o mesmo webhook principal.
+                      Endpoint restaurado da versão funcional para o fluxo app → n8n.
                     </p>
                     <p className="text-[10px] font-mono opacity-80 break-all">
-                      {labelSettings.webhookUrl?.trim() || '(nenhum — impressão pelo navegador)'}
+                      http://localhost:5678/webhook/imprimir-etiqueta
                     </p>
                   </div>
                 </CardContent>
