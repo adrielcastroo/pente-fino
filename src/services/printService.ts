@@ -144,31 +144,45 @@ async function sendToWebhook(
     } catch { return false; }
   })();
 
+  // URLs locais/privadas precisam sair direto do navegador do usuário.
+  // Usar JSON com CORS dispara preflight OPTIONS; muitos n8n locais não
+  // respondem esse preflight e o POST real nunca chega. Também evitamos
+  // `keepalive`: navegadores limitam o corpo (~64KB) e etiquetas em base64
+  // passam fácil disso, fazendo a requisição ser descartada antes de sair.
+  if (isLocalTarget) {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payloadJson,
+    });
+    void logN8nHealth(true);
+    return;
+  }
+
   // 1) Se a URL for pública, preferir Edge Function `n8n-proxy` — nos dá
   //    status HTTP real do n8n sem passar por CORS do browser.
-  if (!isLocalTarget) {
-    try {
-      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-        body: {
-          url: webhookUrl,
-          method: 'POST',
-          body,
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        },
-      });
-      if (error) throw error;
-      if (data && typeof data === 'object') {
-        const d = data as { ok?: boolean; status?: number; error?: string };
-        if (d.ok) { void logN8nHealth(true); return; }
-        const msg = d.error || `n8n respondeu ${d.status ?? '???'}`;
-        void logN8nHealth(false, msg);
-        throw new Error(msg);
-      }
-      void logN8nHealth(true);
-      return;
-    } catch (proxyErr) {
-      console.warn('[print] n8n-proxy indisponível, fallback direto:', proxyErr);
+  try {
+    const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+      body: {
+        url: webhookUrl,
+        method: 'POST',
+        body,
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      },
+    });
+    if (error) throw error;
+    if (data && typeof data === 'object') {
+      const d = data as { ok?: boolean; status?: number; error?: string };
+      if (d.ok) { void logN8nHealth(true); return; }
+      const msg = d.error || `n8n respondeu ${d.status ?? '???'}`;
+      void logN8nHealth(false, msg);
+      throw new Error(msg);
     }
+    void logN8nHealth(true);
+    return;
+  } catch (proxyErr) {
+    console.warn('[print] n8n-proxy indisponível, fallback direto:', proxyErr);
   }
 
   // 2) Fallback (ou caminho primário para localhost/IP privado): chamar o
@@ -178,7 +192,6 @@ async function sendToWebhook(
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: payloadJson,
-      keepalive: true,
     });
     if (res.type === 'opaque') { void logN8nHealth(true); return; }
     if (!res.ok) {
@@ -195,7 +208,6 @@ async function sendToWebhook(
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: payloadJson,
-      keepalive: true,
     });
     // no-cors: sem status real; registrar como aviso.
     void logN8nHealth(false, (err as Error).message || 'CORS/opaque — sem status HTTP');
