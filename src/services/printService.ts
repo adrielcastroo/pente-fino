@@ -122,12 +122,31 @@ async function sendToWebhook(
     imageSize: base64.length,
     sentAt: new Date().toISOString(),
   };
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Webhook respondeu ${res.status}`);
+  const payloadJson = JSON.stringify(body);
+  try {
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: payloadJson,
+      keepalive: true,
+    });
+    // Resposta opaca (mode no-cors não usado aqui, mas guard) — trate como sucesso
+    if (res.type === 'opaque') return;
+    if (!res.ok) throw new Error(`Webhook respondeu ${res.status}`);
+    return;
+  } catch (err) {
+    // Provável bloqueio de CORS/rede — n8n costuma receber e imprimir mesmo assim.
+    // Retenta em modo no-cors (fire-and-forget) e considera enviado.
+    console.warn('[print] webhook CORS/rede falhou, retry no-cors:', err);
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payloadJson,
+      keepalive: true,
+    });
+    return;
+  }
 }
 
 async function dispatchPrint(
