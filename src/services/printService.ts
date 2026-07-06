@@ -139,9 +139,15 @@ async function sendToWebhook(
     if (error) throw error;
     if (data && typeof data === 'object') {
       const d = data as { ok?: boolean; status?: number; error?: string };
-      if (d.ok) return;
-      throw new Error(d.error || `n8n respondeu ${d.status ?? '???'}`);
+      if (d.ok) {
+        void logN8nHealth(true);
+        return;
+      }
+      const msg = d.error || `n8n respondeu ${d.status ?? '???'}`;
+      void logN8nHealth(false, msg);
+      throw new Error(msg);
     }
+    void logN8nHealth(true);
     return;
   } catch (proxyErr) {
     console.warn('[print] n8n-proxy indisponível, fallback direto:', proxyErr);
@@ -155,8 +161,13 @@ async function sendToWebhook(
       body: payloadJson,
       keepalive: true,
     });
-    if (res.type === 'opaque') return;
-    if (!res.ok) throw new Error(`Webhook respondeu ${res.status}`);
+    if (res.type === 'opaque') { void logN8nHealth(true); return; }
+    if (!res.ok) {
+      const msg = `Webhook respondeu ${res.status}`;
+      void logN8nHealth(false, msg);
+      throw new Error(msg);
+    }
+    void logN8nHealth(true);
     return;
   } catch (err) {
     console.warn('[print] webhook direto falhou, retry no-cors:', err);
@@ -167,7 +178,26 @@ async function sendToWebhook(
       body: payloadJson,
       keepalive: true,
     });
+    // no-cors: sem status real; registrar como aviso.
+    void logN8nHealth(false, (err as Error).message || 'CORS/opaque — sem status HTTP');
     return;
+  }
+}
+
+/**
+ * Atualiza `integrations.last_checked_at` / `last_error` / `status` para a
+ * chave `n8n_webhook`, permitindo que o card de Integrações mostre a saúde
+ * real do fluxo de impressão.
+ */
+async function logN8nHealth(ok: boolean, errorMsg?: string): Promise<void> {
+  try {
+    await (supabase.from('integrations' as any).update({
+      last_checked_at: new Date().toISOString(),
+      last_error: ok ? null : (errorMsg ?? 'erro desconhecido').slice(0, 500),
+      status: ok ? 'active' : 'error',
+    }).eq('key', 'n8n_webhook') as any);
+  } catch (e) {
+    console.warn('[print] falha ao registrar saúde do n8n:', e);
   }
 }
 
