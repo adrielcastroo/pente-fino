@@ -1005,18 +1005,31 @@ export default function SettingsPage() {
                               Restaurar padrão
                             </Button>
                           </div>
-                          <div className="relative">
-                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                              value={labelSettings.webhookUrl || ''}
-                              onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
-                              placeholder="http://localhost:5678/webhook/imprimir-etiqueta"
-                              className="pl-9 text-sm bg-muted/20 font-mono"
-                            />
-                          </div>
-                          <p className="text-[10px] text-muted-foreground">
-                            Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Usado para <strong>tecido</strong> e como fallback para <strong>motor</strong>. Alterações são salvas por usuário.
-                          </p>
+                          {(() => {
+                            const v = validateWebhookUrl(labelSettings.webhookUrl, { allowEmpty: true });
+                            const invalid = !v.ok;
+                            return (
+                              <>
+                                <div className="relative">
+                                  <LinkIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${invalid ? 'text-destructive' : 'text-muted-foreground'}`} />
+                                  <Input
+                                    value={labelSettings.webhookUrl || ''}
+                                    onChange={(e) => { setLabelSettings({ webhookUrl: e.target.value }); setHasUnsavedChanges(true); }}
+                                    placeholder="http://localhost:5678/webhook/imprimir-etiqueta"
+                                    aria-invalid={invalid}
+                                    className={`pl-9 text-sm font-mono ${invalid ? 'bg-destructive/5 border-destructive/60 focus-visible:ring-destructive/40' : 'bg-muted/20'}`}
+                                  />
+                                </div>
+                                {invalid ? (
+                                  <p className="text-[11px] text-destructive font-medium">{v.error}</p>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Padrão: <span className="font-mono">http://localhost:5678/webhook/imprimir-etiqueta</span>. Usado para <strong>tecido</strong> e como fallback para <strong>motor</strong>. Alterações são salvas por usuário.
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
 
                         {/* Override opcional para etiquetas de motor */}
