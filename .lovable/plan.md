@@ -1,72 +1,54 @@
-# Plano — Expedição: TMS Interno + Rastreio + UX
+## Diagnóstico
 
-Sem integrações fiscais (adiadas até A1). Divido em 4 turnos independentes.
+O preview que funcionava (`384e237a`, ~02/07) usava um caminho específico para n8n **local/privado** que foi removido nas últimas iterações. O código atual (`src/services/printService.ts`) faz apenas:
 
-## Turno 1 — TMS Interno (schema + Cargas)
+```ts
+fetch(webhookUrl, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  body: JSON.stringify(body),
+})
+```
 
-**Migration:**
-- `expedicao_veiculos` (placa, modelo, capacidade_kg, ativo)
-- `expedicao_cargas` (numero `CRG-YYMMDD-XXXX`, veiculo_id, motorista, data_coleta, rota, status: `planejada|em_transito|entregue|cancelada`, custo_frete, observacao)
-- `expedicao_carga_romaneios` (join carga↔romaneio, N:N)
-- `expedicao_comprovantes` (carga_id, recebedor_nome, recebedor_doc, data_hora, foto_url, assinatura_base64)
-- Novo bucket storage `expedicao-comprovantes`
-- GRANTs + RLS (`has_module('expedicao') AND is_at_least('operador')`) + trigger `updated_at`
+Isso dispara **preflight CORS (OPTIONS)** no navegador. n8n rodando local (`localhost:5678`, `192.168.x.x`, etc.) tipicamente **não responde OPTIONS com `Access-Control-Allow-Origin`**, então o browser bloqueia o POST antes de sair — a etiqueta nunca chega no n8n. O `res.ok` também falha e o toast mostra "webhook falhou".
 
-**UI nova:** `/expedicao/cargas` — lista + criação (seleciona romaneios abertos/faturados + veículo + motorista + rota). Detalhe: timeline de status, upload de comprovante, cálculo automático custo/peça.
+Na versão que funcionava, para URLs locais o envio era:
+- `mode: 'no-cors'` (dispara "simple request", **sem preflight**)
+- corpo como `URLSearchParams` (`application/x-www-form-urlencoded`, que também é "simple")
+- `imageBase64` como campo do form → n8n continua lendo em `$json.body.imageBase64`
+- resposta tratada como sucesso "fire-and-forget" (opaque response), porque o browser esconde o status quando é `no-cors`
 
-## Turno 2 — Rastreio Físico + Alertas
+Para URLs **públicas** (não-local), mantinha JSON normal para conseguir ler o status HTTP.
 
-**Rastreio:**
-- Campo `codigo_rastreio` + `transportadora_tipo` (`correios|jadlog|total|outro`) em `expedicao_cargas`
-- Edge function `rastreio-consulta` (proxy p/ Seu Rastreio API — pede token via `add_secret` SEURASTREIO_TOKEN)
-- Cache em tabela `expedicao_rastreio_eventos` (carga_id, data, status, local, descricao)
-- Job manual "Atualizar rastreio" na tela de Carga; badge de status na lista
+## O que restaurar em `src/services/printService.ts`
 
-**Alertas** (`AlertsPanel` no `/expedicao/painel`):
-- Romaneios abertos > 24h sem faturamento
-- Cargas `em_transito` sem evento de rastreio há > 48h
-- Peças `etiquetada` > 72h sem alocação
-- Dismissible + persistência em `localStorage`
+1. **Helper `isLocalWebhookUrl(url)`** — detecta `localhost`, `127.0.0.1`, hostnames `.local`, e faixas privadas `10.x.x.x`, `192.168.x.x`, `172.16-31.x.x`.
 
-## Turno 3 — Exportações + Trilha de Auditoria
+2. **`sendToWebhook` com dois caminhos:**
+   - **URL local** → `fetch(url, { method: 'POST', mode: 'no-cors', body: URLSearchParams })` com todos os campos como strings (`imageBase64`, `mimeType`, `type`, `template`, `format`, `title`, `widthMm`, `heightMm`, `imageSize`, `sentAt`, `data` como JSON string). Não checa `res.ok` (resposta é opaque) — considera enviado.
+   - **URL pública** → mantém `fetch` com `application/json` + `JSON.stringify(body)` e valida `res.ok`.
 
-**Exports (client-side, sem backend):**
-- `jspdf` + `jspdf-autotable` → Romaneio PDF (cabeçalho, transportadora, peças, totais, QR code do número)
-- `xlsx` (SheetJS) → Relatórios: Peças por período, Romaneios por transportadora, Cargas com custo
-- Botão "Exportar" com dropdown (PDF/Excel/CSV) em Romaneios, Cargas e Dashboards
+3. **Toast** — para local, "Etiqueta enviada para o n8n (fire-and-forget)"; para pública, mesma mensagem atual.
 
-**Auditoria:**
-- Componente `<HistoricoPecaTimeline pecaId=...>` lendo `expedicao_pecas_historico` (já existe)
-- Modal "Ver histórico" na página de Conferência/Alocação/DoubleCheck
-- Preencher `expedicao_pecas_historico` nos pontos que ainda faltam (alocacao, no_romaneio, faturada, cancelada) via triggers ou inserts explícitos
+## O que NÃO alterar
 
-## Turno 4 — Modo Offline (Bipagem)
-
-**Stack:** IndexedDB via `idb` + Service Worker minimal (só fila, sem PWA completo)
-- Hook `useOfflineScanQueue()` — persiste bipes em IndexedDB quando `!navigator.onLine`
-- Sync automático em `window.addEventListener('online')` + retry exponencial
-- Badge "Offline (N pendentes)" no header da Embalagem/Conferência
-- Toast de resultado do sync (X sucesso, Y falha)
-- Sem alteração de schema
-
----
+- `SettingsPage.tsx`, `LabelLayoutPanel.tsx`, `useAppStore.ts` — já estão no formato de webhook único, sem override de motor. Sem mudança.
+- Fluxo do `dispatchPrint` (validação, fallback para navegador quando não há webhook) — mantido.
+- Payload/campos enviados — mantidos os mesmos nomes, só muda o **encoding** (form vs JSON) quando é local.
+- **Não** recriar a Edge Function `n8n-proxy` — para n8n local ela não ajuda (Supabase não alcança sua rede).
 
 ## Detalhes técnicos
 
-- Novos tipos TS em `src/types/expedicao.ts` (extração de literais atuais)
-- Hooks TanStack Query em `src/hooks/expedicao/useCargas.ts`, `useRastreio.ts`
-- Reuso de `PageShell`, `PageHeader`, `StatusBadge`, `KpiCard`
-- Sidebar Expedição ganha entrada "Cargas" (após Romaneio)
-- Zero mudança em fluxo fiscal — deixa gancho `nfe_chave` já existente
+- `URLSearchParams` faz o browser mandar `Content-Type: application/x-www-form-urlencoded;charset=UTF-8`, que é whitelisted como "simple request" — não gera OPTIONS.
+- `mode: 'no-cors'` remove qualquer chance de preflight e faz o browser aceitar a resposta como `opaque` (não conseguimos ler status, mas o POST **sai**).
+- No workflow do n8n, `$json.body.imageBase64` funciona igual para JSON e para form-urlencoded — o n8n faz o parse automaticamente.
+- Sem `keepalive` (ele descarta payloads &gt; ~64KB, e a etiqueta base64 passa disso).
 
-## Fora de escopo (explícito)
+## Arquivo a editar
 
-- Consulta SEFAZ, DANFE, Distribuição DFe, Manifestação — bloqueado sem A1
-- Push notifications, PWA installable
-- Impressão ZPL direto (já existe em `/expedicao/etiquetas`)
+- `src/services/printService.ts` — adicionar `isLocalWebhookUrl` e reescrever `sendToWebhook` com os dois caminhos descritos acima.
 
-## Ordem sugerida
+## Validação
 
-Turno 1 primeiro (fundação). Turnos 2-4 podem intercalar. Cada turno é entregável isolado.
-
-Confirma o Turno 1 pra começar?
+- Rodar `webhook-url.test.ts` e `useAppStore.persist.test.ts` — devem continuar verdes.
+- Testar imprimindo uma etiqueta de tecido: no DevTools &gt; Network, esperar ver o POST para `http://localhost:5678/...` com status `(opaque)` e o n8n recebendo `body.imageBase64`.

@@ -92,6 +92,34 @@ function cleanBase64(input: string): { base64: string; mimeType: string } {
   return { base64: cleaned, mimeType };
 }
 
+/**
+ * Detecta se a URL do webhook aponta para uma rede local/privada (n8n rodando
+ * na máquina do usuário ou na LAN). Nesses casos usamos um POST "simple"
+ * (form-urlencoded + no-cors) para evitar o preflight OPTIONS que quebra o
+ * envio em n8n locais que não respondem CORS.
+ */
+function isLocalWebhookUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const h = u.hostname.toLowerCase();
+    if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+    if (h.endsWith('.local')) return true;
+    // 10.x.x.x
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    // 192.168.x.x
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    // 172.16.x.x - 172.31.x.x
+    const m = h.match(/^172\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n >= 16 && n <= 31) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -104,8 +132,6 @@ async function sendToWebhook(
   },
 ): Promise<void> {
   const { base64, mimeType } = cleanBase64(payload.dataUrl);
-  // Fluxo direto app -> n8n: sem proxy, sem fallback e sem conversão para form-data.
-  // O workflow recebe JSON puro com `imageBase64` no corpo da requisição.
   const body = {
     ...payload,
     template: payload.type,
@@ -116,6 +142,33 @@ async function sendToWebhook(
     sentAt: new Date().toISOString(),
   };
 
+  // n8n local/LAN → evita preflight CORS usando form-urlencoded + no-cors
+  // (POST "simple request"). O workflow continua lendo $json.body.imageBase64.
+  // Sem `keepalive` (descarta payloads grandes ~64KB).
+  if (isLocalWebhookUrl(webhookUrl)) {
+    const form = new URLSearchParams();
+    form.set('type', payload.type);
+    form.set('template', payload.type);
+    form.set('format', payload.type);
+    form.set('title', payload.title);
+    form.set('widthMm', String(payload.widthMm));
+    form.set('heightMm', String(payload.heightMm));
+    form.set('imageBase64', base64);
+    form.set('mimeType', mimeType);
+    form.set('imageSize', String(base64.length));
+    form.set('sentAt', body.sentAt);
+    form.set('data', JSON.stringify(payload.data));
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: form,
+    });
+    // Resposta é opaque em no-cors — consideramos entregue.
+    return;
+  }
+
+  // URL pública → JSON normal, com telemetria real do status HTTP.
   const res = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -126,6 +179,7 @@ async function sendToWebhook(
     throw new Error(`Webhook respondeu ${res.status}`);
   }
 }
+
 
 async function dispatchPrint(
   cfg: PrintConfig,
