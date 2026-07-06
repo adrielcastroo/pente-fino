@@ -60,12 +60,8 @@ async function resolverItem(
 }
 
 
-export type PrintMethod = 'browser' | 'webhook' | 'both';
-
 export interface PrintConfig {
   autoPrint: boolean;
-  /** 'browser' (padrão), 'webhook' (n8n) ou 'both'. */
-  printMethod?: PrintMethod;
   /** URL do webhook (n8n) — usado para tecido e como fallback geral. */
   webhookUrl?: string;
   /** URL do webhook (n8n) específico para etiquetas de motor. Se vazio, usa `webhookUrl`. */
@@ -144,9 +140,6 @@ async function dispatchPrint(
     data: Record<string, any>;
   },
 ): Promise<void> {
-  const browserDisabled = typeof localStorage !== 'undefined'
-    && localStorage.getItem('pref_disable_browser_print') === 'true';
-
   // Webhook por tipo. Motor pode reaproveitar o webhook geral (n8n) como
   // fallback — o payload inclui `type`, `template` e `format` para que o
   // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
@@ -162,69 +155,32 @@ async function dispatchPrint(
   }
   const resolvedWebhook = validation.ok ? rawWebhook : '';
   const hasWebhook = !!resolvedWebhook;
-  const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
 
-  const tryBrowser = async () => {
-    if (browserDisabled) {
-      toast.warning('Impressão pelo navegador está desabilitada nas configurações');
-      return false;
-    }
-    try {
-      await printImageInBrowser(payload.dataUrl, payload.widthMm, payload.heightMm, payload.title);
-      return true;
-    } catch (e) {
-      console.error('Browser print falhou:', e);
-      return false;
-    }
-  };
-
-  const tryWebhook = async () => {
-    if (!hasWebhook) return false;
+  if (hasWebhook) {
     try {
       await sendToWebhook(resolvedWebhook, payload);
-      return true;
+      toast.success('Etiqueta enviada para o n8n');
     } catch (e) {
       console.error('Webhook falhou:', e);
-      return false;
+      toast.error('Webhook (n8n) falhou — envio direto não confirmado');
     }
-  };
-
-  // Modo 'both': dispara os dois em paralelo (respeitando preferência de desabilitar navegador).
-  if (explicitMethod === 'both') {
-    const [webhookOk, browserOk] = await Promise.all([tryWebhook(), tryBrowser()]);
-    if (webhookOk && browserOk) toast.success('Etiqueta enviada (n8n + navegador)');
-    else if (webhookOk) toast.success('Etiqueta enviada para o n8n');
-    else if (browserOk) toast.success('Etiqueta enviada para impressão!');
-    else toast.error('Falha em ambos os métodos de impressão');
-    return;
-  }
-
-  // Preferência padrão: tenta webhook (n8n) primeiro; se falhar, cai para navegador.
-  if (hasWebhook) {
-    const webhookOk = await tryWebhook();
-    if (webhookOk) {
-      toast.success('Etiqueta enviada para o n8n');
-      return;
-    }
-    if (browserDisabled) {
-      toast.error('Webhook (n8n) falhou e impressão pelo navegador está desabilitada');
-      return;
-    }
-    toast.warning('Webhook (n8n) falhou — tentando impressão pelo navegador…');
-    const browserOk = await tryBrowser();
-    if (browserOk) toast.success('Etiqueta enviada para impressão (fallback navegador)');
-    else toast.error('Falha ao imprimir etiqueta');
     return;
   }
 
   // Sem webhook configurado: usa navegador (se permitido).
+  const browserDisabled = typeof localStorage !== 'undefined'
+    && localStorage.getItem('pref_disable_browser_print') === 'true';
   if (browserDisabled) {
     toast.error('Nenhum método disponível: configure o webhook (n8n) ou habilite a impressão pelo navegador');
     return;
   }
-  const browserOk = await tryBrowser();
-  if (browserOk) toast.success('Etiqueta enviada para impressão!');
-  else toast.error('Falha ao abrir diálogo de impressão.');
+  try {
+    await printImageInBrowser(payload.dataUrl, payload.widthMm, payload.heightMm, payload.title);
+    toast.success('Etiqueta enviada para impressão!');
+  } catch (e) {
+    console.error('Browser print falhou:', e);
+    toast.error('Falha ao abrir diálogo de impressão.');
+  }
 }
 
 
@@ -259,7 +215,7 @@ function today(): string {
 
 /**
  * Imprime a imagem da etiqueta diretamente pelo navegador, usando um iframe
- * oculto com @page no tamanho exato em mm. Substitui o envio para o n8n.
+ * oculto com @page no tamanho exato em mm quando nenhum webhook estiver configurado.
  */
 async function printImageInBrowser(
   dataUrl: string,
