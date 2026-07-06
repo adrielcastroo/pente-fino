@@ -46,6 +46,7 @@ import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
 import ErrorWatcherWidget from "@/components/admin/ErrorWatcherWidget";
 const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
+const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
 
