@@ -140,6 +140,24 @@ async function sendToWebhook(
     imageSize: base64.length,
     sentAt: new Date().toISOString(),
   };
+  if (isLocalWebhookUrl(webhookUrl)) {
+    // n8n local normalmente não devolve CORS para `application/json`.
+    // Enviamos como uma requisição simples para o POST chegar ao workflow sem
+    // preflight, preservando `imageBase64` em `$json.body.imageBase64`.
+    const formBody = new URLSearchParams();
+    Object.entries(body).forEach(([key, value]) => {
+      formBody.set(key, typeof value === 'string' ? value : JSON.stringify(value));
+    });
+    formBody.set('payload', JSON.stringify(body));
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formBody,
+    });
+    return;
+  }
+
   const sendJson = async () => {
     const res = await fetch(webhookUrl, {
       method: 'POST',
@@ -154,26 +172,7 @@ async function sendToWebhook(
   try {
     await sendJson();
   } catch (error) {
-    if (!isLocalWebhookUrl(webhookUrl)) {
-      throw error;
-    }
-
-    // n8n local normalmente não devolve CORS para `application/json`.
-    // Quando isso acontece, o navegador bloqueia o POST no preflight e o fluxo
-    // nem recebe a etiqueta. O fallback abaixo usa uma requisição simples
-    // (`no-cors` + form-urlencoded), mantendo `imageBase64` em `$json.body`
-    // para o workflow continuar lendo o mesmo campo.
-    const formBody = new URLSearchParams();
-    Object.entries(body).forEach(([key, value]) => {
-      formBody.set(key, typeof value === 'string' ? value : JSON.stringify(value));
-    });
-    formBody.set('payload', JSON.stringify(body));
-
-    await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: formBody,
-    });
+    throw error;
   }
 }
 
