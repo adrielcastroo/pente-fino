@@ -37,6 +37,7 @@ const GlobalSettingsTab = lazy(() => import('./tabs/GlobalSettingsTab'));
 const BackupTab = lazy(() => import('./tabs/BackupTab'));
 const SentryTab = lazy(() => import('./tabs/SentryTab'));
 const PostHogTab = lazy(() => import('./tabs/PostHogTab'));
+const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 
 declare const __APP_VERSION__: string;
 
