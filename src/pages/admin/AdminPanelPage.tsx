@@ -47,6 +47,7 @@ const TABS = [
   { key: 'observability', label: 'Observabilidade', icon: Eye },
   { key: 'sentry', label: 'Sentry', icon: Bug },
   { key: 'posthog', label: 'PostHog', icon: LineChart },
+  { key: 'n8n', label: 'n8n', icon: Workflow },
   { key: 'flags', label: 'Feature Flags', icon: Flag },
   { key: 'releases', label: 'Releases', icon: Rocket },
   { key: 'team', label: 'Usuários & Acessos', icon: Users },
