@@ -31,6 +31,9 @@ const statusStyle: Record<string, string> = {
 export default function N8nMonitorPage() {
   const [baseUrl, setBaseUrl] = useState(getN8nBaseUrl());
   const [apiKey, setApiKey] = useState(getN8nApiKey());
+  const [webhookOverride, setWebhookOverride] = useState(
+    typeof localStorage !== 'undefined' ? (localStorage.getItem('n8n_webhook_url') || '') : ''
+  );
   const [health, setHealth] = useState<N8nHealth | null>(null);
   const [executions, setExecutions] = useState<N8nExecution[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnosis[]>([]);
