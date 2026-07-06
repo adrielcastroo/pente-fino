@@ -25,6 +25,7 @@ import {
   HardDriveDownload,
   Bug,
   LineChart,
+  Workflow,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
