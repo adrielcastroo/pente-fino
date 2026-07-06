@@ -62,10 +62,8 @@ async function resolverItem(
 
 export interface PrintConfig {
   autoPrint: boolean;
-  /** URL do webhook (n8n) — usado para tecido e como fallback geral. */
+  /** URL única do webhook n8n usada por todas as etiquetas. */
   webhookUrl?: string;
-  /** URL do webhook (n8n) específico para etiquetas de motor. Se vazio, usa `webhookUrl`. */
-  motorWebhookUrl?: string;
 }
 
 /**
@@ -140,13 +138,8 @@ async function dispatchPrint(
     data: Record<string, any>;
   },
 ): Promise<void> {
-  // Webhook por tipo. Motor pode reaproveitar o webhook geral (n8n) como
-  // fallback — o payload inclui `type`, `template` e `format` para que o
-  // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
-  // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
-  const rawWebhook = payload.type === 'motor'
-    ? (cfg.motorWebhookUrl?.trim() || cfg.webhookUrl?.trim() || '')
-    : (cfg.webhookUrl?.trim() || '');
+  // URL única para o teste app -> n8n: nenhuma rota alternativa por tipo.
+  const rawWebhook = cfg.webhookUrl?.trim() || '';
 
   // Se houver URL configurada mas inválida, avisa e desconsidera para não estourar erro obscuro.
   const validation = validateWebhookUrl(rawWebhook, { allowEmpty: true });
