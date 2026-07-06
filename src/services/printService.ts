@@ -99,134 +99,71 @@ function cleanBase64(input: string): { base64: string; mimeType: string } {
   return { base64: cleaned, mimeType };
 }
 
-function submitLocalWebhookForm(webhookUrl: string, fields: Record<string, string>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (typeof document === 'undefined') {
-      reject(new Error('Envio local indisponível fora do navegador'));
-      return;
-    }
+/**
+ * Classifica o destino do webhook para decidir o caminho de envio.
+ *  - 'public'      → passa pelo Edge Function `n8n-proxy` (status HTTP real).
+ *  - 'localhost'   → navegador permite HTTPS → http://localhost (origem segura no Chrome).
+ *                    Requer CORS habilitado no n8n (N8N_CORS_ALLOW_ORIGIN=*).
+ *  - 'private-ip'  → navegador BLOQUEIA por Mixed Content quando o app está em HTTPS.
+ *                    Só funciona se o app for aberto por HTTP, ou o n8n exposto por HTTPS/túnel.
+ */
+export type WebhookTarget = 'public' | 'localhost' | 'private-ip';
 
-    const token = Math.random().toString(36).slice(2);
-    const iframeName = `n8n-print-target-${token}`;
-    const iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.setAttribute('aria-hidden', 'true');
-    iframe.style.position = 'fixed';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    iframe.style.opacity = '0';
-    iframe.style.pointerEvents = 'none';
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = webhookUrl;
-    form.target = iframeName;
-    form.enctype = 'application/x-www-form-urlencoded';
-    form.acceptCharset = 'UTF-8';
-    form.style.display = 'none';
-
-    Object.entries(fields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    let done = false;
-    const cleanup = () => {
-      try { form.remove(); } catch { /* noop */ }
-      try { iframe.remove(); } catch { /* noop */ }
-    };
-    const finish = () => {
-      if (done) return;
-      done = true;
-      cleanup();
-      resolve();
-    };
-
-    iframe.addEventListener('load', finish, { once: true });
-    document.body.appendChild(iframe);
-    document.body.appendChild(form);
-
-    try {
-      form.submit();
-      window.setTimeout(finish, 2500);
-    } catch (error) {
-      cleanup();
-      reject(error);
-    }
-  });
+export function classifyWebhookTarget(webhookUrl: string): WebhookTarget {
+  try {
+    const u = new URL(webhookUrl);
+    const h = u.hostname.toLowerCase();
+    if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return 'localhost';
+    if (
+      h.endsWith('.local') ||
+      /^10\./.test(h) ||
+      /^192\.168\./.test(h) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(h)
+    ) return 'private-ip';
+    return 'public';
+  } catch { return 'public'; }
 }
 
-async function sendToWebhook(
-  webhookUrl: string,
-  payload: {
-    type: 'tecido' | 'motor';
-    title: string;
-    dataUrl: string;
-    widthMm: number;
-    heightMm: number;
-    data: Record<string, any>;
-  },
-): Promise<void> {
-  const { base64, mimeType } = cleanBase64(payload.dataUrl);
-  // Enviamos múltiplos formatos para máxima compatibilidade com o agente n8n:
-  //  - imageBase64: base64 PURO (sem prefixo, sem aspas) → use este no agente
-  //  - mimeType: tipo MIME (geralmente image/png)
-  //  - dataUrl: mantido por retrocompatibilidade
-  const body = {
-    ...payload,
-    template: payload.type,                 // alias explícito p/ roteamento
-    format: payload.type,                   // alias adicional
-    imageBase64: base64,
-    mimeType,
-    imageSize: base64.length,
-    sentAt: new Date().toISOString(),
-  };
-  const payloadJson = JSON.stringify(body);
-  const n8nFormFields = {
-    imageBase64: base64,
-    mimeType,
-    type: payload.type,
-    template: payload.type,
-    format: payload.type,
-    title: payload.title,
-    widthMm: String(payload.widthMm),
-    heightMm: String(payload.heightMm),
-    imageSize: String(base64.length),
-    sentAt: body.sentAt,
-    data: JSON.stringify(payload.data),
-  } satisfies Record<string, string>;
+/**
+ * Envia diretamente ao n8n local. O navegador precisa aceitar a requisição
+ * (mixed content) e o n8n precisa responder CORS. Usa JSON puro para o payload
+ * ficar em `$json.body.imageBase64` no fluxo do n8n.
+ */
+async function sendDirectToLocalN8n(webhookUrl: string, payloadJson: string): Promise<void> {
+  const target = classifyWebhookTarget(webhookUrl);
+  const pageIsHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const webhookIsHttp = webhookUrl.startsWith('http://');
 
-  // Detecta URLs que só existem na máquina do usuário — a Edge Function roda
-  // nos servidores do Supabase e NÃO consegue alcançá-las. Nesses casos vamos
-  // direto pelo browser, como funcionava antes.
-  const isLocalTarget = (() => {
-    try {
-      const h = new URL(webhookUrl).hostname.toLowerCase();
-      return (
-        h === 'localhost' ||
-        h === '127.0.0.1' ||
-        h === '::1' ||
-        h.endsWith('.local') ||
-        /^10\./.test(h) ||
-        /^192\.168\./.test(h) ||
-        /^172\.(1[6-9]|2\d|3[0-1])\./.test(h)
-      );
-    } catch { return false; }
-  })();
-
-  // URLs locais/privadas precisam sair direto do navegador do usuário. Fetch
-  // para localhost/IP privado pode ser bloqueado por CORS/Private Network
-  // Access antes de chegar no n8n. Form POST em iframe oculto não faz preflight
-  // e o n8n expõe o campo como `$json.body.imageBase64`, como no fluxo enviado.
-  if (isLocalTarget) {
-    await submitLocalWebhookForm(webhookUrl, n8nFormFields);
-    void logN8nHealth(true);
-    return;
+  // Chrome bloqueia HTTPS → http://<IP privado> por Mixed Content.
+  // localhost/127.0.0.1 são "potentially trustworthy" e permitidos.
+  if (target === 'private-ip' && pageIsHttps && webhookIsHttp) {
+    throw new Error(
+      'Navegador bloqueia HTTPS → http://IP-privado (Mixed Content). ' +
+      'Use http://localhost:5678 ou exponha o n8n via HTTPS (ex.: túnel Cloudflare/ngrok).'
+    );
   }
+
+  let res: Response;
+  try {
+    res = await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: payloadJson,
+    });
+  } catch (err) {
+    // Falha de rede / CORS preflight recusado / Private Network Access.
+    throw new Error(
+      `Não foi possível alcançar o n8n em ${webhookUrl}. ` +
+      'Verifique se ele está rodando e com CORS habilitado ' +
+      '(N8N_CORS_ALLOW_ORIGIN=* nas variáveis de ambiente do n8n). ' +
+      `Detalhe: ${(err as Error).message || err}`,
+    );
+  }
+  if (!res.ok) {
+    throw new Error(`n8n respondeu HTTP ${res.status}`);
+  }
+}
 
   // 1) Se a URL for pública, preferir Edge Function `n8n-proxy` — nos dá
   //    status HTTP real do n8n sem passar por CORS do browser.
