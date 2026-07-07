@@ -891,5 +891,3 @@ export async function printLabelsBatch(
     : (browserPages.length > 0 ? rendered.length : 0);
   return { ok, total: items.length };
 }
-
-}
