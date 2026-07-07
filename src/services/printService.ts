@@ -965,16 +965,34 @@ export interface BatchItem {
 }
 
 /**
+ * Callback opcional para acompanhar o envio em lote em tempo real.
+ * Chamado para cada item ao mudar de estado.
+ */
+export type BatchProgressStatus = 'pending' | 'sending' | 'retrying' | 'ok' | 'failed';
+export interface BatchProgressEvent {
+  index: number;              // índice do item em `items`
+  total: number;
+  status: BatchProgressStatus;
+  attempt: number;            // 1, 2, 3…
+  title?: string;             // ex: "Etiqueta 002.001.002.000.323"
+  error?: string;
+}
+export type BatchProgressCallback = (ev: BatchProgressEvent) => void;
+
+/**
  * Imprime várias etiquetas em lote:
- *  - Envio ao n8n (webhook) permanece por-item (lógica travada).
+ *  - Envio ao n8n (webhook) permanece por-item (lógica travada) mas agora com
+ *    retry automático (até 3 tentativas com backoff) por item.
  *  - Impressão pelo navegador é feita em UMA ÚNICA janela para todas as
  *    etiquetas selecionadas — o usuário vê um único diálogo de impressão.
+ *  - Progresso é reportado via callback opcional `onProgress`.
  */
 export async function printLabelsBatch(
   items: BatchItem[],
   labelSettings: LabelSettings & PrintConfig,
-): Promise<{ ok: number; total: number }> {
-  if (items.length === 0) return { ok: 0, total: 0 };
+  onProgress?: BatchProgressCallback,
+): Promise<{ ok: number; total: number; failed: number[] }> {
+  if (items.length === 0) return { ok: 0, total: 0, failed: [] };
   const cfg: LabelSettings & PrintConfig = { ...labelSettings, autoPrint: true };
 
   const browserDisabled = typeof localStorage !== 'undefined'
@@ -1079,7 +1097,7 @@ export async function printLabelsBatch(
 
     try {
       await printReactLabelsInBrowserBatch(browserPages, `Etiquetas (${browserPages.length})`);
-      return { ok: browserPages.length, total: items.length };
+      return { ok: browserPages.length, total: items.length, failed: [] };
     } catch (e) {
       console.error('Impressão rápida em lote pelo navegador falhou; usando PNG como fallback:', e);
     }
@@ -1152,13 +1170,45 @@ export async function printLabelsBatch(
   let webhookOkCount = 0;
   const failedIdx: number[] = [];
   if (wantWebhook) {
+    const MAX_ATTEMPTS = 3;
+    const BACKOFF_MS = [0, 700, 1800]; // espera antes de cada tentativa
     for (let i = 0; i < rendered.length; i++) {
-      try {
-        await sendToWebhook(resolvedWebhook, rendered[i].payload);
+      const title = rendered[i].payload.title;
+      let sent = false;
+      let lastError: unknown = null;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        if (BACKOFF_MS[attempt - 1] > 0) {
+          await new Promise(r => setTimeout(r, BACKOFF_MS[attempt - 1]));
+        }
+        onProgress?.({
+          index: i,
+          total: rendered.length,
+          status: attempt === 1 ? 'sending' : 'retrying',
+          attempt,
+          title,
+        });
+        try {
+          await sendToWebhook(resolvedWebhook, rendered[i].payload);
+          sent = true;
+          onProgress?.({ index: i, total: rendered.length, status: 'ok', attempt, title });
+          break;
+        } catch (e) {
+          lastError = e;
+          console.warn(`Webhook lote item ${i} tentativa ${attempt}/${MAX_ATTEMPTS} falhou:`, e);
+        }
+      }
+      if (sent) {
         webhookOkCount++;
-      } catch (e) {
-        console.error('Webhook lote falhou no item', i, e);
+      } else {
         failedIdx.push(i);
+        onProgress?.({
+          index: i,
+          total: rendered.length,
+          status: 'failed',
+          attempt: MAX_ATTEMPTS,
+          title,
+          error: lastError instanceof Error ? lastError.message : String(lastError ?? ''),
+        });
       }
     }
   }
@@ -1180,5 +1230,5 @@ export async function printLabelsBatch(
   const ok = wantWebhook
     ? webhookOkCount + (needsBrowserFallback ? 0 : 0)
     : (browserPages.length > 0 ? rendered.length : 0);
-  return { ok, total: items.length };
+  return { ok, total: items.length, failed: failedIdx };
 }
