@@ -1179,7 +1179,11 @@ export async function printLabelsBatch(
   }
 
 
-  const wantWebhook = (method === 'webhook' || method === 'both') && hasWebhook;
+  // Regra anti-redundância: se navegador está ligado, NUNCA enviamos ao n8n
+  // — mesmo com method='both'. Só há envio ao n8n quando o navegador está
+  // desabilitado (ou method='webhook' explícito).
+  const wantWebhook = method === 'webhook'
+    || (method === 'both' && browserDisabled && hasWebhook);
   const wantBrowser = (method === 'browser' || method === 'both') && !browserDisabled;
   const needsBrowserFallback = method === 'webhook' && !browserDisabled;
 
