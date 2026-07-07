@@ -667,7 +667,10 @@ export async function printMotorLabel(
   } catch (error) {
     console.error('Erro ao imprimir etiqueta (motor):', error);
     toast.error('Falha ao processar etiqueta.');
+  }
 }
+
+
 
 // ============================================================================
 // BATCH PRINT — imprime várias etiquetas com UMA ÚNICA janela de impressão
