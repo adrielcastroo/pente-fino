@@ -427,7 +427,7 @@ export default function LabelLayoutPanel() {
               </div>
               <div
                 ref={previewBoxRef}
-                className="relative flex items-center justify-center p-4 bg-muted/20 rounded-md border-2 border-dashed border-border/30 h-[280px] lg:h-[360px] overflow-hidden"
+                className="relative flex items-center justify-center p-4 bg-muted/60 dark:bg-muted/40 rounded-md border-2 border-dashed border-border/50 h-[280px] lg:h-[360px] overflow-hidden shadow-inner"
               >
                 <div
                   style={{
@@ -436,17 +436,28 @@ export default function LabelLayoutPanel() {
                     transform: `scale(${fit})`,
                     transformOrigin: 'center center',
                     flexShrink: 0,
-                    display: 'flex',
+                    position: 'relative',
                     background: '#fff',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
                   }}
                 >
-                  <div style={{ width: `${offsetPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' }} />
-                  {isMotor
-                    ? <MotorPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
-                    : <TecidoPreview wPx={innerWpx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
-                  }
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      transform: `translate(${offsetXPx}px, ${offsetYPx}px)`,
+                    }}
+                  >
+                    {isMotor
+                      ? <MotorPreview wPx={wPx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
+                      : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
+                    }
+                  </div>
                 </div>
               </div>
+
 
               <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10">
                 <Layout className="w-4 h-4 text-primary shrink-0" />
