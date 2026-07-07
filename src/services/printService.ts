@@ -1170,13 +1170,45 @@ export async function printLabelsBatch(
   let webhookOkCount = 0;
   const failedIdx: number[] = [];
   if (wantWebhook) {
+    const MAX_ATTEMPTS = 3;
+    const BACKOFF_MS = [0, 700, 1800]; // espera antes de cada tentativa
     for (let i = 0; i < rendered.length; i++) {
-      try {
-        await sendToWebhook(resolvedWebhook, rendered[i].payload);
+      const title = rendered[i].payload.title;
+      let sent = false;
+      let lastError: unknown = null;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        if (BACKOFF_MS[attempt - 1] > 0) {
+          await new Promise(r => setTimeout(r, BACKOFF_MS[attempt - 1]));
+        }
+        onProgress?.({
+          index: i,
+          total: rendered.length,
+          status: attempt === 1 ? 'sending' : 'retrying',
+          attempt,
+          title,
+        });
+        try {
+          await sendToWebhook(resolvedWebhook, rendered[i].payload);
+          sent = true;
+          onProgress?.({ index: i, total: rendered.length, status: 'ok', attempt, title });
+          break;
+        } catch (e) {
+          lastError = e;
+          console.warn(`Webhook lote item ${i} tentativa ${attempt}/${MAX_ATTEMPTS} falhou:`, e);
+        }
+      }
+      if (sent) {
         webhookOkCount++;
-      } catch (e) {
-        console.error('Webhook lote falhou no item', i, e);
+      } else {
         failedIdx.push(i);
+        onProgress?.({
+          index: i,
+          total: rendered.length,
+          status: 'failed',
+          attempt: MAX_ATTEMPTS,
+          title,
+          error: lastError instanceof Error ? lastError.message : String(lastError ?? ''),
+        });
       }
     }
   }
@@ -1198,5 +1230,5 @@ export async function printLabelsBatch(
   const ok = wantWebhook
     ? webhookOkCount + (needsBrowserFallback ? 0 : 0)
     : (browserPages.length > 0 ? rendered.length : 0);
-  return { ok, total: items.length };
+  return { ok, total: items.length, failed: failedIdx };
 }
