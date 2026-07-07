@@ -473,7 +473,7 @@ export default function LabelLayoutPanel() {
               </div>
 
 
-              <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10">
+              <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10 shrink-0">
                 <Layout className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-[10px] leading-tight text-primary/80 font-medium">
                   {isMotor
