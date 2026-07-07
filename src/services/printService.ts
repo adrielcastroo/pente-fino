@@ -795,6 +795,41 @@ export async function printLabelsBatch(
   };
   const rendered: { page: BatchPage; payload: Payload }[] = [];
 
+  // Pré-carrega TODOS os itens cadastrados em um único fetch e monta um cache
+  // por (codigo_interno, fornecedores normalizados, descrição). Sem isso, cada
+  // etiqueta disparava 2–3 queries no Supabase — com dezenas de itens a tela
+  // travava no "Preparando…" por muito tempo.
+  const cacheByInterno = new Map<string, { codigoInterno: string; descricao: string }>();
+  const cacheByFornecedor = new Map<string, { codigoInterno: string; descricao: string }>();
+  const cacheByDescricao = new Map<string, { codigoInterno: string; descricao: string }>();
+  try {
+    const all = await itensCadastroService.list();
+    for (const it of all) {
+      const entry = { codigoInterno: it.codigo_interno, descricao: it.descricao };
+      cacheByInterno.set(normalizarCodigo(it.codigo_interno), entry);
+      for (const n of it.codigos_fornecedor_normalizado || []) {
+        if (n) cacheByFornecedor.set(n, entry);
+      }
+      if (it.descricao) cacheByDescricao.set(it.descricao.trim().toLowerCase(), entry);
+    }
+  } catch (e) {
+    console.warn('Não foi possível pré-carregar cadastro; seguindo sem cache:', e);
+  }
+
+  const resolveLocal = (
+    codigo: string,
+    fallbackDescricao: string,
+  ): { codigoInterno: string; descricao: string } => {
+    const norm = normalizarCodigo(codigo);
+    const byInt = norm ? cacheByInterno.get(norm) : undefined;
+    if (byInt) return byInt;
+    const byForn = norm ? cacheByFornecedor.get(norm) : undefined;
+    if (byForn) return byForn;
+    const byDesc = codigo ? cacheByDescricao.get(String(codigo).trim().toLowerCase()) : undefined;
+    if (byDesc) return byDesc;
+    return { codigoInterno: codigo, descricao: fallbackDescricao || codigo };
+  };
+
   for (const it of items) {
     try {
       if (it.kind === 'motor') {
@@ -804,7 +839,7 @@ export async function printLabelsBatch(
           : 'S/CX';
         const nfText = inp.nf ? `NF ${inp.nf}` : '';
         const ntText = inp.loteSistema || inp.lote;
-        const resolved = await resolverItem(inp.item, inp.item, inp.descricao || '');
+        const resolved = resolveLocal(inp.item, inp.descricao || '');
         const data: MotorLabelData = {
           sku: resolved.codigoInterno,
           descricao: resolved.descricao,
@@ -831,7 +866,7 @@ export async function printLabelsBatch(
         const m2Calc = mLinear > 0 && largura > 0 ? mLinear * largura : 0;
         const qtdM2 = m2Informado > 0 ? m2Informado : m2Calc;
         const qtdText = qtdM2 > 0 ? `${qtdM2.toFixed(2).replace('.', ',')} M²` : '';
-        const resolved = await resolverItem(inp.item, inp.item, inp.descricao || '');
+        const resolved = resolveLocal(inp.item, inp.descricao || '');
         const data: TecidoLabelData = {
           sku: resolved.codigoInterno,
           descricao: resolved.descricao,
@@ -853,6 +888,7 @@ export async function printLabelsBatch(
       console.error('Falha ao renderizar etiqueta para lote:', e);
     }
   }
+
 
   const wantWebhook = (method === 'webhook' || method === 'both') && hasWebhook;
   const wantBrowser = (method === 'browser' || method === 'both') && !browserDisabled;
