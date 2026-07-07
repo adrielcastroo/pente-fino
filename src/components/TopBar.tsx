@@ -78,9 +78,16 @@ const TopBar = memo(function TopBar() {
 
 
     const columns = getRegistroColumns(currentRegistros, currentMode);
-    const headers = columns.map(column => column.label);
-    const data = currentRegistros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
-    const columnWidths = columns.map(column => column.width);
+    const isMotorControleExport = currentRegistros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
+    let headers = columns.map(column => column.label);
+    let data = currentRegistros.map(r => columns.map(column => (r as any)[column.key] ?? ''));
+    let columnWidths = columns.map(column => column.width);
+    if (!isMotorControleExport) {
+      const resolveCodigoInterno = await itensCadastroService.buildCodigoInternoResolver();
+      headers = ['Código Interno', ...headers];
+      data = currentRegistros.map((r, i) => [resolveCodigoInterno(r.item || ''), ...data[i]]);
+      columnWidths = [18, ...columnWidths];
+    }
 
     let fileLabel: string;
     let archiveName: string;
