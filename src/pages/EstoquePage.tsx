@@ -94,6 +94,8 @@ export default function EstoquePage() {
   const [confirmScan, setConfirmScan] = useState<Posicao | null>(null);
   const scanRef = useRef<HTMLInputElement>(null);
   const [locateQuery, setLocateQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
@@ -145,8 +147,10 @@ export default function EstoquePage() {
 
   const loadStats = useCallback(async () => {
     try {
-      // Fetch status + estrutura (needed for per-TEC breakdown in stat dialogs)
-      const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura');
+      // Fetch status + estrutura + campos usados na busca global (cross-TEC).
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('id, status, estrutura, coluna, nivel, item, lote, lote_sistema, proc, endereco');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
     } catch (e) {
@@ -172,6 +176,21 @@ export default function EstoquePage() {
   useEffect(() => {
     setFormData({ activeTab: 'estoque' });
   }, [setFormData]);
+
+  // Atalho "/" para focar a busca (ignora quando já está em input/textarea).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (t as any)?.isContentEditable) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const posicoes = posicoesForActiveTec;
   // totalSlots is constant — compute once at module scope below
@@ -203,17 +222,62 @@ export default function EstoquePage() {
     return map;
   }, [posicoes]);
 
+  // Normaliza: remove acentos, colapsa não-alfanuméricos em espaço, lowercase.
+  const normalizeSearch = useCallback((s: string) => {
+    return (s || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }, []);
+
+  // Busca cross-TEC: retorna posições que casam com TODOS os tokens.
+  // Considera item, descrição do cadastro, código interno, lote, lote_sistema,
+  // processo, endereço e a própria estrutura (TEC).
+  const searchMatches = useMemo(() => {
+    const raw = locateQuery.trim();
+    if (!raw) return null;
+    const tokens = normalizeSearch(raw).split(' ').filter(Boolean);
+    if (!tokens.length) return null;
+    const out: Array<Posicao & { _desc: string; _interno: string }> = [];
+    for (const p of allPosicoes as any[]) {
+      const info = resolveItemInfo(p.item);
+      const desc = info?.descricao || '';
+      const interno = info?.codigo_interno || '';
+      const hay = normalizeSearch(
+        `${p.item ?? ''} ${desc} ${interno} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''} ${p.estrutura ?? ''} ${p.coluna ?? ''} N${String(p.nivel ?? '').padStart(2, '0')}`
+      );
+      if (tokens.every(t => hay.includes(t))) {
+        out.push({ ...(p as Posicao), _desc: desc, _interno: interno });
+      }
+    }
+    return out;
+  }, [locateQuery, allPosicoes, resolveItemInfo, normalizeSearch]);
+
+  // Células destacadas no TEC ativo.
   const matchingCells = useMemo(() => {
-    const q = locateQuery.trim().toLowerCase();
-    if (!q) return null;
+    if (!searchMatches) return null;
     const set = new Set<string>();
-    for (const p of posicoes) {
-      const desc = describeItem(p.item);
-      const hay = `${p.item ?? ''} ${desc} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
-      if (hay.includes(q)) set.add(`${p.coluna}-${p.nivel}`);
+    for (const p of searchMatches) {
+      if (p.estrutura === activeTec) set.add(`${p.coluna}-${p.nivel}`);
     }
     return set;
-  }, [locateQuery, posicoes, describeItem]);
+  }, [searchMatches, activeTec]);
+
+  // Agrupa resultados por TEC para o dropdown.
+  const searchByTec = useMemo(() => {
+    if (!searchMatches) return null;
+    const map = new Map<string, typeof searchMatches>();
+    for (const p of searchMatches) {
+      const arr = map.get(p.estrutura) || [];
+      arr.push(p);
+      map.set(p.estrutura, arr);
+    }
+    return map;
+  }, [searchMatches]);
+
 
 
   const handleStatusChange = useCallback(async (pos: Posicao, newStatus: string) => {
@@ -498,23 +562,106 @@ export default function EstoquePage() {
         </div>
       </div>
 
-      {/* Locate search */}
+      {/* Locate search — busca global cross-TEC */}
       <div className="relative">
-        <Input
-          value={locateQuery}
-          onChange={(e) => setLocateQuery(e.target.value)}
-          placeholder="Onde está? Buscar por item, lote, processo ou endereço..."
-          className="h-11 sm:h-12 rounded-md bg-card/40 backdrop-blur-xl border-white/10 pl-4 pr-24 text-xs sm:text-sm"
-        />
-        {locateQuery && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider">
-              {matchingCells?.size ?? 0} células
-            </Badge>
-            <button onClick={() => setLocateQuery('')} className="text-muted-foreground hover:text-foreground text-xs font-semibold">×</button>
+        <div className="relative">
+          <Input
+            ref={searchInputRef}
+            value={locateQuery}
+            onChange={(e) => { setLocateQuery(e.target.value); setSearchOpen(true); }}
+            onFocus={() => setSearchOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                if (locateQuery) { setLocateQuery(''); setSearchOpen(false); }
+                else { searchInputRef.current?.blur(); setSearchOpen(false); }
+              } else if (e.key === 'Enter' && searchMatches && searchMatches.length > 0) {
+                e.preventDefault();
+                const first = searchMatches[0];
+                if (first.estrutura !== activeTec) setActiveTec(first.estrutura);
+                setTimeout(() => setSelectedCell({ col: first.coluna, nivel: first.nivel }), first.estrutura !== activeTec ? 120 : 0);
+                setSearchOpen(false);
+              }
+            }}
+            placeholder="Buscar em todos os TECs: item, descrição, código interno, lote, processo, endereço…  ( / )"
+            className="h-11 sm:h-12 rounded-md bg-card/40 backdrop-blur-xl border-white/10 pl-4 pr-40 text-xs sm:text-sm"
+          />
+          {locateQuery && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider">
+                {searchMatches?.length ?? 0} itens · {matchingCells?.size ?? 0} céls
+              </Badge>
+              <button
+                type="button"
+                onClick={() => { setLocateQuery(''); setSearchOpen(false); searchInputRef.current?.focus(); }}
+                className="text-muted-foreground hover:text-foreground text-sm leading-none w-5 h-5 flex items-center justify-center rounded hover:bg-white/5"
+                aria-label="Limpar busca"
+              >×</button>
+            </div>
+          )}
+        </div>
+
+        {/* Dropdown de resultados */}
+        {searchOpen && locateQuery && searchMatches && (
+          <div className="absolute z-30 mt-1 w-full rounded-md border border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl ring-1 ring-white/5 max-h-[420px] overflow-y-auto">
+            {searchMatches.length === 0 ? (
+              <div className="p-4 text-xs text-muted-foreground text-center">
+                Nada encontrado para <span className="text-foreground font-semibold">"{locateQuery}"</span>.
+              </div>
+            ) : (
+              <>
+                {Array.from(searchByTec!.entries())
+                  .sort(([a], [b]) => (a === activeTec ? -1 : b === activeTec ? 1 : a.localeCompare(b)))
+                  .map(([tec, items]) => (
+                    <div key={tec} className="border-b border-white/5 last:border-b-0">
+                      <div className="px-3 py-1.5 flex items-center justify-between bg-white/[0.02] sticky top-0">
+                        <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary">{tec}</span>
+                        <span className="text-[10px] text-muted-foreground">{items.length} {items.length === 1 ? 'item' : 'itens'}</span>
+                      </div>
+                      {items.slice(0, 25).map((p) => {
+                        const label = p._desc || p.item || '—';
+                        const addr = p.endereco || `${p.estrutura}.${p.coluna}.N${String(p.nivel).padStart(2, '0')}`;
+                        const stCfg = STATUS_CONFIG[p.status];
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              if (p.estrutura !== activeTec) setActiveTec(p.estrutura);
+                              setTimeout(() => setSelectedCell({ col: p.coluna, nivel: p.nivel }), p.estrutura !== activeTec ? 120 : 0);
+                              setSearchOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center gap-3 border-t border-white/[0.03]"
+                          >
+                            <span className={cn('w-1.5 h-8 rounded-full shrink-0', stCfg?.bg || 'bg-muted/30')} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-semibold text-foreground truncate">{label}</div>
+                              <div className="text-[10px] text-muted-foreground truncate">
+                                <span className="font-mono">{addr}</span>
+                                {p._interno && p._interno !== label ? <> · cod. <span className="font-mono">{p._interno}</span></> : null}
+                                {p.lote ? <> · lote {p.lote}</> : null}
+                                {p.proc ? <> · {p.proc}</> : null}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className={cn('text-[9px] uppercase tracking-wider shrink-0', stCfg?.color)}>{stCfg?.label || p.status}</Badge>
+                          </button>
+                        );
+                      })}
+                      {items.length > 25 && (
+                        <div className="px-3 py-1.5 text-[10px] text-muted-foreground text-center bg-white/[0.02]">
+                          +{items.length - 25} outros neste TEC — refine a busca
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </>
+            )}
           </div>
         )}
+        {searchOpen && locateQuery && (
+          <div className="fixed inset-0 z-20" onClick={() => setSearchOpen(false)} />
+        )}
       </div>
+
 
       {/* TEC Tabs */}
       <div className="tec-tabs flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] p-1.5 gap-1.5 sm:gap-2 border border-white/10 shadow-2xl flex-wrap sm:flex-nowrap ring-1 ring-white/5">
