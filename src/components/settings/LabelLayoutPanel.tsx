@@ -483,7 +483,7 @@ export default function LabelLayoutPanel() {
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 shrink-0">
                 <Button
                   onClick={handleReset}
                   variant="outline"
