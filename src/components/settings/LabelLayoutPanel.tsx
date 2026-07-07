@@ -172,57 +172,50 @@ export default function LabelLayoutPanel() {
   }, [wPx, hPx]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="animate-fade-in">
       <Tabs value={kind} onValueChange={(v) => setKind(v as LabelKind)}>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex-1 max-w-xl">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Tipo de etiqueta para imprimir
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                Selecione para editar
-              </span>
-            </div>
-            <TabsList className="flex h-auto w-full flex-col gap-2 bg-transparent p-0">
+        {/* Header compacto: seletor horizontal + info do padrão */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <span className="block mb-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Tipo de etiqueta
+            </span>
+            <TabsList className="inline-flex h-auto w-full sm:w-auto gap-1 bg-muted/40 p-1 rounded-md">
               {([
-                { value: 'tecido', icon: Shirt, title: 'Tecidos', desc: 'Etiqueta 100×60 mm com QR de SKU e Lote.' },
-                { value: 'motor', icon: Cog, title: 'Motores / Controles', desc: 'Etiqueta 60×50 mm com QR Lote+SKU.' },
-              ] as const).map(({ value, icon: Icon, title, desc }) => {
-                const active = kind === value;
-                return (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className={`group w-full items-center gap-3 rounded-md border px-3 py-3 text-left transition-all duration-200 data-[state=inactive]:bg-background/40 data-[state=inactive]:border-border/40 data-[state=active]:border-primary/50 data-[state=active]:bg-primary/5 data-[state=active]:shadow-sm hover:border-primary/40 hover:bg-primary/5 justify-start`}
-                  >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ring-1 transition-colors ${active ? 'bg-primary/15 text-primary ring-primary/30' : 'bg-muted/60 text-muted-foreground ring-border/40'}`}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-foreground">{title}</span>
-                      <span className="block text-[11px] font-normal text-muted-foreground truncate">{desc}</span>
-                    </span>
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'}`}>
-                      {active && <Check className="h-3 w-3" strokeWidth={3} />}
-                    </span>
-                  </TabsTrigger>
-                );
-              })}
+                { value: 'tecido', icon: Shirt, title: 'Tecidos', size: '100×60' },
+                { value: 'motor', icon: Cog, title: 'Motores / Controles', size: '60×50' },
+              ] as const).map(({ value, icon: Icon, title, size }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="flex-1 sm:flex-initial gap-2 px-3 py-2 text-xs font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{title}</span>
+                  <span className="hidden md:inline text-[10px] font-mono opacity-60">{size}mm</span>
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
-          <div className="flex items-center gap-2 lg:pt-7">
-            <span className="text-[11px] text-muted-foreground">Padrão atual:</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] text-muted-foreground">Atual:</span>
             <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-medium text-primary">
-              {isMotor ? 'Motor' : 'Tecido'} · {w}×{h} mm · {(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}
+              {w}×{h}mm · {(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}
             </span>
           </div>
         </div>
 
 
-        <TabsContent value={kind} className="mt-4 animate-fade-in">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 items-start">
-            <div className="space-y-4 lg:col-span-3 order-2 lg:order-1">
+        <TabsContent value={kind} className="mt-0 animate-fade-in">
+          {/*
+            Split panel: em desktop, altura fixa do viewport com duas colunas.
+            A coluna de controles rola independentemente; o preview permanece
+            SEMPRE VISÍVEL à direita — sem sticky, sem depender de scroll da
+            página, sem quebrar por overflow de ancestrais.
+          */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 lg:h-[calc(100vh-15rem)] lg:min-h-[560px]">
+            <div className="space-y-4 lg:col-span-3 order-2 lg:order-1 lg:overflow-y-auto lg:pr-3 lg:-mr-2">
+
               <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
@@ -422,8 +415,8 @@ export default function LabelLayoutPanel() {
               </Card>
             </div>
 
-            <div className="lg:col-span-2 order-1 lg:order-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1 space-y-3">
-              <div className="flex items-baseline justify-between">
+            <div className="lg:col-span-2 order-1 lg:order-2 flex flex-col gap-3 lg:h-full lg:min-h-0">
+              <div className="flex items-baseline justify-between shrink-0">
                 <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">
                   Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
                 </Label>
@@ -433,7 +426,7 @@ export default function LabelLayoutPanel() {
               </div>
               <div
                 ref={previewBoxRef}
-                className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 h-[340px] sm:h-[420px] lg:h-[min(70vh,640px)] overflow-hidden shadow-inner"
+                className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 h-[300px] sm:h-[380px] lg:h-auto lg:flex-1 lg:min-h-0 overflow-hidden shadow-inner"
                 style={{
                   // Fundo xadrez tipo "mesa de trabalho" para diferenciar a
                   // etiqueta branca do fundo escuro do app e reforçar a
@@ -480,7 +473,7 @@ export default function LabelLayoutPanel() {
               </div>
 
 
-              <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10">
+              <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10 shrink-0">
                 <Layout className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-[10px] leading-tight text-primary/80 font-medium">
                   {isMotor
@@ -490,7 +483,7 @@ export default function LabelLayoutPanel() {
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 shrink-0">
                 <Button
                   onClick={handleReset}
                   variant="outline"
