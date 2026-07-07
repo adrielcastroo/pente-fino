@@ -667,5 +667,226 @@ export async function printMotorLabel(
   } catch (error) {
     console.error('Erro ao imprimir etiqueta (motor):', error);
     toast.error('Falha ao processar etiqueta.');
+}
+
+// ============================================================================
+// BATCH PRINT — imprime várias etiquetas com UMA ÚNICA janela de impressão
+// do navegador. O envio para o n8n (webhook) continua sendo feito uma etiqueta
+// por vez, respeitando a lógica travada de `sendToWebhook`.
+// ============================================================================
+
+interface BatchPage {
+  dataUrl: string;
+  widthMm: number;
+  heightMm: number;
+}
+
+async function printImagesInBrowserBatch(pages: BatchPage[], title: string): Promise<void> {
+  if (pages.length === 0) return;
+  if (pages.length === 1) {
+    return printImageInBrowser(pages[0].dataUrl, pages[0].widthMm, pages[0].heightMm, title);
   }
+
+  return new Promise((resolve, reject) => {
+    const safeTitle = title.replace(/[<>&"']/g, '');
+    const maxW = Math.max(...pages.map(p => p.widthMm));
+    const maxH = Math.max(...pages.map(p => p.heightMm));
+    const sections = pages.map((p, i) => `
+      <section class="page" style="width:${p.widthMm}mm;height:${p.heightMm}mm;${i < pages.length - 1 ? 'page-break-after:always;' : ''}">
+        <img class="lbl" src="${p.dataUrl}" style="width:${p.widthMm}mm;height:${p.heightMm}mm">
+      </section>`).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
+      @page { size: ${maxW}mm ${maxH}mm; margin: 0 !important; }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0 !important; padding: 0 !important; background: #fff;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      section.page { display: block; margin: 0; padding: 0; overflow: hidden;
+        break-inside: avoid; page-break-inside: avoid; }
+      img.lbl { display: block; margin: 0; padding: 0; border: 0; image-rendering: pixelated; }
+    </style></head><body>${sections}</body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.setAttribute('title', safeTitle);
+    iframe.style.position = 'fixed';
+    iframe.style.left = '-10000px';
+    iframe.style.top = '0';
+    iframe.style.width = `${Math.max(maxW, 50)}mm`;
+    iframe.style.height = `${Math.max(maxH, 50)}mm`;
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    iframe.srcdoc = html;
+
+    let cleaned = false;
+    const cleanup = () => { if (cleaned) return; cleaned = true; try { iframe.remove(); } catch { /* noop */ } };
+    let printed = false;
+
+    const triggerPrint = () => {
+      if (printed) return;
+      printed = true;
+      const win = iframe.contentWindow;
+      if (!win) { cleanup(); reject(new Error('iframe sem contentWindow')); return; }
+      const doc = win.document;
+      const imgs = Array.from(doc.querySelectorAll('img.lbl')) as HTMLImageElement[];
+      const waitAll = Promise.all(imgs.map(img => img.complete
+        ? Promise.resolve()
+        : new Promise<void>((res, rej) => {
+            img.onload = () => res();
+            img.onerror = () => rej(new Error('Falha ao carregar imagem da etiqueta em lote'));
+          })));
+      waitAll.then(() => {
+        requestAnimationFrame(() => setTimeout(() => {
+          try {
+            win.focus();
+            win.print();
+            const silent = typeof localStorage !== 'undefined'
+              && localStorage.getItem('pref_silent_browser_print') === 'true';
+            win.addEventListener('afterprint', cleanup, { once: true });
+            setTimeout(cleanup, silent ? 5_000 : 120_000);
+            resolve();
+          } catch (e) { cleanup(); reject(e); }
+        }, 30));
+      }).catch((e) => { cleanup(); reject(e); });
+    };
+
+    iframe.addEventListener('load', triggerPrint, { once: true });
+    document.body.appendChild(iframe);
+    setTimeout(triggerPrint, 1200);
+  });
+}
+
+export interface BatchItem {
+  kind: 'tecido' | 'motor';
+  input: TecidoPrintInput | MotorPrintInput;
+}
+
+/**
+ * Imprime várias etiquetas em lote:
+ *  - Envio ao n8n (webhook) permanece por-item (lógica travada).
+ *  - Impressão pelo navegador é feita em UMA ÚNICA janela para todas as
+ *    etiquetas selecionadas — o usuário vê um único diálogo de impressão.
+ */
+export async function printLabelsBatch(
+  items: BatchItem[],
+  labelSettings: LabelSettings & PrintConfig,
+): Promise<{ ok: number; total: number }> {
+  if (items.length === 0) return { ok: 0, total: 0 };
+  const cfg: LabelSettings & PrintConfig = { ...labelSettings, autoPrint: true };
+
+  const browserDisabled = typeof localStorage !== 'undefined'
+    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  const resolvedWebhook = resolveWebhookUrl();
+  const hasWebhook = !!resolvedWebhook;
+  const method: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
+
+  type Payload = {
+    type: 'tecido' | 'motor';
+    title: string;
+    dataUrl: string;
+    widthMm: number;
+    heightMm: number;
+    data: Record<string, unknown>;
+  };
+  const rendered: { page: BatchPage; payload: Payload }[] = [];
+
+  for (const it of items) {
+    try {
+      if (it.kind === 'motor') {
+        const inp = it.input as MotorPrintInput;
+        const cxText = inp.cx != null && inp.cx !== ''
+          ? (typeof inp.cx === 'number' ? `CX${String(inp.cx).padStart(2, '0')}` : String(inp.cx))
+          : 'S/CX';
+        const nfText = inp.nf ? `NF ${inp.nf}` : '';
+        const ntText = inp.loteSistema || inp.lote;
+        const resolved = await resolverItem(inp.item, inp.item, inp.descricao || '');
+        const data: MotorLabelData = {
+          sku: resolved.codigoInterno,
+          descricao: resolved.descricao,
+          cx: cxText,
+          nf: nfText,
+          nt: ntText,
+          rnp: inp.endereco || '',
+          data: today(),
+          qrLoteSku: `${inp.lote};${resolved.codigoInterno}`,
+        };
+        const r = await renderMotorLabel(data, cfg);
+        rendered.push({
+          page: { dataUrl: r.dataUrl, widthMm: r.widthMm, heightMm: r.heightMm },
+          payload: { type: 'motor', title: `Etiqueta ${inp.item}`, dataUrl: r.dataUrl,
+            widthMm: r.widthMm, heightMm: r.heightMm, data: { ...data, input: inp } },
+        });
+      } else {
+        const inp = it.input as TecidoPrintInput;
+        const loteText = inp.loteSistema || (inp.nf ? `NFe ${inp.nf}` : '') || inp.lote || '';
+        const largura = typeof inp.largura === 'number' && inp.largura > 0
+          ? inp.largura : extractLarguraFromItem(inp.item);
+        const m2Informado = typeof inp.m2 === 'number' && inp.m2 > 0 ? inp.m2 : 0;
+        const mLinear = typeof inp.mLinear === 'number' && inp.mLinear > 0 ? inp.mLinear : 0;
+        const m2Calc = mLinear > 0 && largura > 0 ? mLinear * largura : 0;
+        const qtdM2 = m2Informado > 0 ? m2Informado : m2Calc;
+        const qtdText = qtdM2 > 0 ? `${qtdM2.toFixed(2).replace('.', ',')} M²` : '';
+        const resolved = await resolverItem(inp.item, inp.item, inp.descricao || '');
+        const data: TecidoLabelData = {
+          sku: resolved.codigoInterno,
+          descricao: resolved.descricao,
+          lote: loteText,
+          qtd: qtdText,
+          rnp: inp.endereco || '',
+          data: today(),
+          qrSku: resolved.codigoInterno,
+          qrLote: loteText,
+        };
+        const r = await renderTecidoLabel(data, cfg);
+        rendered.push({
+          page: { dataUrl: r.dataUrl, widthMm: r.widthMm, heightMm: r.heightMm },
+          payload: { type: 'tecido', title: `Etiqueta ${inp.item}`, dataUrl: r.dataUrl,
+            widthMm: r.widthMm, heightMm: r.heightMm, data: { ...data, input: inp } },
+        });
+      }
+    } catch (e) {
+      console.error('Falha ao renderizar etiqueta para lote:', e);
+    }
+  }
+
+  const wantWebhook = (method === 'webhook' || method === 'both') && hasWebhook;
+  const wantBrowser = (method === 'browser' || method === 'both') && !browserDisabled;
+  const needsBrowserFallback = method === 'webhook' && !browserDisabled;
+
+  let webhookOkCount = 0;
+  const failedIdx: number[] = [];
+  if (wantWebhook) {
+    for (let i = 0; i < rendered.length; i++) {
+      try {
+        await sendToWebhook(resolvedWebhook, rendered[i].payload);
+        webhookOkCount++;
+      } catch (e) {
+        console.error('Webhook lote falhou no item', i, e);
+        failedIdx.push(i);
+      }
+    }
+  }
+
+  const browserPages: BatchPage[] = wantBrowser
+    ? rendered.map(r => r.page)
+    : needsBrowserFallback
+      ? failedIdx.map(i => rendered[i].page)
+      : [];
+
+  if (browserPages.length > 0) {
+    try {
+      await printImagesInBrowserBatch(browserPages, `Etiquetas (${browserPages.length})`);
+    } catch (e) {
+      console.error('Impressão em lote pelo navegador falhou:', e);
+    }
+  }
+
+  const ok = wantWebhook
+    ? webhookOkCount + (needsBrowserFallback ? 0 : 0)
+    : (browserPages.length > 0 ? rendered.length : 0);
+  return { ok, total: items.length };
+}
+
 }
