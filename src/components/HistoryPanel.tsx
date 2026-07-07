@@ -20,7 +20,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { routeForConference } from '@/lib/conferenceRouting';
-import { printTecidoLabel, printMotorLabel } from '@/services/printService';
+import { printTecidoLabel, printMotorLabel, printLabelsBatch, type BatchItem } from '@/services/printService';
 
 
 
