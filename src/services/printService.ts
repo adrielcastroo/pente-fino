@@ -118,6 +118,130 @@ function cleanBase64(input: string): { base64: string; mimeType: string } {
   return { base64: cleaned, mimeType };
 }
 
+/**
+ * Detecta destinos locais/privados. Esses endpoints de n8n normalmente não
+ * respondem corretamente ao preflight CORS gerado por JSON direto.
+ */
+function isLocalWebhookUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+    if (host.endsWith('.local')) return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+
+    const private172 = host.match(/^172\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+    if (private172) {
+      const octet = Number(private172[1]);
+      return octet >= 16 && octet <= 31;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+/**
+ * Qualquer HTTP/local usa requisição simples para evitar bloqueio antes do POST.
+ * HTTPS público tenta JSON primeiro, mas pode cair no mesmo caminho se CORS falhar.
+ */
+function shouldUseFormNoCors(webhookUrl: string): boolean {
+  try {
+    const parsed = new URL(webhookUrl);
+    return parsed.protocol === 'http:' || isLocalWebhookUrl(webhookUrl);
+  } catch {
+    return false;
+  }
+}
+
+function buildWebhookForm(
+  payload: {
+    type: 'tecido' | 'motor';
+    title: string;
+    widthMm: number;
+    heightMm: number;
+    data: Record<string, any>;
+  },
+  base64: string,
+  mimeType: string,
+  sentAt: string,
+): URLSearchParams {
+  const form = new URLSearchParams();
+  form.set('type', payload.type);
+  form.set('template', payload.type);
+  form.set('format', payload.type);
+  form.set('title', payload.title);
+  form.set('widthMm', String(payload.widthMm));
+  form.set('heightMm', String(payload.heightMm));
+  form.set('imageBase64', base64);
+  form.set('mimeType', mimeType);
+  form.set('imageSize', String(base64.length));
+  form.set('sentAt', sentAt);
+  form.set('data', JSON.stringify(payload.data));
+  return form;
+}
+
+function submitHiddenForm(webhookUrl: string, form: URLSearchParams): Promise<void> {
+  if (typeof document === 'undefined') return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const iframeName = `n8n-print-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+
+    const htmlForm = document.createElement('form');
+    htmlForm.method = 'POST';
+    htmlForm.action = webhookUrl;
+    htmlForm.target = iframeName;
+    htmlForm.enctype = 'application/x-www-form-urlencoded';
+    htmlForm.style.display = 'none';
+
+    form.forEach((value, key) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      htmlForm.appendChild(input);
+    });
+
+    let done = false;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      try { htmlForm.remove(); } catch { /* noop */ }
+      try { iframe.remove(); } catch { /* noop */ }
+      resolve();
+    };
+
+    iframe.addEventListener('load', cleanup, { once: true });
+    document.body.appendChild(iframe);
+    document.body.appendChild(htmlForm);
+    htmlForm.submit();
+    window.setTimeout(cleanup, 1500);
+  });
+}
+
+async function postFormNoCors(webhookUrl: string, form: URLSearchParams): Promise<void> {
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: form,
+    });
+  } catch (fetchError) {
+    console.warn('Envio fetch no-cors bloqueado; tentando formulário oculto:', fetchError);
+    await submitHiddenForm(webhookUrl, form);
+  }
+}
+
 async function sendToWebhook(
   webhookUrl: string,
   payload: {
@@ -143,29 +267,60 @@ async function sendToWebhook(
     imageSize: base64.length,
     sentAt: new Date().toISOString(),
   };
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(body),
-  }).catch((e) => {
-    recordPayload({
-      sentAt: new Date().toISOString(), webhookUrl, status: 'fail',
-      errorMessage: e?.message || String(e), payload: body, title: payload.title,
-    });
-    throw e;
+
+  const recordOk = () => recordPayload({
+    sentAt: new Date().toISOString(),
+    webhookUrl,
+    status: 'ok',
+    payload: body,
+    title: payload.title,
+  });
+  const recordFail = (errorMessage: string) => recordPayload({
+    sentAt: new Date().toISOString(),
+    webhookUrl,
+    status: 'fail',
+    errorMessage,
+    payload: body,
+    title: payload.title,
   });
 
-  if (!res.ok) {
-    recordPayload({
-      sentAt: new Date().toISOString(), webhookUrl, status: 'fail',
-      errorMessage: `HTTP ${res.status}`, payload: body, title: payload.title,
+  // n8n local/HTTP → form-urlencoded + no-cors evita preflight e preserva
+  // `imageBase64` como campo de body para o workflow antigo.
+  if (shouldUseFormNoCors(webhookUrl)) {
+    const form = buildWebhookForm(payload, base64, mimeType, body.sentAt);
+    await postFormNoCors(webhookUrl, form);
+    recordOk();
+    return;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
     });
+  } catch (e: any) {
+    // Tunnel/URL pública sem CORS: ainda enviamos por requisição simples.
+    try {
+      const form = buildWebhookForm(payload, base64, mimeType, body.sentAt);
+      await postFormNoCors(webhookUrl, form);
+      recordOk();
+      return;
+    } catch (fallbackError: any) {
+      const message = fallbackError?.message || e?.message || String(fallbackError || e);
+      recordFail(message);
+      throw fallbackError || e;
+    }
+  }
+
+  if (!res.ok) {
+    const message = `HTTP ${res.status}`;
+    recordFail(message);
     throw new Error(`Webhook respondeu ${res.status}`);
   }
-  recordPayload({
-    sentAt: new Date().toISOString(), webhookUrl, status: 'ok',
-    payload: body, title: payload.title,
-  });
+
+  recordOk();
 }
 
 
