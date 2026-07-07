@@ -90,61 +90,24 @@ export const itensCadastroService = {
   },
 
   /**
-   * Procura um item cujo array de códigos de fornecedor casa com o valor bipado.
-   * Estratégia:
-   *  1. Match exato no array normalizado (contains)
-   *  2. Match parcial (overlap) — varre poucas linhas e compara via codigoBate
-   *  3. Fallback: extrai código embutido na descrição cadastrada e compara
+   * Procura um item cujo array de códigos de fornecedor contém EXATAMENTE
+   * o código bipado (após normalização). Match estrito — sem parcial, sem
+   * fallback por descrição. Isso garante que "5969" nunca case com "12485969".
    */
   async findByCodigoFornecedor(codigoBipado: string): Promise<ItemCadastro | null> {
     const norm = normalizarCodigo(codigoBipado);
-    if (!norm || norm.length < 3) return null;
+    if (!norm) return null;
 
-    // 1. exato (array contém o normalizado)
-    {
-      const { data, error } = await supabase
-        .from('itens_cadastro')
-        .select('*')
-        .contains('codigos_fornecedor_normalizado', [norm])
-        .limit(1)
-        .maybeSingle();
-      if (error && (error as any).code !== 'PGRST116') throw error;
-      if (data) return data as ItemCadastro;
-    }
-
-    // 2. parcial (algum elemento do array contém / é contido)
-    {
-      const { data, error } = await supabase
-        .from('itens_cadastro')
-        .select('*')
-        .not('codigos_fornecedor_normalizado', 'eq', '{}')
-        .limit(500);
-      if (error) throw error;
-      const match = (data || []).find((d: any) => {
-        const arr: string[] = d.codigos_fornecedor || [];
-        return arr.some((c) => codigoBate(codigoBipado, c));
-      });
-      if (match) return match as ItemCadastro;
-    }
-
-    // 3. fallback: olhar dentro da descrição cadastrada (itens sem fornecedor)
-    {
-      const { data, error } = await supabase
-        .from('itens_cadastro')
-        .select('*')
-        .or('codigos_fornecedor.eq.{}')
-        .ilike('descricao', `%${codigoBipado.trim()}%`)
-        .limit(5);
-      if (error) throw error;
-      const match = (data || []).find((d: any) => {
-        const ext = extractCodigoFornecedor(d.descricao);
-        return ext && codigoBate(codigoBipado, ext.codigo);
-      });
-      if (match) return match as ItemCadastro;
-    }
-
-    return null;
+    const { data, error } = await supabase
+      .from('itens_cadastro')
+      .select('*')
+      .contains('codigos_fornecedor_normalizado', [norm])
+      .limit(1)
+      .maybeSingle();
+    if (error && (error as any).code !== 'PGRST116') throw error;
+    return (data as ItemCadastro) || null;
   },
+
 
   async upsert(input: ItemCadastroInput, opts?: { changedField?: string | null; isEdit?: boolean }): Promise<ItemCadastro> {
     const base = prepare(input);

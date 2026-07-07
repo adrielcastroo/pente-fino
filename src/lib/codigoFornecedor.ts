@@ -79,30 +79,17 @@ export function extractCodigoFornecedor(descricao: string | null | undefined): {
 }
 
 /**
- * Verifica se um código bipado corresponde ao código fornecedor cadastrado.
- * Comparação é case-insensitive e ignora pontuação/espaços.
- * Também aceita:
- *  - match parcial (um contém o outro) para tolerar prefixos/sufixos.
- *  - sufixo numérico curto (2–4 dígitos) no bipado representando largura embutida
- *    pelo fornecedor (ex.: "RF-MOMBASSA-5600-200" casa com "RF-MOMBASSA-5600").
- *    O sufixo é descartado apenas para fins de match — não é usado em cálculo.
+ * Verifica se um código bipado corresponde ao código de fornecedor cadastrado.
+ * Comparação é **estrita**: só casa se, após normalizar (uppercase + remover
+ * pontuação/espaços + zeros à esquerda em códigos numéricos), os valores forem
+ * IDÊNTICOS. Nenhum match parcial, contains ou sufixo é aceito — isso evitava
+ * que "5969" (tecido) fosse confundido com "12485969" (motor).
  */
 export function codigoBate(bipado: string | null | undefined, fornecedor: string | null | undefined): boolean {
   const a = normalizarCodigo(bipado);
   const b = normalizarCodigo(fornecedor);
   if (!a || !b) return false;
-  if (a === b) return true;
-  // Tolerância: um contém o outro (útil quando bipam o código + sufixo)
-  if (a.length >= 4 && b.length >= 4) {
-    if (a.includes(b) || b.includes(a)) return true;
-  }
-  // Tolerância: bipado tem sufixo numérico curto (2-4 dígitos) que pode ser largura.
-  // Remove esse sufixo e tenta novamente contains.
-  const stripped = a.replace(/\d{2,4}$/, '');
-  if (stripped && stripped !== a && stripped.length >= 4 && b.length >= 4) {
-    if (stripped === b) return true;
-    if (stripped.includes(b) || b.includes(stripped)) return true;
-  }
-  return false;
+  return a === b;
 }
+
 

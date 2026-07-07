@@ -40,12 +40,9 @@ describe('normalizarCodigo', () => {
   });
 });
 
-describe('codigoBate', () => {
+describe('codigoBate (match estrito)', () => {
   it('match exato após normalização', () => {
     expect(codigoBate('RF-BASIC-BO-03', 'rfbasicbo03')).toBe(true);
-  });
-  it('match parcial', () => {
-    expect(codigoBate('YM4202-A', 'YM4202')).toBe(true);
   });
   it('não bate quando diferentes', () => {
     expect(codigoBate('YM4202', 'YM5304')).toBe(false);
@@ -53,15 +50,14 @@ describe('codigoBate', () => {
   it('vazio retorna false', () => {
     expect(codigoBate('', 'YM4202')).toBe(false);
   });
-  it('bate ignorando sufixo de largura colado', () => {
-    expect(codigoBate('RFMOMBASSA-5600200', 'RF-MOMBASSA-5600')).toBe(true);
+  it('não bate por sufixo (evita 5969 casar com 12485969)', () => {
+    expect(codigoBate('5969', '12485969')).toBe(false);
+    expect(codigoBate('12485969', '5969')).toBe(false);
   });
-  it('bate ignorando sufixo de largura com separador', () => {
-    expect(codigoBate('RFMOMBASSA-5600-200', 'RF-MOMBASSA-5600')).toBe(true);
-    expect(codigoBate('RFMOMBASSA-5600-20', 'RF-MOMBASSA-5600')).toBe(true);
-  });
-  it('não bate quando código base é diferente mesmo com sufixo', () => {
-    expect(codigoBate('OUTROCODIGO-200', 'RF-MOMBASSA-5600')).toBe(false);
+  it('não bate por prefixo/contains', () => {
+    expect(codigoBate('YM4202-A', 'YM4202')).toBe(false);
+    expect(codigoBate('RFMOMBASSA-5600-200', 'RF-MOMBASSA-5600')).toBe(false);
   });
 });
+
 
