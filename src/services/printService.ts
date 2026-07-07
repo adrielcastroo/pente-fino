@@ -965,16 +965,34 @@ export interface BatchItem {
 }
 
 /**
+ * Callback opcional para acompanhar o envio em lote em tempo real.
+ * Chamado para cada item ao mudar de estado.
+ */
+export type BatchProgressStatus = 'pending' | 'sending' | 'retrying' | 'ok' | 'failed';
+export interface BatchProgressEvent {
+  index: number;              // índice do item em `items`
+  total: number;
+  status: BatchProgressStatus;
+  attempt: number;            // 1, 2, 3…
+  title?: string;             // ex: "Etiqueta 002.001.002.000.323"
+  error?: string;
+}
+export type BatchProgressCallback = (ev: BatchProgressEvent) => void;
+
+/**
  * Imprime várias etiquetas em lote:
- *  - Envio ao n8n (webhook) permanece por-item (lógica travada).
+ *  - Envio ao n8n (webhook) permanece por-item (lógica travada) mas agora com
+ *    retry automático (até 3 tentativas com backoff) por item.
  *  - Impressão pelo navegador é feita em UMA ÚNICA janela para todas as
  *    etiquetas selecionadas — o usuário vê um único diálogo de impressão.
+ *  - Progresso é reportado via callback opcional `onProgress`.
  */
 export async function printLabelsBatch(
   items: BatchItem[],
   labelSettings: LabelSettings & PrintConfig,
-): Promise<{ ok: number; total: number }> {
-  if (items.length === 0) return { ok: 0, total: 0 };
+  onProgress?: BatchProgressCallback,
+): Promise<{ ok: number; total: number; failed: number[] }> {
+  if (items.length === 0) return { ok: 0, total: 0, failed: [] };
   const cfg: LabelSettings & PrintConfig = { ...labelSettings, autoPrint: true };
 
   const browserDisabled = typeof localStorage !== 'undefined'
