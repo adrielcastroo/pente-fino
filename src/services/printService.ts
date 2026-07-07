@@ -1097,7 +1097,7 @@ export async function printLabelsBatch(
 
     try {
       await printReactLabelsInBrowserBatch(browserPages, `Etiquetas (${browserPages.length})`);
-      return { ok: browserPages.length, total: items.length };
+      return { ok: browserPages.length, total: items.length, failed: [] };
     } catch (e) {
       console.error('Impressão rápida em lote pelo navegador falhou; usando PNG como fallback:', e);
     }
