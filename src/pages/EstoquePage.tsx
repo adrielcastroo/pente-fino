@@ -145,8 +145,10 @@ export default function EstoquePage() {
 
   const loadStats = useCallback(async () => {
     try {
-      // Fetch status + estrutura (needed for per-TEC breakdown in stat dialogs)
-      const { data, error } = await supabase.from('estoque_posicoes').select('id, status, estrutura');
+      // Fetch status + estrutura + campos usados na busca global (cross-TEC).
+      const { data, error } = await supabase
+        .from('estoque_posicoes')
+        .select('id, status, estrutura, coluna, nivel, item, lote, lote_sistema, proc, endereco');
       if (error) throw error;
       setAllPosicoes((data as any[]) || []);
     } catch (e) {
