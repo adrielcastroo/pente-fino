@@ -94,6 +94,8 @@ export default function EstoquePage() {
   const [confirmScan, setConfirmScan] = useState<Posicao | null>(null);
   const scanRef = useRef<HTMLInputElement>(null);
   const [locateQuery, setLocateQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { isLow } = usePerformance();
 
   const config = TEC_CONFIG[activeTec] || { cols: [], levels: 0 };
