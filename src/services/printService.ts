@@ -820,7 +820,7 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
       try {
         root = createRoot(mount);
         root.render(createElement(
-          createElement('div').type,
+          'div',
           null,
           pages.map((page, index) => {
             const scaleX = (page.widthMm * CSS_PX_PER_MM) / page.basePx.w;
