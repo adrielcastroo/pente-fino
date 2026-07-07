@@ -375,7 +375,12 @@ async function dispatchPrint(
   // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
   const resolvedWebhook = resolveWebhookUrl();
   const hasWebhook = !!resolvedWebhook;
-  const explicitMethod: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
+  // Regra do usuário: quando a impressão pelo navegador está LIGADA, NÃO
+  // enviar ao n8n (evita redundância — o navegador já cuida da impressão).
+  // Só usa n8n quando o navegador está explicitamente desabilitado ou quando
+  // o método foi forçado para 'webhook'.
+  const explicitMethod: PrintMethod = cfg.printMethod
+    || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
 
   const tryBrowser = async () => {
     if (browserDisabled) {
@@ -402,13 +407,21 @@ async function dispatchPrint(
     }
   };
 
-  // Modo 'both': dispara os dois em paralelo (respeitando preferência de desabilitar navegador).
+  // Modo 'both': se o navegador está ligado, o n8n é ignorado (regra
+  // anti-redundância). Só dispara os dois se o usuário forçou 'both' E o
+  // navegador está desabilitado — nesse caso 'both' vira efetivamente 'webhook'.
   if (explicitMethod === 'both') {
-    const [webhookOk, browserOk] = await Promise.all([tryWebhook(), tryBrowser()]);
-    if (webhookOk && browserOk) toast.success('Etiqueta enviada (n8n + navegador)');
-    else if (webhookOk) toast.success('Etiqueta enviada para o n8n');
-    else if (browserOk) toast.success('Etiqueta enviada para impressão!');
-    else toast.error('Falha em ambos os métodos de impressão');
+    if (!browserDisabled) {
+      // Navegador ligado → prioriza o navegador, ignora n8n.
+      const browserOk = await tryBrowser();
+      if (browserOk) toast.success('Etiqueta enviada para impressão!');
+      else toast.error('Falha na impressão pelo navegador');
+      return;
+    }
+    // Navegador desabilitado → só n8n mesmo.
+    const webhookOk = await tryWebhook();
+    if (webhookOk) toast.success('Etiqueta enviada para o n8n');
+    else toast.error('Falha ao enviar ao n8n');
     return;
   }
 
@@ -999,7 +1012,10 @@ export async function printLabelsBatch(
     && localStorage.getItem('pref_disable_browser_print') === 'true';
   const resolvedWebhook = resolveWebhookUrl();
   const hasWebhook = !!resolvedWebhook;
-  const method: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
+  // Regra anti-redundância: navegador ligado → só navegador; navegador
+  // desligado → n8n (se configurado). O caller ainda pode forçar via cfg.printMethod.
+  const method: PrintMethod = cfg.printMethod
+    || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
 
   type Payload = {
     type: 'tecido' | 'motor';
@@ -1163,7 +1179,11 @@ export async function printLabelsBatch(
   }
 
 
-  const wantWebhook = (method === 'webhook' || method === 'both') && hasWebhook;
+  // Regra anti-redundância: se navegador está ligado, NUNCA enviamos ao n8n
+  // — mesmo com method='both'. Só há envio ao n8n quando o navegador está
+  // desabilitado (ou method='webhook' explícito).
+  const wantWebhook = method === 'webhook'
+    || (method === 'both' && browserDisabled && hasWebhook);
   const wantBrowser = (method === 'browser' || method === 'both') && !browserDisabled;
   const needsBrowserFallback = method === 'webhook' && !browserDisabled;
 
