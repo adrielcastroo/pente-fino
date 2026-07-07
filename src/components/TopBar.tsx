@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
+import { itensCadastroService } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { Download, User, CheckCircle2, LogOut, ScanBarcode, Plus, ArrowLeftRight } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
