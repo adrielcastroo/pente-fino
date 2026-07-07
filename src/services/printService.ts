@@ -9,7 +9,7 @@
 import { toast } from 'sonner';
 import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
 import { itensCadastroService } from './itensCadastroService';
-import { codigoBate } from '@/lib/codigoFornecedor';
+import { codigoBate, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { recordPayload } from './n8nApi';
 import { extractLarguraFromItem } from '@/lib/app-utils';
 import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelTemplates';
