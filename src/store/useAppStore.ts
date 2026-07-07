@@ -28,6 +28,8 @@ export interface LabelSettings {
   motorWebhookUrl?: string;
   printOffsetXMm?: number;
   motorPrintOffsetXMm?: number;
+  printOffsetYMm?: number;
+  motorPrintOffsetYMm?: number;
   // Aparência (Tecido)
   borderWidth?: number;        // px
   borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
