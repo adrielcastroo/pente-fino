@@ -415,8 +415,8 @@ export default function LabelLayoutPanel() {
               </Card>
             </div>
 
-            <div className="lg:col-span-2 order-1 lg:order-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1 space-y-3">
-              <div className="flex items-baseline justify-between">
+            <div className="lg:col-span-2 order-1 lg:order-2 flex flex-col gap-3 lg:h-full lg:min-h-0">
+              <div className="flex items-baseline justify-between shrink-0">
                 <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">
                   Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
                 </Label>
@@ -426,7 +426,7 @@ export default function LabelLayoutPanel() {
               </div>
               <div
                 ref={previewBoxRef}
-                className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 h-[340px] sm:h-[420px] lg:h-[min(70vh,640px)] overflow-hidden shadow-inner"
+                className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 h-[300px] sm:h-[380px] lg:h-auto lg:flex-1 lg:min-h-0 overflow-hidden shadow-inner"
                 style={{
                   // Fundo xadrez tipo "mesa de trabalho" para diferenciar a
                   // etiqueta branca do fundo escuro do app e reforçar a
