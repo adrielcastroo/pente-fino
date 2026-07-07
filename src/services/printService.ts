@@ -1012,7 +1012,10 @@ export async function printLabelsBatch(
     && localStorage.getItem('pref_disable_browser_print') === 'true';
   const resolvedWebhook = resolveWebhookUrl();
   const hasWebhook = !!resolvedWebhook;
-  const method: PrintMethod = cfg.printMethod || (hasWebhook ? 'webhook' : 'browser');
+  // Regra anti-redundância: navegador ligado → só navegador; navegador
+  // desligado → n8n (se configurado). O caller ainda pode forçar via cfg.printMethod.
+  const method: PrintMethod = cfg.printMethod
+    || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
 
   type Payload = {
     type: 'tecido' | 'motor';
