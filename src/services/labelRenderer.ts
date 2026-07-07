@@ -27,6 +27,23 @@ export interface RenderedLabel {
   heightPx: number;
 }
 
+// Cache do CSS com @font-face embutido: `getFontEmbedCSS` baixa e serializa as
+// fontes (IBM Plex Mono) em base64 — operação lenta (centenas de ms a
+// segundos). Sem cache, cada etiqueta do lote refazia esse trabalho e a tela
+// "Preparando…" ficava travada. Aqui embutimos uma vez por sessão.
+let _fontEmbedCSSPromise: Promise<string> | null = null;
+async function getCachedFontEmbedCSS(node: HTMLElement): Promise<string> {
+  if (_fontEmbedCSSPromise) return _fontEmbedCSSPromise;
+  _fontEmbedCSSPromise = getFontEmbedCSS(node).catch((e) => {
+    console.warn('Falha ao embutir fontes na etiqueta:', e);
+    // Guarda promise falha só pra não ficar tentando de novo no mesmo batch;
+    // reseta em 30s pra permitir nova tentativa em batches futuros.
+    setTimeout(() => { _fontEmbedCSSPromise = null; }, 30_000);
+    return '';
+  });
+  return _fontEmbedCSSPromise;
+}
+
 async function renderToPng(opts: {
   node: HTMLElement;
   widthMm: number;
@@ -35,24 +52,17 @@ async function renderToPng(opts: {
 }): Promise<RenderedLabel> {
   const { node, widthMm, heightMm, basePx } = opts;
   const targetPxW = widthMm * TARGET_PX_PER_MM;
-  // Força pixelRatio >= 2 para melhorar nitidez de fontes pequenas no PNG.
   const pixelRatio = Math.max(2, Math.min(4, targetPxW / basePx.w));
 
-  // Aguarda layout + QR codes (qrcode.react é síncrono, mas damos um tick para o React commitar)
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-  // Embute @font-face (IBM Plex Mono) no PNG para evitar fallback do SO/impressora
-  // que renderiza glifos errados (ex.: "SERIE" virando caracteres aleatórios).
-  let fontEmbedCSS = '';
-  try {
-    fontEmbedCSS = await getFontEmbedCSS(node);
-  } catch (e) {
-    console.warn('Falha ao embutir fontes na etiqueta:', e);
-  }
+  const fontEmbedCSS = await getCachedFontEmbedCSS(node);
 
   const dataUrl = await toPng(node, {
     pixelRatio,
-    cacheBust: true,
+    // cacheBust desligado: reimpressões em lote reaproveitam recursos já
+    // baixados (QR/fontes/ícones), acelerando muito o preparo do batch.
+    cacheBust: false,
     backgroundColor: '#ffffff',
     width: basePx.w,
     height: basePx.h,
@@ -69,6 +79,7 @@ async function renderToPng(opts: {
     heightPx: Math.round(basePx.h * pixelRatio),
   };
 }
+
 
 function mountOffscreen(): { container: HTMLDivElement; root: ReturnType<typeof createRoot>; cleanup: () => void } {
   const container = document.createElement('div');
