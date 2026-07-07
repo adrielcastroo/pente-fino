@@ -118,6 +118,8 @@ export default function LabelLayoutPanel() {
       : { width: patch.w ?? w, height: patch.h ?? h });
   const updateOffset = (value: number) =>
     setLabelSettings(isMotor ? { motorPrintOffsetXMm: value } : { printOffsetXMm: value });
+  const updateOffsetY = (value: number) =>
+    setLabelSettings(isMotor ? { motorPrintOffsetYMm: value } : { printOffsetYMm: value });
 
   const handleToggleField = (fieldId: string) => {
     updateFields(fields.includes(fieldId) ? fields.filter(f => f !== fieldId) : [...fields, fieldId]);
