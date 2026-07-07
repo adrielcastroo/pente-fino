@@ -714,7 +714,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
           },
         };
       });
-      const { ok, total } = await printLabelsBatch(items, { ...labelSettings, autoPrint: true });
+      const { ok, total } = await printLabelsBatch(items, { ...labelSettings, autoPrint: true, printMethod: 'browser' });
       toast.dismiss(tid);
       if (ok === total) toast.success(`${total} etiqueta(s) enviada(s) para impressão em lote.`);
       else if (ok > 0) toast.warning(`${ok}/${total} etiqueta(s) enviadas — verifique o console.`);
