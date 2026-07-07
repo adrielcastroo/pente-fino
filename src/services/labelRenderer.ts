@@ -111,20 +111,40 @@ export async function renderTecidoLabel(
   const orientation = labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * PREVIEW_SCALE;
   const hPx = (orientation === 'landscape' ? h : w) * PREVIEW_SCALE;
-  const offsetMm = labelSettings.printOffsetXMm ?? 0;
-  const maxOffsetPx = wPx - 1;
-  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
-  const innerWpx = wPx - Math.abs(offsetPx);
-  const leftPx = offsetPx > 0 ? offsetPx : 0;
-  const rightPx = offsetPx < 0 ? -offsetPx : 0;
+  const offsetXPx = (labelSettings.printOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetYPx = (labelSettings.printOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+
+  const appearance = {
+    borderWidth: labelSettings.borderWidth ?? 4,
+    borderStyle: labelSettings.borderStyle ?? 'solid',
+    borderRadius: labelSettings.borderRadius ?? 0,
+    padding: labelSettings.padding ?? 0,
+    margin: labelSettings.margin ?? 0,
+    marginY: labelSettings.marginY ?? 0,
+  };
 
   const { container, root, cleanup } = mountOffscreen();
   try {
     root.render(
-      createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
-        createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
-        createElement(TecidoPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
-        createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+      createElement('div', {
+        style: {
+          position: 'relative',
+          width: `${wPx}px`,
+          height: `${hPx}px`,
+          background: '#fff',
+          overflow: 'hidden',
+        },
+      },
+        createElement('div', {
+          style: {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            transform: `translate(${offsetXPx}px, ${offsetYPx}px)`,
+          },
+        },
+          createElement(TecidoPreview, { wPx, hPx, fs: labelSettings.fontSize, has, data, ...appearance }),
+        ),
       ),
     );
     await new Promise((r) => setTimeout(r, 50));
@@ -147,20 +167,40 @@ export async function renderMotorLabel(
   const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * PREVIEW_SCALE;
   const hPx = (orientation === 'landscape' ? h : w) * PREVIEW_SCALE;
-  const offsetMm = labelSettings.motorPrintOffsetXMm ?? 0;
-  const maxOffsetPx = wPx - 1;
-  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
-  const innerWpx = wPx - Math.abs(offsetPx);
-  const leftPx = offsetPx > 0 ? offsetPx : 0;
-  const rightPx = offsetPx < 0 ? -offsetPx : 0;
+  const offsetXPx = (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetYPx = (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+
+  const appearance = {
+    borderWidth: labelSettings.motorBorderWidth ?? 2,
+    borderStyle: labelSettings.motorBorderStyle ?? 'solid',
+    borderRadius: labelSettings.motorBorderRadius ?? 0,
+    padding: labelSettings.motorPadding ?? 0,
+    margin: labelSettings.motorMargin ?? 0,
+    marginY: labelSettings.motorMarginY ?? 0,
+  };
 
   const { container, root, cleanup } = mountOffscreen();
   try {
     root.render(
-      createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
-        createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
-        createElement(MotorPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
-        createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+      createElement('div', {
+        style: {
+          position: 'relative',
+          width: `${wPx}px`,
+          height: `${hPx}px`,
+          background: '#fff',
+          overflow: 'hidden',
+        },
+      },
+        createElement('div', {
+          style: {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            transform: `translate(${offsetXPx}px, ${offsetYPx}px)`,
+          },
+        },
+          createElement(MotorPreview, { wPx, hPx, fs: labelSettings.fontSize, has, data, ...appearance }),
+        ),
       ),
     );
     await new Promise((r) => setTimeout(r, 50));
@@ -171,3 +211,4 @@ export async function renderMotorLabel(
     cleanup();
   }
 }
+
