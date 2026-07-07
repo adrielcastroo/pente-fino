@@ -529,8 +529,16 @@ async function printImageInBrowser(
           try {
             win.focus();
             win.print();
+            // Impressão silenciosa: só funciona se o navegador foi iniciado com
+            // `--kiosk-printing` (Chrome/Edge). Nesse modo, o navegador imprime
+            // direto na impressora padrão sem mostrar o diálogo. Sem a flag,
+            // o diálogo aparece normalmente — o app continua funcionando.
+            const silent = typeof localStorage !== 'undefined'
+              && localStorage.getItem('pref_silent_browser_print') === 'true';
             win.addEventListener('afterprint', cleanup, { once: true });
-            setTimeout(cleanup, 60_000);
+            // Em modo silencioso o `afterprint` dispara rápido; ainda assim
+            // mantemos um timeout de segurança para não vazar iframe.
+            setTimeout(cleanup, silent ? 5_000 : 60_000);
             resolve();
           } catch (e) {
             cleanup();

@@ -214,6 +214,7 @@ export default function SettingsPage() {
   const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
   const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
+  const [prefSilentBrowserPrint, setPrefSilentBrowserPrint] = useState(localStorage.getItem('pref_silent_browser_print') === 'true');
 
   // MFA state
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
@@ -424,6 +425,7 @@ export default function SettingsPage() {
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
         localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
+        localStorage.setItem('pref_silent_browser_print', String(prefSilentBrowserPrint));
         if (!isGuest && user) {
           const currentPrefs = ((profile as any)?.preferences && typeof (profile as any).preferences === 'object')
             ? (profile as any).preferences
@@ -762,12 +764,53 @@ export default function SettingsPage() {
                         <Switch checked={prefAutoArchive} onCheckedChange={(v) => { setPrefAutoArchive(v); setHasUnsavedChanges(true); }} />
                       </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
-                        <div className="space-y-0.5">
-                          <Label className="text-sm font-bold">Desabilitar Impressão pelo Navegador</Label>
-                          <p className="text-xs text-muted-foreground">Bloqueia o diálogo de impressão do navegador. O disparo via n8n (webhook) continua funcionando normalmente.</p>
+                      <div className="p-4 rounded-md bg-muted/20 border border-border/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-sm font-bold">Desabilitar Impressão pelo Navegador</Label>
+                            <p className="text-xs text-muted-foreground">Bloqueia o diálogo de impressão do navegador. O disparo via n8n (webhook) continua funcionando normalmente.</p>
+                          </div>
+                          <Switch checked={prefDisableBrowserPrint} onCheckedChange={(v) => { setPrefDisableBrowserPrint(v); setHasUnsavedChanges(true); }} />
                         </div>
-                        <Switch checked={prefDisableBrowserPrint} onCheckedChange={(v) => { setPrefDisableBrowserPrint(v); setHasUnsavedChanges(true); }} />
+
+                        {/* Sub-opção: impressão silenciosa (filha da impressão pelo navegador) */}
+                        <div className={`ml-4 pl-4 border-l-2 border-border/30 pt-2 ${prefDisableBrowserPrint ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-0.5">
+                              <Label className="text-sm font-bold">Impressão Silenciosa (sem diálogo)</Label>
+                              <p className="text-xs text-muted-foreground">
+                                Imprime direto na impressora padrão, <b>sem abrir a janela de impressão</b>.
+                                Ideal para quem imprime várias etiquetas seguidas e não quer clicar em "Imprimir" toda vez.
+                              </p>
+                            </div>
+                            <Switch
+                              checked={prefSilentBrowserPrint}
+                              disabled={prefDisableBrowserPrint}
+                              onCheckedChange={(v) => { setPrefSilentBrowserPrint(v); setHasUnsavedChanges(true); }}
+                            />
+                          </div>
+                          {prefSilentBrowserPrint && (
+                            <div className="mt-3 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
+                              <p className="font-bold text-amber-500">⚠️ Requer configuração no navegador</p>
+                              <p className="text-muted-foreground">
+                                Por segurança, navegadores <b>não permitem</b> impressão silenciosa por padrão.
+                                Para funcionar, é preciso abrir o Chrome/Edge com uma "flag" especial:
+                              </p>
+                              <div className="rounded bg-background/60 border border-border/40 p-2 font-mono text-[11px] break-all">
+                                chrome.exe --kiosk-printing
+                              </div>
+                              <p className="text-muted-foreground">
+                                <b>Como fazer no Windows:</b> clique com o direito no atalho do Chrome →
+                                Propriedades → em "Destino", adicione <code className="bg-background/60 px-1 rounded">--kiosk-printing</code> no final →
+                                OK. Abra o Chrome por esse atalho.
+                              </p>
+                              <p className="text-muted-foreground">
+                                Sem a flag, o diálogo continuará abrindo normalmente (o app não quebra).
+                                A impressora padrão do sistema é a que será usada.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
 
