@@ -676,23 +676,53 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       return;
     }
     setPrinting(true);
-    const tid = toast.loading(`Imprimindo ${regs.length} etiqueta(s)...`);
-    let ok = 0;
-    for (const r of regs) {
-      try {
-        await printRegistro(r, labelSettings);
-        ok++;
-        // pequena pausa para o navegador processar diálogo de impressão
-        await new Promise(res => setTimeout(res, 300));
-      } catch (e) {
-        console.error('Falha ao imprimir', r.id, e);
-      }
+    const tid = toast.loading(`Preparando ${regs.length} etiqueta(s)...`);
+    try {
+      const items: BatchItem[] = regs.map((r) => {
+        const isMotorCtrl = r.modoOrigem === 'motor' || r.modoOrigem === 'controle' || r.tipoTecido === 'Coulisse';
+        if (isMotorCtrl) {
+          return {
+            kind: 'motor',
+            input: {
+              item: r.item,
+              descricao: r.modoOrigem === 'motor' ? 'Motor' : r.modoOrigem === 'controle' ? 'Controle' : 'Coulisse',
+              lote: r.lote,
+              loteSistema: r.loteSistema,
+              nf: r.nf,
+              cx: (r as any).caixaNum ?? null,
+            },
+          };
+        }
+        return {
+          kind: 'tecido',
+          input: {
+            item: r.item,
+            descricao: r.tipoTecido || '',
+            lote: r.lote,
+            loteSistema: r.loteSistema,
+            processo: r.processo,
+            nf: r.nf,
+            m2: r.m2,
+            mLinear: r.mLinear,
+            largura: r.largura,
+            endereco: r.endereco,
+          },
+        };
+      });
+      const { ok, total } = await printLabelsBatch(items, { ...labelSettings, autoPrint: true });
+      toast.dismiss(tid);
+      if (ok === total) toast.success(`${total} etiqueta(s) enviada(s) para impressão em lote.`);
+      else if (ok > 0) toast.warning(`${ok}/${total} etiqueta(s) enviadas — verifique o console.`);
+      else toast.error('Falha ao imprimir etiquetas.');
+    } catch (e) {
+      toast.dismiss(tid);
+      console.error(e);
+      toast.error('Falha ao imprimir etiquetas.');
+    } finally {
+      setPrinting(false);
     }
-    toast.dismiss(tid);
-    if (ok === regs.length) toast.success(`${ok} etiqueta(s) enviada(s) para impressão.`);
-    else toast.warning(`${ok}/${regs.length} etiqueta(s) impressas — verifique o console.`);
-    setPrinting(false);
   };
+
 
   const { isLow } = usePerformance();
   const totalML = useMemo(() => {
