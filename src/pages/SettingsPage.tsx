@@ -425,6 +425,7 @@ export default function SettingsPage() {
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
         localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
+        localStorage.setItem('pref_silent_browser_print', String(prefSilentBrowserPrint));
         if (!isGuest && user) {
           const currentPrefs = ((profile as any)?.preferences && typeof (profile as any).preferences === 'object')
             ? (profile as any).preferences
