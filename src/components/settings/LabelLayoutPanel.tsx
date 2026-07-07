@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check } from 'lucide-react';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
