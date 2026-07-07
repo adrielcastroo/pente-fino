@@ -205,17 +205,62 @@ export default function EstoquePage() {
     return map;
   }, [posicoes]);
 
+  // Normaliza: remove acentos, colapsa não-alfanuméricos em espaço, lowercase.
+  const normalizeSearch = useCallback((s: string) => {
+    return (s || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }, []);
+
+  // Busca cross-TEC: retorna posições que casam com TODOS os tokens.
+  // Considera item, descrição do cadastro, código interno, lote, lote_sistema,
+  // processo, endereço e a própria estrutura (TEC).
+  const searchMatches = useMemo(() => {
+    const raw = locateQuery.trim();
+    if (!raw) return null;
+    const tokens = normalizeSearch(raw).split(' ').filter(Boolean);
+    if (!tokens.length) return null;
+    const out: Array<Posicao & { _desc: string; _interno: string }> = [];
+    for (const p of allPosicoes as any[]) {
+      const info = resolveItemInfo(p.item);
+      const desc = info?.descricao || '';
+      const interno = info?.codigo_interno || '';
+      const hay = normalizeSearch(
+        `${p.item ?? ''} ${desc} ${interno} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''} ${p.estrutura ?? ''} ${p.coluna ?? ''} N${String(p.nivel ?? '').padStart(2, '0')}`
+      );
+      if (tokens.every(t => hay.includes(t))) {
+        out.push({ ...(p as Posicao), _desc: desc, _interno: interno });
+      }
+    }
+    return out;
+  }, [locateQuery, allPosicoes, resolveItemInfo, normalizeSearch]);
+
+  // Células destacadas no TEC ativo.
   const matchingCells = useMemo(() => {
-    const q = locateQuery.trim().toLowerCase();
-    if (!q) return null;
+    if (!searchMatches) return null;
     const set = new Set<string>();
-    for (const p of posicoes) {
-      const desc = describeItem(p.item);
-      const hay = `${p.item ?? ''} ${desc} ${p.lote ?? ''} ${p.lote_sistema ?? ''} ${p.proc ?? ''} ${p.endereco ?? ''}`.toLowerCase();
-      if (hay.includes(q)) set.add(`${p.coluna}-${p.nivel}`);
+    for (const p of searchMatches) {
+      if (p.estrutura === activeTec) set.add(`${p.coluna}-${p.nivel}`);
     }
     return set;
-  }, [locateQuery, posicoes, describeItem]);
+  }, [searchMatches, activeTec]);
+
+  // Agrupa resultados por TEC para o dropdown.
+  const searchByTec = useMemo(() => {
+    if (!searchMatches) return null;
+    const map = new Map<string, typeof searchMatches>();
+    for (const p of searchMatches) {
+      const arr = map.get(p.estrutura) || [];
+      arr.push(p);
+      map.set(p.estrutura, arr);
+    }
+    return map;
+  }, [searchMatches]);
+
 
 
   const handleStatusChange = useCallback(async (pos: Posicao, newStatus: string) => {
