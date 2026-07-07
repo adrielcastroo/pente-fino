@@ -448,8 +448,14 @@ function today(): string {
 }
 
 /**
- * Imprime a imagem da etiqueta diretamente pelo navegador, usando um iframe
- * oculto com @page no tamanho exato em mm quando nenhum webhook estiver configurado.
+ * Imprime a imagem da etiqueta diretamente pelo navegador usando um iframe
+ * oculto — mas com dimensões REAIS (não 0×0) posicionado fora da tela, porque
+ * Chrome/Edge recusam abrir o diálogo de impressão de iframes 0×0/opacity:0
+ * e acabam caindo para uma janela pop-up (que o usuário vê como "nova aba").
+ *
+ * Uso srcdoc + onload para garantir que o documento está totalmente pronto
+ * antes de chamar contentWindow.print(); focar o iframe antes é essencial
+ * para o diálogo aparecer na aba atual em vez de uma nova.
  */
 async function printImageInBrowser(
   dataUrl: string,
@@ -458,17 +464,46 @@ async function printImageInBrowser(
   title: string,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
+    const safeTitle = title.replace(/[<>&"']/g, '');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
+      @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff;
+        width: ${widthMm}mm;
+        height: ${heightMm}mm;
+        overflow: hidden;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      img#lbl {
+        display: block;
+        width: ${widthMm}mm;
+        height: ${heightMm}mm;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        image-rendering: pixelated;
+      }
+      @media print {
+        html, body { width: ${widthMm}mm; height: ${heightMm}mm; }
+      }
+    </style></head><body><img id="lbl" src="${dataUrl}"></body></html>`;
+
     const iframe = document.createElement('iframe');
     iframe.setAttribute('aria-hidden', 'true');
+    iframe.setAttribute('title', safeTitle);
+    // Dimensões REAIS fora da tela — 0×0 faz o Chrome abrir uma janela nova.
     iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.left = '-10000px';
+    iframe.style.top = '0';
+    iframe.style.width = `${Math.max(widthMm, 50)}mm`;
+    iframe.style.height = `${Math.max(heightMm, 50)}mm`;
     iframe.style.border = '0';
-    iframe.style.opacity = '0';
-    iframe.style.pointerEvents = 'none';
-    document.body.appendChild(iframe);
+    iframe.style.visibility = 'hidden';
+    iframe.srcdoc = html;
 
     let cleaned = false;
     const cleanup = () => {
@@ -477,81 +512,48 @@ async function printImageInBrowser(
       try { iframe.remove(); } catch { /* noop */ }
     };
 
-    const safeTitle = title.replace(/[<>&"']/g, '');
-    // Renderização "driver-only": tamanho fixo em mm via @page, sem margem,
-    // cores exatas (sem ajuste do navegador) e imagem ocupando 100% da página
-    // — assim "Ajustar à página", margens e escala do diálogo do navegador
-    // não afetam o resultado; quem manda é o driver da impressora.
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
-      @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; padding: 0 !important; }
-      @page :first { margin: 0 !important; }
-      @page :left  { margin: 0 !important; }
-      @page :right { margin: 0 !important; }
-      * { box-sizing: border-box; }
-      html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff;
-        width: ${widthMm}mm !important;
-        height: ${heightMm}mm !important;
-        overflow: hidden !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
-      }
-      img#lbl {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: ${widthMm}mm !important;
-        height: ${heightMm}mm !important;
-        max-width: none !important;
-        max-height: none !important;
-        min-width: ${widthMm}mm !important;
-        min-height: ${heightMm}mm !important;
-        display: block;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        image-rendering: pixelated;
-        transform: none !important;
-        zoom: 1 !important;
-      }
-      @media print {
-        html, body { margin: 0 !important; padding: 0 !important; width: ${widthMm}mm !important; height: ${heightMm}mm !important; }
-        img#lbl { width: ${widthMm}mm !important; height: ${heightMm}mm !important; }
-      }
-    </style></head><body><img id="lbl" src="${dataUrl}"></body></html>`;
-
-    const doc = iframe.contentDocument;
-    if (!doc) { cleanup(); reject(new Error('iframe sem contentDocument')); return; }
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    const win = iframe.contentWindow;
-    if (!win) { cleanup(); reject(new Error('iframe sem contentWindow')); return; }
-
+    let printed = false;
     const triggerPrint = () => {
+      if (printed) return;
+      printed = true;
+      const win = iframe.contentWindow;
+      if (!win) { cleanup(); reject(new Error('iframe sem contentWindow')); return; }
       try {
+        // Focar o iframe é essencial: sem foco, Chrome pode delegar a impressão
+        // à janela principal (ou abrir uma nova) em vez do documento do iframe.
         win.focus();
-        win.print();
-        win.addEventListener('afterprint', cleanup, { once: true });
-        setTimeout(cleanup, 60_000);
-        resolve();
+        // Se houver imagem, esperar carregamento antes do print().
+        const doc = win.document;
+        const img = doc.getElementById('lbl') as HTMLImageElement | null;
+        const doPrint = () => {
+          try {
+            win.focus();
+            win.print();
+            win.addEventListener('afterprint', cleanup, { once: true });
+            setTimeout(cleanup, 60_000);
+            resolve();
+          } catch (e) {
+            cleanup();
+            reject(e);
+          }
+        };
+        if (img && !img.complete) {
+          img.onload = doPrint;
+          img.onerror = () => { cleanup(); reject(new Error('Falha ao carregar imagem da etiqueta')); };
+        } else {
+          // dá 1 frame ao layout aplicar @page/dimensões antes de imprimir
+          requestAnimationFrame(() => setTimeout(doPrint, 30));
+        }
       } catch (e) {
         cleanup();
         reject(e);
       }
     };
 
-    const img = doc.getElementById('lbl') as HTMLImageElement | null;
-    if (img && !img.complete) {
-      img.onload = triggerPrint;
-      img.onerror = () => { cleanup(); reject(new Error('Falha ao carregar imagem da etiqueta')); };
-    } else {
-      setTimeout(triggerPrint, 50);
-    }
+    iframe.addEventListener('load', triggerPrint, { once: true });
+    document.body.appendChild(iframe);
+    // Fallback caso o evento load não dispare (raro com srcdoc)
+    setTimeout(triggerPrint, 800);
   });
 }
 
