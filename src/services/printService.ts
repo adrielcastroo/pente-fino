@@ -8,6 +8,7 @@
 
 import { toast } from 'sonner';
 import { createElement, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
 import { itensCadastroService } from './itensCadastroService';
@@ -819,31 +820,33 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
 
       try {
         root = createRoot(mount);
-        root.render(createElement(
-          'div',
-          null,
-          pages.map((page, index) => {
-            const scaleX = (page.widthMm * CSS_PX_PER_MM) / page.basePx.w;
-            const scaleY = (page.heightMm * CSS_PX_PER_MM) / page.basePx.h;
-            return createElement('section', {
-              key: index,
-              className: 'page',
-              style: {
-                width: `${page.widthMm}mm`,
-                height: `${page.heightMm}mm`,
-                pageBreakAfter: index < pages.length - 1 ? 'always' : undefined,
-                breakAfter: index < pages.length - 1 ? 'page' : undefined,
-              },
-            }, createElement('div', {
-              className: 'label-scale',
-              style: {
-                width: `${page.basePx.w}px`,
-                height: `${page.basePx.h}px`,
-                transform: `scale(${scaleX}, ${scaleY})`,
-              },
-            }, page.element));
-          }),
-        ));
+        flushSync(() => {
+          root?.render(createElement(
+            'div',
+            null,
+            pages.map((page, index) => {
+              const scaleX = (page.widthMm * CSS_PX_PER_MM) / page.basePx.w;
+              const scaleY = (page.heightMm * CSS_PX_PER_MM) / page.basePx.h;
+              return createElement('section', {
+                key: index,
+                className: 'page',
+                style: {
+                  width: `${page.widthMm}mm`,
+                  height: `${page.heightMm}mm`,
+                  pageBreakAfter: index < pages.length - 1 ? 'always' : undefined,
+                  breakAfter: index < pages.length - 1 ? 'page' : undefined,
+                },
+              }, createElement('div', {
+                className: 'label-scale',
+                style: {
+                  width: `${page.basePx.w}px`,
+                  height: `${page.basePx.h}px`,
+                  transform: `scale(${scaleX}, ${scaleY})`,
+                },
+              }, page.element));
+            }),
+          ));
+        });
 
         await new Promise((r) => win.requestAnimationFrame(() => win.requestAnimationFrame(r)));
         await Promise.race([
