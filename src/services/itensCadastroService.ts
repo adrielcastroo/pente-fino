@@ -363,4 +363,48 @@ export const itensCadastroService = {
     }
     return { codigoInterno: raw, descricao: fallbackDescricao, resolved: false, source: 'none' };
   },
+
+  /**
+   * Carrega todo o cadastro e devolve uma função que resolve o "código interno"
+   * a partir do valor gravado em `registros.item` — que pode ser código interno,
+   * código de fornecedor OU a descrição (após backfill do trigger).
+   * Retorna string vazia quando não conseguir resolver.
+   */
+  async buildCodigoInternoResolver(): Promise<(itemText: string) => string> {
+    let itens: ItemCadastro[] = [];
+    try {
+      itens = await this.list();
+    } catch (e) {
+      console.warn('buildCodigoInternoResolver: falha ao carregar cadastros', e);
+      return () => '';
+    }
+    const porInterno = new Map<string, string>();
+    const porFornecedor = new Map<string, string>();
+    const porDescricao = new Map<string, string>();
+    for (const it of itens) {
+      const codigo = (it.codigo_interno || '').trim();
+      if (!codigo) continue;
+      const nInt = normalizarCodigo(codigo);
+      if (nInt) porInterno.set(nInt, codigo);
+      for (const nf of it.codigos_fornecedor_normalizado || []) {
+        if (nf) porFornecedor.set(nf, codigo);
+      }
+      const desc = (it.descricao || '').trim().toLowerCase();
+      if (desc) porDescricao.set(desc, codigo);
+    }
+    return (itemText: string): string => {
+      const raw = (itemText || '').trim();
+      if (!raw) return '';
+      const norm = normalizarCodigo(raw);
+      if (norm) {
+        const hitInt = porInterno.get(norm);
+        if (hitInt) return hitInt;
+        const hitFor = porFornecedor.get(norm);
+        if (hitFor) return hitFor;
+      }
+      const hitDesc = porDescricao.get(raw.toLowerCase());
+      if (hitDesc) return hitDesc;
+      return '';
+    };
+  },
 };
