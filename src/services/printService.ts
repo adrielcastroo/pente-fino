@@ -59,6 +59,18 @@ async function resolverItem(
       };
     }
 
+    // 3. fallback por DESCRIÇÃO — o backfill do trigger substitui `registros.item`
+    //    pela descrição cadastrada; ao reimprimir do histórico, o "item" chega
+    //    aqui como texto de descrição. Buscamos o cadastro para recuperar o
+    //    código interno correto e manter o padrão da etiqueta.
+    const porDescricao = await itensCadastroService.findByDescricao(codigoBipadoOuInterno);
+    if (porDescricao) {
+      return {
+        codigoInterno: porDescricao.codigo_interno,
+        descricao: porDescricao.descricao || fallbackDescricao,
+      };
+    }
+
     toast.warning(`Código "${codigoBipadoOriginal}" não encontrado nos cadastros — etiqueta usará dados do registro`);
     return fallback;
   } catch (e) {
@@ -66,6 +78,7 @@ async function resolverItem(
     return fallback;
   }
 }
+
 
 
 export type PrintMethod = 'browser' | 'webhook' | 'both';
