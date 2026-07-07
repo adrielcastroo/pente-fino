@@ -7,12 +7,21 @@
 // pedir confirmação explícita do usuário.
 
 import { toast } from 'sonner';
+import { createElement, type ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
 import { itensCadastroService } from './itensCadastroService';
 import { codigoBate, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { recordPayload } from './n8nApi';
 import { extractLarguraFromItem } from '@/lib/app-utils';
-import type { TecidoLabelData, MotorLabelData } from '@/components/labels/LabelTemplates';
+import {
+  LABEL_PX_PER_MM,
+  MotorPreview,
+  TecidoPreview,
+  type LabelHas,
+  type MotorLabelData,
+  type TecidoLabelData,
+} from '@/components/labels/LabelTemplates';
 import type { LabelSettings } from '@/store/useAppStore';
 
 /**
@@ -684,6 +693,183 @@ interface BatchPage {
   heightMm: number;
 }
 
+interface DirectBrowserPage {
+  element: ReactNode;
+  widthMm: number;
+  heightMm: number;
+  basePx: { w: number; h: number };
+}
+
+const TECIDO_BATCH_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
+const MOTOR_BATCH_DEFAULT_FIELDS = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
+const CSS_PX_PER_MM = 96 / 25.4;
+
+function buildTecidoBrowserPage(data: TecidoLabelData, labelSettings: LabelSettings): DirectBrowserPage {
+  const fields = labelSettings.fields?.length ? labelSettings.fields : TECIDO_BATCH_DEFAULT_FIELDS;
+  const has: LabelHas = (id) => fields.includes(id);
+  const w = labelSettings.width ?? 100;
+  const h = labelSettings.height ?? 60;
+  const orientation = labelSettings.orientation ?? 'landscape';
+  const wPx = (orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
+  const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
+  const offsetMm = labelSettings.printOffsetXMm ?? 0;
+  const maxOffsetPx = wPx - 1;
+  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
+  const innerWpx = wPx - Math.abs(offsetPx);
+  const leftPx = offsetPx > 0 ? offsetPx : 0;
+  const rightPx = offsetPx < 0 ? -offsetPx : 0;
+
+  return {
+    widthMm: w,
+    heightMm: h,
+    basePx: { w: wPx, h: hPx },
+    element: createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
+      createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+      createElement(TecidoPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
+      createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+    ),
+  };
+}
+
+function buildMotorBrowserPage(data: MotorLabelData, labelSettings: LabelSettings): DirectBrowserPage {
+  const fields = labelSettings.motorFields?.length ? labelSettings.motorFields : MOTOR_BATCH_DEFAULT_FIELDS;
+  const has: LabelHas = (id) => fields.includes(id);
+  const w = labelSettings.motorWidth ?? 60;
+  const h = labelSettings.motorHeight ?? 50;
+  const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
+  const wPx = (orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
+  const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
+  const offsetMm = labelSettings.motorPrintOffsetXMm ?? 0;
+  const maxOffsetPx = wPx - 1;
+  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
+  const innerWpx = wPx - Math.abs(offsetPx);
+  const leftPx = offsetPx > 0 ? offsetPx : 0;
+  const rightPx = offsetPx < 0 ? -offsetPx : 0;
+
+  return {
+    widthMm: w,
+    heightMm: h,
+    basePx: { w: wPx, h: hPx },
+    element: createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
+      createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+      createElement(MotorPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
+      createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+    ),
+  };
+}
+
+function collectPrintableStyles(): string {
+  if (typeof document === 'undefined') return '';
+  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map((node) => node.outerHTML)
+    .join('\n');
+}
+
+async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title: string): Promise<void> {
+  if (pages.length === 0) return;
+
+  return new Promise((resolve, reject) => {
+    const safeTitle = title.replace(/[<>&"']/g, '');
+    const maxW = Math.max(...pages.map(p => p.widthMm));
+    const maxH = Math.max(...pages.map(p => p.heightMm));
+    const styles = collectPrintableStyles();
+    const baseHref = typeof window !== 'undefined' ? `${window.location.origin}/` : '/';
+    const html = `<!doctype html><html><head><meta charset="utf-8"><base href="${baseHref}"><title>${safeTitle}</title>${styles}<style>
+      @page { size: ${maxW}mm ${maxH}mm; margin: 0 !important; }
+      * { box-sizing: border-box; }
+      html, body, #label-root { margin: 0 !important; padding: 0 !important; background: #fff; }
+      body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      section.page { display: block; margin: 0; padding: 0; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+      .label-scale { transform-origin: top left; }
+    </style></head><body><div id="label-root"></div></body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.setAttribute('title', safeTitle);
+    iframe.style.position = 'fixed';
+    iframe.style.left = '-10000px';
+    iframe.style.top = '0';
+    iframe.style.width = `${Math.max(maxW, 50)}mm`;
+    iframe.style.height = `${Math.max(maxH, 50)}mm`;
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    iframe.srcdoc = html;
+
+    let cleaned = false;
+    let printed = false;
+    let root: ReturnType<typeof createRoot> | null = null;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      try { root?.unmount(); } catch { /* noop */ }
+      try { iframe.remove(); } catch { /* noop */ }
+    };
+
+    const triggerPrint = async () => {
+      if (printed) return;
+      printed = true;
+      const win = iframe.contentWindow;
+      const doc = iframe.contentDocument || win?.document;
+      const mount = doc?.getElementById('label-root');
+      if (!win || !doc || !mount) {
+        cleanup();
+        reject(new Error('iframe de impressão sem documento'));
+        return;
+      }
+
+      try {
+        root = createRoot(mount);
+        root.render(createElement(
+          createElement('div').type,
+          null,
+          pages.map((page, index) => {
+            const scaleX = (page.widthMm * CSS_PX_PER_MM) / page.basePx.w;
+            const scaleY = (page.heightMm * CSS_PX_PER_MM) / page.basePx.h;
+            return createElement('section', {
+              key: index,
+              className: 'page',
+              style: {
+                width: `${page.widthMm}mm`,
+                height: `${page.heightMm}mm`,
+                pageBreakAfter: index < pages.length - 1 ? 'always' : undefined,
+                breakAfter: index < pages.length - 1 ? 'page' : undefined,
+              },
+            }, createElement('div', {
+              className: 'label-scale',
+              style: {
+                width: `${page.basePx.w}px`,
+                height: `${page.basePx.h}px`,
+                transform: `scale(${scaleX}, ${scaleY})`,
+              },
+            }, page.element));
+          }),
+        ));
+
+        await new Promise((r) => win.requestAnimationFrame(() => win.requestAnimationFrame(r)));
+        await Promise.race([
+          doc.fonts?.ready ?? Promise.resolve(),
+          new Promise((r) => setTimeout(r, 300)),
+        ]);
+
+        win.focus();
+        win.print();
+        const silent = typeof localStorage !== 'undefined'
+          && localStorage.getItem('pref_silent_browser_print') === 'true';
+        win.addEventListener('afterprint', cleanup, { once: true });
+        setTimeout(cleanup, silent ? 5_000 : 120_000);
+        resolve();
+      } catch (e) {
+        cleanup();
+        reject(e);
+      }
+    };
+
+    iframe.addEventListener('load', () => { void triggerPrint(); }, { once: true });
+    document.body.appendChild(iframe);
+    setTimeout(() => { void triggerPrint(); }, 1200);
+  });
+}
+
 async function printImagesInBrowserBatch(pages: BatchPage[], title: string): Promise<void> {
   if (pages.length === 0) return;
   if (pages.length === 1) {
@@ -829,6 +1015,63 @@ export async function printLabelsBatch(
     if (byDesc) return byDesc;
     return { codigoInterno: codigo, descricao: fallbackDescricao || codigo };
   };
+
+  if (method === 'browser' && !browserDisabled) {
+    const browserPages: DirectBrowserPage[] = [];
+    for (const it of items) {
+      try {
+        if (it.kind === 'motor') {
+          const inp = it.input as MotorPrintInput;
+          const cxText = inp.cx != null && inp.cx !== ''
+            ? (typeof inp.cx === 'number' ? `CX${String(inp.cx).padStart(2, '0')}` : String(inp.cx))
+            : 'S/CX';
+          const nfText = inp.nf ? `NF ${inp.nf}` : '';
+          const ntText = inp.loteSistema || inp.lote;
+          const resolved = resolveLocal(inp.item, inp.descricao || '');
+          browserPages.push(buildMotorBrowserPage({
+            sku: resolved.codigoInterno,
+            descricao: resolved.descricao,
+            cx: cxText,
+            nf: nfText,
+            nt: ntText,
+            rnp: inp.endereco || '',
+            data: today(),
+            qrLoteSku: `${inp.lote};${resolved.codigoInterno}`,
+          }, cfg));
+        } else {
+          const inp = it.input as TecidoPrintInput;
+          const loteText = inp.loteSistema || (inp.nf ? `NFe ${inp.nf}` : '') || inp.lote || '';
+          const largura = typeof inp.largura === 'number' && inp.largura > 0
+            ? inp.largura : extractLarguraFromItem(inp.item);
+          const m2Informado = typeof inp.m2 === 'number' && inp.m2 > 0 ? inp.m2 : 0;
+          const mLinear = typeof inp.mLinear === 'number' && inp.mLinear > 0 ? inp.mLinear : 0;
+          const m2Calc = mLinear > 0 && largura > 0 ? mLinear * largura : 0;
+          const qtdM2 = m2Informado > 0 ? m2Informado : m2Calc;
+          const qtdText = qtdM2 > 0 ? `${qtdM2.toFixed(2).replace('.', ',')} M²` : '';
+          const resolved = resolveLocal(inp.item, inp.descricao || '');
+          browserPages.push(buildTecidoBrowserPage({
+            sku: resolved.codigoInterno,
+            descricao: resolved.descricao,
+            lote: loteText,
+            qtd: qtdText,
+            rnp: inp.endereco || '',
+            data: today(),
+            qrSku: resolved.codigoInterno,
+            qrLote: loteText,
+          }, cfg));
+        }
+      } catch (e) {
+        console.error('Falha ao preparar etiqueta para lote:', e);
+      }
+    }
+
+    try {
+      await printReactLabelsInBrowserBatch(browserPages, `Etiquetas (${browserPages.length})`);
+      return { ok: browserPages.length, total: items.length };
+    } catch (e) {
+      console.error('Impressão rápida em lote pelo navegador falhou; usando PNG como fallback:', e);
+    }
+  }
 
   for (const it of items) {
     try {
