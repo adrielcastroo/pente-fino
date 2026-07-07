@@ -1,3 +1,11 @@
+// ⚠️  LÓGICA DE ENVIO PARA O N8N — TRAVADA POR SOLICITAÇÃO DO USUÁRIO (07/07/2026).
+// Fluxo atual (form-urlencoded + no-cors para HTTP/local, JSON para HTTPS público,
+// com fallback para <form> em iframe oculto) está funcionando como esperado.
+// NÃO alterar `resolveWebhookUrl`, `isLocalWebhookUrl`, `shouldUseFormNoCors`,
+// `buildWebhookForm`, `submitHiddenForm`, `postFormNoCors`, `sendToWebhook` nem
+// as chamadas em `dispatchPrint`. Antes de qualquer mudança nesses trechos,
+// pedir confirmação explícita do usuário.
+
 import { toast } from 'sonner';
 import { renderTecidoLabel, renderMotorLabel } from './labelRenderer';
 import { itensCadastroService } from './itensCadastroService';
