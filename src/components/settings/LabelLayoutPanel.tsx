@@ -271,15 +271,8 @@ export default function LabelLayoutPanel() {
                       Compensa o deslocamento da impressora (faixa branca à esquerda). Padrão: 4 mm.
                     </p>
                   </div>
-                  <div className="space-y-1 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
-                    <Label className="text-xs font-bold">Webhook n8n</Label>
-                    <p className="text-[10px] opacity-70 leading-tight">
-                      Endpoint restaurado da versão funcional para o fluxo app → n8n.
-                    </p>
-                    <p className="text-[10px] font-mono opacity-80 break-all">
-                      http://localhost:5678/webhook/imprimir-etiqueta
-                    </p>
-                  </div>
+                  <WebhookUrlEditor />
+
                 </CardContent>
               </Card>
 
@@ -468,3 +461,92 @@ export default function LabelLayoutPanel() {
     </div>
   );
 }
+
+const DEFAULT_WEBHOOK_URL = 'http://localhost:5678/webhook/imprimir-etiqueta';
+const WEBHOOK_LS_KEY = 'n8n_webhook_url';
+
+function WebhookUrlEditor() {
+  const [value, setValue] = useState<string>(() => {
+    if (typeof localStorage === 'undefined') return '';
+    return localStorage.getItem(WEBHOOK_LS_KEY) || '';
+  });
+  const [saved, setSaved] = useState(false);
+
+  const effective = (value.trim() || DEFAULT_WEBHOOK_URL);
+  let urlError = '';
+  if (value.trim()) {
+    try {
+      const u = new URL(value.trim());
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') urlError = 'Use http:// ou https://';
+    } catch {
+      urlError = 'URL inválida';
+    }
+  }
+
+  const handleSave = () => {
+    if (urlError) {
+      toast.error(urlError);
+      return;
+    }
+    const v = value.trim();
+    try {
+      if (v) localStorage.setItem(WEBHOOK_LS_KEY, v);
+      else localStorage.removeItem(WEBHOOK_LS_KEY);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+      toast.success(v ? 'Webhook do n8n atualizado' : 'Webhook restaurado para o padrão');
+    } catch (e) {
+      toast.error('Não foi possível salvar o webhook');
+    }
+  };
+
+  const handleReset = () => {
+    setValue('');
+    try { localStorage.removeItem(WEBHOOK_LS_KEY); } catch { /* noop */ }
+    toast.success('Webhook restaurado para o padrão');
+  };
+
+  return (
+    <div className="space-y-2 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
+      <Label className="text-xs font-bold">Webhook n8n</Label>
+      <p className="text-[10px] opacity-70 leading-tight">
+        URL do endpoint do n8n que recebe a etiqueta. Deixe vazio para usar o padrão.
+      </p>
+      <Input
+        type="url"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={DEFAULT_WEBHOOK_URL}
+        className="h-8 text-xs font-mono"
+        spellCheck={false}
+        autoComplete="off"
+      />
+      {urlError && (
+        <p className="text-[10px] text-destructive">{urlError}</p>
+      )}
+      <p className="text-[10px] font-mono opacity-70 break-all">
+        Em uso: {effective}
+      </p>
+      <div className="flex gap-2 pt-1">
+        <Button
+          size="sm"
+          className="h-7 text-[11px] font-bold gap-1"
+          onClick={handleSave}
+          disabled={!!urlError}
+        >
+          {saved ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />}
+          {saved ? 'Salvo' : 'Salvar'}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-[11px] gap-1"
+          onClick={handleReset}
+        >
+          <RefreshCw className="w-3 h-3" /> Padrão
+        </Button>
+      </div>
+    </div>
+  );
+}
+
