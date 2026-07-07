@@ -152,17 +152,23 @@ export default function LabelLayoutPanel() {
     const el = previewBoxRef.current;
     if (!el) return;
     const recalc = () => {
-      const padding = 32; // p-4 nas duas direções
+      const padding = 48; // p-6 nas duas direções
       const availW = Math.max(0, el.clientWidth - padding);
       const availH = Math.max(0, el.clientHeight - padding);
       if (availW <= 0 || availH <= 0) return;
-      const next = Math.min(availW / wPx, availH / hPx, 1);
+      // Permite escalar até 1.2x para melhor legibilidade quando há espaço,
+      // sem perder fidelidade (é apenas zoom visual — o PNG é gerado em 1:1).
+      const next = Math.min(availW / wPx, availH / hPx, 1.2);
       setFit(next > 0 ? next : 1);
     };
     recalc();
     const ro = new ResizeObserver(recalc);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener('resize', recalc);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', recalc);
+    };
   }, [wPx, hPx]);
 
   return (
