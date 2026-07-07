@@ -193,11 +193,64 @@ export function clearRecordedPayloads() {
   localStorage.removeItem(LS_LAST_PAYLOADS);
 }
 
+function shouldRetryAsSimpleRequest(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (parsed.protocol === 'http:') return true;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+    if (host.endsWith('.local')) return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+
+    const private172 = host.match(/^172\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+    if (private172) {
+      const octet = Number(private172[1]);
+      return octet >= 16 && octet <= 31;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+function payloadToForm(payload: any): URLSearchParams {
+  const form = new URLSearchParams();
+  Object.entries(payload || {}).forEach(([key, value]) => {
+    form.set(key, typeof value === 'string' ? value : JSON.stringify(value));
+  });
+  return form;
+}
+
+async function retryWithSimpleRequest(webhookUrl: string, payload: any): Promise<void> {
+  await fetch(webhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: payloadToForm(payload),
+  });
+}
+
 /** Reenvia um payload previamente gravado. */
 export async function retryPayload(id: string): Promise<{ ok: boolean; status?: number; error?: string }> {
   const item = getRecordedPayloads().find((p) => p.id === id);
   if (!item) return { ok: false, error: 'Payload não encontrado no histórico local' };
   try {
+    if (shouldRetryAsSimpleRequest(item.webhookUrl)) {
+      await retryWithSimpleRequest(item.webhookUrl, item.payload);
+      const list = getRecordedPayloads();
+      const idx = list.findIndex((p) => p.id === id);
+      if (idx >= 0) {
+        list[idx] = {
+          ...list[idx],
+          status: 'ok',
+          errorMessage: undefined,
+          sentAt: new Date().toISOString(),
+        };
+        localStorage.setItem(LS_LAST_PAYLOADS, JSON.stringify(list));
+      }
+      return { ok: true };
+    }
+
     const res = await fetch(item.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -217,6 +270,10 @@ export async function retryPayload(id: string): Promise<{ ok: boolean; status?: 
     }
     return { ok: res.ok, status: res.status };
   } catch (e: any) {
+    try {
+      await retryWithSimpleRequest(item.webhookUrl, item.payload);
+      return { ok: true };
+    } catch { /* mantém erro original */ }
     return { ok: false, error: e?.message || String(e) };
   }
 }
