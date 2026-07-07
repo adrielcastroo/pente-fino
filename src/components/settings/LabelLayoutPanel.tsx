@@ -615,3 +615,125 @@ function WebhookUrlEditor() {
   );
 }
 
+/**
+ * Input numérico especializado para offset (mm).
+ *
+ * Corrige o bug do <Input type="number" value={number}> controlado: quando o
+ * usuário selecionava "0" e tentava digitar por cima (ou apagar para digitar
+ * "-"), o parse instantâneo com `Number("")`/`Number("-")` = NaN → 0 travava
+ * a edição. Aqui mantemos um estado LOCAL de string enquanto o campo está em
+ * foco / rascunho, e só propagamos ao store quando o valor é numérico válido.
+ *
+ * Também traz botões ± com passo fino (0.5mm) para ajuste sem teclado.
+ */
+interface OffsetInputProps {
+  value: number;
+  onChange: (v: number) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  ariaLabel?: string;
+}
+
+function OffsetInput({ value, onChange, step = 0.5, min = -50, max = 50, ariaLabel }: OffsetInputProps) {
+  const [draft, setDraft] = useState<string>(() => String(value));
+  const focused = useRef(false);
+
+  // Sincroniza quando o valor externo muda e o campo NÃO está em edição.
+  useEffect(() => {
+    if (!focused.current) setDraft(String(value));
+  }, [value]);
+
+  const clamp = (n: number) => Math.min(max, Math.max(min, n));
+
+  const commit = (raw: string) => {
+    const cleaned = raw.trim().replace(',', '.');
+    if (cleaned === '' || cleaned === '-' || cleaned === '.') {
+      onChange(0);
+      setDraft('0');
+      return;
+    }
+    const n = Number(cleaned);
+    if (Number.isFinite(n)) {
+      const c = clamp(n);
+      onChange(c);
+      setDraft(String(c));
+    } else {
+      setDraft(String(value));
+    }
+  };
+
+  const bump = (delta: number) => {
+    const next = clamp(Number((value + delta).toFixed(2)));
+    onChange(next);
+    setDraft(String(next));
+  };
+
+  const isZero = value === 0;
+
+  return (
+    <div className="flex items-stretch h-9 rounded-md border border-input bg-background shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:border-ring transition-all">
+      <button
+        type="button"
+        aria-label={`Diminuir ${ariaLabel ?? ''}`}
+        onClick={() => bump(-step)}
+        className="w-9 flex items-center justify-center border-r border-input bg-muted/40 hover:bg-primary/10 hover:text-primary active:bg-primary/20 transition-colors text-muted-foreground"
+      >
+        <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+      </button>
+      <input
+        type="text"
+        inputMode="decimal"
+        aria-label={ariaLabel}
+        value={draft}
+        onFocus={(e) => {
+          focused.current = true;
+          // Seleciona tudo — permite sobrescrever "0" digitando direto.
+          requestAnimationFrame(() => e.target.select());
+        }}
+        onBlur={(e) => {
+          focused.current = false;
+          commit(e.target.value);
+        }}
+        onChange={(e) => {
+          const v = e.target.value;
+          // Aceita rascunhos válidos: vazio, "-", "-.", "1.", "-1.2" etc.
+          if (/^-?\d*\.?\d*$/.test(v)) {
+            setDraft(v);
+            if (v !== '' && v !== '-' && v !== '.' && v !== '-.') {
+              const n = Number(v);
+              if (Number.isFinite(n)) onChange(clamp(n));
+            }
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp') { e.preventDefault(); bump(step); }
+          else if (e.key === 'ArrowDown') { e.preventDefault(); bump(-step); }
+          else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+        }}
+        className="flex-1 min-w-0 px-2 text-center font-mono text-sm bg-transparent outline-none tabular-nums"
+      />
+      <div className="flex items-center px-1.5 text-[10px] font-mono opacity-50 border-l border-input select-none">mm</div>
+      <button
+        type="button"
+        aria-label={`Zerar ${ariaLabel ?? ''}`}
+        onClick={() => { onChange(0); setDraft('0'); }}
+        disabled={isZero}
+        className="w-8 flex items-center justify-center border-l border-input bg-muted/40 hover:bg-primary/10 hover:text-primary active:bg-primary/20 transition-colors text-muted-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+        title="Zerar"
+      >
+        <RotateCcw className="w-3 h-3" strokeWidth={2.5} />
+      </button>
+      <button
+        type="button"
+        aria-label={`Aumentar ${ariaLabel ?? ''}`}
+        onClick={() => bump(step)}
+        className="w-9 flex items-center justify-center border-l border-input bg-muted/40 hover:bg-primary/10 hover:text-primary active:bg-primary/20 transition-colors text-muted-foreground"
+      >
+        <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+      </button>
+    </div>
+  );
+}
+
+
