@@ -422,18 +422,28 @@ export default function LabelLayoutPanel() {
               </Card>
             </div>
 
-            <div className="space-y-3 lg:col-span-2 order-1 lg:order-2 lg:sticky lg:top-4">
+            <div className="lg:col-span-2 order-1 lg:order-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1 space-y-3">
               <div className="flex items-baseline justify-between">
                 <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">
                   Pré-visualização — {isMotor ? 'Motores / Controles' : 'Tecidos'}
                 </Label>
                 <span className="text-[10px] font-mono opacity-60">
-                  {w}×{h}mm · zoom {Math.round(fit * 100)}%
+                  {w}×{h}mm · escala 1:1 · zoom {Math.round(fit * 100)}%
                 </span>
               </div>
               <div
                 ref={previewBoxRef}
-                className="relative flex items-center justify-center p-4 bg-muted/60 dark:bg-muted/40 rounded-md border-2 border-dashed border-border/50 h-[280px] lg:h-[360px] overflow-hidden shadow-inner"
+                className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 h-[340px] sm:h-[420px] lg:h-[min(70vh,640px)] overflow-hidden shadow-inner"
+                style={{
+                  // Fundo xadrez tipo "mesa de trabalho" para diferenciar a
+                  // etiqueta branca do fundo escuro do app e reforçar a
+                  // percepção de escala física.
+                  backgroundColor: 'hsl(var(--muted) / 0.55)',
+                  backgroundImage:
+                    'linear-gradient(45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(-45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%), linear-gradient(-45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%)',
+                  backgroundSize: '16px 16px',
+                  backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+                }}
               >
                 <div
                   style={{
@@ -445,7 +455,8 @@ export default function LabelLayoutPanel() {
                     position: 'relative',
                     background: '#fff',
                     overflow: 'hidden',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2)',
+                    outline: '1px solid rgba(0,0,0,0.15)',
                   }}
                 >
                   <div
@@ -461,6 +472,10 @@ export default function LabelLayoutPanel() {
                       : <TecidoPreview wPx={wPx} hPx={hPx} fs={fs} has={has} borderWidth={borderWidth} borderStyle={borderStyle} borderRadius={borderRadius} padding={padding} margin={margin} marginY={marginY} offsetX={offsetX} />
                     }
                   </div>
+                </div>
+                <div className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/40 text-[9px] font-mono opacity-80">
+                  <span className="inline-block w-3 h-[2px] bg-foreground/70" />
+                  {Math.round(10 * fit)}px ≈ 10mm
                 </div>
               </div>
 
