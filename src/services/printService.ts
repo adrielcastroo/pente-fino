@@ -713,21 +713,25 @@ function buildTecidoBrowserPage(data: TecidoLabelData, labelSettings: LabelSetti
   const orientation = labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
   const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
-  const offsetMm = labelSettings.printOffsetXMm ?? 0;
-  const maxOffsetPx = wPx - 1;
-  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
-  const innerWpx = wPx - Math.abs(offsetPx);
-  const leftPx = offsetPx > 0 ? offsetPx : 0;
-  const rightPx = offsetPx < 0 ? -offsetPx : 0;
+  const offsetXPx = (labelSettings.printOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetYPx = (labelSettings.printOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  const appearance = {
+    borderWidth: labelSettings.borderWidth ?? 4,
+    borderStyle: labelSettings.borderStyle ?? 'solid',
+    borderRadius: labelSettings.borderRadius ?? 0,
+    padding: labelSettings.padding ?? 0,
+    margin: labelSettings.margin ?? 0,
+    marginY: labelSettings.marginY ?? 0,
+  };
 
   return {
     widthMm: w,
     heightMm: h,
     basePx: { w: wPx, h: hPx },
-    element: createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
-      createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
-      createElement(TecidoPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
-      createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+    element: createElement('div', { style: { position: 'relative', width: `${wPx}px`, height: `${hPx}px`, background: '#fff', overflow: 'hidden' } },
+      createElement('div', { style: { position: 'absolute', left: 0, top: 0, transform: `translate(${offsetXPx}px, ${offsetYPx}px)` } },
+        createElement(TecidoPreview, { wPx, hPx, fs: labelSettings.fontSize, has, data, ...appearance }),
+      ),
     ),
   };
 }
@@ -740,24 +744,29 @@ function buildMotorBrowserPage(data: MotorLabelData, labelSettings: LabelSetting
   const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
   const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
-  const offsetMm = labelSettings.motorPrintOffsetXMm ?? 0;
-  const maxOffsetPx = wPx - 1;
-  const offsetPx = Math.max(-maxOffsetPx, Math.min(offsetMm * LABEL_PX_PER_MM, maxOffsetPx));
-  const innerWpx = wPx - Math.abs(offsetPx);
-  const leftPx = offsetPx > 0 ? offsetPx : 0;
-  const rightPx = offsetPx < 0 ? -offsetPx : 0;
+  const offsetXPx = (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetYPx = (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  const appearance = {
+    borderWidth: labelSettings.motorBorderWidth ?? 2,
+    borderStyle: labelSettings.motorBorderStyle ?? 'solid',
+    borderRadius: labelSettings.motorBorderRadius ?? 0,
+    padding: labelSettings.motorPadding ?? 0,
+    margin: labelSettings.motorMargin ?? 0,
+    marginY: labelSettings.motorMarginY ?? 0,
+  };
 
   return {
     widthMm: w,
     heightMm: h,
     basePx: { w: wPx, h: hPx },
-    element: createElement('div', { style: { display: 'flex', width: `${wPx}px`, height: `${hPx}px`, background: '#fff' } },
-      createElement('div', { style: { width: `${leftPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
-      createElement(MotorPreview, { wPx: innerWpx, hPx, fs: labelSettings.fontSize, has, data }),
-      createElement('div', { style: { width: `${rightPx}px`, height: `${hPx}px`, flexShrink: 0, background: '#fff' } }),
+    element: createElement('div', { style: { position: 'relative', width: `${wPx}px`, height: `${hPx}px`, background: '#fff', overflow: 'hidden' } },
+      createElement('div', { style: { position: 'absolute', left: 0, top: 0, transform: `translate(${offsetXPx}px, ${offsetYPx}px)` } },
+        createElement(MotorPreview, { wPx, hPx, fs: labelSettings.fontSize, has, data, ...appearance }),
+      ),
     ),
   };
 }
+
 
 function collectPrintableStyles(): string {
   if (typeof document === 'undefined') return '';
