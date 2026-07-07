@@ -415,7 +415,7 @@ function getConferenceFolderName(conf: Conference): string {
   return conf.name;
 }
 
-function downloadConferenceExcel(conf: Conference) {
+async function downloadConferenceExcel(conf: Conference) {
   const isMotorControle = conf.registros.some(r => r.modoOrigem === 'motor' || r.modoOrigem === 'controle');
   
   if (isMotorControle) {
@@ -427,23 +427,27 @@ function downloadConferenceExcel(conf: Conference) {
 
   const columns = getRegistroColumns(conf.registros, conf.registros[0]?.modoOrigem === 'openrouter' ? 'openrouter' : conf.registros[0]?.modoOrigem === 'diversos' ? 'diversos' : 'manual');
   const folderName = getConferenceFolderName(conf);
-  const headers = columns.map(c => c.label);
-  const data = conf.registros.map(r => columns.map(c => {
-    switch (c.key) {
-      case 'item': return r.item || '';
-      case 'nf': return r.nf || '';
-      case 'processo': return r.processo || '';
-      case 'm2': return r.m2 > 0 ? r.m2 : '';
-      case 'mLinear': return r.mLinear > 0 ? r.mLinear : '';
-      case 'largura': return r.largura > 0 ? r.largura : '';
-      case 'lote': return r.lote || '';
-      case 'endereco': return r.endereco || '';
-      case 'loteSistema': return r.loteSistema || '';
-      case 'posicao': return r.posicao || '';
-      default: return '';
-    }
-  }));
-  const columnWidths = columns.map(c => c.width);
+  const resolveCodigoInterno = await itensCadastroService.buildCodigoInternoResolver();
+  const headers = ['Código Interno', ...columns.map(c => c.label)];
+  const data = conf.registros.map(r => {
+    const row = columns.map(c => {
+      switch (c.key) {
+        case 'item': return r.item || '';
+        case 'nf': return r.nf || '';
+        case 'processo': return r.processo || '';
+        case 'm2': return r.m2 > 0 ? r.m2 : '';
+        case 'mLinear': return r.mLinear > 0 ? r.mLinear : '';
+        case 'largura': return r.largura > 0 ? r.largura : '';
+        case 'lote': return r.lote || '';
+        case 'endereco': return r.endereco || '';
+        case 'loteSistema': return r.loteSistema || '';
+        case 'posicao': return r.posicao || '';
+        default: return '';
+      }
+    });
+    return [resolveCodigoInterno(r.item || ''), ...row];
+  });
+  const columnWidths = [18, ...columns.map(c => c.width)];
   const fileName = `conferencia_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}`;
   exportConferenceToExcel(headers, data, fileName, columnWidths);
 }
