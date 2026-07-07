@@ -9,6 +9,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { FolderOpen, ChevronDown, Trash2, Pencil, CheckCircle2, Search, Plus, X, Download, Printer } from 'lucide-react';
 import { RequireRole } from '@/components/auth/RequireRole';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
+import { itensCadastroService } from '@/services/itensCadastroService';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
