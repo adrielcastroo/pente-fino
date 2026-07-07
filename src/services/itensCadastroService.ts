@@ -108,6 +108,26 @@ export const itensCadastroService = {
     return (data as ItemCadastro) || null;
   },
 
+  /**
+   * Fallback: procura um item cadastrado cuja descrição bata (após normalização
+   * simples de espaços/caixa) com o texto informado. Útil quando o campo `item`
+   * de um registro já foi substituído pela descrição (backfill do trigger).
+   */
+  async findByDescricao(descricao: string): Promise<ItemCadastro | null> {
+    const q = (descricao || '').trim();
+    if (!q) return null;
+    const { data, error } = await supabase
+      .from('itens_cadastro')
+      .select('*')
+      .ilike('descricao', q)
+      .limit(1)
+      .maybeSingle();
+    if (error && (error as any).code !== 'PGRST116') throw error;
+    return (data as ItemCadastro) || null;
+  },
+
+
+
 
   async upsert(input: ItemCadastroInput, opts?: { changedField?: string | null; isEdit?: boolean }): Promise<ItemCadastro> {
     const base = prepare(input);
