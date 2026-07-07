@@ -177,6 +177,21 @@ export default function EstoquePage() {
     setFormData({ activeTab: 'estoque' });
   }, [setFormData]);
 
+  // Atalho "/" para focar a busca (ignora quando já está em input/textarea).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (t as any)?.isContentEditable) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const posicoes = posicoesForActiveTec;
   // totalSlots is constant — compute once at module scope below
   const totalSlots = TOTAL_SLOTS;
