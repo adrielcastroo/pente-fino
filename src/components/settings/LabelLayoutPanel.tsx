@@ -142,8 +142,8 @@ export default function LabelLayoutPanel() {
   const wPx = (labelSettings.orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
   const hPx = (labelSettings.orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
   const fs = labelSettings.fontSize;
-  const offsetPx = Math.min(Math.max(0, offsetMm) * LABEL_PX_PER_MM, wPx - 1);
-  const innerWpx = wPx - offsetPx;
+  const offsetXPx = offsetMm * LABEL_PX_PER_MM;
+  const offsetYPx = offsetYMm * LABEL_PX_PER_MM;
 
   const previewBoxRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(1);
