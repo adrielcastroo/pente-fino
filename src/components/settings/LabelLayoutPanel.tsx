@@ -263,32 +263,53 @@ export default function LabelLayoutPanel() {
                   </div>
                   <div className="space-y-2 pt-2">
                     <Label className="text-xs font-bold">Offset de impressão (mm)</Label>
-                    <div className="grid grid-cols-2 gap-2 max-w-xs">
+                    <div className="grid grid-cols-2 gap-3 max-w-md">
                       <div className="space-y-1">
-                        <span className="text-[10px] opacity-70">Eixo X (← →)</span>
+                        <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-70">
+                          Eixo X — horizontal
+                        </span>
                         <Input
                           type="number"
                           step="0.5"
+                          min={-50}
+                          max={50}
+                          inputMode="decimal"
                           value={offsetMm}
                           onChange={(e) => updateOffset(Number(e.target.value))}
-                          className="h-9"
+                          placeholder="0"
+                          className="h-9 font-mono"
                         />
+                        <p className="text-[10px] leading-tight opacity-70">
+                          <span className="font-semibold text-foreground">−</span> desloca para a <b>esquerda ←</b><br />
+                          <span className="font-semibold text-foreground">+</span> desloca para a <b>direita →</b>
+                        </p>
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[10px] opacity-70">Eixo Y (↑ ↓)</span>
+                        <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-70">
+                          Eixo Y — vertical
+                        </span>
                         <Input
                           type="number"
                           step="0.5"
+                          min={-50}
+                          max={50}
+                          inputMode="decimal"
                           value={offsetYMm}
                           onChange={(e) => updateOffsetY(Number(e.target.value))}
-                          className="h-9"
+                          placeholder="0"
+                          className="h-9 font-mono"
                         />
+                        <p className="text-[10px] leading-tight opacity-70">
+                          <span className="font-semibold text-foreground">−</span> desloca para <b>cima ↑</b><br />
+                          <span className="font-semibold text-foreground">+</span> desloca para <b>baixo ↓</b>
+                        </p>
                       </div>
                     </div>
-                    <p className="text-[10px] opacity-60 leading-tight">
-                      Desloca a etiqueta sem deformá-la. Negativo = esquerda/topo, positivo = direita/base.
+                    <p className="text-[10px] opacity-60 leading-tight pt-1">
+                      Use valores negativos (ex: <span className="font-mono">-2.5</span>) para corrigir alinhamento sem deformar a etiqueta.
                     </p>
                   </div>
+
                   <WebhookUrlEditor />
 
                 </CardContent>
