@@ -71,6 +71,9 @@ export default function LabelLayoutPanel() {
   const offsetMm = isMotor
     ? (labelSettings.motorPrintOffsetXMm ?? -5)
     : (labelSettings.printOffsetXMm ?? -5);
+  const offsetYMm = isMotor
+    ? (labelSettings.motorPrintOffsetYMm ?? 0)
+    : (labelSettings.printOffsetYMm ?? 0);
   const availableFields = isMotor ? MOTOR_FIELDS : TECIDO_FIELDS;
   const has = (id: string) => fields.includes(id);
 
