@@ -299,6 +299,7 @@ export default function LabelLayoutPanel() {
                   </div>
 
                   <WebhookUrlEditor />
+                  <SilentPrintPanel />
 
                 </CardContent>
               </Card>
