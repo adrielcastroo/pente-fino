@@ -268,16 +268,10 @@ export default function LabelLayoutPanel() {
                         <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-70">
                           Eixo X — horizontal
                         </span>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          min={-50}
-                          max={50}
-                          inputMode="decimal"
+                        <OffsetInput
                           value={offsetMm}
-                          onChange={(e) => updateOffset(Number(e.target.value))}
-                          placeholder="0"
-                          className="h-9 font-mono"
+                          onChange={updateOffset}
+                          ariaLabel="Offset X em milímetros"
                         />
                         <p className="text-[10px] leading-tight opacity-70">
                           <span className="font-semibold text-foreground">−</span> desloca para a <b>esquerda ←</b><br />
@@ -288,16 +282,10 @@ export default function LabelLayoutPanel() {
                         <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-70">
                           Eixo Y — vertical
                         </span>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          min={-50}
-                          max={50}
-                          inputMode="decimal"
+                        <OffsetInput
                           value={offsetYMm}
-                          onChange={(e) => updateOffsetY(Number(e.target.value))}
-                          placeholder="0"
-                          className="h-9 font-mono"
+                          onChange={updateOffsetY}
+                          ariaLabel="Offset Y em milímetros"
                         />
                         <p className="text-[10px] leading-tight opacity-70">
                           <span className="font-semibold text-foreground">−</span> desloca para <b>cima ↑</b><br />
@@ -306,7 +294,7 @@ export default function LabelLayoutPanel() {
                       </div>
                     </div>
                     <p className="text-[10px] opacity-60 leading-tight pt-1">
-                      Use valores negativos (ex: <span className="font-mono">-2.5</span>) para corrigir alinhamento sem deformar a etiqueta.
+                      Use os botões <b>−</b> / <b>+</b> para ajuste fino de <span className="font-mono">0,5mm</span>, ou digite direto (aceita negativos, ex: <span className="font-mono">-2.5</span>). Setas ↑/↓ do teclado também ajustam.
                     </p>
                   </div>
 
