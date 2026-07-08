@@ -254,11 +254,14 @@ export default function RightPanel() {
 
   const trimmedQuery = useMemo(() => searchQuery.toLowerCase().trim(), [searchQuery]);
 
+  const isMotorControleMode = currentMode === 'motor' || currentMode === 'controle';
+  const isTecidoTable = activeTab === 'tecido' && !isMotorControleMode;
+
   const sortedRows = useMemo(() => {
-    if (!trimmedQuery && (!sortBy || !SORT_MAP[sortBy])) {
+    if (!trimmedQuery && (!sortBy || !SORT_MAP[sortBy]) && !isTecidoTable) {
       return registros;
     }
-    
+
     let result: Registro[];
     if (trimmedQuery) {
       result = [];
@@ -277,16 +280,32 @@ export default function RightPanel() {
     } else {
       result = [...registros];
     }
-    
+
     if (sortBy && SORT_MAP[sortBy]) {
       result.sort(SORT_MAP[sortBy]);
+    } else if (isTecidoTable) {
+      // Tecido: mais recentes primeiro (novos são appended no store)
+      result.reverse();
     }
     return result;
-  }, [registros, trimmedQuery, sortBy]);
+  }, [registros, trimmedQuery, sortBy, isTecidoTable]);
+
+  // Reset paginação do tecido quando dataset muda
+  useEffect(() => {
+    setTecidoPage(0);
+  }, [trimmedQuery, sortBy, isTecidoTable]);
+
+  const tecidoPageCount = isTecidoTable
+    ? Math.max(1, Math.ceil(sortedRows.length / TECIDO_PAGE_SIZE))
+    : 1;
 
   const pagedRows = useMemo(() => {
+    if (isTecidoTable) {
+      const start = tecidoPage * TECIDO_PAGE_SIZE;
+      return sortedRows.slice(start, start + TECIDO_PAGE_SIZE);
+    }
     return sortedRows.length > visibleCount ? sortedRows.slice(0, visibleCount) : sortedRows;
-  }, [sortedRows, visibleCount]);
+  }, [sortedRows, visibleCount, isTecidoTable, tecidoPage]);
 
   const totals = useMemo(() => {
     let ml = 0, m2 = 0, qtd = 0;
