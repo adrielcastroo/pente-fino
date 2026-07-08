@@ -680,7 +680,9 @@ export async function printMotorLabel(
       qrLoteSku: `${input.lote};${resolved.codigoInterno}`,
     };
 
-    const rendered = await renderMotorLabel(data, labelSettings);
+    const rendered = await renderMotorLabel(data, labelSettings, {
+      applyPrintOffset: resolvePrintMethod(labelSettings) === 'webhook',
+    });
     await dispatchPrint(labelSettings, {
       type: 'motor',
       title: `Etiqueta ${input.item}`,
