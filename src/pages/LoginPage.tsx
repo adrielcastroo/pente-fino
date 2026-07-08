@@ -450,8 +450,8 @@ export default function LoginPage() {
           <p className="text-center text-[10px] text-muted-foreground mt-8">
             © {new Date().getFullYear()} Sistema Pente Fino. Todos os direitos reservados.
           </p>
-        </div>
       </div>
+
 
       <Dialog open={guestDialogOpen} onOpenChange={setGuestDialogOpen}>
         <DialogContent className="sm:max-w-[420px] max-h-[90vh] overflow-y-auto">
