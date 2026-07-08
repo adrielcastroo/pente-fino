@@ -25,7 +25,7 @@ import AvariaForm, { AvariaTipo } from '@/components/madeira/AvariaForm';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+
 
 const VISION_PROMPT = `Você é um especialista em leitura de etiquetas de rolos de tecido. Analise a imagem e extraia:
 
@@ -1340,22 +1340,35 @@ export const LeftPanel = memo(function LeftPanel() {
               </div>
             )}
 
-            {/* Cortina: chave seletora M² / M Linear */}
+            {/* Cortina: chave seletora M² / M Linear — padrão idêntico ao Coulisse */}
             {isCortina && (
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Tipo de Metragem</label>
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
-                  <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${cortinaMetragem === 'm2' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <div className="flex items-center gap-1.5 h-4">
+                  <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Unidade de Metragem</label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCortinaMetragem('m2')}
+                    className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
+                      !cortinaUsesMLinear
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    }`}
+                  >
                     M²
-                  </span>
-                  <Switch
-                    checked={cortinaMetragem === 'mlinear'}
-                    onCheckedChange={(checked) => setCortinaMetragem(checked ? 'mlinear' : 'm2')}
-                    aria-label="Alternar tipo de metragem"
-                  />
-                  <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${cortinaMetragem === 'mlinear' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    M Linear
-                  </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCortinaMetragem('mlinear')}
+                    className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
+                      cortinaUsesMLinear
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    }`}
+                  >
+                    LINEAR
+                  </button>
                 </div>
               </div>
             )}
