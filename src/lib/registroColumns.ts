@@ -25,16 +25,16 @@ const COLUMN_MAP: Record<RegistroColumnKey, RegistroColumn> = {
 };
 
 const LAYOUTS = {
-  coulisse: ['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema'],
-  ia: ['item', 'largura', 'mLinear', 'endereco', 'posicao', 'loteSistema'],
-  rolo: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema'],
-  cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'posicao', 'loteSistema'],
+  coulisse: ['item', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
+  ia: ['item', 'largura', 'mLinear', 'endereco', 'loteSistema'],
+  rolo: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
+  cortina: ['item', 'nf', 'largura', 'm2', 'mLinear', 'lote', 'endereco', 'loteSistema'],
   celular: ['item', 'processo', 'm2', 'mLinear', 'lote', 'loteSistema'],
   pvt: ['item', 'nf', 'mLinear', 'lote'],
   madeira: ['item', 'processo', 'quantidade', 'lote', 'loteSistema'],
   motor: ['item', 'nf', 'processo', 'lote', 'quantidade', 'loteSistema'],
   controle: ['item', 'nf', 'lote', 'quantidade', 'loteSistema'],
-  etiq_pronta: ['item', 'lote', 'endereco', 'posicao', 'processo', 'mLinear'],
+  etiq_pronta: ['item', 'lote', 'endereco', 'processo', 'mLinear'],
 } satisfies Record<string, RegistroColumnKey[]>;
 
 function normalizeMode(mode?: string | null, fallback: RegistroMode = 'manual'): RegistroMode {
