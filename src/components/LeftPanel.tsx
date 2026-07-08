@@ -1259,15 +1259,13 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
                   <label htmlFor="item-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Item / Referência</label>
-                  {(isPVT || isMadeira || isRolo) && (
-                    <button 
-                      onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
-                      className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
-                      title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
-                    >
-                      {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()}
+                    className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
                 </div>
               <div className="relative">
                 <input
