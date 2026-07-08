@@ -122,6 +122,7 @@ export interface AppState {
   setLockItem: (lock: boolean) => void;
   setLockedItem: (i: string) => void;
   setLockLote: (lock: boolean) => void;
+  setLockCoulisseMetragem: (lock: boolean) => void;
   setLockedLote: (l: string) => void;
   setLockMetragem: (lock: boolean) => void;
   setLockedMetragem: (m: string) => void;
