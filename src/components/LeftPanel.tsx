@@ -1000,7 +1000,9 @@ export const LeftPanel = memo(function LeftPanel() {
       <div
         className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 lg:pb-16"
         style={{
-          padding: 'clamp(0.75rem, 3vw, 1.5rem)',
+          paddingTop: '1rem',
+          paddingLeft: 'clamp(0.75rem, 3vw, 1.5rem)',
+          paddingRight: 'clamp(0.75rem, 3vw, 1.5rem)',
           paddingBottom: 'clamp(6rem, 12vw, 8rem)',
           rowGap: 'clamp(0.75rem, 2.5vw, 1.25rem)',
           display: 'flex',
