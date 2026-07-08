@@ -353,6 +353,19 @@ async function sendToWebhook(
 
   recordOk();
 }
+/**
+ * Determina qual método de impressão será realmente usado com base nas
+ * preferências. Usado para decidir se aplicamos os offsets de alinhamento
+ * físico da impressora térmica dentro do PNG — offsets só fazem sentido
+ * quando a etiqueta vai para o n8n/impressora térmica; no navegador eles
+ * apenas deslocam o conteúdo e causam recorte.
+ */
+export function resolvePrintMethod(cfg: PrintConfig): PrintMethod {
+  const browserDisabled = typeof localStorage !== 'undefined'
+    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  const hasWebhook = !!resolveWebhookUrl();
+  return cfg.printMethod || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
+}
 
 
 async function dispatchPrint(
@@ -501,9 +514,12 @@ async function printImageInBrowser(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const safeTitle = title.replace(/[<>&"']/g, '');
+    // Fidelidade extrema: page size = tamanho físico da etiqueta, sem margens,
+    // imagem preenchendo 100% da página SEM stretch (object-fit: contain
+    // mantém o aspect ratio caso o driver decida escalar).
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
       @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; }
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body {
         margin: 0 !important;
         padding: 0 !important;
@@ -513,18 +529,25 @@ async function printImageInBrowser(
         overflow: hidden;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
       img#lbl {
         display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
         width: ${widthMm}mm;
         height: ${heightMm}mm;
         margin: 0;
         padding: 0;
         border: 0;
-        image-rendering: pixelated;
+        object-fit: fill;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
       @media print {
         html, body { width: ${widthMm}mm; height: ${heightMm}mm; }
+        img#lbl { width: ${widthMm}mm; height: ${heightMm}mm; }
       }
     </style></head><body><img id="lbl" src="${dataUrl}"></body></html>`;
 
@@ -635,7 +658,9 @@ export async function printTecidoLabel(
       qrLote: loteText,
     };
 
-    const rendered = await renderTecidoLabel(data, labelSettings);
+    const rendered = await renderTecidoLabel(data, labelSettings, {
+      applyPrintOffset: resolvePrintMethod(labelSettings) === 'webhook',
+    });
     await dispatchPrint(labelSettings, {
       type: 'tecido',
       title: `Etiqueta ${input.item}`,
@@ -678,7 +703,9 @@ export async function printMotorLabel(
       qrLoteSku: `${input.lote};${resolved.codigoInterno}`,
     };
 
-    const rendered = await renderMotorLabel(data, labelSettings);
+    const rendered = await renderMotorLabel(data, labelSettings, {
+      applyPrintOffset: resolvePrintMethod(labelSettings) === 'webhook',
+    });
     await dispatchPrint(labelSettings, {
       type: 'motor',
       title: `Etiqueta ${input.item}`,
@@ -728,6 +755,10 @@ function buildTecidoBrowserPage(data: TecidoLabelData, labelSettings: LabelSetti
   const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
   const offsetXPx = (labelSettings.printOffsetXMm ?? 0) * LABEL_PX_PER_MM;
   const offsetYPx = (labelSettings.printOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  // No batch pelo navegador, offsets físicos causam recorte — zeramos.
+  const applyOffset = resolvePrintMethod(labelSettings) === 'webhook';
+  const finalOffsetXPx = applyOffset ? offsetXPx : 0;
+  const finalOffsetYPx = applyOffset ? offsetYPx : 0;
   const appearance = {
     borderWidth: labelSettings.borderWidth ?? 4,
     borderStyle: labelSettings.borderStyle ?? 'solid',
@@ -742,7 +773,7 @@ function buildTecidoBrowserPage(data: TecidoLabelData, labelSettings: LabelSetti
     heightMm: h,
     basePx: { w: wPx, h: hPx },
     element: createElement('div', { style: { position: 'relative', width: `${wPx}px`, height: `${hPx}px`, background: '#fff', overflow: 'hidden' } },
-      createElement('div', { style: { position: 'absolute', left: 0, top: 0, transform: `translate(${offsetXPx}px, ${offsetYPx}px)` } },
+      createElement('div', { style: { position: 'absolute', left: 0, top: 0, transform: `translate(${finalOffsetXPx}px, ${finalOffsetYPx}px)` } },
         createElement(TecidoPreview, { wPx, hPx, fs: labelSettings.fontSize, has, data, ...appearance }),
       ),
     ),
@@ -757,8 +788,9 @@ function buildMotorBrowserPage(data: MotorLabelData, labelSettings: LabelSetting
   const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
   const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
-  const offsetXPx = (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
-  const offsetYPx = (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  const applyMotorOffset = resolvePrintMethod(labelSettings) === 'webhook';
+  const offsetXPx = applyMotorOffset ? (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM : 0;
+  const offsetYPx = applyMotorOffset ? (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM : 0;
   const appearance = {
     borderWidth: labelSettings.motorBorderWidth ?? 2,
     borderStyle: labelSettings.motorBorderStyle ?? 'solid',
