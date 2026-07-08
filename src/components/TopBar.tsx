@@ -210,17 +210,17 @@ const TopBar = memo(function TopBar() {
             return (
               <Link
                 to="/estoque/minha-atividade"
-                className="hidden sm:flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors group"
+                className="flex items-center gap-2 pl-1 pr-1 sm:pr-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors group shrink-0"
                 aria-label="Ver minha atividade do dia"
               >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-muted ring-1 ring-border/60 group-hover:ring-primary/40 transition-shadow flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted ring-1 ring-border/60 group-hover:ring-primary/40 transition-shadow flex items-center justify-center shrink-0">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <span className="text-[10px] font-bold text-muted-foreground tracking-tight">{initials}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground tracking-tight">{initials}</span>
                   )}
                 </div>
-                <span className="text-xs font-semibold text-foreground/90 truncate max-w-[80px] md:max-w-[120px]">
+                <span className="hidden sm:inline text-xs font-semibold text-foreground/90 truncate max-w-[80px] md:max-w-[120px]">
                   {displayName}
                 </span>
               </Link>
