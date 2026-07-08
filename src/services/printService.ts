@@ -745,6 +745,10 @@ function buildTecidoBrowserPage(data: TecidoLabelData, labelSettings: LabelSetti
   const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
   const offsetXPx = (labelSettings.printOffsetXMm ?? 0) * LABEL_PX_PER_MM;
   const offsetYPx = (labelSettings.printOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  // No batch pelo navegador, offsets físicos causam recorte — zeramos.
+  const applyOffset = resolvePrintMethod(labelSettings) === 'webhook';
+  const finalOffsetXPx = applyOffset ? offsetXPx : 0;
+  const finalOffsetYPx = applyOffset ? offsetYPx : 0;
   const appearance = {
     borderWidth: labelSettings.borderWidth ?? 4,
     borderStyle: labelSettings.borderStyle ?? 'solid',
