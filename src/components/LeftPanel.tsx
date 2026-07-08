@@ -1315,8 +1315,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   <label htmlFor="largura-cortina" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Largura do Tecido (m)</label>
                   <button
                     onClick={toggleLockCortinaLargura}
-                    className={`transition-colors ${lockCortinaLargura ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
-                    title={lockCortinaLargura ? 'Largura travada' : 'Travar largura'}
+                    className={`transition-colors ${lockCortinaLargura ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={lockCortinaLargura ? 'Campo travado' : 'Travar campo'}
                   >
                     {lockCortinaLargura ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
@@ -1327,8 +1327,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => setCortinaLargura(e.target.value)}
                   onBlur={() => { if (lockCortinaLargura) setLockedCortinaLargura(cortinaLargura); }}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                  className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
-                    lockCortinaLargura ? 'bg-primary/10 border-primary/40 text-primary shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                  className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
+                    lockCortinaLargura ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40'
                   }`}
                   placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                   readOnly={lockCortinaLargura && !!lockedCortinaLargura}
