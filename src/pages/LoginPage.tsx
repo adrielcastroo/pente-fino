@@ -189,21 +189,20 @@ export default function LoginPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <Card className={`border-border/40 shadow-2xl rounded-md overflow-hidden ${isLow ? 'bg-card' : 'bg-card/80 backdrop-blur-md'}`}>
-              <div className="h-1 bg-primary w-full opacity-80" />
-              
-              <CardHeader className="space-y-1 pb-4 px-4 sm:px-6">
-                <CardTitle className="text-xl sm:text-2xl font-bold">
-                  {mode === 'login' && 'Entrar'}
-                  {mode === 'signup' && 'Criar Conta'}
-                  {mode === 'forgot' && 'Recuperar Senha'}
+            <Card className="border-border/60 shadow-lg rounded-xl overflow-hidden bg-card">
+              <CardHeader className="space-y-1 pb-4 pt-6 px-5 sm:px-6">
+                <CardTitle className="text-xl font-semibold tracking-tight">
+                  {mode === 'login' && 'Bem-vindo de volta'}
+                  {mode === 'signup' && 'Criar conta'}
+                  {mode === 'forgot' && 'Recuperar senha'}
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
-                  {mode === 'login' && 'Acesse sua conta para continuar'}
+                  {mode === 'login' && 'Entre na sua conta para continuar'}
                   {mode === 'signup' && 'Cadastre-se para começar a usar'}
-                  {mode === 'forgot' && 'Enviaremos um link para seu email'}
+                  {mode === 'forgot' && 'Enviaremos um link para seu e-mail'}
                 </CardDescription>
               </CardHeader>
+
 
               <CardContent className="px-4 sm:px-6">
                 <AnimatePresence mode="wait">
