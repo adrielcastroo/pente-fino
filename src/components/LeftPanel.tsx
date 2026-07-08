@@ -947,7 +947,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const showDropzone = currentMode === 'openrouter';
   const isTecidoTab = formData.activeTab === 'tecido';
-  const hasTopUtilityActions = !isAI && (undoStack.length > 0 || item || nf || m2 || lote || endereco || processo);
+  const hasTopUtilityActions = !isAI && !!(item || nf || m2 || lote || endereco || processo);
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
