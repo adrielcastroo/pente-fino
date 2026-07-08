@@ -634,7 +634,6 @@ export default function RightPanel() {
                 ))}
               </tbody>
             </table>
-            </>
           )}
 
           {isTecidoTable && sortedRows.length > TECIDO_PAGE_SIZE && (
