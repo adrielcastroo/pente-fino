@@ -228,13 +228,13 @@ export default function RightPanel() {
   })));
 
   const { isLow } = usePerformance();
-  
-  
-  
+
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [visibleCount, setVisibleCount] = useState(isLow ? 50 : 200);
+  const [tecidoPage, setTecidoPage] = useState(0);
+  const TECIDO_PAGE_SIZE = 10;
 
   // Sync local search with store if needed
   useEffect(() => {
