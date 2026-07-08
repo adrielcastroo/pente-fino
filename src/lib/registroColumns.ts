@@ -132,6 +132,6 @@ export function getRegistroColumns(rows: Registro[], fallbackMode: RegistroMode 
     return layoutFromMode(firstMode).map(key => COLUMN_MAP[key]);
   }
 
-  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'posicao', 'loteSistema'];
+  const mixedOrder: RegistroColumnKey[] = ['item', 'nf', 'processo', 'm2', 'largura', 'mLinear', 'quantidade', 'lote', 'endereco', 'loteSistema'];
   return mixedOrder.filter(key => visibility[key]).map(key => COLUMN_MAP[key]);
 }
