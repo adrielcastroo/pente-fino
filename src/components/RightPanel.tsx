@@ -101,7 +101,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors whitespace-nowrap ${columnKey === 'item' ? 'font-bold text-foreground text-sm sm:text-base tracking-tight' : isSecondary ? 'font-mono text-muted-foreground/60 text-[11px] sm:text-xs group-hover:text-muted-foreground' : 'font-mono text-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'tabular-nums' : ''} ${columnKey === 'loteSistema' ? 'min-w-[180px]' : ''} ${columnKey === 'mLinear' || columnKey === 'quantidade' ? 'font-semibold' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors whitespace-nowrap border-r border-border/20 ${columnKey === 'item' ? 'font-bold text-foreground text-sm sm:text-base tracking-tight' : isSecondary ? 'font-mono text-muted-foreground/60 text-[11px] sm:text-xs group-hover:text-muted-foreground' : 'font-mono text-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'tabular-nums' : ''} ${columnKey === 'loteSistema' ? 'min-w-[180px]' : ''} ${columnKey === 'mLinear' || columnKey === 'quantidade' ? 'font-semibold' : ''} ${className || ''}`}
     >
       {content}
     </td>
@@ -131,7 +131,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
 
   return (
     <tr className={`group hover:bg-primary/[0.03] border-b border-border/30 ${r.isNew ? 'bg-primary/[0.08] animate-pulse-subtle' : ''} transition-all duration-300`}>
-      <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-semibold tabular-nums">{i + 1}</td>
+      <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-semibold tabular-nums border-r border-border/20">{i + 1}</td>
       {columns.map((column: any) => {
 
 
@@ -593,12 +593,12 @@ export default function RightPanel() {
             <table className="w-full border-separate border-spacing-0 table-auto min-w-[720px]">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background/80 w-[40px] sm:w-[50px]">#</th>
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background/80 w-[40px] sm:w-[50px]">#</th>
                   {columns.map(column => {
                     return (
                       <th 
                         key={column.key} 
-                        className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background whitespace-nowrap"
+                        className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap"
                       >
                         {column.shortLabel || column.label}
                       </th>
