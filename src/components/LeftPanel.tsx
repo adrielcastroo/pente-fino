@@ -1077,27 +1077,30 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories */}
+        {/* Diversos categories — subordinate to the mode toggle above */}
         {isDiversos && (
-          <div className="flex p-1 rounded-md bg-muted/20 border border-border/40 gap-1 overflow-x-auto no-scrollbar">
-            {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => (
-              <button
-                key={tipo}
-                onClick={() => setDiversosTipo(tipo)}
-                className={`relative flex-1 min-w-[80px] min-h-[44px] rounded-md px-2 py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all duration-300`}
-              >
-                {diversosTipo === tipo && (
-                  <motion.div
-                    layoutId="tipo-bg"
-                    className="absolute inset-0 bg-primary rounded-md shadow-lg"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                  />
-                )}
-                <span className={`relative z-10 ${diversosTipo === tipo ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+          <div className="flex px-3 pt-1 gap-4 border-b border-border/40 -mt-1 overflow-x-auto no-scrollbar">
+            {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => {
+              const active = diversosTipo === tipo;
+              return (
+                <button
+                  key={tipo}
+                  onClick={() => setDiversosTipo(tipo)}
+                  className={`relative min-h-[36px] px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                    active ? 'text-primary' : 'text-muted-foreground/70 hover:text-foreground'
+                  }`}
+                >
                   {tipo}
-                </span>
-              </button>
-            ))}
+                  {active && (
+                    <motion.span
+                      layoutId="tipo-underline"
+                      className="absolute left-0 right-0 -bottom-px h-[2px] bg-primary rounded-full"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
