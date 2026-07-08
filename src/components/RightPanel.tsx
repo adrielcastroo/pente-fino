@@ -642,27 +642,6 @@ export default function RightPanel() {
                   />
                 ))}
               </tbody>
-              {sortedRows.length > 0 && (
-                <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-semibold font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 ">
-                    <td className="px-4 py-4">FIM</td>
-                    {columns.map(column => {
-                      const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
-                      const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : column.key === 'nf' ? "hidden lg:table-cell" : "hidden md:table-cell";
-                      
-                      return (
-                        <td key={column.key} className={`px-4 py-4 ${responsiveClass}`}>
-                          {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
-                          {column.key === 'mLinear' ? formatML(totals.ml) : ''}
-                          {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
-                          {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
-                        </td>
-                      );
-                    })}
-                    {showActions && <td className="px-4 py-4"></td>}
-                  </tr>
-                </tfoot>
-              )}
             </table>
             </>
           )}
