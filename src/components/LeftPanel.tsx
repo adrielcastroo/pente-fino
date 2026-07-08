@@ -50,6 +50,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockMadeiraEndereco, setLockMadeiraEndereco,
     lockMetragem: lockMetragemGlobal, setLockMetragem: setLockMetragemGlobal,
     lockedMetragem, setLockedMetragem,
+    lockCoulisseMetragem, setLockCoulisseMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
     formData, setFormData, resetFormData, labelSettings
   } = useAppStore(useShallow(s => ({
@@ -95,6 +96,8 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockMetragem: s.setLockMetragem,
     lockedMetragem: s.lockedMetragem,
     setLockedMetragem: s.setLockedMetragem,
+    lockCoulisseMetragem: s.lockCoulisseMetragem,
+    setLockCoulisseMetragem: s.setLockCoulisseMetragem,
     lockCortinaLargura: s.lockCortinaLargura,
     setLockCortinaLargura: s.setLockCortinaLargura,
     lockedCortinaLargura: s.lockedCortinaLargura,
@@ -1522,36 +1525,47 @@ export const LeftPanel = memo(function LeftPanel() {
                   </div>
                 )}
 
-                {/* Metragem Toggle - Modernized */}
+                {/* Unidade de Metragem */}
                 {(isRolo || isCoulisse) && (
                   <div className="space-y-1.5 sm:col-span-2">
-                    <div className="flex items-center justify-between gap-3 p-1 rounded-lg border border-border bg-muted/20">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-2">Unidade</span>
-                      <div className="flex bg-muted/40 p-1 rounded-lg gap-1">
-                        <button
-                          onClick={() => setCoulisseMetragem('m2')}
-                          className={`flex-1 min-w-[60px] py-1.5 text-[10px] font-bold rounded-md transition-all duration-300 transform active:scale-95 ${
-                            !coulisseUsesMLinear 
-                              ? 'bg-primary text-primary-foreground shadow-md scale-105' 
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                          }`}
-                        >
-                          M²
-                        </button>
-                        <button
-                          onClick={() => setCoulisseMetragem('mlinear')}
-                          className={`flex-1 min-w-[60px] py-1.5 text-[10px] font-bold rounded-md transition-all duration-300 transform active:scale-95 ${
-                            coulisseUsesMLinear 
-                              ? 'bg-primary text-primary-foreground shadow-md scale-105' 
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                          }`}
-                        >
-                          LINEAR
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-1.5 h-4">
+                      <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Unidade de Metragem</label>
+                      <button
+                        type="button"
+                        onClick={() => setLockCoulisseMetragem(!lockCoulisseMetragem)}
+                        className={`transition-colors ${lockCoulisseMetragem ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                        title={lockCoulisseMetragem ? 'Preferência travada — mantém a escolha entre registros' : 'Travar preferência'}
+                      >
+                        {lockCoulisseMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCoulisseMetragem('m2')}
+                        className={`h-11 rounded-lg border px-3 text-sm font-bold transition-colors active:scale-[0.98] ${
+                          !coulisseUsesMLinear
+                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                        }`}
+                      >
+                        M²
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCoulisseMetragem('mlinear')}
+                        className={`h-11 rounded-lg border px-3 text-sm font-bold transition-colors active:scale-[0.98] ${
+                          coulisseUsesMLinear
+                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                        }`}
+                      >
+                        LINEAR
+                      </button>
                     </div>
                   </div>
                 )}
+
 
                 {isAI ? (
                   <div className="space-y-1.5">

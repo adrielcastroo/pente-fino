@@ -73,6 +73,7 @@ export interface AppState {
   lockedLote: string;
   lockMetragem: boolean;
   lockedMetragem: string;
+  lockCoulisseMetragem: boolean;
   // Cortina locks
   lockCortinaLargura: boolean;
   lockedCortinaLargura: string;
@@ -121,6 +122,7 @@ export interface AppState {
   setLockItem: (lock: boolean) => void;
   setLockedItem: (i: string) => void;
   setLockLote: (lock: boolean) => void;
+  setLockCoulisseMetragem: (lock: boolean) => void;
   setLockedLote: (l: string) => void;
   setLockMetragem: (lock: boolean) => void;
   setLockedMetragem: (m: string) => void;
@@ -205,6 +207,7 @@ export const useAppStore = create<AppState>()(
       lockLote: false,
       lockedLote: '',
       lockMetragem: false,
+      lockCoulisseMetragem: true,
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
@@ -290,6 +293,7 @@ export const useAppStore = create<AppState>()(
       setLockLote: (lock) => set({ lockLote: lock }),
       setLockedLote: (l) => set({ lockedLote: l }),
       setLockMetragem: (lock) => set({ lockMetragem: lock }),
+      setLockCoulisseMetragem: (lock) => set({ lockCoulisseMetragem: lock }),
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
       setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
       setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
@@ -363,6 +367,7 @@ export const useAppStore = create<AppState>()(
           if (state.lockItem) newData.item = state.lockedItem;
           if (state.lockLote) newData.lote = state.lockedLote;
           if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
+          if (state.lockCoulisseMetragem) newData.coulisseMetragem = state.formData.coulisseMetragem;
           if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
         }
         
@@ -913,6 +918,7 @@ export const useAppStore = create<AppState>()(
         lockLote: state.lockLote,
         lockedLote: state.lockedLote,
         lockMetragem: state.lockMetragem,
+        lockCoulisseMetragem: state.lockCoulisseMetragem,
         lockedMetragem: state.lockedMetragem,
         lockCortinaLargura: state.lockCortinaLargura,
         lockedCortinaLargura: state.lockedCortinaLargura,
