@@ -514,9 +514,12 @@ async function printImageInBrowser(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const safeTitle = title.replace(/[<>&"']/g, '');
+    // Fidelidade extrema: page size = tamanho físico da etiqueta, sem margens,
+    // imagem preenchendo 100% da página SEM stretch (object-fit: contain
+    // mantém o aspect ratio caso o driver decida escalar).
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
       @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; }
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body {
         margin: 0 !important;
         padding: 0 !important;
@@ -526,18 +529,25 @@ async function printImageInBrowser(
         overflow: hidden;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
       img#lbl {
         display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
         width: ${widthMm}mm;
         height: ${heightMm}mm;
         margin: 0;
         padding: 0;
         border: 0;
-        image-rendering: pixelated;
+        object-fit: fill;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
       @media print {
         html, body { width: ${widthMm}mm; height: ${heightMm}mm; }
+        img#lbl { width: ${widthMm}mm; height: ${heightMm}mm; }
       }
     </style></head><body><img id="lbl" src="${dataUrl}"></body></html>`;
 
