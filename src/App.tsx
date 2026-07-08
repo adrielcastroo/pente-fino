@@ -49,6 +49,9 @@ const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
+const ComprasOpsPage = lazy(() => import("@/pages/compras/OpsPage"));
+const ComprasOpDetailPage = lazy(() => import("@/pages/compras/OpDetailPage"));
+
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
@@ -204,6 +207,10 @@ const App = () => (
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="/admin" element={<AdminPanelPage />} />
                   <Route path="/admin/n8n" element={<N8nMonitorPage />} />
+                  {/* ===== MÓDULO COMPRAS (mock/seed — sem backend ainda) ===== */}
+                  <Route path="/compras" element={<Navigate to="/compras/ops" replace />} />
+                  <Route path="/compras/ops" element={<ComprasOpsPage />} />
+                  <Route path="/compras/ops/:id" element={<ComprasOpDetailPage />} />
                 </Route>
                 <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
                 <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
