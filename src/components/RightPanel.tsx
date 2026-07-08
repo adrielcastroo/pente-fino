@@ -95,11 +95,12 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   }
 
   const isNumericLike = ['mLinear', 'm2', 'largura', 'quantidade', 'lote', 'nf', 'processo'].includes(columnKey);
+  const isSecondary = ['largura', 'nf', 'processo', 'lote'].includes(columnKey);
 
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-semibold text-foreground scale-100 group-hover:scale-[1.02] origin-left break-words' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'whitespace-nowrap' : ''} ${columnKey === 'loteSistema' ? 'whitespace-nowrap min-w-[180px]' : ''} ${columnKey === 'endereco' ? 'whitespace-nowrap' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors ${columnKey === 'item' ? 'font-bold text-foreground text-sm sm:text-base tracking-tight' : isSecondary ? 'font-mono text-muted-foreground/60 text-[11px] sm:text-xs group-hover:text-muted-foreground' : 'font-mono text-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'whitespace-nowrap tabular-nums' : ''} ${columnKey === 'loteSistema' ? 'whitespace-nowrap min-w-[180px]' : ''} ${columnKey === 'endereco' ? 'whitespace-nowrap' : ''} ${columnKey === 'mLinear' || columnKey === 'quantidade' ? 'font-semibold' : ''} ${className || ''}`}
     >
       {content}
     </td>
@@ -472,32 +473,32 @@ export default function RightPanel() {
         </div>
       </div>
 
-      {/* KPI strip — inspired by mockup */}
+      {/* KPI strip — compact */}
       {registros.length > 0 && (
-        <div className="flex-shrink-0 px-3 xs:px-4 py-3 bg-card/40 border-b border-border/40 min-w-0">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        <div className="flex-shrink-0 px-3 xs:px-4 py-2 bg-card/40 border-b border-border/40 min-w-0">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {[
-              { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Total de Registros', value: kpis.total.toString(), sub: 'Registros cadastrados' },
-              { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: 'Metragem Total (m²)', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml), sub: kpis.m2 > 0 ? 'Soma de m² conferidos' : 'Total em metros lineares' },
-              { icon: Layers3, color: 'text-purple-500', bg: 'bg-purple-500/10', label: 'Lotes Distintos', value: kpis.lotes.toString(), sub: 'Lotes únicos' },
-              { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-500/10', label: 'Última Atualização', value: kpis.lastTime, sub: kpis.lastDate },
+              { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Registros', value: kpis.total.toString() },
+              { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: kpis.m2 > 0 ? 'Total m²' : 'Total m Lin', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml) },
+              { icon: Layers3, color: 'text-purple-500', bg: 'bg-purple-500/10', label: 'Lotes', value: kpis.lotes.toString() },
+              { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-500/10', label: kpis.lastDate || 'Atualizado', value: kpis.lastTime },
             ].map((k, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 sm:gap-4 rounded-md border border-border/50 bg-background px-2.5 sm:px-4 py-2.5 sm:py-3.5 min-w-0 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                className="flex items-center gap-2 rounded-md border border-border/50 bg-background px-2.5 py-1.5 min-w-0 hover:border-primary/40 transition-colors group"
               >
-                <div className={`flex-shrink-0 w-9 h-9 sm:w-12 sm:h-12 rounded-md ${k.bg} ${k.color} flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}>
-                  <k.icon className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                <div className={`flex-shrink-0 w-7 h-7 rounded-md ${k.bg} ${k.color} flex items-center justify-center`}>
+                  <k.icon className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/50 truncate mb-0.5">{k.label}</span>
-                  <span className="text-base sm:text-xl font-semibold text-foreground leading-tight font-mono truncate">{k.value}</span>
-                  <span className="text-[10px] text-muted-foreground/60 font-bold truncate mt-0.5">{k.sub}</span>
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/60 truncate">{k.label}</span>
+                  <span className="text-sm sm:text-base font-semibold text-foreground font-mono truncate">{k.value}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
+
       )}
 
       <div className="flex-1 overflow-y-auto overflow-x-auto bg-background/20 custom-scrollbar relative min-h-0">
@@ -585,15 +586,7 @@ export default function RightPanel() {
                   </React.Fragment>
                 ))}
               </tbody>
-              {sortedRows.length > 0 && (
-                <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-semibold font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 ">
-                    <td className="px-4 py-4">{sortedRows.length} {sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}</td>
-                    <td className="px-4 py-4">{motorGroups.length} {motorGroups.length !== 1 ? 'CAIXAS' : 'CAIXA'}</td>
-                    {showActions && <td className="px-4 py-4"></td>}
-                  </tr>
-                </tfoot>
-              )}
+
             </table>
           ) : (
             <>
@@ -650,27 +643,6 @@ export default function RightPanel() {
                   />
                 ))}
               </tbody>
-              {sortedRows.length > 0 && (
-                <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-semibold font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 ">
-                    <td className="px-4 py-4">FIM</td>
-                    {columns.map(column => {
-                      const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
-                      const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : column.key === 'nf' ? "hidden lg:table-cell" : "hidden md:table-cell";
-                      
-                      return (
-                        <td key={column.key} className={`px-4 py-4 ${responsiveClass}`}>
-                          {column.key === 'item' ? `${sortedRows.length} ${sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}` : ''}
-                          {column.key === 'mLinear' ? formatML(totals.ml) : ''}
-                          {column.key === 'm2' ? (totals.m2 > 0 ? totals.m2.toFixed(1) + ' m²' : '') : ''}
-                          {column.key === 'quantidade' ? (totals.qtd > 0 ? `${totals.qtd} UND` : '') : ''}
-                        </td>
-                      );
-                    })}
-                    {showActions && <td className="px-4 py-4"></td>}
-                  </tr>
-                </tfoot>
-              )}
             </table>
             </>
           )}
