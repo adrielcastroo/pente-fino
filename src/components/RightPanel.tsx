@@ -1,5 +1,5 @@
 import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
-import TecidoCardsView from '@/components/tecido/TecidoCardsView';
+import TecidoCardsView, { type TecidoCardVariant } from '@/components/tecido/TecidoCardsView';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/store/useAppStore';
