@@ -1248,8 +1248,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   value={processo}
                   onChange={e => handleProcessoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                  className={`w-full h-14 lg:h-12 rounded-lg border px-3 text-base lg:text-sm font-mono transition-colors ${
-                    (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  className={`w-full h-14 lg:h-12 rounded-lg border px-3.5 text-base lg:text-sm font-mono transition-all duration-200 ${
+                    (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: 123456..."
                   autoComplete="off"
@@ -1282,8 +1282,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleItemChange(e.target.value)}
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                  className={`w-full h-14 lg:h-12 rounded-lg border px-3 text-base lg:text-sm font-mono transition-colors ${
-                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  className={`w-full h-14 lg:h-12 rounded-lg border px-3.5 text-base lg:text-sm font-mono transition-all duration-200 ${
+                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
@@ -1335,7 +1335,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onBlur={() => { if (lockCortinaLargura) setLockedCortinaLargura(cortinaLargura); }}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
-                    lockCortinaLargura ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    lockCortinaLargura ? 'bg-primary/10 border-primary/40 text-primary shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                   readOnly={lockCortinaLargura && !!lockedCortinaLargura}
@@ -1382,7 +1382,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleNfChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    lockNf ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                    lockNf ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="NF..."
                   autoComplete="off"
@@ -1412,7 +1412,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                     onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
                     className={`w-full h-11 rounded-lg border px-3 text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
-                      lockMadeiraLote ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'border-border/50 bg-muted/20 focus:border-primary'
+                      lockMadeiraLote ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                     }`}
                     readOnly={lockMadeiraLote && !!lote}
                     placeholder="Lote..." autoComplete="off"
@@ -1514,7 +1514,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       onChange={e => isAI ? setAiMLinear(e.target.value) : (isPVT || coulisseUsesMLinear || cortinaUsesMLinear) ? setDiversosMLinear(e.target.value) : setM2(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, isAI ? larguraRef : (isRolo ? manualLarguraRef : loteRef))}
                       className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
-                        (isPVT && lockMetragemGlobal) ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                        (isPVT && lockMetragemGlobal) ? 'bg-primary/10 border-primary/40 text-primary shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                       }`}
                       placeholder="0.0" autoComplete="off" inputMode="decimal"
                       readOnly={isPVT && lockMetragemGlobal && !!lockedMetragem}
@@ -1603,7 +1603,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
                       className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                        ((isPVT || isRolo) && lockLote) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                        ((isPVT || isRolo) && lockLote) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                       }`}
                       placeholder="Lote..." autoComplete="off"
                       readOnly={((isPVT || isRolo) && lockLote) && !!lockedLote}
@@ -1633,7 +1633,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleEnderecoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
-                    (isMadeira ? lockMadeiraEndereco : (isRolo && lockEndereco) || lockEndereco) ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400' : (enderecoError ? 'border-destructive bg-destructive/5' : 'bg-muted/20 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/10')
+                    (isMadeira ? lockMadeiraEndereco : (isRolo && lockEndereco) || lockEndereco) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : (enderecoError ? 'border-destructive bg-destructive/5' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none')
                   }`}
                   placeholder="TEC01.A.N03" autoComplete="off"
                   readOnly={(isMadeira ? lockMadeiraEndereco : lockEndereco) && !!(isMadeira ? endereco : lockedEndereco)}
