@@ -674,32 +674,37 @@ export default function EstoquePage() {
 
 
       {/* TEC Tabs */}
-      <div className="tec-tabs flex bg-card/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] p-1.5 gap-1.5 sm:gap-2 border border-white/10 shadow-2xl flex-wrap sm:flex-nowrap ring-1 ring-white/5">
-        {Object.keys(TEC_CONFIG).map(tec => (
-          <button 
-            key={tec} 
-            onClick={() => setActiveTec(tec)} 
-            className={`touch-target flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 md:py-4 rounded-md sm:rounded-md text-[9px] sm:text-xs font-semibold tracking-widest uppercase transition-all duration-500 ${
-              activeTec === tec 
-                ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-white/10' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-            }`}
-          >
-            {tec}
-          </button>
-        ))}
+      <div className="tec-tabs flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 shadow-sm flex-wrap sm:flex-nowrap">
+        {Object.keys(TEC_CONFIG).map(tec => {
+          const isActive = activeTec === tec;
+          return (
+            <button
+              key={tec}
+              onClick={() => setActiveTec(tec)}
+              aria-pressed={isActive}
+              className={cn(
+                'touch-target flex-1 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] py-2.5 sm:py-3 rounded-md text-[10px] sm:text-xs font-semibold tracking-widest uppercase transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
+              )}
+            >
+              {tec}
+            </button>
+          );
+        })}
       </div>
 
       {/* Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-6 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-2xl ring-1 ring-white/5">
+        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/60 rounded-lg border border-border/40 shadow-sm">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <Warehouse className="w-6 h-6 text-primary animate-pulse" />
+              <Warehouse className="w-5 h-5 text-primary" strokeWidth={1.75} />
             </div>
           </div>
-          <span className="text-sm font-semibold tracking-[0.3em] text-muted-foreground animate-pulse">Sincronizando Grade...</span>
+          <span className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground">Sincronizando grade…</span>
         </div>
       ) : (
         <motion.div 
