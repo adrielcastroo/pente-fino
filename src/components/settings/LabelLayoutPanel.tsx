@@ -9,7 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw } from 'lucide-react';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
@@ -27,28 +28,27 @@ const readPersistedKind = (): LabelKind => {
   }
 };
 
-const TECIDO_FIELDS = [
-  { id: 'sku', label: 'SKU (Código)' },
-  { id: 'descricao', label: 'Descrição do Item' },
-  { id: 'nfe', label: 'NFe / Lote' },
-  { id: 'qtd', label: 'Quantidade (QTD)' },
-  { id: 'rnp', label: 'RNP (Endereço)' },
-  { id: 'data', label: 'Data' },
-  { id: 'qr_sku', label: 'QR Code SKU' },
-  { id: 'qr_lote', label: 'QR Code Lote' },
-  
+const TECIDO_FIELDS: { id: string; label: string; icon: LucideIcon; hint: string }[] = [
+  { id: 'sku', label: 'SKU (Código)', icon: Barcode, hint: 'Código do produto' },
+  { id: 'descricao', label: 'Descrição do Item', icon: AlignLeft, hint: 'Nome / descrição' },
+  { id: 'nfe', label: 'NFe / Lote', icon: Receipt, hint: 'Nota fiscal e lote' },
+  { id: 'qtd', label: 'Quantidade (QTD)', icon: Package, hint: 'Quantidade da peça' },
+  { id: 'rnp', label: 'RNP (Endereço)', icon: MapPin, hint: 'Endereço no estoque' },
+  { id: 'data', label: 'Data', icon: Calendar, hint: 'Data da conferência' },
+  { id: 'qr_sku', label: 'QR Code SKU', icon: QrCode, hint: 'QR do código' },
+  { id: 'qr_lote', label: 'QR Code Lote', icon: QrCode, hint: 'QR do lote' },
 ];
 
-const MOTOR_FIELDS = [
-  { id: 'sku', label: 'SKU (Código)' },
-  { id: 'descricao', label: 'Descrição do Motor' },
-  { id: 'serie', label: 'Faixa SERIE' },
-  { id: 'cx', label: 'Nº da Caixa (CX)' },
-  { id: 'nf', label: 'Nota Fiscal (NF)' },
-  { id: 'nt', label: 'Nº de Série (NT)' },
-  { id: 'rnp', label: 'RNP (Endereço)' },
-  { id: 'data', label: 'Data' },
-  { id: 'qr_lote_sku', label: 'QR Code Lote+SKU' },
+const MOTOR_FIELDS: { id: string; label: string; icon: LucideIcon; hint: string }[] = [
+  { id: 'sku', label: 'SKU (Código)', icon: Barcode, hint: 'Código do motor' },
+  { id: 'descricao', label: 'Descrição do Motor', icon: AlignLeft, hint: 'Modelo / descrição' },
+  { id: 'serie', label: 'Faixa SERIE', icon: Hash, hint: 'Intervalo de série' },
+  { id: 'cx', label: 'Nº da Caixa (CX)', icon: Box, hint: 'Caixa de origem' },
+  { id: 'nf', label: 'Nota Fiscal (NF)', icon: Receipt, hint: 'Número da NF' },
+  { id: 'nt', label: 'Nº de Série (NT)', icon: Fingerprint, hint: 'Série individual' },
+  { id: 'rnp', label: 'RNP (Endereço)', icon: MapPin, hint: 'Endereço no estoque' },
+  { id: 'data', label: 'Data', icon: Calendar, hint: 'Data da conferência' },
+  { id: 'qr_lote_sku', label: 'QR Code Lote+SKU', icon: QrCode, hint: 'QR combinado' },
 ];
 
 const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
@@ -316,27 +316,47 @@ export default function LabelLayoutPanel() {
                   <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {availableFields.map((field) => {
                       const active = fields.includes(field.id);
+                      const Icon = field.icon;
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={field.id}
-                          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-all duration-200 cursor-pointer hover:border-primary/40 hover:bg-primary/5 ${
-                            active ? 'border-primary/30 bg-primary/5' : 'border-border/40 bg-background/40'
-                          }`}
                           onClick={() => handleToggleField(field.id)}
+                          aria-pressed={active}
+                          className={`group/item flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${
+                            active
+                              ? 'border-primary/40 bg-primary/[0.06] shadow-[0_1px_0_hsl(var(--primary)/0.08)]'
+                              : 'border-border/50 bg-background/40 hover:border-primary/30 hover:bg-primary/[0.03]'
+                          }`}
                         >
-                          <Label htmlFor={`f-${kind}-${field.id}`} className="text-xs font-medium cursor-pointer flex-1">
-                            {field.label}
-                          </Label>
+                          <div
+                            className={`shrink-0 w-8 h-8 rounded-md flex items-center justify-center border transition-colors ${
+                              active
+                                ? 'bg-primary/10 border-primary/25 text-primary'
+                                : 'bg-muted/40 border-border/40 text-muted-foreground group-hover/item:text-foreground'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" strokeWidth={2} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className={`text-xs font-semibold truncate ${active ? 'text-foreground' : 'text-foreground/80'}`}>
+                              {field.label}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground/80 truncate">
+                              {field.hint}
+                            </div>
+                          </div>
                           <Switch
                             id={`f-${kind}-${field.id}`}
                             checked={active}
                             onCheckedChange={() => handleToggleField(field.id)}
                             onClick={(e) => e.stopPropagation()}
+                            className="shrink-0"
                           />
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
