@@ -44,22 +44,44 @@ const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 
 declare const __APP_VERSION__: string;
 
-const TABS = [
-  { key: 'overview', label: 'Visão geral', icon: Activity },
-  { key: 'integrations', label: 'Integrações', icon: Plug },
-  { key: 'observability', label: 'Observabilidade', icon: Eye },
-  { key: 'sentry', label: 'Sentry', icon: Bug },
-  { key: 'posthog', label: 'PostHog', icon: LineChart },
-  { key: 'n8n', label: 'n8n', icon: Workflow },
-  { key: 'flags', label: 'Feature Flags', icon: Flag },
-  { key: 'releases', label: 'Releases', icon: Rocket },
-  { key: 'team', label: 'Usuários & Acessos', icon: Users },
-  { key: 'settings', label: 'Configurações globais', icon: Settings2 },
-  { key: 'database', label: 'Banco de Dados', icon: Database },
-  { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
-  { key: 'audit', label: 'Auditoria', icon: ScrollText },
-  { key: 'security', label: 'Segurança & Auth', icon: KeyRound },
+const TAB_GROUPS = [
+  {
+    label: 'Visão',
+    tabs: [
+      { key: 'overview', label: 'Visão geral', icon: Activity },
+    ],
+  },
+  {
+    label: 'Plataforma',
+    tabs: [
+      { key: 'integrations', label: 'Integrações', icon: Plug },
+      { key: 'observability', label: 'Observabilidade', icon: Eye },
+      { key: 'sentry', label: 'Sentry', icon: Bug },
+      { key: 'posthog', label: 'PostHog', icon: LineChart },
+      { key: 'n8n', label: 'n8n', icon: Workflow },
+    ],
+  },
+  {
+    label: 'Entrega',
+    tabs: [
+      { key: 'flags', label: 'Feature Flags', icon: Flag },
+      { key: 'releases', label: 'Releases', icon: Rocket },
+    ],
+  },
+  {
+    label: 'Governança',
+    tabs: [
+      { key: 'team', label: 'Usuários & Acessos', icon: Users },
+      { key: 'settings', label: 'Configurações', icon: Settings2 },
+      { key: 'database', label: 'Banco de Dados', icon: Database },
+      { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
+      { key: 'audit', label: 'Auditoria', icon: ScrollText },
+      { key: 'security', label: 'Segurança & Auth', icon: KeyRound },
+    ],
+  },
 ] as const;
+
+const TABS = TAB_GROUPS.flatMap((g) => g.tabs);
 
 type TabKey = typeof TABS[number]['key'];
 
