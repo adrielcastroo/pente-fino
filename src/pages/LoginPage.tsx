@@ -196,7 +196,7 @@ export default function LoginPage() {
           <div className="p-2.5 bg-card border border-border/60 rounded-lg shadow-sm mb-3">
             <img src={logoComb} alt="Logo Pente-Fino" className="w-10 h-10 object-contain" />
           </div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Pente-Fino</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Pente Fino</h1>
         </motion.div>
 
 
