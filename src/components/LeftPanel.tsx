@@ -1008,30 +1008,18 @@ export const LeftPanel = memo(function LeftPanel() {
         }}
       >
         
-        {/* "Novo registro" hero header */}
-        <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.2 }}
-          className="rounded-md border border-border/60 bg-card px-3 sm:px-4 py-3 sm:py-3.5 flex items-center gap-3 shadow-sm"
-        >
-          <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-md bg-primary/10 text-primary flex items-center justify-center">
-            <ScanBarcode className="w-5 h-5" strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[13px] sm:text-sm font-semibold text-foreground leading-tight">Novo registro</div>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-snug truncate">Aponte o leitor ou digite o código do item</p>
-          </div>
-          {(item || nf || m2 || lote || endereco || processo) && !isAI && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+        {/* Botão Limpar — visível apenas quando há dados no formulário */}
+        {(item || nf || m2 || lote || endereco || processo) && !isAI && (
+          <div className="flex justify-end">
+            <button
+              type="button"
               onClick={resetForm}
-              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2 py-1 rounded-md hover:bg-destructive/10"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2.5 py-1 rounded-md hover:bg-destructive/10 border border-transparent hover:border-destructive/20"
             >
               Limpar
-            </motion.button>
-          )}
-        </motion.div>
+            </button>
+          </div>
+        )}
 
         {/* Mode Toggle */}
         {!isMadeira && (
