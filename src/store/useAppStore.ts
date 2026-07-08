@@ -299,6 +299,7 @@ export const useAppStore = create<AppState>()(
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
       setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
       setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
+      setLockCortinaMetragem: (lock) => set({ lockCortinaMetragem: lock }),
       setLockMadeiraProcesso: (lock) => set({ lockMadeiraProcesso: lock }),
       setLockMadeiraItem: (lock) => set({ lockMadeiraItem: lock }),
       setLockMadeiraLote: (lock) => set({ lockMadeiraLote: lock }),
