@@ -673,7 +673,58 @@ export default function RightPanel() {
             </>
           )}
 
-          {sortedRows.length > visibleCount && (
+          {isTecidoTable && sortedRows.length > TECIDO_PAGE_SIZE && (
+            <div className="p-3 flex items-center justify-between gap-3 border-t border-border/40 bg-card/40">
+              <span className="text-[11px] text-muted-foreground tabular-nums">
+                Página <span className="font-semibold text-foreground">{tecidoPage + 1}</span> de{' '}
+                <span className="font-semibold text-foreground">{tecidoPageCount}</span>
+                <span className="mx-2 text-muted-foreground/40">·</span>
+                <span className="font-mono">{sortedRows.length}</span> registros
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTecidoPage(0)}
+                  disabled={tecidoPage === 0}
+                  className="h-8 px-2 text-[11px] rounded-md"
+                  aria-label="Primeira página"
+                >
+                  «
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTecidoPage(p => Math.max(0, p - 1))}
+                  disabled={tecidoPage === 0}
+                  className="h-8 px-2.5 text-[11px] rounded-md"
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTecidoPage(p => Math.min(tecidoPageCount - 1, p + 1))}
+                  disabled={tecidoPage >= tecidoPageCount - 1}
+                  className="h-8 px-2.5 text-[11px] rounded-md"
+                >
+                  Próxima
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTecidoPage(tecidoPageCount - 1)}
+                  disabled={tecidoPage >= tecidoPageCount - 1}
+                  className="h-8 px-2 text-[11px] rounded-md"
+                  aria-label="Última página"
+                >
+                  »
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!isTecidoTable && sortedRows.length > visibleCount && (
             <div className="p-4 flex justify-center border-t border-border/10 bg-muted/5">
               <Button variant="ghost" size="sm" onClick={loadMore} className="text-primary font-bold hover:bg-primary/5 rounded-md px-6">
                 Carregar mais registros ({sortedRows.length - visibleCount} restantes)
