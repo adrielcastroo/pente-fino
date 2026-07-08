@@ -45,7 +45,7 @@ export default function OpDetailPage() {
 
   return (
     <>
-      <Seo title={`${op.numero} — Compras | Pente Fino`} path={`/compras/ops/${op.id}`} />
+      <Seo title={`${op.numero} — Compras | Pente Fino`} description={`Detalhes da ordem de compra ${op.numero} (${op.fornecedor}).`} path={`/compras/ops/${op.id}`} />
       <PageShell>
         <PageHeader
           title={op.numero}
