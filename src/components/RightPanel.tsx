@@ -1,6 +1,5 @@
 import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
 import TecidoCardsView from '@/components/tecido/TecidoCardsView';
-import { TecidoCardVariantSwitcher, useTecidoCardVariant } from '@/components/tecido/useTecidoCardVariant';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/store/useAppStore';
@@ -229,7 +228,7 @@ export default function RightPanel() {
   })));
 
   const { isLow } = usePerformance();
-  const tecidoCardVariant = useTecidoCardVariant();
+  
   
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -580,14 +579,12 @@ export default function RightPanel() {
               {/* Tablet vertical (md→lg) na aba Tecido: cards operacionais */}
               {activeTab === 'tecido' && (
                 <div className="block xl:hidden">
-                  <TecidoCardVariantSwitcher />
                   <TecidoCardsView
                     rows={pagedRows}
                     onDelete={deleteRegistro}
                     onCopy={copyText}
                     isGuest={isGuest}
                     showActions={showActions}
-                    variant={tecidoCardVariant}
                   />
                 </div>
               )}
