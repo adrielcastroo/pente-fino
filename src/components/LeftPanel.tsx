@@ -1077,27 +1077,28 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Diversos categories — subordinate to the mode toggle above */}
+        {/* Diversos categories — subordinate pills (touch-friendly, subtle) */}
         {isDiversos && (
-          <div className="flex px-3 pt-1 gap-4 border-b border-border/40 -mt-1 overflow-x-auto no-scrollbar">
+          <div className="flex p-1 gap-1 rounded-md bg-muted/30 border border-border/30 overflow-x-auto no-scrollbar">
             {(['Rolo', 'PVT', 'Cortina', 'Celular'] as const).map(tipo => {
               const active = diversosTipo === tipo;
               return (
                 <button
                   key={tipo}
                   onClick={() => setDiversosTipo(tipo)}
-                  className={`relative min-h-[36px] px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors ${
-                    active ? 'text-primary' : 'text-muted-foreground/70 hover:text-foreground'
+                  className={`relative flex-1 min-w-[72px] min-h-[40px] sm:min-h-[36px] rounded-[5px] px-3 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                    active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                   }`}
+                  aria-pressed={active}
                 >
-                  {tipo}
                   {active && (
                     <motion.span
-                      layoutId="tipo-underline"
-                      className="absolute left-0 right-0 -bottom-px h-[2px] bg-primary rounded-full"
+                      layoutId="tipo-bg"
+                      className="absolute inset-0 rounded-[5px] bg-primary/10 border border-primary/25"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
+                  <span className="relative z-10">{tipo}</span>
                 </button>
               );
             })}
