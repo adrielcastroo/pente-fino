@@ -353,6 +353,19 @@ async function sendToWebhook(
 
   recordOk();
 }
+/**
+ * Determina qual método de impressão será realmente usado com base nas
+ * preferências. Usado para decidir se aplicamos os offsets de alinhamento
+ * físico da impressora térmica dentro do PNG — offsets só fazem sentido
+ * quando a etiqueta vai para o n8n/impressora térmica; no navegador eles
+ * apenas deslocam o conteúdo e causam recorte.
+ */
+export function resolvePrintMethod(cfg: PrintConfig): PrintMethod {
+  const browserDisabled = typeof localStorage !== 'undefined'
+    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  const hasWebhook = !!resolveWebhookUrl();
+  return cfg.printMethod || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
+}
 
 
 async function dispatchPrint(
