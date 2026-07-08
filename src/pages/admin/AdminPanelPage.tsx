@@ -92,9 +92,9 @@ export default function AdminPanelPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        {/* Custom segmented tabs — mesmo padrão dos módulos Estoque/Expedição */}
-        <div className="overflow-x-auto -mx-1 px-1 pb-1 scrollbar-thin">
-          <div className="inline-flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 shadow-sm">
+        {/* Segmented tabs — wrap em telas menores, evita scroll horizontal na página */}
+        <div className="bg-card/60 rounded-md p-1 border border-border/40 shadow-sm">
+          <div className="flex flex-wrap gap-1">
             {TABS.map((t) => {
               const Icon = t.icon;
               const isActive = tab === t.key;
@@ -106,13 +106,14 @@ export default function AdminPanelPage() {
                   aria-selected={isActive}
                   onClick={() => setTab(t.key)}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
                   )}
                 >
-                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t.label}
+                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                  <span>{t.label}</span>
                 </button>
               );
             })}
