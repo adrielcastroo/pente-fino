@@ -1276,12 +1276,12 @@ export const LeftPanel = memo(function LeftPanel() {
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
-                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                    ((isMadeira ? lockMadeiraItem : lockItem)) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
                   data-barcode="true"
-                  readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) && !!item}
+                  readOnly={(isMadeira ? lockMadeiraItem : lockItem) && !!item}
                 />
                 {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
