@@ -536,27 +536,34 @@ export default function EstoquePage() {
             { key: 'livre', label: 'Posições Livres', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5 shadow-primary/5', border: 'border-primary/20' } },
             { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.bloqueado, bg: 'bg-red-500/10 shadow-red-500/5', border: 'border-red-500/20' } },
             { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.reservado, bg: 'bg-amber-500/10 shadow-amber-500/5', border: 'border-amber-500/20' } },
-          ].map((s) => (
+          ].map((s, i) => (
             <motion.div
               key={s.label}
-              whileHover={{ scale: 1.05, translateY: -5 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.04, ease: 'easeOut' }}
+              whileHover={{ y: -2 }}
             >
-              <Card 
+              <Card
                 onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
-                className={`rounded-[1.5rem] sm:rounded-[2rem] border-2 ${s.config.border} ${s.config.bg} backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl relative overflow-hidden group ${
-                  selectedStat === s.key ? 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background scale-[1.02] sm:scale-105' : ''
-                } ${s.key === 'total' ? 'col-span-2 sm:col-span-1 tablet-portrait:col-span-1' : ''}`}
+                className={cn(
+                  'rounded-lg border transition-all duration-200 cursor-pointer relative overflow-hidden group',
+                  'shadow-sm hover:shadow-md hover:border-primary/40',
+                  s.config.border,
+                  s.config.bg,
+                  selectedStat === s.key ? 'ring-2 ring-primary/60 border-primary/50' : '',
+                  s.key === 'total' ? 'col-span-2 sm:col-span-1 tablet-portrait:col-span-1' : '',
+                )}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                <CardContent className="p-4 sm:p-6 tablet-portrait:p-2 text-center space-y-1 sm:space-y-2 tablet-portrait:space-y-0.5 relative z-10">
-                  <div className={`text-xl sm:text-2xl lg:text-3xl tablet-portrait:text-lg font-semibold tabular-nums tracking-tighter ${s.config.color} drop-shadow-sm`}>{s.value}</div>
-                  <div className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">{s.label}</div>
-                  <div className="flex items-center justify-center gap-1.5 pt-2">
-                    <div className="h-1 w-8 bg-muted-foreground/20 rounded-full overflow-hidden">
-                       <div className={`h-full ${s.config.color.replace('text', 'bg')}`} style={{ width: `${s.percent}%` }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <CardContent className="p-4 sm:p-5 tablet-portrait:p-2 text-center space-y-1.5 sm:space-y-2 tablet-portrait:space-y-0.5 relative z-10">
+                  <div className={cn('text-xl sm:text-2xl lg:text-[26px] tablet-portrait:text-lg font-semibold tabular-nums tracking-tight leading-none', s.config.color)}>{s.value}</div>
+                  <div className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.18em] opacity-70 group-hover:opacity-100 transition-opacity">{s.label}</div>
+                  <div className="flex items-center justify-center gap-1.5 pt-1.5">
+                    <div className="h-1 w-10 bg-muted-foreground/15 rounded-full overflow-hidden">
+                       <div className={cn('h-full transition-all duration-500 ease-out', s.config.color.replace('text', 'bg'))} style={{ width: `${s.percent}%` }} />
                     </div>
-                    <span className="text-[10px] font-semibold text-muted-foreground/80">{s.percent}%</span>
+                    <span className="text-[10px] font-medium text-muted-foreground/80 tabular-nums">{s.percent}%</span>
                   </div>
                 </CardContent>
               </Card>
