@@ -1341,6 +1341,14 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center gap-1.5 h-4">
                   <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Unidade de Metragem</label>
+                  <button
+                    type="button"
+                    onClick={() => setLockCortinaMetragem(!lockCortinaMetragem)}
+                    className={`transition-colors ${lockCortinaMetragem ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={lockCortinaMetragem ? 'Preferência travada — mantém a escolha entre registros' : 'Travar preferência'}
+                  >
+                    {lockCortinaMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -1348,7 +1356,9 @@ export const LeftPanel = memo(function LeftPanel() {
                     onClick={() => setCortinaMetragem('m2')}
                     className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
                       !cortinaUsesMLinear
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        ? lockCortinaMetragem
+                          ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]'
+                          : 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
                     }`}
                   >
@@ -1359,7 +1369,9 @@ export const LeftPanel = memo(function LeftPanel() {
                     onClick={() => setCortinaMetragem('mlinear')}
                     className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
                       cortinaUsesMLinear
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        ? lockCortinaMetragem
+                          ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]'
+                          : 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
                     }`}
                   >
