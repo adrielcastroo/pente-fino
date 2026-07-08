@@ -150,7 +150,6 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
             onStartEdit={onStartEdit}
             onCopy={onCopy}
             loteSistema={r.loteSistema}
-            className={responsiveClass}
           />
         );
       })}
