@@ -1124,9 +1124,9 @@ export const LeftPanel = memo(function LeftPanel() {
               ))}
             </div>
             {/* Próximo CX preview — Modernized card */}
-            <div className="flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner group hover:border-primary/40 transition-all">
+            <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:rotate-12">
+                <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
                   <Package className="w-4 h-4" />
                 </div>
                 <div>
