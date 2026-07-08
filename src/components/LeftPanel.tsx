@@ -1567,7 +1567,8 @@ export const LeftPanel = memo(function LeftPanel() {
                     />
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 sm:col-span-2">
+
                     <div className="flex items-center gap-1.5 h-4">
                       <label htmlFor="lote-material" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Lote / Batch</label>
                       {(isPVT || isRolo) && (
