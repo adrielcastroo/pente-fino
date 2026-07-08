@@ -763,7 +763,7 @@ function buildTecidoBrowserPage(data: TecidoLabelData, labelSettings: LabelSetti
     heightMm: h,
     basePx: { w: wPx, h: hPx },
     element: createElement('div', { style: { position: 'relative', width: `${wPx}px`, height: `${hPx}px`, background: '#fff', overflow: 'hidden' } },
-      createElement('div', { style: { position: 'absolute', left: 0, top: 0, transform: `translate(${offsetXPx}px, ${offsetYPx}px)` } },
+      createElement('div', { style: { position: 'absolute', left: 0, top: 0, transform: `translate(${finalOffsetXPx}px, ${finalOffsetYPx}px)` } },
         createElement(TecidoPreview, { wPx, hPx, fs: labelSettings.fontSize, has, data, ...appearance }),
       ),
     ),
