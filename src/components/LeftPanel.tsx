@@ -103,6 +103,8 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockCortinaLargura: s.setLockCortinaLargura,
     lockedCortinaLargura: s.lockedCortinaLargura,
     setLockedCortinaLargura: s.setLockedCortinaLargura,
+    lockCortinaMetragem: s.lockCortinaMetragem,
+    setLockCortinaMetragem: s.setLockCortinaMetragem,
     formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData,
