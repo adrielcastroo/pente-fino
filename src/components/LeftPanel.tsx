@@ -1238,7 +1238,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   value={processo}
                   onChange={e => handleProcessoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
-                  className={`w-full h-14 lg:h-12 rounded-lg border px-3.5 text-base lg:text-sm font-mono transition-all duration-200 ${
+                  className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
                     (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: 123456..."
@@ -1272,7 +1272,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleItemChange(e.target.value)}
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
-                  className={`w-full h-14 lg:h-12 rounded-lg border px-3.5 text-base lg:text-sm font-mono transition-all duration-200 ${
+                  className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
                     ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
