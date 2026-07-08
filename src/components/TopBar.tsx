@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { itensCadastroService } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
-import { Download, User, CheckCircle2, LogOut, ScanBarcode, Plus, ArrowLeftRight } from 'lucide-react';
+import { Download, User, CheckCircle2, LogOut, ScanBarcode, ArrowLeftRight } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
