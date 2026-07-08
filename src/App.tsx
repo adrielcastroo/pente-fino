@@ -200,11 +200,13 @@ const App = () => (
 
                 </Route>
 
-                {/* ===== ADMIN ===== */}
-                <Route path="/admin" element={<ProtectedRoute><AdminPanelPage /></ProtectedRoute>} />
+                {/* ===== ADMIN (dentro do MainLayout — sidebar principal preservada) ===== */}
+                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                  <Route path="/admin" element={<AdminPanelPage />} />
+                  <Route path="/admin/n8n" element={<N8nMonitorPage />} />
+                </Route>
                 <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
                 <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
-                <Route path="/admin/n8n" element={<ProtectedRoute><N8nMonitorPage /></ProtectedRoute>} />
                 <Route path="/n8n" element={<Navigate to="/admin/n8n" replace />} />
 
 
