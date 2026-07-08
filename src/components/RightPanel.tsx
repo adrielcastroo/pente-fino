@@ -587,7 +587,7 @@ export default function RightPanel() {
                     onCopy={copyText}
                     isGuest={isGuest}
                     showActions={showActions}
-                    variant={useTecidoCardVariant()}
+                    variant={tecidoCardVariant}
                   />
                 </div>
               )}
