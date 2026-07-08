@@ -228,7 +228,7 @@ export default function RightPanel() {
   })));
 
   const { isLow } = usePerformance();
-  const tecidoCardVariant = useTecidoCardVariant();
+  
   
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
