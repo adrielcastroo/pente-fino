@@ -579,14 +579,12 @@ export default function RightPanel() {
               {/* Tablet vertical (md→lg) na aba Tecido: cards operacionais */}
               {activeTab === 'tecido' && (
                 <div className="block xl:hidden">
-                  <TecidoCardVariantSwitcher />
                   <TecidoCardsView
                     rows={pagedRows}
                     onDelete={deleteRegistro}
                     onCopy={copyText}
                     isGuest={isGuest}
                     showActions={showActions}
-                    variant={tecidoCardVariant}
                   />
                 </div>
               )}
