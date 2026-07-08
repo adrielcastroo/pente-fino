@@ -28,28 +28,27 @@ const readPersistedKind = (): LabelKind => {
   }
 };
 
-const TECIDO_FIELDS = [
-  { id: 'sku', label: 'SKU (Código)' },
-  { id: 'descricao', label: 'Descrição do Item' },
-  { id: 'nfe', label: 'NFe / Lote' },
-  { id: 'qtd', label: 'Quantidade (QTD)' },
-  { id: 'rnp', label: 'RNP (Endereço)' },
-  { id: 'data', label: 'Data' },
-  { id: 'qr_sku', label: 'QR Code SKU' },
-  { id: 'qr_lote', label: 'QR Code Lote' },
-  
+const TECIDO_FIELDS: { id: string; label: string; icon: LucideIcon; hint: string }[] = [
+  { id: 'sku', label: 'SKU (Código)', icon: Barcode, hint: 'Código do produto' },
+  { id: 'descricao', label: 'Descrição do Item', icon: AlignLeft, hint: 'Nome / descrição' },
+  { id: 'nfe', label: 'NFe / Lote', icon: Receipt, hint: 'Nota fiscal e lote' },
+  { id: 'qtd', label: 'Quantidade (QTD)', icon: Package, hint: 'Quantidade da peça' },
+  { id: 'rnp', label: 'RNP (Endereço)', icon: MapPin, hint: 'Endereço no estoque' },
+  { id: 'data', label: 'Data', icon: Calendar, hint: 'Data da conferência' },
+  { id: 'qr_sku', label: 'QR Code SKU', icon: QrCode, hint: 'QR do código' },
+  { id: 'qr_lote', label: 'QR Code Lote', icon: QrCode, hint: 'QR do lote' },
 ];
 
-const MOTOR_FIELDS = [
-  { id: 'sku', label: 'SKU (Código)' },
-  { id: 'descricao', label: 'Descrição do Motor' },
-  { id: 'serie', label: 'Faixa SERIE' },
-  { id: 'cx', label: 'Nº da Caixa (CX)' },
-  { id: 'nf', label: 'Nota Fiscal (NF)' },
-  { id: 'nt', label: 'Nº de Série (NT)' },
-  { id: 'rnp', label: 'RNP (Endereço)' },
-  { id: 'data', label: 'Data' },
-  { id: 'qr_lote_sku', label: 'QR Code Lote+SKU' },
+const MOTOR_FIELDS: { id: string; label: string; icon: LucideIcon; hint: string }[] = [
+  { id: 'sku', label: 'SKU (Código)', icon: Barcode, hint: 'Código do motor' },
+  { id: 'descricao', label: 'Descrição do Motor', icon: AlignLeft, hint: 'Modelo / descrição' },
+  { id: 'serie', label: 'Faixa SERIE', icon: Hash, hint: 'Intervalo de série' },
+  { id: 'cx', label: 'Nº da Caixa (CX)', icon: Box, hint: 'Caixa de origem' },
+  { id: 'nf', label: 'Nota Fiscal (NF)', icon: Receipt, hint: 'Número da NF' },
+  { id: 'nt', label: 'Nº de Série (NT)', icon: Fingerprint, hint: 'Série individual' },
+  { id: 'rnp', label: 'RNP (Endereço)', icon: MapPin, hint: 'Endereço no estoque' },
+  { id: 'data', label: 'Data', icon: Calendar, hint: 'Data da conferência' },
+  { id: 'qr_lote_sku', label: 'QR Code Lote+SKU', icon: QrCode, hint: 'QR combinado' },
 ];
 
 const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
