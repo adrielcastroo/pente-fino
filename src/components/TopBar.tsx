@@ -198,20 +198,34 @@ const TopBar = memo(function TopBar() {
             </div>
           )}
 
-          {!isGuest && user && (
-            <Link
-              to="/estoque/minha-atividade"
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 rounded-md border border-primary/10 transition-colors"
-              aria-label="Ver minha atividade do dia"
-            >
-              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <span className="text-xs font-bold text-foreground truncate max-w-[80px] md:max-w-[120px]">
-                {profile?.display_name || user.email?.split('@')[0] || 'Usuário'}
-              </span>
-            </Link>
-          )}
+          {!isGuest && user && (() => {
+            const displayName = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
+            const avatarUrl = profile?.avatar_url as string | undefined;
+            const initials = displayName
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((p: string) => p[0]?.toUpperCase())
+              .join('') || 'U';
+            return (
+              <Link
+                to="/estoque/minha-atividade"
+                className="hidden sm:flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors group"
+                aria-label="Ver minha atividade do dia"
+              >
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-muted ring-1 ring-border/60 group-hover:ring-primary/40 transition-shadow flex items-center justify-center shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <span className="text-[10px] font-bold text-muted-foreground tracking-tight">{initials}</span>
+                  )}
+                </div>
+                <span className="text-xs font-semibold text-foreground/90 truncate max-w-[80px] md:max-w-[120px]">
+                  {displayName}
+                </span>
+              </Link>
+            );
+          })()}
 
 
 
