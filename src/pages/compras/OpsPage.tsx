@@ -225,29 +225,32 @@ function ListaView({ ops }: { ops: OpMock[] }) {
             const dias = diasParaEntrega(op.data_prevista_entrega);
             const atrasada = isAberta(op.status) && dias < 0;
             return (
-              <TableRow key={op.id} asChild>
-                <Link to={`/compras/ops/${op.id}`} className="cursor-pointer hover:bg-muted/40">
-                  <TableCell className="font-mono text-xs font-semibold">{op.numero}</TableCell>
-                  <TableCell className="font-medium truncate max-w-[220px]">{op.fornecedor}</TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground text-sm">{op.categoria}</TableCell>
-                  <TableCell>
-                    <StatusBadge label={STATUS_LABEL[op.status]} tone={STATUS_TONE[op.status]} />
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-semibold">{fmtBRL(op.valor_total)}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm">
-                    <span className={cn('tabular-nums', atrasada && 'text-destructive font-semibold')}>
-                      {fmtDate(op.data_prevista_entrega)}
-                    </span>
-                    {atrasada && <span className="ml-1 text-[10px] text-destructive">({Math.abs(dias)}d)</span>}
-                  </TableCell>
-                  <TableCell>
-                    <ProgressBar pct={pct} tone={atrasada ? 'danger' : pct === 100 ? 'success' : 'primary'} />
-                  </TableCell>
-                  <TableCell>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </TableCell>
-                </Link>
+              <TableRow
+                key={op.id}
+                onClick={() => navigate(`/compras/ops/${op.id}`)}
+                className="cursor-pointer hover:bg-muted/40"
+              >
+                <TableCell className="font-mono text-xs font-semibold">{op.numero}</TableCell>
+                <TableCell className="font-medium truncate max-w-[220px]">{op.fornecedor}</TableCell>
+                <TableCell className="hidden md:table-cell text-muted-foreground text-sm">{op.categoria}</TableCell>
+                <TableCell>
+                  <StatusBadge label={STATUS_LABEL[op.status]} tone={STATUS_TONE[op.status]} />
+                </TableCell>
+                <TableCell className="text-right tabular-nums font-semibold">{fmtBRL(op.valor_total)}</TableCell>
+                <TableCell className="hidden lg:table-cell text-sm">
+                  <span className={cn('tabular-nums', atrasada && 'text-destructive font-semibold')}>
+                    {fmtDate(op.data_prevista_entrega)}
+                  </span>
+                  {atrasada && <span className="ml-1 text-[10px] text-destructive">({Math.abs(dias)}d)</span>}
+                </TableCell>
+                <TableCell>
+                  <ProgressBar pct={pct} tone={atrasada ? 'danger' : pct === 100 ? 'success' : 'primary'} />
+                </TableCell>
+                <TableCell>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </TableCell>
               </TableRow>
+
             );
           })}
         </TableBody>
