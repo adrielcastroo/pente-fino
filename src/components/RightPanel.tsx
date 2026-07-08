@@ -619,7 +619,7 @@ export default function RightPanel() {
                     return (
                       <th 
                         key={column.key} 
-                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background ${responsiveClass}`}
+                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background whitespace-nowrap ${responsiveClass}`}
                       >
                         {column.shortLabel || column.label}
                       </th>
