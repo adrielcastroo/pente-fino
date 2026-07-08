@@ -498,21 +498,24 @@ export default function EstoquePage() {
       </div>
 
       {/* Categoria Tabs */}
-      <div className="flex bg-card/40 backdrop-blur rounded-lg p-1 gap-1 border border-border/30 w-full sm:max-w-md">
+      <div className="inline-flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 w-full sm:max-w-md">
         {(['tecido', 'madeira'] as const).map((key) => {
           const Icon = key === 'tecido' ? Shirt : TreePine;
           const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
+          const isActive = category === key;
           return (
             <button
               key={key}
               onClick={() => setCategory(key)}
-              className={`flex-1 py-2.5 rounded-md text-[10px] sm:text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-w-0 ${
-                category === key
+              aria-pressed={isActive}
+              className={cn(
+                'flex-1 py-2 rounded-md text-[11px] sm:text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-              }`}
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
+              )}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
               <span className="truncate">{label}</span>
             </button>
           );
