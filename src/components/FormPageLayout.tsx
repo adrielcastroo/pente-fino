@@ -55,7 +55,7 @@ export default function FormPageLayout({ children, showRightPanel = true }: Form
           <Button
             size="lg"
             onClick={() => setShowTableMobile(!showTableMobile)}
-            className="rounded-full h-14 w-14 shadow-2xl shadow-primary/40 border-2 border-white/20 active:scale-90 transition-transform bg-primary text-primary-foreground"
+            className="rounded-full h-14 w-14 shadow-lg border border-border active:scale-95 transition-transform bg-primary text-primary-foreground hover:bg-primary/90"
             aria-label={showTableMobile ? 'Voltar ao formulário' : 'Ver itens bipados'}
           >
             {showTableMobile ? <ClipboardList className="w-6 h-6" /> : <List className="w-6 h-6" />}

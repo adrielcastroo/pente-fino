@@ -1124,9 +1124,9 @@ export const LeftPanel = memo(function LeftPanel() {
               ))}
             </div>
             {/* Próximo CX preview — Modernized card */}
-            <div className="flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-4 py-3 shadow-inner group hover:border-primary/40 transition-all">
+            <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:rotate-12">
+                <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
                   <Package className="w-4 h-4" />
                 </div>
                 <div>
@@ -1698,28 +1698,13 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Actions */}
         <div className="space-y-3 pb-6 pt-2 px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
+          <Button
+            onClick={handleAdd}
+            className="w-full h-14 sm:h-16 rounded-md font-semibold tracking-[0.08em] text-sm sm:text-base"
           >
-            <Button
-              onClick={handleAdd}
-              className="w-full h-14 sm:h-16 rounded-md font-semibold tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
-              <span className="relative flex items-center justify-center gap-3">
-                <motion.div
-                  initial={false}
-                  animate={{ rotate: 0 }}
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Plus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
-                </motion.div>
-                Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
-              </span>
-            </Button>
-          </motion.div>
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" strokeWidth={2.5} />
+            Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
+          </Button>
 
 
           {isDuplicate && (
