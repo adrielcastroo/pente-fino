@@ -148,78 +148,41 @@ export default function LoginPage() {
         description="Acesse o Sistema Pente Fino: conferência, endereçamento e expedição de estoque têxtil em tempo real."
         path="/login"
       />
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-background overflow-hidden">
-      {/* Coluna Esquerda: Visual (Desktop/Tablet Horizontal) */}
-      <div className="hidden md:flex md:w-1/2 lg:w-[60%] relative flex-col items-center justify-center p-12 overflow-hidden bg-muted/30 border-r border-border/50">
-        {/* Subtle Dot Grid */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-             style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+    <div className="relative min-h-[100dvh] w-full flex items-center justify-center bg-background overflow-hidden px-4 py-10 sm:py-16">
+      {/* Fundo: grid sutil com máscara radial */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
+          maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
+        }}
+      />
+      {/* Brilho radial sutil da cor primária */}
+      {!isLow && (
+        <>
+          <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
+          <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+        </>
+      )}
 
-        {/* Decorative background gradients */}
-        {!isLow && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px] animate-pulse delay-1000" />
-          </div>
-        )}
-
+      <div className="w-full max-w-[410px] relative z-10">
+        {/* Header com logo + nome */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative z-10 flex flex-col items-center text-center max-w-md"
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="flex flex-col items-center mb-6"
         >
-          <div className={`p-4 bg-white dark:bg-card border border-border/50 rounded-md shadow-xl mb-8 ${!isLow ? 'transform hover:scale-105 transition-transform duration-300' : ''}`}>
-            <img src={logoComb} alt="Logo" className="w-16 h-16 object-contain" />
+          <div className="p-2.5 bg-card border border-border/60 rounded-lg shadow-sm mb-3">
+            <img src={logoComb} alt="Logo Pente-Fino" className="w-10 h-10 object-contain" />
           </div>
-          <h1 className="text-5xl font-semibold tracking-tight text-foreground mb-8 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
-            Sistema Pente Fino
-          </h1>
-          
-          <div className="space-y-6 w-full mt-4">
-            {[
-              { icon: Search, title: "Conferência Ágil", desc: "Validação instantânea de estoque com precisão cirúrgica." },
-              { icon: BarChart3, title: "Insights em Tempo Real", desc: "Acompanhe cada movimentação no momento em que acontece." },
-              { icon: ShieldCheck, title: "Segurança de Dados", desc: "Arquitetura robusta para proteção total das suas informações." },
-              { icon: Zap, title: "Performance Elevada", desc: "Interface otimizada para máxima produtividade da sua equipe." }
-            ].map((item, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + (i * 0.1) }}
-                className="flex items-start gap-4 p-4 rounded-md bg-white/50 dark:bg-card/50 border border-border/30 backdrop-blur-sm hover:shadow-md transition-all duration-300 group"
-              >
-                <div className="p-2.5 rounded-md bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-bold text-foreground text-sm">{item.title}</h3>
-                  <p className="text-muted-foreground text-xs mt-0.5 leading-relaxed">{item.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Pente-Fino</h1>
         </motion.div>
-      </div>
 
-      {/* Coluna Direita: Formulário (Todos os dispositivos) */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-12 relative overflow-y-auto">
-        {/* Grid dots for mobile background consistency */}
-        <div className="absolute inset-0 opacity-[0.02] pointer-events-none md:hidden" 
-             style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        <div className="w-full max-w-[420px] z-10 py-6 sm:py-12">
-          <div className="flex flex-col items-center mb-8 md:hidden">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="p-3 bg-white dark:bg-card border border-border/50 rounded-md shadow-sm mb-4"
-            >
-              <img src={logoComb} alt="Logo Pente Fino" className="w-10 h-10 object-contain" />
-            </motion.div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Sistema Pente Fino</h2>
-          </div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
