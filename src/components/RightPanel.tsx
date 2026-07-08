@@ -585,15 +585,8 @@ export default function RightPanel() {
                   </React.Fragment>
                 ))}
               </tbody>
-              {sortedRows.length > 0 && (
-                <tfoot className="sticky bottom-0 z-10">
-                  <tr className="bg-primary/95 text-white font-semibold font-mono text-[11px] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] border-t border-white/10 ">
-                    <td className="px-4 py-4">{sortedRows.length} {sortedRows.length !== 1 ? 'ITENS' : 'ITEM'}</td>
-                    <td className="px-4 py-4">{motorGroups.length} {motorGroups.length !== 1 ? 'CAIXAS' : 'CAIXA'}</td>
-                    {showActions && <td className="px-4 py-4"></td>}
-                  </tr>
-                </tfoot>
-              )}
+              </tbody>
+
             </table>
           ) : (
             <>
