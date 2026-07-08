@@ -691,17 +691,6 @@ export default function RightPanel() {
             </div>
           )}
 
-          {sortedRows.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-              <div className="h-14 w-14 bg-muted/40 rounded-md flex items-center justify-center mb-4">
-                <Package className="w-7 h-7 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm font-semibold text-foreground mb-1">Nenhum item registrado</p>
-              <p className="text-xs text-muted-foreground max-w-[280px] leading-relaxed">
-                Os materiais bipados aparecerão aqui.
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
