@@ -367,6 +367,7 @@ export const useAppStore = create<AppState>()(
           if (state.lockItem) newData.item = state.lockedItem;
           if (state.lockLote) newData.lote = state.lockedLote;
           if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
+          if (state.lockCoulisseMetragem) newData.coulisseMetragem = state.formData.coulisseMetragem;
           if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
         }
         
