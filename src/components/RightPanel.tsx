@@ -421,26 +421,26 @@ export default function RightPanel() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-md border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
 
-      <div className="px-4 xs:px-6 py-4 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0">
-        <div className="flex flex-row items-center gap-3 sm:gap-5">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
-            <input 
-              value={localSearch} 
+      <div className="px-3 xs:px-4 sm:px-6 py-3 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0 min-w-0">
+        <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 min-w-0">
+          <div className="relative flex-1 min-w-[160px] group">
+            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
+            <input
+              value={localSearch}
               onChange={e => setLocalSearch(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 rounded-md border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-8 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30 shadow-inner" 
-              placeholder="Buscar material, lote ou endereço..." 
-              autoComplete="off" 
+              className="w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 rounded-md border border-border/50 bg-muted/40 text-xs sm:text-sm font-bold tracking-tight focus:bg-background focus:border-primary/50 focus:ring-8 focus:ring-primary/5 transition-all duration-300 placeholder:text-muted-foreground/30 shadow-inner"
+              placeholder="Buscar material, lote ou endereço..."
+              autoComplete="off"
             />
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 shrink-0">
             <div className="flex-none h-11 px-2 sm:px-3 rounded-md bg-transparent hover:bg-muted/40 flex items-center gap-1.5 transition-colors group">
               <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground" />
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-transparent border-none outline-none text-[8px] sm:text-xs font-medium text-muted-foreground/70 cursor-pointer group-hover:text-foreground w-16 sm:w-auto"
+                className="bg-transparent border-none outline-none text-[10px] sm:text-xs font-medium text-muted-foreground/70 cursor-pointer group-hover:text-foreground w-[72px] sm:w-auto"
               >
                 <option value="">Ordenar</option>
                 <option value="item">A-Z</option>
@@ -449,15 +449,15 @@ export default function RightPanel() {
                 <option value="end">Endereço</option>
               </select>
             </div>
-            
+
             {registros.length > 0 && !isGuest && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={handleClearAll} 
-                    className="h-12 w-12 rounded-md border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 hover:rotate-12 transition-all active:scale-95 shadow-sm"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleClearAll}
+                    className="h-11 w-11 sm:h-12 sm:w-12 rounded-md border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 hover:rotate-12 transition-all active:scale-95 shadow-sm"
                   >
                     <Trash2 className="w-5 h-5" />
                   </Button>
@@ -472,8 +472,8 @@ export default function RightPanel() {
 
       {/* KPI strip — inspired by mockup */}
       {registros.length > 0 && (
-        <div className="flex-shrink-0 px-2 xs:px-4 py-3 bg-card/40 border-b border-border/40 overflow-x-auto custom-scrollbar">
-          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 min-w-full lg:min-w-0">
+        <div className="flex-shrink-0 px-3 xs:px-4 py-3 bg-card/40 border-b border-border/40 min-w-0">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {[
               { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Total de Registros', value: kpis.total.toString(), sub: 'Registros cadastrados' },
               { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: 'Metragem Total (m²)', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml), sub: kpis.m2 > 0 ? 'Soma de m² conferidos' : 'Total em metros lineares' },
@@ -482,14 +482,14 @@ export default function RightPanel() {
             ].map((k, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-4 rounded-md border border-border/50 bg-background px-4 py-3.5 min-w-[170px] sm:min-w-[200px] hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                className="flex items-center gap-2 sm:gap-4 rounded-md border border-border/50 bg-background px-2.5 sm:px-4 py-2.5 sm:py-3.5 min-w-0 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-md ${k.bg} ${k.color} flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}>
-                  <k.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                <div className={`flex-shrink-0 w-9 h-9 sm:w-12 sm:h-12 rounded-md ${k.bg} ${k.color} flex items-center justify-center shadow-inner transition-transform group-hover:scale-110`}>
+                  <k.icon className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={2.5} />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/50 truncate mb-0.5">{k.label}</span>
-                  <span className="text-lg sm:text-xl font-semibold text-foreground leading-tight font-mono truncate">{k.value}</span>
+                  <span className="text-base sm:text-xl font-semibold text-foreground leading-tight font-mono truncate">{k.value}</span>
                   <span className="text-[10px] text-muted-foreground/60 font-bold truncate mt-0.5">{k.sub}</span>
                 </div>
               </div>
