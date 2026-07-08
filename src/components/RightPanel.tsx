@@ -593,12 +593,12 @@ export default function RightPanel() {
             <table className="w-full border-separate border-spacing-0 table-auto min-w-[720px]">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background/80 w-[40px] sm:w-[50px]">#</th>
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background/80 w-[40px] sm:w-[50px]">#</th>
                   {columns.map(column => {
                     return (
                       <th 
                         key={column.key} 
-                        className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background whitespace-nowrap"
+                        className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap"
                       >
                         {column.shortLabel || column.label}
                       </th>
