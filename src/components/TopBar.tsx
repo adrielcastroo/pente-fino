@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
 import { itensCadastroService } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
-import { Download, User, CheckCircle2, LogOut, ScanBarcode, Plus, ArrowLeftRight } from 'lucide-react';
+import { Download, User, CheckCircle2, LogOut, ScanBarcode, ArrowLeftRight } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -215,26 +215,6 @@ const TopBar = memo(function TopBar() {
 
 
 
-          {isRegistroRoute && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => {
-                    if (path === '/estoque/motor') resetMotorFormData();
-                    else resetFormData();
-                    toast.success('Pronto para um novo registro');
-                  }}
-                  size="sm"
-                  variant="outline"
-                  className="h-9 sm:h-10 xl:h-11 rounded-md px-2.5 sm:px-4 gap-1.5 font-bold text-xs border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden md:inline">Novo registro</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Limpar formulário para um novo registro</TooltipContent>
-            </Tooltip>
-          )}
 
           <GlossaryDialog />
           <ChangelogDialog />
