@@ -52,6 +52,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockedMetragem, setLockedMetragem,
     lockCoulisseMetragem, setLockCoulisseMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
+    lockCortinaMetragem, setLockCortinaMetragem,
     formData, setFormData, resetFormData, labelSettings
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
@@ -102,6 +103,8 @@ export const LeftPanel = memo(function LeftPanel() {
     setLockCortinaLargura: s.setLockCortinaLargura,
     lockedCortinaLargura: s.lockedCortinaLargura,
     setLockedCortinaLargura: s.setLockedCortinaLargura,
+    lockCortinaMetragem: s.lockCortinaMetragem,
+    setLockCortinaMetragem: s.setLockCortinaMetragem,
     formData: s.formData,
     setFormData: s.setFormData,
     resetFormData: s.resetFormData,
@@ -944,7 +947,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const showDropzone = currentMode === 'openrouter';
   const isTecidoTab = formData.activeTab === 'tecido';
-  const hasTopUtilityActions = !isAI && (undoStack.length > 0 || item || nf || m2 || lote || endereco || processo);
+  const hasTopUtilityActions = !isAI && !!(item || nf || m2 || lote || endereco || processo);
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
@@ -1063,11 +1066,6 @@ export const LeftPanel = memo(function LeftPanel() {
         {hasTopUtilityActions && (
           <div className="flex items-center justify-end text-xs text-muted-foreground">
             <div className="flex gap-1">
-              {undoStack.length > 0 && (
-                <Button variant="ghost" size="icon" onClick={handleUndo} className="h-11 w-11 sm:h-7 sm:w-7 rounded-md hover:bg-primary/10 hover:text-primary">
-                  <Undo2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                </Button>
-              )}
               {(item || nf || m2 || lote || endereco || processo) && (
                 <Button variant="ghost" size="sm" onClick={resetForm} className="h-11 sm:h-7 rounded-md text-[11px] sm:text-[10px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive px-3 sm:px-2">
                   Limpar campos
@@ -1261,15 +1259,13 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
                   <label htmlFor="item-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Item / Referência</label>
-                  {(isPVT || isMadeira || isRolo) && (
-                    <button 
-                      onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
-                      className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
-                      title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
-                    >
-                      {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()}
+                    className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
+                  >
+                    {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
                 </div>
               <div className="relative">
                 <input
@@ -1280,12 +1276,12 @@ export const LeftPanel = memo(function LeftPanel() {
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
-                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                    ((isMadeira ? lockMadeiraItem : lockItem)) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
                   data-barcode="true"
-                  readOnly={((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) && !!item}
+                  readOnly={(isMadeira ? lockMadeiraItem : lockItem) && !!item}
                 />
                 {(usesLarguraFromItem || isEtiqPronta) && largura > 0 && (
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
@@ -1319,8 +1315,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   <label htmlFor="largura-cortina" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Largura do Tecido (m)</label>
                   <button
                     onClick={toggleLockCortinaLargura}
-                    className={`transition-colors ${lockCortinaLargura ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
-                    title={lockCortinaLargura ? 'Largura travada' : 'Travar largura'}
+                    className={`transition-colors ${lockCortinaLargura ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={lockCortinaLargura ? 'Campo travado' : 'Travar campo'}
                   >
                     {lockCortinaLargura ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   </button>
@@ -1331,8 +1327,8 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => setCortinaLargura(e.target.value)}
                   onBlur={() => { if (lockCortinaLargura) setLockedCortinaLargura(cortinaLargura); }}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                  className={`w-full h-11 rounded-lg border px-3 text-sm transition-colors ${
-                    lockCortinaLargura ? 'bg-primary/10 border-primary/40 text-primary shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                  className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
+                    lockCortinaLargura ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40'
                   }`}
                   placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                   readOnly={lockCortinaLargura && !!lockedCortinaLargura}
@@ -1345,6 +1341,14 @@ export const LeftPanel = memo(function LeftPanel() {
               <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center gap-1.5 h-4">
                   <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Unidade de Metragem</label>
+                  <button
+                    type="button"
+                    onClick={() => setLockCortinaMetragem(!lockCortinaMetragem)}
+                    className={`transition-colors ${lockCortinaMetragem ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                    title={lockCortinaMetragem ? 'Preferência travada — mantém a escolha entre registros' : 'Travar preferência'}
+                  >
+                    {lockCortinaMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -1352,7 +1356,9 @@ export const LeftPanel = memo(function LeftPanel() {
                     onClick={() => setCortinaMetragem('m2')}
                     className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
                       !cortinaUsesMLinear
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        ? lockCortinaMetragem
+                          ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]'
+                          : 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
                     }`}
                   >
@@ -1363,7 +1369,9 @@ export const LeftPanel = memo(function LeftPanel() {
                     onClick={() => setCortinaMetragem('mlinear')}
                     className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
                       cortinaUsesMLinear
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        ? lockCortinaMetragem
+                          ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]'
+                          : 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
                     }`}
                   >

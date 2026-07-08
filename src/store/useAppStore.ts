@@ -77,6 +77,7 @@ export interface AppState {
   // Cortina locks
   lockCortinaLargura: boolean;
   lockedCortinaLargura: string;
+  lockCortinaMetragem: boolean;
   lockMadeiraProcesso: boolean;
   lockMadeiraItem: boolean;
   lockMadeiraLote: boolean;
@@ -128,6 +129,7 @@ export interface AppState {
   setLockedMetragem: (m: string) => void;
   setLockCortinaLargura: (lock: boolean) => void;
   setLockedCortinaLargura: (l: string) => void;
+  setLockCortinaMetragem: (lock: boolean) => void;
   setLockMadeiraProcesso: (lock: boolean) => void;
   setLockMadeiraItem: (lock: boolean) => void;
   setLockMadeiraLote: (lock: boolean) => void;
@@ -211,6 +213,7 @@ export const useAppStore = create<AppState>()(
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
+      lockCortinaMetragem: true,
       lockMadeiraProcesso: false,
       lockMadeiraItem: false,
       lockMadeiraLote: false,
@@ -297,6 +300,7 @@ export const useAppStore = create<AppState>()(
       setLockedMetragem: (m) => set({ lockedMetragem: m }),
       setLockCortinaLargura: (lock) => set({ lockCortinaLargura: lock }),
       setLockedCortinaLargura: (l) => set({ lockedCortinaLargura: l }),
+      setLockCortinaMetragem: (lock) => set({ lockCortinaMetragem: lock }),
       setLockMadeiraProcesso: (lock) => set({ lockMadeiraProcesso: lock }),
       setLockMadeiraItem: (lock) => set({ lockMadeiraItem: lock }),
       setLockMadeiraLote: (lock) => set({ lockMadeiraLote: lock }),
@@ -369,6 +373,7 @@ export const useAppStore = create<AppState>()(
           if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
           if (state.lockCoulisseMetragem) newData.coulisseMetragem = state.formData.coulisseMetragem;
           if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
+          if (state.lockCortinaMetragem) newData.cortinaMetragem = state.formData.cortinaMetragem;
         }
         
         const updates: any = { formData: newData };
@@ -922,6 +927,7 @@ export const useAppStore = create<AppState>()(
         lockedMetragem: state.lockedMetragem,
         lockCortinaLargura: state.lockCortinaLargura,
         lockedCortinaLargura: state.lockedCortinaLargura,
+        lockCortinaMetragem: state.lockCortinaMetragem,
         lockMadeiraProcesso: state.lockMadeiraProcesso,
         lockMadeiraItem: state.lockMadeiraItem,
         lockMadeiraLote: state.lockMadeiraLote,
