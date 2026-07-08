@@ -77,6 +77,7 @@ export interface AppState {
   // Cortina locks
   lockCortinaLargura: boolean;
   lockedCortinaLargura: string;
+  lockCortinaMetragem: boolean;
   lockMadeiraProcesso: boolean;
   lockMadeiraItem: boolean;
   lockMadeiraLote: boolean;
