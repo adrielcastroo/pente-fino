@@ -372,6 +372,7 @@ export const useAppStore = create<AppState>()(
           if (state.lockMetragem) newData.diversosMLinear = state.lockedMetragem;
           if (state.lockCoulisseMetragem) newData.coulisseMetragem = state.formData.coulisseMetragem;
           if (state.lockCortinaLargura) newData.cortinaLargura = state.lockedCortinaLargura;
+          if (state.lockCortinaMetragem) newData.cortinaMetragem = state.formData.cortinaMetragem;
         }
         
         const updates: any = { formData: newData };
