@@ -44,7 +44,11 @@ const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 
 declare const __APP_VERSION__: string;
 
-const TAB_GROUPS = [
+type LucideIcon = typeof Activity;
+type TabDef = { key: string; label: string; icon: LucideIcon };
+type TabGroup = { label: string; tabs: TabDef[] };
+
+const TAB_GROUPS: TabGroup[] = [
   {
     label: 'Visão',
     tabs: [
@@ -79,11 +83,9 @@ const TAB_GROUPS = [
       { key: 'security', label: 'Segurança & Auth', icon: KeyRound },
     ],
   },
-] as const;
+];
 
-const TABS = TAB_GROUPS.flatMap((g) => g.tabs);
-
-type TabKey = typeof TABS[number]['key'];
+type TabKey = string;
 
 const tabFallback = <Skeleton className="h-96 rounded-md" />;
 
@@ -114,33 +116,46 @@ export default function AdminPanelPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        {/* Segmented tabs — wrap em telas menores, evita scroll horizontal na página */}
-        <div className="bg-card/60 rounded-md p-1 border border-border/40 shadow-sm">
-          <div className="flex flex-wrap gap-1">
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const isActive = tab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setTab(t.key)}
-                  className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                  <span>{t.label}</span>
-                </button>
-              );
-            })}
+        {/* Navegação agrupada — categorias lógicas, wrap responsivo, sem scroll horizontal */}
+        <nav
+          aria-label="Seções do painel admin"
+          className="bg-card/60 rounded-md border border-border/40 shadow-sm p-2 sm:p-3"
+        >
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-3">
+            {TAB_GROUPS.map((group) => (
+              <div key={group.label} className="flex flex-col gap-1.5 min-w-0">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/70 px-1">
+                  {group.label}
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {group.tabs.map((t) => {
+                    const Icon = t.icon;
+                    const isActive = tab === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => setTab(t.key)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                        <span>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </nav>
+
 
         <motion.div
           key={tab}
