@@ -1468,16 +1468,6 @@ export const LeftPanel = memo(function LeftPanel() {
                     placeholder="Ex: 001234..." autoComplete="off"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-posicao" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Posição (Alocada)</label></div>
-                  <input
-                    id="etiq-posicao"
-                    value={posicao}
-                    readOnly
-                    className="w-full h-11 rounded-lg border border-primary/40 bg-primary/10 px-3.5 text-sm font-bold text-primary shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    placeholder="Auto..."
-                  />
-                </div>
               </>
             )}
 
