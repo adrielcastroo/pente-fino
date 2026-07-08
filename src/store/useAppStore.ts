@@ -129,6 +129,7 @@ export interface AppState {
   setLockedMetragem: (m: string) => void;
   setLockCortinaLargura: (lock: boolean) => void;
   setLockedCortinaLargura: (l: string) => void;
+  setLockCortinaMetragem: (lock: boolean) => void;
   setLockMadeiraProcesso: (lock: boolean) => void;
   setLockMadeiraItem: (lock: boolean) => void;
   setLockMadeiraLote: (lock: boolean) => void;
