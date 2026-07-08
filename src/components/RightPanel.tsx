@@ -95,11 +95,12 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   }
 
   const isNumericLike = ['mLinear', 'm2', 'largura', 'quantidade', 'lote', 'nf', 'processo'].includes(columnKey);
+  const isSecondary = ['largura', 'nf', 'processo', 'lote'].includes(columnKey);
 
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-semibold text-foreground scale-100 group-hover:scale-[1.02] origin-left break-words' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'whitespace-nowrap' : ''} ${columnKey === 'loteSistema' ? 'whitespace-nowrap min-w-[180px]' : ''} ${columnKey === 'endereco' ? 'whitespace-nowrap' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors ${columnKey === 'item' ? 'font-bold text-foreground text-sm sm:text-base tracking-tight' : isSecondary ? 'font-mono text-muted-foreground/60 text-[11px] sm:text-xs group-hover:text-muted-foreground' : 'font-mono text-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'whitespace-nowrap tabular-nums' : ''} ${columnKey === 'loteSistema' ? 'whitespace-nowrap min-w-[180px]' : ''} ${columnKey === 'endereco' ? 'whitespace-nowrap' : ''} ${columnKey === 'mLinear' || columnKey === 'quantidade' ? 'font-semibold' : ''} ${className || ''}`}
     >
       {content}
     </td>
