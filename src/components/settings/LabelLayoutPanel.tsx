@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint } from 'lucide-react';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint, Ruler, LayoutGrid, Palette } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
@@ -220,10 +220,11 @@ export default function LabelLayoutPanel() {
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Maximize className="w-4 h-4" />
+                    <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/40 group-hover:shadow-primary/20">
+                      <Ruler className="w-[18px] h-[18px]" strokeWidth={2.25} />
+                      <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <CardTitle className="text-sm font-semibold">Dimensões (mm)</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight">Dimensões (mm)</CardTitle>
                   </div>
                   <CardDescription className="pl-12">
                     {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
@@ -308,10 +309,11 @@ export default function LabelLayoutPanel() {
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Layout className="w-4 h-4" />
+                    <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/40 group-hover:shadow-primary/20">
+                      <LayoutGrid className="w-[18px] h-[18px]" strokeWidth={2.25} />
+                      <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <CardTitle className="text-sm font-semibold">Blocos da Etiqueta</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight">Blocos da Etiqueta</CardTitle>
                   </div>
                   <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
@@ -384,10 +386,11 @@ export default function LabelLayoutPanel() {
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Square className="w-4 h-4" />
+                    <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/40 group-hover:shadow-primary/20">
+                      <Palette className="w-[18px] h-[18px]" strokeWidth={2.25} />
+                      <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <CardTitle className="text-sm font-semibold">Aparência</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight">Aparência</CardTitle>
                   </div>
                   <CardDescription className="pl-12">Bordas, cantos, padding e margem da etiqueta.</CardDescription>
                 </CardHeader>
