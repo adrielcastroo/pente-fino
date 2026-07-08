@@ -212,6 +212,7 @@ export const useAppStore = create<AppState>()(
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
+      lockCortinaMetragem: true,
       lockMadeiraProcesso: false,
       lockMadeiraItem: false,
       lockMadeiraLote: false,
