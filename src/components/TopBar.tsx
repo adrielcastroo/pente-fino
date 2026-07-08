@@ -215,26 +215,6 @@ const TopBar = memo(function TopBar() {
 
 
 
-          {isRegistroRoute && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => {
-                    if (path === '/estoque/motor') resetMotorFormData();
-                    else resetFormData();
-                    toast.success('Pronto para um novo registro');
-                  }}
-                  size="sm"
-                  variant="outline"
-                  className="h-9 sm:h-10 xl:h-11 rounded-md px-2.5 sm:px-4 gap-1.5 font-bold text-xs border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden md:inline">Novo registro</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Limpar formulário para um novo registro</TooltipContent>
-            </Tooltip>
-          )}
 
           <GlossaryDialog />
           <ChangelogDialog />
