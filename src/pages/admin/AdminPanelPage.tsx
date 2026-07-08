@@ -1,12 +1,15 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
+import { cn } from '@/lib/utils';
 import {
   ShieldCheck,
   Flag,
@@ -60,6 +63,8 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key'];
 
+const tabFallback = <Skeleton className="h-96 rounded-md" />;
+
 export default function AdminPanelPage() {
   const { isAdmin, loading, user } = useAuth();
   const [params, setParams] = useSearchParams();
@@ -72,73 +77,113 @@ export default function AdminPanelPage() {
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
-      <header className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <ShieldCheck className="h-7 w-7 text-primary" /> Painel Admin
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Controle total do aplicativo: features, versões, usuários, banco e segurança.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          <Badge variant="outline" className="font-mono">v{version}</Badge>
-          <Badge variant="secondary" className="gap-1"><ShieldCheck className="h-3 w-3" /> {user?.email}</Badge>
-        </div>
-      </header>
+    <PageShell>
+      <PageHeader
+        title="Painel Admin"
+        subtitle="Controle total do aplicativo: features, versões, usuários, banco e segurança."
+        actions={
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="font-mono h-7 px-2.5">v{version}</Badge>
+            <Badge variant="secondary" className="gap-1 h-7 px-2.5">
+              <ShieldCheck className="h-3 w-3" /> {user?.email}
+            </Badge>
+          </div>
+        }
+      />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        <div className="overflow-x-auto -mx-2 px-2">
-          <TabsList className="inline-flex h-auto p-1">
+        {/* Custom segmented tabs — mesmo padrão dos módulos Estoque/Expedição */}
+        <div className="overflow-x-auto -mx-1 px-1 pb-1 scrollbar-thin">
+          <div className="inline-flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 shadow-sm">
             {TABS.map((t) => {
               const Icon = t.icon;
+              const isActive = tab === t.key;
               return (
-                <TabsTrigger key={t.key} value={t.key} className="gap-1.5 text-xs sm:text-sm">
-                  <Icon className="h-3.5 w-3.5" /> {t.label}
-                </TabsTrigger>
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setTab(t.key)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t.label}
+                </button>
               );
             })}
-          </TabsList>
+          </div>
         </div>
 
-        <TabsContent value="overview"><OverviewTab /></TabsContent>
-        <TabsContent value="integrations">
-          <Suspense fallback={<Skeleton className="h-96" />}><IntegrationsTab /></Suspense>
-        </TabsContent>
-        <TabsContent value="observability">
-          <Suspense fallback={<Skeleton className="h-96" />}><ObservabilityTab /></Suspense>
-        </TabsContent>
-        <TabsContent value="sentry">
-          <Suspense fallback={<Skeleton className="h-96" />}><SentryTab /></Suspense>
-        </TabsContent>
-        <TabsContent value="posthog">
-          <Suspense fallback={<Skeleton className="h-96" />}><PostHogTab /></Suspense>
-        </TabsContent>
-        <TabsContent value="n8n">
-          <Suspense fallback={<Skeleton className="h-96" />}><N8nMonitorPage /></Suspense>
-        </TabsContent>
-        <TabsContent value="flags">
-          <Suspense fallback={<Skeleton className="h-96" />}><FeatureFlagsPage /></Suspense>
-        </TabsContent>
-        <TabsContent value="releases">
-          <Suspense fallback={<Skeleton className="h-96" />}><ReleasesPage /></Suspense>
-        </TabsContent>
-        <TabsContent value="team">
-          <Card className="p-6">
-            <Suspense fallback={<Skeleton className="h-96" />}><TeamPanel /></Suspense>
-          </Card>
-        </TabsContent>
-        <TabsContent value="settings">
-          <Suspense fallback={<Skeleton className="h-96" />}><GlobalSettingsTab /></Suspense>
-        </TabsContent>
-        <TabsContent value="database"><DatabaseTab /></TabsContent>
-        <TabsContent value="backup">
-          <Suspense fallback={<Skeleton className="h-96" />}><BackupTab /></Suspense>
-        </TabsContent>
-        <TabsContent value="audit"><AuditTab /></TabsContent>
-        <TabsContent value="security"><SecurityTab /></TabsContent>
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <TabsContent value="overview" className="mt-0"><OverviewTab /></TabsContent>
+          <TabsContent value="integrations" className="mt-0">
+            <Suspense fallback={tabFallback}><IntegrationsTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="observability" className="mt-0">
+            <Suspense fallback={tabFallback}><ObservabilityTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="sentry" className="mt-0">
+            <Suspense fallback={tabFallback}><SentryTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="posthog" className="mt-0">
+            <Suspense fallback={tabFallback}><PostHogTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="n8n" className="mt-0">
+            <Suspense fallback={tabFallback}><N8nMonitorPage /></Suspense>
+          </TabsContent>
+          <TabsContent value="flags" className="mt-0">
+            <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>
+          </TabsContent>
+          <TabsContent value="releases" className="mt-0">
+            <Suspense fallback={tabFallback}><ReleasesPage /></Suspense>
+          </TabsContent>
+          <TabsContent value="team" className="mt-0">
+            <Card className="p-6 rounded-md border-border/40 shadow-sm">
+              <Suspense fallback={tabFallback}><TeamPanel /></Suspense>
+            </Card>
+          </TabsContent>
+          <TabsContent value="settings" className="mt-0">
+            <Suspense fallback={tabFallback}><GlobalSettingsTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="database" className="mt-0"><DatabaseTab /></TabsContent>
+          <TabsContent value="backup" className="mt-0">
+            <Suspense fallback={tabFallback}><BackupTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
+          <TabsContent value="security" className="mt-0"><SecurityTab /></TabsContent>
+        </motion.div>
       </Tabs>
+    </PageShell>
+  );
+}
+
+// ============ SECTION HEADER ============
+function SectionToolbar({
+  hint,
+  onRefresh,
+  loading,
+}: {
+  hint?: string;
+  onRefresh: () => void;
+  loading?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 flex-wrap">
+      {hint ? <p className="text-xs sm:text-sm text-muted-foreground">{hint}</p> : <span />}
+      <Button size="sm" variant="outline" onClick={onRefresh} disabled={loading} className="h-8 gap-1.5">
+        <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+        Atualizar
+      </Button>
     </div>
   );
 }
@@ -170,50 +215,50 @@ function OverviewTab() {
 
   useEffect(() => { load(); }, []);
 
-  if (!stats) return <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24" />)}</div>;
+  if (!stats) {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-md" />)}
+        </div>
+      </div>
+    );
+  }
 
   const current = stats.releases.find((r: any) => r.is_current);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button size="sm" variant="ghost" onClick={load}><RefreshCw className="h-3.5 w-3.5" /> Atualizar</Button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="Usuários cadastrados" value={stats.users} />
-        <StatCard icon={Flag} label="Feature flags ativas" value={`${stats.flagsAtivas}/${stats.flagsTotal}`} />
-        <StatCard icon={Rocket} label="Versão atual" value={current ? `v${current.version}` : '—'} />
+      <SectionToolbar onRefresh={load} />
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard icon={Users} label="Usuários" value={stats.users} />
+        <StatCard icon={Flag} label="Feature flags" value={`${stats.flagsAtivas}/${stats.flagsTotal}`} variant="primary" />
+        <StatCard icon={Rocket} label="Versão atual" value={current ? `v${current.version}` : '—'} variant="success" />
         <StatCard icon={Package} label="Registros" value={stats.registros.toLocaleString('pt-BR')} />
         <StatCard icon={Activity} label="Conferências" value={stats.conferences.toLocaleString('pt-BR')} />
         <StatCard icon={Activity} label="Saídas" value={stats.saidas.toLocaleString('pt-BR')} />
       </div>
 
-      <Card className="p-5">
-        <h3 className="font-semibold mb-3 flex items-center gap-2"><Rocket className="h-4 w-4" /> Últimas releases</h3>
-        <div className="space-y-1.5">
-          {stats.releases.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma release registrada.</p>
-          ) : stats.releases.map((r: any) => (
-            <div key={r.version} className="flex items-center gap-2 text-sm">
-              <span className="font-mono">v{r.version}</span>
-              {r.is_current && <Badge className="bg-primary text-xs">Atual</Badge>}
-              {r.is_stable && <Badge variant="secondary" className="text-xs">Estável</Badge>}
-            </div>
-          ))}
-        </div>
+      <Card className="p-5 rounded-md border-border/40 shadow-sm">
+        <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+          <Rocket className="h-4 w-4 text-primary" /> Últimas releases
+        </h3>
+        {stats.releases.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma release registrada.</p>
+        ) : (
+          <ul className="divide-y divide-border/40">
+            {stats.releases.map((r: any) => (
+              <li key={r.version} className="flex items-center gap-2 py-2 text-sm">
+                <span className="font-mono">v{r.version}</span>
+                {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
+                {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
-  );
-}
-
-function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: any }) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <Icon className="h-3.5 w-3.5" /> {label}
-      </div>
-      <div className="text-2xl font-bold mt-1 tabular-nums">{value}</div>
-    </Card>
   );
 }
 
@@ -247,22 +292,25 @@ function DatabaseTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Volumetria em tempo real (respeita RLS — admin enxerga tudo).
-        </p>
-        <Button size="sm" variant="ghost" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Atualizar
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      <SectionToolbar
+        hint="Volumetria em tempo real (respeita RLS — admin enxerga tudo)."
+        onRefresh={load}
+        loading={loading}
+      />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
         {rows.map((r) => (
-          <Card key={r.table} className="p-3">
+          <Card
+            key={r.table}
+            className="p-3 rounded-md border-border/40 shadow-sm hover:border-primary/40 hover:shadow-md transition-colors duration-200"
+          >
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
-              <HardDrive className="h-3 w-3 shrink-0" /> <span className="truncate font-mono">{r.table}</span>
+              <HardDrive className="h-3 w-3 shrink-0" />
+              <span className="truncate font-mono">{r.table}</span>
             </div>
-            <div className="text-xl font-bold tabular-nums mt-0.5">
-              {r.error ? <span className="text-xs text-destructive">erro</span> : (r.count ?? 0).toLocaleString('pt-BR')}
+            <div className="text-xl font-semibold tabular-nums mt-1">
+              {r.error
+                ? <span className="text-xs text-destructive">erro</span>
+                : (r.count ?? 0).toLocaleString('pt-BR')}
             </div>
           </Card>
         ))}
@@ -288,35 +336,38 @@ function AuditTab() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Últimas 100 alterações no sistema.</p>
-        <Button size="sm" variant="ghost" onClick={load}><RefreshCw className="h-3.5 w-3.5" /> Atualizar</Button>
-      </div>
-      {loading ? <Skeleton className="h-64" /> : (
-        <Card className="p-0 overflow-hidden">
+      <SectionToolbar
+        hint="Últimas 100 alterações no sistema."
+        onRefresh={load}
+        loading={loading}
+      />
+      {loading ? <Skeleton className="h-64 rounded-md" /> : (
+        <Card className="p-0 overflow-hidden rounded-md border-border/40 shadow-sm">
           <div className="max-h-[600px] overflow-auto">
             <table className="w-full text-xs">
-              <thead className="bg-muted/40 sticky top-0">
-                <tr className="text-left">
-                  <th className="p-2">Quando</th>
-                  <th className="p-2">Quem</th>
-                  <th className="p-2">Ação</th>
-                  <th className="p-2">Entidade</th>
-                  <th className="p-2">Campos</th>
+              <thead className="bg-muted/40 sticky top-0 backdrop-blur">
+                <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th className="p-2.5 font-semibold">Quando</th>
+                  <th className="p-2.5 font-semibold">Quem</th>
+                  <th className="p-2.5 font-semibold">Ação</th>
+                  <th className="p-2.5 font-semibold">Entidade</th>
+                  <th className="p-2.5 font-semibold">Campos</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((l) => (
-                  <tr key={l.id} className="border-t border-border/40 hover:bg-muted/20">
-                    <td className="p-2 whitespace-nowrap font-mono text-[10px]">{new Date(l.created_at).toLocaleString('pt-BR')}</td>
-                    <td className="p-2 truncate max-w-[160px]">{l.user_email || l.user_id?.slice(0, 8) || '—'}</td>
-                    <td className="p-2"><Badge variant="outline" className="text-[10px]">{l.action}</Badge></td>
-                    <td className="p-2 font-mono">{l.entity}</td>
-                    <td className="p-2 text-muted-foreground truncate max-w-[240px]">{(l.changed_keys || []).join(', ')}</td>
+                  <tr key={l.id} className="border-t border-border/40 hover:bg-muted/30 transition-colors">
+                    <td className="p-2.5 whitespace-nowrap font-mono text-[10px] text-muted-foreground">
+                      {new Date(l.created_at).toLocaleString('pt-BR')}
+                    </td>
+                    <td className="p-2.5 truncate max-w-[160px]">{l.user_email || l.user_id?.slice(0, 8) || '—'}</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-[10px] h-5">{l.action}</Badge></td>
+                    <td className="p-2.5 font-mono">{l.entity}</td>
+                    <td className="p-2.5 text-muted-foreground truncate max-w-[240px]">{(l.changed_keys || []).join(', ')}</td>
                   </tr>
                 ))}
                 {logs.length === 0 && (
-                  <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Sem registros.</td></tr>
+                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Sem registros.</td></tr>
                 )}
               </tbody>
             </table>
@@ -344,49 +395,55 @@ function SecurityTab() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 border-primary/30 bg-primary/5">
+      <Card className="p-4 rounded-md border-primary/30 bg-primary/5 shadow-sm">
         <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
           <ShieldCheck className="h-4 w-4 text-primary" /> Modelo de acesso
         </h3>
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Perfis: <strong>admin</strong> → <strong>gerente</strong> → <strong>supervisor</strong> → <strong>operador</strong>.</p>
-          <p>• Alteração de perfis via aba <strong>Usuários &amp; Acessos</strong>.</p>
-          <p>• Todas as tabelas usam RLS. Admin enxerga tudo via <code className="text-[10px]">has_role()</code>.</p>
+        <div className="text-xs text-muted-foreground space-y-1 leading-relaxed">
+          <p>• Perfis: <strong className="text-foreground">admin</strong> → <strong className="text-foreground">gerente</strong> → <strong className="text-foreground">supervisor</strong> → <strong className="text-foreground">operador</strong>.</p>
+          <p>• Alteração de perfis via aba <strong className="text-foreground">Usuários &amp; Acessos</strong>.</p>
+          <p>• Todas as tabelas usam RLS. Admin enxerga tudo via <code className="text-[10px] bg-muted/60 px-1 py-0.5 rounded">has_role()</code>.</p>
         </div>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Eventos de autenticação (login, reset, etc.).</p>
-        <Button size="sm" variant="ghost" onClick={load}><RefreshCw className="h-3.5 w-3.5" /> Atualizar</Button>
-      </div>
+      <SectionToolbar
+        hint="Eventos de autenticação (login, reset, etc.)."
+        onRefresh={load}
+        loading={loading}
+      />
 
-      {loading ? <Skeleton className="h-64" /> : (
-        <Card className="p-0 overflow-hidden">
+      {loading ? <Skeleton className="h-64 rounded-md" /> : (
+        <Card className="p-0 overflow-hidden rounded-md border-border/40 shadow-sm">
           <div className="max-h-[600px] overflow-auto">
             <table className="w-full text-xs">
-              <thead className="bg-muted/40 sticky top-0">
-                <tr className="text-left">
-                  <th className="p-2">Quando</th>
-                  <th className="p-2">Evento</th>
-                  <th className="p-2">Email</th>
-                  <th className="p-2">Status</th>
+              <thead className="bg-muted/40 sticky top-0 backdrop-blur">
+                <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th className="p-2.5 font-semibold">Quando</th>
+                  <th className="p-2.5 font-semibold">Evento</th>
+                  <th className="p-2.5 font-semibold">Email</th>
+                  <th className="p-2.5 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((l) => (
-                  <tr key={l.id} className="border-t border-border/40 hover:bg-muted/20">
-                    <td className="p-2 whitespace-nowrap font-mono text-[10px]">{new Date(l.created_at).toLocaleString('pt-BR')}</td>
-                    <td className="p-2"><Badge variant="outline" className="text-[10px]">{l.event_type}</Badge></td>
-                    <td className="p-2 truncate max-w-[220px]">{l.email || '—'}</td>
-                    <td className="p-2">
-                      <Badge variant={l.status === 'success' ? 'default' : 'secondary'} className="text-[10px]">
+                  <tr key={l.id} className="border-t border-border/40 hover:bg-muted/30 transition-colors">
+                    <td className="p-2.5 whitespace-nowrap font-mono text-[10px] text-muted-foreground">
+                      {new Date(l.created_at).toLocaleString('pt-BR')}
+                    </td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-[10px] h-5">{l.event_type}</Badge></td>
+                    <td className="p-2.5 truncate max-w-[220px]">{l.email || '—'}</td>
+                    <td className="p-2.5">
+                      <Badge
+                        variant={l.status === 'success' ? 'default' : 'secondary'}
+                        className="text-[10px] h-5"
+                      >
                         {l.status || '—'}
                       </Badge>
                     </td>
                   </tr>
                 ))}
                 {logs.length === 0 && (
-                  <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Sem eventos.</td></tr>
+                  <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Sem eventos.</td></tr>
                 )}
               </tbody>
             </table>
