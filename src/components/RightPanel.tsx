@@ -1,5 +1,5 @@
 import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
-import TecidoCardsView from '@/components/tecido/TecidoCardsView';
+
 import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/store/useAppStore';
@@ -133,10 +133,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
     <tr className={`group hover:bg-primary/[0.03] border-b border-border/30 ${r.isNew ? 'bg-primary/[0.08] animate-pulse-subtle' : ''} transition-all duration-300`}>
       <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-semibold tabular-nums">{i + 1}</td>
       {columns.map((column: any) => {
-        // Critical columns that should always show: item, mLinear, quantidade, loteSistema
-        // Less critical: nf, processo, m2, largura, lote, endereco
-        const isCritical = ['item', 'mLinear', 'quantidade'].includes(column.key);
-        const responsiveClass = isCritical ? "" : column.key === 'loteSistema' ? "hidden sm:table-cell" : column.key === 'nf' ? "hidden lg:table-cell" : "hidden md:table-cell";
+
 
         return (
           <TableCell
@@ -153,7 +150,6 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
             onStartEdit={onStartEdit}
             onCopy={onCopy}
             loteSistema={r.loteSistema}
-            className={responsiveClass}
           />
         );
       })}
@@ -594,30 +590,15 @@ export default function RightPanel() {
 
             </table>
           ) : (
-            <>
-              {/* Tablet vertical (md→lg) na aba Tecido: cards operacionais */}
-              {activeTab === 'tecido' && (
-                <div className="block xl:hidden">
-                  <TecidoCardsView
-                    rows={pagedRows}
-                    onDelete={deleteRegistro}
-                    onCopy={copyText}
-                    isGuest={isGuest}
-                    showActions={showActions}
-                  />
-                </div>
-              )}
-            <table className={`w-full border-separate border-spacing-0 table-auto min-w-[600px] lg:min-w-full ${activeTab === 'tecido' ? 'hidden xl:table' : ''}`}>
+            <table className="w-full border-separate border-spacing-0 table-auto min-w-[720px]">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background/80  w-[40px] sm:w-[50px]">#</th>
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background/80 w-[40px] sm:w-[50px]">#</th>
                   {columns.map(column => {
-                    const isCritical = ['item', 'mLinear', 'quantidade', 'loteSistema'].includes(column.key);
-                    const responsiveClass = isCritical ? "" : "hidden md:table-cell";
                     return (
                       <th 
                         key={column.key} 
-                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background whitespace-nowrap ${responsiveClass}`}
+                        className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background whitespace-nowrap"
                       >
                         {column.shortLabel || column.label}
                       </th>
@@ -649,7 +630,6 @@ export default function RightPanel() {
                 ))}
               </tbody>
             </table>
-            </>
           )}
 
           {isTecidoTable && sortedRows.length > TECIDO_PAGE_SIZE && (
