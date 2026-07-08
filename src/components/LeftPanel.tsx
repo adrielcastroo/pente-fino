@@ -1698,28 +1698,13 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Actions */}
         <div className="space-y-3 pb-6 pt-2 px-1 -mx-1 z-30 sm:relative sm:bg-none sm:p-0">
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
+          <Button
+            onClick={handleAdd}
+            className="w-full h-14 sm:h-16 rounded-md font-semibold tracking-[0.08em] text-sm sm:text-base"
           >
-            <Button
-              onClick={handleAdd}
-              className="w-full h-14 sm:h-16 rounded-md font-semibold tracking-[0.1em] text-sm sm:text-base shadow-xl shadow-primary/20 transition-all duration-300 group relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-10 transition-opacity" />
-              <span className="relative flex items-center justify-center gap-3">
-                <motion.div
-                  initial={false}
-                  animate={{ rotate: 0 }}
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Plus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
-                </motion.div>
-                Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
-              </span>
-            </Button>
-          </motion.div>
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" strokeWidth={2.5} />
+            Adicionar {isMadeira ? (madeiraTipo === 'Lâmina' ? 'Lâminas' : madeiraTipo) : 'Registro'}
+          </Button>
 
 
           {isDuplicate && (
