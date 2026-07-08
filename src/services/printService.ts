@@ -635,7 +635,9 @@ export async function printTecidoLabel(
       qrLote: loteText,
     };
 
-    const rendered = await renderTecidoLabel(data, labelSettings);
+    const rendered = await renderTecidoLabel(data, labelSettings, {
+      applyPrintOffset: resolvePrintMethod(labelSettings) === 'webhook',
+    });
     await dispatchPrint(labelSettings, {
       type: 'tecido',
       title: `Etiqueta ${input.item}`,
