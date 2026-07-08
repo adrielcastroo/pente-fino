@@ -216,17 +216,15 @@ export default function LabelLayoutPanel() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 lg:h-[calc(100vh-15rem)] lg:min-h-[560px]">
             <div className="space-y-4 lg:col-span-3 order-2 lg:order-1 lg:overflow-y-auto lg:pr-3 lg:-mr-2">
 
-              <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <CardHeader className="pb-3">
+              <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                <CardHeader className="p-5 border-b border-border/40 space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/40 group-hover:shadow-primary/20">
-                      <Ruler className="w-[18px] h-[18px]" strokeWidth={2.25} />
-                      <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                      <Ruler className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold tracking-tight">Dimensões (mm)</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Dimensões (mm)</CardTitle>
                   </div>
-                  <CardDescription className="pl-12">
+                  <CardDescription className="text-xs text-muted-foreground pl-11">
                     {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
                   </CardDescription>
                 </CardHeader>
@@ -305,17 +303,15 @@ export default function LabelLayoutPanel() {
                 </CardContent>
               </Card>
 
-              <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <CardHeader className="pb-3">
+              <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                <CardHeader className="p-5 border-b border-border/40 space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/40 group-hover:shadow-primary/20">
-                      <LayoutGrid className="w-[18px] h-[18px]" strokeWidth={2.25} />
-                      <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                      <LayoutGrid className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold tracking-tight">Blocos da Etiqueta</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Blocos da Etiqueta</CardTitle>
                   </div>
-                  <CardDescription className="pl-12">Habilite ou desabilite cada elemento.</CardDescription>
+                  <CardDescription className="text-xs text-muted-foreground pl-11">Habilite ou desabilite cada elemento.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -382,17 +378,15 @@ export default function LabelLayoutPanel() {
                 </CardContent>
               </Card>
 
-              <Card className="group relative overflow-hidden border-border/40 bg-gradient-to-br from-card to-card/60 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-0.5">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <CardHeader className="pb-3">
+              <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                <CardHeader className="p-5 border-b border-border/40 space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary ring-1 ring-primary/20 shadow-sm shadow-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/40 group-hover:shadow-primary/20">
-                      <Palette className="w-[18px] h-[18px]" strokeWidth={2.25} />
-                      <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                      <Palette className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold tracking-tight">Aparência</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Aparência</CardTitle>
                   </div>
-                  <CardDescription className="pl-12">Bordas, cantos, padding e margem da etiqueta.</CardDescription>
+                  <CardDescription className="text-xs text-muted-foreground pl-11">Bordas, cantos, padding e margem da etiqueta.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="space-y-2">
@@ -520,13 +514,13 @@ export default function LabelLayoutPanel() {
                 <Button
                   onClick={handleReset}
                   variant="outline"
-                  className="flex-1 gap-2 font-bold border-dashed h-11 rounded-md transition-all duration-300 hover:bg-destructive/5 hover:border-destructive/40 hover:text-destructive hover:-translate-y-0.5 hover:shadow-md"
+                  className="flex-1 gap-2 h-10 rounded-md font-medium text-xs hover:bg-destructive/5 hover:border-destructive/40 hover:text-destructive"
                 >
-                  <RefreshCw className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" /> Resetar Padrão
+                  <RefreshCw className="w-4 h-4" /> Resetar Padrão
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="flex-[2] gap-2 font-bold h-11 rounded-md bg-gradient-to-r from-primary to-primary/85 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
+                  className="flex-[2] gap-2 h-10 rounded-md font-medium text-xs"
                 >
                   <Save className="w-4 h-4" /> Salvar Preferências
                 </Button>
