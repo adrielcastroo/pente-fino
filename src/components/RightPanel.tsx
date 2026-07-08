@@ -94,10 +94,12 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
     content = <HighlightedText text={String(value || '—')} q={searchQuery} />;
   }
 
+  const isNumericLike = ['mLinear', 'm2', 'largura', 'quantidade', 'lote', 'nf', 'processo'].includes(columnKey);
+
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-semibold text-foreground scale-100 group-hover:scale-[1.02] origin-left' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${columnKey === 'loteSistema' ? 'max-w-[140px] sm:max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm transition-all duration-300 ${columnKey === 'item' ? 'font-semibold text-foreground scale-100 group-hover:scale-[1.02] origin-left break-words' : 'font-mono text-muted-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'whitespace-nowrap' : ''} ${columnKey === 'loteSistema' ? 'whitespace-nowrap min-w-[180px]' : ''} ${columnKey === 'endereco' ? 'whitespace-nowrap' : ''} ${className || ''}`}
     >
       {content}
     </td>
@@ -617,7 +619,7 @@ export default function RightPanel() {
                     return (
                       <th 
                         key={column.key} 
-                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background ${responsiveClass}`}
+                        className={`sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background whitespace-nowrap ${responsiveClass}`}
                       >
                         {column.shortLabel || column.label}
                       </th>
