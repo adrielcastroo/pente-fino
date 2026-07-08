@@ -778,8 +778,9 @@ function buildMotorBrowserPage(data: MotorLabelData, labelSettings: LabelSetting
   const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * LABEL_PX_PER_MM;
   const hPx = (orientation === 'landscape' ? h : w) * LABEL_PX_PER_MM;
-  const offsetXPx = (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
-  const offsetYPx = (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  const applyMotorOffset = resolvePrintMethod(labelSettings) === 'webhook';
+  const offsetXPx = applyMotorOffset ? (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM : 0;
+  const offsetYPx = applyMotorOffset ? (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM : 0;
   const appearance = {
     borderWidth: labelSettings.motorBorderWidth ?? 2,
     borderStyle: labelSettings.motorBorderStyle ?? 'solid',
