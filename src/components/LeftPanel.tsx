@@ -1218,7 +1218,7 @@ export const LeftPanel = memo(function LeftPanel() {
         {/* Form Fields */}
         <div className="space-y-3">
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-start">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4 items-start">
 
             {/* PROCESSO */}
             {requiresProcesso && (
