@@ -1539,16 +1539,16 @@ export const LeftPanel = memo(function LeftPanel() {
                         {lockCoulisseMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                       </button>
                     </div>
-                    <div className={`grid grid-cols-2 gap-2 rounded-lg transition-shadow ${lockCoulisseMetragem ? 'shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]' : ''}`}>
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setCoulisseMetragem('m2')}
-                        className={`h-11 rounded-lg border px-3 text-sm font-bold transition-colors active:scale-[0.98] ${
+                        className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
                           !coulisseUsesMLinear
-                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                            : lockCoulisseMetragem
-                              ? 'border-lock/50 bg-lock/[0.08] text-foreground'
-                              : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                            ? lockCoulisseMetragem
+                              ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]'
+                              : 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
                         }`}
                       >
                         M²
@@ -1556,12 +1556,12 @@ export const LeftPanel = memo(function LeftPanel() {
                       <button
                         type="button"
                         onClick={() => setCoulisseMetragem('mlinear')}
-                        className={`h-11 rounded-lg border px-3 text-sm font-bold transition-colors active:scale-[0.98] ${
+                        className={`h-11 rounded-lg border px-3 text-sm font-bold transition-all active:scale-[0.98] ${
                           coulisseUsesMLinear
-                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                            : lockCoulisseMetragem
-                              ? 'border-lock/50 bg-lock/[0.08] text-foreground'
-                              : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                            ? lockCoulisseMetragem
+                              ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)]'
+                              : 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
                         }`}
                       >
                         LINEAR
