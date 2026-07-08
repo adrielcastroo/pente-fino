@@ -200,6 +200,7 @@ export default function OpsPage() {
 /* ---------------- Sub-views ---------------- */
 
 function ListaView({ ops }: { ops: OpMock[] }) {
+  const navigate = useNavigate();
   if (ops.length === 0) return <EmptyState />;
   return (
     <Card className="rounded-md border-border bg-card overflow-hidden">
