@@ -926,6 +926,7 @@ export const useAppStore = create<AppState>()(
         lockedMetragem: state.lockedMetragem,
         lockCortinaLargura: state.lockCortinaLargura,
         lockedCortinaLargura: state.lockedCortinaLargura,
+        lockCortinaMetragem: state.lockCortinaMetragem,
         lockMadeiraProcesso: state.lockMadeiraProcesso,
         lockMadeiraItem: state.lockMadeiraItem,
         lockMadeiraLote: state.lockMadeiraLote,
