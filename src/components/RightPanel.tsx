@@ -585,7 +585,6 @@ export default function RightPanel() {
                   </React.Fragment>
                 ))}
               </tbody>
-              </tbody>
 
             </table>
           ) : (
