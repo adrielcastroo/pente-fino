@@ -149,24 +149,41 @@ export default function LoginPage() {
         path="/login"
       />
     <div className="relative min-h-[100dvh] w-full flex items-center justify-center bg-background overflow-hidden px-4 py-10 sm:py-16">
-      {/* Fundo: grid sutil com máscara radial */}
-      <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-          WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
-          maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
-        }}
-      />
-      {/* Brilho radial sutil da cor primária */}
-      {!isLow && (
-        <>
-          <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
-          <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
-        </>
-      )}
+      {/* Fundo temático "fio do pente" — camada absoluta atrás do card */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Dentes do pente: linhas verticais finas e próximas */}
+        <div
+          className="absolute inset-0 text-primary opacity-[0.10] dark:opacity-[0.14]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 10px)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 70% 60% at 50% 45%, black 0%, black 35%, transparent 80%)',
+            maskImage:
+              'radial-gradient(ellipse 70% 60% at 50% 45%, black 0%, black 35%, transparent 80%)',
+          }}
+        />
+        {/* Barra horizontal do pente (topo), bem sutil */}
+        <div
+          className="absolute inset-x-0 top-0 h-[38%] text-primary opacity-[0.05] dark:opacity-[0.08]"
+          style={{
+            backgroundImage:
+              'linear-gradient(to bottom, currentColor 0%, currentColor 22%, transparent 100%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 60% 100% at 50% 0%, black 0%, transparent 75%)',
+            maskImage:
+              'radial-gradient(ellipse 60% 100% at 50% 0%, black 0%, transparent 75%)',
+          }}
+        />
+        {/* Halo radial sutil da cor primária */}
+        {!isLow && (
+          <>
+            <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[640px] h-[640px] bg-primary/[0.07] rounded-full blur-[140px]" />
+            <div className="absolute -bottom-48 left-1/2 -translate-x-1/2 w-[520px] h-[520px] bg-primary/[0.04] rounded-full blur-[140px]" />
+          </>
+        )}
+      </div>
+
 
       <div className="w-full max-w-[410px] relative z-10">
         {/* Header com logo + nome */}
