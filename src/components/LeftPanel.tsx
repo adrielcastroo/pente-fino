@@ -52,6 +52,7 @@ export const LeftPanel = memo(function LeftPanel() {
     lockedMetragem, setLockedMetragem,
     lockCoulisseMetragem, setLockCoulisseMetragem,
     lockCortinaLargura, setLockCortinaLargura, lockedCortinaLargura, setLockedCortinaLargura,
+    lockCortinaMetragem, setLockCortinaMetragem,
     formData, setFormData, resetFormData, labelSettings
   } = useAppStore(useShallow(s => ({
     currentMode: s.currentMode,
