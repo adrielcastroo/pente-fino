@@ -229,6 +229,8 @@ export default function RightPanel() {
   })));
 
   const { isLow } = usePerformance();
+  const tecidoCardVariant = useTecidoCardVariant();
+  
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [editingCell, setEditingCell] = useState<{ rowId: string; key: string } | null>(null);
