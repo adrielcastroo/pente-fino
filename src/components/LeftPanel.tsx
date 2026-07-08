@@ -1230,7 +1230,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   <label htmlFor="proc-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Processo (PROC)</label>
                   <button 
                     onClick={() => isMadeira ? setLockMadeiraProcesso(!lockMadeiraProcesso) : toggleLockProcesso()} 
-                    className={`transition-colors ${(isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
                     title={(isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'Campo travado' : 'Travar campo'}
                   >
                     {(isMadeira ? lockMadeiraProcesso : lockProcesso) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1242,7 +1242,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleProcessoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, itemRef)}
                   className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
-                    (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                    (isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: 123456..."
                   autoComplete="off"
@@ -1260,7 +1260,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   {(isPVT || isMadeira || isRolo) && (
                     <button 
                       onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
-                      className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                      className={`transition-colors ${(isMadeira ? lockMadeiraItem : lockItem) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
                       title={(isMadeira ? lockMadeiraItem : lockItem) ? 'Campo travado' : 'Travar campo'}
                     >
                       {(isMadeira ? lockMadeiraItem : lockItem) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1276,7 +1276,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onBlur={handleItemBlur}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterItem())}
                   className={`w-full h-11 rounded-lg border px-3.5 text-sm font-mono transition-all duration-200 ${
-                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                    ((isPVT && lockItem) || (isMadeira && lockMadeiraItem) || (isRolo && lockItem)) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="Ex: SRC-3003-05-3"
                   autoComplete="off"
@@ -1363,7 +1363,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <div className="flex items-center gap-1.5">
                   <label htmlFor="nf-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Nota Fiscal (NF)</label>
                   {(lockNf || isRolo || isPVT || isCortina) && (
-                    <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
+                    <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
                       {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                     </button>
                   )}
@@ -1375,7 +1375,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleNfChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, getNextRefAfterNf())}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                    lockNf ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                    lockNf ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                   }`}
                   placeholder="NF..."
                   autoComplete="off"
@@ -1392,7 +1392,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     <label htmlFor="lote-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Lote / Batch</label>
                     <button 
                       onClick={() => setLockMadeiraLote(!lockMadeiraLote)} 
-                      className={`transition-colors ${lockMadeiraLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                      className={`transition-colors ${lockMadeiraLote ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
                       title={lockMadeiraLote ? 'Campo travado' : 'Travar campo'}
                     >
                       {lockMadeiraLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1405,7 +1405,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                     onKeyDown={e => handleFieldKeyDown(e, quantidadeRef)}
                     className={`w-full h-11 rounded-lg border px-3 text-sm font-mono focus:ring-2 focus:ring-primary/10 transition-colors ${
-                      lockMadeiraLote ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                      lockMadeiraLote ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                     }`}
                     readOnly={lockMadeiraLote && !!lote}
                     placeholder="Lote..." autoComplete="off"
@@ -1533,7 +1533,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       <button
                         type="button"
                         onClick={() => setLockCoulisseMetragem(!lockCoulisseMetragem)}
-                        className={`transition-colors ${lockCoulisseMetragem ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                        className={`transition-colors ${lockCoulisseMetragem ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
                         title={lockCoulisseMetragem ? 'Preferência travada — mantém a escolha entre registros' : 'Travar preferência'}
                       >
                         {lockCoulisseMetragem ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1586,7 +1586,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     <div className="flex items-center gap-1.5 h-4">
                       <label htmlFor="lote-material" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Lote / Batch</label>
                       {(isPVT || isRolo) && (
-                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
+                        <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
                           {lockLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </button>
                       )}
@@ -1598,7 +1598,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       onChange={e => setLote(e.target.value.replace(/[''`]/g, '-'))}
                       onKeyDown={e => handleFieldKeyDown(e, requiresEndereco && !lockEndereco ? enderecoRef : null)}
                       className={`w-full h-11 rounded-lg border px-3 text-sm font-mono transition-colors ${
-                        ((isPVT || isRolo) && lockLote) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
+                        ((isPVT || isRolo) && lockLote) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none'
                       }`}
                       placeholder="Lote..." autoComplete="off"
                       readOnly={((isPVT || isRolo) && lockLote) && !!lockedLote}
@@ -1615,7 +1615,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   <label htmlFor="endereco-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Endereço de Armazenagem</label>
                   <button 
                     onClick={() => isMadeira ? setLockMadeiraEndereco(!lockMadeiraEndereco) : toggleLockEndereco()} 
-                    className={`transition-colors ${(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
+                    className={`transition-colors ${(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'text-lock' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
                     title={(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'Campo travado' : 'Travar campo'}
                   >
                     {(isMadeira ? lockMadeiraEndereco : lockEndereco) ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1628,7 +1628,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   onChange={e => handleEnderecoChange(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, null)}
                   className={`w-full h-11 rounded-lg border px-3 text-sm font-mono uppercase transition-colors ${
-                    (isMadeira ? lockMadeiraEndereco : (isRolo && lockEndereco) || lockEndereco) ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 shadow-sm focus:ring-2 focus:ring-amber-500/25 focus:outline-none' : (enderecoError ? 'border-destructive bg-destructive/5' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none')
+                    (isMadeira ? lockMadeiraEndereco : (isRolo && lockEndereco) || lockEndereco) ? 'bg-lock/[0.08] border-lock/50 text-foreground shadow-[0_0_0_3px_hsl(var(--lock)/0.18),0_0_18px_hsl(var(--lock)/0.35)] focus:ring-2 focus:ring-lock/40 focus:outline-none' : (enderecoError ? 'border-destructive bg-destructive/5' : 'border-border bg-card hover:border-primary/40 focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none')
                   }`}
                   placeholder="TEC01.A.N03" autoComplete="off"
                   readOnly={(isMadeira ? lockMadeiraEndereco : lockEndereco) && !!(isMadeira ? endereco : lockedEndereco)}

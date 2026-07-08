@@ -54,6 +54,10 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        lock: {
+          DEFAULT: "hsl(var(--lock))",
+          foreground: "hsl(var(--lock-foreground))",
+        },
         error: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",

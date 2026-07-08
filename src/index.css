@@ -47,6 +47,9 @@
     --warning: 32 95% 44%;
     --warning-foreground: 210 40% 98%;
 
+    --lock: 262 83% 58%;
+    --lock-foreground: 210 40% 98%;
+
     --border: 215 20% 89%;
     --input: 215 20% 89%;
     --ring: 201 96% 32%;
@@ -103,6 +106,9 @@
 
     --warning: 48 96% 53%;
     --warning-foreground: 222.2 47.4% 11.2%;
+
+    --lock: 262 90% 68%;
+    --lock-foreground: 222 47% 11%;
 
     --border: 224 14% 16%;
     --input: 224 14% 16%;
