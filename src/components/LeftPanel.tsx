@@ -1224,7 +1224,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {requiresProcesso && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
-                  <label htmlFor="proc-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Processo (PROC)</label>
+                  <label htmlFor="proc-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Processo (PROC)</label>
                   <button 
                     onClick={() => isMadeira ? setLockMadeiraProcesso(!lockMadeiraProcesso) : toggleLockProcesso()} 
                     className={`transition-colors ${(isMadeira ? lockMadeiraProcesso : lockProcesso) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
@@ -1253,7 +1253,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {!isEtiqPronta && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
-                  <label htmlFor="item-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Item / Referência</label>
+                  <label htmlFor="item-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Item / Referência</label>
                   {(isPVT || isMadeira || isRolo) && (
                     <button 
                       onClick={() => isMadeira ? setLockMadeiraItem(!lockMadeiraItem) : toggleLockItem()} 
@@ -1292,7 +1292,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {/* Coulisse largura */}
             {isCoulisse && (
               <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-manual" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label></div>
+                <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-manual" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Largura do Tecido (m)</label></div>
                 <input
                   id="largura-manual"
                   ref={manualLarguraRef}
@@ -1309,7 +1309,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {isCortina && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 h-4">
-                  <label htmlFor="largura-cortina" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura do Tecido (m)</label>
+                  <label htmlFor="largura-cortina" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Largura do Tecido (m)</label>
                   <button
                     onClick={toggleLockCortinaLargura}
                     className={`transition-colors ${lockCortinaLargura ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
@@ -1336,7 +1336,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {/* Cortina: chave seletora M² / M Linear */}
             {isCortina && (
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tipo de Metragem</label>
+                <label className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Tipo de Metragem</label>
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
                   <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${cortinaMetragem === 'm2' ? 'text-foreground' : 'text-muted-foreground'}`}>
                     M²
@@ -1358,7 +1358,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {requiresNF && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <label htmlFor="nf-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nota Fiscal (NF)</label>
+                  <label htmlFor="nf-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Nota Fiscal (NF)</label>
                   {(lockNf || isRolo || isPVT || isCortina) && (
                     <button onClick={toggleLockNf} className={`transition-colors ${lockNf ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockNf ? 'Campo travado' : 'Travar campo'}>
                       {lockNf ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1386,7 +1386,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
-                    <label htmlFor="lote-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                    <label htmlFor="lote-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Lote / Batch</label>
                     <button 
                       onClick={() => setLockMadeiraLote(!lockMadeiraLote)} 
                       className={`transition-colors ${lockMadeiraLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
@@ -1409,7 +1409,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="qtd-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Quantidade</label>
+                  <label htmlFor="qtd-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Quantidade</label>
                   <input
                     id="qtd-input"
                     ref={quantidadeRef}
@@ -1445,7 +1445,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {isEtiqPronta && (
               <>
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-codigo-item" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Código item</label></div>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-codigo-item" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Código item</label></div>
                   <input
                     id="etiq-codigo-item"
                     ref={itemRef}
@@ -1457,7 +1457,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-lote-final" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote Final</label></div>
+                  <div className="flex items-center gap-1.5 h-4"><label htmlFor="etiq-lote-final" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Lote Final</label></div>
                   <input
                     id="etiq-lote-final"
                     ref={etiqProntaLoteFinalRef}
@@ -1476,7 +1476,7 @@ export const LeftPanel = memo(function LeftPanel() {
               <>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 h-4">
-                    <label htmlFor="metragem-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <label htmlFor="metragem-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">
                       {isAI || isPVT || coulisseUsesMLinear || cortinaUsesMLinear ? 'Metragem Linear' : 'Metragem Total'}
                     </label>
                     {isPVT && (
@@ -1509,7 +1509,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
                 {isRolo && (
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-rolo" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label></div>
+                    <div className="flex items-center gap-1.5 h-4"><label htmlFor="largura-rolo" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Largura (m)</label></div>
                     <input
                       id="largura-rolo"
                       ref={manualLarguraRef}
@@ -1555,7 +1555,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
                 {isAI ? (
                   <div className="space-y-1.5">
-                    <label htmlFor="largura-ai" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Largura (m)</label>
+                    <label htmlFor="largura-ai" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Largura (m)</label>
                     <input
                       id="largura-ai"
                       ref={larguraRef}
@@ -1569,7 +1569,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 ) : (
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 h-4">
-                      <label htmlFor="lote-material" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lote / Batch</label>
+                      <label htmlFor="lote-material" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Lote / Batch</label>
                       {(isPVT || isRolo) && (
                         <button onClick={toggleLockLote} className={`transition-colors ${lockLote ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} title={lockLote ? 'Campo travado' : 'Travar campo'}>
                           {lockLote ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1597,7 +1597,7 @@ export const LeftPanel = memo(function LeftPanel() {
             {requiresEndereco && (
               <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center gap-1.5">
-                  <label htmlFor="endereco-input" className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Endereço de Armazenagem</label>
+                  <label htmlFor="endereco-input" className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/90">Endereço de Armazenagem</label>
                   <button 
                     onClick={() => isMadeira ? setLockMadeiraEndereco(!lockMadeiraEndereco) : toggleLockEndereco()} 
                     className={`transition-colors ${(isMadeira ? lockMadeiraEndereco : lockEndereco) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`} 
