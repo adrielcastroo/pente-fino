@@ -155,7 +155,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
       })}
       {showActions && (
         <td className="px-3 sm:px-5 py-3 sm:py-4">
-          <div className="flex justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 transform lg:translate-x-2 group-hover:translate-x-0">
+          <div className="flex justify-end gap-2 opacity-100 transition-all duration-200">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
