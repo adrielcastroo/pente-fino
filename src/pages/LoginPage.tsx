@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, UserPlus, LogIn, KeyRound, ChevronLeft, CheckCircle2, ShieldCheck, Zap, BarChart3, Search } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Loader2, UserPlus, LogIn, KeyRound, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { usePerformance } from '@/hooks/use-performance';
