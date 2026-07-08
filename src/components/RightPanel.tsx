@@ -101,7 +101,7 @@ const TableCell = memo(({ id, columnKey, value, searchQuery, isEditing, editValu
   return (
     <td 
       onDoubleClick={() => columnKey !== 'loteSistema' ? onStartEdit(id, columnKey, String(value ?? '')) : undefined}
-      className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors whitespace-nowrap ${columnKey === 'item' ? 'font-bold text-foreground text-sm sm:text-base tracking-tight' : isSecondary ? 'font-mono text-muted-foreground/60 text-[11px] sm:text-xs group-hover:text-muted-foreground' : 'font-mono text-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'tabular-nums' : ''} ${columnKey === 'loteSistema' ? 'min-w-[180px]' : ''} ${columnKey === 'mLinear' || columnKey === 'quantidade' ? 'font-semibold' : ''} ${className || ''}`}
+      className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors whitespace-nowrap border-r border-border/20 ${columnKey === 'item' ? 'font-bold text-foreground text-sm sm:text-base tracking-tight' : isSecondary ? 'font-mono text-muted-foreground/60 text-[11px] sm:text-xs group-hover:text-muted-foreground' : 'font-mono text-foreground/80 group-hover:text-foreground'} ${isNumericLike ? 'tabular-nums' : ''} ${columnKey === 'loteSistema' ? 'min-w-[180px]' : ''} ${columnKey === 'mLinear' || columnKey === 'quantidade' ? 'font-semibold' : ''} ${className || ''}`}
     >
       {content}
     </td>
