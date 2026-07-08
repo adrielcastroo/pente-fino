@@ -940,6 +940,8 @@ export const LeftPanel = memo(function LeftPanel() {
   ];
 
   const showDropzone = currentMode === 'openrouter';
+  const isTecidoTab = formData.activeTab === 'tecido';
+  const hasTopUtilityActions = !isAI && (undoStack.length > 0 || item || nf || m2 || lote || endereco || processo);
 
   // Determine next ref after item based on mode
   const getNextRefAfterItem = () => {
@@ -998,13 +1000,11 @@ export const LeftPanel = memo(function LeftPanel() {
      */
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-md border border-border/50 lg:border-none lg:rounded-none">
       <div
-        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 lg:pb-16"
+        className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 lg:pb-16 ${isTecidoTab ? 'pt-3 gap-3 xl:gap-2' : 'pt-[1.3125rem] gap-[clamp(0.75rem,2.5vw,1.25rem)]'}`}
         style={{
-          paddingTop: '1.3125rem',
           paddingLeft: 'clamp(0.75rem, 3vw, 1.5rem)',
           paddingRight: 'clamp(0.75rem, 3vw, 1.5rem)',
           paddingBottom: 'clamp(6rem, 12vw, 8rem)',
-          rowGap: 'clamp(0.75rem, 2.5vw, 1.25rem)',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -1025,7 +1025,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Mode Toggle */}
         {!isMadeira && (
-          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
+          <div className={`grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-md border border-border/40 ${isTecidoTab ? 'xl:grid-cols-4 xl:gap-1' : ''}`}>
             {tecidoModes.map(m => {
               const Icon = m.icon;
               const isActive = currentMode === m.key;
@@ -1033,7 +1033,7 @@ export const LeftPanel = memo(function LeftPanel() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`relative min-w-0 min-h-[44px] py-3 px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider ${
+                  className={`relative min-w-0 min-h-[44px] py-3 px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider ${isTecidoTab ? 'xl:min-h-[38px] xl:py-2 xl:px-1.5 xl:text-[9px] xl:gap-1.5' : ''} ${
                     isActive
                       ? 'text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -1047,7 +1047,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
-                  <Icon className={`relative z-10 w-3.5 h-3.5 shrink-0 ${isActive ? 'text-primary-foreground' : ''}`} />
+                  <Icon className={`relative z-10 w-3.5 h-3.5 shrink-0 ${isTecidoTab ? 'xl:w-3 xl:h-3' : ''} ${isActive ? 'text-primary-foreground' : ''}`} />
                   <span className="relative z-10 truncate">{m.label}</span>
                 </button>
               );
@@ -1057,7 +1057,7 @@ export const LeftPanel = memo(function LeftPanel() {
 
         {/* Action buttons — touch targets aumentados em mobile (h-11 = 44px),
             voltam ao tamanho compacto h-7 em ≥sm para preservar densidade desktop. */}
-        {!isAI && (
+        {hasTopUtilityActions && (
           <div className="flex items-center justify-end text-xs text-muted-foreground">
             <div className="flex gap-1">
               {undoStack.length > 0 && (
