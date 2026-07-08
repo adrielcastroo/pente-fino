@@ -1309,7 +1309,7 @@ export const LeftPanel = memo(function LeftPanel() {
                   type="number" step="0.01" value={manualLargura}
                   onChange={e => setManualLargura(e.target.value)}
                   onKeyDown={e => handleFieldKeyDown(e, m2Ref)}
-                  className="w-full h-11 rounded-lg border border-border/60 bg-background/60 px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-border hover:bg-background focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40"
+                  className="w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40"
                   placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                 />
               </div>
@@ -1426,7 +1426,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     type="number" step="1" value={quantidade}
                     onChange={e => setQuantidade(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className="w-full h-11 rounded-lg border border-border/60 bg-background/60 px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-border hover:bg-background focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none"
+                    className="w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none"
                     placeholder={madeiraDefaults[madeiraTipo].toString()} autoComplete="off" inputMode="numeric"
                   />
                 </div>
@@ -1462,7 +1462,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     value={item}
                     onChange={e => setItem(e.target.value)}
                     onKeyDown={e => handleFieldKeyDown(e, etiqProntaLoteFinalRef)}
-                    className="w-full h-11 rounded-lg border border-border/60 bg-background/60 px-3.5 text-sm font-mono shadow-sm transition-all duration-200 hover:border-border hover:bg-background focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40"
+                    className="w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40"
                     placeholder="Ex: SRC-3003..." autoComplete="off"
                   />
                 </div>
@@ -1474,7 +1474,7 @@ export const LeftPanel = memo(function LeftPanel() {
                     value={etiqProntaLoteFinal}
                     onChange={e => setEtiqProntaLoteFinal(e.target.value.toUpperCase())}
                     onKeyDown={e => handleFieldKeyDown(e, null)}
-                    className="w-full h-11 rounded-lg border border-border/60 bg-background/60 px-3.5 text-sm font-mono shadow-sm transition-all duration-200 hover:border-border hover:bg-background focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40"
+                    className="w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none placeholder:text-muted-foreground/40"
                     placeholder="Ex: 001234..." autoComplete="off"
                   />
                 </div>
@@ -1536,7 +1536,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       type="number" step="0.01" value={manualLargura}
                       onChange={e => setManualLargura(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, loteRef)}
-                      className="w-full h-11 rounded-lg border border-border/60 bg-background/60 px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-border hover:bg-background focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none"
+                      className="w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none"
                       placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                     />
                   </div>
@@ -1582,7 +1582,7 @@ export const LeftPanel = memo(function LeftPanel() {
                       type="number" step="0.01" value={aiLargura}
                       onChange={e => setAiLargura(e.target.value)}
                       onKeyDown={e => handleFieldKeyDown(e, lockEndereco ? null : enderecoRef)}
-                      className="w-full h-11 rounded-lg border border-border/60 bg-background/60 px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-border hover:bg-background focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none"
+                      className="w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-card focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none"
                       placeholder="Ex: 2.80" autoComplete="off" inputMode="decimal"
                     />
                   </div>
