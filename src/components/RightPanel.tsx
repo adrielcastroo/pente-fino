@@ -439,20 +439,24 @@ export default function RightPanel() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex-none h-11 px-2 sm:px-3 rounded-md bg-transparent hover:bg-muted/40 flex items-center gap-1.5 transition-colors group">
-              <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground" />
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value)}
-                className="bg-transparent border-none outline-none text-[10px] sm:text-xs font-medium text-muted-foreground/70 cursor-pointer group-hover:text-foreground w-[72px] sm:w-auto"
+            <Select value={sortBy || 'none'} onValueChange={(v) => setSortBy(v === 'none' ? '' : v)}>
+              <SelectTrigger
+                className="h-11 sm:h-12 w-[110px] sm:w-[140px] rounded-md border-border/50 bg-background/60 hover:bg-muted/40 text-[11px] sm:text-xs font-medium text-muted-foreground focus:ring-1 focus:ring-primary/40 transition-colors"
+                aria-label="Ordenar registros"
               >
-                <option value="">Ordenar</option>
-                <option value="item">A-Z</option>
-                <option value="ml-d">Linear ↓</option>
-                <option value="ml-a">Linear ↑</option>
-                <option value="end">Endereço</option>
-              </select>
-            </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <ArrowUpDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
+                  <SelectValue placeholder="Ordenar" />
+                </div>
+              </SelectTrigger>
+              <SelectContent align="end" className="min-w-[160px]">
+                <SelectItem value="none" className="text-xs">Padrão</SelectItem>
+                <SelectItem value="item" className="text-xs">Item (A-Z)</SelectItem>
+                <SelectItem value="ml-d" className="text-xs">Metros lin. ↓</SelectItem>
+                <SelectItem value="ml-a" className="text-xs">Metros lin. ↑</SelectItem>
+                <SelectItem value="end" className="text-xs">Endereço</SelectItem>
+              </SelectContent>
+            </Select>
 
             {registros.length > 0 && !isGuest && (
               <Tooltip>
