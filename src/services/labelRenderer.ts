@@ -161,7 +161,9 @@ export async function renderTecidoLabel(
 export async function renderMotorLabel(
   data: MotorLabelData,
   labelSettings: LabelSettings,
+  options: { applyPrintOffset?: boolean } = {},
 ): Promise<RenderedLabel> {
+  const { applyPrintOffset = true } = options;
   const fields = labelSettings.motorFields?.length ? labelSettings.motorFields : MOTOR_DEFAULT_FIELDS;
   const has: LabelHas = (id) => fields.includes(id);
   const w = labelSettings.motorWidth ?? 60;
@@ -169,8 +171,8 @@ export async function renderMotorLabel(
   const orientation = labelSettings.motorOrientation ?? labelSettings.orientation ?? 'landscape';
   const wPx = (orientation === 'landscape' ? w : h) * PREVIEW_SCALE;
   const hPx = (orientation === 'landscape' ? h : w) * PREVIEW_SCALE;
-  const offsetXPx = (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
-  const offsetYPx = (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetXPx = applyPrintOffset ? (labelSettings.motorPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM : 0;
+  const offsetYPx = applyPrintOffset ? (labelSettings.motorPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM : 0;
 
   const appearance = {
     borderWidth: labelSettings.motorBorderWidth ?? 2,
