@@ -207,6 +207,7 @@ export const useAppStore = create<AppState>()(
       lockLote: false,
       lockedLote: '',
       lockMetragem: false,
+      lockCoulisseMetragem: true,
       lockedMetragem: '',
       lockCortinaLargura: false,
       lockedCortinaLargura: '',
