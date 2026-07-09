@@ -41,6 +41,8 @@ const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPag
 const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoHomePage"));
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
+const ComprasLayout = lazy(() => import("@/components/compras/ComprasLayout"));
+const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/AcompanhamentosPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
@@ -198,6 +200,20 @@ const App = () => (
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
 
 
+                </Route>
+
+                {/* ===== MÓDULO COMPRAS ===== */}
+                <Route
+                  path="/compras"
+                  element={
+                    <ProtectedRoute>
+                      <ComprasLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Navigate to="/compras/acompanhamentos" replace />} />
+                  <Route path="acompanhamentos" element={<ComprasAcompanhamentosPage />} />
+                  <Route path="configuracoes" element={<SettingsPage />} />
                 </Route>
 
                 {/* ===== ADMIN (dentro do MainLayout — sidebar principal preservada) ===== */}
