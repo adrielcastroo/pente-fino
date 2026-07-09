@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, Sparkles } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 
 export const COMPRAS_NAV: ModuleSidebarConfig = {
@@ -15,6 +15,12 @@ export const COMPRAS_NAV: ModuleSidebarConfig = {
           label: 'Acompanhamentos',
           icon: ClipboardList,
           path: '/compras/acompanhamentos',
+        },
+        {
+          key: 'starcolor',
+          label: 'Starcolor',
+          icon: Sparkles,
+          path: '/compras/acompanhamentos/starcolor',
         },
       ],
     },

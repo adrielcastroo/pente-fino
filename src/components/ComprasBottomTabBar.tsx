@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TABS = [
-  { path: '/compras/acompanhamentos', label: 'Acompanhamentos', icon: ClipboardList },
+  { path: '/compras/acompanhamentos', label: 'Acompanh.', icon: ClipboardList, exact: true },
+  { path: '/compras/acompanhamentos/starcolor', label: 'Starcolor', icon: Sparkles, exact: false },
 ] as const;
 
 export default function ComprasBottomTabBar() {
@@ -14,10 +15,11 @@ export default function ComprasBottomTabBar() {
       aria-label="Navegação Compras"
     >
       <div className="flex w-full items-stretch">
-        {TABS.map(({ path, label, icon: Icon }) => (
+        {TABS.map(({ path, label, icon: Icon, exact }) => (
           <NavLink
             key={path}
             to={path}
+            end={exact}
             className={({ isActive }) =>
               cn(
                 'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] transition-colors',

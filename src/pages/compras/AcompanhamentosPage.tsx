@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { PackageSearch, Clock, CheckCircle2, AlertTriangle, Loader2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { PackageSearch, Clock, CheckCircle2, AlertTriangle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageShell, PageHeader, StatCard } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
