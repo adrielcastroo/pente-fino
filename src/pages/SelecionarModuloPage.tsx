@@ -1,5 +1,5 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Package, Truck, ArrowRight, WifiOff, Plus, Pin } from 'lucide-react';
+import { Package, Truck, ShoppingCart, ArrowRight, WifiOff, Plus, Pin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -95,7 +95,7 @@ function useModuleStats(enabled: boolean) {
         try { const r = await q; return (r?.count as number | null) ?? 0; } catch { return 0; }
       };
 
-      const [openConfs, sessionsToday, regsToday, pendPickings, emSeparacao, expedHoje, occupied, totalSlots] = await Promise.all([
+      const [openConfs, sessionsToday, regsToday, pendPickings, emSeparacao, expedHoje, occupied, totalSlots, comprasPend, comprasAtras] = await Promise.all([
         safeCount(supabase.from('conferences').select('id', { count: 'exact', head: true }).is('finished_at', null)),
         safeCount(supabase.from('conferences').select('id', { count: 'exact', head: true }).gte('started_at', isoToday)),
         safeCount(supabase.from('registros').select('id', { count: 'exact', head: true }).gte('created_at', isoToday)),
@@ -104,6 +104,8 @@ function useModuleStats(enabled: boolean) {
         safeCount(supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).eq('status', 'faturado').gte('updated_at', isoToday) as any),
         safeCount(supabase.from('estoque_posicoes').select('id', { count: 'exact', head: true }).not('item_id', 'is', null)),
         safeCount(supabase.from('estoque_posicoes').select('id', { count: 'exact', head: true })),
+        safeCount(supabase.from('compras_pedidos' as any).select('id', { count: 'exact', head: true }).in('status', ['pendente', 'em_andamento']) as any),
+        safeCount(supabase.from('compras_pedidos' as any).select('id', { count: 'exact', head: true }).eq('status', 'atrasado') as any),
       ]);
 
       const ocupacao = totalSlots ? Math.round((occupied / totalSlots) * 100) : 0;
@@ -111,6 +113,7 @@ function useModuleStats(enabled: boolean) {
       return {
         estoque: { openConferences: openConfs, sessionsToday, registrosToday: regsToday, ocupacao },
         expedicao: { pendentes: pendPickings, emSeparacao, expedidosHoje: expedHoje },
+        compras: { emAcompanhamento: comprasPend, atrasados: comprasAtras },
       };
     },
   });
