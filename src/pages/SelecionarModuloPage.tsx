@@ -450,8 +450,10 @@ export default function SelecionarModuloPage() {
                 <Pin className="w-2.5 h-2.5" /> padrão
               </button>
             </Link>
+            )}
 
             {/* Expedição */}
+            {hasExpedicao && (
             <Link
               to="/expedicao/painel"
               onClick={() => localStorage.setItem('pf_lastModule', 'expedicao')}
@@ -492,6 +494,51 @@ export default function SelecionarModuloPage() {
                 <Pin className="w-2.5 h-2.5" /> padrão
               </button>
             </Link>
+            )}
+
+            {/* Compras */}
+            {hasCompras && (
+            <Link
+              to="/compras/acompanhamentos"
+              onClick={() => localStorage.setItem('pf_lastModule', 'compras')}
+              onMouseEnter={() => prefetchModule('compras')}
+              onFocus={() => prefetchModule('compras')}
+              className={`group relative min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lastModule === 'compras' ? 'ring-1 ring-violet-400/40' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <ShoppingCart className="w-5 h-5 text-violet-600" strokeWidth={1.75} />
+                <h2 className="text-sm font-semibold text-foreground">Compras</h2>
+                {!!stats?.compras.atrasados && (
+                  <span className="ml-auto text-[10px] font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded px-1.5 py-0.5 tabular-nums">
+                    {stats.compras.atrasados} atrasado{stats.compras.atrasados > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {renderMetric(stats?.compras.emAcompanhamento, 'em acompanhamento')}
+                {renderMetric(stats?.compras.atrasados, 'atrasados', stats?.compras.atrasados ? 'text-destructive' : undefined)}
+              </div>
+
+              <div className="mt-auto flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground">Pedidos, fornecedores e recebimento</span>
+                <kbd className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70 border border-border rounded px-1.5 py-0.5">
+                  3
+                </kbd>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDefaultModule('compras', 'Compras'); }}
+                className="absolute bottom-1.5 left-1.5 text-[9px] text-muted-foreground/40 hover:text-muted-foreground transition-colors inline-flex items-center gap-1"
+                title="Definir como módulo padrão"
+              >
+                <Pin className="w-2.5 h-2.5" /> padrão
+              </button>
+            </Link>
+            )}
           </div>
 
           {/* Acesso rápido: nova conferência */}
