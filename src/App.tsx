@@ -43,6 +43,7 @@ const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleChec
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 const ComprasLayout = lazy(() => import("@/components/compras/ComprasLayout"));
 const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/AcompanhamentosPage"));
+const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
@@ -213,6 +214,7 @@ const App = () => (
                 >
                   <Route index element={<Navigate to="/compras/acompanhamentos" replace />} />
                   <Route path="acompanhamentos" element={<ComprasAcompanhamentosPage />} />
+                  <Route path="acompanhamentos/starcolor" element={<ComprasStarcolorPage />} />
                   <Route path="configuracoes" element={<SettingsPage />} />
                 </Route>
 
