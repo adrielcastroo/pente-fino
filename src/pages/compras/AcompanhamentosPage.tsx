@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { PackageSearch, Clock, CheckCircle2, AlertTriangle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { PackageSearch, Clock, CheckCircle2, AlertTriangle, Loader2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { PageShell, PageHeader, StatCard } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +70,15 @@ export default function AcompanhamentosPage() {
         title="Acompanhamentos"
         subtitle="Pedidos de compra em curso e previsões de recebimento"
       />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link to="/compras/acompanhamentos/starcolor">
+            <Sparkles className="w-4 h-4 mr-1.5" />
+            Starcolor
+          </Link>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard label="Total" value={kpis?.total ?? 0} icon={PackageSearch} />
