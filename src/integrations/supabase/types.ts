@@ -143,6 +143,48 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_pedidos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          fornecedor: string
+          id: string
+          itens: number
+          numero: string
+          observacao: string | null
+          previsao: string | null
+          status: Database["public"]["Enums"]["compras_pedido_status"]
+          updated_at: string
+          valor_total: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          fornecedor: string
+          id?: string
+          itens?: number
+          numero: string
+          observacao?: string | null
+          previsao?: string | null
+          status?: Database["public"]["Enums"]["compras_pedido_status"]
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          fornecedor?: string
+          id?: string
+          itens?: number
+          numero?: string
+          observacao?: string | null
+          previsao?: string | null
+          status?: Database["public"]["Enums"]["compras_pedido_status"]
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Relationships: []
+      }
       conferences: {
         Row: {
           conferente: string
@@ -2388,6 +2430,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"
+      compras_pedido_status:
+        | "pendente"
+        | "em_andamento"
+        | "recebido"
+        | "atrasado"
+        | "cancelado"
       expedicao_carrinho_status: "livre" | "em_uso" | "manutencao"
       expedicao_carrinho_status_v2:
         | "montando"
@@ -2540,6 +2588,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "operador", "user", "supervisor", "gerente"],
+      compras_pedido_status: [
+        "pendente",
+        "em_andamento",
+        "recebido",
+        "atrasado",
+        "cancelado",
+      ],
       expedicao_carrinho_status: ["livre", "em_uso", "manutencao"],
       expedicao_carrinho_status_v2: [
         "montando",
