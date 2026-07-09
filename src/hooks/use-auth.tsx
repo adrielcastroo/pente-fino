@@ -115,9 +115,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const can = useCallback((action: Action) => canDo(role, action), [role]);
 
   const modules = useMemo<string[]>(() => {
+    // Admin sempre tem acesso a todos os módulos, independente do que estiver no profile.
+    if (isAdmin) return ['estoque', 'expedicao', 'compras'];
     const raw = (profile as any)?.modules;
     if (Array.isArray(raw) && raw.length) return raw as string[];
-    if (isAdmin) return ['estoque', 'expedicao', 'compras'];
     return ['estoque'];
   }, [profile, isAdmin]);
 
