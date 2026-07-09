@@ -1,5 +1,5 @@
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Package, Truck, ArrowRight, WifiOff, Plus, Pin } from 'lucide-react';
+import { Package, Truck, ShoppingCart, ArrowRight, WifiOff, Plus, Pin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -95,7 +95,7 @@ function useModuleStats(enabled: boolean) {
         try { const r = await q; return (r?.count as number | null) ?? 0; } catch { return 0; }
       };
 
-      const [openConfs, sessionsToday, regsToday, pendPickings, emSeparacao, expedHoje, occupied, totalSlots] = await Promise.all([
+      const [openConfs, sessionsToday, regsToday, pendPickings, emSeparacao, expedHoje, occupied, totalSlots, comprasPend, comprasAtras] = await Promise.all([
         safeCount(supabase.from('conferences').select('id', { count: 'exact', head: true }).is('finished_at', null)),
         safeCount(supabase.from('conferences').select('id', { count: 'exact', head: true }).gte('started_at', isoToday)),
         safeCount(supabase.from('registros').select('id', { count: 'exact', head: true }).gte('created_at', isoToday)),
@@ -104,6 +104,8 @@ function useModuleStats(enabled: boolean) {
         safeCount(supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).eq('status', 'faturado').gte('updated_at', isoToday) as any),
         safeCount(supabase.from('estoque_posicoes').select('id', { count: 'exact', head: true }).not('item_id', 'is', null)),
         safeCount(supabase.from('estoque_posicoes').select('id', { count: 'exact', head: true })),
+        safeCount(supabase.from('compras_pedidos' as any).select('id', { count: 'exact', head: true }).in('status', ['pendente', 'em_andamento']) as any),
+        safeCount(supabase.from('compras_pedidos' as any).select('id', { count: 'exact', head: true }).eq('status', 'atrasado') as any),
       ]);
 
       const ocupacao = totalSlots ? Math.round((occupied / totalSlots) * 100) : 0;
@@ -111,6 +113,7 @@ function useModuleStats(enabled: boolean) {
       return {
         estoque: { openConferences: openConfs, sessionsToday, registrosToday: regsToday, ocupacao },
         expedicao: { pendentes: pendPickings, emSeparacao, expedidosHoje: expedHoje },
+        compras: { emAcompanhamento: comprasPend, atrasados: comprasAtras },
       };
     },
   });
@@ -224,18 +227,21 @@ export default function SelecionarModuloPage() {
 
   const hasEstoque = modules.includes('estoque');
   const hasExpedicao = modules.includes('expedicao');
-  const showBoth = hasEstoque && hasExpedicao;
+  const hasCompras = modules.includes('compras');
+  const moduleCount = [hasEstoque, hasExpedicao, hasCompras].filter(Boolean).length;
+  const showBoth = moduleCount > 1;
 
   useEffect(() => {
     if (!showBoth) return;
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-      if (e.key === '1') navigate('/estoque');
-      if (e.key === '2') navigate('/expedicao/painel');
+      if (e.key === '1' && hasEstoque) navigate('/estoque');
+      if (e.key === '2' && hasExpedicao) navigate('/expedicao/painel');
+      if (e.key === '3' && hasCompras) navigate('/compras/acompanhamentos');
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [navigate, showBoth]);
+  }, [navigate, showBoth, hasEstoque, hasExpedicao, hasCompras]);
 
   useEffect(() => {
     const t = setTimeout(() => firstCardRef.current?.focus(), 100);
@@ -257,11 +263,15 @@ export default function SelecionarModuloPage() {
   }
 
   if (isGuest) return <Navigate to="/estoque/operacao" replace />;
-  if (hasEstoque && !hasExpedicao) return <Navigate to="/estoque" replace />;
-  if (hasExpedicao && !hasEstoque) return <Navigate to="/expedicao/painel" replace />;
+  if (moduleCount === 1) {
+    if (hasEstoque) return <Navigate to="/estoque" replace />;
+    if (hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
+    if (hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
+  }
   // Feature 5: módulo padrão (skip automático)
   if (defaultModule === 'estoque' && hasEstoque) return <Navigate to="/estoque" replace />;
   if (defaultModule === 'expedicao' && hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
+  if (defaultModule === 'compras' && hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Operador';
   const roleName =
@@ -278,12 +288,13 @@ export default function SelecionarModuloPage() {
     navigate('/login');
   };
 
-  const prefetchModule = (key: 'estoque' | 'expedicao') => {
+  const prefetchModule = (key: 'estoque' | 'expedicao' | 'compras') => {
     if (key === 'estoque') import('@/pages/DashboardPage').catch(() => {});
     if (key === 'expedicao') import('@/pages/expedicao/PainelPage').catch(() => {});
+    if (key === 'compras') import('@/pages/compras/AcompanhamentosPage').catch(() => {});
   };
 
-  const setDefaultModule = (mod: 'estoque' | 'expedicao', label: string) => {
+  const setDefaultModule = (mod: 'estoque' | 'expedicao' | 'compras', label: string) => {
     localStorage.setItem('pf_defaultModule', mod);
     toast.success(`${label} definido como módulo padrão`, {
       description: 'Você pode alterar isso em Configurações.',
@@ -380,8 +391,9 @@ export default function SelecionarModuloPage() {
           )}
 
           {/* Cards de módulo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${moduleCount >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-4`}>
             {/* Estoque */}
+            {hasEstoque && (
             <Link
               ref={firstCardRef}
               to="/estoque"
@@ -438,8 +450,10 @@ export default function SelecionarModuloPage() {
                 <Pin className="w-2.5 h-2.5" /> padrão
               </button>
             </Link>
+            )}
 
             {/* Expedição */}
+            {hasExpedicao && (
             <Link
               to="/expedicao/painel"
               onClick={() => localStorage.setItem('pf_lastModule', 'expedicao')}
@@ -480,6 +494,51 @@ export default function SelecionarModuloPage() {
                 <Pin className="w-2.5 h-2.5" /> padrão
               </button>
             </Link>
+            )}
+
+            {/* Compras */}
+            {hasCompras && (
+            <Link
+              to="/compras/acompanhamentos"
+              onClick={() => localStorage.setItem('pf_lastModule', 'compras')}
+              onMouseEnter={() => prefetchModule('compras')}
+              onFocus={() => prefetchModule('compras')}
+              className={`group relative min-h-[200px] flex flex-col p-5 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lastModule === 'compras' ? 'ring-1 ring-violet-400/40' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <ShoppingCart className="w-5 h-5 text-violet-600" strokeWidth={1.75} />
+                <h2 className="text-sm font-semibold text-foreground">Compras</h2>
+                {!!stats?.compras.atrasados && (
+                  <span className="ml-auto text-[10px] font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded px-1.5 py-0.5 tabular-nums">
+                    {stats.compras.atrasados} atrasado{stats.compras.atrasados > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {renderMetric(stats?.compras.emAcompanhamento, 'em acompanhamento')}
+                {renderMetric(stats?.compras.atrasados, 'atrasados', stats?.compras.atrasados ? 'text-destructive' : undefined)}
+              </div>
+
+              <div className="mt-auto flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground">Pedidos, fornecedores e recebimento</span>
+                <kbd className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70 border border-border rounded px-1.5 py-0.5">
+                  3
+                </kbd>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDefaultModule('compras', 'Compras'); }}
+                className="absolute bottom-1.5 left-1.5 text-[9px] text-muted-foreground/40 hover:text-muted-foreground transition-colors inline-flex items-center gap-1"
+                title="Definir como módulo padrão"
+              >
+                <Pin className="w-2.5 h-2.5" /> padrão
+              </button>
+            </Link>
+            )}
           </div>
 
           {/* Acesso rápido: nova conferência */}

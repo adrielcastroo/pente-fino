@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const modules = useMemo<string[]>(() => {
     const raw = (profile as any)?.modules;
     if (Array.isArray(raw) && raw.length) return raw as string[];
-    if (isAdmin) return ['estoque', 'expedicao'];
+    if (isAdmin) return ['estoque', 'expedicao', 'compras'];
     return ['estoque'];
   }, [profile, isAdmin]);
 
