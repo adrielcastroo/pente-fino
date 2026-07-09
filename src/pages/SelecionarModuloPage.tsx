@@ -227,18 +227,21 @@ export default function SelecionarModuloPage() {
 
   const hasEstoque = modules.includes('estoque');
   const hasExpedicao = modules.includes('expedicao');
-  const showBoth = hasEstoque && hasExpedicao;
+  const hasCompras = modules.includes('compras');
+  const moduleCount = [hasEstoque, hasExpedicao, hasCompras].filter(Boolean).length;
+  const showBoth = moduleCount > 1;
 
   useEffect(() => {
     if (!showBoth) return;
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-      if (e.key === '1') navigate('/estoque');
-      if (e.key === '2') navigate('/expedicao/painel');
+      if (e.key === '1' && hasEstoque) navigate('/estoque');
+      if (e.key === '2' && hasExpedicao) navigate('/expedicao/painel');
+      if (e.key === '3' && hasCompras) navigate('/compras/acompanhamentos');
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [navigate, showBoth]);
+  }, [navigate, showBoth, hasEstoque, hasExpedicao, hasCompras]);
 
   useEffect(() => {
     const t = setTimeout(() => firstCardRef.current?.focus(), 100);
@@ -260,11 +263,15 @@ export default function SelecionarModuloPage() {
   }
 
   if (isGuest) return <Navigate to="/estoque/operacao" replace />;
-  if (hasEstoque && !hasExpedicao) return <Navigate to="/estoque" replace />;
-  if (hasExpedicao && !hasEstoque) return <Navigate to="/expedicao/painel" replace />;
+  if (moduleCount === 1) {
+    if (hasEstoque) return <Navigate to="/estoque" replace />;
+    if (hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
+    if (hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
+  }
   // Feature 5: módulo padrão (skip automático)
   if (defaultModule === 'estoque' && hasEstoque) return <Navigate to="/estoque" replace />;
   if (defaultModule === 'expedicao' && hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
+  if (defaultModule === 'compras' && hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Operador';
   const roleName =
@@ -281,12 +288,13 @@ export default function SelecionarModuloPage() {
     navigate('/login');
   };
 
-  const prefetchModule = (key: 'estoque' | 'expedicao') => {
+  const prefetchModule = (key: 'estoque' | 'expedicao' | 'compras') => {
     if (key === 'estoque') import('@/pages/DashboardPage').catch(() => {});
     if (key === 'expedicao') import('@/pages/expedicao/PainelPage').catch(() => {});
+    if (key === 'compras') import('@/pages/compras/AcompanhamentosPage').catch(() => {});
   };
 
-  const setDefaultModule = (mod: 'estoque' | 'expedicao', label: string) => {
+  const setDefaultModule = (mod: 'estoque' | 'expedicao' | 'compras', label: string) => {
     localStorage.setItem('pf_defaultModule', mod);
     toast.success(`${label} definido como módulo padrão`, {
       description: 'Você pode alterar isso em Configurações.',
