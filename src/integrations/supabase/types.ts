@@ -185,6 +185,51 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_starcolor_ops: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_envio: string | null
+          data_retorno: string | null
+          descricao: string | null
+          id: string
+          numero_nf: string | null
+          numero_op: string
+          observacoes: string | null
+          quantidade: number | null
+          status: Database["public"]["Enums"]["compras_starcolor_op_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_envio?: string | null
+          data_retorno?: string | null
+          descricao?: string | null
+          id?: string
+          numero_nf?: string | null
+          numero_op: string
+          observacoes?: string | null
+          quantidade?: number | null
+          status?: Database["public"]["Enums"]["compras_starcolor_op_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_envio?: string | null
+          data_retorno?: string | null
+          descricao?: string | null
+          id?: string
+          numero_nf?: string | null
+          numero_op?: string
+          observacoes?: string | null
+          quantidade?: number | null
+          status?: Database["public"]["Enums"]["compras_starcolor_op_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conferences: {
         Row: {
           conferente: string
@@ -2436,6 +2481,11 @@ export type Database = {
         | "recebido"
         | "atrasado"
         | "cancelado"
+      compras_starcolor_op_status:
+        | "aberta"
+        | "na_starcolor"
+        | "retornou"
+        | "finalizada"
       expedicao_carrinho_status: "livre" | "em_uso" | "manutencao"
       expedicao_carrinho_status_v2:
         | "montando"
@@ -2594,6 +2644,12 @@ export const Constants = {
         "recebido",
         "atrasado",
         "cancelado",
+      ],
+      compras_starcolor_op_status: [
+        "aberta",
+        "na_starcolor",
+        "retornou",
+        "finalizada",
       ],
       expedicao_carrinho_status: ["livre", "em_uso", "manutencao"],
       expedicao_carrinho_status_v2: [
