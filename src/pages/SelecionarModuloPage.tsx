@@ -391,8 +391,9 @@ export default function SelecionarModuloPage() {
           )}
 
           {/* Cards de módulo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${moduleCount >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-4`}>
             {/* Estoque */}
+            {hasEstoque && (
             <Link
               ref={firstCardRef}
               to="/estoque"
