@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportRomaneioXLSX } from '@/lib/compras/starcolorRomaneioExport';
+import { ComboboxCreatable } from '@/components/compras/ComboboxCreatable';
 
 type RomaneioStatus = 'rascunho' | 'gerado' | 'enviado' | 'retornou' | 'finalizado';
 
