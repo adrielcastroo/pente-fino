@@ -96,6 +96,23 @@ export default function RomaneioStarcolorEditorPage() {
     staleTime: 60_000,
   });
 
+  // Auto-gera próximo número de romaneio (ROM-XXXX) ao criar novo
+  useEffect(() => {
+    if (!isNew || numero) return;
+    (async () => {
+      const { data } = await supabase
+        .from('compras_starcolor_romaneios')
+        .select('numero')
+        .ilike('numero', 'ROM-%');
+      let max = 0;
+      for (const r of (data ?? []) as any[]) {
+        const m = /ROM-(\d+)/i.exec(r.numero ?? '');
+        if (m) max = Math.max(max, parseInt(m[1], 10));
+      }
+      setNumero(`ROM-${String(max + 1).padStart(4, '0')}`);
+    })();
+  }, [isNew, numero]);
+
   // Carregar romaneio existente
   const romQ = useQuery({
     queryKey: ['compras', 'starcolor', 'romaneio', id],
@@ -283,8 +300,8 @@ export default function RomaneioStarcolorEditorPage() {
       {/* Cabeçalho */}
       <div className="rounded-lg border border-border bg-card p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
-          <Label>Nº do Romaneio *</Label>
-          <Input value={numero} onChange={e => setNumero(e.target.value)} placeholder="ex.: ROM-0001" />
+          <Label>Nº do Romaneio</Label>
+          <Input value={numero} readOnly disabled placeholder="gerado automaticamente" className="bg-muted/40 tabular-nums" />
         </div>
         <div>
           <Label>Nº da NF *</Label>
