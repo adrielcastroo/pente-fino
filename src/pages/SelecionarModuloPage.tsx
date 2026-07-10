@@ -268,10 +268,13 @@ export default function SelecionarModuloPage() {
     if (hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
     if (hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
   }
-  // Feature 5: módulo padrão (skip automático)
-  if (defaultModule === 'estoque' && hasEstoque) return <Navigate to="/estoque" replace />;
-  if (defaultModule === 'expedicao' && hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
-  if (defaultModule === 'compras' && hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
+  // Feature 5: módulo padrão (skip automático) — ignorar se o usuário pediu para trocar
+  const forceSwitch = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('switch');
+  if (!forceSwitch) {
+    if (defaultModule === 'estoque' && hasEstoque) return <Navigate to="/estoque" replace />;
+    if (defaultModule === 'expedicao' && hasExpedicao) return <Navigate to="/expedicao/painel" replace />;
+    if (defaultModule === 'compras' && hasCompras) return <Navigate to="/compras/acompanhamentos" replace />;
+  }
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Operador';
   const roleName =
