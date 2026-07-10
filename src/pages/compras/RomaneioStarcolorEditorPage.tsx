@@ -49,6 +49,22 @@ const num = (v: string): number => {
 
 const OP_FREE_VALUE = '__free__';
 
+const CORES_PREDEFINIDAS = [
+  'Branco B2011',
+  'Branco Brilhante 15901374',
+  'Bege 9001',
+  'Bege Papirus PO96',
+  'Bronze BZ1002 LM219B',
+  'Bronze BZ1003',
+  'Cherry 8024',
+  'Cinza Chumbo P-CLFE.24',
+  'Cinza Inox W2638',
+  'Dark cherry 8014',
+  'Grafite 7024',
+  'Prata W2601',
+  'Preto P2609',
+];
+
 export default function RomaneioStarcolorEditorPage() {
   const { id } = useParams<{ id?: string }>();
   const isNew = !id || id === 'novo';
