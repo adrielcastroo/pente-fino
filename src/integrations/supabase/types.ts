@@ -230,6 +230,105 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_starcolor_romaneio_itens: {
+        Row: {
+          codigo: string | null
+          created_at: string
+          id: string
+          op_id: string | null
+          op_texto: string | null
+          ordem: number
+          peso_liq: number | null
+          qtd_pecas: number | null
+          romaneio_id: string
+          tam_barras: number | null
+        }
+        Insert: {
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          op_id?: string | null
+          op_texto?: string | null
+          ordem?: number
+          peso_liq?: number | null
+          qtd_pecas?: number | null
+          romaneio_id: string
+          tam_barras?: number | null
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          op_id?: string | null
+          op_texto?: string | null
+          ordem?: number
+          peso_liq?: number | null
+          qtd_pecas?: number | null
+          romaneio_id?: string
+          tam_barras?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_starcolor_romaneio_itens_op_id_fkey"
+            columns: ["op_id"]
+            isOneToOne: false
+            referencedRelation: "compras_starcolor_ops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_starcolor_romaneio_itens_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "compras_starcolor_romaneios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras_starcolor_romaneios: {
+        Row: {
+          acabamento: string | null
+          cor: string
+          created_at: string
+          created_by: string | null
+          data_emissao: string
+          id: string
+          numero: string
+          numero_nf: string
+          observacoes: string | null
+          servico_adicional: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acabamento?: string | null
+          cor: string
+          created_at?: string
+          created_by?: string | null
+          data_emissao?: string
+          id?: string
+          numero: string
+          numero_nf: string
+          observacoes?: string | null
+          servico_adicional?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acabamento?: string | null
+          cor?: string
+          created_at?: string
+          created_by?: string | null
+          data_emissao?: string
+          id?: string
+          numero?: string
+          numero_nf?: string
+          observacoes?: string | null
+          servico_adicional?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conferences: {
         Row: {
           conferente: string
