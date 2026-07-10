@@ -102,7 +102,7 @@ export default function RomaneioStarcolorEditorPage() {
         .from('compras_starcolor_romaneios')
         .select('cor, acabamento');
       if (error) throw error;
-      const cores = new Set<string>();
+      const cores = new Set<string>(CORES_PREDEFINIDAS);
       for (const r of (data ?? []) as any[]) {
         if (r.cor?.trim()) cores.add(r.cor.trim());
         if (r.acabamento?.trim()) cores.add(r.acabamento.trim());
