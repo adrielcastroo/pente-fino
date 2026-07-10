@@ -304,18 +304,9 @@ export default function RomaneioStarcolorEditorPage() {
           <Input type="date" value={dataEmissao} onChange={e => setDataEmissao(e.target.value)} />
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-4">
           <Label>Serviço adicional</Label>
           <Input value={servicoAdicional} onChange={e => setServicoAdicional(e.target.value)} />
-        </div>
-        <div className="md:col-span-2">
-          <Label>Acabamento</Label>
-          <ComboboxCreatable
-            value={acabamento}
-            onChange={setAcabamento}
-            options={sugestoesQ.data?.acabamentos ?? []}
-            placeholder="Selecione ou digite o acabamento…"
-          />
         </div>
 
         <div className="md:col-span-3">
