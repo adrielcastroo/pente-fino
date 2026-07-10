@@ -35,7 +35,7 @@ export default function ModuleSwitchFab() {
   // Esconder em telas de seleção/login
   if (pathname.startsWith('/selecionar-modulo') || pathname.startsWith('/login')) return null;
 
-  const target = '/selecionar-modulo';
+  const target = '/selecionar-modulo?switch=1';
   const targetLabel = 'Trocar de módulo';
 
   return (
