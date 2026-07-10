@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportRomaneioXLSX } from '@/lib/compras/starcolorRomaneioExport';
+import { ComboboxCreatable } from '@/components/compras/ComboboxCreatable';
 
 type RomaneioStatus = 'rascunho' | 'gerado' | 'enviado' | 'retornou' | 'finalizado';
 
@@ -75,6 +76,25 @@ export default function RomaneioStarcolorEditorPage() {
       if (error) throw error;
       return (data ?? []) as OPOption[];
     },
+  });
+
+  // Sugestões (cores + acabamentos já usados)
+  const sugestoesQ = useQuery({
+    queryKey: ['compras', 'starcolor', 'romaneios', 'sugestoes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('compras_starcolor_romaneios')
+        .select('cor, acabamento');
+      if (error) throw error;
+      const cores = new Set<string>();
+      const acabs = new Set<string>();
+      for (const r of (data ?? []) as any[]) {
+        if (r.cor?.trim()) cores.add(r.cor.trim());
+        if (r.acabamento?.trim()) acabs.add(r.acabamento.trim());
+      }
+      return { cores: [...cores], acabamentos: [...acabs] };
+    },
+    staleTime: 60_000,
   });
 
   // Carregar romaneio existente
@@ -273,7 +293,12 @@ export default function RomaneioStarcolorEditorPage() {
         </div>
         <div>
           <Label>Cor *</Label>
-          <Input value={cor} onChange={e => setCor(e.target.value)} placeholder="ex.: Preto" />
+          <ComboboxCreatable
+            value={cor}
+            onChange={setCor}
+            options={sugestoesQ.data?.cores ?? []}
+            placeholder="Selecione ou digite a cor…"
+          />
         </div>
         <div>
           <Label>Data de emissão</Label>
@@ -286,7 +311,12 @@ export default function RomaneioStarcolorEditorPage() {
         </div>
         <div className="md:col-span-2">
           <Label>Acabamento</Label>
-          <Input value={acabamento} onChange={e => setAcabamento(e.target.value)} />
+          <ComboboxCreatable
+            value={acabamento}
+            onChange={setAcabamento}
+            options={sugestoesQ.data?.acabamentos ?? []}
+            placeholder="Selecione ou digite o acabamento…"
+          />
         </div>
 
         <div className="md:col-span-3">
