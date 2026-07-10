@@ -78,7 +78,7 @@ export default function RomaneioStarcolorEditorPage() {
     },
   });
 
-  // Sugestões (cores + acabamentos já usados)
+  // Sugestões de cor (inclui valores antigos de acabamento — são a mesma coisa)
   const sugestoesQ = useQuery({
     queryKey: ['compras', 'starcolor', 'romaneios', 'sugestoes'],
     queryFn: async () => {
@@ -87,12 +87,11 @@ export default function RomaneioStarcolorEditorPage() {
         .select('cor, acabamento');
       if (error) throw error;
       const cores = new Set<string>();
-      const acabs = new Set<string>();
       for (const r of (data ?? []) as any[]) {
         if (r.cor?.trim()) cores.add(r.cor.trim());
-        if (r.acabamento?.trim()) acabs.add(r.acabamento.trim());
+        if (r.acabamento?.trim()) cores.add(r.acabamento.trim());
       }
-      return { cores: [...cores], acabamentos: [...acabs] };
+      return { cores: [...cores] };
     },
     staleTime: 60_000,
   });
