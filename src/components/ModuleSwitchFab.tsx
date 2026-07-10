@@ -35,9 +35,8 @@ export default function ModuleSwitchFab() {
   // Esconder em telas de seleção/login
   if (pathname.startsWith('/selecionar-modulo') || pathname.startsWith('/login')) return null;
 
-  const inExpedicao = pathname.startsWith('/expedicao');
-  const target = inExpedicao ? '/estoque/operacao' : '/expedicao/painel';
-  const targetLabel = inExpedicao ? 'Ir para Estoque' : 'Ir para Expedição';
+  const target = '/selecionar-modulo?switch=1';
+  const targetLabel = 'Trocar de módulo';
 
   return (
     <div className="hidden desktop:flex tablet-landscape:flex fixed bottom-6 right-6 z-40 flex-col items-end gap-2">
