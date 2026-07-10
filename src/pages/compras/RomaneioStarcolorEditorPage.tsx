@@ -78,7 +78,7 @@ export default function RomaneioStarcolorEditorPage() {
     },
   });
 
-  // Sugestões (cores + acabamentos já usados)
+  // Sugestões de cor (inclui valores antigos de acabamento — são a mesma coisa)
   const sugestoesQ = useQuery({
     queryKey: ['compras', 'starcolor', 'romaneios', 'sugestoes'],
     queryFn: async () => {
@@ -87,12 +87,11 @@ export default function RomaneioStarcolorEditorPage() {
         .select('cor, acabamento');
       if (error) throw error;
       const cores = new Set<string>();
-      const acabs = new Set<string>();
       for (const r of (data ?? []) as any[]) {
         if (r.cor?.trim()) cores.add(r.cor.trim());
-        if (r.acabamento?.trim()) acabs.add(r.acabamento.trim());
+        if (r.acabamento?.trim()) cores.add(r.acabamento.trim());
       }
-      return { cores: [...cores], acabamentos: [...acabs] };
+      return { cores: [...cores] };
     },
     staleTime: 60_000,
   });
@@ -305,18 +304,9 @@ export default function RomaneioStarcolorEditorPage() {
           <Input type="date" value={dataEmissao} onChange={e => setDataEmissao(e.target.value)} />
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-4">
           <Label>Serviço adicional</Label>
           <Input value={servicoAdicional} onChange={e => setServicoAdicional(e.target.value)} />
-        </div>
-        <div className="md:col-span-2">
-          <Label>Acabamento</Label>
-          <ComboboxCreatable
-            value={acabamento}
-            onChange={setAcabamento}
-            options={sugestoesQ.data?.acabamentos ?? []}
-            placeholder="Selecione ou digite o acabamento…"
-          />
         </div>
 
         <div className="md:col-span-3">
