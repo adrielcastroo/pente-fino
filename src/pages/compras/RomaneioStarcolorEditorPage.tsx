@@ -293,7 +293,12 @@ export default function RomaneioStarcolorEditorPage() {
         </div>
         <div>
           <Label>Cor *</Label>
-          <Input value={cor} onChange={e => setCor(e.target.value)} placeholder="ex.: Preto" />
+          <ComboboxCreatable
+            value={cor}
+            onChange={setCor}
+            options={sugestoesQ.data?.cores ?? []}
+            placeholder="Selecione ou digite a cor…"
+          />
         </div>
         <div>
           <Label>Data de emissão</Label>
@@ -306,7 +311,12 @@ export default function RomaneioStarcolorEditorPage() {
         </div>
         <div className="md:col-span-2">
           <Label>Acabamento</Label>
-          <Input value={acabamento} onChange={e => setAcabamento(e.target.value)} />
+          <ComboboxCreatable
+            value={acabamento}
+            onChange={setAcabamento}
+            options={sugestoesQ.data?.acabamentos ?? []}
+            placeholder="Selecione ou digite o acabamento…"
+          />
         </div>
 
         <div className="md:col-span-3">
