@@ -82,13 +82,13 @@ export default function RomaneioStarcolorEditorPage() {
     queryKey: ['compras', 'starcolor', 'romaneio', id],
     queryFn: async () => {
       const { data: rom, error: e1 } = await supabase
-        .from('compras_starcolor_romaneios' as never)
+        .from('compras_starcolor_romaneios')
         .select('*')
         .eq('id', id!)
         .maybeSingle();
       if (e1) throw e1;
       const { data: its, error: e2 } = await supabase
-        .from('compras_starcolor_romaneio_itens' as never)
+        .from('compras_starcolor_romaneio_itens')
         .select('*')
         .eq('romaneio_id', id!)
         .order('ordem');
@@ -175,7 +175,7 @@ export default function RomaneioStarcolorEditorPage() {
       let romaneioId = id;
       if (isNew) {
         const { data, error } = await supabase
-          .from('compras_starcolor_romaneios' as never)
+          .from('compras_starcolor_romaneios')
           .insert(payload)
           .select('id')
           .single();
@@ -183,7 +183,7 @@ export default function RomaneioStarcolorEditorPage() {
         romaneioId = (data as any).id;
       } else {
         const { error } = await supabase
-          .from('compras_starcolor_romaneios' as never)
+          .from('compras_starcolor_romaneios')
           .update(payload)
           .eq('id', id!);
         if (error) throw error;
@@ -191,7 +191,7 @@ export default function RomaneioStarcolorEditorPage() {
 
       // Substituir itens (simples e confiável neste tamanho)
       await supabase
-        .from('compras_starcolor_romaneio_itens' as never)
+        .from('compras_starcolor_romaneio_itens')
         .delete()
         .eq('romaneio_id', romaneioId!);
 
@@ -209,7 +209,7 @@ export default function RomaneioStarcolorEditorPage() {
         }));
       if (rows.length) {
         const { error } = await supabase
-          .from('compras_starcolor_romaneio_itens' as never)
+          .from('compras_starcolor_romaneio_itens')
           .insert(rows);
         if (error) throw error;
       }

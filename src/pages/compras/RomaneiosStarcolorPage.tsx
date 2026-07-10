@@ -61,7 +61,7 @@ const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : N
 async function fetchAllItens(romaneioIds: string[]): Promise<ItemRow[]> {
   if (!romaneioIds.length) return [];
   const { data, error } = await supabase
-    .from('compras_starcolor_romaneio_itens' as never)
+    .from('compras_starcolor_romaneio_itens')
     .select('*, compras_starcolor_ops(numero_op)')
     .in('romaneio_id', romaneioIds)
     .order('ordem');
@@ -80,7 +80,7 @@ export default function RomaneiosStarcolorPage() {
     queryKey: ['compras', 'starcolor', 'romaneios'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('compras_starcolor_romaneios' as never)
+        .from('compras_starcolor_romaneios')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -136,7 +136,7 @@ export default function RomaneiosStarcolorPage() {
   const delMut = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('compras_starcolor_romaneios' as never)
+        .from('compras_starcolor_romaneios')
         .delete()
         .eq('id', id);
       if (error) throw error;
