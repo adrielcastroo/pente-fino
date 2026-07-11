@@ -23,6 +23,7 @@ import { RastreamentoProgress } from '@/components/rastreamento/RastreamentoProg
 import { RastreamentoHistoryList } from '@/components/rastreamento/RastreamentoHistoryList';
 import { RastreamentoLinkDialog } from '@/components/rastreamento/RastreamentoLinkDialog';
 import { CarrierBadge } from '@/components/rastreamento/CarrierBadge';
+import { MelhorEnvioConnectButton } from '@/components/rastreamento/MelhorEnvioConnectButton';
 import type { TrackingStatus } from '@/types/tracking';
 
 const STATUS_LABELS: Record<TrackingStatus, string> = {
@@ -102,11 +103,14 @@ export default function RastreamentoPage() {
   return (
     <TooltipProvider>
       <div className="p-4 sm:p-6 space-y-5">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Rastreamento de Encomendas</h1>
-          <p className="text-sm text-muted-foreground">
-            Consulte e vincule códigos de rastreio a notas, romaneios, conferências, reservas e pedidos.
-          </p>
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Rastreamento de Encomendas</h1>
+            <p className="text-sm text-muted-foreground">
+              Consulte e vincule códigos de rastreio a notas, romaneios, conferências, reservas e pedidos.
+            </p>
+          </div>
+          <MelhorEnvioConnectButton />
         </header>
 
         <Card>
