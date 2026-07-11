@@ -46,6 +46,7 @@ const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/Acompanham
 const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"));
 const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
+const RastreamentoPage = lazy(() => import("@/pages/RastreamentoPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
@@ -156,6 +157,8 @@ const App = () => (
                     }
                   />
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
+                  <Route path="/estoque/rastreamento" element={<RastreamentoPage />} />
+                  <Route path="/rastreamento" element={<Navigate to="/estoque/rastreamento" replace />} />
                   <Route path="/estoque/etiquetas" element={<Navigate to="/expedicao/etiquetas" replace />} />
 
                   {/* Redirects 301 — rotas legadas → /estoque/* */}
