@@ -1762,6 +1762,33 @@ export type Database = {
         }
         Relationships: []
       }
+      melhor_envio_credentials: {
+        Row: {
+          access_token: string | null
+          environment: string
+          expires_at: string | null
+          id: number
+          refresh_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          environment?: string
+          expires_at?: string | null
+          id?: number
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          environment?: string
+          expires_at?: string | null
+          id?: number
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       movimentacoes_endereco: {
         Row: {
           codigo_lote: string
