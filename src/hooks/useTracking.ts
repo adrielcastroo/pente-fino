@@ -80,3 +80,14 @@ export function useDeleteTracking() {
     onSuccess: () => qc.invalidateQueries({ queryKey: trackingKeys.lists() }),
   });
 }
+
+export function usePrefetchTrackingLink() {
+  const qc = useQueryClient();
+  return (id: string) =>
+    qc.prefetchQuery({
+      queryKey: trackingKeys.detail(id),
+      queryFn: () => trackingService.getLink(id),
+      staleTime: 2 * 60 * 1000,
+    });
+}
+
