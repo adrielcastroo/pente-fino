@@ -157,6 +157,8 @@ const App = () => (
                     }
                   />
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
+                  <Route path="/estoque/rastreamento" element={<RastreamentoPage />} />
+                  <Route path="/rastreamento" element={<Navigate to="/estoque/rastreamento" replace />} />
                   <Route path="/estoque/etiquetas" element={<Navigate to="/expedicao/etiquetas" replace />} />
 
                   {/* Redirects 301 — rotas legadas → /estoque/* */}
