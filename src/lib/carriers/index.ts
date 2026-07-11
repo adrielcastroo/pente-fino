@@ -2,10 +2,6 @@ import type { TrackResponse, TrackingEvent, TrackingStatus } from '@/types/track
 import { correios } from './correios';
 import { jt } from './jt';
 import { loggi } from './loggi';
-import { jamef } from './jamef';
-import { aceville } from './aceville';
-import { rodonaves } from './rodonaves';
-import { saoMiguel } from './saoMiguel';
 import { melhorEnvio } from './melhorEnvio';
 import { mock } from './mock';
 
@@ -21,16 +17,7 @@ export interface CarrierAdapter {
   validate?: (code: string) => boolean;
 }
 
-export const carriers: CarrierAdapter[] = [
-  correios,
-  jt,
-  loggi,
-  jamef,
-  aceville,
-  rodonaves,
-  saoMiguel,
-  melhorEnvio,
-];
+export const carriers: CarrierAdapter[] = [correios, jt, loggi, melhorEnvio];
 
 if (import.meta.env.DEV) {
   carriers.unshift(mock);
@@ -42,10 +29,6 @@ export function detectCarrier(code: string): CarrierAdapter | null {
   if (/^[A-Z]{2}\d{9}BR$/.test(c)) return carriers.find(x => x.code === 'correios') ?? null;
   if (/^BR\d{13,}$/.test(c)) return carriers.find(x => x.code === 'jt') ?? null;
   if (/^LGG\d+$/.test(c)) return carriers.find(x => x.code === 'loggi') ?? null;
-  if (/^JMF\d{8,12}$/.test(c) || /^JAMEF\d{8,}$/.test(c)) return carriers.find(x => x.code === 'jamef') ?? null;
-  if (/^ACE\d{8,12}$/.test(c) || /^ACV\d{8,}$/.test(c)) return carriers.find(x => x.code === 'aceville') ?? null;
-  if (/^RN\d{8,12}$/.test(c) || /^ROD\d{8,}$/.test(c)) return carriers.find(x => x.code === 'rodonaves') ?? null;
-  if (/^SM\d{8,12}$/.test(c) || /^SAO\d{8,}$/.test(c)) return carriers.find(x => x.code === 'saomiguel') ?? null;
   if (/^\d{6,}$/.test(c)) return carriers.find(x => x.code === 'melhorenvio') ?? null;
   return null;
 }
