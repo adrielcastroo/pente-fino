@@ -46,6 +46,7 @@ const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/Acompanham
 const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"));
 const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
+const RastreamentoPage = lazy(() => import("@/pages/RastreamentoPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
