@@ -46,23 +46,22 @@ export function RastreamentoLinkDialog({ open, onClose, trackingCode, onLink }: 
         let data: EntityOption[] = [];
 
         if (type === 'nota_fiscal') {
-          let sb = supabase.from('nfe_importadas').select('id, numero_nf, fornecedor_nome, valor_total, status').limit(20);
-          if (q) sb = sb.ilike('numero_nf', `%${q}%`);
+          let sb = supabase.from('nfe_importadas').select('id, numero, serie, nome_emitente, valor_total').limit(20);
+          if (q) sb = sb.ilike('numero', `%${q}%`);
           const { data: rows } = await sb;
           data = (rows || []).map((r) => ({
             id: r.id, type,
-            label: `NF ${r.numero_nf}`,
-            subtitle: r.fornecedor_nome || undefined,
-            badge: r.status || undefined,
+            label: `NF ${r.numero}${r.serie ? '/' + r.serie : ''}`,
+            subtitle: r.nome_emitente || undefined,
+            badge: r.valor_total != null ? `R$ ${Number(r.valor_total).toFixed(2)}` : undefined,
           }));
         } else if (type === 'romaneio') {
-          let sb = supabase.from('expedicao_romaneios').select('id, numero, motorista_nome, status').limit(20);
+          let sb = supabase.from('expedicao_romaneios').select('id, numero, status').limit(20);
           if (q) sb = sb.ilike('numero', `%${q}%`);
           const { data: rows } = await sb;
           data = (rows || []).map((r) => ({
             id: r.id, type,
             label: `Romaneio ${r.numero}`,
-            subtitle: r.motorista_nome || undefined,
             badge: r.status || undefined,
           }));
         } else if (type === 'conferencia') {
@@ -76,22 +75,22 @@ export function RastreamentoLinkDialog({ open, onClose, trackingCode, onLink }: 
             badge: r.finished_at ? 'finalizada' : 'em andamento',
           }));
         } else if (type === 'reserva') {
-          let sb = supabase.from('independent_reservations').select('id, codigo_produto, descricao_produto, endereco, quantidade, status').limit(20);
-          if (q) sb = sb.ilike('codigo_produto', `%${q}%`);
+          let sb = supabase.from('independent_reservations').select('id, codigo, descricao, endereco, quantidade').limit(20);
+          if (q) sb = sb.ilike('codigo', `%${q}%`);
           const { data: rows } = await sb;
           data = (rows || []).map((r) => ({
             id: r.id, type,
-            label: r.codigo_produto || 'Reserva',
-            subtitle: r.descricao_produto || undefined,
-            badge: r.endereco || r.status || undefined,
+            label: r.codigo || 'Reserva',
+            subtitle: r.descricao || undefined,
+            badge: r.endereco || undefined,
           }));
         } else if (type === 'pedido_compra') {
-          let sb = supabase.from('compras_pedidos').select('id, numero_pedido, fornecedor, status').limit(20);
-          if (q) sb = sb.ilike('numero_pedido', `%${q}%`);
+          let sb = supabase.from('compras_pedidos').select('id, numero, fornecedor, status').limit(20);
+          if (q) sb = sb.ilike('numero', `%${q}%`);
           const { data: rows } = await sb;
           data = (rows || []).map((r) => ({
             id: r.id, type,
-            label: `Pedido ${r.numero_pedido}`,
+            label: `Pedido ${r.numero}`,
             subtitle: r.fornecedor || undefined,
             badge: r.status || undefined,
           }));
