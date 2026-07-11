@@ -21,18 +21,23 @@ function isEmbeddedPreview() {
   }
 }
 
+function isPreviewOrigin() {
+  const o = window.location.origin;
+  return (
+    o.includes('-preview--') ||
+    o.includes('id-preview--') ||
+    o.includes('.lovableproject.com') ||
+    o.includes('.lovable.dev')
+  );
+}
+
 function getRedirectUri() {
-  const origin = window.location.origin;
-  const isLovablePreview = origin.includes('-preview--') || origin.includes('id-preview--');
-  const callbackOrigin = isLovablePreview ? PUBLISHED_CALLBACK_ORIGIN : origin;
+  const callbackOrigin = isPreviewOrigin() ? PUBLISHED_CALLBACK_ORIGIN : window.location.origin;
   return `${callbackOrigin}/auth/callback`;
 }
 
 /**
  * Botão / status da integração com o Melhor Envio.
- * - Verifica se há refresh_token no backend (action=status)
- * - Se não conectado: chama action=authorize_url e redireciona para o consentimento OAuth
- * - Após consentimento, o usuário volta em /auth/callback (OAuthCallbackPage)
  */
 export function MelhorEnvioConnectButton() {
   const [status, setStatus] = useState<MEStatus | null>(null);
@@ -47,7 +52,6 @@ export function MelhorEnvioConnectButton() {
       if (data?.error) throw new Error(data.error);
       setStatus(data as MEStatus);
     } catch (e) {
-      // silencioso — a página funciona mesmo sem status
       console.error('ME status:', (e as Error).message);
     }
   }, []);
@@ -58,8 +62,6 @@ export function MelhorEnvioConnectButton() {
 
   const connect = async () => {
     setLoading(true);
-    const embedded = isEmbeddedPreview();
-    const authWindow = embedded ? window.open('about:blank', '_blank') : null;
     try {
       const redirectUri = getRedirectUri();
       const { data, error } = await supabase.functions.invoke('melhor-envio', {
@@ -69,16 +71,23 @@ export function MelhorEnvioConnectButton() {
       if (data?.error) throw new Error(data.error);
       if (!data?.url) throw new Error('URL de autorização não recebida');
 
-      if (authWindow) {
-        authWindow.opener = null;
-        authWindow.location.href = data.url as string;
+      const url = data.url as string;
+      const embedded = isEmbeddedPreview();
+
+      if (embedded) {
+        // Abre em nova aba de nível superior para escapar do iframe do preview
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!win) {
+          toast.error('Popup bloqueado. Permita popups ou abra o app publicado: ' + PUBLISHED_CALLBACK_ORIGIN);
+        } else {
+          toast.info('Abrimos o consentimento em uma nova aba. Finalize por lá.');
+        }
         setLoading(false);
         return;
       }
 
-      window.location.assign(data.url as string);
+      window.location.assign(url);
     } catch (e) {
-      authWindow?.close();
       toast.error((e as Error).message || 'Falha ao iniciar OAuth');
       setLoading(false);
     }
