@@ -236,6 +236,8 @@ export default function ExpedicaoEtiquetasPage() {
   const [history, setHistory] = useState<PrintHistoryEntry[]>(() => loadHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [xmlOpen, setXmlOpen] = useState(false);
+  const [freeOpen, setFreeOpen] = useState(false);
 
   useEffect(() => {
     if (!templates.some((t) => t.id === activeId)) {
