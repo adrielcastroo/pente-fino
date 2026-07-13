@@ -4,6 +4,7 @@ import JsBarcode from 'jsbarcode';
 import {
   Printer, Tag, Save, Trash2, Plus, Copy, Download, Upload, Image as ImageIcon, X,
   History, Sparkles, GripVertical, Usb, AlertCircle, CheckCircle2, RefreshCw, MoreHorizontal,
+  FileText, Wand2,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -32,6 +33,9 @@ import {
   isWebUsbSupported, isWebSerialSupported,
   type BarcodeFmt, type Vars, type PrintHistoryEntry,
 } from './etiqueta-helpers';
+import EtiquetaXmlDialog, { type LabelSizeKey } from './EtiquetaXmlDialog';
+import EtiquetaFreeEditor from './EtiquetaFreeEditor';
+import type { EtiquetaXmlPatch } from './etiqueta-xml';
 
 // ============================================================================
 // Types
@@ -232,6 +236,8 @@ export default function ExpedicaoEtiquetasPage() {
   const [history, setHistory] = useState<PrintHistoryEntry[]>(() => loadHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [xmlOpen, setXmlOpen] = useState(false);
+  const [freeOpen, setFreeOpen] = useState(false);
 
   useEffect(() => {
     if (!templates.some((t) => t.id === activeId)) {
@@ -369,6 +375,36 @@ export default function ExpedicaoEtiquetasPage() {
     }, 250);
   }
 
+  // Aplica dados extraídos do XML da NF-e no template ativo.
+  function applyXmlPatch(input: EtiquetaXmlPatch & { pageSize: LabelSizeKey; copies: number }) {
+    const patch: Partial<LabelTemplate> = {
+      titulo: input.titulo,
+      subtitulo: input.subtitulo,
+      codigo: input.codigo,
+      destino: input.destino,
+      transportadora: input.transportadora,
+      nfNumero: input.nfNumero,
+      volumeAtual: input.volumeAtual,
+      volumeTotal: input.volumeTotal,
+      codePayload: input.codePayload,
+      showBarcode: input.showBarcode,
+      showQr: input.showQr,
+      barcodeFmt: input.barcodeFmt,
+      copias: Math.max(1, input.copies),
+    };
+    if (input.pageSize === '100x50') {
+      patch.pageSize = 'custom';
+      patch.customWidth = 100;
+      patch.customHeight = 50;
+    } else {
+      patch.pageSize = input.pageSize as PageSize;
+    }
+    patchActive(patch);
+    toast.success('Etiqueta gerada a partir do XML.');
+  }
+
+
+
   // Combinação: vars globais + vars do template (template tem prioridade)
   const mergedVars: Vars = useMemo(
     () => ({ ...globalVars, ...(active?.vars ?? {}) }),
@@ -478,6 +514,8 @@ export default function ExpedicaoEtiquetasPage() {
         onPrintZplSerial={() => handleZplPrint('serial')}
         onOpenHistory={() => setHistoryOpen(true)}
         onOpenPresets={() => setPresetsOpen(true)}
+        onOpenXml={() => setXmlOpen(true)}
+        onOpenFreeEditor={() => setFreeOpen(true)}
         historyCount={history.length}
       />
 
@@ -797,6 +835,8 @@ export default function ExpedicaoEtiquetasPage() {
       </div>
 
       <PresetsDialog open={presetsOpen} onOpenChange={setPresetsOpen} onApply={applyPreset} onApplyAndPrint={applyPresetAndPrint} />
+      <EtiquetaXmlDialog open={xmlOpen} onOpenChange={setXmlOpen} onApply={applyXmlPatch} />
+      <EtiquetaFreeEditor open={freeOpen} onOpenChange={setFreeOpen} />
       <HistoryDialog
         open={historyOpen} onOpenChange={setHistoryOpen}
         history={history}
@@ -816,14 +856,15 @@ export default function ExpedicaoEtiquetasPage() {
 function Header({
   templates, active, onSelect, onCreate, onDuplicate, onRemove, onRename,
   onExport, onImport, onPrint, onPrintZplUsb, onPrintZplSerial,
-  onOpenHistory, onOpenPresets, historyCount,
+  onOpenHistory, onOpenPresets, onOpenXml, onOpenFreeEditor, historyCount,
 }: {
   templates: LabelTemplate[]; active: LabelTemplate;
   onSelect: (id: string) => void; onCreate: () => void; onDuplicate: () => void;
   onRemove: () => void; onRename: (name: string) => void;
   onExport: () => void; onImport: (f: File) => void;
   onPrint: () => void; onPrintZplUsb: () => void; onPrintZplSerial: () => void;
-  onOpenHistory: () => void; onOpenPresets: () => void; historyCount: number;
+  onOpenHistory: () => void; onOpenPresets: () => void;
+  onOpenXml: () => void; onOpenFreeEditor: () => void; historyCount: number;
 }) {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(active.name);
@@ -861,6 +902,13 @@ function Header({
             ))}
           </SelectContent>
         </Select>
+
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={onOpenXml} title="Gerar etiqueta a partir do XML da NF-e">
+          <FileText className="size-4" /> Do XML
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={onOpenFreeEditor} title="Criar etiqueta do zero (estilo BarTender)">
+          <Wand2 className="size-4" /> Do zero
+        </Button>
 
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onOpenPresets}>
           <Sparkles className="size-4" /> Presets
