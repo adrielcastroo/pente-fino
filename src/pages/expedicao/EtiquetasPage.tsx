@@ -1402,7 +1402,7 @@ function PreviewWorkbench({
   }, [naturalW, naturalH]);
 
   return (
-    <div className="space-y-3 print:contents">
+    <div className="space-y-3 exp-preview-workbench">
       <div className="flex items-baseline justify-between shrink-0 print:hidden">
         <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">
           Pré-visualização · Expedição
@@ -1413,7 +1413,7 @@ function PreviewWorkbench({
       </div>
       <div
         ref={boxRef}
-        className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 min-h-[380px] lg:min-h-[520px] overflow-hidden shadow-inner print:hidden"
+        className="exp-preview-box relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 min-h-[380px] lg:min-h-[520px] overflow-hidden shadow-inner"
         style={{
           backgroundColor: 'hsl(var(--muted) / 0.55)',
           backgroundImage:
@@ -1423,6 +1423,7 @@ function PreviewWorkbench({
         }}
       >
         <div
+          className="exp-preview-stack"
           style={{
             transform: `scale(${fit})`,
             transformOrigin: 'center center',
@@ -1434,15 +1435,10 @@ function PreviewWorkbench({
         >
           {children}
         </div>
-        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/40 text-[9px] font-mono opacity-80">
+        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/40 text-[9px] font-mono opacity-80 print:hidden">
           <span className="inline-block w-3 h-[2px] bg-foreground/70" />
           {Math.round(10 * MM_TO_PX * fit)}px ≈ 10mm
         </div>
-      </div>
-
-      {/* Impressão: renderiza etiquetas 1:1 sem workbench */}
-      <div className="hidden print:contents">
-        {children}
       </div>
     </div>
   );
