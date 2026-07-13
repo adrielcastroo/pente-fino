@@ -2,8 +2,13 @@
 // Scraper de leitura autenticado. Sem API oficial.
 // Precisa de: AUGE_BASE_URL, AUGE_USERNAME, AUGE_PASSWORD
 
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
 
 const AUGE_BASE_URL = Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app';
 const AUGE_USERNAME = Deno.env.get('AUGE_USERNAME') ?? '';
