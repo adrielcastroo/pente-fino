@@ -1361,6 +1361,93 @@ function Barcode({ value, format, width }: { value: string; format: BarcodeFmt; 
   return <svg ref={ref} style={{ maxWidth: `${width}px`, width: '100%', height: 'auto' }} />;
 }
 
+// 1 mm ≈ 3.7795 CSS px em telas comuns. Usamos para calcular o tamanho
+// visual da etiqueta (que é definida em mm) e fazer o fit-to-container.
+const MM_TO_PX = 3.7795;
+
+function PreviewWorkbench({
+  dims,
+  copias,
+  children,
+}: {
+  dims: { w: number; h: number };
+  copias: number;
+  children: React.ReactNode;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(1);
+
+  // A etiqueta em mm ocupa (dims.w × MM_TO_PX) px de largura no fluxo natural;
+  // se houver múltiplas cópias, elas empilham verticalmente com um gap.
+  const gapPx = 16;
+  const naturalW = dims.w * MM_TO_PX;
+  const naturalH = dims.h * MM_TO_PX * Math.max(1, copias) + gapPx * Math.max(0, copias - 1);
+
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const recalc = () => {
+      const pad = 48; // p-6
+      const availW = Math.max(0, el.clientWidth - pad);
+      const availH = Math.max(0, el.clientHeight - pad);
+      if (availW <= 0 || availH <= 0) return;
+      const next = Math.min(availW / naturalW, availH / naturalH, 1.2);
+      setFit(next > 0 ? next : 1);
+    };
+    recalc();
+    const ro = new ResizeObserver(recalc);
+    ro.observe(el);
+    window.addEventListener('resize', recalc);
+    return () => { ro.disconnect(); window.removeEventListener('resize', recalc); };
+  }, [naturalW, naturalH]);
+
+  return (
+    <div className="space-y-3 print:contents">
+      <div className="flex items-baseline justify-between shrink-0 print:hidden">
+        <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">
+          Pré-visualização · Expedição
+        </Label>
+        <span className="text-[10px] font-mono opacity-60">
+          {dims.w}×{dims.h}mm · escala 1:1 · zoom {Math.round(fit * 100)}% · {copias} cópia(s)
+        </span>
+      </div>
+      <div
+        ref={boxRef}
+        className="relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 min-h-[380px] lg:min-h-[520px] overflow-hidden shadow-inner print:hidden"
+        style={{
+          backgroundColor: 'hsl(var(--muted) / 0.55)',
+          backgroundImage:
+            'linear-gradient(45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(-45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%), linear-gradient(-45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%)',
+          backgroundSize: '16px 16px',
+          backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+        }}
+      >
+        <div
+          style={{
+            transform: `scale(${fit})`,
+            transformOrigin: 'center center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: `${gapPx}px`,
+          }}
+        >
+          {children}
+        </div>
+        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/40 text-[9px] font-mono opacity-80">
+          <span className="inline-block w-3 h-[2px] bg-foreground/70" />
+          {Math.round(10 * MM_TO_PX * fit)}px ≈ 10mm
+        </div>
+      </div>
+
+      {/* Impressão: renderiza etiquetas 1:1 sem workbench */}
+      <div className="hidden print:contents">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function LabelSheet({ t }: { t: LabelTemplate }) {
   const dims = resolveDims(t);
   const codeValue = (t.codePayload || t.codigo || t.titulo || '').slice(0, 700);
