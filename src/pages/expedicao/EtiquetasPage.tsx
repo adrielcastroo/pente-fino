@@ -1587,6 +1587,14 @@ function PrintStyles({ wMm, hMm }: { wMm: number; hMm: number }) {
         @page { size: ${wMm}mm ${hMm}mm; margin: 0; }
         body * { visibility: hidden !important; }
         .label-sheet, .label-sheet * { visibility: visible !important; }
+        /* Neutraliza o workbench para não empurrar / escalar as etiquetas */
+        .exp-preview-box {
+          padding: 0 !important; border: 0 !important; box-shadow: none !important;
+          background: none !important; min-height: 0 !important; overflow: visible !important;
+        }
+        .exp-preview-stack {
+          transform: none !important; gap: 0 !important; display: block !important;
+        }
         .label-sheet {
           position: relative;
           page-break-after: always;
