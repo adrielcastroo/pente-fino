@@ -401,6 +401,9 @@ export default function ExpedicaoEtiquetasPage() {
     }
     patchActive(patch);
     toast.success('Etiqueta gerada a partir do XML.');
+  }
+
+
 
   // Combinação: vars globais + vars do template (template tem prioridade)
   const mergedVars: Vars = useMemo(
