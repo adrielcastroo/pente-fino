@@ -150,7 +150,7 @@ export default function EtiquetaFreeEditor({ open, onOpenChange }: Props) {
     const serialOk = isWebSerialSupported();
     if (!usbOk && !serialOk) return toast.error('Este navegador não suporta WebUSB nem Web Serial.');
     const r = usbOk ? await sendZplViaUsb(zpl) : await sendZplViaSerial(zpl);
-    if (r.ok) toast.success('Etiqueta enviada para impressora.');
+    if (r.ok === true) toast.success('Etiqueta enviada para impressora.');
     else toast.error(r.error);
   }
 
