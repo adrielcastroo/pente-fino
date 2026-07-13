@@ -4,6 +4,7 @@ import JsBarcode from 'jsbarcode';
 import {
   Printer, Tag, Save, Trash2, Plus, Copy, Download, Upload, Image as ImageIcon, X,
   History, Sparkles, GripVertical, Usb, AlertCircle, CheckCircle2, RefreshCw, MoreHorizontal,
+  FileText, Wand2,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -32,6 +33,9 @@ import {
   isWebUsbSupported, isWebSerialSupported,
   type BarcodeFmt, type Vars, type PrintHistoryEntry,
 } from './etiqueta-helpers';
+import EtiquetaXmlDialog, { type LabelSizeKey } from './EtiquetaXmlDialog';
+import EtiquetaFreeEditor from './EtiquetaFreeEditor';
+import type { EtiquetaXmlPatch } from './etiqueta-xml';
 
 // ============================================================================
 // Types
