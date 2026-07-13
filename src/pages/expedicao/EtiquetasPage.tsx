@@ -3,8 +3,11 @@ import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import {
   Printer, Tag, Save, Trash2, Plus, Copy, Download, Upload, Image as ImageIcon, X,
-  History, Sparkles, GripVertical, Usb, AlertCircle, CheckCircle2, RefreshCw,
+  History, Sparkles, GripVertical, Usb, AlertCircle, CheckCircle2, RefreshCw, MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -824,6 +827,7 @@ function Header({
 }) {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(active.name);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => setName(active.name), [active.name, active.id]);
 
   const usbOk = isWebUsbSupported();
@@ -831,27 +835,26 @@ function Header({
   const headerDims = resolveDims(active);
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 print:hidden">
-      <div>
+    <div className="flex flex-col gap-3 print:hidden sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
         <h1 className="text-xl font-semibold text-foreground flex items-center gap-2 flex-wrap">
           <Tag className="size-5 text-primary" /> Etiquetas
           <Badge
             variant="secondary"
-            className="ml-1 font-mono text-[11px] gap-1"
+            className="font-mono text-[11px]"
             title="Tamanho padrão atual — usado na próxima impressão até ser alterado"
           >
-            <span className="text-muted-foreground">Padrão:</span>
             {headerDims.w}×{headerDims.h} mm
           </Badge>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Personalize, salve modelos e imprima via navegador ou ZPL direto na impressora.
+        <p className="text-xs text-muted-foreground mt-1 truncate">
+          Personalize modelos e imprima via navegador ou ZPL.
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={active.id} onValueChange={onSelect}>
-          <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             {templates.map((t) => (
               <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -862,48 +865,57 @@ function Header({
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onOpenPresets}>
           <Sparkles className="size-4" /> Presets
         </Button>
+
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onOpenHistory}>
-          <History className="size-4" /> Histórico
+          <History className="size-4" />
           {historyCount > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{historyCount}</Badge>
+            <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{historyCount}</Badge>
           )}
         </Button>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setRenaming(true)}>
-          <Save className="size-4" /> Renomear
-        </Button>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={onCreate}>
-          <Plus className="size-4" /> Novo
-        </Button>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={onDuplicate}>
-          <Copy className="size-4" /> Duplicar
-        </Button>
-        <Button variant="outline" size="sm" className="gap-1.5 text-destructive" onClick={onRemove}>
-          <Trash2 className="size-4" /> Excluir
-        </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5" onClick={onExport}>
-          <Download className="size-4" /> Exportar
-        </Button>
-        <label className="inline-flex">
-          <Button variant="ghost" size="sm" className="gap-1.5" asChild>
-            <span><Upload className="size-4" /> Importar</span>
-          </Button>
-          <input type="file" accept="application/json" className="hidden"
-            onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
-        </label>
 
-        {usbOk && (
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={onPrintZplUsb}
-            title="Envia ZPL direto via WebUSB (Zebra/Argox/Bixolon)">
-            <Usb className="size-4" /> ZPL USB
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <MoreHorizontal className="size-4" /> Modelo
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={onCreate}><Plus className="size-4 mr-2" /> Novo</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setRenaming(true)}><Save className="size-4 mr-2" /> Renomear</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDuplicate}><Copy className="size-4 mr-2" /> Duplicar</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onExport}><Download className="size-4 mr-2" /> Exportar</DropdownMenuItem>
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}>
+              <Upload className="size-4 mr-2" /> Importar
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onRemove} className="text-destructive focus:text-destructive">
+              <Trash2 className="size-4 mr-2" /> Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.target.value = ''; }}
+        />
+
+        {(usbOk || serialOk) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={usbOk ? onPrintZplUsb : onPrintZplSerial}
+            title={usbOk ? 'Envia ZPL via WebUSB' : 'Envia ZPL via Web Serial'}
+          >
+            <Usb className="size-4" /> ZPL
           </Button>
         )}
-        {serialOk && !usbOk && (
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={onPrintZplSerial}>
-            <Usb className="size-4" /> ZPL Serial
-          </Button>
-        )}
 
-        <Button onClick={onPrint} className="gap-2">
+        <Button onClick={onPrint} size="sm" className="gap-1.5">
           <Printer className="size-4" /> Imprimir
         </Button>
       </div>
