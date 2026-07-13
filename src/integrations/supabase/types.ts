@@ -113,6 +113,84 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_produtos_saldo: {
+        Row: {
+          codigo: string
+          created_at: string
+          deposito: string
+          descricao: string | null
+          id: string
+          quantidade: number
+          raw: Json | null
+          synced_at: string
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          deposito?: string
+          descricao?: string | null
+          id?: string
+          quantidade?: number
+          raw?: Json | null
+          synced_at?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          deposito?: string
+          descricao?: string | null
+          id?: string
+          quantidade?: number
+          raw?: Json | null
+          synced_at?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auge_sync_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          metadata: Json | null
+          rows_processed: number
+          rows_upserted: number
+          started_at: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          rows_processed?: number
+          rows_upserted?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          rows_processed?: number
+          rows_upserted?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       auth_audit_logs: {
         Row: {
           created_at: string
