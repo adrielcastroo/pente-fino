@@ -827,6 +827,7 @@ function Header({
 }) {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(active.name);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => setName(active.name), [active.name, active.id]);
 
   const usbOk = isWebUsbSupported();
