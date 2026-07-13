@@ -375,6 +375,33 @@ export default function ExpedicaoEtiquetasPage() {
     }, 250);
   }
 
+  // Aplica dados extraídos do XML da NF-e no template ativo.
+  function applyXmlPatch(input: EtiquetaXmlPatch & { pageSize: LabelSizeKey; copies: number }) {
+    const patch: Partial<LabelTemplate> = {
+      titulo: input.titulo,
+      subtitulo: input.subtitulo,
+      codigo: input.codigo,
+      destino: input.destino,
+      transportadora: input.transportadora,
+      nfNumero: input.nfNumero,
+      volumeAtual: input.volumeAtual,
+      volumeTotal: input.volumeTotal,
+      codePayload: input.codePayload,
+      showBarcode: input.showBarcode,
+      showQr: input.showQr,
+      barcodeFmt: input.barcodeFmt,
+      copias: Math.max(1, input.copies),
+    };
+    if (input.pageSize === '100x50') {
+      patch.pageSize = 'custom';
+      patch.customWidth = 100;
+      patch.customHeight = 50;
+    } else {
+      patch.pageSize = input.pageSize as PageSize;
+    }
+    patchActive(patch);
+    toast.success('Etiqueta gerada a partir do XML.');
+
   // Combinação: vars globais + vars do template (template tem prioridade)
   const mergedVars: Vars = useMemo(
     () => ({ ...globalVars, ...(active?.vars ?? {}) }),
