@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import {
