@@ -816,22 +816,12 @@ export default function ExpedicaoEtiquetasPage() {
           </CardContent>
         </Card>
 
-        {/* Preview */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between print:hidden">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">
-              Pré-visualização · {dims.w}×{dims.h}mm
-            </p>
-            <span className="text-[10px] text-muted-foreground">
-              {active.copias} cópia(s)
-            </span>
-          </div>
-          <div className="print:contents">
-            {Array.from({ length: active.copias }).map((_, i) => (
-              <LabelSheet key={i} t={interpolated} />
-            ))}
-          </div>
-        </div>
+        {/* Preview — workbench estilo Estoque */}
+        <PreviewWorkbench dims={dims} copias={active.copias}>
+          {Array.from({ length: active.copias }).map((_, i) => (
+            <LabelSheet key={i} t={interpolated} />
+          ))}
+        </PreviewWorkbench>
       </div>
 
       <PresetsDialog open={presetsOpen} onOpenChange={setPresetsOpen} onApply={applyPreset} onApplyAndPrint={applyPresetAndPrint} />
