@@ -3,8 +3,11 @@ import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import {
   Printer, Tag, Save, Trash2, Plus, Copy, Download, Upload, Image as ImageIcon, X,
-  History, Sparkles, GripVertical, Usb, AlertCircle, CheckCircle2, RefreshCw,
+  History, Sparkles, GripVertical, Usb, AlertCircle, CheckCircle2, RefreshCw, MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
