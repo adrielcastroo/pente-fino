@@ -12,7 +12,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
-import bwipjs from 'bwip-js';
+import bwipjs from 'bwip-js/browser';
 import {
   Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
   Trash2, Copy, Minus, Square, ArrowUp, ArrowDown, Plus, Image as ImageIcon,
