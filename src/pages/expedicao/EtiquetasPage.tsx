@@ -596,31 +596,39 @@ export default function ExpedicaoEtiquetasPage() {
 // Preview workbench com réguas + zoom pela roda do mouse
 // ============================================================================
 
-const RULER_SIZE = 20; // px
+const RULER_SIZE = 22; // px
 
+/**
+ * Workbench com:
+ *  - Réguas mm fixadas nas bordas superior/esquerda do preview (Req #1)
+ *  - Zoom pela roda do mouse (Ctrl/Alt = passo fino)
+ *  - Scroll horizontal com Espaço pressionado + roda do mouse (Req #9)
+ *  - Sem scroll vertical do editor: o preview ocupa a altura disponível (Req #6)
+ */
 function PreviewWorkbench({
-  widthMm, heightMm, copias, zoom, onZoomChange, selected, children,
+  widthMm, heightMm, zoom, onZoomChange, selected, children,
 }: {
-  widthMm: number; heightMm: number; copias: number; zoom: number;
+  widthMm: number; heightMm: number; zoom: number;
   onZoomChange: (v: number) => void;
   selected: LabelElement | null;
   children: React.ReactNode;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [autoFit, setAutoFit] = useState(1);
+  const [spaceDown, setSpaceDown] = useState(false);
 
-  const gapPx = 16;
   const naturalW = widthMm * MM_TO_PX;
-  const naturalH = heightMm * MM_TO_PX * Math.max(1, copias) + gapPx * Math.max(0, copias - 1);
+  const naturalH = heightMm * MM_TO_PX;
 
   useLayoutEffect(() => {
     const el = boxRef.current; if (!el) return;
     const recalc = () => {
-      const pad = 48;
+      const pad = 32;
       const availW = Math.max(0, el.clientWidth - pad - RULER_SIZE);
       const availH = Math.max(0, el.clientHeight - pad - RULER_SIZE);
       if (availW <= 0 || availH <= 0) return;
-      setAutoFit(Math.min(availW / naturalW, availH / naturalH, 1.5));
+      setAutoFit(Math.min(availW / naturalW, availH / naturalH, 1.8));
     };
     recalc();
     const ro = new ResizeObserver(recalc); ro.observe(el);
@@ -629,13 +637,33 @@ function PreviewWorkbench({
 
   const fit = zoom > 0 ? zoom : autoFit;
 
-  // Wheel zoom: sem preventDefault (React events são passivos); usamos listener nativo.
+  // Espaço pressionado → habilita "pan" com scroll horizontal (Req #9)
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        e.preventDefault();
+        setSpaceDown(true);
+      }
+    };
+    const onUp = (e: KeyboardEvent) => { if (e.code === 'Space') setSpaceDown(false); };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => { window.removeEventListener('keydown', onDown); window.removeEventListener('keyup', onUp); };
+  }, []);
+
+  // Roda: zoom (padrão) ou pan horizontal (Espaço pressionado)
   useEffect(() => {
     const el = boxRef.current; if (!el) return;
     const handler = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey && Math.abs(e.deltaY) < 4) return;
+      if (spaceDown) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+        return;
+      }
       e.preventDefault();
-      const step = e.altKey ? 0.02 : 0.08;
+      const step = e.altKey ? 0.02 : e.ctrlKey || e.metaKey ? 0.04 : 0.08;
       const dir = e.deltaY > 0 ? -1 : 1;
       const base = zoom > 0 ? zoom : autoFit;
       const next = Math.max(0.2, Math.min(4, base + dir * step));
@@ -643,22 +671,28 @@ function PreviewWorkbench({
     };
     el.addEventListener('wheel', handler, { passive: false });
     return () => el.removeEventListener('wheel', handler);
-  }, [zoom, autoFit, onZoomChange]);
+  }, [zoom, autoFit, onZoomChange, spaceDown]);
+
+  const scaledW = naturalW * fit;
+  const scaledH = naturalH * fit;
 
   return (
-    <div className="space-y-3 exp-preview-workbench">
+    <div className="space-y-2 exp-preview-workbench flex flex-col min-h-0 lg:h-full">
       <div className="flex items-baseline justify-between shrink-0 print:hidden">
         <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">Pré-visualização</Label>
         <div className="flex items-center gap-3 text-[10px] font-mono opacity-70">
           <span>{widthMm}×{heightMm}mm</span>
           <span>{Math.round(fit * 100)}%</span>
           <button className="underline hover:text-primary" onClick={() => onZoomChange(0)}>Ajustar</button>
-          <span className="opacity-60">Scroll do mouse para zoom (Ctrl = zoom fino)</span>
+          <span className="opacity-60">Scroll = zoom · Espaço + scroll = mover · Del = excluir · Ctrl+B = negrito</span>
         </div>
       </div>
       <div
         ref={boxRef}
-        className="exp-preview-box relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 min-h-[560px] overflow-auto shadow-inner"
+        className={cn(
+          'exp-preview-box relative rounded-lg border-2 border-dashed border-border/50 overflow-auto shadow-inner flex-1 min-h-0',
+          spaceDown && 'cursor-grab',
+        )}
         style={{
           backgroundColor: 'hsl(var(--muted) / 0.55)',
           backgroundImage:
@@ -667,21 +701,41 @@ function PreviewWorkbench({
           backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
         }}
       >
+        {/* Réguas fixadas nas bordas do preview (Req #1) */}
         <div
-          className="relative"
+          className="pointer-events-none sticky top-0 left-0 z-20 print:hidden"
+          style={{ height: RULER_SIZE, width: '100%' }}
+        >
+          <div className="absolute" style={{ left: RULER_SIZE, top: 0 }}>
+            <Ruler orientation="horizontal" lengthMm={widthMm} pxPerMm={MM_TO_PX * fit}
+              highlight={selected ? { start: selected.x, end: selected.x + selected.w } : null} />
+          </div>
+          <div className="absolute" style={{ left: 0, top: 0 }}>
+            <Ruler orientation="vertical" lengthMm={heightMm} pxPerMm={MM_TO_PX * fit}
+              highlight={selected ? { start: selected.y, end: selected.y + selected.h } : null} />
+          </div>
+          {/* canto */}
+          <div className="absolute bg-background border-b border-r border-border" style={{ left: 0, top: 0, width: RULER_SIZE, height: RULER_SIZE }} />
+        </div>
+
+        <div
+          ref={stageRef}
+          className="exp-preview-stack relative"
           style={{
-            transform: `scale(${fit})`,
-            transformOrigin: 'center center',
-            paddingLeft: RULER_SIZE, paddingTop: RULER_SIZE,
+            paddingLeft: RULER_SIZE + 8,
+            paddingTop: 8,
+            paddingRight: 8,
+            paddingBottom: 8,
+            width: `max(100%, ${scaledW + RULER_SIZE + 16}px)`,
+            minHeight: `${scaledH + 16}px`,
           }}
         >
-          {/* Régua horizontal */}
-          <Ruler orientation="horizontal" lengthMm={widthMm} highlight={selected ? { start: selected.x, end: selected.x + selected.w } : null} />
-          {/* Régua vertical */}
-          <Ruler orientation="vertical" lengthMm={heightMm * Math.max(1, copias) + (gapPx / MM_TO_PX) * Math.max(0, copias - 1)} highlight={selected ? { start: selected.y, end: selected.y + selected.h } : null} />
           <div
-            className="exp-preview-stack"
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: `${gapPx}px` }}
+            style={{
+              width: naturalW, height: naturalH,
+              transform: `scale(${fit})`,
+              transformOrigin: 'top left',
+            }}
           >
             {children}
           </div>
@@ -690,6 +744,7 @@ function PreviewWorkbench({
     </div>
   );
 }
+
 
 // ---------------------------------------------------------------------------
 // Régua (estilo Canva/BarTender): traços a cada mm, número a cada 10mm.
