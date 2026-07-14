@@ -364,8 +364,26 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         block={editing}
         variaveis={variaveis}
         onSubmit={applyEdit}
+        onDelete={deleteEditing}
       />
     </>
   );
 });
+
+/** Utilitário: adiciona um novo bloco ZPL antes do ^XZ final. */
+export function appendZplBlock(zpl: string, block: string): string {
+  const idx = zpl.lastIndexOf('^XZ');
+  if (idx === -1) return zpl + '\n' + block;
+  return zpl.slice(0, idx) + block + '\n' + zpl.slice(idx);
+}
+
+/** Cria um novo bloco de acordo com o tipo pedido — inserido no centro da etiqueta. */
+export function createNewBlock(tipo: 'text' | 'qr' | 'barcode' | 'logo', dims: { largura: number; altura: number }): string {
+  const cx = Math.round((dims.largura * 8) / 2);
+  const cy = Math.round((dims.altura * 8) / 2);
+  if (tipo === 'text') return `^FO${cx - 40},${cy}^A0N,28,28^FDNovo texto^FS`;
+  if (tipo === 'qr') return `^FO${cx - 60},${cy - 60}^BQN,2,4^FDLA,QR^FS`;
+  if (tipo === 'barcode') return `^FO${cx - 100},${cy}^BCN,80,Y,N,N^FD123456^FS`;
+  return `^FO${cx - 60},${cy - 20}^A0N,36,36^FD{{logo}}^FS`;
+}
 InteractiveZPLEditor.displayName = 'InteractiveZPLEditor';
