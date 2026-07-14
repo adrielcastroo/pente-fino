@@ -60,6 +60,8 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [wrapEnabled, setWrapEnabled] = useState(false);
   const [fbWidth, setFbWidth] = useState(200);
   const [fbMaxLines, setFbMaxLines] = useState(1);
+  const [posX, setPosX] = useState(0);
+  const [posY, setPosY] = useState(0);
 
   useEffect(() => {
     if (!block) return;
@@ -75,6 +77,8 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setWrapEnabled(hasFb);
     setFbWidth(block.fbWidth ?? 200);
     setFbMaxLines(block.fbMaxLines ?? 1);
+    setPosX(block.x);
+    setPosY(block.y);
   }, [block]);
 
   if (!block) return null;
