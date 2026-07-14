@@ -179,7 +179,7 @@ export const etiquetaService = {
       usuario_id: user?.id ?? null,
       usuario_nome: nome,
     };
-    const { data, error } = await supabase.from('etiqueta_historico').insert(payload).select().single();
+    const { data, error } = await supabase.from('etiqueta_historico').insert(payload as never).select().single();
     if (error) throw new ServiceError('REGISTRAR_FAILED', error.message);
     return mapHistorico(data as DbHistoricoRow);
   },
