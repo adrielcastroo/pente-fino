@@ -11,7 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
   AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
-  Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X,
+  Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
