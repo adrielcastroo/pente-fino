@@ -399,6 +399,40 @@ export default function ExpedicaoEtiquetasPage() {
               </ScrollArea>
             </div>
 
+            {/* Presets salvos */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Meus presets ({presets.length})
+                </Label>
+                <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1"
+                  onClick={handleSavePreset}>
+                  <Plus className="size-3" /> Salvar
+                </Button>
+              </div>
+              {presets.length > 0 && (
+                <ScrollArea className="max-h-40 border border-border/60 rounded-md">
+                  <ul className="divide-y divide-border">
+                    {presets.map((p) => (
+                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/40">
+                        <button type="button" onClick={() => handleLoadPreset(p)}
+                          className="flex-1 min-w-0 text-left">
+                          <div className="text-xs font-medium truncate">{p.name}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">
+                            {p.snapshot.widthMm}×{p.snapshot.heightMm}mm · {p.snapshot.elements.length} elem.
+                          </div>
+                        </button>
+                        <button type="button" onClick={() => handleDeletePreset(p.id)}
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+                          <Trash2 className="size-3" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              )}
+            </div>
+
             {/* Resumo XML */}
             {(state.meta.transportadora || state.meta.nfNumero) && (
               <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-1.5 text-[11px]">
