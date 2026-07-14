@@ -533,8 +533,8 @@ export default function LabelLayoutPanel() {
             </div>
           </div>
         </TabsContent>
-        </TabsContent>
         )}
+
 
         <TabsContent value="expedicao" className="mt-0 animate-fade-in">
           <ExpedicaoLayoutSection />
