@@ -57,6 +57,9 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
     const fd = fdMatch ? fdMatch[1] : '';
     const styleMatch = inner.match(/\^FX-S:(\w+)-/);
     const style = (styleMatch ? styleMatch[1] : 'solid') as ShapeStyle;
+    const fbMatch = inner.match(/\^FB(\d+),\d+,\d+,([LCRJ])/);
+    const align: TextAlign = fbMatch ? (fbMatch[2] === 'J' ? 'L' : (fbMatch[2] as TextAlign)) : 'L';
+    const fbWidth = fbMatch ? parseInt(fbMatch[1], 10) : undefined;
     let tipo: ParsedBlock['tipo'] = 'text';
     let width: number | undefined;
     let height: number | undefined;
@@ -76,7 +79,7 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
       }
       tipo = (width === 1 || height === 1) ? 'line' : 'box';
     }
-    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag });
+    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag, align, fbWidth });
   }
   return out;
 }
