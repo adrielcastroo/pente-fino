@@ -229,7 +229,7 @@ export default function RastreamentoPage() {
                   <Button variant="outline" onClick={() => { setLinkDialogOpen(true); setDetailOpen(false); }}>
                     Vincular ao ERP
                   </Button>
-                  <Button onClick={() => handleTrack(selectedLink.trackingCode, selectedLink.carrier)}>
+                  <Button onClick={() => handleTrack(selectedLink.trackingCode, { carrier: selectedLink.carrier })}>
                     Atualizar
                   </Button>
                 </DialogFooter>
