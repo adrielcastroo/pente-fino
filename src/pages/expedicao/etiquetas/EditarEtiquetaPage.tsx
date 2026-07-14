@@ -559,10 +559,7 @@ export default function EditarEtiquetaPage() {
             <div className="shrink-0 border-b border-border/60 bg-card/50 backdrop-blur px-3 py-2 flex items-center gap-2">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
                 <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
-                  <MousePointer2 className="h-3.5 w-3.5" /> Interativo
-                </PreviewToggleBtn>
-                <PreviewToggleBtn active={previewMode === 'visual'} onClick={() => setPreviewMode('visual')}>
-                  <Eye className="h-3.5 w-3.5" /> Visual
+                  <MousePointer2 className="h-3.5 w-3.5" /> Preview
                 </PreviewToggleBtn>
                 <PreviewToggleBtn active={previewMode === 'zpl'} onClick={() => setPreviewMode('zpl')}>
                   <Code2 className="h-3.5 w-3.5" /> ZPL
