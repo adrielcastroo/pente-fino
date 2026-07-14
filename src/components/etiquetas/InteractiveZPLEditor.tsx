@@ -378,23 +378,55 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           }
 
           if (b.tipo === 'text') {
-            const text = interpolate(b.fd);
-            const w = Math.max(20, text.length * b.size * 0.55);
-            const h = b.size + 6;
+            const raw = interpolate(b.fd);
+            // quebras explícitas via "\&" + word-wrap por ^FB
+            let lines = raw.split(/\\&/g);
+            const charW = b.size * 0.55;
+            if (b.fbWidth) {
+              const maxChars = Math.max(1, Math.floor(b.fbWidth / charW));
+              const wrapped: string[] = [];
+              for (const ln of lines) {
+                if (ln.length <= maxChars) { wrapped.push(ln); continue; }
+                const words = ln.split(/\s+/);
+                let cur = '';
+                for (const w of words) {
+                  if (!cur) { cur = w; continue; }
+                  if ((cur + ' ' + w).length <= maxChars) cur += ' ' + w;
+                  else { wrapped.push(cur); cur = w; }
+                }
+                if (cur) wrapped.push(cur);
+              }
+              lines = wrapped.slice(0, Math.max(1, b.fbMaxLines ?? 1));
+            }
+            const align = b.align ?? 'L';
+            const lineH = b.size + (b.fbSpacing ?? 0);
+            const boxW = b.fbWidth ?? Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
+            const boxH = lines.length * lineH + 6;
+            let anchorX = b.x;
+            let textAnchor: 'start' | 'middle' | 'end' = 'start';
+            if (b.fbWidth) {
+              if (align === 'C') { anchorX = b.x + b.fbWidth / 2; textAnchor = 'middle'; }
+              else if (align === 'R') { anchorX = b.x + b.fbWidth; textAnchor = 'end'; }
+            }
             return (
               <g key={b.index} {...commonHandlers}>
-                {b.reverse && <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h} fill="#111" />}
-                <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h}
+                {b.reverse && <rect x={b.x - 2} y={b.y - 2} width={boxW + 4} height={boxH} fill="#111" />}
+                <rect x={b.x - 2} y={b.y - 2} width={boxW + 4} height={boxH}
                   fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
                   strokeDasharray="4 3" strokeWidth={2}
                   className="hover:stroke-primary/50" />
-                <text
-                  x={b.x} y={b.y + b.size} fontSize={b.size} fontFamily="monospace"
-                  fill={b.reverse ? '#fff' : '#111'}
-                  pointerEvents="none"
-                >
-                  {text}
-                </text>
+                {lines.map((ln, k) => (
+                  <text
+                    key={k}
+                    x={anchorX} y={b.y + b.size + k * lineH}
+                    fontSize={b.size} fontFamily="monospace"
+                    fill={b.reverse ? '#fff' : '#111'}
+                    textAnchor={textAnchor}
+                    pointerEvents="none"
+                  >
+                    {ln}
+                  </text>
+                ))}
               </g>
             );
           }
