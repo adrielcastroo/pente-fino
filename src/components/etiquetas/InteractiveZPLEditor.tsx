@@ -468,10 +468,11 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                     <QRCodeSVG value={payload} size={side} level="M" includeMargin={false} />
                   </div>
                 </foreignObject>
-                <rect x={b.x - 2} y={b.y - 2} width={side + 4} height={side + 4}
-                  fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                  strokeDasharray="4 3" strokeWidth={2}
-                  className="hover:stroke-primary/50" />
+                <rect x={b.x} y={b.y} width={side} height={side} rx={2}
+                  fill="transparent"
+                  stroke={isDragging ? 'hsl(var(--primary))' : 'transparent'}
+                  strokeWidth={1}
+                  className="hover:stroke-primary/60 transition-colors" />
               </g>
             );
           }
