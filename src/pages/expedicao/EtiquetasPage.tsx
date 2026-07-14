@@ -1098,6 +1098,16 @@ function ElementInspector({
               <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
               <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
             </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] uppercase text-muted-foreground">Cor</Label>
+              <input
+                type="color"
+                value={element.fontColor || '#000000'}
+                onChange={(e) => onUpdate({ fontColor: e.target.value })}
+                className="h-8 w-10 rounded border border-border bg-background cursor-pointer p-0.5"
+                title="Cor da fonte"
+              />
+            </div>
             <div className="flex gap-1">
               {(['left', 'center', 'right'] as const).map((a) => (
                 <Button key={a} size="sm" variant={element.align === a ? 'default' : 'outline'} className="h-8 px-2 text-[10px] uppercase"
