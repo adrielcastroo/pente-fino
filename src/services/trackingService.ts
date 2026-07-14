@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { trackWithFallback } from '@/lib/carriers';
+import { trackWithFallback, type TrackOptions } from '@/lib/carriers';
 import type { TrackResponse, TrackingLink, TrackingStatus, TrackingEvent } from '@/types/tracking';
 
 class ServiceError extends Error {
@@ -46,11 +46,12 @@ function mapDbToTrackingLink(row: TrackingLinkRow): TrackingLink {
 }
 
 export const trackingService = {
-  async syncTracking(code: string, preferredCarrier?: string): Promise<TrackingLink> {
+  async syncTracking(code: string, opts?: TrackOptions | string): Promise<TrackingLink> {
     const clean = code.trim().toUpperCase();
+    const options: TrackOptions = typeof opts === 'string' ? { preferred: opts } : (opts || {});
     let apiResult: TrackResponse;
     try {
-      apiResult = await trackWithFallback(clean, preferredCarrier);
+      apiResult = await trackWithFallback(clean, options);
     } catch (e) {
       throw new ServiceError('CARRIER_UNAVAILABLE', (e as Error).message, e as Error);
     }

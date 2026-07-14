@@ -60,12 +60,12 @@ export default function RastreamentoPage() {
   });
 
   const handleTrack = useCallback(
-    async (code: string, carrier?: string) => {
+    async (code: string, opts: { carrier?: string; cnpj?: string; nf?: string }) => {
       try {
-        await syncMutation.mutateAsync({ code, carrier });
+        await syncMutation.mutateAsync({ code, carrier: opts.carrier, cnpj: opts.cnpj, nf: opts.nf });
         toast.success('Rastreamento atualizado');
       } catch (e) {
-        toast.error((e as Error).message || 'Erro ao rastrear');
+        toast.error((e as Error).message || 'Erro ao rastrear', { duration: 8000 });
       }
     },
     [syncMutation],
@@ -229,7 +229,7 @@ export default function RastreamentoPage() {
                   <Button variant="outline" onClick={() => { setLinkDialogOpen(true); setDetailOpen(false); }}>
                     Vincular ao ERP
                   </Button>
-                  <Button onClick={() => handleTrack(selectedLink.trackingCode, selectedLink.carrier)}>
+                  <Button onClick={() => handleTrack(selectedLink.trackingCode, { carrier: selectedLink.carrier })}>
                     Atualizar
                   </Button>
                 </DialogFooter>
