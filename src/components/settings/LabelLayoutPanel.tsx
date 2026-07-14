@@ -9,12 +9,12 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint, Ruler, LayoutGrid, Palette } from 'lucide-react';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint, Ruler, LayoutGrid, Palette, Truck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
-type LabelKind = 'tecido' | 'motor';
+type LabelKind = 'tecido' | 'motor' | 'expedicao';
 
 const LABEL_KIND_STORAGE_KEY = 'pf_label_layout_kind_v1';
 
