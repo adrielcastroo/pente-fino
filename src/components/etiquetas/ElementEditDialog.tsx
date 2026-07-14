@@ -11,7 +11,9 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Trash2 } from 'lucide-react';
 import type { ParsedBlock } from './InteractiveZPLEditor';
+import { VARIAVEIS_INTELIGENTES } from '@/types/etiquetas';
 
 export interface ElementEditValues {
   fd: string;
@@ -25,9 +27,17 @@ interface Props {
   block: ParsedBlock | null;
   variaveis: { chave: string; label: string }[];
   onSubmit: (v: ElementEditValues) => void;
+  onDelete?: () => void;
 }
 
-export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubmit }: Props) {
+export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubmit, onDelete }: Props) {
+  // Mescla variáveis do template com as inteligentes (nf, romaneio, etc.) — dedup por chave.
+  const todasVariaveis = (() => {
+    const map = new Map<string, { chave: string; label: string }>();
+    VARIAVEIS_INTELIGENTES.forEach((v) => map.set(v.chave, { chave: v.chave, label: v.label }));
+    variaveis.forEach((v) => map.set(v.chave, v));
+    return Array.from(map.values());
+  })();
   const [fd, setFd] = useState('');
   const [size, setSize] = useState(24);
   const [reverse, setReverse] = useState(false);
@@ -79,10 +89,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                 <SelectValue placeholder="Escolha uma variável…" />
               </SelectTrigger>
               <SelectContent>
-                {variaveis.length === 0 && (
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhuma variável definida no modelo</div>
-                )}
-                {variaveis.map((v) => (
+                {todasVariaveis.map((v) => (
                   <SelectItem key={v.chave} value={v.chave}>
                     <span className="flex items-center gap-2">
                       <span>{v.label}</span>
@@ -118,9 +125,16 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={() => onSubmit({ fd, size, reverse })}>Aplicar</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {onDelete ? (
+            <Button variant="destructive" size="sm" onClick={onDelete} className="gap-1.5">
+              <Trash2 className="h-3.5 w-3.5" /> Remover elemento
+            </Button>
+          ) : <span />}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={() => onSubmit({ fd, size, reverse })}>Aplicar</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -11,7 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
   AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
-  Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X,
+  Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAtualizarTemplate, useEtiqueta } from '@/hooks/useEtiquetas';
 import { AutoCompleteZPL } from '@/components/etiquetas/AutoCompleteZPL';
 import { LiveZPLPreview } from '@/components/etiquetas/LiveZPLPreview';
-import { InteractiveZPLEditor } from '@/components/etiquetas/InteractiveZPLEditor';
+import { InteractiveZPLEditor, appendZplBlock, createNewBlock } from '@/components/etiquetas/InteractiveZPLEditor';
 import {
   PRESETS_TAMANHO,
   VARIAVEIS_INTELIGENTES,
@@ -86,6 +86,8 @@ export default function EditarEtiquetaPage() {
       const url = String(reader.result || '');
       setLogoUrl(url);
       if (id) localStorage.setItem(`etiqueta-logo-${id}`, url);
+      // Auto-injeta {{logo}} no ZPL se não existir — garante que apareça no preview.
+      setZpl((prev) => (/\{\{\s*logo\s*\}\}/i.test(prev) ? prev : appendZplBlock(prev, createNewBlock('logo', { largura, altura }))));
     };
     reader.readAsDataURL(file);
   };
@@ -93,6 +95,10 @@ export default function EditarEtiquetaPage() {
   const clearLogo = () => {
     setLogoUrl('');
     if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
+  };
+
+  const addElement = (tipo: 'text' | 'qr' | 'barcode') => {
+    setZpl((prev) => appendZplBlock(prev, createNewBlock(tipo, { largura, altura })));
   };
 
   useEffect(() => {
@@ -568,6 +574,19 @@ export default function EditarEtiquetaPage() {
                 </PreviewToggleBtn>
               </div>
               <div className="ml-auto flex items-center gap-1.5">
+                {previewMode === 'interativo' && (
+                  <div className="inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background overflow-hidden mr-1">
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('text')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar texto"><Type className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Adicionar texto</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('qr')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar QR"><QrCode className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Adicionar QR Code</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('barcode')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar código de barras"><Barcode className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Adicionar código de barras</TooltipContent></Tooltip>
+                  </div>
+                )}
                 <Badge variant="outline" className="font-mono text-[10px] h-5 gap-1">
                   <Ruler className="h-2.5 w-2.5" /> {largura}×{altura}mm
                 </Badge>
