@@ -13,6 +13,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { ElementEditDialog, type ElementEditValues } from './ElementEditDialog';
 
 export type ShapeStyle = 'solid' | 'dashed' | 'dotted';
+export type TextAlign = 'L' | 'C' | 'R';
 
 export interface ParsedBlock {
   index: number;
@@ -28,10 +29,10 @@ export interface ParsedBlock {
   width?: number;
   height?: number;
   thickness?: number;
-  /** solid | dashed | dotted (aplica-se a box/line no preview). */
   style?: ShapeStyle;
-  /** Magnificação do QR (^BQN,2,N). */
   qrMag?: number;
+  align?: TextAlign;
+  fbWidth?: number;
 }
 
 const BLOCK_RE = /\^FO(\d+),(\d+)([\s\S]*?)\^FS/g;
