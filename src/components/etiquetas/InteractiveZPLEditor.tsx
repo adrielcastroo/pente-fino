@@ -33,6 +33,8 @@ export interface ParsedBlock {
   qrMag?: number;
   align?: TextAlign;
   fbWidth?: number;
+  fbMaxLines?: number;
+  fbSpacing?: number;
 }
 
 const BLOCK_RE = /\^FO(\d+),(\d+)([\s\S]*?)\^FS/g;
@@ -57,9 +59,11 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
     const fd = fdMatch ? fdMatch[1] : '';
     const styleMatch = inner.match(/\^FX-S:(\w+)-/);
     const style = (styleMatch ? styleMatch[1] : 'solid') as ShapeStyle;
-    const fbMatch = inner.match(/\^FB(\d+),\d+,\d+,([LCRJ])/);
-    const align: TextAlign = fbMatch ? (fbMatch[2] === 'J' ? 'L' : (fbMatch[2] as TextAlign)) : 'L';
+    const fbMatch = inner.match(/\^FB(\d+),(\d+),(-?\d+),([LCRJ])/);
+    const align: TextAlign = fbMatch ? (fbMatch[4] === 'J' ? 'L' : (fbMatch[4] as TextAlign)) : 'L';
     const fbWidth = fbMatch ? parseInt(fbMatch[1], 10) : undefined;
+    const fbMaxLines = fbMatch ? parseInt(fbMatch[2], 10) : undefined;
+    const fbSpacing = fbMatch ? parseInt(fbMatch[3], 10) : undefined;
     let tipo: ParsedBlock['tipo'] = 'text';
     let width: number | undefined;
     let height: number | undefined;
@@ -79,7 +83,7 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
       }
       tipo = (width === 1 || height === 1) ? 'line' : 'box';
     }
-    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag, align, fbWidth });
+    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag, align, fbWidth, fbMaxLines, fbSpacing });
   }
   return out;
 }
@@ -120,17 +124,16 @@ function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues, viewW: nu
       raw = raw.replace(/\^FD/, `^A0N,${edit.size},${edit.size}^FD`);
     }
 
-    // Alinhamento via ^FB{w},1,0,{J}
+    // Alinhamento e quebra de linha via ^FB{w},{maxLines},{spacing},{align}
     const align: TextAlign = edit.align ?? 'L';
-    const hasFB = /\^FB\d+,\d+,\d+,[LCRJ]/.test(raw);
-    if (align === 'L') {
-      // remove ^FB se existir (esquerda é o padrão sem field-block)
-      raw = raw.replace(/\^FB\d+,\d+,\d+,[LCRJ]/, '');
-    } else if (hasFB) {
-      raw = raw.replace(/(\^FB\d+,\d+,\d+),[LCRJ]/, `$1,${align}`);
-    } else {
-      const fbW = Math.max(40, viewW - block.x);
-      raw = raw.replace(/\^FD/, `^FB${fbW},1,0,${align}^FD`);
+    const maxLines = Math.max(1, edit.fbMaxLines ?? block.fbMaxLines ?? 1);
+    const wantsFB = align !== 'L' || maxLines > 1 || (edit.fbWidth ?? block.fbWidth) !== undefined;
+    // remove qualquer ^FB existente
+    raw = raw.replace(/\^FB\d+,\d+,-?\d+,[LCRJ]/, '');
+    if (wantsFB) {
+      const fbW = Math.max(20, edit.fbWidth ?? block.fbWidth ?? Math.max(40, viewW - block.x));
+      const spacing = block.fbSpacing ?? 0;
+      raw = raw.replace(/\^FD/, `^FB${fbW},${maxLines},${spacing},${align}^FD`);
     }
   }
   const hasFR = /\^FR(?![A-Z])/.test(raw);
@@ -375,23 +378,55 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           }
 
           if (b.tipo === 'text') {
-            const text = interpolate(b.fd);
-            const w = Math.max(20, text.length * b.size * 0.55);
-            const h = b.size + 6;
+            const raw = interpolate(b.fd);
+            // quebras explícitas via "\&" + word-wrap por ^FB
+            let lines = raw.split(/\\&/g);
+            const charW = b.size * 0.55;
+            if (b.fbWidth) {
+              const maxChars = Math.max(1, Math.floor(b.fbWidth / charW));
+              const wrapped: string[] = [];
+              for (const ln of lines) {
+                if (ln.length <= maxChars) { wrapped.push(ln); continue; }
+                const words = ln.split(/\s+/);
+                let cur = '';
+                for (const w of words) {
+                  if (!cur) { cur = w; continue; }
+                  if ((cur + ' ' + w).length <= maxChars) cur += ' ' + w;
+                  else { wrapped.push(cur); cur = w; }
+                }
+                if (cur) wrapped.push(cur);
+              }
+              lines = wrapped.slice(0, Math.max(1, b.fbMaxLines ?? 1));
+            }
+            const align = b.align ?? 'L';
+            const lineH = b.size + (b.fbSpacing ?? 0);
+            const boxW = b.fbWidth ?? Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
+            const boxH = lines.length * lineH + 6;
+            let anchorX = b.x;
+            let textAnchor: 'start' | 'middle' | 'end' = 'start';
+            if (b.fbWidth) {
+              if (align === 'C') { anchorX = b.x + b.fbWidth / 2; textAnchor = 'middle'; }
+              else if (align === 'R') { anchorX = b.x + b.fbWidth; textAnchor = 'end'; }
+            }
             return (
               <g key={b.index} {...commonHandlers}>
-                {b.reverse && <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h} fill="#111" />}
-                <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h}
+                {b.reverse && <rect x={b.x - 2} y={b.y - 2} width={boxW + 4} height={boxH} fill="#111" />}
+                <rect x={b.x - 2} y={b.y - 2} width={boxW + 4} height={boxH}
                   fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
                   strokeDasharray="4 3" strokeWidth={2}
                   className="hover:stroke-primary/50" />
-                <text
-                  x={b.x} y={b.y + b.size} fontSize={b.size} fontFamily="monospace"
-                  fill={b.reverse ? '#fff' : '#111'}
-                  pointerEvents="none"
-                >
-                  {text}
-                </text>
+                {lines.map((ln, k) => (
+                  <text
+                    key={k}
+                    x={anchorX} y={b.y + b.size + k * lineH}
+                    fontSize={b.size} fontFamily="monospace"
+                    fill={b.reverse ? '#fff' : '#111'}
+                    textAnchor={textAnchor}
+                    pointerEvents="none"
+                  >
+                    {ln}
+                  </text>
+                ))}
               </g>
             );
           }

@@ -22,6 +22,8 @@ export interface ElementEditValues {
   size: number;
   reverse: boolean;
   align?: TextAlign;
+  fbWidth?: number;
+  fbMaxLines?: number;
   width?: number;
   height?: number;
   thickness?: number;
@@ -53,6 +55,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [thickness, setThickness] = useState(2);
   const [style, setStyle] = useState<ShapeStyle>('solid');
   const [align, setAlign] = useState<TextAlign>('L');
+  const [wrapEnabled, setWrapEnabled] = useState(false);
+  const [fbWidth, setFbWidth] = useState(200);
+  const [fbMaxLines, setFbMaxLines] = useState(1);
 
   useEffect(() => {
     if (!block) return;
@@ -64,6 +69,10 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setThickness(block.thickness ?? 2);
     setStyle(block.style ?? 'solid');
     setAlign(block.align ?? 'L');
+    const hasFb = block.fbWidth !== undefined || (block.fbMaxLines ?? 1) > 1;
+    setWrapEnabled(hasFb);
+    setFbWidth(block.fbWidth ?? 200);
+    setFbMaxLines(block.fbMaxLines ?? 1);
   }, [block]);
 
   if (!block) return null;
@@ -151,6 +160,38 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                   ))}
                 </div>
                 <p className="text-[10px] text-muted-foreground">Usa <code className="font-mono">^FB</code> para alinhar o texto na etiqueta.</p>
+              </div>
+
+              <div className="rounded-md border border-border/60 p-2.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-xs">Quebra de linha (field block)</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Emite <code className="font-mono">^FB</code> — respeita largura e nº de linhas.
+                    </p>
+                  </div>
+                  <Switch checked={wrapEnabled} onCheckedChange={setWrapEnabled} />
+                </div>
+                {wrapEnabled && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Largura (dots)</Label>
+                      <Input
+                        type="number" min={20} value={fbWidth}
+                        onChange={(e) => setFbWidth(Math.max(20, parseInt(e.target.value, 10) || 20))}
+                        className="font-mono h-9"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Máx. de linhas</Label>
+                      <Input
+                        type="number" min={1} max={9999} value={fbMaxLines}
+                        onChange={(e) => setFbMaxLines(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        className="font-mono h-9"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
@@ -241,7 +282,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           ) : <span />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={() => onSubmit({ fd, size, reverse, align, width, height, thickness, style })}>Aplicar</Button>
+            <Button onClick={() => onSubmit({ fd, size, reverse, align, fbWidth: wrapEnabled ? fbWidth : undefined, fbMaxLines: wrapEnabled ? fbMaxLines : 1, width, height, thickness, style })}>Aplicar</Button>
           </div>
         </DialogFooter>
       </DialogContent>
