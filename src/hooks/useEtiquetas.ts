@@ -3,7 +3,10 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createElement } from 'react';
 import { etiquetaService } from '@/services/etiquetaService';
+import { ZPLPreview } from '@/components/etiquetas/ZPLPreview';
 import type { CreateEtiquetaTemplateInput, ImprimirInput } from '@/types/etiquetas';
 
 export const etiquetaQueryKeys = {
