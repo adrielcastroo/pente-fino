@@ -210,6 +210,7 @@ export default function LabelLayoutPanel() {
 
 
 
+        {kind !== 'expedicao' && (
         <TabsContent value={kind} className="mt-0 animate-fade-in">
           {/*
             Split panel: em desktop, altura fixa do viewport com duas colunas.
