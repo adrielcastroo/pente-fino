@@ -4,7 +4,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { etiquetaService } from '@/services/etiquetaService';
-import { printZplLabelsInBrowser } from '@/services/printService';
+import { printImagesInBrowser } from '@/services/printService';
+import { renderZplLabel } from '@/services/labelRenderer';
 import { useAppStore } from '@/store/useAppStore';
 import type { CreateEtiquetaTemplateInput, ImprimirInput } from '@/types/etiquetas';
 
