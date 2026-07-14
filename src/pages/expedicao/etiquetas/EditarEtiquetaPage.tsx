@@ -10,7 +10,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
-  AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
+  AlertTriangle, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
   Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
   Minus, Square, SquareDashed, FlaskConical,
 } from 'lucide-react';
