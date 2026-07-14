@@ -1289,6 +1289,51 @@ function NumField({ label, value, onChange }: { label: string; value: number; on
   );
 }
 
+/**
+ * Campo de dimensão que permite ao usuário apagar totalmente o valor e digitar
+ * do zero (Req #1). O clamp min/max só é aplicado ao confirmar (blur ou Enter).
+ * Enquanto o campo está em edição mantemos uma string local para não sobrescrever
+ * o que o usuário digitou.
+ */
+function DimensionInput({
+  value, min, max, onCommit,
+}: { value: number; min: number; max: number; onCommit: (v: number) => void }) {
+  const [draft, setDraft] = useState<string>(String(value));
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (!editing) setDraft(String(value));
+  }, [value, editing]);
+
+  const commit = () => {
+    setEditing(false);
+    const raw = draft.trim();
+    if (raw === '') { setDraft(String(value)); return; }
+    const n = Number(raw);
+    if (!Number.isFinite(n)) { setDraft(String(value)); return; }
+    const clamped = Math.max(min, Math.min(max, n));
+    setDraft(String(clamped));
+    if (clamped !== value) onCommit(clamped);
+  };
+
+  return (
+    <Input
+      type="number"
+      inputMode="decimal"
+      min={min}
+      max={max}
+      className="h-8"
+      value={draft}
+      onFocus={() => setEditing(true)}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { e.currentTarget.blur(); }
+        if (e.key === 'Escape') { setDraft(String(value)); setEditing(false); e.currentTarget.blur(); }
+      }}
+    />
+  );
+
 // ============================================================================
 // History Dialog
 // ============================================================================
