@@ -405,44 +405,57 @@ export default function ExpedicaoEtiquetasPage() {
               )}
             </div>
 
-            {/* Cópias */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-muted-foreground">Cópias</Label>
-                <span className="text-xs font-mono">{state.copias}</span>
-              </div>
-              <Slider value={[state.copias]} min={1} max={50} step={1}
-                onValueChange={(v) => patch({ copias: v[0] })} />
-            </div>
-
-            {/* Adicionar elementos */}
-            <div className="space-y-1.5">
+            {/* Adicionar elementos — agrupados por categoria (Req #3) */}
+            <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Adicionar elemento</Label>
-              <div className="grid grid-cols-2 gap-1.5">
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('text')}>
-                  <Type className="size-3.5" /> Texto
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('qr')}>
-                  <QrCode className="size-3.5" /> QR
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('datamatrix')}>
-                  <Grid3x3 className="size-3.5" /> DataMatrix
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('aztec')}>
-                  <Hexagon className="size-3.5" /> Aztec
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('barcode')}>
-                  <BarcodeIcon className="size-3.5" /> Barras
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('line')}>
-                  <Minus className="size-3.5" /> Linha
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('rect')}>
-                  <Square className="size-3.5" /> Retângulo
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('image')}>
-                  <ImageIcon className="size-3.5" /> Imagem
-                </Button>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Texto</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('text')}>
+                    <Type className="size-3.5" /> Texto
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Códigos</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('qr')}>
+                    <QrCode className="size-3.5" /> QR
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('barcode')}>
+                    <BarcodeIcon className="size-3.5" /> Barras
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('datamatrix')}>
+                    <Grid3x3 className="size-3.5" /> DataMatrix
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('aztec')}>
+                    <Hexagon className="size-3.5" /> Aztec
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Formas</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('line')}>
+                    <Minus className="size-3.5" /> Linha
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('rect')}>
+                    <Square className="size-3.5" /> Retângulo
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Mídia</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={triggerImageUpload}>
+                    <ImageIcon className="size-3.5" /> Imagem
+                  </Button>
+                </div>
+                <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
               </div>
             </div>
 
