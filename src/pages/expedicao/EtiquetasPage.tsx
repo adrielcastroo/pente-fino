@@ -141,6 +141,27 @@ export default function ExpedicaoEtiquetasPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState<number>(0); // 0 = auto-fit
+  const [presets, setPresets] = useState<SavedPreset[]>(() => loadPresets());
+
+  const handleSavePreset = () => {
+    const name = prompt('Nome do preset:', `Preset ${presets.length + 1}`);
+    if (!name?.trim()) return;
+    const next: SavedPreset = { id: uid(), name: name.trim(), createdAt: Date.now(), snapshot: state };
+    const list = [next, ...presets];
+    setPresets(list);
+    savePresets(list);
+    toast.success(`Preset "${next.name}" salvo.`);
+  };
+  const handleLoadPreset = (p: SavedPreset) => {
+    setState(p.snapshot);
+    setSelectedId(null);
+    toast.success(`Preset "${p.name}" carregado.`);
+  };
+  const handleDeletePreset = (id: string) => {
+    const list = presets.filter((p) => p.id !== id);
+    setPresets(list);
+    savePresets(list);
+  };
 
   useEffect(() => {
     const id = setTimeout(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(state)), 250);
