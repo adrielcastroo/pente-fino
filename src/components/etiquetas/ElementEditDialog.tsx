@@ -55,6 +55,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [thickness, setThickness] = useState(2);
   const [style, setStyle] = useState<ShapeStyle>('solid');
   const [align, setAlign] = useState<TextAlign>('L');
+  const [wrapEnabled, setWrapEnabled] = useState(false);
+  const [fbWidth, setFbWidth] = useState(200);
+  const [fbMaxLines, setFbMaxLines] = useState(1);
 
   useEffect(() => {
     if (!block) return;
@@ -66,6 +69,10 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setThickness(block.thickness ?? 2);
     setStyle(block.style ?? 'solid');
     setAlign(block.align ?? 'L');
+    const hasFb = block.fbWidth !== undefined || (block.fbMaxLines ?? 1) > 1;
+    setWrapEnabled(hasFb);
+    setFbWidth(block.fbWidth ?? 200);
+    setFbMaxLines(block.fbMaxLines ?? 1);
   }, [block]);
 
   if (!block) return null;
