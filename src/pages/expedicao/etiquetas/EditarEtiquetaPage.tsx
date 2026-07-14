@@ -574,6 +574,19 @@ export default function EditarEtiquetaPage() {
                 </PreviewToggleBtn>
               </div>
               <div className="ml-auto flex items-center gap-1.5">
+                {previewMode === 'interativo' && (
+                  <div className="inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background overflow-hidden mr-1">
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('text')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar texto"><Type className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Adicionar texto</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('qr')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar QR"><QrCode className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Adicionar QR Code</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('barcode')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar código de barras"><Barcode className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Adicionar código de barras</TooltipContent></Tooltip>
+                  </div>
+                )}
                 <Badge variant="outline" className="font-mono text-[10px] h-5 gap-1">
                   <Ruler className="h-2.5 w-2.5" /> {largura}×{altura}mm
                 </Badge>
