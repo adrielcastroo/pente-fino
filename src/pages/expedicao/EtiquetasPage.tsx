@@ -16,7 +16,8 @@ import bwipjs from 'bwip-js/browser';
 import {
   Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
   Trash2, Copy, Minus, Square, ArrowUp, ArrowDown, Plus, Image as ImageIcon,
-  Grid3x3, Hexagon, Bold, Italic, Underline, Contrast,
+  Grid3x3, Hexagon, Bold, Italic, Underline, Contrast, Ruler as RulerIcon,
+  Layers, Sparkles, MousePointerClick, Keyboard, Bookmark, Palette, Move,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
