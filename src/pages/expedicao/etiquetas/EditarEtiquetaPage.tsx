@@ -194,7 +194,7 @@ export default function EditarEtiquetaPage() {
     setAltura(p.altura);
   };
 
-  // valores de exemplo para o preview vivo
+  // valores de exemplo para o preview vivo (overrides do usuário têm precedência)
   const valoresExemplo = useMemo(() => {
     const v: Record<string, string> = {};
     variaveis.forEach((x) => {
@@ -202,8 +202,8 @@ export default function EditarEtiquetaPage() {
       else if (x.tipo === 'date') v[x.chave] = new Date().toLocaleDateString('pt-BR');
       else v[x.chave] = x.label;
     });
-    return v;
-  }, [variaveis]);
+    return { ...v, ...previewOverrides };
+  }, [variaveis, previewOverrides]);
 
   // variáveis referenciadas no ZPL mas não definidas
   const referenced = useMemo(() => extractReferencedVars(zpl), [zpl]);
