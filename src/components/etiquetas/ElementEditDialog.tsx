@@ -89,10 +89,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                 <SelectValue placeholder="Escolha uma variável…" />
               </SelectTrigger>
               <SelectContent>
-                {variaveis.length === 0 && (
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhuma variável definida no modelo</div>
-                )}
-                {variaveis.map((v) => (
+                {todasVariaveis.map((v) => (
                   <SelectItem key={v.chave} value={v.chave}>
                     <span className="flex items-center gap-2">
                       <span>{v.label}</span>
