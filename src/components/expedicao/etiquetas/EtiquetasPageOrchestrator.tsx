@@ -15,7 +15,8 @@ import TestPrintDialog from './components/TestPrintDialog';
 import BatchPrintDialog from './components/BatchPrintDialog';
 import AdvancedSettingsDrawer from './components/AdvancedSettingsDrawer';
 import { toast } from 'sonner';
-import type { PickingLike, PrintHistoryEntry, Template } from './types/etiqueta';
+import type { PickingLike, Template } from './types/etiqueta';
+import type { PrintHistoryEntry } from './utils/etiquetaHistory';
 
 export default function EtiquetasPageOrchestrator() {
   useDocumentTitle('Etiquetas · Expedição');
