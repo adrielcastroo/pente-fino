@@ -42,12 +42,12 @@ export function useEtiquetaHistorico(filtro?: { templateId?: string }) {
 }
 
 /**
- * Impressão da etiqueta ZPL via navegador usando o MESMO pipeline direto do
- * módulo de estoque (React → iframe, sem conversão para PNG). Isso garante
- * que 100% dos elementos definidos no template (textos, códigos, QR, boxes,
- * linhas, logo) sejam impressos exatamente como aparecem no preview — sem
- * tirar nem adicionar nada. Ajustes finos (offset X/Y, borda, padding) vêm
- * do LabelSettings, aba "Expedição (ZPL)".
+ * Impressão da etiqueta ZPL via navegador usando o MESMO pipeline PNG do
+ * módulo de estoque: renderiza o `ZPLPreview` offscreen → converte para PNG
+ * (html-to-image, fontes embutidas) → imprime em iframe oculto com `@page`
+ * do tamanho físico da etiqueta. Isso preserva 100% dos elementos do preview
+ * e é o método já validado em produção. Ajustes finos (offset X/Y, borda,
+ * padding) vêm do LabelSettings, aba "Expedição (ZPL)".
  */
 async function imprimirNavegador(
   zplFinal: string,
@@ -57,14 +57,14 @@ async function imprimirNavegador(
   templateNome: string,
 ): Promise<void> {
   const labelSettings = useAppStore.getState().labelSettings;
-  await printZplLabelsInBrowser(
-    zplFinal,
-    variaveis,
-    dimensoes,
-    Math.max(1, quantidade),
-    labelSettings,
-    `Etiqueta · ${templateNome}`,
-  );
+  const rendered = await renderZplLabel(zplFinal, variaveis, dimensoes, labelSettings);
+  const copies = Math.max(1, quantidade);
+  const pages = Array.from({ length: copies }, () => ({
+    dataUrl: rendered.dataUrl,
+    widthMm: rendered.widthMm,
+    heightMm: rendered.heightMm,
+  }));
+  await printImagesInBrowser(pages, `Etiqueta · ${templateNome}`);
 }
 
 
