@@ -9,6 +9,7 @@ import {
   type MotorLabelData,
   type LabelHas,
 } from '@/components/labels/LabelTemplates';
+import { ZPLPreview } from '@/components/etiquetas/ZPLPreview';
 import type { LabelSettings } from '@/store/useAppStore';
 
 const TECIDO_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
