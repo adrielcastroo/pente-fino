@@ -669,10 +669,7 @@ export default function EditarEtiquetaPage() {
             <div className="flex items-center gap-2 mb-2">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
                 <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
-                  <MousePointer2 className="h-3.5 w-3.5" /> Interativo
-                </PreviewToggleBtn>
-                <PreviewToggleBtn active={previewMode === 'visual'} onClick={() => setPreviewMode('visual')}>
-                  <Eye className="h-3.5 w-3.5" /> Visual
+                  <MousePointer2 className="h-3.5 w-3.5" /> Preview
                 </PreviewToggleBtn>
                 <PreviewToggleBtn active={previewMode === 'zpl'} onClick={() => setPreviewMode('zpl')}>
                   <Code2 className="h-3.5 w-3.5" /> ZPL
@@ -685,18 +682,14 @@ export default function EditarEtiquetaPage() {
               </pre>
             ) : (
               <div className="bg-white border border-border rounded-md overflow-hidden mx-auto max-w-[260px]" style={{ aspectRatio: `${largura} / ${altura}` }}>
-                {previewMode === 'interativo' ? (
-                  <InteractiveZPLEditor
-                    zpl={zpl}
-                    onChange={setZpl}
-                    valores={valoresExemplo}
-                    dimensoes={{ largura, altura }}
-                    variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
-                    logoUrl={logoUrl}
-                  />
-                ) : (
-                  <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
-                )}
+                <InteractiveZPLEditor
+                  zpl={zpl}
+                  onChange={setZpl}
+                  valores={valoresExemplo}
+                  dimensoes={{ largura, altura }}
+                  variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                  logoUrl={logoUrl}
+                />
               </div>
             )}
           </aside>
