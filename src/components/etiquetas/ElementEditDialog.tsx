@@ -52,6 +52,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [height, setHeight] = useState(60);
   const [thickness, setThickness] = useState(2);
   const [style, setStyle] = useState<ShapeStyle>('solid');
+  const [align, setAlign] = useState<TextAlign>('L');
 
   useEffect(() => {
     if (!block) return;
@@ -62,6 +63,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setHeight(block.height ?? 60);
     setThickness(block.thickness ?? 2);
     setStyle(block.style ?? 'solid');
+    setAlign(block.align ?? 'L');
   }, [block]);
 
   if (!block) return null;
@@ -69,6 +71,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const insertVar = (chave: string) => setFd((cur) => `${cur}{{${chave}}}`);
 
   const isText = block.tipo === 'text';
+  const isQr = block.tipo === 'qr';
   const isShape = block.tipo === 'box' || block.tipo === 'line';
 
   return (
