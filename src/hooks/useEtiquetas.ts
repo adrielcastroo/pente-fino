@@ -4,7 +4,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { etiquetaService } from '@/services/etiquetaService';
-import { printZplLabelsInBrowser } from '@/services/printService';
+import { printImagesInBrowser } from '@/services/printService';
+import { renderZplLabel } from '@/services/labelRenderer';
 import { useAppStore } from '@/store/useAppStore';
 import type { CreateEtiquetaTemplateInput, ImprimirInput } from '@/types/etiquetas';
 
@@ -41,12 +42,12 @@ export function useEtiquetaHistorico(filtro?: { templateId?: string }) {
 }
 
 /**
- * Impressão da etiqueta ZPL via navegador usando o MESMO pipeline direto do
- * módulo de estoque (React → iframe, sem conversão para PNG). Isso garante
- * que 100% dos elementos definidos no template (textos, códigos, QR, boxes,
- * linhas, logo) sejam impressos exatamente como aparecem no preview — sem
- * tirar nem adicionar nada. Ajustes finos (offset X/Y, borda, padding) vêm
- * do LabelSettings, aba "Expedição (ZPL)".
+ * Impressão da etiqueta ZPL via navegador usando o MESMO pipeline PNG do
+ * módulo de estoque: renderiza o `ZPLPreview` offscreen → converte para PNG
+ * (html-to-image, fontes embutidas) → imprime em iframe oculto com `@page`
+ * do tamanho físico da etiqueta. Isso preserva 100% dos elementos do preview
+ * e é o método já validado em produção. Ajustes finos (offset X/Y, borda,
+ * padding) vêm do LabelSettings, aba "Expedição (ZPL)".
  */
 async function imprimirNavegador(
   zplFinal: string,
@@ -56,12 +57,13 @@ async function imprimirNavegador(
   templateNome: string,
 ): Promise<void> {
   const labelSettings = useAppStore.getState().labelSettings;
-  await printZplLabelsInBrowser(
-    zplFinal,
-    variaveis,
-    dimensoes,
-    Math.max(1, quantidade),
-    labelSettings,
+  const rendered = await renderZplLabel(zplFinal, variaveis, dimensoes, labelSettings);
+  const copies = Math.max(1, quantidade);
+  await printImagesInBrowser(
+    rendered.dataUrl,
+    rendered.widthMm,
+    rendered.heightMm,
+    copies,
     `Etiqueta · ${templateNome}`,
   );
 }
