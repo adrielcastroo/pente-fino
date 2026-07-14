@@ -76,7 +76,7 @@ export function useImprimirEtiqueta() {
       const template = await etiquetaService.getById(templateId);
       if (!template) throw new Error('Template não encontrado');
       const zplFinal = etiquetaService.renderZPL(template.zpl, variaveis);
-      await imprimirNavegador(zplFinal, variaveis, quantidade, template.dimensoes);
+      await imprimirNavegador(zplFinal, variaveis, quantidade, template.dimensoes, template.nome);
       await etiquetaService.registrarImpressao({
         templateId,
         template_nome: template.nome,
