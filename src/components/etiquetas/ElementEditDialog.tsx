@@ -13,8 +13,8 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Trash2 } from 'lucide-react';
-import type { ParsedBlock, ShapeStyle } from './InteractiveZPLEditor';
+import { Trash2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import type { ParsedBlock, ShapeStyle, TextAlign } from './InteractiveZPLEditor';
 import { VARIAVEIS_INTELIGENTES } from '@/types/etiquetas';
 
 export interface ElementEditValues {
