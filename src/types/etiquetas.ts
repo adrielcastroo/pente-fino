@@ -98,14 +98,26 @@ export const VARIAVEIS_INTELIGENTES: readonly VariavelInteligente[] = [
   { chave: 'caixa', label: 'Caixa', tipo: 'text', desc: 'Número da caixa (1/3, 2/3)' },
 ];
 
+// Etiqueta padrão de expedição (100x150mm — 480x400 dots @ 203dpi)
+// Layout: LOGO centralizado, TRANSPORTADORA centralizada, QR Code central,
+// VOLUME atual/total centralizado, DATA de impressão no canto inferior direito.
 export const ZPL_PADRAO = `^XA
+^PW480
+^LL400
+^LH0,0
 ^CI28
-^FO40,40^A0N,40,40^FD{{cliente}}^FS
-^FO40,90^A0N,28,28^FDRomaneio: {{romaneio}}^FS
-^FO40,130^A0N,28,28^FDNF: {{nf}}^FS
-^FO40,170^A0N,24,24^FDData: {{data}}^FS
-^FO40,210^A0N,24,24^FDTransp: {{transportadora}}^FS
-^FO40,260^BY3^BCN,100,Y,N,N^FD{{codigo_barras}}^FS
+^FX =============================== LOGO
+^FO0,10^FB480,1,0,C^A0N,36,36^FDUNILUX^FS
+^FX =============================== TRANSPORTADORA
+^FO0,70^FB480,1,0,C^A0N,22,22^FDTRANSPORTADORA^FS
+^FO0,95^FB480,1,0,C^A0N,28,28^FD{{transportadora}}^FS
+^FX =============================== QR CODE CENTRAL
+^FO180,135^BQN,2,5^FDLA,ROM{{romaneio}}^FS
+^FX =============================== VOLUME
+^FO0,300^FB480,1,0,C^A0N,50,50^FD{{caixa}}^FS
+^FO0,360^FB480,1,0,C^A0N,18,18^FDVOLUME^FS
+^FX =============================== DATA DE IMPRESSAO (canto inferior direito)
+^FO0,378^FB470,1,0,R^A0N,18,18^FD{{hoje}}^FS
 ^XZ`;
 
 export const VARIAVEIS_PADRAO: VariavelTemplate[] = [
