@@ -28,6 +28,8 @@ export interface ElementEditValues {
   height?: number;
   thickness?: number;
   style?: ShapeStyle;
+  x?: number;
+  y?: number;
 }
 
 interface Props {
