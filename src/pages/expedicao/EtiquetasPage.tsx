@@ -371,8 +371,10 @@ export default function ExpedicaoEtiquetasPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0">
-        {/* Painel de configuração */}
+      {/* Req #6: layout sem scroll vertical — grade ocupa altura restante da viewport */}
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0 lg:h-[calc(100vh-160px)] lg:overflow-hidden">
+        {/* Painel de configuração (rola internamente para não empurrar o preview) */}
+        <div className="lg:h-full lg:overflow-y-auto lg:pr-1">
         <Card className="print:hidden">
           <CardContent className="p-4 space-y-4">
             {/* Tamanho */}
