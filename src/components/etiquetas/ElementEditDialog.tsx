@@ -125,8 +125,13 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {onDelete ? (
+            <Button variant="destructive" size="sm" onClick={onDelete} className="gap-1.5">
+              <Trash2 className="h-3.5 w-3.5" /> Remover elemento
+            </Button>
+          ) : <span />}
+          <div className="flex gap-2">
           <Button onClick={() => onSubmit({ fd, size, reverse })}>Aplicar</Button>
         </DialogFooter>
       </DialogContent>
