@@ -371,6 +371,41 @@ export default function EditarEtiquetaPage() {
                         </FormField>
                       </div>
                     </div>
+
+                    {/* Logo (imagem) */}
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Logo</div>
+                      <div className="flex items-center gap-3 border border-border/60 rounded-lg p-3 bg-background/60">
+                        <div className="h-14 w-24 rounded border border-border/60 bg-white flex items-center justify-center overflow-hidden shrink-0">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                          ) : (
+                            <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <label className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer text-primary hover:underline">
+                            <Upload className="h-3.5 w-3.5" />
+                            {logoUrl ? 'Trocar imagem' : 'Fazer upload'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => e.target.files?.[0] && onLogoUpload(e.target.files[0])}
+                            />
+                          </label>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Substitui o texto no bloco <code className="font-mono">{`{{logo}}`}</code>. PNG/JPG/SVG.
+                          </p>
+                        </div>
+                        {logoUrl && (
+                          <Button variant="ghost" size="icon" onClick={clearLogo} aria-label="Remover logo" className="text-muted-foreground hover:text-destructive">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
                       Tipografia, padding, alinhamento e borda são definidos diretamente no layout ZPL acima. Use o editor visual avançado para ajustes drag-and-drop.
                     </div>
