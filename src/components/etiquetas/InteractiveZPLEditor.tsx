@@ -300,8 +300,17 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   };
 
   const applyResize = (b: ParsedBlock, newX: number, newY: number, newW: number, newH: number) => {
-    newW = Math.max(4, newW);
-    newH = Math.max(4, newH);
+    if (b.tipo === 'line') {
+      // Preserva o eixo fino da linha (1-2 dots) para não virar retângulo.
+      const origW = b.width ?? 1;
+      const origH = b.height ?? 1;
+      const isHorizontal = origH <= 2;
+      if (isHorizontal) { newW = Math.max(4, newW); newH = origH; }
+      else { newH = Math.max(4, newH); newW = origW; }
+    } else {
+      newW = Math.max(4, newW);
+      newH = Math.max(4, newH);
+    }
     newX = Math.max(0, newX);
     newY = Math.max(0, newY);
     let raw = b.raw;
