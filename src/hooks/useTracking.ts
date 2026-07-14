@@ -39,7 +39,8 @@ export function useTrackingByEntity(entityType: string, entityId: string) {
 export function useSyncTracking() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ code, carrier }: { code: string; carrier?: string }) => trackingService.syncTracking(code, carrier),
+    mutationFn: ({ code, carrier, cnpj, nf }: { code: string; carrier?: string; cnpj?: string; nf?: string }) =>
+      trackingService.syncTracking(code, { preferred: carrier, cnpj, nf }),
     onSuccess: (link) => {
       qc.setQueryData(trackingKeys.detail(link.id), link);
       qc.invalidateQueries({ queryKey: trackingKeys.lists() });
