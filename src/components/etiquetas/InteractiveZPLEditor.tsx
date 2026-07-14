@@ -301,7 +301,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const applyEdit = (edit: ElementEditValues) => {
     if (!editing) return;
     const current = parseBlocks(zpl).find((x) => x.sourceStart === editing.sourceStart) ?? editing;
-    onChange(replaceBlock(zpl, current, applyEditToBlock(current, edit)));
+    onChange(replaceBlock(zpl, current, applyEditToBlock(current, edit, viewW)));
     setEditing(null);
   };
 
