@@ -834,6 +834,10 @@ function LabelCanvas({
   const hPx = heightMm * MM_TO_PX;
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Guias de snap ativas durante o drag (em mm). Estilo Canva:
+  // mostra linhas quando o elemento se alinha a bordas/centros do canvas ou de outros elementos.
+  const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
+
   const startDrag = (e: React.PointerEvent, el: LabelElement, mode: 'move' | 'resize') => {
     if (!editable) return;
     e.stopPropagation();
@@ -846,20 +850,75 @@ function LabelCanvas({
     const startY = e.clientY;
     const origin = { x: el.x, y: el.y, w: el.w, h: el.h };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+    // Alvos de snap fixos (bordas + centro do canvas). Adiciona também bordas/centros
+    // de outros elementos, para replicar o comportamento do Canva/BarTender.
+    const others = elements.filter((o) => o.id !== el.id);
+    const xTargetsBase = [0, widthMm / 2, widthMm, ...others.flatMap((o) => [o.x, o.x + o.w / 2, o.x + o.w])];
+    const yTargetsBase = [0, heightMm / 2, heightMm, ...others.flatMap((o) => [o.y, o.y + o.h / 2, o.y + o.h])];
+
     const onMove = (ev: PointerEvent) => {
       const dxMm = (ev.clientX - startX) / scaleX / MM_TO_PX;
       const dyMm = (ev.clientY - startY) / scaleY / MM_TO_PX;
+      // Snap desabilitado com Alt pressionado (mesma UX do Canva)
+      const snapEnabled = !ev.altKey;
+      // Tolerância em mm — proporcional para telas com fit variável (~5px).
+      const tol = 1.2;
+
       if (mode === 'move') {
-        const nx = Math.max(0, Math.min(widthMm - origin.w, origin.x + dxMm));
-        const ny = Math.max(0, Math.min(heightMm - origin.h, origin.y + dyMm));
+        let nx = Math.max(0, Math.min(widthMm - origin.w, origin.x + dxMm));
+        let ny = Math.max(0, Math.min(heightMm - origin.h, origin.y + dyMm));
+        const activeV: number[] = [];
+        const activeH: number[] = [];
+        if (snapEnabled) {
+          // Candidatos verticais: esquerda, centro, direita do elemento em movimento.
+          const xCands = [nx, nx + origin.w / 2, nx + origin.w];
+          for (let i = 0; i < xCands.length; i++) {
+            for (const t of xTargetsBase) {
+              if (Math.abs(xCands[i] - t) <= tol) {
+                nx = t - (i === 0 ? 0 : i === 1 ? origin.w / 2 : origin.w);
+                activeV.push(t);
+                break;
+              }
+            }
+          }
+          const yCands = [ny, ny + origin.h / 2, ny + origin.h];
+          for (let i = 0; i < yCands.length; i++) {
+            for (const t of yTargetsBase) {
+              if (Math.abs(yCands[i] - t) <= tol) {
+                ny = t - (i === 0 ? 0 : i === 1 ? origin.h / 2 : origin.h);
+                activeH.push(t);
+                break;
+              }
+            }
+          }
+          nx = Math.max(0, Math.min(widthMm - origin.w, nx));
+          ny = Math.max(0, Math.min(heightMm - origin.h, ny));
+        }
+        setGuides({ v: activeV, h: activeH });
         onUpdate(el.id, { x: +nx.toFixed(2), y: +ny.toFixed(2) });
       } else {
-        const nw = Math.max(4, Math.min(widthMm - origin.x, origin.w + dxMm));
-        const nh = Math.max(2, Math.min(heightMm - origin.y, origin.h + dyMm));
+        let nw = Math.max(4, Math.min(widthMm - origin.x, origin.w + dxMm));
+        let nh = Math.max(2, Math.min(heightMm - origin.y, origin.h + dyMm));
+        const activeV: number[] = [];
+        const activeH: number[] = [];
+        if (snapEnabled) {
+          for (const t of xTargetsBase) {
+            if (Math.abs(origin.x + nw - t) <= tol) { nw = t - origin.x; activeV.push(t); break; }
+          }
+          for (const t of yTargetsBase) {
+            if (Math.abs(origin.y + nh - t) <= tol) { nh = t - origin.y; activeH.push(t); break; }
+          }
+        }
+        setGuides({ v: activeV, h: activeH });
         onUpdate(el.id, { w: +nw.toFixed(2), h: +nh.toFixed(2) });
       }
     };
-    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      setGuides({ v: [], h: [] });
+    };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
   };
@@ -885,9 +944,24 @@ function LabelCanvas({
           onUpdate={(p) => onUpdate(el.id, p)}
         />
       ))}
+
+      {/* Guias de snap (Req #3): linhas cyan enquanto arrasta, ocultas na impressão. */}
+      {editable && (guides.v.length > 0 || guides.h.length > 0) && (
+        <div className="pointer-events-none absolute inset-0 print:hidden">
+          {guides.v.map((mm, i) => (
+            <div key={`v-${i}-${mm}`} className="absolute top-0 bottom-0 w-px bg-fuchsia-500"
+              style={{ left: `${mm * MM_TO_PX}px` }} />
+          ))}
+          {guides.h.map((mm, i) => (
+            <div key={`h-${i}-${mm}`} className="absolute left-0 right-0 h-px bg-fuchsia-500"
+              style={{ top: `${mm * MM_TO_PX}px` }} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ============================================================================
 // Element view
