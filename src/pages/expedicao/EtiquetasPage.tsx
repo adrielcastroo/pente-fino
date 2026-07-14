@@ -1173,98 +1173,117 @@ function ElementInspector({
   };
 
   return (
-    <Card className="print:hidden">
-      <CardContent className="p-3 flex flex-wrap items-end gap-3">
-        <div className="flex items-center gap-2 mr-2">
-          <ElementIcon type={element.type} />
-          <span className="text-xs font-semibold">{elementLabel(element)}</span>
-        </div>
+    <Card className="print:hidden border-primary/30 bg-gradient-to-r from-primary/[0.03] to-transparent shadow-sm">
+      <CardContent className="p-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+        <InspectorGroup>
+          <div className="flex items-center gap-2 pr-1">
+            <div className="size-7 rounded-md bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
+              <ElementIcon type={element.type} />
+            </div>
+            <span className="text-xs font-semibold whitespace-nowrap max-w-[140px] truncate">{elementLabel(element)}</span>
+          </div>
+        </InspectorGroup>
 
-        <NumField label="X" value={element.x} onChange={(v) => onUpdate({ x: v })} />
-        <NumField label="Y" value={element.y} onChange={(v) => onUpdate({ y: v })} />
-        <NumField label="L" value={element.w} onChange={(v) => onUpdate({ w: v })} />
-        <NumField label="A" value={element.h} onChange={(v) => onUpdate({ h: v })} />
+        <InspectorGroup>
+          <NumField label="X" value={element.x} onChange={(v) => onUpdate({ x: v })} />
+          <NumField label="Y" value={element.y} onChange={(v) => onUpdate({ y: v })} />
+          <NumField label="L" value={element.w} onChange={(v) => onUpdate({ w: v })} />
+          <NumField label="A" value={element.h} onChange={(v) => onUpdate({ h: v })} />
+        </InspectorGroup>
 
         {element.type === 'text' && (
           <>
-            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
-              <Label className="text-[10px] uppercase text-muted-foreground">Texto (aceita {'{{variáveis}}'})</Label>
-              <Input className="h-8" value={element.text || ''} onChange={(e) => onUpdate({ text: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1 min-w-[160px]">
-              <Label className="text-[10px] uppercase text-muted-foreground">Fonte</Label>
-              <Select value={element.fontFamily || FONT_FAMILIES[0].value} onValueChange={(v) => onUpdate({ fontFamily: v })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {FONT_FAMILIES.map((f) => (<SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>))}
-                </SelectContent>
-              </Select>
-            </div>
-            <NumField label="pt" value={element.fontSize || 12} onChange={(v) => onUpdate({ fontSize: v })} />
-            <div className="flex gap-1">
-              <ToggleBtn active={!!element.bold} onClick={() => onUpdate({ bold: !element.bold })} title="Negrito"><Bold className="size-3.5" /></ToggleBtn>
-              <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
-              <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
-              <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] uppercase text-muted-foreground">Cor</Label>
-              <input
-                type="color"
-                value={element.fontColor || '#000000'}
-                onChange={(e) => onUpdate({ fontColor: e.target.value })}
-                className="h-8 w-10 rounded border border-border bg-background cursor-pointer p-0.5"
-                title="Cor da fonte"
-              />
-            </div>
-            <div className="flex gap-1">
-              {(['left', 'center', 'right'] as const).map((a) => (
-                <Button key={a} size="sm" variant={element.align === a ? 'default' : 'outline'} className="h-8 px-2 text-[10px] uppercase"
-                  onClick={() => onUpdate({ align: a })}>{a[0]}</Button>
-              ))}
-            </div>
+            <InspectorGroup>
+              <div className="flex flex-col gap-1 min-w-[200px] flex-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Texto (aceita {'{{variáveis}}'})</Label>
+                <Input className="h-8" value={element.text || ''} onChange={(e) => onUpdate({ text: e.target.value })} />
+              </div>
+            </InspectorGroup>
+            <InspectorGroup>
+              <div className="flex flex-col gap-1 min-w-[150px]">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Fonte</Label>
+                <Select value={element.fontFamily || FONT_FAMILIES[0].value} onValueChange={(v) => onUpdate({ fontFamily: v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FONT_FAMILIES.map((f) => (<SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <NumField label="pt" value={element.fontSize || 12} onChange={(v) => onUpdate({ fontSize: v })} />
+            </InspectorGroup>
+            <InspectorGroup>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo</Label>
+                <div className="flex gap-1">
+                  <ToggleBtn active={!!element.bold} onClick={() => onUpdate({ bold: !element.bold })} title="Negrito (Ctrl+B)"><Bold className="size-3.5" /></ToggleBtn>
+                  <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
+                  <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
+                  <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><Palette className="size-3" /> Cor</Label>
+                <input
+                  type="color"
+                  value={element.fontColor || '#000000'}
+                  onChange={(e) => onUpdate({ fontColor: e.target.value })}
+                  className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5 hover:border-primary/50 transition-colors"
+                  title="Cor da fonte"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Alinhar</Label>
+                <div className="flex gap-1">
+                  {(['left', 'center', 'right'] as const).map((a) => (
+                    <Button key={a} size="sm" variant={element.align === a ? 'default' : 'outline'} className="h-8 w-8 p-0 text-[10px] uppercase font-mono"
+                      onClick={() => onUpdate({ align: a })}>{a[0]}</Button>
+                  ))}
+                </div>
+              </div>
+            </InspectorGroup>
           </>
         )}
 
         {(element.type === 'qr' || element.type === 'barcode' || element.type === 'datamatrix' || element.type === 'aztec') && (
-          <div className="flex flex-col gap-1 min-w-[240px] flex-1">
-            <Label className="text-[10px] uppercase text-muted-foreground">
-              Dado (aceita {'{{variáveis}}'} — resolvido ao imprimir)
-            </Label>
-            <Input className="h-8 font-mono text-xs" value={element.payload || ''} onChange={(e) => onUpdate({ payload: e.target.value })} placeholder="{{codigo}}" />
-          </div>
-        )}
-
-        {element.type === 'barcode' && (
-          <div className="flex flex-col gap-1 min-w-[130px]">
-            <Label className="text-[10px] uppercase text-muted-foreground">Formato</Label>
-            <Select value={element.barcodeFmt || 'CODE128'} onValueChange={(v) => onUpdate({ barcodeFmt: v as BarcodeFmt })}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {(['CODE128', 'CODE39', 'EAN13', 'EAN8', 'ITF14', 'UPC'] as BarcodeFmt[]).map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
-              </SelectContent>
-            </Select>
-          </div>
+          <InspectorGroup>
+            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Dado (aceita {'{{variáveis}}'})</Label>
+              <Input className="h-8 font-mono text-xs" value={element.payload || ''} onChange={(e) => onUpdate({ payload: e.target.value })} placeholder="{{codigo}}" />
+            </div>
+            {element.type === 'barcode' && (
+              <div className="flex flex-col gap-1 min-w-[120px]">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Formato</Label>
+                <Select value={element.barcodeFmt || 'CODE128'} onValueChange={(v) => onUpdate({ barcodeFmt: v as BarcodeFmt })}>
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(['CODE128', 'CODE39', 'EAN13', 'EAN8', 'ITF14', 'UPC'] as BarcodeFmt[]).map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </InspectorGroup>
         )}
 
         {element.type === 'line' && (
-          <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label className="text-[10px] uppercase text-muted-foreground">Estilo da linha</Label>
-            <Select value={element.lineStyle || 'solid'} onValueChange={(v) => onUpdate({ lineStyle: v as LineStyle })}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="solid">Sólida</SelectItem>
-                <SelectItem value="dashed">Tracejada</SelectItem>
-                <SelectItem value="dotted">Pontilhada</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <InspectorGroup>
+            <div className="flex flex-col gap-1 min-w-[140px]">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo da linha</Label>
+              <Select value={element.lineStyle || 'solid'} onValueChange={(v) => onUpdate({ lineStyle: v as LineStyle })}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solid">Sólida</SelectItem>
+                  <SelectItem value="dashed">Tracejada</SelectItem>
+                  <SelectItem value="dotted">Pontilhada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </InspectorGroup>
         )}
 
         {element.type === 'rect' && (
-          <>
+          <InspectorGroup>
             <div className="flex flex-col gap-1 min-w-[130px]">
-              <Label className="text-[10px] uppercase text-muted-foreground">Preenchimento</Label>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Preenchimento</Label>
               <Select value={element.rectFill || 'outline'} onValueChange={(v) => onUpdate({ rectFill: v as RectFill })}>
                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1277,25 +1296,25 @@ function ElementInspector({
               <NumField label="Borda (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
             )}
             <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
-          </>
+          </InspectorGroup>
         )}
 
         {element.type === 'image' && (
-          <>
+          <InspectorGroup>
             <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => fileRef.current?.click()}>
               <ImageIcon className="size-3.5" /> {element.imageSrc ? 'Trocar imagem' : 'Carregar imagem'}
             </Button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
             {element.imageSrc && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive" onClick={() => onUpdate({ imageSrc: '' })}>
+              <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={() => onUpdate({ imageSrc: '' })}>
                 Remover
               </Button>
             )}
             <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
-          </>
+          </InspectorGroup>
         )}
 
-        <Button size="sm" variant="ghost" className="ml-auto text-xs" onClick={onClose}>Fechar</Button>
+        <Button size="sm" variant="ghost" className="ml-auto text-xs h-8" onClick={onClose}>Fechar</Button>
       </CardContent>
     </Card>
   );
