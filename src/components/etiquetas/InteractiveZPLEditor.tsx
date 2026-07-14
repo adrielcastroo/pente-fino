@@ -92,28 +92,45 @@ function rewriteBlockCoords(block: ParsedBlock, nx: number, ny: number): string 
   return block.raw.replace(/^\^FO\d+,\d+/, `^FO${Math.max(0, Math.round(nx))},${Math.max(0, Math.round(ny))}`);
 }
 
-function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues): string {
+function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues, viewW: number): string {
   let raw = block.raw;
 
-  // SHAPE (box/line): atualiza ^GB w,h,t e marcador de estilo ^FX-S:xxx-
+  // SHAPE (box/line)
   if (block.tipo === 'box' || block.tipo === 'line') {
     const w = Math.max(1, edit.width ?? block.width ?? 100);
     const h = Math.max(1, edit.height ?? block.height ?? 100);
     const t = Math.max(1, edit.thickness ?? block.thickness ?? 2);
     raw = raw.replace(/\^GB\d+,\d+,\d+/, `^GB${w},${h},${t}`);
-    // remove marcador antigo
     raw = raw.replace(/\^FX-S:\w+-/, '');
-    // insere novo antes de ^FS
     raw = raw.replace(/\^FS$/, `^FX-S:${edit.style ?? 'solid'}-^FS`);
     return raw;
   }
 
-  // TEXT (inclui logo, que também é bloco de texto)
+  // QR: apenas atualiza payload (^FD)
+  if (block.tipo === 'qr') {
+    raw = raw.replace(/\^FD[\s\S]*?\^FS$/, `^FD${edit.fd}^FS`);
+    return raw;
+  }
+
+  // TEXT (inclui logo)
   if (block.tipo === 'text') {
     if (/\^A0N,\d+,\d+/.test(raw)) {
       raw = raw.replace(/\^A0N,\d+,\d+/, `^A0N,${edit.size},${edit.size}`);
     } else {
       raw = raw.replace(/\^FD/, `^A0N,${edit.size},${edit.size}^FD`);
+    }
+
+    // Alinhamento via ^FB{w},1,0,{J}
+    const align: TextAlign = edit.align ?? 'L';
+    const hasFB = /\^FB\d+,\d+,\d+,[LCRJ]/.test(raw);
+    if (align === 'L') {
+      // remove ^FB se existir (esquerda é o padrão sem field-block)
+      raw = raw.replace(/\^FB\d+,\d+,\d+,[LCRJ]/, '');
+    } else if (hasFB) {
+      raw = raw.replace(/(\^FB\d+,\d+,\d+),[LCRJ]/, `$1,${align}`);
+    } else {
+      const fbW = Math.max(40, viewW - block.x);
+      raw = raw.replace(/\^FD/, `^FB${fbW},1,0,${align}^FD`);
     }
   }
   const hasFR = /\^FR(?![A-Z])/.test(raw);
