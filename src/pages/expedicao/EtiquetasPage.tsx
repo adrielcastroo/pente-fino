@@ -750,16 +750,24 @@ function PreviewWorkbench({
 // Régua (estilo Canva/BarTender): traços a cada mm, número a cada 10mm.
 // ---------------------------------------------------------------------------
 function Ruler({
-  orientation, lengthMm, highlight,
-}: { orientation: 'horizontal' | 'vertical'; lengthMm: number; highlight: { start: number; end: number } | null }) {
-  const lengthPx = lengthMm * MM_TO_PX;
+  orientation, lengthMm, highlight, pxPerMm,
+}: {
+  orientation: 'horizontal' | 'vertical';
+  lengthMm: number;
+  highlight: { start: number; end: number } | null;
+  pxPerMm?: number;
+}) {
+  const px = pxPerMm ?? MM_TO_PX;
+  const lengthPx = lengthMm * px;
   const isH = orientation === 'horizontal';
   const marks: JSX.Element[] = [];
+  // Espaçamento adaptativo entre rótulos conforme escala.
+  const labelStep = px < 1.2 ? 50 : px < 2.4 ? 20 : 10;
   for (let mm = 0; mm <= Math.ceil(lengthMm); mm++) {
-    const pos = mm * MM_TO_PX;
-    let height = 4;
-    if (mm % 10 === 0) height = 12;
-    else if (mm % 5 === 0) height = 8;
+    const pos = mm * px;
+    let height = 3;
+    if (mm % labelStep === 0) height = 11;
+    else if (mm % (labelStep / 2) === 0) height = 7;
     marks.push(
       <div key={mm}
         className="absolute bg-foreground/60"
@@ -768,7 +776,7 @@ function Ruler({
           : { top: pos, left: RULER_SIZE - height, height: 1, width: height }}
       />
     );
-    if (mm % 10 === 0 && mm > 0) {
+    if (mm % labelStep === 0 && mm > 0) {
       marks.push(
         <div key={`l-${mm}`}
           className="absolute text-[8px] font-mono text-foreground/70 select-none pointer-events-none"
@@ -781,8 +789,8 @@ function Ruler({
   }
 
   const style: React.CSSProperties = isH
-    ? { position: 'absolute', top: 0, left: RULER_SIZE, width: lengthPx, height: RULER_SIZE, background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))' }
-    : { position: 'absolute', top: RULER_SIZE, left: 0, height: lengthPx, width: RULER_SIZE, background: 'hsl(var(--background))', borderRight: '1px solid hsl(var(--border))' };
+    ? { position: 'relative', width: lengthPx, height: RULER_SIZE, background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))' }
+    : { position: 'relative', height: lengthPx, width: RULER_SIZE, background: 'hsl(var(--background))', borderRight: '1px solid hsl(var(--border))' };
 
   return (
     <div style={style} className="print:hidden">
@@ -791,8 +799,8 @@ function Ruler({
         <div
           className="absolute bg-primary/40"
           style={isH
-            ? { left: highlight.start * MM_TO_PX, top: 0, width: (highlight.end - highlight.start) * MM_TO_PX, height: RULER_SIZE }
-            : { top: highlight.start * MM_TO_PX, left: 0, height: (highlight.end - highlight.start) * MM_TO_PX, width: RULER_SIZE }}
+            ? { left: highlight.start * px, top: 0, width: (highlight.end - highlight.start) * px, height: RULER_SIZE }
+            : { top: highlight.start * px, left: 0, height: (highlight.end - highlight.start) * px, width: RULER_SIZE }}
         />
       )}
     </div>
