@@ -99,6 +99,13 @@ function rewriteBlockCoords(block: ParsedBlock, nx: number, ny: number): string 
 function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues, viewW: number): string {
   let raw = block.raw;
 
+  // Reposição fina (X/Y) — aplica antes de qualquer outro ajuste
+  if (edit.x !== undefined || edit.y !== undefined) {
+    const nx = Math.max(0, Math.round(edit.x ?? block.x));
+    const ny = Math.max(0, Math.round(edit.y ?? block.y));
+    raw = raw.replace(/^\^FO\d+,\d+/, `^FO${nx},${ny}`);
+  }
+
   // SHAPE (box/line)
   if (block.tipo === 'box' || block.tipo === 'line') {
     const w = Math.max(1, edit.width ?? block.width ?? 100);
