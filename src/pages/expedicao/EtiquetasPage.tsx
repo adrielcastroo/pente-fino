@@ -1,8 +1,9 @@
 /**
- * Dashboard de etiquetas — rota /expedicao/etiquetas
+ * Central de etiquetas — rota /expedicao/etiquetas.
+ * Unifica expedição, conferência e devolução em fluxo único (Operação | Avançado).
  */
-import { EtiquetaDashboard } from '@/components/etiquetas/EtiquetaDashboard';
+import { CentralEtiquetas } from '@/components/etiquetas/CentralEtiquetas';
 
 export default function ExpedicaoEtiquetasPage() {
-  return <EtiquetaDashboard />;
+  return <CentralEtiquetas />;
 }
