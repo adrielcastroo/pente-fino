@@ -6,7 +6,9 @@ import { toast } from 'sonner';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { etiquetaService } from '@/services/etiquetaService';
-import { ZPLPreview } from '@/components/etiquetas/ZPLPreview';
+import { renderZplLabel } from '@/services/labelRenderer';
+import { printImagesInBrowser } from '@/services/printService';
+import { useAppStore } from '@/store/useAppStore';
 import type { CreateEtiquetaTemplateInput, ImprimirInput } from '@/types/etiquetas';
 
 export const etiquetaQueryKeys = {
@@ -41,39 +43,30 @@ export function useEtiquetaHistorico(filtro?: { templateId?: string }) {
   });
 }
 
+/**
+ * Impressão da etiqueta ZPL via navegador reutilizando o mesmo pipeline do
+ * módulo de estoque (renderiza offscreen como PNG com fontes embutidas e
+ * dispara `printImagesInBrowser`). Ajustes finos (offset X/Y, borda, padding)
+ * vêm do LabelSettings, aba "Expedição".
+ */
 async function imprimirNavegador(
   zplFinal: string,
   variaveis: Record<string, string>,
   quantidade: number,
   dimensoes: { largura: number; altura: number },
+  templateNome: string,
 ): Promise<void> {
-  const w = window.open('', '_blank', 'width=600,height=800');
-  if (!w) throw new Error('Popup bloqueado. Libere popups para imprimir.');
-
-  // Renderiza o preview visual fiel (mesmo engine do editor) para cada cópia.
-  const previewMarkup = renderToStaticMarkup(
-    createElement(ZPLPreview, { zpl: zplFinal, variaveis, dimensoes }),
+  const labelSettings = useAppStore.getState().labelSettings;
+  const rendered = await renderZplLabel(zplFinal, variaveis, dimensoes, labelSettings, {
+    applyPrintOffset: true,
+  });
+  await printImagesInBrowser(
+    rendered.dataUrl,
+    rendered.widthMm,
+    rendered.heightMm,
+    Math.max(1, quantidade),
+    `Etiqueta · ${templateNome}`,
   );
-  const copies = Array.from({ length: Math.max(1, quantidade) })
-    .map(() => `<div class="label">${previewMarkup}</div>`)
-    .join('');
-
-  w.document.write(`<!doctype html><html><head><title>Etiqueta</title>
-    <style>
-      @page { size: ${dimensoes.largura}mm ${dimensoes.altura}mm; margin: 0; }
-      html, body { margin: 0; padding: 0; background: #fff; color: #000; }
-      .label {
-        width: ${dimensoes.largura}mm;
-        height: ${dimensoes.altura}mm;
-        page-break-after: always;
-        overflow: hidden;
-        background: #fff;
-      }
-      .label:last-child { page-break-after: auto; }
-      .label > div { width: 100%; height: 100%; }
-      svg { width: 100%; height: 100%; display: block; }
-    </style></head><body>${copies}<script>window.onload=()=>{window.focus();window.print();setTimeout(()=>window.close(),500)}</script></body></html>`);
-  w.document.close();
 }
 
 export function useImprimirEtiqueta() {
