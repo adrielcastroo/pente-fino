@@ -59,12 +59,13 @@ async function imprimirNavegador(
   const labelSettings = useAppStore.getState().labelSettings;
   const rendered = await renderZplLabel(zplFinal, variaveis, dimensoes, labelSettings);
   const copies = Math.max(1, quantidade);
-  const pages = Array.from({ length: copies }, () => ({
-    dataUrl: rendered.dataUrl,
-    widthMm: rendered.widthMm,
-    heightMm: rendered.heightMm,
-  }));
-  await printImagesInBrowser(pages, `Etiqueta · ${templateNome}`);
+  await printImagesInBrowser(
+    rendered.dataUrl,
+    rendered.widthMm,
+    rendered.heightMm,
+    copies,
+    `Etiqueta · ${templateNome}`,
+  );
 }
 
 
