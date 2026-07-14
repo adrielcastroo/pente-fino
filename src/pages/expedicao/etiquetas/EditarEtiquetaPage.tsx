@@ -67,7 +67,7 @@ export default function EditarEtiquetaPage() {
   const [altura, setAltura] = useState(150);
   const [zpl, setZpl] = useState('');
   const [variaveis, setVariaveis] = useState<VariavelTemplate[]>([]);
-  const [previewMode, setPreviewMode] = useState<'visual' | 'zpl'>('visual');
+  const [previewMode, setPreviewMode] = useState<'interativo' | 'visual' | 'zpl'>('interativo');
   const [dirty, setDirty] = useState(false);
   const skipDirtyRef = useRef(true);
 
