@@ -11,7 +11,9 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Trash2 } from 'lucide-react';
 import type { ParsedBlock } from './InteractiveZPLEditor';
+import { VARIAVEIS_INTELIGENTES } from '@/types/etiquetas';
 
 export interface ElementEditValues {
   fd: string;
@@ -25,9 +27,17 @@ interface Props {
   block: ParsedBlock | null;
   variaveis: { chave: string; label: string }[];
   onSubmit: (v: ElementEditValues) => void;
+  onDelete?: () => void;
 }
 
-export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubmit }: Props) {
+export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubmit, onDelete }: Props) {
+  // Mescla variáveis do template com as inteligentes (nf, romaneio, etc.) — dedup por chave.
+  const todasVariaveis = (() => {
+    const map = new Map<string, { chave: string; label: string }>();
+    VARIAVEIS_INTELIGENTES.forEach((v) => map.set(v.chave, { chave: v.chave, label: v.label }));
+    variaveis.forEach((v) => map.set(v.chave, v));
+    return Array.from(map.values());
+  })();
   const [fd, setFd] = useState('');
   const [size, setSize] = useState(24);
   const [reverse, setReverse] = useState(false);
