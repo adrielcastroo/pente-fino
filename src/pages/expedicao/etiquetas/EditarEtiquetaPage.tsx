@@ -644,18 +644,14 @@ export default function EditarEtiquetaPage() {
                   className="bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[360px]"
                   style={{ aspectRatio: `${largura} / ${altura}` }}
                 >
-                  {previewMode === 'interativo' ? (
-                    <InteractiveZPLEditor
-                      zpl={zpl}
-                      onChange={setZpl}
-                      valores={valoresExemplo}
-                      dimensoes={{ largura, altura }}
-                      variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
-                      logoUrl={logoUrl}
-                    />
-                  ) : (
-                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
-                  )}
+                  <InteractiveZPLEditor
+                    zpl={zpl}
+                    onChange={setZpl}
+                    valores={valoresExemplo}
+                    dimensoes={{ largura, altura }}
+                    variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                    logoUrl={logoUrl}
+                  />
                 </div>
               )}
             </div>
@@ -663,8 +659,8 @@ export default function EditarEtiquetaPage() {
             <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5">
               <Package className="h-3 w-3" />
               {previewMode === 'interativo'
-                ? 'Arraste para mover · duplo-clique para editar variáveis, fonte e negativo.'
-                : 'Preview atualiza em tempo real com valores de exemplo.'}
+                ? 'Arraste para mover · duplo-clique para ajustar variáveis, fonte, largura e alinhamento.'
+                : 'Código ZPL enviado à impressora.'}
             </div>
           </aside>
 
