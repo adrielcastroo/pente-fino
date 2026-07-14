@@ -9,6 +9,7 @@ import {
   type MotorLabelData,
   type LabelHas,
 } from '@/components/labels/LabelTemplates';
+import { ZPLPreview } from '@/components/etiquetas/ZPLPreview';
 import type { LabelSettings } from '@/store/useAppStore';
 
 const TECIDO_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
@@ -215,4 +216,71 @@ export async function renderMotorLabel(
     cleanup();
   }
 }
+
+/**
+ * Renderiza uma etiqueta ZPL (expedição) como PNG usando o mesmo pipeline
+ * offscreen do estoque (html-to-image + fontes embutidas). O ZPLPreview é
+ * renderizado dentro de um box com dimensão física em pixels (widthMm ×
+ * LABEL_PX_PER_MM) e os ajustes finos (offset X/Y, borda, padding) do
+ * LabelSettings são aplicados antes da captura.
+ */
+export async function renderZplLabel(
+  zpl: string,
+  variaveis: Record<string, string>,
+  dimensoes: { largura: number; altura: number },
+  labelSettings: LabelSettings,
+  options: { applyPrintOffset?: boolean } = {},
+): Promise<RenderedLabel> {
+  const { applyPrintOffset = true } = options;
+  const w = dimensoes.largura;
+  const h = dimensoes.altura;
+  const wPx = w * PREVIEW_SCALE;
+  const hPx = h * PREVIEW_SCALE;
+  const offsetXPx = applyPrintOffset ? (labelSettings.expedicaoPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM : 0;
+  const offsetYPx = applyPrintOffset ? (labelSettings.expedicaoPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM : 0;
+  const borderWidth = labelSettings.expedicaoBorderWidth ?? 0;
+  const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
+  const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
+  const padding = labelSettings.expedicaoPadding ?? 0;
+  const borderCss = borderStyle === 'none' || borderWidth <= 0
+    ? 'none'
+    : `${borderWidth}px ${borderStyle} #000`;
+
+  const { container, root, cleanup } = mountOffscreen();
+  try {
+    root.render(
+      createElement('div', {
+        style: {
+          position: 'relative',
+          width: `${wPx}px`,
+          height: `${hPx}px`,
+          background: '#fff',
+          overflow: 'hidden',
+        },
+      },
+        createElement('div', {
+          style: {
+            position: 'absolute',
+            inset: 0,
+            transform: `translate(${offsetXPx}px, ${offsetYPx}px)`,
+            boxSizing: 'border-box',
+            border: borderCss,
+            borderRadius: `${borderRadius}px`,
+            padding: `${padding}px`,
+            background: '#fff',
+          },
+        },
+          createElement(ZPLPreview, { zpl, variaveis, dimensoes }),
+        ),
+      ),
+    );
+    await new Promise((r) => setTimeout(r, 80));
+    const node = container.firstElementChild as HTMLElement | null;
+    if (!node) throw new Error('Falha ao renderizar etiqueta ZPL');
+    return await renderToPng({ node, widthMm: w, heightMm: h, basePx: { w: wPx, h: hPx } });
+  } finally {
+    cleanup();
+  }
+}
+
 
