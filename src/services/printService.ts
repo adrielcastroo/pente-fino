@@ -1284,3 +1284,102 @@ export async function printLabelsBatch(
     : (browserPages.length > 0 ? rendered.length : 0);
   return { ok, total: items.length, failed: failedIdx };
 }
+
+/**
+ * Imprime N cópias de UMA imagem já renderizada (PNG dataURL) via iframe único.
+ * Modelado no `printImageInBrowser` — mesmo tratamento de @page/fidelidade,
+ * mas empilha várias páginas separadas por `page-break-after` para sair uma
+ * etiqueta por página no diálogo/spooler.
+ */
+export async function printImagesInBrowser(
+  dataUrl: string,
+  widthMm: number,
+  heightMm: number,
+  copies: number,
+  title: string,
+): Promise<void> {
+  const nCopies = Math.max(1, Math.floor(copies));
+  return new Promise((resolve, reject) => {
+    const safeTitle = title.replace(/[<>&"']/g, '');
+    const pages = Array.from({ length: nCopies })
+      .map(() => `<img class="lbl" src="${dataUrl}">`)
+      .join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
+      @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        margin: 0 !important; padding: 0 !important; background: #fff;
+        width: ${widthMm}mm;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      img.lbl {
+        display: block;
+        width: ${widthMm}mm;
+        height: ${heightMm}mm;
+        margin: 0; padding: 0; border: 0;
+        object-fit: fill;
+        page-break-after: always;
+        break-after: page;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+      }
+      img.lbl:last-child { page-break-after: auto; break-after: auto; }
+      @media print {
+        html, body { width: ${widthMm}mm; }
+        img.lbl { width: ${widthMm}mm; height: ${heightMm}mm; }
+      }
+    </style></head><body>${pages}</body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.setAttribute('title', safeTitle);
+    iframe.style.position = 'fixed';
+    iframe.style.left = '-10000px';
+    iframe.style.top = '0';
+    iframe.style.width = `${Math.max(widthMm, 50)}mm`;
+    iframe.style.height = `${Math.max(heightMm * nCopies, 50)}mm`;
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    iframe.srcdoc = html;
+
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      try { iframe.remove(); } catch { /* noop */ }
+    };
+
+    let printed = false;
+    const triggerPrint = () => {
+      if (printed) return;
+      printed = true;
+      const win = iframe.contentWindow;
+      if (!win) { cleanup(); reject(new Error('iframe sem contentWindow')); return; }
+      const doc = win.document;
+      const imgs = Array.from(doc.querySelectorAll('img.lbl')) as HTMLImageElement[];
+      const waitAll = Promise.all(imgs.map((img) => img.complete
+        ? Promise.resolve()
+        : new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(new Error('Falha ao carregar imagem')); })));
+      waitAll
+        .then(() => new Promise<void>((res) => requestAnimationFrame(() => setTimeout(res, 30))))
+        .then(() => {
+          try {
+            win.focus();
+            win.print();
+            const silent = typeof localStorage !== 'undefined'
+              && localStorage.getItem('pref_silent_browser_print') === 'true';
+            win.addEventListener('afterprint', cleanup, { once: true });
+            setTimeout(cleanup, silent ? 5_000 : 60_000);
+            resolve();
+          } catch (e) { cleanup(); reject(e); }
+        })
+        .catch((e) => { cleanup(); reject(e); });
+    };
+
+    iframe.addEventListener('load', triggerPrint, { once: true });
+    document.body.appendChild(iframe);
+    setTimeout(triggerPrint, 800);
+  });
+}
+
