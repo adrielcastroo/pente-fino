@@ -1020,19 +1020,13 @@ function ElementView({
     left: `${el.x * MM_TO_PX}px`, top: `${el.y * MM_TO_PX}px`,
     width: `${el.w * MM_TO_PX}px`, height: `${el.h * MM_TO_PX}px`,
   };
-  // Contraste alto contra fundo branco/escuro (Req #1):
-  // - selecionado: outline duplo (branco por fora + primary por dentro) + ring cyan luminoso.
-  // - hover: outline tracejado escuro visível em qualquer cor de fundo.
-  const selectionShadow = selected
-    ? '0 0 0 1px #ffffff, 0 0 0 3px hsl(199 89% 48%), 0 0 0 4px rgba(0,0,0,0.55), 0 4px 14px rgba(0,0,0,0.25)'
-    : undefined;
-  const finalStyle: React.CSSProperties = { ...style, boxShadow: selectionShadow };
+  // Seleção estilo Canva/Bartender: borda azul fina + 8 handles brancos com borda azul.
   return (
     <div
-      style={finalStyle}
-      className={cn('label-el',
+      style={style}
+      className={cn('label-el group',
         editable && 'cursor-move',
-        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:2px] hover:[outline-color:rgba(0,0,0,0.55)] hover:[outline-offset:1px]',
+        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:#2563eb] hover:[outline-offset:1px]',
       )}
       onPointerDown={(e) => onPointerDown(e, 'move')}
       onDoubleClick={(e) => {
@@ -1044,16 +1038,36 @@ function ElementView({
 
       {editable && selected && (
         <>
-          {/* Handle grande, alto contraste (anel branco + núcleo cyan + borda preta) */}
-          <div onPointerDown={(e) => onPointerDown(e, 'resize')}
-            className="label-handle absolute -right-2 -bottom-2 w-4 h-4 rounded-full cursor-se-resize"
-            style={{ background: 'hsl(199 89% 48%)', boxShadow: '0 0 0 2px #fff, 0 0 0 3px #000, 0 2px 6px rgba(0,0,0,0.4)' }} />
+          {/* Borda de seleção (fora do conteúdo, não interfere no visual da etiqueta) */}
+          <div className="pointer-events-none absolute -inset-px z-[5]"
+            style={{ boxShadow: 'inset 0 0 0 1.5px #2563eb, 0 0 0 1px rgba(255,255,255,0.9)' }} />
+
+          {/* 8 handles: 4 cantos + 4 meios de aresta — visual Canva/Bartender */}
+          {([
+            ['nw', '-top-1.5 -left-1.5 cursor-nw-resize'],
+            ['n',  '-top-1.5 left-1/2 -translate-x-1/2 cursor-n-resize'],
+            ['ne', '-top-1.5 -right-1.5 cursor-ne-resize'],
+            ['e',  'top-1/2 -right-1.5 -translate-y-1/2 cursor-e-resize'],
+            ['se', '-bottom-1.5 -right-1.5 cursor-se-resize'],
+            ['s',  '-bottom-1.5 left-1/2 -translate-x-1/2 cursor-s-resize'],
+            ['sw', '-bottom-1.5 -left-1.5 cursor-sw-resize'],
+            ['w',  'top-1/2 -left-1.5 -translate-y-1/2 cursor-w-resize'],
+          ] as const).map(([key, pos]) => (
+            <div key={key}
+              onPointerDown={(e) => onPointerDown(e, 'resize')}
+              className={cn('label-handle absolute w-2.5 h-2.5 bg-white z-[6]', pos)}
+              style={{ boxShadow: '0 0 0 1.5px #2563eb, 0 1px 3px rgba(0,0,0,0.35)', borderRadius: '2px' }} />
+          ))}
+
+          {/* Toolbar de ações — fundo branco, ícones escuros (alto contraste) */}
           <div onPointerDown={(e) => e.stopPropagation()}
-            className="label-actions absolute -top-9 left-0 flex items-center gap-0.5 bg-slate-900 text-white border border-slate-700 rounded-md shadow-xl px-1 py-0.5 z-10">
-            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-3.5" /></button>
-            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Frente"><ArrowUp className="size-3.5" /></button>
-            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Trás"><ArrowDown className="size-3.5" /></button>
-            <button className="p-1.5 hover:bg-red-500/30 text-red-300 rounded" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-3.5" /></button>
+            className="label-actions absolute -top-10 left-0 flex items-center gap-0.5 bg-white text-slate-900 rounded-md px-1 py-1 z-10"
+            style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 6px 18px rgba(0,0,0,0.18)' }}>
+            <button className="p-1.5 hover:bg-slate-100 rounded text-slate-800" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-4" strokeWidth={2} /></button>
+            <button className="p-1.5 hover:bg-slate-100 rounded text-slate-800" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Trazer para frente"><ArrowUp className="size-4" strokeWidth={2} /></button>
+            <button className="p-1.5 hover:bg-slate-100 rounded text-slate-800" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Enviar para trás"><ArrowDown className="size-4" strokeWidth={2} /></button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5" />
+            <button className="p-1.5 hover:bg-red-50 rounded text-red-600" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-4" strokeWidth={2} /></button>
           </div>
         </>
       )}
