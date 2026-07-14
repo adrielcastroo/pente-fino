@@ -86,6 +86,8 @@ export default function EditarEtiquetaPage() {
       const url = String(reader.result || '');
       setLogoUrl(url);
       if (id) localStorage.setItem(`etiqueta-logo-${id}`, url);
+      // Auto-injeta {{logo}} no ZPL se não existir — garante que apareça no preview.
+      setZpl((prev) => (/\{\{\s*logo\s*\}\}/i.test(prev) ? prev : appendZplBlock(prev, createNewBlock('logo', { largura, altura }))));
     };
     reader.readAsDataURL(file);
   };
@@ -93,6 +95,10 @@ export default function EditarEtiquetaPage() {
   const clearLogo = () => {
     setLogoUrl('');
     if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
+  };
+
+  const addElement = (tipo: 'text' | 'qr' | 'barcode') => {
+    setZpl((prev) => appendZplBlock(prev, createNewBlock(tipo, { largura, altura })));
   };
 
   useEffect(() => {
