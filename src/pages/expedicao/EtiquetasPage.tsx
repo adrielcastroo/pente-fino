@@ -11,7 +11,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import {
   Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
-  Trash2, Copy, ZoomIn, ZoomOut, Minus, Square, ArrowUp, ArrowDown,
+  Trash2, Copy, ZoomIn, ZoomOut, Minus, Square, ArrowUp, ArrowDown, Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
