@@ -10,7 +10,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
-  AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
+  AlertTriangle, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
   Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
   Minus, Square, SquareDashed, FlaskConical,
 } from 'lucide-react';
@@ -26,7 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAtualizarTemplate, useEtiqueta } from '@/hooks/useEtiquetas';
 import { AutoCompleteZPL } from '@/components/etiquetas/AutoCompleteZPL';
-import { LiveZPLPreview } from '@/components/etiquetas/LiveZPLPreview';
+
 import { InteractiveZPLEditor, appendZplBlock, createNewBlock } from '@/components/etiquetas/InteractiveZPLEditor';
 import {
   PRESETS_TAMANHO,
@@ -68,7 +68,7 @@ export default function EditarEtiquetaPage() {
   const [altura, setAltura] = useState(150);
   const [zpl, setZpl] = useState('');
   const [variaveis, setVariaveis] = useState<VariavelTemplate[]>([]);
-  const [previewMode, setPreviewMode] = useState<'interativo' | 'visual' | 'zpl'>('interativo');
+  const [previewMode, setPreviewMode] = useState<'interativo' | 'zpl'>('interativo');
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [dirty, setDirty] = useState(false);
   const skipDirtyRef = useRef(true);
@@ -559,10 +559,7 @@ export default function EditarEtiquetaPage() {
             <div className="shrink-0 border-b border-border/60 bg-card/50 backdrop-blur px-3 py-2 flex items-center gap-2">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
                 <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
-                  <MousePointer2 className="h-3.5 w-3.5" /> Interativo
-                </PreviewToggleBtn>
-                <PreviewToggleBtn active={previewMode === 'visual'} onClick={() => setPreviewMode('visual')}>
-                  <Eye className="h-3.5 w-3.5" /> Visual
+                  <MousePointer2 className="h-3.5 w-3.5" /> Preview
                 </PreviewToggleBtn>
                 <PreviewToggleBtn active={previewMode === 'zpl'} onClick={() => setPreviewMode('zpl')}>
                   <Code2 className="h-3.5 w-3.5" /> ZPL
@@ -647,18 +644,14 @@ export default function EditarEtiquetaPage() {
                   className="bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[360px]"
                   style={{ aspectRatio: `${largura} / ${altura}` }}
                 >
-                  {previewMode === 'interativo' ? (
-                    <InteractiveZPLEditor
-                      zpl={zpl}
-                      onChange={setZpl}
-                      valores={valoresExemplo}
-                      dimensoes={{ largura, altura }}
-                      variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
-                      logoUrl={logoUrl}
-                    />
-                  ) : (
-                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
-                  )}
+                  <InteractiveZPLEditor
+                    zpl={zpl}
+                    onChange={setZpl}
+                    valores={valoresExemplo}
+                    dimensoes={{ largura, altura }}
+                    variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                    logoUrl={logoUrl}
+                  />
                 </div>
               )}
             </div>
@@ -666,8 +659,8 @@ export default function EditarEtiquetaPage() {
             <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5">
               <Package className="h-3 w-3" />
               {previewMode === 'interativo'
-                ? 'Arraste para mover · duplo-clique para editar variáveis, fonte e negativo.'
-                : 'Preview atualiza em tempo real com valores de exemplo.'}
+                ? 'Arraste para mover · duplo-clique para ajustar variáveis, fonte, largura e alinhamento.'
+                : 'Código ZPL enviado à impressora.'}
             </div>
           </aside>
 
@@ -676,10 +669,7 @@ export default function EditarEtiquetaPage() {
             <div className="flex items-center gap-2 mb-2">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
                 <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
-                  <MousePointer2 className="h-3.5 w-3.5" /> Interativo
-                </PreviewToggleBtn>
-                <PreviewToggleBtn active={previewMode === 'visual'} onClick={() => setPreviewMode('visual')}>
-                  <Eye className="h-3.5 w-3.5" /> Visual
+                  <MousePointer2 className="h-3.5 w-3.5" /> Preview
                 </PreviewToggleBtn>
                 <PreviewToggleBtn active={previewMode === 'zpl'} onClick={() => setPreviewMode('zpl')}>
                   <Code2 className="h-3.5 w-3.5" /> ZPL
@@ -692,18 +682,14 @@ export default function EditarEtiquetaPage() {
               </pre>
             ) : (
               <div className="bg-white border border-border rounded-md overflow-hidden mx-auto max-w-[260px]" style={{ aspectRatio: `${largura} / ${altura}` }}>
-                {previewMode === 'interativo' ? (
-                  <InteractiveZPLEditor
-                    zpl={zpl}
-                    onChange={setZpl}
-                    valores={valoresExemplo}
-                    dimensoes={{ largura, altura }}
-                    variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
-                    logoUrl={logoUrl}
-                  />
-                ) : (
-                  <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
-                )}
+                <InteractiveZPLEditor
+                  zpl={zpl}
+                  onChange={setZpl}
+                  valores={valoresExemplo}
+                  dimensoes={{ largura, altura }}
+                  variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                  logoUrl={logoUrl}
+                />
               </div>
             )}
           </aside>

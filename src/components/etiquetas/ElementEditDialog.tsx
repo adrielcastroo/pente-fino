@@ -28,6 +28,8 @@ export interface ElementEditValues {
   height?: number;
   thickness?: number;
   style?: ShapeStyle;
+  x?: number;
+  y?: number;
 }
 
 interface Props {
@@ -58,6 +60,8 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [wrapEnabled, setWrapEnabled] = useState(false);
   const [fbWidth, setFbWidth] = useState(200);
   const [fbMaxLines, setFbMaxLines] = useState(1);
+  const [posX, setPosX] = useState(0);
+  const [posY, setPosY] = useState(0);
 
   useEffect(() => {
     if (!block) return;
@@ -73,6 +77,8 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setWrapEnabled(hasFb);
     setFbWidth(block.fbWidth ?? 200);
     setFbMaxLines(block.fbMaxLines ?? 1);
+    setPosX(block.x);
+    setPosY(block.y);
   }, [block]);
 
   if (!block) return null;
@@ -100,7 +106,31 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
+          {/* Ajustes finos de posição — comuns a todos os tipos */}
+          <div className="rounded-md border border-border/60 p-2.5 space-y-2">
+            <Label className="text-xs">Posição fina (dots)</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">X</Label>
+                <div className="flex items-center gap-1">
+                  <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setPosX((v) => Math.max(0, v - 1))}>−</Button>
+                  <Input type="number" min={0} value={posX} onChange={(e) => setPosX(Math.max(0, parseInt(e.target.value, 10) || 0))} className="font-mono h-8" />
+                  <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setPosX((v) => v + 1)}>+</Button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">Y</Label>
+                <div className="flex items-center gap-1">
+                  <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setPosY((v) => Math.max(0, v - 1))}>−</Button>
+                  <Input type="number" min={0} value={posY} onChange={(e) => setPosY(Math.max(0, parseInt(e.target.value, 10) || 0))} className="font-mono h-8" />
+                  <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setPosY((v) => v + 1)}>+</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
           {isText && (
             <>
               <div className="space-y-1.5">
@@ -282,7 +312,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           ) : <span />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={() => onSubmit({ fd, size, reverse, align, fbWidth: wrapEnabled ? fbWidth : undefined, fbMaxLines: wrapEnabled ? fbMaxLines : 1, width, height, thickness, style })}>Aplicar</Button>
+            <Button onClick={() => onSubmit({ fd, size, reverse, align, fbWidth: wrapEnabled ? fbWidth : undefined, fbMaxLines: wrapEnabled ? fbMaxLines : 1, width, height, thickness, style, x: posX, y: posY })}>Aplicar</Button>
           </div>
         </DialogFooter>
       </DialogContent>
