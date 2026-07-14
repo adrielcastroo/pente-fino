@@ -1426,14 +1426,73 @@ function HistoryDialog({
   );
 }
 
-function StatMini({ label, value }: { label: string; value: string }) {
+function StatMini({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-border bg-muted/30 p-2 text-center">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="text-xl font-bold font-mono">{value}</div>
+    <div className="rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 p-3 flex items-center gap-3">
+      {icon && <div className="size-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">{icon}</div>}
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="text-xl font-bold font-mono leading-tight">{value}</div>
+      </div>
     </div>
   );
 }
+
+// --- Sidebar / toolbar helpers (visual only) ---
+
+function SidebarSection({
+  icon, title, badge, action, children, last,
+}: {
+  icon: React.ReactNode; title: string;
+  badge?: React.ReactNode; action?: React.ReactNode;
+  children: React.ReactNode; last?: boolean;
+}) {
+  return (
+    <section className={cn('px-3.5 py-3', !last && 'border-b border-border/50')}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
+          <span className="text-primary/70">{icon}</span>
+          {title}
+          {badge}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function AddButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full inline-flex items-center gap-2 rounded-md border border-border/70 bg-background/60 px-2.5 py-2 text-xs font-medium hover:bg-accent hover:border-primary/40 hover:text-foreground transition-all active:scale-[0.98] shadow-sm"
+    >
+      <span className="text-primary/80">{icon}</span>
+      {label}
+    </button>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex items-center px-1.5 h-[18px] rounded border border-border/70 bg-muted/60 font-mono text-[9px] font-semibold text-foreground/80 shadow-[0_1px_0_hsl(var(--border))]">
+      {children}
+    </kbd>
+  );
+}
+
+// --- Inspector visual helpers ---
+
+function InspectorGroup({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-end gap-2.5 pr-3 mr-1 border-r border-border/50 last:border-r-0 last:pr-0 last:mr-0">
+      {children}
+    </div>
+  );
+}
+
 
 // ============================================================================
 // Icons & labels
