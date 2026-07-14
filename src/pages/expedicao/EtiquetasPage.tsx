@@ -386,14 +386,13 @@ export default function ExpedicaoEtiquetasPage() {
 
 
       {/* Req #6: layout sem scroll vertical — grade ocupa altura restante da viewport */}
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0 lg:h-[calc(100vh-160px)] lg:overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 lg:gap-5 print:block min-w-0 lg:h-[calc(100vh-200px)] lg:overflow-hidden">
         {/* Painel de configuração (rola internamente para não empurrar o preview) */}
-        <div className="lg:h-full lg:overflow-y-auto lg:pr-1">
-        <Card className="print:hidden">
-          <CardContent className="p-4 space-y-4">
-            {/* Tamanho */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Tamanho</Label>
+        <div className="lg:h-full lg:overflow-y-auto lg:pr-1 space-y-3 custom-scrollbar">
+        <Card className="print:hidden border-border/60 shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            {/* --- Tamanho --- */}
+            <SidebarSection icon={<RulerIcon className="size-3.5" />} title="Tamanho da etiqueta">
               <Select value={state.pageSize} onValueChange={(v) => changePreset(v as PresetSize)}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -404,130 +403,119 @@ export default function ExpedicaoEtiquetasPage() {
                 </SelectContent>
               </Select>
               {state.pageSize === 'custom' && (
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div className="space-y-1">
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Largura (mm)</Label>
-                    <DimensionInput
-                      value={state.widthMm}
-                      min={20}
-                      max={300}
-                      onCommit={(v) => patch({ widthMm: v })}
-                    />
+                    <DimensionInput value={state.widthMm} min={20} max={300} onCommit={(v) => patch({ widthMm: v })} />
                   </div>
-                  <div>
+                  <div className="space-y-1">
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Altura (mm)</Label>
-                    <DimensionInput
-                      value={state.heightMm}
-                      min={20}
-                      max={400}
-                      onCommit={(v) => patch({ heightMm: v })}
-                    />
+                    <DimensionInput value={state.heightMm} min={20} max={400} onCommit={(v) => patch({ heightMm: v })} />
                   </div>
                 </div>
               )}
-            </div>
+            </SidebarSection>
 
-            {/* Adicionar elementos — agrupados por categoria (Req #3) */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">Adicionar elemento</Label>
+            {/* --- Adicionar elementos --- */}
+            <SidebarSection icon={<Plus className="size-3.5" />} title="Adicionar elemento">
+              <div className="space-y-2.5">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Texto</div>
+                  <AddButton icon={<Type className="size-3.5" />} label="Texto" onClick={() => addElement('text')} />
+                </div>
 
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Texto</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('text')}>
-                    <Type className="size-3.5" /> Texto
-                  </Button>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Códigos</div>
+                  <Select value="" onValueChange={(v) => v && addElement(v as ElementType)}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="Selecionar tipo de código…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="qr"><span className="inline-flex items-center gap-2"><QrCode className="size-3.5" /> QR Code</span></SelectItem>
+                      <SelectItem value="barcode"><span className="inline-flex items-center gap-2"><BarcodeIcon className="size-3.5" /> Código de barras (1D)</span></SelectItem>
+                      <SelectItem value="datamatrix"><span className="inline-flex items-center gap-2"><Grid3x3 className="size-3.5" /> DataMatrix</span></SelectItem>
+                      <SelectItem value="aztec"><span className="inline-flex items-center gap-2"><Hexagon className="size-3.5" /> Aztec</span></SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Formas</div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <AddButton icon={<Minus className="size-3.5" />} label="Linha" onClick={() => addElement('line')} />
+                    <AddButton icon={<Square className="size-3.5" />} label="Retângulo" onClick={() => addElement('rect')} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Mídia</div>
+                  <AddButton icon={<ImageIcon className="size-3.5" />} label="Carregar imagem" onClick={triggerImageUpload} />
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
                 </div>
               </div>
+            </SidebarSection>
 
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Códigos</div>
-                <Select value="" onValueChange={(v) => v && addElement(v as ElementType)}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Selecionar código…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="qr"><span className="inline-flex items-center gap-2"><QrCode className="size-3.5" /> QR Code</span></SelectItem>
-                    <SelectItem value="barcode"><span className="inline-flex items-center gap-2"><BarcodeIcon className="size-3.5" /> Código de barras (1D)</span></SelectItem>
-                    <SelectItem value="datamatrix"><span className="inline-flex items-center gap-2"><Grid3x3 className="size-3.5" /> DataMatrix</span></SelectItem>
-                    <SelectItem value="aztec"><span className="inline-flex items-center gap-2"><Hexagon className="size-3.5" /> Aztec</span></SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Formas</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('line')}>
-                    <Minus className="size-3.5" /> Linha
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('rect')}>
-                    <Square className="size-3.5" /> Retângulo
-                  </Button>
+            {/* --- Variáveis disponíveis --- */}
+            <SidebarSection icon={<Sparkles className="size-3.5" />} title="Variáveis dinâmicas">
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5 space-y-1.5">
+                <div className="flex flex-wrap gap-1">
+                  {VARIABLE_KEYS.map((k) => (
+                    <code key={k} className="px-1.5 py-0.5 rounded bg-background border border-border/70 font-mono text-[10px] text-primary">{`{{${k}}}`}</code>
+                  ))}
                 </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Use em textos, QR, DataMatrix e barras. Resolvidas ao imprimir.</p>
               </div>
+            </SidebarSection>
 
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Mídia</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={triggerImageUpload}>
-                    <ImageIcon className="size-3.5" /> Imagem
-                  </Button>
-                </div>
-                <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
-              </div>
-            </div>
-
-            {/* Variáveis */}
-            <div className="rounded-md border border-border/60 bg-muted/30 p-2 text-[10px] space-y-1">
-              <div className="font-semibold uppercase tracking-wider text-muted-foreground">Variáveis disponíveis</div>
-              <div className="flex flex-wrap gap-1">
-                {VARIABLE_KEYS.map((k) => (
-                  <code key={k} className="px-1 py-0.5 rounded bg-background border border-border font-mono">{`{{${k}}}`}</code>
-                ))}
-              </div>
-              <p className="text-muted-foreground pt-1">Use em textos, QR e barras. São resolvidas ao imprimir.</p>
-            </div>
-
-            {/* Elementos */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Elementos ({state.elements.length})</Label>
-              <ScrollArea className="h-40 border border-border/60 rounded-md">
-                <ul className="divide-y divide-border">
+            {/* --- Elementos da etiqueta --- */}
+            <SidebarSection
+              icon={<Layers className="size-3.5" />}
+              title="Elementos"
+              badge={<Badge variant="secondary" className="text-[10px] px-1.5 h-4">{state.elements.length}</Badge>}
+            >
+              <ScrollArea className="h-40 border border-border/60 rounded-md bg-background/40">
+                <ul className="divide-y divide-border/60">
                   {state.elements.map((el) => (
                     <li key={el.id}>
                       <button type="button" onClick={() => setSelectedId(el.id)}
-                        className={cn('w-full text-left px-2 py-1.5 text-xs flex items-center gap-2 hover:bg-accent/40 transition-colors',
-                          selectedId === el.id && 'bg-primary/10')}>
+                        className={cn('w-full text-left px-2.5 py-2 text-xs flex items-center gap-2 hover:bg-accent/50 transition-colors',
+                          selectedId === el.id && 'bg-primary/10 border-l-2 border-primary')}>
                         <ElementIcon type={el.type} />
                         <span className="truncate flex-1">{elementLabel(el)}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); removeElement(el.id); }}
-                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                          title="Remover">
                           <Trash2 className="size-3" />
                         </button>
                       </button>
                     </li>
                   ))}
                   {state.elements.length === 0 && (
-                    <li className="p-3 text-[11px] text-muted-foreground italic">Nenhum elemento.</li>
+                    <li className="p-4 text-[11px] text-muted-foreground italic text-center">
+                      <MousePointerClick className="size-4 mx-auto mb-1 opacity-50" />
+                      Nenhum elemento — adicione acima.
+                    </li>
                   )}
                 </ul>
               </ScrollArea>
-            </div>
+            </SidebarSection>
 
-            {/* Presets salvos */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-muted-foreground">Meus presets ({presets.length})</Label>
-                <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1" onClick={handleSavePreset}>
+            {/* --- Presets --- */}
+            <SidebarSection
+              icon={<Bookmark className="size-3.5" />}
+              title="Meus presets"
+              badge={<Badge variant="secondary" className="text-[10px] px-1.5 h-4">{presets.length}</Badge>}
+              action={
+                <Button size="sm" variant="ghost" className="h-6 text-[11px] gap-1 px-2 text-primary hover:text-primary hover:bg-primary/10" onClick={handleSavePreset}>
                   <Plus className="size-3" /> Salvar
                 </Button>
-              </div>
-              {presets.length > 0 && (
-                <ScrollArea className="max-h-40 border border-border/60 rounded-md">
-                  <ul className="divide-y divide-border">
+              }
+            >
+              {presets.length > 0 ? (
+                <ScrollArea className="max-h-40 border border-border/60 rounded-md bg-background/40">
+                  <ul className="divide-y divide-border/60">
                     {presets.map((p) => (
-                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/40">
+                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/50 transition-colors">
                         <button type="button" onClick={() => handleLoadPreset(p)} className="flex-1 min-w-0 text-left">
                           <div className="text-xs font-medium truncate">{p.name}</div>
                           <div className="text-[10px] text-muted-foreground font-mono">
@@ -535,36 +523,43 @@ export default function ExpedicaoEtiquetasPage() {
                           </div>
                         </button>
                         <button type="button" onClick={() => handleDeletePreset(p.id)}
-                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
                           <Trash2 className="size-3" />
                         </button>
                       </li>
                     ))}
                   </ul>
                 </ScrollArea>
+              ) : (
+                <div className="text-[11px] text-muted-foreground italic text-center py-3 border border-dashed border-border/50 rounded-md">
+                  Salve o layout atual para reutilizar depois.
+                </div>
               )}
-            </div>
+            </SidebarSection>
 
-            {/* Resumo XML */}
+            {/* --- Resumo XML --- */}
             {(state.meta.transportadora || state.meta.nfNumero) && (
-              <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Transp.</span>
-                  <span className="font-semibold text-right truncate">{state.meta.transportadora || '—'}</span>
+              <SidebarSection icon={<FileText className="size-3.5" />} title="Dados do XML atual" last>
+                <div className="rounded-md border border-border/60 bg-muted/40 p-2.5 space-y-1.5 text-[11px]">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Transp.</span>
+                    <span className="font-semibold text-right truncate">{state.meta.transportadora || '—'}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">NF-e</span>
+                    <span className="font-mono text-right truncate">{state.meta.nfNumero || '—'}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Vol.</span>
+                    <span className="font-mono">{state.meta.volumeAtual}/{state.meta.volumeTotal}</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted-foreground uppercase tracking-wide text-[10px]">NF-e</span>
-                  <span className="font-mono text-right truncate">{state.meta.nfNumero || '—'}</span>
-                </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Vol.</span>
-                  <span className="font-mono">{state.meta.volumeAtual}/{state.meta.volumeTotal}</span>
-                </div>
-              </div>
+              </SidebarSection>
             )}
           </CardContent>
         </Card>
         </div>
+
 
         {/* Editor Canvas — barra de ações (Inspector) fica ACIMA do preview (Req #2) */}
         <div className="flex flex-col min-h-0 lg:h-full gap-2">
