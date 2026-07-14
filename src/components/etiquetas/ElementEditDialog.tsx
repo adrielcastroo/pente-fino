@@ -22,6 +22,8 @@ export interface ElementEditValues {
   size: number;
   reverse: boolean;
   align?: TextAlign;
+  fbWidth?: number;
+  fbMaxLines?: number;
   width?: number;
   height?: number;
   thickness?: number;
