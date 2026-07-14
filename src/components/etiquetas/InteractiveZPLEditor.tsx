@@ -374,10 +374,11 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                       </text>
                     </>
                   )}
-                  <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h + 4}
-                    fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                    strokeDasharray="4 3" strokeWidth={2}
-                    className="hover:stroke-primary/50" />
+                  <rect x={b.x} y={b.y} width={w} height={h} rx={2}
+                    fill="transparent"
+                    stroke={isDragging ? 'hsl(var(--primary))' : 'transparent'}
+                    strokeWidth={1}
+                    className="hover:stroke-primary/60 transition-colors" />
                 </g>
                 {renderResizeHandle(b.x + w, b.y + h, b)}
               </g>
@@ -410,7 +411,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             const naturalW = Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
             const maxAvail = Math.max(20, viewW - b.x);
             const boxW = Math.min(maxAvail, b.fbWidth ?? naturalW);
-            const boxH = lines.length * lineH + 6;
+            const boxH = lines.length * lineH;
             let anchorX = b.x;
             let textAnchor: 'start' | 'middle' | 'end' = 'start';
             if (b.fbWidth) {
@@ -419,15 +420,16 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             }
             return (
               <g key={b.index} {...commonHandlers}>
-                {b.reverse && <rect x={b.x - 2} y={b.y - 2} width={boxW + 4} height={boxH} fill="#111" />}
-                <rect x={b.x - 2} y={b.y - 2} width={boxW + 4} height={boxH}
-                  fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                  strokeDasharray="4 3" strokeWidth={2}
-                  className="hover:stroke-primary/50" />
+                {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="#111" />}
+                <rect x={b.x} y={b.y} width={boxW} height={boxH} rx={2}
+                  fill="transparent"
+                  stroke={isDragging ? 'hsl(var(--primary))' : 'transparent'}
+                  strokeWidth={1}
+                  className="hover:stroke-primary/60 transition-colors" />
                 {lines.map((ln, k) => (
                   <text
                     key={k}
-                    x={anchorX} y={b.y + b.size + k * lineH}
+                    x={anchorX} y={b.y + b.size * 0.85 + k * lineH}
                     fontSize={b.size} fontFamily="monospace"
                     fill={b.reverse ? '#fff' : '#111'}
                     textAnchor={textAnchor}
@@ -447,10 +449,11 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                   <rect key={i} x={b.x + i * 6} y={b.y} width={i % 3 === 0 ? 4 : 2} height={80} fill="#111" />
                 ))}
                 <text x={b.x} y={b.y + 100} fontSize={18} fontFamily="monospace" fill="#111" pointerEvents="none">{text}</text>
-                <rect x={b.x - 2} y={b.y - 2} width={244} height={108}
-                  fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                  strokeDasharray="4 3" strokeWidth={2}
-                  className="hover:stroke-primary/50" />
+                <rect x={b.x} y={b.y} width={240} height={100} rx={2}
+                  fill="transparent"
+                  stroke={isDragging ? 'hsl(var(--primary))' : 'transparent'}
+                  strokeWidth={1}
+                  className="hover:stroke-primary/60 transition-colors" />
               </g>
             );
           }
@@ -465,10 +468,11 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                     <QRCodeSVG value={payload} size={side} level="M" includeMargin={false} />
                   </div>
                 </foreignObject>
-                <rect x={b.x - 2} y={b.y - 2} width={side + 4} height={side + 4}
-                  fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                  strokeDasharray="4 3" strokeWidth={2}
-                  className="hover:stroke-primary/50" />
+                <rect x={b.x} y={b.y} width={side} height={side} rx={2}
+                  fill="transparent"
+                  stroke={isDragging ? 'hsl(var(--primary))' : 'transparent'}
+                  strokeWidth={1}
+                  className="hover:stroke-primary/60 transition-colors" />
               </g>
             );
           }
@@ -485,10 +489,11 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                     fill="none" stroke="#111" strokeWidth={t}
                     strokeDasharray={dash}
                   />
-                  <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h + 4}
-                    fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                    strokeDasharray="4 3" strokeWidth={2}
-                    className="hover:stroke-primary/50" />
+                  <rect x={b.x} y={b.y} width={w} height={h} rx={2}
+                    fill="transparent"
+                    stroke={isDragging ? 'hsl(var(--primary))' : 'transparent'}
+                    strokeWidth={1}
+                    className="hover:stroke-primary/60 transition-colors" />
                 </g>
                 {renderResizeHandle(b.x + w, b.y + h, b)}
               </g>
