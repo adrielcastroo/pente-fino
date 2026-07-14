@@ -894,7 +894,7 @@ function BwipCode({ kind, value }: { kind: 'datamatrix' | 'azteccode'; value: st
   useEffect(() => {
     if (!ref.current || !value) return;
     try {
-      bwipjs.toCanvas(ref.current, { bcid: kind, text: value, scale: 4, includetext: false, padding: 0 });
+      bwipjs.toCanvas(ref.current, { bcid: kind, text: value, scale: 4, includetext: false });
     } catch { /* ignore */ }
   }, [kind, value]);
   if (!value) return <EmptyBox label={kind === 'datamatrix' ? 'DataMatrix' : 'Aztec'} />;
