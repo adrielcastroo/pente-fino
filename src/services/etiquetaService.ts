@@ -100,12 +100,12 @@ export const etiquetaService = {
     const payload = {
       nome: input.nome,
       categoria: input.categoria,
-      dimensoes: input.dimensoes,
+      dimensoes: input.dimensoes as unknown as Record<string, number>,
       zpl: input.zpl,
-      variaveis: input.variaveis,
+      variaveis: input.variaveis as unknown as Record<string, unknown>[],
       criado_por: userRes.user?.id ?? null,
     };
-    const { data, error } = await supabase.from('etiqueta_templates').insert(payload).select().single();
+    const { data, error } = await supabase.from('etiqueta_templates').insert(payload as never).select().single();
     if (error) throw new ServiceError('CREATE_FAILED', error.message);
     return mapTemplate(data as DbTemplateRow);
   },
