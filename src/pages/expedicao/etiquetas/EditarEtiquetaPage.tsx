@@ -26,7 +26,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAtualizarTemplate, useEtiqueta } from '@/hooks/useEtiquetas';
 import { AutoCompleteZPL } from '@/components/etiquetas/AutoCompleteZPL';
 import { LiveZPLPreview } from '@/components/etiquetas/LiveZPLPreview';
-import { InteractiveZPLEditor } from '@/components/etiquetas/InteractiveZPLEditor';
+import { InteractiveZPLEditor, appendZplBlock, createNewBlock } from '@/components/etiquetas/InteractiveZPLEditor';
 import {
   PRESETS_TAMANHO,
   VARIAVEIS_INTELIGENTES,
