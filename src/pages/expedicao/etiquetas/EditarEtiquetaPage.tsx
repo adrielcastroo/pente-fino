@@ -498,6 +498,9 @@ export default function EditarEtiquetaPage() {
           >
             <div className="shrink-0 border-b border-border/60 bg-card/50 backdrop-blur px-3 py-2 flex items-center gap-2">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
+                <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
+                  <MousePointer2 className="h-3.5 w-3.5" /> Interativo
+                </PreviewToggleBtn>
                 <PreviewToggleBtn active={previewMode === 'visual'} onClick={() => setPreviewMode('visual')}>
                   <Eye className="h-3.5 w-3.5" /> Visual
                 </PreviewToggleBtn>
@@ -513,23 +516,35 @@ export default function EditarEtiquetaPage() {
             </div>
 
             <div className="flex-1 min-h-0 overflow-auto p-4 flex items-start justify-center">
-              {previewMode === 'visual' ? (
-                <div
-                  className="bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[320px]"
-                  style={{ aspectRatio: `${largura} / ${altura}` }}
-                >
-                  <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
-                </div>
-              ) : (
+              {previewMode === 'zpl' ? (
                 <pre className="w-full text-[11px] font-mono leading-relaxed p-3 rounded-md border border-border/60 bg-background overflow-auto whitespace-pre-wrap break-all text-foreground/90 select-all">
                   {zpl || '// Layout ZPL vazio'}
                 </pre>
+              ) : (
+                <div
+                  className="bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[360px]"
+                  style={{ aspectRatio: `${largura} / ${altura}` }}
+                >
+                  {previewMode === 'interativo' ? (
+                    <InteractiveZPLEditor
+                      zpl={zpl}
+                      onChange={setZpl}
+                      valores={valoresExemplo}
+                      dimensoes={{ largura, altura }}
+                      variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                    />
+                  ) : (
+                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
+                  )}
+                </div>
               )}
             </div>
 
             <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5">
               <Package className="h-3 w-3" />
-              Preview atualiza em tempo real com valores de exemplo.
+              {previewMode === 'interativo'
+                ? 'Arraste para mover · duplo-clique para editar variáveis, fonte e negativo.'
+                : 'Preview atualiza em tempo real com valores de exemplo.'}
             </div>
           </aside>
 
