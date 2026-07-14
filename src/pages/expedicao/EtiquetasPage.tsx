@@ -345,32 +345,45 @@ export default function ExpedicaoEtiquetasPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col gap-3 print:hidden sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2 flex-wrap">
-            <Tag className="size-5 text-primary" /> Etiquetas de Expedição
-            <Badge variant="secondary" className="font-mono text-[11px]">{state.widthMm}×{state.heightMm} mm</Badge>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1 truncate">
-            Editor livre com réguas, variáveis dinâmicas e zoom por scroll do mouse.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="default" size="sm" className="gap-1.5" onClick={() => setXmlOpen(true)}>
-            <FileText className="size-4" /> Importar XML
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryOpen(true)}>
-            <History className="size-4" /> Histórico
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={reset} title="Limpar etiqueta">
-            <RotateCcw className="size-4" />
-          </Button>
-          <Button onClick={handlePrint} size="sm" className="gap-1.5">
-            <Printer className="size-4" /> Imprimir
-          </Button>
+      {/* Header — cartão premium com hierarquia clara e CTA destacado */}
+      <div className="print:hidden rounded-xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 shadow-sm">
+        <div className="flex flex-col gap-3 p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex items-start gap-3">
+            <div className="hidden sm:flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+              <Tag className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">Etiquetas de Expedição</h1>
+                <Badge variant="secondary" className="font-mono text-[11px] gap-1">
+                  <RulerIcon className="size-3" /> {state.widthMm}×{state.heightMm} mm
+                </Badge>
+                <Badge variant="outline" className="font-mono text-[10px] gap-1 text-muted-foreground">
+                  <Layers className="size-3" /> {state.elements.length} elem.
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Editor visual com réguas, variáveis dinâmicas e snap inteligente — estilo Canva/BarTender.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryOpen(true)}>
+              <History className="size-4" /> Histórico
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={reset} title="Limpar etiqueta">
+              <RotateCcw className="size-4" /> <span className="hidden sm:inline">Reiniciar</span>
+            </Button>
+            <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setXmlOpen(true)}>
+              <FileText className="size-4" /> Importar XML
+            </Button>
+            <Button onClick={handlePrint} size="sm" className="gap-1.5 shadow-sm">
+              <Printer className="size-4" /> Imprimir
+            </Button>
+          </div>
         </div>
       </div>
+
 
       {/* Req #6: layout sem scroll vertical — grade ocupa altura restante da viewport */}
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0 lg:h-[calc(100vh-160px)] lg:overflow-hidden">
