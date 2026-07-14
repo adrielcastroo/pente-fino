@@ -1032,9 +1032,6 @@ function BarcodeSvg({ value, fmt }: { value: string; fmt: BarcodeFmt }) {
   }, [value, fmt]);
   return <svg ref={ref} className="w-full h-full bg-white" preserveAspectRatio="none" />;
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _keepEmpty(_: string) { return _; }
-function _oldBarcodeReturn() { return null;
 
 function BwipCode({ kind, value }: { kind: 'datamatrix' | 'azteccode'; value: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
