@@ -346,15 +346,7 @@ export default function EditarEtiquetaPage() {
                       </Select>
                     </FormField>
 
-                  </AccordionContent>
-                </AccordionItem>
-
-                {/* placeholder removido — edição do ZPL agora é feita no preview interativo */}
-                {false && (
-                <AccordionItem value="__removed__">
-                  <AccordionContent />
-                </AccordionItem>
-                )}
+                    {/* Editor ZPL textual removido — edição via preview interativo. */}
                   </AccordionContent>
                 </AccordionItem>
 
