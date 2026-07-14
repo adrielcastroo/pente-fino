@@ -346,17 +346,15 @@ export default function EditarEtiquetaPage() {
                       </Select>
                     </FormField>
 
-                    <FormField
-                      id="zpl-editor"
-                      label="Layout ZPL"
-                      hint={
-                        <>
-                          Digite <code className="font-mono text-primary bg-primary/10 px-1 rounded">{'{{'}</code> para inserir variáveis.
-                        </>
-                      }
-                    >
-                      <AutoCompleteZPL value={zpl} onChange={setZpl} rows={14} />
-                    </FormField>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* placeholder removido — edição do ZPL agora é feita no preview interativo */}
+                {false && (
+                <AccordionItem value="__removed__">
+                  <AccordionContent />
+                </AccordionItem>
+                )}
                   </AccordionContent>
                 </AccordionItem>
 
