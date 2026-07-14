@@ -1,17 +1,18 @@
 /**
  * InteractiveZPLEditor — preview interativo do ZPL.
- * - Arraste elementos: reescreve ^FO x,y no ZPL fonte.
- * - Snap-to-grid: guias de alinhamento (centro horizontal/vertical do label
- *   e alinhamento com outros elementos) — travam ao passar próximo.
- * - Duplo-clique em texto/QR/código: abre dialog para editar conteúdo,
- *   atribuir variável, mudar tamanho e negativo (^FR).
+ * - Arraste elementos: reescreve ^FO x,y no ZPL.
+ * - Redimensione LOGO e SHAPES (retângulo/linha/box) pelo handle no canto.
+ * - Duplo-clique: abre o dialog. Para shapes, permite ajustar w/h/thickness/estilo.
+ * - Estilo do shape (solid/dashed/dotted) é codificado como comentário `^FX-S:xxx-`
+ *   dentro do bloco (não afeta impressão — ZPL trata como comentário).
+ * - Snap-to-grid com guias de alinhamento.
  * - QR real via qrcode.react.
- * - Suporte a logo: quando o bloco de texto tem `fd = {{logo}}` (ou contém apenas
- *   o marcador logo) e um `logoUrl` é fornecido, renderiza como <image>.
  */
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ElementEditDialog, type ElementEditValues } from './ElementEditDialog';
+
+export type ShapeStyle = 'solid' | 'dashed' | 'dotted';
 
 export interface ParsedBlock {
   index: number;
@@ -23,9 +24,12 @@ export interface ParsedBlock {
   size: number;
   reverse: boolean;
   fd: string;
-  tipo: 'text' | 'barcode' | 'qr' | 'box';
+  tipo: 'text' | 'barcode' | 'qr' | 'box' | 'line';
   width?: number;
   height?: number;
+  thickness?: number;
+  /** solid | dashed | dotted (aplica-se a box/line no preview). */
+  style?: ShapeStyle;
   /** Magnificação do QR (^BQN,2,N). */
   qrMag?: number;
 }
@@ -50,9 +54,12 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
     const reverse = /\^FR(?![A-Z])/.test(inner);
     const fdMatch = inner.match(/\^FD([\s\S]*?)$/);
     const fd = fdMatch ? fdMatch[1] : '';
+    const styleMatch = inner.match(/\^FX-S:(\w+)-/);
+    const style = (styleMatch ? styleMatch[1] : 'solid') as ShapeStyle;
     let tipo: ParsedBlock['tipo'] = 'text';
     let width: number | undefined;
     let height: number | undefined;
+    let thickness: number | undefined;
     let qrMag: number | undefined;
     if (/\^BC/.test(inner)) tipo = 'barcode';
     else if (/\^BQ/.test(inner)) {
@@ -60,11 +67,15 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
       const bq = inner.match(/\^BQN,\d+,(\d+)/);
       qrMag = bq ? parseInt(bq[1], 10) : 4;
     } else if (/\^GB/.test(inner)) {
-      tipo = 'box';
       const gb = inner.match(/\^GB(\d+),(\d+),(\d+)/);
-      if (gb) { width = parseInt(gb[1], 10); height = parseInt(gb[2], 10); }
+      if (gb) {
+        width = parseInt(gb[1], 10);
+        height = parseInt(gb[2], 10);
+        thickness = parseInt(gb[3], 10);
+      }
+      tipo = (width === 1 || height === 1) ? 'line' : 'box';
     }
-    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, qrMag });
+    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag });
   }
   return out;
 }
@@ -79,6 +90,21 @@ function rewriteBlockCoords(block: ParsedBlock, nx: number, ny: number): string 
 
 function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues): string {
   let raw = block.raw;
+
+  // SHAPE (box/line): atualiza ^GB w,h,t e marcador de estilo ^FX-S:xxx-
+  if (block.tipo === 'box' || block.tipo === 'line') {
+    const w = Math.max(1, edit.width ?? block.width ?? 100);
+    const h = Math.max(1, edit.height ?? block.height ?? 100);
+    const t = Math.max(1, edit.thickness ?? block.thickness ?? 2);
+    raw = raw.replace(/\^GB\d+,\d+,\d+/, `^GB${w},${h},${t}`);
+    // remove marcador antigo
+    raw = raw.replace(/\^FX-S:\w+-/, '');
+    // insere novo antes de ^FS
+    raw = raw.replace(/\^FS$/, `^FX-S:${edit.style ?? 'solid'}-^FS`);
+    return raw;
+  }
+
+  // TEXT (inclui logo, que também é bloco de texto)
   if (block.tipo === 'text') {
     if (/\^A0N,\d+,\d+/.test(raw)) {
       raw = raw.replace(/\^A0N,\d+,\d+/, `^A0N,${edit.size},${edit.size}`);
@@ -101,18 +127,39 @@ function isLogoBlock(b: ParsedBlock): boolean {
   return b.tipo === 'text' && /\{\{\s*logo\s*\}\}/i.test(b.fd);
 }
 
+function logoDims(b: ParsedBlock): { w: number; h: number } {
+  const h = b.size * 1.6;
+  const w = h * 2.5;
+  return { w, h };
+}
+
 /** Estimated element bounding box in dots (para snap contra outros elementos). */
 function bbox(b: ParsedBlock, logoUrl?: string): { w: number; h: number } {
   if (b.tipo === 'qr') {
-    const s = (b.qrMag ?? 4) * 8; // approx module count × mag
+    const s = (b.qrMag ?? 4) * 8;
     const side = Math.max(60, s * 4);
     return { w: side, h: side };
   }
   if (b.tipo === 'barcode') return { w: 240, h: 100 };
-  if (b.tipo === 'box') return { w: b.width ?? 40, h: b.height ?? 40 };
-  if (isLogoBlock(b) && logoUrl) return { w: b.size * 3, h: b.size * 1.6 };
+  if (b.tipo === 'box' || b.tipo === 'line') return { w: b.width ?? 40, h: b.height ?? 40 };
+  if (isLogoBlock(b) && logoUrl) return logoDims(b);
   const chars = Math.max(1, b.fd.length);
   return { w: Math.max(20, chars * b.size * 0.55), h: b.size + 6 };
+}
+
+function updateA0Size(raw: string, size: number): string {
+  if (/\^A0N,\d+,\d+/.test(raw)) return raw.replace(/\^A0N,\d+,\d+/, `^A0N,${size},${size}`);
+  return raw.replace(/\^FD/, `^A0N,${size},${size}^FD`);
+}
+
+function updateGBDims(raw: string, w: number, h: number): string {
+  return raw.replace(/\^GB\d+,\d+,(\d+)/, `^GB${Math.max(1, Math.round(w))},${Math.max(1, Math.round(h))},$1`);
+}
+
+function strokeDashFor(style?: ShapeStyle): string | undefined {
+  if (style === 'dashed') return '8 4';
+  if (style === 'dotted') return '2 3';
+  return undefined;
 }
 
 interface Props {
@@ -129,6 +176,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<null | { idx: number; offX: number; offY: number }>(null);
+  const [resizing, setResizing] = useState<null | { idx: number }>(null);
   const [guides, setGuides] = useState<{ vx?: number; vy?: number; hx?: number; hy?: number }>({});
   const [editing, setEditing] = useState<ParsedBlock | null>(null);
 
@@ -159,6 +207,12 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     setDragging({ idx: b.index, offX: p.x - b.x, offY: p.y - b.y });
   };
 
+  const onResizeDown = (e: React.PointerEvent, b: ParsedBlock) => {
+    e.stopPropagation();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    setResizing({ idx: b.index });
+  };
+
   const computeSnap = (b: ParsedBlock, nx: number, ny: number) => {
     const { w, h } = bbox(b, logoUrl);
     const cx = nx + w / 2;
@@ -167,17 +221,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     let snapY = ny;
     const g: typeof guides = {};
 
-    // Snap horizontal ao centro do label
-    if (Math.abs(cx - viewW / 2) < SNAP_THRESHOLD) {
-      snapX = viewW / 2 - w / 2;
-      g.vx = viewW / 2;
-    }
-    // Snap vertical ao centro do label
-    if (Math.abs(cy - viewH / 2) < SNAP_THRESHOLD) {
-      snapY = viewH / 2 - h / 2;
-      g.hy = viewH / 2;
-    }
-    // Alinhamento com outros blocos (x, centro-x, y, centro-y)
+    if (Math.abs(cx - viewW / 2) < SNAP_THRESHOLD) { snapX = viewW / 2 - w / 2; g.vx = viewW / 2; }
+    if (Math.abs(cy - viewH / 2) < SNAP_THRESHOLD) { snapY = viewH / 2 - h / 2; g.hy = viewH / 2; }
     for (const other of blocks) {
       if (other.index === b.index) continue;
       const ob = bbox(other, logoUrl);
@@ -192,46 +237,70 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    const p = svgPoint(e.clientX, e.clientY);
+    if (resizing) {
+      const b = blocks[resizing.idx];
+      if (!b) return;
+      if (isLogoBlock(b)) {
+        // altura visual = size*1.6 → resize por Y
+        const newH = Math.max(12, p.y - b.y);
+        const newSize = Math.max(8, Math.round(newH / 1.6));
+        onChange(replaceBlock(zpl, b, updateA0Size(b.raw, newSize)));
+        return;
+      }
+      if (b.tipo === 'box' || b.tipo === 'line') {
+        const newW = Math.max(1, p.x - b.x);
+        const newH = Math.max(1, p.y - b.y);
+        onChange(replaceBlock(zpl, b, updateGBDims(b.raw, newW, newH)));
+        return;
+      }
+      return;
+    }
     if (!dragging) return;
     const b = blocks[dragging.idx];
     if (!b) return;
-    const p = svgPoint(e.clientX, e.clientY);
     const rawX = p.x - dragging.offX;
     const rawY = p.y - dragging.offY;
     const { snapX, snapY, g } = computeSnap(b, rawX, rawY);
     setGuides(g);
     if (Math.round(snapX) === b.x && Math.round(snapY) === b.y) return;
-    const newRaw = rewriteBlockCoords(b, snapX, snapY);
-    onChange(replaceBlock(zpl, b, newRaw));
+    onChange(replaceBlock(zpl, b, rewriteBlockCoords(b, snapX, snapY)));
   };
 
   const onPointerUp = () => {
     setDragging(null);
+    setResizing(null);
     setGuides({});
   };
 
   const onDoubleClickBlock = (b: ParsedBlock) => {
-    if (b.tipo === 'box') return;
     setEditing(b);
   };
 
   const applyEdit = (edit: ElementEditValues) => {
     if (!editing) return;
     const current = parseBlocks(zpl).find((x) => x.sourceStart === editing.sourceStart) ?? editing;
-    const newRaw = applyEditToBlock(current, edit);
-    onChange(replaceBlock(zpl, current, newRaw));
+    onChange(replaceBlock(zpl, current, applyEditToBlock(current, edit)));
     setEditing(null);
   };
 
   const deleteEditing = () => {
     if (!editing) return;
     const current = parseBlocks(zpl).find((x) => x.sourceStart === editing.sourceStart) ?? editing;
-    // remove bloco inteiro + linha em branco eventual
     const before = zpl.slice(0, current.sourceStart).replace(/\n\s*$/, '\n');
     const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
     onChange(before + after);
     setEditing(null);
   };
+
+  const renderResizeHandle = (x: number, y: number, b: ParsedBlock) => (
+    <rect
+      x={x - 5} y={y - 5} width={10} height={10}
+      fill="#3B82F6" stroke="#fff" strokeWidth={1.5}
+      style={{ cursor: 'nwse-resize' }}
+      onPointerDown={(e) => onResizeDown(e, b)}
+    />
+  );
 
   return (
     <>
@@ -248,7 +317,6 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
       >
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
 
-        {/* Guias de centro (sempre visíveis, sutis) */}
         <line x1={viewW / 2} y1={0} x2={viewW / 2} y2={viewH} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
         <line x1={0} y1={viewH / 2} x2={viewW} y2={viewH / 2} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
 
@@ -260,26 +328,27 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             style: { cursor: 'grab' as const },
           };
 
-          // LOGO: bloco de texto contendo {{logo}} vira imagem quando logoUrl existe
           if (isLogoBlock(b)) {
-            const h = b.size * 1.6;
-            const w = h * 2.5;
+            const { w, h } = logoDims(b);
             return (
-              <g key={b.index} {...commonHandlers}>
-                {logoUrl ? (
-                  <image href={logoUrl} x={b.x} y={b.y} height={h} preserveAspectRatio="xMidYMid meet" />
-                ) : (
-                  <>
-                    <rect x={b.x} y={b.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
-                    <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily="monospace" fill="#6b7280" textAnchor="middle" pointerEvents="none">
-                      LOGO
-                    </text>
-                  </>
-                )}
-                <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h + 4}
-                  fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
-                  strokeDasharray="4 3" strokeWidth={2}
-                  className="hover:stroke-primary/50" />
+              <g key={b.index}>
+                <g {...commonHandlers}>
+                  {logoUrl ? (
+                    <image href={logoUrl} x={b.x} y={b.y} height={h} width={w} preserveAspectRatio="xMidYMid meet" />
+                  ) : (
+                    <>
+                      <rect x={b.x} y={b.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
+                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily="monospace" fill="#6b7280" textAnchor="middle" pointerEvents="none">
+                        LOGO
+                      </text>
+                    </>
+                  )}
+                  <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h + 4}
+                    fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
+                    strokeDasharray="4 3" strokeWidth={2}
+                    className="hover:stroke-primary/50" />
+                </g>
+                {renderResizeHandle(b.x + w, b.y + h, b)}
               </g>
             );
           }
@@ -338,22 +407,35 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
               </g>
             );
           }
-          if (b.tipo === 'box') {
+          if (b.tipo === 'box' || b.tipo === 'line') {
+            const w = b.width ?? 0;
+            const h = b.height ?? 0;
+            const t = Math.max(1, b.thickness ?? 2);
+            const dash = strokeDashFor(b.style);
             return (
-              <g key={b.index} {...commonHandlers}>
-                <rect x={b.x} y={b.y} width={b.width ?? 0} height={b.height ?? 0}
-                  fill="none" stroke="#111" strokeWidth={2} />
+              <g key={b.index}>
+                <g {...commonHandlers}>
+                  <rect
+                    x={b.x} y={b.y} width={w} height={h}
+                    fill="none" stroke="#111" strokeWidth={t}
+                    strokeDasharray={dash}
+                  />
+                  <rect x={b.x - 2} y={b.y - 2} width={w + 4} height={h + 4}
+                    fill="transparent" stroke={isDragging ? '#3B82F6' : 'transparent'}
+                    strokeDasharray="4 3" strokeWidth={2}
+                    className="hover:stroke-primary/50" />
+                </g>
+                {renderResizeHandle(b.x + w, b.y + h, b)}
               </g>
             );
           }
           return null;
         })}
 
-        {/* Guias de snap ativas — cyan enquanto arrastando */}
-        {dragging && guides.vx !== undefined && (
+        {(dragging || resizing) && guides.vx !== undefined && (
           <line x1={guides.vx} y1={0} x2={guides.vx} y2={viewH} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
-        {dragging && guides.hy !== undefined && (
+        {(dragging || resizing) && guides.hy !== undefined && (
           <line x1={0} y1={guides.hy} x2={viewW} y2={guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
       </svg>
@@ -377,13 +459,19 @@ export function appendZplBlock(zpl: string, block: string): string {
   return zpl.slice(0, idx) + block + '\n' + zpl.slice(idx);
 }
 
-/** Cria um novo bloco de acordo com o tipo pedido — inserido no centro da etiqueta. */
-export function createNewBlock(tipo: 'text' | 'qr' | 'barcode' | 'logo', dims: { largura: number; altura: number }): string {
+export type NewBlockKind = 'text' | 'qr' | 'barcode' | 'logo' | 'line-h' | 'line-v' | 'rect' | 'box-filled';
+
+/** Cria um novo bloco de acordo com o tipo — inserido próximo do centro da etiqueta. */
+export function createNewBlock(tipo: NewBlockKind, dims: { largura: number; altura: number }): string {
   const cx = Math.round((dims.largura * 8) / 2);
   const cy = Math.round((dims.altura * 8) / 2);
   if (tipo === 'text') return `^FO${cx - 40},${cy}^A0N,28,28^FDNovo texto^FS`;
   if (tipo === 'qr') return `^FO${cx - 60},${cy - 60}^BQN,2,4^FDLA,QR^FS`;
   if (tipo === 'barcode') return `^FO${cx - 100},${cy}^BCN,80,Y,N,N^FD123456^FS`;
-  return `^FO${cx - 60},${cy - 20}^A0N,36,36^FD{{logo}}^FS`;
+  if (tipo === 'logo') return `^FO${cx - 60},${cy - 20}^A0N,36,36^FD{{logo}}^FS`;
+  if (tipo === 'line-h') return `^FO${cx - 100},${cy}^GB200,1,2^FS`;
+  if (tipo === 'line-v') return `^FO${cx},${cy - 60}^GB1,120,2^FS`;
+  if (tipo === 'rect') return `^FO${cx - 60},${cy - 40}^GB120,80,2^FS`;
+  return `^FO${cx - 60},${cy - 40}^GB120,80,80^FS`; // box-filled: thickness == height
 }
 InteractiveZPLEditor.displayName = 'InteractiveZPLEditor';

@@ -12,6 +12,7 @@ import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
   AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
   Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
+  Minus, Square, SquareDashed, FlaskConical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,9 +98,13 @@ export default function EditarEtiquetaPage() {
     if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
   };
 
-  const addElement = (tipo: 'text' | 'qr' | 'barcode') => {
+  const addElement = (tipo: 'text' | 'qr' | 'barcode' | 'line-h' | 'line-v' | 'rect' | 'box-filled') => {
     setZpl((prev) => appendZplBlock(prev, createNewBlock(tipo, { largura, altura })));
   };
+
+  // Overrides do preview — usuário injeta valores fictícios para testar tamanhos.
+  const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
+  const [showPreviewValues, setShowPreviewValues] = useState(false);
 
   useEffect(() => {
     if (!template) return;
@@ -189,7 +194,7 @@ export default function EditarEtiquetaPage() {
     setAltura(p.altura);
   };
 
-  // valores de exemplo para o preview vivo
+  // valores de exemplo para o preview vivo (overrides do usuário têm precedência)
   const valoresExemplo = useMemo(() => {
     const v: Record<string, string> = {};
     variaveis.forEach((x) => {
@@ -197,8 +202,8 @@ export default function EditarEtiquetaPage() {
       else if (x.tipo === 'date') v[x.chave] = new Date().toLocaleDateString('pt-BR');
       else v[x.chave] = x.label;
     });
-    return v;
-  }, [variaveis]);
+    return { ...v, ...previewOverrides };
+  }, [variaveis, previewOverrides]);
 
   // variáveis referenciadas no ZPL mas não definidas
   const referenced = useMemo(() => extractReferencedVars(zpl), [zpl]);
@@ -585,13 +590,62 @@ export default function EditarEtiquetaPage() {
                     <Tooltip><TooltipTrigger asChild>
                       <button onClick={() => addElement('barcode')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar código de barras"><Barcode className="h-3 w-3" /></button>
                     </TooltipTrigger><TooltipContent>Adicionar código de barras</TooltipContent></Tooltip>
+                    <div className="w-px bg-border/60 self-stretch" />
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('line-h')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar linha horizontal"><Minus className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Linha horizontal</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('line-v')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar linha vertical"><Minus className="h-3 w-3 rotate-90" /></button>
+                    </TooltipTrigger><TooltipContent>Linha vertical</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('rect')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar retângulo"><SquareDashed className="h-3 w-3" /></button>
+                    </TooltipTrigger><TooltipContent>Retângulo</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button onClick={() => addElement('box-filled')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar box preenchido"><Square className="h-3 w-3 fill-current" /></button>
+                    </TooltipTrigger><TooltipContent>Box preenchido</TooltipContent></Tooltip>
                   </div>
                 )}
+                <Tooltip><TooltipTrigger asChild>
+                  <button
+                    onClick={() => setShowPreviewValues((v) => !v)}
+                    className={cn(
+                      'inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-md border border-border/60',
+                      showPreviewValues ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-muted-foreground hover:text-foreground',
+                    )}
+                    aria-label="Valores de teste"
+                  >
+                    <FlaskConical className="h-3 w-3" />
+                  </button>
+                </TooltipTrigger><TooltipContent>Valores fictícios para preview</TooltipContent></Tooltip>
                 <Badge variant="outline" className="font-mono text-[10px] h-5 gap-1">
                   <Ruler className="h-2.5 w-2.5" /> {largura}×{altura}mm
                 </Badge>
               </div>
             </div>
+
+            {showPreviewValues && (
+              <div className="shrink-0 border-b border-border/60 bg-background/60 px-3 py-2 space-y-1.5 max-h-40 overflow-auto">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Valores de teste (só preview)</span>
+                  {Object.keys(previewOverrides).length > 0 && (
+                    <button onClick={() => setPreviewOverrides({})} className="text-[10px] text-muted-foreground hover:text-destructive">Limpar</button>
+                  )}
+                </div>
+                {variaveis.length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground">Defina variáveis para testá-las aqui.</p>
+                ) : variaveis.map((v) => (
+                  <div key={v.chave} className="grid grid-cols-[110px_1fr] gap-2 items-center">
+                    <span className="font-mono text-[10px] text-muted-foreground truncate" title={v.label}>{`{{${v.chave}}}`}</span>
+                    <Input
+                      value={previewOverrides[v.chave] ?? ''}
+                      onChange={(e) => setPreviewOverrides((prev) => ({ ...prev, [v.chave]: e.target.value }))}
+                      placeholder={v.label}
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex-1 min-h-0 overflow-auto p-4 flex items-start justify-center">
               {previewMode === 'zpl' ? (
