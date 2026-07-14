@@ -59,9 +59,11 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
     const fd = fdMatch ? fdMatch[1] : '';
     const styleMatch = inner.match(/\^FX-S:(\w+)-/);
     const style = (styleMatch ? styleMatch[1] : 'solid') as ShapeStyle;
-    const fbMatch = inner.match(/\^FB(\d+),\d+,\d+,([LCRJ])/);
-    const align: TextAlign = fbMatch ? (fbMatch[2] === 'J' ? 'L' : (fbMatch[2] as TextAlign)) : 'L';
+    const fbMatch = inner.match(/\^FB(\d+),(\d+),(-?\d+),([LCRJ])/);
+    const align: TextAlign = fbMatch ? (fbMatch[4] === 'J' ? 'L' : (fbMatch[4] as TextAlign)) : 'L';
     const fbWidth = fbMatch ? parseInt(fbMatch[1], 10) : undefined;
+    const fbMaxLines = fbMatch ? parseInt(fbMatch[2], 10) : undefined;
+    const fbSpacing = fbMatch ? parseInt(fbMatch[3], 10) : undefined;
     let tipo: ParsedBlock['tipo'] = 'text';
     let width: number | undefined;
     let height: number | undefined;
