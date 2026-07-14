@@ -580,7 +580,7 @@ function LabelCanvas({
       ref={canvasRef}
       className="label-sheet bg-white text-black shadow-md relative overflow-hidden"
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontFamily: 'system-ui, sans-serif' }}
-      onClick={() => editable && onSelect(null)}
+      onPointerDown={(e) => { if (editable && e.target === e.currentTarget) onSelect(null); }}
     >
       {elements.map((el) => (
         <ElementView
