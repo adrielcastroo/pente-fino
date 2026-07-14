@@ -23,7 +23,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
+
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -53,6 +53,7 @@ interface LabelElement {
   text?: string;
   fontSize?: number;
   fontFamily?: string;
+  fontColor?: string;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
@@ -175,6 +176,7 @@ export default function ExpedicaoEtiquetasPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState<number>(0); // 0 = auto-fit
   const [presets, setPresets] = useState<SavedPreset[]>(() => loadPresets());
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleSavePreset = () => {
     const name = prompt('Nome do preset:', `Preset ${presets.length + 1}`);
@@ -221,7 +223,7 @@ export default function ExpedicaoEtiquetasPage() {
   const addElement = useCallback((type: ElementType) => {
     const base: LabelElement = (() => {
       switch (type) {
-        case 'text': return { id: uid(), type, x: 5, y: 5, w: 60, h: 8, text: 'Novo texto', fontSize: 12, align: 'left', fontFamily: FONT_FAMILIES[0].value };
+        case 'text': return { id: uid(), type, x: 5, y: 5, w: 60, h: 8, text: 'Novo texto', fontSize: 12, align: 'left', fontFamily: FONT_FAMILIES[0].value, fontColor: '#000000' };
         case 'qr': return { id: uid(), type, x: 5, y: 5, w: 30, h: 30, payload: '{{codigo}}' };
         case 'datamatrix': return { id: uid(), type, x: 5, y: 5, w: 25, h: 25, payload: '{{codigo}}' };
         case 'aztec': return { id: uid(), type, x: 5, y: 5, w: 25, h: 25, payload: '{{codigo}}' };
@@ -233,7 +235,66 @@ export default function ExpedicaoEtiquetasPage() {
     })();
     setState((s) => ({ ...s, elements: [...s.elements, base] }));
     setSelectedId(base.id);
+    return base.id;
   }, []);
+
+  // Requisito #4: adicionar imagem = sempre upload do usuário. O botão dispara file picker
+  // imediatamente; só cria o elemento após a imagem ser carregada com sucesso.
+  const triggerImageUpload = useCallback(() => {
+    imageInputRef.current?.click();
+  }, []);
+  const onImageUploadFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = ''; // permite escolher a mesma imagem depois
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande (máx 2 MB).'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = String(reader.result || '');
+      const id = uid();
+      // proporção aproximada baseada na imagem para ficar bonita já no add
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 40; // mm
+        const ratio = img.height / img.width || 0.6;
+        const w = Math.min(maxW, 40);
+        const h = +(w * ratio).toFixed(1);
+        setState((s) => ({ ...s, elements: [...s.elements, { id, type: 'image', x: 5, y: 5, w, h, imageSrc: src, borderRadius: 0 }] }));
+        setSelectedId(id);
+      };
+      img.onerror = () => {
+        setState((s) => ({ ...s, elements: [...s.elements, { id, type: 'image', x: 5, y: 5, w: 30, h: 20, imageSrc: src, borderRadius: 0 }] }));
+        setSelectedId(id);
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(f);
+  }, []);
+
+  // Requisito #7: atalhos no preview — Del/Backspace remove, Ctrl/Cmd+B alterna negrito.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (typing) return;
+      if (!selectedId) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        removeElement(selectedId);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setState((s) => {
+          const el = s.elements.find((x) => x.id === selectedId);
+          if (!el || el.type !== 'text') return s;
+          return { ...s, elements: s.elements.map((x) => x.id === selectedId ? { ...x, bold: !x.bold } : x) };
+        });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId, removeElement]);
+
 
   function applyXmlPatch(input: EtiquetaXmlPatch & { pageSize: LabelSizeKey; copies: number }) {
     setState((s) => {
@@ -310,8 +371,10 @@ export default function ExpedicaoEtiquetasPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0">
-        {/* Painel de configuração */}
+      {/* Req #6: layout sem scroll vertical — grade ocupa altura restante da viewport */}
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0 lg:h-[calc(100vh-160px)] lg:overflow-hidden">
+        {/* Painel de configuração (rola internamente para não empurrar o preview) */}
+        <div className="lg:h-full lg:overflow-y-auto lg:pr-1">
         <Card className="print:hidden">
           <CardContent className="p-4 space-y-4">
             {/* Tamanho */}
@@ -344,44 +407,57 @@ export default function ExpedicaoEtiquetasPage() {
               )}
             </div>
 
-            {/* Cópias */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-muted-foreground">Cópias</Label>
-                <span className="text-xs font-mono">{state.copias}</span>
-              </div>
-              <Slider value={[state.copias]} min={1} max={50} step={1}
-                onValueChange={(v) => patch({ copias: v[0] })} />
-            </div>
-
-            {/* Adicionar elementos */}
-            <div className="space-y-1.5">
+            {/* Adicionar elementos — agrupados por categoria (Req #3) */}
+            <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Adicionar elemento</Label>
-              <div className="grid grid-cols-2 gap-1.5">
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('text')}>
-                  <Type className="size-3.5" /> Texto
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('qr')}>
-                  <QrCode className="size-3.5" /> QR
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('datamatrix')}>
-                  <Grid3x3 className="size-3.5" /> DataMatrix
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('aztec')}>
-                  <Hexagon className="size-3.5" /> Aztec
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('barcode')}>
-                  <BarcodeIcon className="size-3.5" /> Barras
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('line')}>
-                  <Minus className="size-3.5" /> Linha
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('rect')}>
-                  <Square className="size-3.5" /> Retângulo
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('image')}>
-                  <ImageIcon className="size-3.5" /> Imagem
-                </Button>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Texto</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('text')}>
+                    <Type className="size-3.5" /> Texto
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Códigos</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('qr')}>
+                    <QrCode className="size-3.5" /> QR
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('barcode')}>
+                    <BarcodeIcon className="size-3.5" /> Barras
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('datamatrix')}>
+                    <Grid3x3 className="size-3.5" /> DataMatrix
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('aztec')}>
+                    <Hexagon className="size-3.5" /> Aztec
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Formas</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('line')}>
+                    <Minus className="size-3.5" /> Linha
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('rect')}>
+                    <Square className="size-3.5" /> Retângulo
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Mídia</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={triggerImageUpload}>
+                    <ImageIcon className="size-3.5" /> Imagem
+                  </Button>
+                </div>
+                <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
               </div>
             </div>
 
@@ -471,32 +547,29 @@ export default function ExpedicaoEtiquetasPage() {
             )}
           </CardContent>
         </Card>
+        </div>
 
-        {/* Editor Canvas */}
+        {/* Editor Canvas — sempre 1 cópia no editor (Req #8) */}
         <PreviewWorkbench
           widthMm={state.widthMm}
           heightMm={state.heightMm}
-          copias={state.copias}
           zoom={zoom}
           onZoomChange={setZoom}
           selected={selected}
         >
-          {Array.from({ length: state.copias }).map((_, i) => (
-            <LabelCanvas
-              key={i}
-              editable={i === 0}
-              widthMm={state.widthMm}
-              heightMm={state.heightMm}
-              elements={state.elements}
-              meta={state.meta}
-              selectedId={i === 0 ? selectedId : null}
-              onSelect={setSelectedId}
-              onUpdate={updateElement}
-              onRemove={removeElement}
-              onDuplicate={duplicateElement}
-              onMoveZ={moveElementZ}
-            />
-          ))}
+          <LabelCanvas
+            editable
+            widthMm={state.widthMm}
+            heightMm={state.heightMm}
+            elements={state.elements}
+            meta={state.meta}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onUpdate={updateElement}
+            onRemove={removeElement}
+            onDuplicate={duplicateElement}
+            onMoveZ={moveElementZ}
+          />
         </PreviewWorkbench>
       </div>
 
@@ -523,31 +596,39 @@ export default function ExpedicaoEtiquetasPage() {
 // Preview workbench com réguas + zoom pela roda do mouse
 // ============================================================================
 
-const RULER_SIZE = 20; // px
+const RULER_SIZE = 22; // px
 
+/**
+ * Workbench com:
+ *  - Réguas mm fixadas nas bordas superior/esquerda do preview (Req #1)
+ *  - Zoom pela roda do mouse (Ctrl/Alt = passo fino)
+ *  - Scroll horizontal com Espaço pressionado + roda do mouse (Req #9)
+ *  - Sem scroll vertical do editor: o preview ocupa a altura disponível (Req #6)
+ */
 function PreviewWorkbench({
-  widthMm, heightMm, copias, zoom, onZoomChange, selected, children,
+  widthMm, heightMm, zoom, onZoomChange, selected, children,
 }: {
-  widthMm: number; heightMm: number; copias: number; zoom: number;
+  widthMm: number; heightMm: number; zoom: number;
   onZoomChange: (v: number) => void;
   selected: LabelElement | null;
   children: React.ReactNode;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [autoFit, setAutoFit] = useState(1);
+  const [spaceDown, setSpaceDown] = useState(false);
 
-  const gapPx = 16;
   const naturalW = widthMm * MM_TO_PX;
-  const naturalH = heightMm * MM_TO_PX * Math.max(1, copias) + gapPx * Math.max(0, copias - 1);
+  const naturalH = heightMm * MM_TO_PX;
 
   useLayoutEffect(() => {
     const el = boxRef.current; if (!el) return;
     const recalc = () => {
-      const pad = 48;
+      const pad = 32;
       const availW = Math.max(0, el.clientWidth - pad - RULER_SIZE);
       const availH = Math.max(0, el.clientHeight - pad - RULER_SIZE);
       if (availW <= 0 || availH <= 0) return;
-      setAutoFit(Math.min(availW / naturalW, availH / naturalH, 1.5));
+      setAutoFit(Math.min(availW / naturalW, availH / naturalH, 1.8));
     };
     recalc();
     const ro = new ResizeObserver(recalc); ro.observe(el);
@@ -556,13 +637,33 @@ function PreviewWorkbench({
 
   const fit = zoom > 0 ? zoom : autoFit;
 
-  // Wheel zoom: sem preventDefault (React events são passivos); usamos listener nativo.
+  // Espaço pressionado → habilita "pan" com scroll horizontal (Req #9)
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        e.preventDefault();
+        setSpaceDown(true);
+      }
+    };
+    const onUp = (e: KeyboardEvent) => { if (e.code === 'Space') setSpaceDown(false); };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => { window.removeEventListener('keydown', onDown); window.removeEventListener('keyup', onUp); };
+  }, []);
+
+  // Roda: zoom (padrão) ou pan horizontal (Espaço pressionado)
   useEffect(() => {
     const el = boxRef.current; if (!el) return;
     const handler = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey && Math.abs(e.deltaY) < 4) return;
+      if (spaceDown) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+        return;
+      }
       e.preventDefault();
-      const step = e.altKey ? 0.02 : 0.08;
+      const step = e.altKey ? 0.02 : e.ctrlKey || e.metaKey ? 0.04 : 0.08;
       const dir = e.deltaY > 0 ? -1 : 1;
       const base = zoom > 0 ? zoom : autoFit;
       const next = Math.max(0.2, Math.min(4, base + dir * step));
@@ -570,22 +671,28 @@ function PreviewWorkbench({
     };
     el.addEventListener('wheel', handler, { passive: false });
     return () => el.removeEventListener('wheel', handler);
-  }, [zoom, autoFit, onZoomChange]);
+  }, [zoom, autoFit, onZoomChange, spaceDown]);
+
+  const scaledW = naturalW * fit;
+  const scaledH = naturalH * fit;
 
   return (
-    <div className="space-y-3 exp-preview-workbench">
+    <div className="space-y-2 exp-preview-workbench flex flex-col min-h-0 lg:h-full">
       <div className="flex items-baseline justify-between shrink-0 print:hidden">
         <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">Pré-visualização</Label>
         <div className="flex items-center gap-3 text-[10px] font-mono opacity-70">
           <span>{widthMm}×{heightMm}mm</span>
           <span>{Math.round(fit * 100)}%</span>
           <button className="underline hover:text-primary" onClick={() => onZoomChange(0)}>Ajustar</button>
-          <span className="opacity-60">Scroll do mouse para zoom (Ctrl = zoom fino)</span>
+          <span className="opacity-60">Scroll = zoom · Espaço + scroll = mover · Del = excluir · Ctrl+B = negrito</span>
         </div>
       </div>
       <div
         ref={boxRef}
-        className="exp-preview-box relative flex items-center justify-center p-6 rounded-lg border-2 border-dashed border-border/50 min-h-[560px] overflow-auto shadow-inner"
+        className={cn(
+          'exp-preview-box relative rounded-lg border-2 border-dashed border-border/50 overflow-auto shadow-inner flex-1 min-h-0',
+          spaceDown && 'cursor-grab',
+        )}
         style={{
           backgroundColor: 'hsl(var(--muted) / 0.55)',
           backgroundImage:
@@ -594,21 +701,41 @@ function PreviewWorkbench({
           backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
         }}
       >
+        {/* Réguas fixadas nas bordas do preview (Req #1) */}
         <div
-          className="relative"
+          className="pointer-events-none sticky top-0 left-0 z-20 print:hidden"
+          style={{ height: RULER_SIZE, width: '100%' }}
+        >
+          <div className="absolute" style={{ left: RULER_SIZE, top: 0 }}>
+            <Ruler orientation="horizontal" lengthMm={widthMm} pxPerMm={MM_TO_PX * fit}
+              highlight={selected ? { start: selected.x, end: selected.x + selected.w } : null} />
+          </div>
+          <div className="absolute" style={{ left: 0, top: 0 }}>
+            <Ruler orientation="vertical" lengthMm={heightMm} pxPerMm={MM_TO_PX * fit}
+              highlight={selected ? { start: selected.y, end: selected.y + selected.h } : null} />
+          </div>
+          {/* canto */}
+          <div className="absolute bg-background border-b border-r border-border" style={{ left: 0, top: 0, width: RULER_SIZE, height: RULER_SIZE }} />
+        </div>
+
+        <div
+          ref={stageRef}
+          className="exp-preview-stack relative"
           style={{
-            transform: `scale(${fit})`,
-            transformOrigin: 'center center',
-            paddingLeft: RULER_SIZE, paddingTop: RULER_SIZE,
+            paddingLeft: RULER_SIZE + 8,
+            paddingTop: 8,
+            paddingRight: 8,
+            paddingBottom: 8,
+            width: `max(100%, ${scaledW + RULER_SIZE + 16}px)`,
+            minHeight: `${scaledH + 16}px`,
           }}
         >
-          {/* Régua horizontal */}
-          <Ruler orientation="horizontal" lengthMm={widthMm} highlight={selected ? { start: selected.x, end: selected.x + selected.w } : null} />
-          {/* Régua vertical */}
-          <Ruler orientation="vertical" lengthMm={heightMm * Math.max(1, copias) + (gapPx / MM_TO_PX) * Math.max(0, copias - 1)} highlight={selected ? { start: selected.y, end: selected.y + selected.h } : null} />
           <div
-            className="exp-preview-stack"
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: `${gapPx}px` }}
+            style={{
+              width: naturalW, height: naturalH,
+              transform: `scale(${fit})`,
+              transformOrigin: 'top left',
+            }}
           >
             {children}
           </div>
@@ -618,20 +745,29 @@ function PreviewWorkbench({
   );
 }
 
+
 // ---------------------------------------------------------------------------
 // Régua (estilo Canva/BarTender): traços a cada mm, número a cada 10mm.
 // ---------------------------------------------------------------------------
 function Ruler({
-  orientation, lengthMm, highlight,
-}: { orientation: 'horizontal' | 'vertical'; lengthMm: number; highlight: { start: number; end: number } | null }) {
-  const lengthPx = lengthMm * MM_TO_PX;
+  orientation, lengthMm, highlight, pxPerMm,
+}: {
+  orientation: 'horizontal' | 'vertical';
+  lengthMm: number;
+  highlight: { start: number; end: number } | null;
+  pxPerMm?: number;
+}) {
+  const px = pxPerMm ?? MM_TO_PX;
+  const lengthPx = lengthMm * px;
   const isH = orientation === 'horizontal';
   const marks: JSX.Element[] = [];
+  // Espaçamento adaptativo entre rótulos conforme escala.
+  const labelStep = px < 1.2 ? 50 : px < 2.4 ? 20 : 10;
   for (let mm = 0; mm <= Math.ceil(lengthMm); mm++) {
-    const pos = mm * MM_TO_PX;
-    let height = 4;
-    if (mm % 10 === 0) height = 12;
-    else if (mm % 5 === 0) height = 8;
+    const pos = mm * px;
+    let height = 3;
+    if (mm % labelStep === 0) height = 11;
+    else if (mm % (labelStep / 2) === 0) height = 7;
     marks.push(
       <div key={mm}
         className="absolute bg-foreground/60"
@@ -640,7 +776,7 @@ function Ruler({
           : { top: pos, left: RULER_SIZE - height, height: 1, width: height }}
       />
     );
-    if (mm % 10 === 0 && mm > 0) {
+    if (mm % labelStep === 0 && mm > 0) {
       marks.push(
         <div key={`l-${mm}`}
           className="absolute text-[8px] font-mono text-foreground/70 select-none pointer-events-none"
@@ -653,8 +789,8 @@ function Ruler({
   }
 
   const style: React.CSSProperties = isH
-    ? { position: 'absolute', top: 0, left: RULER_SIZE, width: lengthPx, height: RULER_SIZE, background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))' }
-    : { position: 'absolute', top: RULER_SIZE, left: 0, height: lengthPx, width: RULER_SIZE, background: 'hsl(var(--background))', borderRight: '1px solid hsl(var(--border))' };
+    ? { position: 'relative', width: lengthPx, height: RULER_SIZE, background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))' }
+    : { position: 'relative', height: lengthPx, width: RULER_SIZE, background: 'hsl(var(--background))', borderRight: '1px solid hsl(var(--border))' };
 
   return (
     <div style={style} className="print:hidden">
@@ -663,8 +799,8 @@ function Ruler({
         <div
           className="absolute bg-primary/40"
           style={isH
-            ? { left: highlight.start * MM_TO_PX, top: 0, width: (highlight.end - highlight.start) * MM_TO_PX, height: RULER_SIZE }
-            : { top: highlight.start * MM_TO_PX, left: 0, height: (highlight.end - highlight.start) * MM_TO_PX, width: RULER_SIZE }}
+            ? { left: highlight.start * px, top: 0, width: (highlight.end - highlight.start) * px, height: RULER_SIZE }
+            : { top: highlight.start * px, left: 0, height: (highlight.end - highlight.start) * px, width: RULER_SIZE }}
         />
       )}
     </div>
@@ -805,6 +941,8 @@ function ElementView({
 function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta'] }) {
   if (el.type === 'text') {
     const negative = el.negative;
+    const fg = negative ? '#fff' : (el.fontColor || '#000');
+    const bg = negative ? '#000' : 'transparent';
     return (
       <div className="w-full h-full leading-tight overflow-hidden break-words"
         style={{
@@ -814,8 +952,8 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
           fontStyle: el.italic ? 'italic' : 'normal',
           textDecoration: el.underline ? 'underline' : 'none',
           textAlign: el.align || 'left',
-          background: negative ? '#000' : 'transparent',
-          color: negative ? '#fff' : '#000',
+          background: bg,
+          color: fg,
           display: 'flex', alignItems: 'center',
           justifyContent: el.align === 'center' ? 'center' : el.align === 'right' ? 'flex-end' : 'flex-start',
           padding: negative ? '2px 4px' : 0,
@@ -827,18 +965,25 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
       </div>
     );
   }
+  // Códigos: se a variável ainda não foi preenchida, usamos um valor de preview
+  // baseado no próprio payload para que o QR/DM/Aztec/Barras seja sempre visível (Req #5).
+  const codePreview = (raw: string | undefined) => {
+    const resolved = resolveVars(raw, meta);
+    if (resolved) return resolved;
+    return (raw && raw.trim()) || 'PREVIEW';
+  };
   if (el.type === 'qr') {
-    const size = Math.min(el.w, el.h) * MM_TO_PX;
-    const value = resolveVars(el.payload, meta);
+    const size = Math.max(16, Math.min(el.w, el.h) * MM_TO_PX);
+    const value = codePreview(el.payload);
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        {value ? <QRCodeCanvas value={value} size={size} level="M" includeMargin={false} /> : <EmptyBox label="QR" />}
+      <div className="w-full h-full flex items-center justify-center bg-white">
+        <QRCodeCanvas value={value} size={size} level="M" includeMargin={false} />
       </div>
     );
   }
-  if (el.type === 'datamatrix') return <BwipCode kind="datamatrix" value={resolveVars(el.payload, meta)} />;
-  if (el.type === 'aztec') return <BwipCode kind="azteccode" value={resolveVars(el.payload, meta)} />;
-  if (el.type === 'barcode') return <BarcodeSvg value={resolveVars(el.payload, meta)} fmt={el.barcodeFmt || 'CODE128'} />;
+  if (el.type === 'datamatrix') return <BwipCode kind="datamatrix" value={codePreview(el.payload)} />;
+  if (el.type === 'aztec') return <BwipCode kind="azteccode" value={codePreview(el.payload)} />;
+  if (el.type === 'barcode') return <BarcodeSvg value={codePreview(el.payload)} fmt={el.barcodeFmt || 'CODE128'} />;
   if (el.type === 'line') {
     const style = el.lineStyle || 'solid';
     if (style === 'solid') return <div className="w-full h-full bg-black" />;
@@ -885,8 +1030,7 @@ function BarcodeSvg({ value, fmt }: { value: string; fmt: BarcodeFmt }) {
       JsBarcode(ref.current, value, { format: fmt, displayValue: true, fontSize: 10, height: 40, margin: 0, width: 1.4 });
     } catch { /* ignore */ }
   }, [value, fmt]);
-  if (!value) return <EmptyBox label="Barras" />;
-  return <svg ref={ref} className="w-full h-full" preserveAspectRatio="none" />;
+  return <svg ref={ref} className="w-full h-full bg-white" preserveAspectRatio="none" />;
 }
 
 function BwipCode({ kind, value }: { kind: 'datamatrix' | 'azteccode'; value: string }) {
@@ -897,8 +1041,7 @@ function BwipCode({ kind, value }: { kind: 'datamatrix' | 'azteccode'; value: st
       bwipjs.toCanvas(ref.current, { bcid: kind, text: value, scale: 4, includetext: false });
     } catch { /* ignore */ }
   }, [kind, value]);
-  if (!value) return <EmptyBox label={kind === 'datamatrix' ? 'DataMatrix' : 'Aztec'} />;
-  return <canvas ref={ref} className="w-full h-full" style={{ imageRendering: 'pixelated' }} />;
+  return <canvas ref={ref} className="w-full h-full bg-white" style={{ imageRendering: 'pixelated' }} />;
 }
 
 // ============================================================================
@@ -952,6 +1095,16 @@ function ElementInspector({
               <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
               <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
               <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] uppercase text-muted-foreground">Cor</Label>
+              <input
+                type="color"
+                value={element.fontColor || '#000000'}
+                onChange={(e) => onUpdate({ fontColor: e.target.value })}
+                className="h-8 w-10 rounded border border-border bg-background cursor-pointer p-0.5"
+                title="Cor da fonte"
+              />
             </div>
             <div className="flex gap-1">
               {(['left', 'center', 'right'] as const).map((a) => (
