@@ -400,7 +400,9 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             }
             const align = b.align ?? 'L';
             const lineH = b.size + (b.fbSpacing ?? 0);
-            const boxW = b.fbWidth ?? Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
+            const naturalW = Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
+            const maxAvail = Math.max(20, viewW - b.x);
+            const boxW = Math.min(maxAvail, b.fbWidth ?? naturalW);
             const boxH = lines.length * lineH + 6;
             let anchorX = b.x;
             let textAnchor: 'start' | 'middle' | 'end' = 'start';
