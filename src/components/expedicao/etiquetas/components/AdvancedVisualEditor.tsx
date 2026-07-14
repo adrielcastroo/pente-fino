@@ -30,9 +30,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { loadHistory, pushHistory, clearHistory, type PrintHistoryEntry, type BarcodeFmt } from './etiqueta-helpers';
-import EtiquetaXmlDialog, { type LabelSizeKey } from './EtiquetaXmlDialog';
-import type { EtiquetaXmlPatch } from './etiqueta-xml';
+import { loadHistory, pushHistory, clearHistory, type PrintHistoryEntry, type BarcodeFmt } from '@/pages/expedicao/etiqueta-helpers';
+import EtiquetaXmlDialog, { type LabelSizeKey } from '@/pages/expedicao/EtiquetaXmlDialog';
+import type { EtiquetaXmlPatch } from '@/pages/expedicao/etiqueta-xml';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -168,7 +168,7 @@ function resolveVars(input: string | undefined, meta: LabelState['meta']): strin
 // Page
 // ============================================================================
 
-export default function ExpedicaoEtiquetasPage() {
+export default function AdvancedVisualEditor() {
   useDocumentTitle('Etiquetas · Expedição');
 
   const [state, setState] = useState<LabelState>(() => loadState());
