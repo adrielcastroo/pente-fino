@@ -552,6 +552,9 @@ export default function EditarEtiquetaPage() {
           <aside className="lg:hidden border-t border-border/60 bg-card/40 p-3" aria-label="Pré-visualização">
             <div className="flex items-center gap-2 mb-2">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
+                <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
+                  <MousePointer2 className="h-3.5 w-3.5" /> Interativo
+                </PreviewToggleBtn>
                 <PreviewToggleBtn active={previewMode === 'visual'} onClick={() => setPreviewMode('visual')}>
                   <Eye className="h-3.5 w-3.5" /> Visual
                 </PreviewToggleBtn>
@@ -560,14 +563,24 @@ export default function EditarEtiquetaPage() {
                 </PreviewToggleBtn>
               </div>
             </div>
-            {previewMode === 'visual' ? (
-              <div className="bg-white border border-border rounded-md overflow-hidden mx-auto max-w-[240px]" style={{ aspectRatio: `${largura} / ${altura}` }}>
-                <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
-              </div>
-            ) : (
+            {previewMode === 'zpl' ? (
               <pre className="text-[10px] font-mono p-2 rounded-md border border-border/60 bg-background overflow-auto whitespace-pre-wrap break-all max-h-64">
                 {zpl}
               </pre>
+            ) : (
+              <div className="bg-white border border-border rounded-md overflow-hidden mx-auto max-w-[260px]" style={{ aspectRatio: `${largura} / ${altura}` }}>
+                {previewMode === 'interativo' ? (
+                  <InteractiveZPLEditor
+                    zpl={zpl}
+                    onChange={setZpl}
+                    valores={valoresExemplo}
+                    dimensoes={{ largura, altura }}
+                    variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                  />
+                ) : (
+                  <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
+                )}
+              </div>
             )}
           </aside>
         </div>
