@@ -1313,8 +1313,36 @@ function ElementInspector({
                 </SelectContent>
               </Select>
             </div>
+            {element.rectFill === 'filled' && (
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor</Label>
+                <input type="color" value={element.rectFillColor || '#000000'} onChange={(e) => onUpdate({ rectFillColor: e.target.value })}
+                  className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5" />
+              </div>
+            )}
             {element.rectFill !== 'filled' && (
-              <NumField label="Borda (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
+              <>
+                <div className="flex flex-col gap-1 min-w-[130px]">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo da borda</Label>
+                  <Select value={element.borderStyle || 'solid'} onValueChange={(v) => onUpdate({ borderStyle: v as BorderStyle })}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solid">Sólida</SelectItem>
+                      <SelectItem value="dashed">Tracejada</SelectItem>
+                      <SelectItem value="dotted">Pontilhada</SelectItem>
+                      <SelectItem value="double">Dupla</SelectItem>
+                      <SelectItem value="groove">Baixo-relevo</SelectItem>
+                      <SelectItem value="ridge">Alto-relevo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <NumField label="Espessura (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor da borda</Label>
+                  <input type="color" value={element.borderColor || '#000000'} onChange={(e) => onUpdate({ borderColor: e.target.value })}
+                    className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5" />
+                </div>
+              </>
             )}
             <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
           </InspectorGroup>
