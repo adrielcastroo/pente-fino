@@ -4,8 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { etiquetaService } from '@/services/etiquetaService';
-import { renderZplLabel } from '@/services/labelRenderer';
-import { printImagesInBrowser } from '@/services/printService';
+import { printZplLabelsInBrowser } from '@/services/printService';
 import { useAppStore } from '@/store/useAppStore';
 import type { CreateEtiquetaTemplateInput, ImprimirInput } from '@/types/etiquetas';
 
@@ -42,10 +41,12 @@ export function useEtiquetaHistorico(filtro?: { templateId?: string }) {
 }
 
 /**
- * Impressão da etiqueta ZPL via navegador reutilizando o mesmo pipeline do
- * módulo de estoque (renderiza offscreen como PNG com fontes embutidas e
- * dispara `printImagesInBrowser`). Ajustes finos (offset X/Y, borda, padding)
- * vêm do LabelSettings, aba "Expedição".
+ * Impressão da etiqueta ZPL via navegador usando o MESMO pipeline direto do
+ * módulo de estoque (React → iframe, sem conversão para PNG). Isso garante
+ * que 100% dos elementos definidos no template (textos, códigos, QR, boxes,
+ * linhas, logo) sejam impressos exatamente como aparecem no preview — sem
+ * tirar nem adicionar nada. Ajustes finos (offset X/Y, borda, padding) vêm
+ * do LabelSettings, aba "Expedição (ZPL)".
  */
 async function imprimirNavegador(
   zplFinal: string,
@@ -55,17 +56,16 @@ async function imprimirNavegador(
   templateNome: string,
 ): Promise<void> {
   const labelSettings = useAppStore.getState().labelSettings;
-  const rendered = await renderZplLabel(zplFinal, variaveis, dimensoes, labelSettings, {
-    applyPrintOffset: true,
-  });
-  await printImagesInBrowser(
-    rendered.dataUrl,
-    rendered.widthMm,
-    rendered.heightMm,
+  await printZplLabelsInBrowser(
+    zplFinal,
+    variaveis,
+    dimensoes,
     Math.max(1, quantidade),
+    labelSettings,
     `Etiqueta · ${templateNome}`,
   );
 }
+
 
 export function useImprimirEtiqueta() {
   const qc = useQueryClient();
