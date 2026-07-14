@@ -552,38 +552,42 @@ export default function ExpedicaoEtiquetasPage() {
         </Card>
         </div>
 
-        {/* Editor Canvas — sempre 1 cópia no editor (Req #8) */}
-        <PreviewWorkbench
-          widthMm={state.widthMm}
-          heightMm={state.heightMm}
-          zoom={zoom}
-          onZoomChange={setZoom}
-          selected={selected}
-        >
-          <LabelCanvas
-            editable
+        {/* Editor Canvas — barra de ações (Inspector) fica ACIMA do preview (Req #2) */}
+        <div className="flex flex-col min-h-0 lg:h-full gap-2">
+          {selected ? (
+            <ElementInspector
+              element={selected}
+              onUpdate={(p) => updateElement(selected.id, p)}
+              onClose={() => setSelectedId(null)}
+            />
+          ) : (
+            <div className="rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground print:hidden">
+              Selecione um elemento na etiqueta para editar suas propriedades aqui.
+            </div>
+          )}
+          <PreviewWorkbench
             widthMm={state.widthMm}
             heightMm={state.heightMm}
-            elements={state.elements}
-            meta={state.meta}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onUpdate={updateElement}
-            onRemove={removeElement}
-            onDuplicate={duplicateElement}
-            onMoveZ={moveElementZ}
-          />
-        </PreviewWorkbench>
+            zoom={zoom}
+            onZoomChange={setZoom}
+            selected={selected}
+          >
+            <LabelCanvas
+              editable
+              widthMm={state.widthMm}
+              heightMm={state.heightMm}
+              elements={state.elements}
+              meta={state.meta}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onUpdate={updateElement}
+              onRemove={removeElement}
+              onDuplicate={duplicateElement}
+              onMoveZ={moveElementZ}
+            />
+          </PreviewWorkbench>
+        </div>
       </div>
-
-      {/* Painel de edição do elemento selecionado */}
-      {selected && (
-        <ElementInspector
-          element={selected}
-          onUpdate={(p) => updateElement(selected.id, p)}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
 
       <EtiquetaXmlDialog open={xmlOpen} onOpenChange={setXmlOpen} onApply={applyXmlPatch} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} onRestore={(snap) => {
