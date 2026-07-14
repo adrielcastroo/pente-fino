@@ -533,7 +533,153 @@ export default function LabelLayoutPanel() {
             </div>
           </div>
         </TabsContent>
+        </TabsContent>
+        )}
+
+        <TabsContent value="expedicao" className="mt-0 animate-fade-in">
+          <ExpedicaoLayoutSection />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/**
+ * Ajustes finos para a impressão de etiquetas de Expedição (ZPL dinâmico).
+ * Como as dimensões da etiqueta vêm do próprio template, aqui só expomos os
+ * ajustes que valem para qualquer template: offset X/Y, borda e padding.
+ */
+function ExpedicaoLayoutSection() {
+  const { labelSettings, setLabelSettings } = useAppStore();
+  const offsetX = labelSettings.expedicaoPrintOffsetXMm ?? 0;
+  const offsetY = labelSettings.expedicaoPrintOffsetYMm ?? 0;
+  const borderWidth = labelSettings.expedicaoBorderWidth ?? 0;
+  const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
+  const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
+  const padding = labelSettings.expedicaoPadding ?? 0;
+
+  const handleReset = () => {
+    setLabelSettings({
+      expedicaoPrintOffsetXMm: 0,
+      expedicaoPrintOffsetYMm: 0,
+      expedicaoBorderWidth: 0,
+      expedicaoBorderStyle: 'none',
+      expedicaoBorderRadius: 0,
+      expedicaoPadding: 0,
+    });
+    toast.info('Ajustes de Expedição redefinidos.');
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 animate-fade-in">
+      <div className="space-y-4 lg:col-span-3">
+        <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader className="p-5 border-b border-border/40 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                <Maximize className="w-4 h-4" />
+              </div>
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Deslocamento de impressão</CardTitle>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground pl-11">
+              Ajuste fino em milímetros para compensar margens da impressora. Vale para todos os templates da Expedição.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex justify-between">
+                <span>Offset X (mm) — horizontal</span>
+                <span className="font-mono opacity-70">{offsetX.toFixed(1)}mm</span>
+              </Label>
+              <Slider value={[offsetX]} min={-15} max={15} step={0.5}
+                onValueChange={([v]) => setLabelSettings({ expedicaoPrintOffsetXMm: v })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex justify-between">
+                <span>Offset Y (mm) — vertical</span>
+                <span className="font-mono opacity-70">{offsetY.toFixed(1)}mm</span>
+              </Label>
+              <Slider value={[offsetY]} min={-15} max={15} step={0.5}
+                onValueChange={([v]) => setLabelSettings({ expedicaoPrintOffsetYMm: v })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader className="p-5 border-b border-border/40 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                <Palette className="w-4 h-4" />
+              </div>
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Aparência</CardTitle>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground pl-11">Bordas e padding aplicados por cima da etiqueta ZPL.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex justify-between">
+                <span>Espessura da borda</span><span className="font-mono opacity-70">{borderWidth}px</span>
+              </Label>
+              <Slider value={[borderWidth]} min={0} max={12} step={1}
+                onValueChange={([v]) => setLabelSettings({ expedicaoBorderWidth: v })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold">Estilo da borda</Label>
+              <Select value={borderStyle} onValueChange={(v) => setLabelSettings({ expedicaoBorderStyle: v as typeof borderStyle })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem borda</SelectItem>
+                  <SelectItem value="solid">Sólida</SelectItem>
+                  <SelectItem value="dashed">Tracejada</SelectItem>
+                  <SelectItem value="dotted">Pontilhada</SelectItem>
+                  <SelectItem value="double">Dupla</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex justify-between">
+                <span>Raio dos cantos</span><span className="font-mono opacity-70">{borderRadius}px</span>
+              </Label>
+              <Slider value={[borderRadius]} min={0} max={40} step={1}
+                onValueChange={([v]) => setLabelSettings({ expedicaoBorderRadius: v })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex justify-between">
+                <span>Espaçamento interno (padding)</span><span className="font-mono opacity-70">{padding}px</span>
+              </Label>
+              <Slider value={[padding]} min={0} max={40} step={1}
+                onValueChange={([v]) => setLabelSettings({ expedicaoPadding: v })} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="lg:col-span-2 flex flex-col gap-3">
+        <div className="rounded-lg border border-primary/15 bg-primary/5 p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold text-primary">Impressão de Expedição</span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            As etiquetas de expedição usam templates ZPL dinâmicos criados na Central de Etiquetas —
+            largura, altura e conteúdo vêm de cada template. Estes ajustes se aplicam globalmente
+            no momento da impressão, usando o mesmo pipeline (PNG + fontes embutidas) das
+            etiquetas de tecido/motor.
+          </p>
+          <p className="text-[10px] leading-tight text-muted-foreground opacity-80">
+            Dica: se a etiqueta sair cortada, ajuste primeiro o <b>Offset X/Y</b>. Use bordas/padding
+            apenas se precisar de um "reforço" visual em cima do ZPL.
+          </p>
+        </div>
+
+        <Button
+          onClick={handleReset}
+          variant="outline"
+          className="gap-2 h-10 rounded-md font-medium text-xs hover:bg-destructive/5 hover:border-destructive/40 hover:text-destructive"
+        >
+          <RefreshCw className="w-4 h-4" /> Resetar ajustes de Expedição
+        </Button>
+      </div>
     </div>
   );
 }
