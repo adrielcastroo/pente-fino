@@ -53,6 +53,7 @@ interface LabelElement {
   text?: string;
   fontSize?: number;
   fontFamily?: string;
+  fontColor?: string;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
