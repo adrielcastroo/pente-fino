@@ -100,22 +100,27 @@ export const ZPL_PADRAO = `^XA
 ^LH0,0
 ^CI28
 ^FX =============================== LOGO (imagem via upload)
-^FO130,20^A0N,36,36^FD{{logo}}^FS
+^FO146,0^A0N,49,49^FD{{logo}}^FS
 ^FX =============================== TRANSPORTADORA
-^FO20,70^A0N,22,22^FDTRANSPORTADORA:^FS
-^FO20,95^FB440,1,0,C^A0N,28,28^FD{{transportadora}}^FS
+^FO18,77^A0N,18,18^FB210,1,0,L^FR^FDTRANSPORTADORA:^FS
 ^FX =============================== QR CODE CENTRAL
-^FO175,130^BQN,2,4^FDLA,ROM{{romaneio}}^FS
+^FO304,136^BQN,2,4^FD{{nf}}^FS
 ^FX =============================== NF (abaixo do QR)
-^FO20,265^FB440,1,0,C^A0N,24,24^FDNF {{nf}}^FS
+^FO308,77^FB440,1,0,C^A0N,24,24^FR^FDNF {{nf}}^FS
 ^FX =============================== VOLUME ATUAL / TOTAL
-^FO90,300^A0N,50,50^FD{{volume_atual}}^FS
-^FO185,300^A0N,45,45^FD/^FS
-^FO245,300^A0N,50,50^FD{{volume_total}}^FS
-^FO80,350^A0N,18,18^FDVOLUME^FS
-^FO235,350^A0N,18,18^FDTOTAL^FS
+^FO91,308^A0N,40,40^FB120,1,0,C^FD{{volume_atual}}^FS
+^FO232,308^A0N,45,45^FD/^FS
+^FO335,308^A0N,40,40^FB120,1,0,C^FD{{volume_total}}^FS
+^FO91,362^A0N,18,18^FDVOLUME^FS
+^FO343,362^A0N,18,18^FDTOTAL^FS
 ^FX =============================== DATA EMISSAO (canto inferior direito)
-^FO285,375^A0N,18,18^FD{{data}}^FS
+^FO372,10^A0N,18,18^FD{{data}}^FS
+^FX =============================== DIVISORES
+^FO0,77^GB484,1,2^FS
+^FO241,77^GB2,224,2^FS
+^FO0,296^GB488,1,2^FS
+^FX =============================== NOME TRANSPORTADORA
+^FO18,120^A0N,28,28^FB210,3,0,L^FD{{transportadora}}^FS
 ^XZ`;
 
 export const VARIAVEIS_PADRAO: VariavelTemplate[] = [
