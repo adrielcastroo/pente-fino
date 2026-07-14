@@ -1,13 +1,8 @@
 // ============================================================================
-// Etiquetas de Expedição — editor visual estilo Canva/BarTender.
-// Recursos:
-//  - Réguas horizontal/vertical (mm) com marcador da posição do elemento
-//  - Variáveis dinâmicas em QR/Barras/Texto ({{nfNumero}}, {{codigo}}, ...)
-//  - Tamanhos padrão + personalizado com atualização em tempo real
-//  - Elementos: texto (B/I/U/negativo/fonte), QR, DataMatrix, Aztec, barras,
-//    linha (sólida/tracejada/pontilhada), retângulo (oco/preenchido/borda/raio)
-//  - Imagem externa (logo da empresa) via upload
-//  - Zoom pela roda do mouse (Ctrl/Alt para passo fino)
+// Etiquetas de Expedição — editor visual estilo BarTender/Canva.
+// Estrutura: barra superior única + 3 colunas (Adicionar/Elementos | Canvas | Propriedades).
+// Painel de propriedades único com abas Elemento | Variáveis | Presets.
+// Preserva 100% do comportamento anterior (snap, réguas, ZPL, atalhos, impressão).
 // ============================================================================
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -17,19 +12,23 @@ import {
   Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
   Trash2, Copy, Minus, Square, ArrowUp, ArrowDown, Plus, Image as ImageIcon,
   Grid3x3, Hexagon, Bold, Italic, Underline, Contrast, Ruler as RulerIcon,
-  Layers, Sparkles, MousePointerClick, Keyboard, Bookmark, Palette, Move,
+  Layers, Sparkles, MousePointerClick, Keyboard, Bookmark, MoreHorizontal,
+  Eye, EyeOff, Lock, Unlock, HelpCircle, ZoomIn, ZoomOut, Maximize2, GripVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { loadHistory, pushHistory, clearHistory, type PrintHistoryEntry, type BarcodeFmt } from '@/pages/expedicao/etiqueta-helpers';
 import EtiquetaXmlDialog, { type LabelSizeKey } from '@/pages/expedicao/EtiquetaXmlDialog';
 import type { EtiquetaXmlPatch } from '@/pages/expedicao/etiqueta-xml';
@@ -40,9 +39,7 @@ import { cn } from '@/lib/utils';
 // ============================================================================
 
 type PresetSize = '100x150' | '100x100' | '100x50' | 'custom';
-
 type ElementType = 'text' | 'qr' | 'datamatrix' | 'aztec' | 'barcode' | 'line' | 'rect' | 'image';
-
 type LineStyle = 'solid' | 'dashed' | 'dotted';
 type RectFill = 'outline' | 'filled';
 type BorderStyle = 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge';
@@ -50,8 +47,9 @@ type BorderStyle = 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge'
 interface LabelElement {
   id: string;
   type: ElementType;
-  x: number; y: number; w: number; h: number; // mm
-  // texto
+  x: number; y: number; w: number; h: number;
+  hidden?: boolean;
+  locked?: boolean;
   text?: string;
   fontSize?: number;
   fontFamily?: string;
@@ -61,23 +59,20 @@ interface LabelElement {
   underline?: boolean;
   negative?: boolean;
   align?: 'left' | 'center' | 'right';
-  // códigos
   barcodeFmt?: BarcodeFmt;
   payload?: string;
-  // linha
   lineStyle?: LineStyle;
-  // retângulo
   rectFill?: RectFill;
   borderWidth?: number;
   borderRadius?: number;
   borderStyle?: BorderStyle;
   borderColor?: string;
   rectFillColor?: string;
-  // imagem
   imageSrc?: string;
 }
 
 interface LabelState {
+  name: string;
   pageSize: PresetSize;
   widthMm: number;
   heightMm: number;
@@ -129,6 +124,7 @@ function defaultElements(): LabelElement[] {
 }
 
 const DEFAULT_STATE: LabelState = {
+  name: 'Etiqueta de expedição',
   pageSize: '100x150',
   widthMm: 100,
   heightMm: 150,
@@ -158,7 +154,6 @@ function loadPresets(): SavedPreset[] {
 }
 function savePresets(list: SavedPreset[]) { localStorage.setItem(PRESETS_KEY, JSON.stringify(list)); }
 
-// Interpolação de variáveis: {{nfNumero}} → valor real do meta.
 const VARIABLE_KEYS = ['transportadora', 'nfNumero', 'volumeAtual', 'volumeTotal', 'destino', 'codigo'] as const;
 function resolveVars(input: string | undefined, meta: LabelState['meta']): string {
   if (!input) return '';
@@ -168,20 +163,39 @@ function resolveVars(input: string | undefined, meta: LabelState['meta']): strin
   });
 }
 
+// Insere texto no último input/textarea focado. Usado pelas chips da aba Variáveis.
+function insertIntoLastFocused(text: string, fallback?: HTMLElement | null) {
+  const el = (document.activeElement as HTMLElement) || fallback;
+  if (!el) return false;
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    const next = el.value.slice(0, start) + text + el.value.slice(end);
+    // dispara React onChange
+    const setter = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value')?.set;
+    setter?.call(el, next);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    const pos = start + text.length;
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(pos, pos); });
+    return true;
+  }
+  return false;
+}
+
 // ============================================================================
 // Page
 // ============================================================================
 
 export default function AdvancedVisualEditor() {
-  // documentTitle é gerenciado pela EtiquetasPage principal
-
   const [state, setState] = useState<LabelState>(() => loadState());
   const [xmlOpen, setXmlOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [zoom, setZoom] = useState<number>(0); // 0 = auto-fit
+  const [zoom, setZoom] = useState<number>(0);
   const [presets, setPresets] = useState<SavedPreset[]>(() => loadPresets());
+  const [rightTab, setRightTab] = useState<'element' | 'variables' | 'presets'>('element');
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
 
   const handleSavePreset = () => {
     const name = prompt('Nome do preset:', `Preset ${presets.length + 1}`);
@@ -224,6 +238,17 @@ export default function AdvancedVisualEditor() {
       return { ...s, elements: next };
     });
   }, []);
+  const reorderElements = useCallback((fromId: string, toId: string) => {
+    setState((s) => {
+      const from = s.elements.findIndex((e) => e.id === fromId);
+      const to = s.elements.findIndex((e) => e.id === toId);
+      if (from < 0 || to < 0 || from === to) return s;
+      const next = [...s.elements];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return { ...s, elements: next };
+    });
+  }, []);
 
   const addElement = useCallback((type: ElementType) => {
     const base: LabelElement = (() => {
@@ -240,43 +265,38 @@ export default function AdvancedVisualEditor() {
     })();
     setState((s) => ({ ...s, elements: [...s.elements, base] }));
     setSelectedId(base.id);
+    setRightTab('element');
     return base.id;
   }, []);
 
-  // Requisito #4: adicionar imagem = sempre upload do usuário. O botão dispara file picker
-  // imediatamente; só cria o elemento após a imagem ser carregada com sucesso.
-  const triggerImageUpload = useCallback(() => {
-    imageInputRef.current?.click();
-  }, []);
+  const triggerImageUpload = useCallback(() => { imageInputRef.current?.click(); }, []);
   const onImageUploadFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    e.target.value = ''; // permite escolher a mesma imagem depois
+    e.target.value = '';
     if (!f) return;
     if (f.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande (máx 2 MB).'); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const src = String(reader.result || '');
       const id = uid();
-      // proporção aproximada baseada na imagem para ficar bonita já no add
       const img = new Image();
       img.onload = () => {
-        const maxW = 40; // mm
         const ratio = img.height / img.width || 0.6;
-        const w = Math.min(maxW, 40);
+        const w = Math.min(40, 40);
         const h = +(w * ratio).toFixed(1);
         setState((s) => ({ ...s, elements: [...s.elements, { id, type: 'image', x: 5, y: 5, w, h, imageSrc: src, borderRadius: 0 }] }));
-        setSelectedId(id);
+        setSelectedId(id); setRightTab('element');
       };
       img.onerror = () => {
         setState((s) => ({ ...s, elements: [...s.elements, { id, type: 'image', x: 5, y: 5, w: 30, h: 20, imageSrc: src, borderRadius: 0 }] }));
-        setSelectedId(id);
+        setSelectedId(id); setRightTab('element');
       };
       img.src = src;
     };
     reader.readAsDataURL(f);
   }, []);
 
-  // Requisito #7: atalhos no preview — Del/Backspace remove, Ctrl/Cmd+B alterna negrito.
+  // Atalhos globais: Del remove, Ctrl+B negrito.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -300,6 +320,17 @@ export default function AdvancedVisualEditor() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedId, removeElement]);
 
+  // Rastreia último input/textarea focado (para chips de variáveis).
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => {
+      const t = e.target as HTMLElement;
+      if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) {
+        lastFocusedRef.current = t;
+      }
+    };
+    document.addEventListener('focusin', onFocusIn);
+    return () => document.removeEventListener('focusin', onFocusIn);
+  }, []);
 
   function applyXmlPatch(input: EtiquetaXmlPatch & { pageSize: LabelSizeKey; copies: number }) {
     setState((s) => {
@@ -318,7 +349,7 @@ export default function AdvancedVisualEditor() {
         },
       };
     });
-    toast.success('Dados do XML aplicados. As variáveis dos elementos foram atualizadas automaticamente.');
+    toast.success('Dados do XML aplicados.');
   }
 
   function changePreset(next: PresetSize) {
@@ -333,11 +364,16 @@ export default function AdvancedVisualEditor() {
     toast.success('Etiqueta reiniciada.');
   }
 
+  function handleSaveLayout() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    toast.success('Layout salvo.');
+  }
+
   function handlePrint() {
     window.print();
     pushHistory({
       templateId: 'editor',
-      templateName: `Etiqueta ${state.widthMm}×${state.heightMm}mm`,
+      templateName: state.name || `Etiqueta ${state.widthMm}×${state.heightMm}mm`,
       copies: state.copias,
       payload: state.meta.nfNumero || state.meta.codigo || '',
       method: 'browser',
@@ -348,289 +384,747 @@ export default function AdvancedVisualEditor() {
   const selected = state.elements.find((e) => e.id === selectedId) || null;
 
   return (
-    <div className="space-y-4">
-      {/* Header — cartão premium com hierarquia clara e CTA destacado */}
-      <div className="print:hidden rounded-xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 shadow-sm">
-        <div className="flex flex-col gap-3 p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0 flex items-start gap-3">
-            <div className="hidden sm:flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
-              <Tag className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">Etiquetas de Expedição</h1>
-                <Badge variant="secondary" className="font-mono text-[11px] gap-1">
-                  <RulerIcon className="size-3" /> {state.widthMm}×{state.heightMm} mm
-                </Badge>
-                <Badge variant="outline" className="font-mono text-[10px] gap-1 text-muted-foreground">
-                  <Layers className="size-3" /> {state.elements.length} elem.
-                </Badge>
+    <TooltipProvider delayDuration={200}>
+      <div className="flex flex-col h-[calc(100vh-64px)] min-h-0 print:h-auto print:block">
+        {/* ============ BARRA SUPERIOR ÚNICA ============ */}
+        <TopBar
+          state={state}
+          onRename={(name) => patch({ name })}
+          onSave={handleSaveLayout}
+          onPrint={handlePrint}
+          onImportXml={() => setXmlOpen(true)}
+          onReset={reset}
+          onHistory={() => setHistoryOpen(true)}
+        />
+
+        {/* ============ 3 COLUNAS ============ */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-0 print:block">
+          {/* -------- COLUNA ESQUERDA -------- */}
+          <aside className="print:hidden border-r border-border/60 bg-card/40 flex flex-col min-h-0">
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="p-3 space-y-4">
+                <AddElementPanel onAdd={addElement} onUploadImage={triggerImageUpload} />
+                <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
+                <Separator />
+                <LayersPanel
+                  elements={state.elements}
+                  selectedId={selectedId}
+                  onSelect={(id) => { setSelectedId(id); setRightTab('element'); }}
+                  onUpdate={updateElement}
+                  onRemove={removeElement}
+                  onDuplicate={duplicateElement}
+                  onReorder={reorderElements}
+                />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Editor visual com réguas, variáveis dinâmicas e snap inteligente — estilo Canva/BarTender.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryOpen(true)}>
-              <History className="size-4" /> Histórico
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={reset} title="Limpar etiqueta">
-              <RotateCcw className="size-4" /> <span className="hidden sm:inline">Reiniciar</span>
-            </Button>
-            <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setXmlOpen(true)}>
-              <FileText className="size-4" /> Importar XML
-            </Button>
-            <Button onClick={handlePrint} size="sm" className="gap-1.5 shadow-sm">
-              <Printer className="size-4" /> Imprimir
-            </Button>
-          </div>
-        </div>
-      </div>
+            </ScrollArea>
+          </aside>
 
-
-      {/* Req #6: layout sem scroll vertical — grade ocupa altura restante da viewport */}
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 lg:gap-5 print:block min-w-0 lg:h-[calc(100vh-200px)] lg:overflow-hidden">
-        {/* Painel de configuração (rola internamente para não empurrar o preview) */}
-        <div className="lg:h-full lg:overflow-y-auto lg:pr-1 space-y-3 custom-scrollbar">
-        <Card className="print:hidden border-border/60 shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            {/* --- Tamanho --- */}
-            <SidebarSection icon={<RulerIcon className="size-3.5" />} title="Tamanho da etiqueta">
-              <Select value={state.pageSize} onValueChange={(v) => changePreset(v as PresetSize)}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(Object.entries(PRESETS) as [Exclude<PresetSize, 'custom'>, typeof PRESETS['100x150']][]).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                  ))}
-                  <SelectItem value="custom">Personalizado…</SelectItem>
-                </SelectContent>
-              </Select>
-              {state.pageSize === 'custom' && (
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Largura (mm)</Label>
-                    <DimensionInput value={state.widthMm} min={20} max={300} onCommit={(v) => patch({ widthMm: v })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Altura (mm)</Label>
-                    <DimensionInput value={state.heightMm} min={20} max={400} onCommit={(v) => patch({ heightMm: v })} />
-                  </div>
-                </div>
-              )}
-            </SidebarSection>
-
-            {/* --- Adicionar elementos --- */}
-            <SidebarSection icon={<Plus className="size-3.5" />} title="Adicionar elemento">
-              <div className="space-y-2.5">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Texto</div>
-                  <AddButton icon={<Type className="size-3.5" />} label="Texto" onClick={() => addElement('text')} />
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Códigos</div>
-                  <Select value="" onValueChange={(v) => v && addElement(v as ElementType)}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Selecionar tipo de código…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="qr"><span className="inline-flex items-center gap-2"><QrCode className="size-3.5" /> QR Code</span></SelectItem>
-                      <SelectItem value="barcode"><span className="inline-flex items-center gap-2"><BarcodeIcon className="size-3.5" /> Código de barras (1D)</span></SelectItem>
-                      <SelectItem value="datamatrix"><span className="inline-flex items-center gap-2"><Grid3x3 className="size-3.5" /> DataMatrix</span></SelectItem>
-                      <SelectItem value="aztec"><span className="inline-flex items-center gap-2"><Hexagon className="size-3.5" /> Aztec</span></SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Formas</div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <AddButton icon={<Minus className="size-3.5" />} label="Linha" onClick={() => addElement('line')} />
-                    <AddButton icon={<Square className="size-3.5" />} label="Retângulo" onClick={() => addElement('rect')} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Mídia</div>
-                  <AddButton icon={<ImageIcon className="size-3.5" />} label="Carregar imagem" onClick={triggerImageUpload} />
-                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
-                </div>
-              </div>
-            </SidebarSection>
-
-            {/* --- Variáveis disponíveis --- */}
-            <SidebarSection icon={<Sparkles className="size-3.5" />} title="Variáveis dinâmicas">
-              <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5 space-y-1.5">
-                <div className="flex flex-wrap gap-1">
-                  {VARIABLE_KEYS.map((k) => (
-                    <code key={k} className="px-1.5 py-0.5 rounded bg-background border border-border/70 font-mono text-[10px] text-primary">{`{{${k}}}`}</code>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">Use em textos, QR, DataMatrix e barras. Resolvidas ao imprimir.</p>
-              </div>
-            </SidebarSection>
-
-            {/* --- Elementos da etiqueta --- */}
-            <SidebarSection
-              icon={<Layers className="size-3.5" />}
-              title="Elementos"
-              badge={<Badge variant="secondary" className="text-[10px] px-1.5 h-4">{state.elements.length}</Badge>}
-            >
-              <ScrollArea className="h-40 border border-border/60 rounded-md bg-background/40">
-                <ul className="divide-y divide-border/60">
-                  {state.elements.map((el) => (
-                    <li key={el.id}>
-                      <button type="button" onClick={() => setSelectedId(el.id)}
-                        className={cn('w-full text-left px-2.5 py-2 text-xs flex items-center gap-2 hover:bg-accent/50 transition-colors',
-                          selectedId === el.id && 'bg-primary/10 border-l-2 border-primary')}>
-                        <ElementIcon type={el.type} />
-                        <span className="truncate flex-1">{elementLabel(el)}</span>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); removeElement(el.id); }}
-                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-                          title="Remover">
-                          <Trash2 className="size-3" />
-                        </button>
-                      </button>
-                    </li>
-                  ))}
-                  {state.elements.length === 0 && (
-                    <li className="p-4 text-[11px] text-muted-foreground italic text-center">
-                      <MousePointerClick className="size-4 mx-auto mb-1 opacity-50" />
-                      Nenhum elemento — adicione acima.
-                    </li>
-                  )}
-                </ul>
-              </ScrollArea>
-            </SidebarSection>
-
-            {/* --- Presets --- */}
-            <SidebarSection
-              icon={<Bookmark className="size-3.5" />}
-              title="Meus presets"
-              badge={<Badge variant="secondary" className="text-[10px] px-1.5 h-4">{presets.length}</Badge>}
-              action={
-                <Button size="sm" variant="ghost" className="h-6 text-[11px] gap-1 px-2 text-primary hover:text-primary hover:bg-primary/10" onClick={handleSavePreset}>
-                  <Plus className="size-3" /> Salvar
-                </Button>
-              }
-            >
-              {presets.length > 0 ? (
-                <ScrollArea className="max-h-40 border border-border/60 rounded-md bg-background/40">
-                  <ul className="divide-y divide-border/60">
-                    {presets.map((p) => (
-                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/50 transition-colors">
-                        <button type="button" onClick={() => handleLoadPreset(p)} className="flex-1 min-w-0 text-left">
-                          <div className="text-xs font-medium truncate">{p.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-mono">
-                            {p.snapshot.widthMm}×{p.snapshot.heightMm}mm · {p.snapshot.elements.length} elem.
-                          </div>
-                        </button>
-                        <button type="button" onClick={() => handleDeletePreset(p.id)}
-                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
-                          <Trash2 className="size-3" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              ) : (
-                <div className="text-[11px] text-muted-foreground italic text-center py-3 border border-dashed border-border/50 rounded-md">
-                  Salve o layout atual para reutilizar depois.
-                </div>
-              )}
-            </SidebarSection>
-
-            {/* --- Resumo XML --- */}
-            {(state.meta.transportadora || state.meta.nfNumero) && (
-              <SidebarSection icon={<FileText className="size-3.5" />} title="Dados do XML atual" last>
-                <div className="rounded-md border border-border/60 bg-muted/40 p-2.5 space-y-1.5 text-[11px]">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Transp.</span>
-                    <span className="font-semibold text-right truncate">{state.meta.transportadora || '—'}</span>
-                  </div>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">NF-e</span>
-                    <span className="font-mono text-right truncate">{state.meta.nfNumero || '—'}</span>
-                  </div>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Vol.</span>
-                    <span className="font-mono">{state.meta.volumeAtual}/{state.meta.volumeTotal}</span>
-                  </div>
-                </div>
-              </SidebarSection>
-            )}
-          </CardContent>
-        </Card>
-        </div>
-
-
-        {/* Editor Canvas — barra de ações (Inspector) fica ACIMA do preview (Req #2) */}
-        <div className="flex flex-col min-h-0 lg:h-full gap-2">
-          {selected ? (
-            <ElementInspector
-              element={selected}
-              onUpdate={(p) => updateElement(selected.id, p)}
-              onClose={() => setSelectedId(null)}
-            />
-          ) : (
-            <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-3 text-xs text-muted-foreground print:hidden flex items-center gap-2.5">
-              <div className="size-8 rounded-md bg-background/70 border border-border/60 flex items-center justify-center shrink-0">
-                <MousePointerClick className="size-4 text-primary/70" />
-              </div>
-              <div>
-                <div className="font-medium text-foreground/90">Selecione um elemento na etiqueta</div>
-                <div className="text-[11px] text-muted-foreground">Suas propriedades aparecem aqui para edição rápida.</div>
-              </div>
-            </div>
-          )}
-          <PreviewWorkbench
-            widthMm={state.widthMm}
-            heightMm={state.heightMm}
-            zoom={zoom}
-            onZoomChange={setZoom}
-            selected={selected}
-          >
-            <LabelCanvas
-              editable
+          {/* -------- CENTRO: CANVAS -------- */}
+          <main className="flex flex-col min-h-0 bg-muted/20 print:bg-transparent print:block">
+            <PreviewWorkbench
               widthMm={state.widthMm}
               heightMm={state.heightMm}
-              elements={state.elements}
-              meta={state.meta}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onUpdate={updateElement}
-              onRemove={removeElement}
-              onDuplicate={duplicateElement}
-              onMoveZ={moveElementZ}
-            />
-          </PreviewWorkbench>
+              zoom={zoom}
+              onZoomChange={setZoom}
+              selected={selected}
+            >
+              <LabelCanvas
+                editable
+                widthMm={state.widthMm}
+                heightMm={state.heightMm}
+                elements={state.elements}
+                meta={state.meta}
+                selectedId={selectedId}
+                onSelect={(id) => { setSelectedId(id); if (id) setRightTab('element'); }}
+                onUpdate={updateElement}
+                onRemove={removeElement}
+                onDuplicate={duplicateElement}
+                onMoveZ={moveElementZ}
+              />
+            </PreviewWorkbench>
+          </main>
+
+          {/* -------- COLUNA DIREITA -------- */}
+          <aside className="print:hidden border-l border-border/60 bg-card/40 flex flex-col min-h-0">
+            <Tabs value={rightTab} onValueChange={(v) => setRightTab(v as typeof rightTab)} className="flex flex-col h-full min-h-0">
+              <TabsList className="grid grid-cols-3 mx-3 mt-3 h-9 shrink-0">
+                <TabsTrigger value="element" className="text-xs">Elemento</TabsTrigger>
+                <TabsTrigger value="variables" className="text-xs">Variáveis</TabsTrigger>
+                <TabsTrigger value="presets" className="text-xs">Presets</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="element" className="flex-1 min-h-0 mt-2 mx-0">
+                <ScrollArea className="h-full">
+                  <div className="p-3">
+                    {selected ? (
+                      <ElementInspector
+                        element={selected}
+                        onUpdate={(p) => updateElement(selected.id, p)}
+                        pageSize={state.pageSize}
+                        widthMm={state.widthMm}
+                        heightMm={state.heightMm}
+                        onChangePreset={changePreset}
+                        onPatch={patch}
+                      />
+                    ) : (
+                      <PageInspector
+                        pageSize={state.pageSize}
+                        widthMm={state.widthMm}
+                        heightMm={state.heightMm}
+                        onChangePreset={changePreset}
+                        onPatch={patch}
+                      />
+                    )}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="variables" className="flex-1 min-h-0 mt-2 mx-0">
+                <ScrollArea className="h-full">
+                  <div className="p-3">
+                    <VariablesTab lastFocusedRef={lastFocusedRef} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="presets" className="flex-1 min-h-0 mt-2 mx-0">
+                <ScrollArea className="h-full">
+                  <div className="p-3">
+                    <PresetsTab
+                      presets={presets}
+                      onSave={handleSavePreset}
+                      onLoad={handleLoadPreset}
+                      onDelete={handleDeletePreset}
+                    />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
+          </aside>
+        </div>
+
+        <EtiquetaXmlDialog open={xmlOpen} onOpenChange={setXmlOpen} onApply={applyXmlPatch} />
+        <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} onRestore={(snap) => {
+          if (snap && typeof snap === 'object') setState(snap as LabelState);
+          setHistoryOpen(false);
+        }} />
+        <PrintStyles wMm={state.widthMm} hMm={state.heightMm} />
+      </div>
+    </TooltipProvider>
+  );
+}
+
+// ============================================================================
+// TopBar
+// ============================================================================
+
+function TopBar({
+  state, onRename, onSave, onPrint, onImportXml, onReset, onHistory,
+}: {
+  state: LabelState;
+  onRename: (n: string) => void;
+  onSave: () => void;
+  onPrint: () => void;
+  onImportXml: () => void;
+  onReset: () => void;
+  onHistory: () => void;
+}) {
+  const [draft, setDraft] = useState(state.name);
+  useEffect(() => setDraft(state.name), [state.name]);
+
+  return (
+    <div className="print:hidden shrink-0 h-14 border-b border-border/60 bg-card/60 backdrop-blur flex items-center gap-3 px-4">
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="size-8 rounded-md bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
+          <Tag className="size-4" />
         </div>
       </div>
+      <Input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => draft.trim() && onRename(draft.trim())}
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur(); }}
+        className="h-8 max-w-[280px] font-medium text-sm border-transparent hover:border-border focus-visible:border-border bg-transparent"
+        placeholder="Nome da etiqueta"
+        aria-label="Nome da etiqueta"
+      />
+      <Badge variant="secondary" className="font-mono text-[10px] gap-1 h-6">
+        <RulerIcon className="size-3" /> {state.widthMm}×{state.heightMm} mm
+      </Badge>
+      <Badge variant="outline" className="font-mono text-[10px] gap-1 h-6 text-muted-foreground">
+        <Layers className="size-3" /> {state.elements.length}
+      </Badge>
 
-      <EtiquetaXmlDialog open={xmlOpen} onOpenChange={setXmlOpen} onApply={applyXmlPatch} />
-      <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} onRestore={(snap) => {
-        if (snap && typeof snap === 'object') setState(snap as LabelState);
-        setHistoryOpen(false);
-      }} />
-      <PrintStyles wMm={state.widthMm} hMm={state.heightMm} />
+      <div className="ml-auto flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={onSave} className="gap-1.5">
+          <Bookmark className="size-4" /> Salvar layout
+        </Button>
+        <Button size="sm" onClick={onPrint} className="gap-1.5 shadow-sm">
+          <Printer className="size-4" /> Imprimir
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="size-9" aria-label="Mais ações">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem onClick={onImportXml}>
+              <FileText className="size-4 mr-2" /> Importar XML
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onHistory}>
+              <History className="size-4 mr-2" /> Histórico
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onReset} className="text-destructive focus:text-destructive">
+              <RotateCcw className="size-4 mr-2" /> Reiniciar etiqueta
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
 
 // ============================================================================
-// Preview workbench com réguas + zoom pela roda do mouse
+// Painel esquerdo — Adicionar elemento
 // ============================================================================
 
-const RULER_SIZE = 22; // px
+function AddElementPanel({ onAdd, onUploadImage }: { onAdd: (t: ElementType) => void; onUploadImage: () => void }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
+        <Plus className="size-3.5 text-primary/70" /> Adicionar elemento
+      </div>
 
-/**
- * Workbench com:
- *  - Réguas mm fixadas nas bordas superior/esquerda do preview (Req #1)
- *  - Zoom pela roda do mouse (Ctrl/Alt = passo fino)
- *  - Scroll horizontal com Espaço pressionado + roda do mouse (Req #9)
- *  - Sem scroll vertical do editor: o preview ocupa a altura disponível (Req #6)
- */
+      <div className="space-y-2.5">
+        <SubGroup label="Texto">
+          <AddTile icon={<Type className="size-4" />} label="Texto" onClick={() => onAdd('text')} />
+        </SubGroup>
+
+        <SubGroup label="Códigos">
+          <div className="grid grid-cols-2 gap-1.5">
+            <AddTile icon={<QrCode className="size-4" />} label="QR" onClick={() => onAdd('qr')} />
+            <AddTile icon={<BarcodeIcon className="size-4" />} label="Barras" onClick={() => onAdd('barcode')} />
+            <AddTile icon={<Grid3x3 className="size-4" />} label="DataMatrix" onClick={() => onAdd('datamatrix')} />
+            <AddTile icon={<Hexagon className="size-4" />} label="Aztec" onClick={() => onAdd('aztec')} />
+          </div>
+        </SubGroup>
+
+        <SubGroup label="Formas">
+          <div className="grid grid-cols-2 gap-1.5">
+            <AddTile icon={<Minus className="size-4" />} label="Linha" onClick={() => onAdd('line')} />
+            <AddTile icon={<Square className="size-4" />} label="Retângulo" onClick={() => onAdd('rect')} />
+          </div>
+        </SubGroup>
+
+        <SubGroup label="Mídia">
+          <AddTile icon={<ImageIcon className="size-4" />} label="Imagem" onClick={onUploadImage} />
+        </SubGroup>
+      </div>
+    </section>
+  );
+}
+
+function SubGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function AddTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full inline-flex flex-col items-center justify-center gap-1 rounded-md border border-border/70 bg-background/60 px-2 py-3 text-[11px] font-medium hover:bg-accent hover:border-primary/40 hover:text-foreground transition-all active:scale-[0.98]"
+      aria-label={`Adicionar ${label}`}
+    >
+      <span className="text-primary/80">{icon}</span>
+      {label}
+    </button>
+  );
+}
+
+// ============================================================================
+// Painel esquerdo — Layers (elementos)
+// ============================================================================
+
+function LayersPanel({
+  elements, selectedId, onSelect, onUpdate, onRemove, onDuplicate, onReorder,
+}: {
+  elements: LabelElement[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onUpdate: (id: string, p: Partial<LabelElement>) => void;
+  onRemove: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onReorder: (fromId: string, toId: string) => void;
+}) {
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  // Renderiza em ordem visual: topo do painel = topo do z-index (último no array).
+  const ordered = [...elements].reverse();
+
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
+          <Layers className="size-3.5 text-primary/70" /> Elementos
+          <Badge variant="secondary" className="text-[10px] px-1.5 h-4 ml-1">{elements.length}</Badge>
+        </div>
+      </div>
+
+      {elements.length === 0 ? (
+        <div className="text-[11px] text-muted-foreground italic text-center py-6 border border-dashed border-border/50 rounded-md">
+          <MousePointerClick className="size-4 mx-auto mb-1 opacity-50" />
+          Nenhum elemento — adicione acima.
+        </div>
+      ) : (
+        <ul className="rounded-md border border-border/60 bg-background/40 overflow-hidden">
+          {ordered.map((el) => {
+            const active = selectedId === el.id;
+            return (
+              <li
+                key={el.id}
+                draggable
+                onDragStart={() => setDragId(el.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragId && dragId !== el.id) onReorder(dragId, el.id);
+                  setDragId(null);
+                }}
+                onDragEnd={() => setDragId(null)}
+                className={cn(
+                  'group flex items-center gap-1 px-1.5 py-1.5 text-xs border-b border-border/50 last:border-b-0 transition-colors',
+                  active ? 'bg-primary/10 border-l-2 border-l-primary' : 'hover:bg-accent/40',
+                  dragId === el.id && 'opacity-50',
+                )}
+              >
+                <GripVertical className="size-3 text-muted-foreground/50 shrink-0 cursor-grab" />
+                <button
+                  type="button"
+                  onClick={() => onSelect(el.id)}
+                  className="flex-1 flex items-center gap-1.5 min-w-0 text-left"
+                >
+                  <ElementIcon type={el.type} />
+                  <span className={cn('truncate', el.hidden && 'opacity-50 line-through')}>{elementLabel(el)}</span>
+                </button>
+
+                <div className="flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                  <LayerAction
+                    label={el.hidden ? 'Mostrar' : 'Ocultar'}
+                    onClick={() => onUpdate(el.id, { hidden: !el.hidden })}
+                  >
+                    {el.hidden ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                  </LayerAction>
+                  <LayerAction
+                    label={el.locked ? 'Destravar' : 'Travar'}
+                    onClick={() => onUpdate(el.id, { locked: !el.locked })}
+                  >
+                    {el.locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
+                  </LayerAction>
+                  <LayerAction label="Duplicar" onClick={() => onDuplicate(el.id)}>
+                    <Copy className="size-3" />
+                  </LayerAction>
+                  <LayerAction label="Excluir" destructive onClick={() => onRemove(el.id)}>
+                    <Trash2 className="size-3" />
+                  </LayerAction>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function LayerAction({
+  label, onClick, children, destructive,
+}: { label: string; onClick: () => void; children: React.ReactNode; destructive?: boolean }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+          aria-label={label}
+          className={cn(
+            'p-1 rounded transition-colors text-muted-foreground',
+            destructive ? 'hover:bg-destructive/15 hover:text-destructive' : 'hover:bg-accent hover:text-foreground',
+          )}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-[10px]">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+// ============================================================================
+// Painel direito — Variáveis
+// ============================================================================
+
+function VariablesTab({ lastFocusedRef }: { lastFocusedRef: React.MutableRefObject<HTMLElement | null> }) {
+  const insert = (key: string) => {
+    const ok = insertIntoLastFocused(`{{${key}}}`, lastFocusedRef.current);
+    if (!ok) {
+      navigator.clipboard?.writeText(`{{${key}}}`);
+      toast.success(`{{${key}}} copiado — cole em um campo.`);
+    }
+  };
+  return (
+    <div className="space-y-3">
+      <div className="text-[11px] text-muted-foreground">
+        Clique numa variável para inserir no campo em foco.
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {VARIABLE_KEYS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => insert(k)}
+            className="px-2 py-1 rounded-md border border-primary/30 bg-primary/5 hover:bg-primary/15 hover:border-primary/50 font-mono text-[11px] text-primary transition-colors"
+          >
+            {`{{${k}}}`}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Painel direito — Presets
+// ============================================================================
+
+function PresetsTab({
+  presets, onSave, onLoad, onDelete,
+}: {
+  presets: SavedPreset[];
+  onSave: () => void;
+  onLoad: (p: SavedPreset) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <Button size="sm" variant="secondary" className="w-full gap-1.5" onClick={onSave}>
+        <Plus className="size-3.5" /> Salvar preset
+      </Button>
+      {presets.length === 0 ? (
+        <div className="text-[11px] text-muted-foreground italic text-center py-6 border border-dashed border-border/50 rounded-md">
+          Nenhum preset salvo ainda.
+        </div>
+      ) : (
+        <ul className="rounded-md border border-border/60 bg-background/40 divide-y divide-border/60">
+          {presets.map((p) => (
+            <li key={p.id} className="flex items-center gap-1 px-2 py-2 hover:bg-accent/40 transition-colors">
+              <button type="button" onClick={() => onLoad(p)} className="flex-1 min-w-0 text-left">
+                <div className="text-xs font-medium truncate">{p.name}</div>
+                <div className="text-[10px] text-muted-foreground font-mono">
+                  {p.snapshot.widthMm}×{p.snapshot.heightMm}mm · {p.snapshot.elements.length} elem.
+                </div>
+              </button>
+              <LayerAction label="Excluir preset" destructive onClick={() => onDelete(p.id)}>
+                <Trash2 className="size-3" />
+              </LayerAction>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Painel direito — Inspector (Elemento)
+// ============================================================================
+
+function PageInspector({
+  pageSize, widthMm, heightMm, onChangePreset, onPatch,
+}: {
+  pageSize: PresetSize; widthMm: number; heightMm: number;
+  onChangePreset: (p: PresetSize) => void;
+  onPatch: (p: Partial<LabelState>) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
+        <MousePointerClick className="size-4 text-primary/70 shrink-0" />
+        Selecione um elemento na etiqueta.
+      </div>
+      <div className="space-y-2">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80">Tamanho da etiqueta</div>
+        <Select value={pageSize} onValueChange={(v) => onChangePreset(v as PresetSize)}>
+          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {(Object.entries(PRESETS) as [Exclude<PresetSize, 'custom'>, typeof PRESETS['100x150']][]).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v.label}</SelectItem>
+            ))}
+            <SelectItem value="custom">Personalizado…</SelectItem>
+          </SelectContent>
+        </Select>
+        {pageSize === 'custom' && (
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Largura (mm)</Label>
+              <DimensionInput value={widthMm} min={20} max={300} onCommit={(v) => onPatch({ widthMm: v })} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Altura (mm)</Label>
+              <DimensionInput value={heightMm} min={20} max={400} onCommit={(v) => onPatch({ heightMm: v })} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ElementInspector({
+  element, onUpdate, pageSize, widthMm, heightMm, onChangePreset, onPatch,
+}: {
+  element: LabelElement;
+  onUpdate: (p: Partial<LabelElement>) => void;
+  pageSize: PresetSize; widthMm: number; heightMm: number;
+  onChangePreset: (p: PresetSize) => void;
+  onPatch: (p: Partial<LabelState>) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (f.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande (máx 2 MB).'); return; }
+    const reader = new FileReader();
+    reader.onload = () => onUpdate({ imageSrc: String(reader.result || '') });
+    reader.readAsDataURL(f);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header do elemento */}
+      <div className="flex items-center gap-2">
+        <div className="size-8 rounded-md bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
+          <ElementIcon type={element.type} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-semibold truncate">{elementLabel(element)}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{typeLabel(element.type)}</div>
+        </div>
+      </div>
+
+      {/* Posição / dimensões */}
+      <InspectorSection title="Posição e tamanho (mm)">
+        <div className="grid grid-cols-2 gap-2">
+          <NumField label="X" value={element.x} onChange={(v) => onUpdate({ x: v })} />
+          <NumField label="Y" value={element.y} onChange={(v) => onUpdate({ y: v })} />
+          <NumField label="Largura" value={element.w} onChange={(v) => onUpdate({ w: v })} />
+          <NumField label="Altura" value={element.h} onChange={(v) => onUpdate({ h: v })} />
+        </div>
+      </InspectorSection>
+
+      {/* Texto */}
+      {element.type === 'text' && (
+        <>
+          <InspectorSection title="Conteúdo">
+            <Input
+              placeholder="Texto (aceita {{variáveis}})"
+              value={element.text || ''}
+              onChange={(e) => onUpdate({ text: e.target.value })}
+              className="h-8 text-xs"
+            />
+          </InspectorSection>
+          <InspectorSection title="Tipografia">
+            <Select value={element.fontFamily || FONT_FAMILIES[0].value} onValueChange={(v) => onUpdate({ fontFamily: v })}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FONT_FAMILIES.map((f) => (<SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <NumField label="Tamanho (pt)" value={element.fontSize || 12} onChange={(v) => onUpdate({ fontSize: v })} />
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor</Label>
+                <input type="color" value={element.fontColor || '#000000'} onChange={(e) => onUpdate({ fontColor: e.target.value })}
+                  className="h-8 w-full rounded-md border border-border bg-background cursor-pointer p-0.5" />
+              </div>
+            </div>
+            <div className="flex items-center gap-1 mt-2">
+              <ToggleBtn active={!!element.bold} onClick={() => onUpdate({ bold: !element.bold })} title="Negrito (Ctrl+B)"><Bold className="size-3.5" /></ToggleBtn>
+              <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
+              <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
+              <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Negativo"><Contrast className="size-3.5" /></ToggleBtn>
+              <div className="w-px h-5 bg-border mx-1" />
+              <ToggleBtn active={element.align === 'left'} onClick={() => onUpdate({ align: 'left' })} title="Alinhar à esquerda"><span className="text-[10px]">L</span></ToggleBtn>
+              <ToggleBtn active={element.align === 'center'} onClick={() => onUpdate({ align: 'center' })} title="Centralizar"><span className="text-[10px]">C</span></ToggleBtn>
+              <ToggleBtn active={element.align === 'right'} onClick={() => onUpdate({ align: 'right' })} title="Alinhar à direita"><span className="text-[10px]">R</span></ToggleBtn>
+            </div>
+          </InspectorSection>
+        </>
+      )}
+
+      {/* Códigos */}
+      {(element.type === 'qr' || element.type === 'barcode' || element.type === 'datamatrix' || element.type === 'aztec') && (
+        <InspectorSection title="Dado">
+          <Input
+            placeholder="{{codigo}}"
+            value={element.payload || ''}
+            onChange={(e) => onUpdate({ payload: e.target.value })}
+            className="h-8 font-mono text-xs"
+          />
+          {element.type === 'barcode' && (
+            <div className="mt-2">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Formato</Label>
+              <Select value={element.barcodeFmt || 'CODE128'} onValueChange={(v) => onUpdate({ barcodeFmt: v as BarcodeFmt })}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(['CODE128', 'CODE39', 'EAN13', 'EAN8', 'ITF14', 'UPC'] as BarcodeFmt[]).map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </InspectorSection>
+      )}
+
+      {/* Linha */}
+      {element.type === 'line' && (
+        <InspectorSection title="Estilo da linha">
+          <Select value={element.lineStyle || 'solid'} onValueChange={(v) => onUpdate({ lineStyle: v as LineStyle })}>
+            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="solid">Sólida</SelectItem>
+              <SelectItem value="dashed">Tracejada</SelectItem>
+              <SelectItem value="dotted">Pontilhada</SelectItem>
+            </SelectContent>
+          </Select>
+        </InspectorSection>
+      )}
+
+      {/* Retângulo */}
+      {element.type === 'rect' && (
+        <InspectorSection title="Retângulo">
+          <Select value={element.rectFill || 'outline'} onValueChange={(v) => onUpdate({ rectFill: v as RectFill })}>
+            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="outline">Somente borda</SelectItem>
+              <SelectItem value="filled">Preenchido</SelectItem>
+            </SelectContent>
+          </Select>
+          {element.rectFill === 'filled' ? (
+            <div className="mt-2">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor</Label>
+              <input type="color" value={element.rectFillColor || '#000000'} onChange={(e) => onUpdate({ rectFillColor: e.target.value })}
+                className="h-8 w-full rounded-md border border-border bg-background cursor-pointer p-0.5" />
+            </div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              <Select value={element.borderStyle || 'solid'} onValueChange={(v) => onUpdate({ borderStyle: v as BorderStyle })}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solid">Sólida</SelectItem>
+                  <SelectItem value="dashed">Tracejada</SelectItem>
+                  <SelectItem value="dotted">Pontilhada</SelectItem>
+                  <SelectItem value="double">Dupla</SelectItem>
+                  <SelectItem value="groove">Baixo-relevo</SelectItem>
+                  <SelectItem value="ridge">Alto-relevo</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="grid grid-cols-2 gap-2">
+                <NumField label="Espessura (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor</Label>
+                  <input type="color" value={element.borderColor || '#000000'} onChange={(e) => onUpdate({ borderColor: e.target.value })}
+                    className="h-8 w-full rounded-md border border-border bg-background cursor-pointer p-0.5" />
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="mt-2">
+            <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
+          </div>
+        </InspectorSection>
+      )}
+
+      {/* Imagem */}
+      {element.type === 'image' && (
+        <InspectorSection title="Imagem">
+          <Button size="sm" variant="outline" className="w-full h-8 gap-1.5" onClick={() => fileRef.current?.click()}>
+            <ImageIcon className="size-3.5" /> {element.imageSrc ? 'Trocar imagem' : 'Carregar imagem'}
+          </Button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+          {element.imageSrc && (
+            <Button size="sm" variant="ghost" className="w-full h-8 text-xs text-destructive hover:bg-destructive/10 mt-1" onClick={() => onUpdate({ imageSrc: '' })}>
+              Remover imagem
+            </Button>
+          )}
+          <div className="mt-2">
+            <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
+          </div>
+        </InspectorSection>
+      )}
+
+      <Separator />
+
+      <InspectorSection title="Página">
+        <Select value={pageSize} onValueChange={(v) => onChangePreset(v as PresetSize)}>
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {(Object.entries(PRESETS) as [Exclude<PresetSize, 'custom'>, typeof PRESETS['100x150']][]).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v.label}</SelectItem>
+            ))}
+            <SelectItem value="custom">Personalizado…</SelectItem>
+          </SelectContent>
+        </Select>
+        {pageSize === 'custom' && (
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">L (mm)</Label>
+              <DimensionInput value={widthMm} min={20} max={300} onCommit={(v) => onPatch({ widthMm: v })} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">A (mm)</Label>
+              <DimensionInput value={heightMm} min={20} max={400} onCommit={(v) => onPatch({ heightMm: v })} />
+            </div>
+          </div>
+        )}
+      </InspectorSection>
+    </div>
+  );
+}
+
+function InspectorSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-1.5">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+      {children}
+    </section>
+  );
+}
+
+function typeLabel(t: ElementType): string {
+  return t === 'text' ? 'Texto'
+    : t === 'qr' ? 'QR Code'
+    : t === 'datamatrix' ? 'DataMatrix'
+    : t === 'aztec' ? 'Aztec'
+    : t === 'barcode' ? 'Código de barras'
+    : t === 'line' ? 'Linha'
+    : t === 'image' ? 'Imagem'
+    : 'Retângulo';
+}
+
+// ============================================================================
+// Preview workbench com réguas + zoom flutuante
+// ============================================================================
+
+const RULER_SIZE = 22;
+
 function PreviewWorkbench({
   widthMm, heightMm, zoom, onZoomChange, selected, children,
 }: {
@@ -663,7 +1157,6 @@ function PreviewWorkbench({
 
   const fit = zoom > 0 ? zoom : autoFit;
 
-  // Espaço pressionado → habilita "pan" com scroll horizontal (Req #9)
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
@@ -679,7 +1172,6 @@ function PreviewWorkbench({
     return () => { window.removeEventListener('keydown', onDown); window.removeEventListener('keyup', onUp); };
   }, []);
 
-  // Roda: zoom (padrão) ou pan horizontal (Espaço pressionado)
   useEffect(() => {
     const el = boxRef.current; if (!el) return;
     const handler = (e: WheelEvent) => {
@@ -702,93 +1194,125 @@ function PreviewWorkbench({
   const scaledW = naturalW * fit;
   const scaledH = naturalH * fit;
 
+  const zoomIn = () => onZoomChange(Math.min(4, fit + 0.1));
+  const zoomOut = () => onZoomChange(Math.max(0.2, fit - 0.1));
+
   return (
-    <div className="space-y-2 exp-preview-workbench flex flex-col min-h-0 lg:h-full">
-      <div className="flex items-center justify-between gap-3 shrink-0 print:hidden flex-wrap">
-        <div className="flex items-center gap-2">
-          <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Pré-visualização</Label>
-          <Badge variant="outline" className="font-mono text-[10px] gap-1 h-5">
-            <RulerIcon className="size-3" /> {widthMm}×{heightMm}mm
-          </Badge>
-          <Badge variant="secondary" className="font-mono text-[10px] h-5">{Math.round(fit * 100)}%</Badge>
-          <button className="text-[10px] font-medium text-primary hover:underline underline-offset-2 transition-colors" onClick={() => onZoomChange(0)}>
-            Ajustar à tela
-          </button>
-        </div>
-        <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <Keyboard className="size-3 mr-0.5 opacity-60" />
-          <Kbd>Scroll</Kbd><span className="opacity-60">zoom</span>
-          <span className="opacity-30">·</span>
-          <Kbd>Space</Kbd>+<Kbd>Scroll</Kbd><span className="opacity-60">mover</span>
-          <span className="opacity-30">·</span>
-          <Kbd>Del</Kbd><span className="opacity-60">excluir</span>
-          <span className="opacity-30">·</span>
-          <Kbd>Ctrl</Kbd>+<Kbd>B</Kbd><span className="opacity-60">negrito</span>
-          <span className="opacity-30">·</span>
-          <Kbd>Alt</Kbd><span className="opacity-60">sem snap</span>
-        </div>
-      </div>
+    <div
+      ref={boxRef}
+      className={cn(
+        'exp-preview-box relative overflow-auto flex-1 min-h-0',
+        spaceDown && 'cursor-grab',
+      )}
+      style={{
+        backgroundColor: 'hsl(var(--muted) / 0.55)',
+        backgroundImage:
+          'linear-gradient(45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(-45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%), linear-gradient(-45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%)',
+        backgroundSize: '16px 16px',
+        backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+      }}
+    >
+      {/* Réguas */}
       <div
-        ref={boxRef}
-        className={cn(
-          'exp-preview-box relative rounded-xl border border-border/60 overflow-auto shadow-inner flex-1 min-h-0 bg-background/50',
-          spaceDown && 'cursor-grab',
-        )}
+        className="pointer-events-none sticky top-0 left-0 z-20 print:hidden"
+        style={{ height: RULER_SIZE, width: '100%' }}
+      >
+        <div className="absolute" style={{ left: RULER_SIZE, top: 0 }}>
+          <Ruler orientation="horizontal" lengthMm={widthMm} pxPerMm={MM_TO_PX * fit}
+            highlight={selected ? { start: selected.x, end: selected.x + selected.w } : null} />
+        </div>
+        <div className="absolute" style={{ left: 0, top: 0 }}>
+          <Ruler orientation="vertical" lengthMm={heightMm} pxPerMm={MM_TO_PX * fit}
+            highlight={selected ? { start: selected.y, end: selected.y + selected.h } : null} />
+        </div>
+        <div className="absolute bg-background border-b border-r border-border" style={{ left: 0, top: 0, width: RULER_SIZE, height: RULER_SIZE }} />
+      </div>
+
+      <div
+        ref={stageRef}
+        className="exp-preview-stack relative"
         style={{
-          backgroundColor: 'hsl(var(--muted) / 0.55)',
-          backgroundImage:
-            'linear-gradient(45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(-45deg, hsl(var(--foreground) / 0.06) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%), linear-gradient(-45deg, transparent 75%, hsl(var(--foreground) / 0.06) 75%)',
-          backgroundSize: '16px 16px',
-          backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+          paddingLeft: RULER_SIZE + 8,
+          paddingTop: 8,
+          paddingRight: 8,
+          paddingBottom: 8,
+          width: `max(100%, ${scaledW + RULER_SIZE + 16}px)`,
+          minHeight: `${scaledH + 16}px`,
         }}
       >
-        {/* Réguas fixadas nas bordas do preview (Req #1) */}
         <div
-          className="pointer-events-none sticky top-0 left-0 z-20 print:hidden"
-          style={{ height: RULER_SIZE, width: '100%' }}
-        >
-          <div className="absolute" style={{ left: RULER_SIZE, top: 0 }}>
-            <Ruler orientation="horizontal" lengthMm={widthMm} pxPerMm={MM_TO_PX * fit}
-              highlight={selected ? { start: selected.x, end: selected.x + selected.w } : null} />
-          </div>
-          <div className="absolute" style={{ left: 0, top: 0 }}>
-            <Ruler orientation="vertical" lengthMm={heightMm} pxPerMm={MM_TO_PX * fit}
-              highlight={selected ? { start: selected.y, end: selected.y + selected.h } : null} />
-          </div>
-          {/* canto */}
-          <div className="absolute bg-background border-b border-r border-border" style={{ left: 0, top: 0, width: RULER_SIZE, height: RULER_SIZE }} />
-        </div>
-
-        <div
-          ref={stageRef}
-          className="exp-preview-stack relative"
           style={{
-            paddingLeft: RULER_SIZE + 8,
-            paddingTop: 8,
-            paddingRight: 8,
-            paddingBottom: 8,
-            width: `max(100%, ${scaledW + RULER_SIZE + 16}px)`,
-            minHeight: `${scaledH + 16}px`,
+            width: naturalW, height: naturalH,
+            transform: `scale(${fit})`,
+            transformOrigin: 'top left',
           }}
         >
-          <div
-            style={{
-              width: naturalW, height: naturalH,
-              transform: `scale(${fit})`,
-              transformOrigin: 'top left',
-            }}
-          >
-            {children}
-          </div>
+          {children}
+        </div>
+      </div>
+
+      {/* Controle de zoom flutuante + ajuda */}
+      <div className="print:hidden sticky bottom-3 left-0 flex justify-center pointer-events-none z-30" style={{ marginTop: -46 }}>
+        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-border bg-card/95 backdrop-blur shadow-lg px-1.5 py-1">
+          <Button variant="ghost" size="icon" className="size-7" onClick={zoomOut} aria-label="Diminuir zoom">
+            <ZoomOut className="size-3.5" />
+          </Button>
+          <span className="min-w-[42px] text-center font-mono text-[11px] font-medium tabular-nums">{Math.round(fit * 100)}%</span>
+          <Button variant="ghost" size="icon" className="size-7" onClick={zoomIn} aria-label="Aumentar zoom">
+            <ZoomIn className="size-3.5" />
+          </Button>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-7" onClick={() => onZoomChange(0)} aria-label="Ajustar à tela">
+                <Maximize2 className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px]">Ajustar à tela</TooltipContent>
+          </Tooltip>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-7" aria-label="Atalhos de teclado">
+                <HelpCircle className="size-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="end" className="w-72 p-3">
+              <div className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                <Keyboard className="size-3.5 text-primary" /> Atalhos
+              </div>
+              <div className="space-y-1.5 text-[11px]">
+                <ShortcutRow keys={['Scroll']} desc="Zoom" />
+                <ShortcutRow keys={['Space', '+', 'Scroll']} desc="Mover / pan" />
+                <ShortcutRow keys={['Del']} desc="Excluir elemento" />
+                <ShortcutRow keys={['Ctrl', '+', 'B']} desc="Negrito" />
+                <ShortcutRow keys={['Alt']} desc="Arrastar sem snap" />
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </div>
   );
 }
 
+function ShortcutRow({ keys, desc }: { keys: string[]; desc: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-1">
+        {keys.map((k, i) => k === '+' ? (
+          <span key={i} className="opacity-50">+</span>
+        ) : (
+          <Kbd key={i}>{k}</Kbd>
+        ))}
+      </div>
+      <span className="text-muted-foreground">{desc}</span>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
-// Régua (estilo Canva/BarTender): traços a cada mm, número a cada 10mm.
+// Régua
 // ---------------------------------------------------------------------------
 function Ruler({
   orientation, lengthMm, highlight, pxPerMm,
@@ -802,7 +1326,6 @@ function Ruler({
   const lengthPx = lengthMm * px;
   const isH = orientation === 'horizontal';
   const marks: JSX.Element[] = [];
-  // Espaçamento adaptativo entre rótulos conforme escala.
   const labelStep = px < 1.2 ? 50 : px < 2.4 ? 20 : 10;
   for (let mm = 0; mm <= Math.ceil(lengthMm); mm++) {
     const pos = mm * px;
@@ -871,13 +1394,11 @@ function LabelCanvas({
   const wPx = widthMm * MM_TO_PX;
   const hPx = heightMm * MM_TO_PX;
   const canvasRef = useRef<HTMLDivElement>(null);
-
-  // Guias de snap ativas durante o drag (em mm). Estilo Canva:
-  // mostra linhas quando o elemento se alinha a bordas/centros do canvas ou de outros elementos.
   const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
 
   const startDrag = (e: React.PointerEvent, el: LabelElement, mode: 'move' | 'resize') => {
     if (!editable) return;
+    if (el.locked) { e.stopPropagation(); onSelect(el.id); return; }
     e.stopPropagation();
     onSelect(el.id);
     const canvas = canvasRef.current; if (!canvas) return;
@@ -889,18 +1410,14 @@ function LabelCanvas({
     const origin = { x: el.x, y: el.y, w: el.w, h: el.h };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
-    // Alvos de snap fixos (bordas + centro do canvas). Adiciona também bordas/centros
-    // de outros elementos, para replicar o comportamento do Canva/BarTender.
-    const others = elements.filter((o) => o.id !== el.id);
+    const others = elements.filter((o) => o.id !== el.id && !o.hidden);
     const xTargetsBase = [0, widthMm / 2, widthMm, ...others.flatMap((o) => [o.x, o.x + o.w / 2, o.x + o.w])];
     const yTargetsBase = [0, heightMm / 2, heightMm, ...others.flatMap((o) => [o.y, o.y + o.h / 2, o.y + o.h])];
 
     const onMove = (ev: PointerEvent) => {
       const dxMm = (ev.clientX - startX) / scaleX / MM_TO_PX;
       const dyMm = (ev.clientY - startY) / scaleY / MM_TO_PX;
-      // Snap desabilitado com Alt pressionado (mesma UX do Canva)
       const snapEnabled = !ev.altKey;
-      // Tolerância em mm — proporcional para telas com fit variável (~5px).
       const tol = 1.2;
 
       if (mode === 'move') {
@@ -909,7 +1426,6 @@ function LabelCanvas({
         const activeV: number[] = [];
         const activeH: number[] = [];
         if (snapEnabled) {
-          // Candidatos verticais: esquerda, centro, direita do elemento em movimento.
           const xCands = [nx, nx + origin.w / 2, nx + origin.w];
           for (let i = 0; i < xCands.length; i++) {
             for (const t of xTargetsBase) {
@@ -968,7 +1484,7 @@ function LabelCanvas({
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontFamily: 'system-ui, sans-serif' }}
       onPointerDown={(e) => { if (editable && e.target === e.currentTarget) onSelect(null); }}
     >
-      {elements.map((el) => (
+      {elements.filter((e) => !e.hidden).map((el) => (
         <ElementView
           key={el.id}
           el={el}
@@ -983,7 +1499,6 @@ function LabelCanvas({
         />
       ))}
 
-      {/* Guias de snap (Req #3): linhas cyan enquanto arrasta, ocultas na impressão. */}
       {editable && (guides.v.length > 0 || guides.h.length > 0) && (
         <div className="pointer-events-none absolute inset-0 print:hidden">
           {guides.v.map((mm, i) => (
@@ -999,7 +1514,6 @@ function LabelCanvas({
     </div>
   );
 }
-
 
 // ============================================================================
 // Element view
@@ -1020,26 +1534,26 @@ function ElementView({
     left: `${el.x * MM_TO_PX}px`, top: `${el.y * MM_TO_PX}px`,
     width: `${el.w * MM_TO_PX}px`, height: `${el.h * MM_TO_PX}px`,
   };
-  // Seleção estilo Canva: borda violeta fina, handles brancos com anel violeta, toolbar pill flutuante.
   const PURPLE = '#8B3DFF';
   return (
     <div
       style={style}
       className={cn('label-el group',
-        editable && 'cursor-move',
-        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:#8B3DFF] hover:[outline-offset:2px]',
+        editable && !el.locked && 'cursor-move',
+        editable && el.locked && 'cursor-not-allowed',
+        editable && !selected && !el.locked && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:#8B3DFF] hover:[outline-offset:2px]',
       )}
       onPointerDown={(e) => onPointerDown(e, 'move')}
       onDoubleClick={(e) => {
         e.stopPropagation();
+        if (el.locked) return;
         if (el.type === 'text') { const next = prompt('Texto:', el.text || ''); if (next != null) onUpdate({ text: next }); }
       }}
     >
       <ElementContent el={el} meta={meta} />
 
-      {editable && selected && (
+      {editable && selected && !el.locked && (
         <>
-          {/* Borda de seleção estilo Canva: violeta fino, alto contraste sobre branco */}
           <div
             className="pointer-events-none absolute -inset-px z-[5]"
             style={{
@@ -1049,7 +1563,6 @@ function ElementView({
             }}
           />
 
-          {/* Handles estilo Canva: círculos brancos com anel violeta */}
           {([
             ['nw', '-top-[6px] -left-[6px] cursor-nw-resize', 'corner'],
             ['n',  '-top-[6px] left-1/2 -translate-x-1/2 cursor-n-resize', 'edge-h'],
@@ -1077,7 +1590,6 @@ function ElementView({
             );
           })}
 
-          {/* Toolbar flutuante estilo Canva: pill branco com ícones escuros, sombra suave */}
           <div onPointerDown={(e) => e.stopPropagation()}
             className="label-actions absolute -top-12 left-0 flex items-center gap-0.5 rounded-full px-2 py-1.5 z-10"
             style={{
@@ -1125,8 +1637,6 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
       </div>
     );
   }
-  // Códigos: se a variável ainda não foi preenchida, usamos um valor de preview
-  // baseado no próprio payload para que o QR/DM/Aztec/Barras seja sempre visível (Req #5).
   const codePreview = (raw: string | undefined) => {
     const resolved = resolveVars(raw, meta);
     if (resolved) return resolved;
@@ -1134,7 +1644,6 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
   };
   if (el.type === 'qr') {
     const value = codePreview(el.payload);
-    // SVG vetorial: escala sem perda em qualquer tamanho (Req #2).
     return (
       <div className="w-full h-full flex items-center justify-center bg-white overflow-hidden">
         <QRCodeSVG
@@ -1154,7 +1663,6 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
   if (el.type === 'line') {
     const style = el.lineStyle || 'solid';
     if (style === 'solid') return <div className="w-full h-full bg-black" />;
-    // dashed/dotted usando gradient
     const dashSize = style === 'dashed' ? '6px' : '2px';
     const gapSize = style === 'dashed' ? '4px' : '3px';
     return (
@@ -1214,201 +1722,12 @@ function BwipCode({ kind, value }: { kind: 'datamatrix' | 'azteccode'; value: st
 }
 
 // ============================================================================
-// Inspector
+// Reusable form controls
 // ============================================================================
-
-function ElementInspector({
-  element, onUpdate, onClose,
-}: { element: LabelElement; onUpdate: (p: Partial<LabelElement>) => void; onClose: () => void }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (!f) return;
-    if (f.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande (máx 2 MB).'); return; }
-    const reader = new FileReader();
-    reader.onload = () => onUpdate({ imageSrc: String(reader.result || '') });
-    reader.readAsDataURL(f);
-  };
-
-  return (
-    <Card className="print:hidden border-primary/30 bg-gradient-to-r from-primary/[0.03] to-transparent shadow-sm">
-      <CardContent className="p-3 flex flex-wrap items-end gap-x-3 gap-y-2">
-        <InspectorGroup>
-          <div className="flex items-center gap-2 pr-1">
-            <div className="size-7 rounded-md bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
-              <ElementIcon type={element.type} />
-            </div>
-            <span className="text-xs font-semibold whitespace-nowrap max-w-[140px] truncate">{elementLabel(element)}</span>
-          </div>
-        </InspectorGroup>
-
-        <InspectorGroup>
-          <NumField label="X" value={element.x} onChange={(v) => onUpdate({ x: v })} />
-          <NumField label="Y" value={element.y} onChange={(v) => onUpdate({ y: v })} />
-          <NumField label="L" value={element.w} onChange={(v) => onUpdate({ w: v })} />
-          <NumField label="A" value={element.h} onChange={(v) => onUpdate({ h: v })} />
-        </InspectorGroup>
-
-        {element.type === 'text' && (
-          <>
-            <InspectorGroup>
-              <div className="flex flex-col gap-1 min-w-[200px] flex-1">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Texto (aceita {'{{variáveis}}'})</Label>
-                <Input className="h-8" value={element.text || ''} onChange={(e) => onUpdate({ text: e.target.value })} />
-              </div>
-            </InspectorGroup>
-            <InspectorGroup>
-              <div className="flex flex-col gap-1 min-w-[150px]">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Fonte</Label>
-                <Select value={element.fontFamily || FONT_FAMILIES[0].value} onValueChange={(v) => onUpdate({ fontFamily: v })}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FONT_FAMILIES.map((f) => (<SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <NumField label="pt" value={element.fontSize || 12} onChange={(v) => onUpdate({ fontSize: v })} />
-            </InspectorGroup>
-            <InspectorGroup>
-              <div className="flex flex-col gap-1">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo</Label>
-                <div className="flex gap-1">
-                  <ToggleBtn active={!!element.bold} onClick={() => onUpdate({ bold: !element.bold })} title="Negrito (Ctrl+B)"><Bold className="size-3.5" /></ToggleBtn>
-                  <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
-                  <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
-                  <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><Palette className="size-3" /> Cor</Label>
-                <input
-                  type="color"
-                  value={element.fontColor || '#000000'}
-                  onChange={(e) => onUpdate({ fontColor: e.target.value })}
-                  className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5 hover:border-primary/50 transition-colors"
-                  title="Cor da fonte"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Alinhar</Label>
-                <div className="flex gap-1">
-                  {(['left', 'center', 'right'] as const).map((a) => (
-                    <Button key={a} size="sm" variant={element.align === a ? 'default' : 'outline'} className="h-8 w-8 p-0 text-[10px] uppercase font-mono"
-                      onClick={() => onUpdate({ align: a })}>{a[0]}</Button>
-                  ))}
-                </div>
-              </div>
-            </InspectorGroup>
-          </>
-        )}
-
-        {(element.type === 'qr' || element.type === 'barcode' || element.type === 'datamatrix' || element.type === 'aztec') && (
-          <InspectorGroup>
-            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Dado (aceita {'{{variáveis}}'})</Label>
-              <Input className="h-8 font-mono text-xs" value={element.payload || ''} onChange={(e) => onUpdate({ payload: e.target.value })} placeholder="{{codigo}}" />
-            </div>
-            {element.type === 'barcode' && (
-              <div className="flex flex-col gap-1 min-w-[120px]">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Formato</Label>
-                <Select value={element.barcodeFmt || 'CODE128'} onValueChange={(v) => onUpdate({ barcodeFmt: v as BarcodeFmt })}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(['CODE128', 'CODE39', 'EAN13', 'EAN8', 'ITF14', 'UPC'] as BarcodeFmt[]).map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </InspectorGroup>
-        )}
-
-        {element.type === 'line' && (
-          <InspectorGroup>
-            <div className="flex flex-col gap-1 min-w-[140px]">
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo da linha</Label>
-              <Select value={element.lineStyle || 'solid'} onValueChange={(v) => onUpdate({ lineStyle: v as LineStyle })}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="solid">Sólida</SelectItem>
-                  <SelectItem value="dashed">Tracejada</SelectItem>
-                  <SelectItem value="dotted">Pontilhada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </InspectorGroup>
-        )}
-
-        {element.type === 'rect' && (
-          <InspectorGroup>
-            <div className="flex flex-col gap-1 min-w-[130px]">
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Preenchimento</Label>
-              <Select value={element.rectFill || 'outline'} onValueChange={(v) => onUpdate({ rectFill: v as RectFill })}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="outline">Somente borda</SelectItem>
-                  <SelectItem value="filled">Preenchido</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {element.rectFill === 'filled' && (
-              <div className="flex flex-col gap-1">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor</Label>
-                <input type="color" value={element.rectFillColor || '#000000'} onChange={(e) => onUpdate({ rectFillColor: e.target.value })}
-                  className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5" />
-              </div>
-            )}
-            {element.rectFill !== 'filled' && (
-              <>
-                <div className="flex flex-col gap-1 min-w-[130px]">
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo da borda</Label>
-                  <Select value={element.borderStyle || 'solid'} onValueChange={(v) => onUpdate({ borderStyle: v as BorderStyle })}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="solid">Sólida</SelectItem>
-                      <SelectItem value="dashed">Tracejada</SelectItem>
-                      <SelectItem value="dotted">Pontilhada</SelectItem>
-                      <SelectItem value="double">Dupla</SelectItem>
-                      <SelectItem value="groove">Baixo-relevo</SelectItem>
-                      <SelectItem value="ridge">Alto-relevo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <NumField label="Espessura (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor da borda</Label>
-                  <input type="color" value={element.borderColor || '#000000'} onChange={(e) => onUpdate({ borderColor: e.target.value })}
-                    className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5" />
-                </div>
-              </>
-            )}
-            <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
-          </InspectorGroup>
-        )}
-
-        {element.type === 'image' && (
-          <InspectorGroup>
-            <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => fileRef.current?.click()}>
-              <ImageIcon className="size-3.5" /> {element.imageSrc ? 'Trocar imagem' : 'Carregar imagem'}
-            </Button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
-            {element.imageSrc && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={() => onUpdate({ imageSrc: '' })}>
-                Remover
-              </Button>
-            )}
-            <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
-          </InspectorGroup>
-        )}
-
-        <Button size="sm" variant="ghost" className="ml-auto text-xs h-8" onClick={onClose}>Fechar</Button>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ToggleBtn({ active, onClick, title, children }: { active: boolean; onClick: () => void; title: string; children: React.ReactNode }) {
   return (
-    <Button size="sm" variant={active ? 'default' : 'outline'} className="h-8 w-8 p-0" onClick={onClick} title={title}>
+    <Button size="sm" variant={active ? 'default' : 'outline'} className="h-8 w-8 p-0" onClick={onClick} title={title} aria-label={title}>
       {children}
     </Button>
   );
@@ -1416,7 +1735,7 @@ function ToggleBtn({ active, onClick, title, children }: { active: boolean; onCl
 
 function NumField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex flex-col gap-1 w-20">
+    <div className="flex flex-col gap-1">
       <Label className="text-[10px] uppercase text-muted-foreground">{label}</Label>
       <Input type="number" step="0.5" className="h-8 font-mono text-xs" value={value}
         onChange={(e) => onChange(Number(e.target.value) || 0)} />
@@ -1424,12 +1743,6 @@ function NumField({ label, value, onChange }: { label: string; value: number; on
   );
 }
 
-/**
- * Campo de dimensão que permite ao usuário apagar totalmente o valor e digitar
- * do zero (Req #1). O clamp min/max só é aplicado ao confirmar (blur ou Enter).
- * Enquanto o campo está em edição mantemos uma string local para não sobrescrever
- * o que o usuário digitou.
- */
 function DimensionInput({
   value, min, max, onCommit,
 }: { value: number; min: number; max: number; onCommit: (v: number) => void }) {
@@ -1469,7 +1782,6 @@ function DimensionInput({
     />
   );
 }
-
 
 // ============================================================================
 // History Dialog
@@ -1543,43 +1855,6 @@ function StatMini({ label, value, icon }: { label: string; value: string; icon?:
   );
 }
 
-// --- Sidebar / toolbar helpers (visual only) ---
-
-function SidebarSection({
-  icon, title, badge, action, children, last,
-}: {
-  icon: React.ReactNode; title: string;
-  badge?: React.ReactNode; action?: React.ReactNode;
-  children: React.ReactNode; last?: boolean;
-}) {
-  return (
-    <section className={cn('px-3.5 py-3', !last && 'border-b border-border/50')}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
-          <span className="text-primary/70">{icon}</span>
-          {title}
-          {badge}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function AddButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full inline-flex items-center gap-2 rounded-md border border-border/70 bg-background/60 px-2.5 py-2 text-xs font-medium hover:bg-accent hover:border-primary/40 hover:text-foreground transition-all active:scale-[0.98] shadow-sm"
-    >
-      <span className="text-primary/80">{icon}</span>
-      {label}
-    </button>
-  );
-}
-
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd className="inline-flex items-center px-1.5 h-[18px] rounded border border-border/70 bg-muted/60 font-mono text-[9px] font-semibold text-foreground/80 shadow-[0_1px_0_hsl(var(--border))]">
@@ -1587,17 +1862,6 @@ function Kbd({ children }: { children: React.ReactNode }) {
     </kbd>
   );
 }
-
-// --- Inspector visual helpers ---
-
-function InspectorGroup({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-end gap-2.5 pr-3 mr-1 border-r border-border/50 last:border-r-0 last:pr-0 last:mr-0">
-      {children}
-    </div>
-  );
-}
-
 
 // ============================================================================
 // Icons & labels
