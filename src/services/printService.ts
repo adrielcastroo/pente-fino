@@ -23,6 +23,7 @@ import {
   type MotorLabelData,
   type TecidoLabelData,
 } from '@/components/labels/LabelTemplates';
+import { ZPLPreview } from '@/components/etiquetas/ZPLPreview';
 import type { LabelSettings } from '@/store/useAppStore';
 
 /**
