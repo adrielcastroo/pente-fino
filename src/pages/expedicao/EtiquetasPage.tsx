@@ -393,15 +393,21 @@ export default function ExpedicaoEtiquetasPage() {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <div>
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Largura (mm)</Label>
-                    <Input type="number" min={20} max={300} className="h-8"
+                    <DimensionInput
                       value={state.widthMm}
-                      onChange={(e) => patch({ widthMm: Math.max(20, Math.min(300, Number(e.target.value) || 20)) })} />
+                      min={20}
+                      max={300}
+                      onCommit={(v) => patch({ widthMm: v })}
+                    />
                   </div>
                   <div>
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Altura (mm)</Label>
-                    <Input type="number" min={20} max={400} className="h-8"
+                    <DimensionInput
                       value={state.heightMm}
-                      onChange={(e) => patch({ heightMm: Math.max(20, Math.min(400, Number(e.target.value) || 20)) })} />
+                      min={20}
+                      max={400}
+                      onCommit={(v) => patch({ heightMm: v })}
+                    />
                   </div>
                 </div>
               )}
