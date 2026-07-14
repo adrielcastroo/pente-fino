@@ -31,5 +31,6 @@ export async function printTemplate(
   const zpl = templateToZpl(t, vars);
   const res = method === 'zpl-usb' ? await sendZplViaUsb(zpl) : await sendZplViaSerial(zpl);
   if (res.ok) return { ok: true, method };
-  return { ok: false, method, error: res.error };
+  const err = (res as { ok: false; error: string }).error;
+  return { ok: false, method, error: err };
 }
