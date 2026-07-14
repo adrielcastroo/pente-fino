@@ -21,6 +21,7 @@ export interface ElementEditValues {
   fd: string;
   size: number;
   reverse: boolean;
+  align?: TextAlign;
   width?: number;
   height?: number;
   thickness?: number;
