@@ -10,8 +10,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } fr
 import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import {
-  Printer, Tag, FileText, RotateCcw, History, Plus, Type, QrCode, Barcode as BarcodeIcon,
-  Trash2, Copy, ZoomIn, ZoomOut, Minus, Square, Truck, Package, User, Hash, Move, ArrowUp, ArrowDown,
+  Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
+  Trash2, Copy, ZoomIn, ZoomOut, Minus, Square, ArrowUp, ArrowDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +22,6 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { loadHistory, pushHistory, clearHistory, type PrintHistoryEntry, type BarcodeFmt } from './etiqueta-helpers';
