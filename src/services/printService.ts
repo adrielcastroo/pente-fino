@@ -1384,3 +1384,68 @@ export async function printImagesInBrowser(
   });
 }
 
+/**
+ * Impressão de etiquetas ZPL da Expedição usando o MESMO pipeline direto (React → iframe)
+ * das etiquetas de Tecido/Motor no módulo estoque. Isso preserva 100% dos elementos
+ * visuais do `ZPLPreview` (textos, códigos, QR, boxes, linhas) sem conversão para PNG
+ * — nada é adicionado, nada é removido. Ajustes finos (offset X/Y, borda, padding)
+ * vêm do LabelSettings (aba "Expedição (ZPL)").
+ */
+export async function printZplLabelsInBrowser(
+  zpl: string,
+  variaveis: Record<string, string>,
+  dimensoes: { largura: number; altura: number },
+  copies: number,
+  labelSettings: LabelSettings,
+  title: string,
+): Promise<void> {
+  const nCopies = Math.max(1, Math.floor(copies));
+  const w = dimensoes.largura;
+  const h = dimensoes.altura;
+  const wPx = w * LABEL_PX_PER_MM;
+  const hPx = h * LABEL_PX_PER_MM;
+  const offsetXPx = (labelSettings.expedicaoPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetYPx = (labelSettings.expedicaoPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
+  const borderWidth = labelSettings.expedicaoBorderWidth ?? 0;
+  const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
+  const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
+  const padding = labelSettings.expedicaoPadding ?? 0;
+  const borderCss = borderStyle === 'none' || borderWidth <= 0
+    ? 'none'
+    : `${borderWidth}px ${borderStyle} #000`;
+
+  const buildPage = (): DirectBrowserPage => ({
+    widthMm: w,
+    heightMm: h,
+    basePx: { w: wPx, h: hPx },
+    element: createElement('div', {
+      style: {
+        position: 'relative',
+        width: `${wPx}px`,
+        height: `${hPx}px`,
+        background: '#fff',
+        overflow: 'hidden',
+      },
+    },
+      createElement('div', {
+        style: {
+          position: 'absolute',
+          inset: 0,
+          transform: `translate(${offsetXPx}px, ${offsetYPx}px)`,
+          boxSizing: 'border-box',
+          border: borderCss,
+          borderRadius: `${borderRadius}px`,
+          padding: `${padding}px`,
+          background: '#fff',
+        },
+      },
+        createElement(ZPLPreview, { zpl, variaveis, dimensoes }),
+      ),
+    ),
+  });
+
+  const pages: DirectBrowserPage[] = Array.from({ length: nCopies }, buildPage);
+  await printReactLabelsInBrowserBatch(pages, title);
+}
+
+
