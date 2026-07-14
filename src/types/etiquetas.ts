@@ -82,49 +82,42 @@ export interface VariavelInteligente {
 }
 
 export const VARIAVEIS_INTELIGENTES: readonly VariavelInteligente[] = [
-  { chave: 'romaneio', label: 'Romaneio', tipo: 'text', desc: 'Número do romaneio' },
-  { chave: 'cliente', label: 'Cliente', tipo: 'text', desc: 'Nome do cliente' },
-  { chave: 'nf', label: 'Nota Fiscal', tipo: 'text', desc: 'Nota fiscal' },
-  { chave: 'transportadora', label: 'Transportadora', tipo: 'select', opcoes: ['Jadlog', 'Correios', 'Sequoia', 'Outra'], desc: 'Transportadora' },
-  { chave: 'data', label: 'Data', tipo: 'date', padrao: '{{hoje}}', desc: 'Data' },
-  { chave: 'peso', label: 'Peso (kg)', tipo: 'text', desc: 'Peso calculado' },
-  { chave: 'volume', label: 'Volume (m³)', tipo: 'text', desc: 'Volume da caixa' },
-  { chave: 'endereco', label: 'Endereço', tipo: 'text', desc: 'Endereço completo' },
-  { chave: 'codigo_barras', label: 'Código de Barras', tipo: 'barcode', desc: 'CODE128 automático' },
-  { chave: 'qr_code', label: 'QR Code', tipo: 'qr', desc: 'QR com JSON' },
-  { chave: 'pedido', label: 'Pedido', tipo: 'text', desc: 'Número do pedido' },
-  { chave: 'item', label: 'Item/SKU', tipo: 'text', desc: 'Item/SKU' },
-  { chave: 'quantidade', label: 'Quantidade', tipo: 'text', desc: 'Quantidade' },
-  { chave: 'caixa', label: 'Caixa', tipo: 'text', desc: 'Número da caixa (1/3, 2/3)' },
+  { chave: 'romaneio', label: 'Romaneio', tipo: 'text', desc: 'Número do romaneio (6 dígitos)' },
+  { chave: 'transportadora', label: 'Transportadora', tipo: 'select', opcoes: ['JADLOG', 'CORREIOS', 'SEQUOIA', 'OUTRA'], desc: 'Transportadora' },
+  { chave: 'volume_atual', label: 'Volume Atual', tipo: 'text', desc: 'Número do volume atual (ex: 03)' },
+  { chave: 'volume_total', label: 'Volume Total', tipo: 'text', desc: 'Total de volumes (ex: 12)' },
+  { chave: 'data', label: 'Data de Emissão', tipo: 'date', padrao: '{{hoje}}', desc: 'Data de emissão' },
 ];
 
-// Etiqueta padrão de expedição (100x150mm — 480x400 dots @ 203dpi)
-// Layout: LOGO centralizado, TRANSPORTADORA centralizada, QR Code central,
-// VOLUME atual/total centralizado, DATA de impressão no canto inferior direito.
+// Etiqueta PADRÃO ÚNICO de Expedição (100x50mm — 480x400 dots @ 203dpi)
+// Layout: LOGO UNILUX no topo · TRANSPORTADORA centralizada · QR Code central ·
+// VOLUME atual / total centralizado · DATA de emissão no canto inferior direito.
 export const ZPL_PADRAO = `^XA
 ^PW480
 ^LL400
 ^LH0,0
 ^CI28
 ^FX =============================== LOGO
-^FO0,10^FB480,1,0,C^A0N,36,36^FDUNILUX^FS
+^FO130,20^A0N,36,36^FDUNILUX^FS
 ^FX =============================== TRANSPORTADORA
-^FO0,70^FB480,1,0,C^A0N,22,22^FDTRANSPORTADORA^FS
-^FO0,95^FB480,1,0,C^A0N,28,28^FD{{transportadora}}^FS
+^FO20,70^A0N,22,22^FDTRANSPORTADORA:^FS
+^FO20,95^FB440,1,0,C^A0N,28,28^FD{{transportadora}}^FS
 ^FX =============================== QR CODE CENTRAL
-^FO180,135^BQN,2,5^FDLA,ROM{{romaneio}}^FS
-^FX =============================== VOLUME
-^FO0,300^FB480,1,0,C^A0N,50,50^FD{{caixa}}^FS
-^FO0,360^FB480,1,0,C^A0N,18,18^FDVOLUME^FS
-^FX =============================== DATA DE IMPRESSAO (canto inferior direito)
-^FO0,378^FB470,1,0,R^A0N,18,18^FD{{hoje}}^FS
+^FO160,135^BQN,2,5^FDLA,ROM{{romaneio}}^FS
+^FX =============================== VOLUME ATUAL / TOTAL
+^FO90,300^A0N,50,50^FD{{volume_atual}}^FS
+^FO185,300^A0N,45,45^FD/^FS
+^FO245,300^A0N,50,50^FD{{volume_total}}^FS
+^FO80,350^A0N,18,18^FDVOLUME^FS
+^FO235,350^A0N,18,18^FDTOTAL^FS
+^FX =============================== DATA EMISSAO (canto inferior direito)
+^FO285,375^A0N,18,18^FD{{data}}^FS
 ^XZ`;
 
 export const VARIAVEIS_PADRAO: VariavelTemplate[] = [
   { chave: 'romaneio', label: 'Romaneio', tipo: 'text', obrigatorio: true, ordem: 0 },
-  { chave: 'cliente', label: 'Cliente', tipo: 'text', obrigatorio: true, ordem: 1 },
-  { chave: 'nf', label: 'Nota Fiscal', tipo: 'text', obrigatorio: false, ordem: 2 },
-  { chave: 'data', label: 'Data', tipo: 'date', obrigatorio: false, padrao: '{{hoje}}', ordem: 3 },
-  { chave: 'transportadora', label: 'Transportadora', tipo: 'select', obrigatorio: false, opcoes: ['Jadlog', 'Correios', 'Sequoia', 'Outra'], ordem: 4 },
-  { chave: 'codigo_barras', label: 'Código de Barras', tipo: 'barcode', obrigatorio: false, ordem: 5 },
+  { chave: 'transportadora', label: 'Transportadora', tipo: 'select', obrigatorio: true, opcoes: ['JADLOG', 'CORREIOS', 'SEQUOIA', 'OUTRA'], ordem: 1 },
+  { chave: 'volume_atual', label: 'Volume Atual', tipo: 'text', obrigatorio: true, ordem: 2 },
+  { chave: 'volume_total', label: 'Volume Total', tipo: 'text', obrigatorio: true, ordem: 3 },
+  { chave: 'data', label: 'Data de Emissão', tipo: 'date', obrigatorio: false, padrao: '{{hoje}}', ordem: 4 },
 ];
