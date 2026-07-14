@@ -22,7 +22,7 @@ const readPersistedKind = (): LabelKind => {
   if (typeof window === 'undefined') return 'tecido';
   try {
     const v = window.localStorage.getItem(LABEL_KIND_STORAGE_KEY);
-    return v === 'motor' || v === 'tecido' ? v : 'tecido';
+    return v === 'motor' || v === 'tecido' || v === 'expedicao' ? v : 'tecido';
   } catch {
     return 'tecido';
   }
