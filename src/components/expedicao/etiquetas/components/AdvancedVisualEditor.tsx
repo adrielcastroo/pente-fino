@@ -169,7 +169,7 @@ function resolveVars(input: string | undefined, meta: LabelState['meta']): strin
 // ============================================================================
 
 export default function AdvancedVisualEditor() {
-  useDocumentTitle('Etiquetas · Expedição');
+  // documentTitle é gerenciado pela EtiquetasPage principal
 
   const [state, setState] = useState<LabelState>(() => loadState());
   const [xmlOpen, setXmlOpen] = useState(false);
