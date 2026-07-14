@@ -162,6 +162,38 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                 <p className="text-[10px] text-muted-foreground">Usa <code className="font-mono">^FB</code> para alinhar o texto na etiqueta.</p>
               </div>
 
+              <div className="rounded-md border border-border/60 p-2.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-xs">Quebra de linha (field block)</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Emite <code className="font-mono">^FB</code> — respeita largura e nº de linhas.
+                    </p>
+                  </div>
+                  <Switch checked={wrapEnabled} onCheckedChange={setWrapEnabled} />
+                </div>
+                {wrapEnabled && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Largura (dots)</Label>
+                      <Input
+                        type="number" min={20} value={fbWidth}
+                        onChange={(e) => setFbWidth(Math.max(20, parseInt(e.target.value, 10) || 20))}
+                        className="font-mono h-9"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Máx. de linhas</Label>
+                      <Input
+                        type="number" min={1} max={9999} value={fbMaxLines}
+                        onChange={(e) => setFbMaxLines(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        className="font-mono h-9"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
                 <div>
                   <Label className="text-xs">Negativo (fundo preto)</Label>
