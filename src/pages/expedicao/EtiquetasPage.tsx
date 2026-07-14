@@ -428,20 +428,17 @@ export default function ExpedicaoEtiquetasPage() {
 
               <div className="space-y-1">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Códigos</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('qr')}>
-                    <QrCode className="size-3.5" /> QR
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('barcode')}>
-                    <BarcodeIcon className="size-3.5" /> Barras
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('datamatrix')}>
-                    <Grid3x3 className="size-3.5" /> DataMatrix
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('aztec')}>
-                    <Hexagon className="size-3.5" /> Aztec
-                  </Button>
-                </div>
+                <Select value="" onValueChange={(v) => v && addElement(v as ElementType)}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Selecionar código…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="qr"><span className="inline-flex items-center gap-2"><QrCode className="size-3.5" /> QR Code</span></SelectItem>
+                    <SelectItem value="barcode"><span className="inline-flex items-center gap-2"><BarcodeIcon className="size-3.5" /> Código de barras (1D)</span></SelectItem>
+                    <SelectItem value="datamatrix"><span className="inline-flex items-center gap-2"><Grid3x3 className="size-3.5" /> DataMatrix</span></SelectItem>
+                    <SelectItem value="aztec"><span className="inline-flex items-center gap-2"><Hexagon className="size-3.5" /> Aztec</span></SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1">
