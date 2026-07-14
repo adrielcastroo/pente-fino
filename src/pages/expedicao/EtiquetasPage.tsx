@@ -570,8 +570,14 @@ export default function ExpedicaoEtiquetasPage() {
               onClose={() => setSelectedId(null)}
             />
           ) : (
-            <div className="rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground print:hidden">
-              Selecione um elemento na etiqueta para editar suas propriedades aqui.
+            <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-3 text-xs text-muted-foreground print:hidden flex items-center gap-2.5">
+              <div className="size-8 rounded-md bg-background/70 border border-border/60 flex items-center justify-center shrink-0">
+                <MousePointerClick className="size-4 text-primary/70" />
+              </div>
+              <div>
+                <div className="font-medium text-foreground/90">Selecione um elemento na etiqueta</div>
+                <div className="text-[11px] text-muted-foreground">Suas propriedades aparecem aqui para edição rápida.</div>
+              </div>
             </div>
           )}
           <PreviewWorkbench
