@@ -16,7 +16,8 @@ import bwipjs from 'bwip-js/browser';
 import {
   Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
   Trash2, Copy, Minus, Square, ArrowUp, ArrowDown, Plus, Image as ImageIcon,
-  Grid3x3, Hexagon, Bold, Italic, Underline, Contrast,
+  Grid3x3, Hexagon, Bold, Italic, Underline, Contrast, Ruler as RulerIcon,
+  Layers, Sparkles, MousePointerClick, Keyboard, Bookmark, Palette, Move,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -344,42 +345,54 @@ export default function ExpedicaoEtiquetasPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col gap-3 print:hidden sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2 flex-wrap">
-            <Tag className="size-5 text-primary" /> Etiquetas de Expedição
-            <Badge variant="secondary" className="font-mono text-[11px]">{state.widthMm}×{state.heightMm} mm</Badge>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1 truncate">
-            Editor livre com réguas, variáveis dinâmicas e zoom por scroll do mouse.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="default" size="sm" className="gap-1.5" onClick={() => setXmlOpen(true)}>
-            <FileText className="size-4" /> Importar XML
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryOpen(true)}>
-            <History className="size-4" /> Histórico
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={reset} title="Limpar etiqueta">
-            <RotateCcw className="size-4" />
-          </Button>
-          <Button onClick={handlePrint} size="sm" className="gap-1.5">
-            <Printer className="size-4" /> Imprimir
-          </Button>
+      {/* Header — cartão premium com hierarquia clara e CTA destacado */}
+      <div className="print:hidden rounded-xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 shadow-sm">
+        <div className="flex flex-col gap-3 p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex items-start gap-3">
+            <div className="hidden sm:flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+              <Tag className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">Etiquetas de Expedição</h1>
+                <Badge variant="secondary" className="font-mono text-[11px] gap-1">
+                  <RulerIcon className="size-3" /> {state.widthMm}×{state.heightMm} mm
+                </Badge>
+                <Badge variant="outline" className="font-mono text-[10px] gap-1 text-muted-foreground">
+                  <Layers className="size-3" /> {state.elements.length} elem.
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Editor visual com réguas, variáveis dinâmicas e snap inteligente — estilo Canva/BarTender.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setHistoryOpen(true)}>
+              <History className="size-4" /> Histórico
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={reset} title="Limpar etiqueta">
+              <RotateCcw className="size-4" /> <span className="hidden sm:inline">Reiniciar</span>
+            </Button>
+            <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setXmlOpen(true)}>
+              <FileText className="size-4" /> Importar XML
+            </Button>
+            <Button onClick={handlePrint} size="sm" className="gap-1.5 shadow-sm">
+              <Printer className="size-4" /> Imprimir
+            </Button>
+          </div>
         </div>
       </div>
 
+
       {/* Req #6: layout sem scroll vertical — grade ocupa altura restante da viewport */}
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6 print:block min-w-0 lg:h-[calc(100vh-160px)] lg:overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 lg:gap-5 print:block min-w-0 lg:h-[calc(100vh-200px)] lg:overflow-hidden">
         {/* Painel de configuração (rola internamente para não empurrar o preview) */}
-        <div className="lg:h-full lg:overflow-y-auto lg:pr-1">
-        <Card className="print:hidden">
-          <CardContent className="p-4 space-y-4">
-            {/* Tamanho */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Tamanho</Label>
+        <div className="lg:h-full lg:overflow-y-auto lg:pr-1 space-y-3 custom-scrollbar">
+        <Card className="print:hidden border-border/60 shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            {/* --- Tamanho --- */}
+            <SidebarSection icon={<RulerIcon className="size-3.5" />} title="Tamanho da etiqueta">
               <Select value={state.pageSize} onValueChange={(v) => changePreset(v as PresetSize)}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -390,130 +403,119 @@ export default function ExpedicaoEtiquetasPage() {
                 </SelectContent>
               </Select>
               {state.pageSize === 'custom' && (
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div className="space-y-1">
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Largura (mm)</Label>
-                    <DimensionInput
-                      value={state.widthMm}
-                      min={20}
-                      max={300}
-                      onCommit={(v) => patch({ widthMm: v })}
-                    />
+                    <DimensionInput value={state.widthMm} min={20} max={300} onCommit={(v) => patch({ widthMm: v })} />
                   </div>
-                  <div>
+                  <div className="space-y-1">
                     <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Altura (mm)</Label>
-                    <DimensionInput
-                      value={state.heightMm}
-                      min={20}
-                      max={400}
-                      onCommit={(v) => patch({ heightMm: v })}
-                    />
+                    <DimensionInput value={state.heightMm} min={20} max={400} onCommit={(v) => patch({ heightMm: v })} />
                   </div>
                 </div>
               )}
-            </div>
+            </SidebarSection>
 
-            {/* Adicionar elementos — agrupados por categoria (Req #3) */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">Adicionar elemento</Label>
+            {/* --- Adicionar elementos --- */}
+            <SidebarSection icon={<Plus className="size-3.5" />} title="Adicionar elemento">
+              <div className="space-y-2.5">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Texto</div>
+                  <AddButton icon={<Type className="size-3.5" />} label="Texto" onClick={() => addElement('text')} />
+                </div>
 
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Texto</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('text')}>
-                    <Type className="size-3.5" /> Texto
-                  </Button>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Códigos</div>
+                  <Select value="" onValueChange={(v) => v && addElement(v as ElementType)}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="Selecionar tipo de código…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="qr"><span className="inline-flex items-center gap-2"><QrCode className="size-3.5" /> QR Code</span></SelectItem>
+                      <SelectItem value="barcode"><span className="inline-flex items-center gap-2"><BarcodeIcon className="size-3.5" /> Código de barras (1D)</span></SelectItem>
+                      <SelectItem value="datamatrix"><span className="inline-flex items-center gap-2"><Grid3x3 className="size-3.5" /> DataMatrix</span></SelectItem>
+                      <SelectItem value="aztec"><span className="inline-flex items-center gap-2"><Hexagon className="size-3.5" /> Aztec</span></SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Formas</div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <AddButton icon={<Minus className="size-3.5" />} label="Linha" onClick={() => addElement('line')} />
+                    <AddButton icon={<Square className="size-3.5" />} label="Retângulo" onClick={() => addElement('rect')} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Mídia</div>
+                  <AddButton icon={<ImageIcon className="size-3.5" />} label="Carregar imagem" onClick={triggerImageUpload} />
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
                 </div>
               </div>
+            </SidebarSection>
 
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Códigos</div>
-                <Select value="" onValueChange={(v) => v && addElement(v as ElementType)}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Selecionar código…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="qr"><span className="inline-flex items-center gap-2"><QrCode className="size-3.5" /> QR Code</span></SelectItem>
-                    <SelectItem value="barcode"><span className="inline-flex items-center gap-2"><BarcodeIcon className="size-3.5" /> Código de barras (1D)</span></SelectItem>
-                    <SelectItem value="datamatrix"><span className="inline-flex items-center gap-2"><Grid3x3 className="size-3.5" /> DataMatrix</span></SelectItem>
-                    <SelectItem value="aztec"><span className="inline-flex items-center gap-2"><Hexagon className="size-3.5" /> Aztec</span></SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Formas</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('line')}>
-                    <Minus className="size-3.5" /> Linha
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={() => addElement('rect')}>
-                    <Square className="size-3.5" /> Retângulo
-                  </Button>
+            {/* --- Variáveis disponíveis --- */}
+            <SidebarSection icon={<Sparkles className="size-3.5" />} title="Variáveis dinâmicas">
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5 space-y-1.5">
+                <div className="flex flex-wrap gap-1">
+                  {VARIABLE_KEYS.map((k) => (
+                    <code key={k} className="px-1.5 py-0.5 rounded bg-background border border-border/70 font-mono text-[10px] text-primary">{`{{${k}}}`}</code>
+                  ))}
                 </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Use em textos, QR, DataMatrix e barras. Resolvidas ao imprimir.</p>
               </div>
+            </SidebarSection>
 
-              <div className="space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Mídia</div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Button variant="outline" size="sm" className="justify-start gap-1.5 h-8" onClick={triggerImageUpload}>
-                    <ImageIcon className="size-3.5" /> Imagem
-                  </Button>
-                </div>
-                <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUploadFile} />
-              </div>
-            </div>
-
-            {/* Variáveis */}
-            <div className="rounded-md border border-border/60 bg-muted/30 p-2 text-[10px] space-y-1">
-              <div className="font-semibold uppercase tracking-wider text-muted-foreground">Variáveis disponíveis</div>
-              <div className="flex flex-wrap gap-1">
-                {VARIABLE_KEYS.map((k) => (
-                  <code key={k} className="px-1 py-0.5 rounded bg-background border border-border font-mono">{`{{${k}}}`}</code>
-                ))}
-              </div>
-              <p className="text-muted-foreground pt-1">Use em textos, QR e barras. São resolvidas ao imprimir.</p>
-            </div>
-
-            {/* Elementos */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Elementos ({state.elements.length})</Label>
-              <ScrollArea className="h-40 border border-border/60 rounded-md">
-                <ul className="divide-y divide-border">
+            {/* --- Elementos da etiqueta --- */}
+            <SidebarSection
+              icon={<Layers className="size-3.5" />}
+              title="Elementos"
+              badge={<Badge variant="secondary" className="text-[10px] px-1.5 h-4">{state.elements.length}</Badge>}
+            >
+              <ScrollArea className="h-40 border border-border/60 rounded-md bg-background/40">
+                <ul className="divide-y divide-border/60">
                   {state.elements.map((el) => (
                     <li key={el.id}>
                       <button type="button" onClick={() => setSelectedId(el.id)}
-                        className={cn('w-full text-left px-2 py-1.5 text-xs flex items-center gap-2 hover:bg-accent/40 transition-colors',
-                          selectedId === el.id && 'bg-primary/10')}>
+                        className={cn('w-full text-left px-2.5 py-2 text-xs flex items-center gap-2 hover:bg-accent/50 transition-colors',
+                          selectedId === el.id && 'bg-primary/10 border-l-2 border-primary')}>
                         <ElementIcon type={el.type} />
                         <span className="truncate flex-1">{elementLabel(el)}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); removeElement(el.id); }}
-                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                          title="Remover">
                           <Trash2 className="size-3" />
                         </button>
                       </button>
                     </li>
                   ))}
                   {state.elements.length === 0 && (
-                    <li className="p-3 text-[11px] text-muted-foreground italic">Nenhum elemento.</li>
+                    <li className="p-4 text-[11px] text-muted-foreground italic text-center">
+                      <MousePointerClick className="size-4 mx-auto mb-1 opacity-50" />
+                      Nenhum elemento — adicione acima.
+                    </li>
                   )}
                 </ul>
               </ScrollArea>
-            </div>
+            </SidebarSection>
 
-            {/* Presets salvos */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-muted-foreground">Meus presets ({presets.length})</Label>
-                <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1" onClick={handleSavePreset}>
+            {/* --- Presets --- */}
+            <SidebarSection
+              icon={<Bookmark className="size-3.5" />}
+              title="Meus presets"
+              badge={<Badge variant="secondary" className="text-[10px] px-1.5 h-4">{presets.length}</Badge>}
+              action={
+                <Button size="sm" variant="ghost" className="h-6 text-[11px] gap-1 px-2 text-primary hover:text-primary hover:bg-primary/10" onClick={handleSavePreset}>
                   <Plus className="size-3" /> Salvar
                 </Button>
-              </div>
-              {presets.length > 0 && (
-                <ScrollArea className="max-h-40 border border-border/60 rounded-md">
-                  <ul className="divide-y divide-border">
+              }
+            >
+              {presets.length > 0 ? (
+                <ScrollArea className="max-h-40 border border-border/60 rounded-md bg-background/40">
+                  <ul className="divide-y divide-border/60">
                     {presets.map((p) => (
-                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/40">
+                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/50 transition-colors">
                         <button type="button" onClick={() => handleLoadPreset(p)} className="flex-1 min-w-0 text-left">
                           <div className="text-xs font-medium truncate">{p.name}</div>
                           <div className="text-[10px] text-muted-foreground font-mono">
@@ -521,36 +523,43 @@ export default function ExpedicaoEtiquetasPage() {
                           </div>
                         </button>
                         <button type="button" onClick={() => handleDeletePreset(p.id)}
-                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
                           <Trash2 className="size-3" />
                         </button>
                       </li>
                     ))}
                   </ul>
                 </ScrollArea>
+              ) : (
+                <div className="text-[11px] text-muted-foreground italic text-center py-3 border border-dashed border-border/50 rounded-md">
+                  Salve o layout atual para reutilizar depois.
+                </div>
               )}
-            </div>
+            </SidebarSection>
 
-            {/* Resumo XML */}
+            {/* --- Resumo XML --- */}
             {(state.meta.transportadora || state.meta.nfNumero) && (
-              <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-1.5 text-[11px]">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Transp.</span>
-                  <span className="font-semibold text-right truncate">{state.meta.transportadora || '—'}</span>
+              <SidebarSection icon={<FileText className="size-3.5" />} title="Dados do XML atual" last>
+                <div className="rounded-md border border-border/60 bg-muted/40 p-2.5 space-y-1.5 text-[11px]">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Transp.</span>
+                    <span className="font-semibold text-right truncate">{state.meta.transportadora || '—'}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">NF-e</span>
+                    <span className="font-mono text-right truncate">{state.meta.nfNumero || '—'}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Vol.</span>
+                    <span className="font-mono">{state.meta.volumeAtual}/{state.meta.volumeTotal}</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted-foreground uppercase tracking-wide text-[10px]">NF-e</span>
-                  <span className="font-mono text-right truncate">{state.meta.nfNumero || '—'}</span>
-                </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-muted-foreground uppercase tracking-wide text-[10px]">Vol.</span>
-                  <span className="font-mono">{state.meta.volumeAtual}/{state.meta.volumeTotal}</span>
-                </div>
-              </div>
+              </SidebarSection>
             )}
           </CardContent>
         </Card>
         </div>
+
 
         {/* Editor Canvas — barra de ações (Inspector) fica ACIMA do preview (Req #2) */}
         <div className="flex flex-col min-h-0 lg:h-full gap-2">
@@ -561,8 +570,14 @@ export default function ExpedicaoEtiquetasPage() {
               onClose={() => setSelectedId(null)}
             />
           ) : (
-            <div className="rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground print:hidden">
-              Selecione um elemento na etiqueta para editar suas propriedades aqui.
+            <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-3 text-xs text-muted-foreground print:hidden flex items-center gap-2.5">
+              <div className="size-8 rounded-md bg-background/70 border border-border/60 flex items-center justify-center shrink-0">
+                <MousePointerClick className="size-4 text-primary/70" />
+              </div>
+              <div>
+                <div className="font-medium text-foreground/90">Selecione um elemento na etiqueta</div>
+                <div className="text-[11px] text-muted-foreground">Suas propriedades aparecem aqui para edição rápida.</div>
+              </div>
             </div>
           )}
           <PreviewWorkbench
@@ -685,19 +700,34 @@ function PreviewWorkbench({
 
   return (
     <div className="space-y-2 exp-preview-workbench flex flex-col min-h-0 lg:h-full">
-      <div className="flex items-baseline justify-between shrink-0 print:hidden">
-        <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">Pré-visualização</Label>
-        <div className="flex items-center gap-3 text-[10px] font-mono opacity-70">
-          <span>{widthMm}×{heightMm}mm</span>
-          <span>{Math.round(fit * 100)}%</span>
-          <button className="underline hover:text-primary" onClick={() => onZoomChange(0)}>Ajustar</button>
-          <span className="opacity-60">Scroll = zoom · Espaço + scroll = mover · Del = excluir · Ctrl+B = negrito</span>
+      <div className="flex items-center justify-between gap-3 shrink-0 print:hidden flex-wrap">
+        <div className="flex items-center gap-2">
+          <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Pré-visualização</Label>
+          <Badge variant="outline" className="font-mono text-[10px] gap-1 h-5">
+            <RulerIcon className="size-3" /> {widthMm}×{heightMm}mm
+          </Badge>
+          <Badge variant="secondary" className="font-mono text-[10px] h-5">{Math.round(fit * 100)}%</Badge>
+          <button className="text-[10px] font-medium text-primary hover:underline underline-offset-2 transition-colors" onClick={() => onZoomChange(0)}>
+            Ajustar à tela
+          </button>
+        </div>
+        <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <Keyboard className="size-3 mr-0.5 opacity-60" />
+          <Kbd>Scroll</Kbd><span className="opacity-60">zoom</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Space</Kbd>+<Kbd>Scroll</Kbd><span className="opacity-60">mover</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Del</Kbd><span className="opacity-60">excluir</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Ctrl</Kbd>+<Kbd>B</Kbd><span className="opacity-60">negrito</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Alt</Kbd><span className="opacity-60">sem snap</span>
         </div>
       </div>
       <div
         ref={boxRef}
         className={cn(
-          'exp-preview-box relative rounded-lg border-2 border-dashed border-border/50 overflow-auto shadow-inner flex-1 min-h-0',
+          'exp-preview-box relative rounded-xl border border-border/60 overflow-auto shadow-inner flex-1 min-h-0 bg-background/50',
           spaceDown && 'cursor-grab',
         )}
         style={{
@@ -1143,98 +1173,117 @@ function ElementInspector({
   };
 
   return (
-    <Card className="print:hidden">
-      <CardContent className="p-3 flex flex-wrap items-end gap-3">
-        <div className="flex items-center gap-2 mr-2">
-          <ElementIcon type={element.type} />
-          <span className="text-xs font-semibold">{elementLabel(element)}</span>
-        </div>
+    <Card className="print:hidden border-primary/30 bg-gradient-to-r from-primary/[0.03] to-transparent shadow-sm">
+      <CardContent className="p-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+        <InspectorGroup>
+          <div className="flex items-center gap-2 pr-1">
+            <div className="size-7 rounded-md bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
+              <ElementIcon type={element.type} />
+            </div>
+            <span className="text-xs font-semibold whitespace-nowrap max-w-[140px] truncate">{elementLabel(element)}</span>
+          </div>
+        </InspectorGroup>
 
-        <NumField label="X" value={element.x} onChange={(v) => onUpdate({ x: v })} />
-        <NumField label="Y" value={element.y} onChange={(v) => onUpdate({ y: v })} />
-        <NumField label="L" value={element.w} onChange={(v) => onUpdate({ w: v })} />
-        <NumField label="A" value={element.h} onChange={(v) => onUpdate({ h: v })} />
+        <InspectorGroup>
+          <NumField label="X" value={element.x} onChange={(v) => onUpdate({ x: v })} />
+          <NumField label="Y" value={element.y} onChange={(v) => onUpdate({ y: v })} />
+          <NumField label="L" value={element.w} onChange={(v) => onUpdate({ w: v })} />
+          <NumField label="A" value={element.h} onChange={(v) => onUpdate({ h: v })} />
+        </InspectorGroup>
 
         {element.type === 'text' && (
           <>
-            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
-              <Label className="text-[10px] uppercase text-muted-foreground">Texto (aceita {'{{variáveis}}'})</Label>
-              <Input className="h-8" value={element.text || ''} onChange={(e) => onUpdate({ text: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1 min-w-[160px]">
-              <Label className="text-[10px] uppercase text-muted-foreground">Fonte</Label>
-              <Select value={element.fontFamily || FONT_FAMILIES[0].value} onValueChange={(v) => onUpdate({ fontFamily: v })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {FONT_FAMILIES.map((f) => (<SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>))}
-                </SelectContent>
-              </Select>
-            </div>
-            <NumField label="pt" value={element.fontSize || 12} onChange={(v) => onUpdate({ fontSize: v })} />
-            <div className="flex gap-1">
-              <ToggleBtn active={!!element.bold} onClick={() => onUpdate({ bold: !element.bold })} title="Negrito"><Bold className="size-3.5" /></ToggleBtn>
-              <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
-              <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
-              <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] uppercase text-muted-foreground">Cor</Label>
-              <input
-                type="color"
-                value={element.fontColor || '#000000'}
-                onChange={(e) => onUpdate({ fontColor: e.target.value })}
-                className="h-8 w-10 rounded border border-border bg-background cursor-pointer p-0.5"
-                title="Cor da fonte"
-              />
-            </div>
-            <div className="flex gap-1">
-              {(['left', 'center', 'right'] as const).map((a) => (
-                <Button key={a} size="sm" variant={element.align === a ? 'default' : 'outline'} className="h-8 px-2 text-[10px] uppercase"
-                  onClick={() => onUpdate({ align: a })}>{a[0]}</Button>
-              ))}
-            </div>
+            <InspectorGroup>
+              <div className="flex flex-col gap-1 min-w-[200px] flex-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Texto (aceita {'{{variáveis}}'})</Label>
+                <Input className="h-8" value={element.text || ''} onChange={(e) => onUpdate({ text: e.target.value })} />
+              </div>
+            </InspectorGroup>
+            <InspectorGroup>
+              <div className="flex flex-col gap-1 min-w-[150px]">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Fonte</Label>
+                <Select value={element.fontFamily || FONT_FAMILIES[0].value} onValueChange={(v) => onUpdate({ fontFamily: v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FONT_FAMILIES.map((f) => (<SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <NumField label="pt" value={element.fontSize || 12} onChange={(v) => onUpdate({ fontSize: v })} />
+            </InspectorGroup>
+            <InspectorGroup>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo</Label>
+                <div className="flex gap-1">
+                  <ToggleBtn active={!!element.bold} onClick={() => onUpdate({ bold: !element.bold })} title="Negrito (Ctrl+B)"><Bold className="size-3.5" /></ToggleBtn>
+                  <ToggleBtn active={!!element.italic} onClick={() => onUpdate({ italic: !element.italic })} title="Itálico"><Italic className="size-3.5" /></ToggleBtn>
+                  <ToggleBtn active={!!element.underline} onClick={() => onUpdate({ underline: !element.underline })} title="Sublinhado"><Underline className="size-3.5" /></ToggleBtn>
+                  <ToggleBtn active={!!element.negative} onClick={() => onUpdate({ negative: !element.negative })} title="Texto negativo (fundo preto)"><Contrast className="size-3.5" /></ToggleBtn>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><Palette className="size-3" /> Cor</Label>
+                <input
+                  type="color"
+                  value={element.fontColor || '#000000'}
+                  onChange={(e) => onUpdate({ fontColor: e.target.value })}
+                  className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5 hover:border-primary/50 transition-colors"
+                  title="Cor da fonte"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Alinhar</Label>
+                <div className="flex gap-1">
+                  {(['left', 'center', 'right'] as const).map((a) => (
+                    <Button key={a} size="sm" variant={element.align === a ? 'default' : 'outline'} className="h-8 w-8 p-0 text-[10px] uppercase font-mono"
+                      onClick={() => onUpdate({ align: a })}>{a[0]}</Button>
+                  ))}
+                </div>
+              </div>
+            </InspectorGroup>
           </>
         )}
 
         {(element.type === 'qr' || element.type === 'barcode' || element.type === 'datamatrix' || element.type === 'aztec') && (
-          <div className="flex flex-col gap-1 min-w-[240px] flex-1">
-            <Label className="text-[10px] uppercase text-muted-foreground">
-              Dado (aceita {'{{variáveis}}'} — resolvido ao imprimir)
-            </Label>
-            <Input className="h-8 font-mono text-xs" value={element.payload || ''} onChange={(e) => onUpdate({ payload: e.target.value })} placeholder="{{codigo}}" />
-          </div>
-        )}
-
-        {element.type === 'barcode' && (
-          <div className="flex flex-col gap-1 min-w-[130px]">
-            <Label className="text-[10px] uppercase text-muted-foreground">Formato</Label>
-            <Select value={element.barcodeFmt || 'CODE128'} onValueChange={(v) => onUpdate({ barcodeFmt: v as BarcodeFmt })}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {(['CODE128', 'CODE39', 'EAN13', 'EAN8', 'ITF14', 'UPC'] as BarcodeFmt[]).map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
-              </SelectContent>
-            </Select>
-          </div>
+          <InspectorGroup>
+            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Dado (aceita {'{{variáveis}}'})</Label>
+              <Input className="h-8 font-mono text-xs" value={element.payload || ''} onChange={(e) => onUpdate({ payload: e.target.value })} placeholder="{{codigo}}" />
+            </div>
+            {element.type === 'barcode' && (
+              <div className="flex flex-col gap-1 min-w-[120px]">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Formato</Label>
+                <Select value={element.barcodeFmt || 'CODE128'} onValueChange={(v) => onUpdate({ barcodeFmt: v as BarcodeFmt })}>
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(['CODE128', 'CODE39', 'EAN13', 'EAN8', 'ITF14', 'UPC'] as BarcodeFmt[]).map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </InspectorGroup>
         )}
 
         {element.type === 'line' && (
-          <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label className="text-[10px] uppercase text-muted-foreground">Estilo da linha</Label>
-            <Select value={element.lineStyle || 'solid'} onValueChange={(v) => onUpdate({ lineStyle: v as LineStyle })}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="solid">Sólida</SelectItem>
-                <SelectItem value="dashed">Tracejada</SelectItem>
-                <SelectItem value="dotted">Pontilhada</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <InspectorGroup>
+            <div className="flex flex-col gap-1 min-w-[140px]">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo da linha</Label>
+              <Select value={element.lineStyle || 'solid'} onValueChange={(v) => onUpdate({ lineStyle: v as LineStyle })}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solid">Sólida</SelectItem>
+                  <SelectItem value="dashed">Tracejada</SelectItem>
+                  <SelectItem value="dotted">Pontilhada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </InspectorGroup>
         )}
 
         {element.type === 'rect' && (
-          <>
+          <InspectorGroup>
             <div className="flex flex-col gap-1 min-w-[130px]">
-              <Label className="text-[10px] uppercase text-muted-foreground">Preenchimento</Label>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Preenchimento</Label>
               <Select value={element.rectFill || 'outline'} onValueChange={(v) => onUpdate({ rectFill: v as RectFill })}>
                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1247,25 +1296,25 @@ function ElementInspector({
               <NumField label="Borda (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
             )}
             <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
-          </>
+          </InspectorGroup>
         )}
 
         {element.type === 'image' && (
-          <>
+          <InspectorGroup>
             <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => fileRef.current?.click()}>
               <ImageIcon className="size-3.5" /> {element.imageSrc ? 'Trocar imagem' : 'Carregar imagem'}
             </Button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
             {element.imageSrc && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive" onClick={() => onUpdate({ imageSrc: '' })}>
+              <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={() => onUpdate({ imageSrc: '' })}>
                 Remover
               </Button>
             )}
             <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
-          </>
+          </InspectorGroup>
         )}
 
-        <Button size="sm" variant="ghost" className="ml-auto text-xs" onClick={onClose}>Fechar</Button>
+        <Button size="sm" variant="ghost" className="ml-auto text-xs h-8" onClick={onClose}>Fechar</Button>
       </CardContent>
     </Card>
   );
@@ -1357,9 +1406,9 @@ function HistoryDialog({
           <DialogTitle className="flex items-center gap-2"><History className="size-4 text-primary" /> Histórico de impressões</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-2">
-          <StatMini label="Total" value={String(stats.total)} />
-          <StatMini label="Cópias" value={String(stats.copies)} />
-          <StatMini label="Hoje" value={String(stats.today)} />
+          <StatMini label="Total" value={String(stats.total)} icon={<History className="size-4" />} />
+          <StatMini label="Cópias" value={String(stats.copies)} icon={<Copy className="size-4" />} />
+          <StatMini label="Hoje" value={String(stats.today)} icon={<Sparkles className="size-4" />} />
         </div>
         <ScrollArea className="h-[420px] border border-border rounded-md">
           {items.length === 0 ? (
@@ -1396,14 +1445,73 @@ function HistoryDialog({
   );
 }
 
-function StatMini({ label, value }: { label: string; value: string }) {
+function StatMini({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-border bg-muted/30 p-2 text-center">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="text-xl font-bold font-mono">{value}</div>
+    <div className="rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 p-3 flex items-center gap-3">
+      {icon && <div className="size-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">{icon}</div>}
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="text-xl font-bold font-mono leading-tight">{value}</div>
+      </div>
     </div>
   );
 }
+
+// --- Sidebar / toolbar helpers (visual only) ---
+
+function SidebarSection({
+  icon, title, badge, action, children, last,
+}: {
+  icon: React.ReactNode; title: string;
+  badge?: React.ReactNode; action?: React.ReactNode;
+  children: React.ReactNode; last?: boolean;
+}) {
+  return (
+    <section className={cn('px-3.5 py-3', !last && 'border-b border-border/50')}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
+          <span className="text-primary/70">{icon}</span>
+          {title}
+          {badge}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function AddButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full inline-flex items-center gap-2 rounded-md border border-border/70 bg-background/60 px-2.5 py-2 text-xs font-medium hover:bg-accent hover:border-primary/40 hover:text-foreground transition-all active:scale-[0.98] shadow-sm"
+    >
+      <span className="text-primary/80">{icon}</span>
+      {label}
+    </button>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex items-center px-1.5 h-[18px] rounded border border-border/70 bg-muted/60 font-mono text-[9px] font-semibold text-foreground/80 shadow-[0_1px_0_hsl(var(--border))]">
+      {children}
+    </kbd>
+  );
+}
+
+// --- Inspector visual helpers ---
+
+function InspectorGroup({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-end gap-2.5 pr-3 mr-1 border-r border-border/50 last:border-r-0 last:pr-0 last:mr-0">
+      {children}
+    </div>
+  );
+}
+
 
 // ============================================================================
 // Icons & labels
