@@ -68,8 +68,32 @@ export default function EditarEtiquetaPage() {
   const [zpl, setZpl] = useState('');
   const [variaveis, setVariaveis] = useState<VariavelTemplate[]>([]);
   const [previewMode, setPreviewMode] = useState<'interativo' | 'visual' | 'zpl'>('interativo');
+  const [logoUrl, setLogoUrl] = useState<string>('');
   const [dirty, setDirty] = useState(false);
   const skipDirtyRef = useRef(true);
+
+  // Persistência do logo por template (localStorage — imagem não vai para o ZPL).
+  useEffect(() => {
+    if (!id) return;
+    const saved = localStorage.getItem(`etiqueta-logo-${id}`);
+    if (saved) setLogoUrl(saved);
+  }, [id]);
+
+  const onLogoUpload = (file: File) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result || '');
+      setLogoUrl(url);
+      if (id) localStorage.setItem(`etiqueta-logo-${id}`, url);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearLogo = () => {
+    setLogoUrl('');
+    if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
+  };
 
   useEffect(() => {
     if (!template) return;
