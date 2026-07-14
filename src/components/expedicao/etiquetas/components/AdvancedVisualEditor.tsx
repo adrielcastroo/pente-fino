@@ -10,7 +10,7 @@
 //  - Zoom pela roda do mouse (Ctrl/Alt para passo fino)
 // ============================================================================
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import bwipjs from 'bwip-js/browser';
 import {
@@ -45,6 +45,7 @@ type ElementType = 'text' | 'qr' | 'datamatrix' | 'aztec' | 'barcode' | 'line' |
 
 type LineStyle = 'solid' | 'dashed' | 'dotted';
 type RectFill = 'outline' | 'filled';
+type BorderStyle = 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge';
 
 interface LabelElement {
   id: string;
@@ -69,6 +70,9 @@ interface LabelElement {
   rectFill?: RectFill;
   borderWidth?: number;
   borderRadius?: number;
+  borderStyle?: BorderStyle;
+  borderColor?: string;
+  rectFillColor?: string;
   // imagem
   imageSrc?: string;
 }
@@ -1084,11 +1088,18 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
     return (raw && raw.trim()) || 'PREVIEW';
   };
   if (el.type === 'qr') {
-    const size = Math.max(16, Math.min(el.w, el.h) * MM_TO_PX);
     const value = codePreview(el.payload);
+    // SVG vetorial: escala sem perda em qualquer tamanho (Req #2).
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white">
-        <QRCodeCanvas value={value} size={size} level="M" includeMargin={false} />
+      <div className="w-full h-full flex items-center justify-center bg-white overflow-hidden">
+        <QRCodeSVG
+          value={value}
+          level="H"
+          includeMargin={false}
+          bgColor="#ffffff"
+          fgColor="#000000"
+          style={{ width: '100%', height: '100%', display: 'block', shapeRendering: 'crispEdges' }}
+        />
       </div>
     );
   }
@@ -1114,10 +1125,12 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
   if (el.type === 'rect') {
     const bw = (el.borderWidth ?? 0.4) * MM_TO_PX;
     const br = (el.borderRadius ?? 0) * MM_TO_PX;
+    const bs = el.borderStyle || 'solid';
+    const bc = el.borderColor || '#000';
     if (el.rectFill === 'filled') {
-      return <div className="w-full h-full bg-black" style={{ borderRadius: `${br}px` }} />;
+      return <div className="w-full h-full" style={{ background: el.rectFillColor || '#000', borderRadius: `${br}px` }} />;
     }
-    return <div className="w-full h-full" style={{ border: `${bw}px solid #000`, borderRadius: `${br}px` }} />;
+    return <div className="w-full h-full" style={{ border: `${bw}px ${bs} ${bc}`, borderRadius: `${br}px`, background: 'transparent' }} />;
   }
   if (el.type === 'image') {
     const br = (el.borderRadius ?? 0) * MM_TO_PX;
