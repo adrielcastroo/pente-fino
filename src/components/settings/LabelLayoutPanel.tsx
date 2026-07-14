@@ -184,6 +184,7 @@ export default function LabelLayoutPanel() {
               {([
                 { value: 'tecido', icon: Shirt, title: 'Tecidos', size: '100×60' },
                 { value: 'motor', icon: Cog, title: 'Motores / Controles', size: '60×50' },
+                { value: 'expedicao', icon: Truck, title: 'Expedição (ZPL)', size: 'template' },
               ] as const).map(({ value, icon: Icon, title, size }) => (
                 <TabsTrigger
                   key={value}
@@ -192,7 +193,7 @@ export default function LabelLayoutPanel() {
                 >
                   <Icon className="h-3.5 w-3.5" />
                   <span>{title}</span>
-                  <span className="hidden md:inline text-[10px] font-mono opacity-60">{size}mm</span>
+                  <span className="hidden md:inline text-[10px] font-mono opacity-60">{size}{size !== 'template' ? 'mm' : ''}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -200,10 +201,13 @@ export default function LabelLayoutPanel() {
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[10px] text-muted-foreground">Atual:</span>
             <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-medium text-primary">
-              {w}×{h}mm · {(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}
+              {kind === 'expedicao'
+                ? 'Ajustes globais · dim. do template'
+                : `${w}×${h}mm · ${(isMotor ? (labelSettings.motorOrientation ?? labelSettings.orientation) : labelSettings.orientation) === 'landscape' ? 'Paisagem' : 'Retrato'}`}
             </span>
           </div>
         </div>
+
 
 
         <TabsContent value={kind} className="mt-0 animate-fade-in">
