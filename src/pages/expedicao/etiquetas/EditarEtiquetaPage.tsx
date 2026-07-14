@@ -591,9 +591,10 @@ export default function EditarEtiquetaPage() {
                       valores={valoresExemplo}
                       dimensoes={{ largura, altura }}
                       variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                      logoUrl={logoUrl}
                     />
                   ) : (
-                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
+                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
                   )}
                 </div>
               )}
