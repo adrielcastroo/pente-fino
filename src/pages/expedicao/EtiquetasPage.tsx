@@ -11,7 +11,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import {
   Printer, Tag, FileText, RotateCcw, History, Type, QrCode, Barcode as BarcodeIcon,
-  Trash2, Copy, ZoomIn, ZoomOut, Minus, Square, ArrowUp, ArrowDown,
+  Trash2, Copy, ZoomIn, ZoomOut, Minus, Square, ArrowUp, ArrowDown, Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -110,6 +110,25 @@ function loadState(): LabelState {
   } catch { return { ...DEFAULT_STATE, elements: defaultElements() }; }
 }
 
+// ---------------------------------------------------------------------------
+// Presets salvos pelo usuário — layouts nomeados que ficam no localStorage.
+// ---------------------------------------------------------------------------
+const PRESETS_KEY = 'exp_label_presets_v1';
+
+interface SavedPreset { id: string; name: string; createdAt: number; snapshot: LabelState }
+
+function loadPresets(): SavedPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function savePresets(list: SavedPreset[]) {
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(list));
+}
+
 // ============================================================================
 // Page
 // ============================================================================
@@ -122,6 +141,27 @@ export default function ExpedicaoEtiquetasPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState<number>(0); // 0 = auto-fit
+  const [presets, setPresets] = useState<SavedPreset[]>(() => loadPresets());
+
+  const handleSavePreset = () => {
+    const name = prompt('Nome do preset:', `Preset ${presets.length + 1}`);
+    if (!name?.trim()) return;
+    const next: SavedPreset = { id: uid(), name: name.trim(), createdAt: Date.now(), snapshot: state };
+    const list = [next, ...presets];
+    setPresets(list);
+    savePresets(list);
+    toast.success(`Preset "${next.name}" salvo.`);
+  };
+  const handleLoadPreset = (p: SavedPreset) => {
+    setState(p.snapshot);
+    setSelectedId(null);
+    toast.success(`Preset "${p.name}" carregado.`);
+  };
+  const handleDeletePreset = (id: string) => {
+    const list = presets.filter((p) => p.id !== id);
+    setPresets(list);
+    savePresets(list);
+  };
 
   useEffect(() => {
     const id = setTimeout(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(state)), 250);
@@ -380,6 +420,40 @@ export default function ExpedicaoEtiquetasPage() {
               </ScrollArea>
             </div>
 
+            {/* Presets salvos */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Meus presets ({presets.length})
+                </Label>
+                <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1"
+                  onClick={handleSavePreset}>
+                  <Plus className="size-3" /> Salvar
+                </Button>
+              </div>
+              {presets.length > 0 && (
+                <ScrollArea className="max-h-40 border border-border/60 rounded-md">
+                  <ul className="divide-y divide-border">
+                    {presets.map((p) => (
+                      <li key={p.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-accent/40">
+                        <button type="button" onClick={() => handleLoadPreset(p)}
+                          className="flex-1 min-w-0 text-left">
+                          <div className="text-xs font-medium truncate">{p.name}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">
+                            {p.snapshot.widthMm}×{p.snapshot.heightMm}mm · {p.snapshot.elements.length} elem.
+                          </div>
+                        </button>
+                        <button type="button" onClick={() => handleDeletePreset(p.id)}
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+                          <Trash2 className="size-3" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              )}
+            </div>
+
             {/* Resumo XML */}
             {(state.meta.transportadora || state.meta.nfNumero) && (
               <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-1.5 text-[11px]">
@@ -580,7 +654,7 @@ function LabelCanvas({
       ref={canvasRef}
       className="label-sheet bg-white text-black shadow-md relative overflow-hidden"
       style={{ width: `${wPx}px`, height: `${hPx}px`, fontFamily: 'system-ui, sans-serif' }}
-      onClick={() => editable && onSelect(null)}
+      onPointerDown={(e) => { if (editable && e.target === e.currentTarget) onSelect(null); }}
     >
       {elements.map((el) => (
         <ElementView
