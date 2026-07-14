@@ -941,6 +941,8 @@ function ElementView({
 function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta'] }) {
   if (el.type === 'text') {
     const negative = el.negative;
+    const fg = negative ? '#fff' : (el.fontColor || '#000');
+    const bg = negative ? '#000' : 'transparent';
     return (
       <div className="w-full h-full leading-tight overflow-hidden break-words"
         style={{
@@ -950,8 +952,8 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
           fontStyle: el.italic ? 'italic' : 'normal',
           textDecoration: el.underline ? 'underline' : 'none',
           textAlign: el.align || 'left',
-          background: negative ? '#000' : 'transparent',
-          color: negative ? '#fff' : '#000',
+          background: bg,
+          color: fg,
           display: 'flex', alignItems: 'center',
           justifyContent: el.align === 'center' ? 'center' : el.align === 'right' ? 'flex-end' : 'flex-start',
           padding: negative ? '2px 4px' : 0,
@@ -963,18 +965,25 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
       </div>
     );
   }
+  // Códigos: se a variável ainda não foi preenchida, usamos um valor de preview
+  // baseado no próprio payload para que o QR/DM/Aztec/Barras seja sempre visível (Req #5).
+  const codePreview = (raw: string | undefined) => {
+    const resolved = resolveVars(raw, meta);
+    if (resolved) return resolved;
+    return (raw && raw.trim()) || 'PREVIEW';
+  };
   if (el.type === 'qr') {
-    const size = Math.min(el.w, el.h) * MM_TO_PX;
-    const value = resolveVars(el.payload, meta);
+    const size = Math.max(16, Math.min(el.w, el.h) * MM_TO_PX);
+    const value = codePreview(el.payload);
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        {value ? <QRCodeCanvas value={value} size={size} level="M" includeMargin={false} /> : <EmptyBox label="QR" />}
+      <div className="w-full h-full flex items-center justify-center bg-white">
+        <QRCodeCanvas value={value} size={size} level="M" includeMargin={false} />
       </div>
     );
   }
-  if (el.type === 'datamatrix') return <BwipCode kind="datamatrix" value={resolveVars(el.payload, meta)} />;
-  if (el.type === 'aztec') return <BwipCode kind="azteccode" value={resolveVars(el.payload, meta)} />;
-  if (el.type === 'barcode') return <BarcodeSvg value={resolveVars(el.payload, meta)} fmt={el.barcodeFmt || 'CODE128'} />;
+  if (el.type === 'datamatrix') return <BwipCode kind="datamatrix" value={codePreview(el.payload)} />;
+  if (el.type === 'aztec') return <BwipCode kind="azteccode" value={codePreview(el.payload)} />;
+  if (el.type === 'barcode') return <BarcodeSvg value={codePreview(el.payload)} fmt={el.barcodeFmt || 'CODE128'} />;
   if (el.type === 'line') {
     const style = el.lineStyle || 'solid';
     if (style === 'solid') return <div className="w-full h-full bg-black" />;
