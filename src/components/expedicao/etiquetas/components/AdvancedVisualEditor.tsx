@@ -1020,13 +1020,19 @@ function ElementView({
     left: `${el.x * MM_TO_PX}px`, top: `${el.y * MM_TO_PX}px`,
     width: `${el.w * MM_TO_PX}px`, height: `${el.h * MM_TO_PX}px`,
   };
+  // Contraste alto contra fundo branco/escuro (Req #1):
+  // - selecionado: outline duplo (branco por fora + primary por dentro) + ring cyan luminoso.
+  // - hover: outline tracejado escuro visível em qualquer cor de fundo.
+  const selectionShadow = selected
+    ? '0 0 0 1px #ffffff, 0 0 0 3px hsl(199 89% 48%), 0 0 0 4px rgba(0,0,0,0.55), 0 4px 14px rgba(0,0,0,0.25)'
+    : undefined;
+  const finalStyle: React.CSSProperties = { ...style, boxShadow: selectionShadow };
   return (
     <div
-      style={style}
+      style={finalStyle}
       className={cn('label-el',
         editable && 'cursor-move',
-        editable && selected && 'outline outline-2 outline-primary',
-        editable && !selected && 'hover:outline hover:outline-1 hover:outline-primary/50',
+        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:2px] hover:[outline-color:rgba(0,0,0,0.55)] hover:[outline-offset:1px]',
       )}
       onPointerDown={(e) => onPointerDown(e, 'move')}
       onDoubleClick={(e) => {
@@ -1038,14 +1044,16 @@ function ElementView({
 
       {editable && selected && (
         <>
+          {/* Handle grande, alto contraste (anel branco + núcleo cyan + borda preta) */}
           <div onPointerDown={(e) => onPointerDown(e, 'resize')}
-            className="label-handle absolute -right-1 -bottom-1 w-3 h-3 bg-primary rounded-sm cursor-se-resize border border-white" />
+            className="label-handle absolute -right-2 -bottom-2 w-4 h-4 rounded-full cursor-se-resize"
+            style={{ background: 'hsl(199 89% 48%)', boxShadow: '0 0 0 2px #fff, 0 0 0 3px #000, 0 2px 6px rgba(0,0,0,0.4)' }} />
           <div onPointerDown={(e) => e.stopPropagation()}
-            className="label-actions absolute -top-8 left-0 flex items-center gap-0.5 bg-background border border-border rounded-md shadow-lg px-1 py-0.5 z-10">
-            <button className="p-1 hover:bg-accent rounded" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-3" /></button>
-            <button className="p-1 hover:bg-accent rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Frente"><ArrowUp className="size-3" /></button>
-            <button className="p-1 hover:bg-accent rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Trás"><ArrowDown className="size-3" /></button>
-            <button className="p-1 hover:bg-destructive/20 text-destructive rounded" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-3" /></button>
+            className="label-actions absolute -top-9 left-0 flex items-center gap-0.5 bg-slate-900 text-white border border-slate-700 rounded-md shadow-xl px-1 py-0.5 z-10">
+            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-3.5" /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Frente"><ArrowUp className="size-3.5" /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Trás"><ArrowDown className="size-3.5" /></button>
+            <button className="p-1.5 hover:bg-red-500/30 text-red-300 rounded" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-3.5" /></button>
           </div>
         </>
       )}
