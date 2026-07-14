@@ -1387,9 +1387,9 @@ function HistoryDialog({
           <DialogTitle className="flex items-center gap-2"><History className="size-4 text-primary" /> Histórico de impressões</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-2">
-          <StatMini label="Total" value={String(stats.total)} />
-          <StatMini label="Cópias" value={String(stats.copies)} />
-          <StatMini label="Hoje" value={String(stats.today)} />
+          <StatMini label="Total" value={String(stats.total)} icon={<History className="size-4" />} />
+          <StatMini label="Cópias" value={String(stats.copies)} icon={<Copy className="size-4" />} />
+          <StatMini label="Hoje" value={String(stats.today)} icon={<Sparkles className="size-4" />} />
         </div>
         <ScrollArea className="h-[420px] border border-border rounded-md">
           {items.length === 0 ? (
