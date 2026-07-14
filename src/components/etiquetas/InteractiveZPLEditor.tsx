@@ -223,6 +223,16 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     setEditing(null);
   };
 
+  const deleteEditing = () => {
+    if (!editing) return;
+    const current = parseBlocks(zpl).find((x) => x.sourceStart === editing.sourceStart) ?? editing;
+    // remove bloco inteiro + linha em branco eventual
+    const before = zpl.slice(0, current.sourceStart).replace(/\n\s*$/, '\n');
+    const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
+    onChange(before + after);
+    setEditing(null);
+  };
+
   return (
     <>
       <svg
