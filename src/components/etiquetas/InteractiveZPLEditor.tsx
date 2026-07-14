@@ -124,17 +124,16 @@ function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues, viewW: nu
       raw = raw.replace(/\^FD/, `^A0N,${edit.size},${edit.size}^FD`);
     }
 
-    // Alinhamento via ^FB{w},1,0,{J}
+    // Alinhamento e quebra de linha via ^FB{w},{maxLines},{spacing},{align}
     const align: TextAlign = edit.align ?? 'L';
-    const hasFB = /\^FB\d+,\d+,\d+,[LCRJ]/.test(raw);
-    if (align === 'L') {
-      // remove ^FB se existir (esquerda é o padrão sem field-block)
-      raw = raw.replace(/\^FB\d+,\d+,\d+,[LCRJ]/, '');
-    } else if (hasFB) {
-      raw = raw.replace(/(\^FB\d+,\d+,\d+),[LCRJ]/, `$1,${align}`);
-    } else {
-      const fbW = Math.max(40, viewW - block.x);
-      raw = raw.replace(/\^FD/, `^FB${fbW},1,0,${align}^FD`);
+    const maxLines = Math.max(1, edit.fbMaxLines ?? block.fbMaxLines ?? 1);
+    const wantsFB = align !== 'L' || maxLines > 1 || (edit.fbWidth ?? block.fbWidth) !== undefined;
+    // remove qualquer ^FB existente
+    raw = raw.replace(/\^FB\d+,\d+,-?\d+,[LCRJ]/, '');
+    if (wantsFB) {
+      const fbW = Math.max(20, edit.fbWidth ?? block.fbWidth ?? Math.max(40, viewW - block.x));
+      const spacing = block.fbSpacing ?? 0;
+      raw = raw.replace(/\^FD/, `^FB${fbW},${maxLines},${spacing},${align}^FD`);
     }
   }
   const hasFR = /\^FR(?![A-Z])/.test(raw);
