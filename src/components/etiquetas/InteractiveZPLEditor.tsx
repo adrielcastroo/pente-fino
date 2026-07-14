@@ -33,6 +33,8 @@ export interface ParsedBlock {
   qrMag?: number;
   align?: TextAlign;
   fbWidth?: number;
+  fbMaxLines?: number;
+  fbSpacing?: number;
 }
 
 const BLOCK_RE = /\^FO(\d+),(\d+)([\s\S]*?)\^FS/g;
