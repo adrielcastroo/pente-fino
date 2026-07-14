@@ -702,6 +702,92 @@ export type Database = {
         }
         Relationships: []
       }
+      etiqueta_historico: {
+        Row: {
+          criado_em: string
+          id: string
+          impressora: string | null
+          quantidade: number
+          template_id: string | null
+          template_nome: string
+          usuario_id: string | null
+          usuario_nome: string | null
+          variaveis_usadas: Json
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          impressora?: string | null
+          quantidade?: number
+          template_id?: string | null
+          template_nome: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+          variaveis_usadas?: Json
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          impressora?: string | null
+          quantidade?: number
+          template_id?: string | null
+          template_nome?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+          variaveis_usadas?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etiqueta_historico_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "etiqueta_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      etiqueta_templates: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          categoria: string
+          criado_em: string
+          criado_por: string | null
+          dimensoes: Json
+          id: string
+          nome: string
+          variaveis: Json
+          versao: number
+          zpl: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          categoria: string
+          criado_em?: string
+          criado_por?: string | null
+          dimensoes?: Json
+          id?: string
+          nome: string
+          variaveis?: Json
+          versao?: number
+          zpl?: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          categoria?: string
+          criado_em?: string
+          criado_por?: string | null
+          dimensoes?: Json
+          id?: string
+          nome?: string
+          variaveis?: Json
+          versao?: number
+          zpl?: string
+        }
+        Relationships: []
+      }
       expedicao_carga_romaneios: {
         Row: {
           carga_id: string
