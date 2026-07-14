@@ -1,14 +1,19 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /expedicao/
 
 User-agent: Bingbot
 Allow: /
+Disallow: /expedicao/
 
 User-agent: Twitterbot
 Allow: /
+Disallow: /expedicao/
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow: /expedicao/
 
 User-agent: *
 Allow: /
+Disallow: /expedicao/
