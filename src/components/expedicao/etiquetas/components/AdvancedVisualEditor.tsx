@@ -1020,13 +1020,13 @@ function ElementView({
     left: `${el.x * MM_TO_PX}px`, top: `${el.y * MM_TO_PX}px`,
     width: `${el.w * MM_TO_PX}px`, height: `${el.h * MM_TO_PX}px`,
   };
-  // Seleção estilo Canva/Bartender: borda azul fina + 8 handles brancos com borda azul.
+  // Seleção estilo Canva/Bartender: azul de alto contraste, sem usar branco como cor principal.
   return (
     <div
       style={style}
       className={cn('label-el group',
         editable && 'cursor-move',
-        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:#2563eb] hover:[outline-offset:1px]',
+        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:#0284c7] hover:[outline-offset:2px]',
       )}
       onPointerDown={(e) => onPointerDown(e, 'move')}
       onDoubleClick={(e) => {
@@ -1039,10 +1039,15 @@ function ElementView({
       {editable && selected && (
         <>
           {/* Borda de seleção (fora do conteúdo, não interfere no visual da etiqueta) */}
-          <div className="pointer-events-none absolute -inset-px z-[5]"
-            style={{ boxShadow: 'inset 0 0 0 1.5px #2563eb, 0 0 0 1px rgba(255,255,255,0.9)' }} />
+          <div
+            className="pointer-events-none absolute -inset-0.5 z-[5] rounded-[2px]"
+            style={{
+              border: '2px solid #0284c7',
+              boxShadow: '0 0 0 1px rgba(2,132,199,0.35), 0 0 0 3px rgba(15,23,42,0.18)',
+            }}
+          />
 
-          {/* 8 handles: 4 cantos + 4 meios de aresta — visual Canva/Bartender */}
+          {/* 8 handles: 4 cantos + 4 meios de aresta — visíveis sobre fundo branco */}
           {([
             ['nw', '-top-1.5 -left-1.5 cursor-nw-resize'],
             ['n',  '-top-1.5 left-1/2 -translate-x-1/2 cursor-n-resize'],
@@ -1055,19 +1060,31 @@ function ElementView({
           ] as const).map(([key, pos]) => (
             <div key={key}
               onPointerDown={(e) => onPointerDown(e, 'resize')}
-              className={cn('label-handle absolute w-2.5 h-2.5 bg-white z-[6]', pos)}
-              style={{ boxShadow: '0 0 0 1.5px #2563eb, 0 1px 3px rgba(0,0,0,0.35)', borderRadius: '2px' }} />
+              className={cn('label-handle absolute z-[6]', pos)}
+              style={{
+                width: 11,
+                height: 11,
+                background: '#0f172a',
+                border: '2px solid #38bdf8',
+                boxShadow: '0 0 0 1px rgba(255,255,255,0.95), 0 2px 7px rgba(0,0,0,0.45)',
+                borderRadius: 2,
+              }} />
           ))}
 
-          {/* Toolbar de ações — fundo branco, ícones escuros (alto contraste) */}
+          {/* Toolbar de ações — fundo escuro, ícones claros, alto contraste no canvas branco */}
           <div onPointerDown={(e) => e.stopPropagation()}
-            className="label-actions absolute -top-10 left-0 flex items-center gap-0.5 bg-white text-slate-900 rounded-md px-1 py-1 z-10"
-            style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 6px 18px rgba(0,0,0,0.18)' }}>
-            <button className="p-1.5 hover:bg-slate-100 rounded text-slate-800" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-4" strokeWidth={2} /></button>
-            <button className="p-1.5 hover:bg-slate-100 rounded text-slate-800" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Trazer para frente"><ArrowUp className="size-4" strokeWidth={2} /></button>
-            <button className="p-1.5 hover:bg-slate-100 rounded text-slate-800" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Enviar para trás"><ArrowDown className="size-4" strokeWidth={2} /></button>
-            <div className="w-px h-4 bg-slate-200 mx-0.5" />
-            <button className="p-1.5 hover:bg-red-50 rounded text-red-600" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-4" strokeWidth={2} /></button>
+            className="label-actions absolute -top-11 left-0 flex items-center gap-1 rounded-md px-1.5 py-1.5 z-10"
+            style={{
+              background: '#0f172a',
+              color: '#f8fafc',
+              border: '1px solid #38bdf8',
+              boxShadow: '0 10px 26px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.18)',
+            }}>
+            <button className="p-1.5 rounded" style={{ color: '#f8fafc' }} onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-4" strokeWidth={2.5} /></button>
+            <button className="p-1.5 rounded" style={{ color: '#f8fafc' }} onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Trazer para frente"><ArrowUp className="size-4" strokeWidth={2.5} /></button>
+            <button className="p-1.5 rounded" style={{ color: '#f8fafc' }} onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Enviar para trás"><ArrowDown className="size-4" strokeWidth={2.5} /></button>
+            <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(248,250,252,0.32)' }} />
+            <button className="p-1.5 rounded" style={{ color: '#fecaca' }} onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-4" strokeWidth={2.5} /></button>
           </div>
         </>
       )}
