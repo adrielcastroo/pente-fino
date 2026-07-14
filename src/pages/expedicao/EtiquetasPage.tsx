@@ -1030,9 +1030,11 @@ function BarcodeSvg({ value, fmt }: { value: string; fmt: BarcodeFmt }) {
       JsBarcode(ref.current, value, { format: fmt, displayValue: true, fontSize: 10, height: 40, margin: 0, width: 1.4 });
     } catch { /* ignore */ }
   }, [value, fmt]);
-  if (!value) return <EmptyBox label="Barras" />;
-  return <svg ref={ref} className="w-full h-full" preserveAspectRatio="none" />;
+  return <svg ref={ref} className="w-full h-full bg-white" preserveAspectRatio="none" />;
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _keepEmpty(_: string) { return _; }
+function _oldBarcodeReturn() { return null;
 
 function BwipCode({ kind, value }: { kind: 'datamatrix' | 'azteccode'; value: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
