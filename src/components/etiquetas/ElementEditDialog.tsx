@@ -1,6 +1,8 @@
 /**
- * ElementEditDialog — popup para atribuir variável, mudar fonte e ligar "negativo"
- * a um elemento do ZPL (bloco ^FO ... ^FS). Duplo-clique no preview interativo abre.
+ * ElementEditDialog — popup de edição para elementos do ZPL.
+ * - TEXT: conteúdo/variáveis, tamanho da fonte, negativo (^FR).
+ * - LOGO: (bloco text com {{logo}}) idem texto.
+ * - BOX / LINE: dimensões, espessura, estilo (solid/dashed/dotted).
  */
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -12,13 +14,17 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Trash2 } from 'lucide-react';
-import type { ParsedBlock } from './InteractiveZPLEditor';
+import type { ParsedBlock, ShapeStyle } from './InteractiveZPLEditor';
 import { VARIAVEIS_INTELIGENTES } from '@/types/etiquetas';
 
 export interface ElementEditValues {
   fd: string;
   size: number;
   reverse: boolean;
+  width?: number;
+  height?: number;
+  thickness?: number;
+  style?: ShapeStyle;
 }
 
 interface Props {
@@ -31,31 +37,38 @@ interface Props {
 }
 
 export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubmit, onDelete }: Props) {
-  // Mescla variáveis do template com as inteligentes (nf, romaneio, etc.) — dedup por chave.
   const todasVariaveis = (() => {
     const map = new Map<string, { chave: string; label: string }>();
     VARIAVEIS_INTELIGENTES.forEach((v) => map.set(v.chave, { chave: v.chave, label: v.label }));
     variaveis.forEach((v) => map.set(v.chave, v));
     return Array.from(map.values());
   })();
+
   const [fd, setFd] = useState('');
   const [size, setSize] = useState(24);
   const [reverse, setReverse] = useState(false);
+  const [width, setWidth] = useState(100);
+  const [height, setHeight] = useState(60);
+  const [thickness, setThickness] = useState(2);
+  const [style, setStyle] = useState<ShapeStyle>('solid');
 
   useEffect(() => {
     if (!block) return;
     setFd(block.fd);
     setSize(block.size || 24);
     setReverse(block.reverse);
+    setWidth(block.width ?? 100);
+    setHeight(block.height ?? 60);
+    setThickness(block.thickness ?? 2);
+    setStyle(block.style ?? 'solid');
   }, [block]);
 
   if (!block) return null;
 
-  const insertVar = (chave: string) => {
-    setFd((cur) => `${cur}{{${chave}}}`);
-  };
+  const insertVar = (chave: string) => setFd((cur) => `${cur}{{${chave}}}`);
 
   const isText = block.tipo === 'text';
+  const isShape = block.tipo === 'box' || block.tipo === 'line';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,60 +81,93 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
             </Badge>
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Ajuste o conteúdo, atribua variáveis ou mude o estilo. As mudanças refletem no ZPL e no preview em tempo real.
+            {isShape
+              ? 'Ajuste dimensões, espessura e estilo da linha.'
+              : 'Ajuste conteúdo, variáveis e estilo. Refletido em tempo real.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="fd" className="text-xs">Conteúdo (texto ou variáveis)</Label>
-            <Input
-              id="fd" value={fd} onChange={(e) => setFd(e.target.value)}
-              placeholder="Texto ou {{variavel}}"
-              className="font-mono text-sm"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Inserir variável</Label>
-            <Select onValueChange={insertVar}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Escolha uma variável…" />
-              </SelectTrigger>
-              <SelectContent>
-                {todasVariaveis.map((v) => (
-                  <SelectItem key={v.chave} value={v.chave}>
-                    <span className="flex items-center gap-2">
-                      <span>{v.label}</span>
-                      <span className="font-mono text-[10px] text-muted-foreground">{`{{${v.chave}}}`}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {isText && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Tamanho da fonte</Label>
-                <span className="font-mono text-[10px] text-muted-foreground">{size}pt</span>
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="fd" className="text-xs">Conteúdo (texto ou variáveis)</Label>
+                <Input
+                  id="fd" value={fd} onChange={(e) => setFd(e.target.value)}
+                  placeholder="Texto ou {{variavel}}"
+                  className="font-mono text-sm"
+                />
               </div>
-              <Slider
-                value={[size]} min={10} max={120} step={1}
-                onValueChange={(v) => setSize(v[0] ?? 24)}
-              />
-            </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Inserir variável</Label>
+                <Select onValueChange={insertVar}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Escolha uma variável…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {todasVariaveis.map((v) => (
+                      <SelectItem key={v.chave} value={v.chave}>
+                        <span className="flex items-center gap-2">
+                          <span>{v.label}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">{`{{${v.chave}}}`}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Tamanho da fonte</Label>
+                  <span className="font-mono text-[10px] text-muted-foreground">{size}pt</span>
+                </div>
+                <Slider value={[size]} min={10} max={120} step={1} onValueChange={(v) => setSize(v[0] ?? 24)} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
+                <div>
+                  <Label className="text-xs">Negativo (fundo preto)</Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Adiciona <code className="font-mono">^FR</code> — inverte cores.</p>
+                </div>
+                <Switch checked={reverse} onCheckedChange={setReverse} />
+              </div>
+            </>
           )}
 
-          {isText && (
-            <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
-              <div>
-                <Label className="text-xs">Negativo (fundo preto)</Label>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Adiciona <code className="font-mono">^FR</code> — inverte cores.</p>
+          {isShape && (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Largura</Label>
+                  <Input type="number" min={1} value={width} onChange={(e) => setWidth(parseInt(e.target.value, 10) || 1)} className="font-mono" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Altura</Label>
+                  <Input type="number" min={1} value={height} onChange={(e) => setHeight(parseInt(e.target.value, 10) || 1)} className="font-mono" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Espessura</Label>
+                  <Input type="number" min={1} value={thickness} onChange={(e) => setThickness(parseInt(e.target.value, 10) || 1)} className="font-mono" />
+                </div>
               </div>
-              <Switch checked={reverse} onCheckedChange={setReverse} />
-            </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Estilo da linha</Label>
+                <Select value={style} onValueChange={(v) => setStyle(v as ShapeStyle)}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solid">Sólida ▬▬▬▬</SelectItem>
+                    <SelectItem value="dashed">Tracejada ▬ ▬ ▬</SelectItem>
+                    <SelectItem value="dotted">Pontilhada ··· ···</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground">
+                  Estilo aplicado no preview. Impressoras ZPL desenham como sólido; use tracejado/pontilhado apenas como referência visual.
+                </p>
+              </div>
+            </>
           )}
         </div>
 
@@ -133,7 +179,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           ) : <span />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={() => onSubmit({ fd, size, reverse })}>Aplicar</Button>
+            <Button onClick={() => onSubmit({ fd, size, reverse, width, height, thickness, style })}>Aplicar</Button>
           </div>
         </DialogFooter>
       </DialogContent>
