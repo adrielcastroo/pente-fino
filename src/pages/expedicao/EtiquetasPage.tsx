@@ -547,32 +547,29 @@ export default function ExpedicaoEtiquetasPage() {
             )}
           </CardContent>
         </Card>
+        </div>
 
-        {/* Editor Canvas */}
+        {/* Editor Canvas — sempre 1 cópia no editor (Req #8) */}
         <PreviewWorkbench
           widthMm={state.widthMm}
           heightMm={state.heightMm}
-          copias={state.copias}
           zoom={zoom}
           onZoomChange={setZoom}
           selected={selected}
         >
-          {Array.from({ length: state.copias }).map((_, i) => (
-            <LabelCanvas
-              key={i}
-              editable={i === 0}
-              widthMm={state.widthMm}
-              heightMm={state.heightMm}
-              elements={state.elements}
-              meta={state.meta}
-              selectedId={i === 0 ? selectedId : null}
-              onSelect={setSelectedId}
-              onUpdate={updateElement}
-              onRemove={removeElement}
-              onDuplicate={duplicateElement}
-              onMoveZ={moveElementZ}
-            />
-          ))}
+          <LabelCanvas
+            editable
+            widthMm={state.widthMm}
+            heightMm={state.heightMm}
+            elements={state.elements}
+            meta={state.meta}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onUpdate={updateElement}
+            onRemove={removeElement}
+            onDuplicate={duplicateElement}
+            onMoveZ={moveElementZ}
+          />
         </PreviewWorkbench>
       </div>
 
