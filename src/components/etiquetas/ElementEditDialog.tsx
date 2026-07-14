@@ -132,7 +132,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
             </Button>
           ) : <span />}
           <div className="flex gap-2">
-          <Button onClick={() => onSubmit({ fd, size, reverse })}>Aplicar</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={() => onSubmit({ fd, size, reverse })}>Aplicar</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
