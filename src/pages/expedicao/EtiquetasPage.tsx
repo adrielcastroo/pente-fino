@@ -176,6 +176,7 @@ export default function ExpedicaoEtiquetasPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState<number>(0); // 0 = auto-fit
   const [presets, setPresets] = useState<SavedPreset[]>(() => loadPresets());
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleSavePreset = () => {
     const name = prompt('Nome do preset:', `Preset ${presets.length + 1}`);
@@ -222,7 +223,7 @@ export default function ExpedicaoEtiquetasPage() {
   const addElement = useCallback((type: ElementType) => {
     const base: LabelElement = (() => {
       switch (type) {
-        case 'text': return { id: uid(), type, x: 5, y: 5, w: 60, h: 8, text: 'Novo texto', fontSize: 12, align: 'left', fontFamily: FONT_FAMILIES[0].value };
+        case 'text': return { id: uid(), type, x: 5, y: 5, w: 60, h: 8, text: 'Novo texto', fontSize: 12, align: 'left', fontFamily: FONT_FAMILIES[0].value, fontColor: '#000000' };
         case 'qr': return { id: uid(), type, x: 5, y: 5, w: 30, h: 30, payload: '{{codigo}}' };
         case 'datamatrix': return { id: uid(), type, x: 5, y: 5, w: 25, h: 25, payload: '{{codigo}}' };
         case 'aztec': return { id: uid(), type, x: 5, y: 5, w: 25, h: 25, payload: '{{codigo}}' };
@@ -234,7 +235,66 @@ export default function ExpedicaoEtiquetasPage() {
     })();
     setState((s) => ({ ...s, elements: [...s.elements, base] }));
     setSelectedId(base.id);
+    return base.id;
   }, []);
+
+  // Requisito #4: adicionar imagem = sempre upload do usuário. O botão dispara file picker
+  // imediatamente; só cria o elemento após a imagem ser carregada com sucesso.
+  const triggerImageUpload = useCallback(() => {
+    imageInputRef.current?.click();
+  }, []);
+  const onImageUploadFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = ''; // permite escolher a mesma imagem depois
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande (máx 2 MB).'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = String(reader.result || '');
+      const id = uid();
+      // proporção aproximada baseada na imagem para ficar bonita já no add
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 40; // mm
+        const ratio = img.height / img.width || 0.6;
+        const w = Math.min(maxW, 40);
+        const h = +(w * ratio).toFixed(1);
+        setState((s) => ({ ...s, elements: [...s.elements, { id, type: 'image', x: 5, y: 5, w, h, imageSrc: src, borderRadius: 0 }] }));
+        setSelectedId(id);
+      };
+      img.onerror = () => {
+        setState((s) => ({ ...s, elements: [...s.elements, { id, type: 'image', x: 5, y: 5, w: 30, h: 20, imageSrc: src, borderRadius: 0 }] }));
+        setSelectedId(id);
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(f);
+  }, []);
+
+  // Requisito #7: atalhos no preview — Del/Backspace remove, Ctrl/Cmd+B alterna negrito.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (typing) return;
+      if (!selectedId) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        removeElement(selectedId);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setState((s) => {
+          const el = s.elements.find((x) => x.id === selectedId);
+          if (!el || el.type !== 'text') return s;
+          return { ...s, elements: s.elements.map((x) => x.id === selectedId ? { ...x, bold: !x.bold } : x) };
+        });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId, removeElement]);
+
 
   function applyXmlPatch(input: EtiquetaXmlPatch & { pageSize: LabelSizeKey; copies: number }) {
     setState((s) => {
