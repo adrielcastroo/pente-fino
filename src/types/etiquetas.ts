@@ -82,28 +82,32 @@ export interface VariavelInteligente {
 }
 
 export const VARIAVEIS_INTELIGENTES: readonly VariavelInteligente[] = [
+  { chave: 'nf', label: 'Nota Fiscal', tipo: 'text', desc: 'Número da NF (importado do XML)' },
   { chave: 'romaneio', label: 'Romaneio', tipo: 'text', desc: 'Número do romaneio (6 dígitos)' },
   { chave: 'transportadora', label: 'Transportadora', tipo: 'select', opcoes: ['JADLOG', 'CORREIOS', 'SEQUOIA', 'OUTRA'], desc: 'Transportadora' },
   { chave: 'volume_atual', label: 'Volume Atual', tipo: 'text', desc: 'Número do volume atual (ex: 03)' },
   { chave: 'volume_total', label: 'Volume Total', tipo: 'text', desc: 'Total de volumes (ex: 12)' },
   { chave: 'data', label: 'Data de Emissão', tipo: 'date', padrao: '{{hoje}}', desc: 'Data de emissão' },
+  { chave: 'logo', label: 'Logo (imagem)', tipo: 'auto', desc: 'Logo importada via upload — renderiza como imagem' },
 ];
 
 // Etiqueta PADRÃO ÚNICO de Expedição (100x50mm — 480x400 dots @ 203dpi)
-// Layout: LOGO UNILUX no topo · TRANSPORTADORA centralizada · QR Code central ·
-// VOLUME atual / total centralizado · DATA de emissão no canto inferior direito.
+// Layout: LOGO (imagem) no topo · TRANSPORTADORA centralizada · QR Code central ·
+// NF abaixo do QR · VOLUME atual / total · DATA de emissão no canto inferior direito.
 export const ZPL_PADRAO = `^XA
 ^PW480
 ^LL400
 ^LH0,0
 ^CI28
-^FX =============================== LOGO
-^FO130,20^A0N,36,36^FDUNILUX^FS
+^FX =============================== LOGO (imagem via upload)
+^FO130,20^A0N,36,36^FD{{logo}}^FS
 ^FX =============================== TRANSPORTADORA
 ^FO20,70^A0N,22,22^FDTRANSPORTADORA:^FS
 ^FO20,95^FB440,1,0,C^A0N,28,28^FD{{transportadora}}^FS
 ^FX =============================== QR CODE CENTRAL
-^FO160,135^BQN,2,5^FDLA,ROM{{romaneio}}^FS
+^FO175,130^BQN,2,4^FDLA,ROM{{romaneio}}^FS
+^FX =============================== NF (abaixo do QR)
+^FO20,265^FB440,1,0,C^A0N,24,24^FDNF {{nf}}^FS
 ^FX =============================== VOLUME ATUAL / TOTAL
 ^FO90,300^A0N,50,50^FD{{volume_atual}}^FS
 ^FO185,300^A0N,45,45^FD/^FS
@@ -115,9 +119,10 @@ export const ZPL_PADRAO = `^XA
 ^XZ`;
 
 export const VARIAVEIS_PADRAO: VariavelTemplate[] = [
-  { chave: 'romaneio', label: 'Romaneio', tipo: 'text', obrigatorio: true, ordem: 0 },
-  { chave: 'transportadora', label: 'Transportadora', tipo: 'select', obrigatorio: true, opcoes: ['JADLOG', 'CORREIOS', 'SEQUOIA', 'OUTRA'], ordem: 1 },
-  { chave: 'volume_atual', label: 'Volume Atual', tipo: 'text', obrigatorio: true, ordem: 2 },
-  { chave: 'volume_total', label: 'Volume Total', tipo: 'text', obrigatorio: true, ordem: 3 },
-  { chave: 'data', label: 'Data de Emissão', tipo: 'date', obrigatorio: false, padrao: '{{hoje}}', ordem: 4 },
+  { chave: 'nf', label: 'Nota Fiscal', tipo: 'text', obrigatorio: true, ordem: 0 },
+  { chave: 'romaneio', label: 'Romaneio', tipo: 'text', obrigatorio: true, ordem: 1 },
+  { chave: 'transportadora', label: 'Transportadora', tipo: 'select', obrigatorio: true, opcoes: ['JADLOG', 'CORREIOS', 'SEQUOIA', 'OUTRA'], ordem: 2 },
+  { chave: 'volume_atual', label: 'Volume Atual', tipo: 'text', obrigatorio: true, ordem: 3 },
+  { chave: 'volume_total', label: 'Volume Total', tipo: 'text', obrigatorio: true, ordem: 4 },
+  { chave: 'data', label: 'Data de Emissão', tipo: 'date', obrigatorio: false, padrao: '{{hoje}}', ordem: 5 },
 ];

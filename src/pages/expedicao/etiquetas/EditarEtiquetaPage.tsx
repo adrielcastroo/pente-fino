@@ -11,7 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
   AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
-  Sliders, Variable, ExternalLink, MousePointer2,
+  Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,8 +68,32 @@ export default function EditarEtiquetaPage() {
   const [zpl, setZpl] = useState('');
   const [variaveis, setVariaveis] = useState<VariavelTemplate[]>([]);
   const [previewMode, setPreviewMode] = useState<'interativo' | 'visual' | 'zpl'>('interativo');
+  const [logoUrl, setLogoUrl] = useState<string>('');
   const [dirty, setDirty] = useState(false);
   const skipDirtyRef = useRef(true);
+
+  // Persistência do logo por template (localStorage — imagem não vai para o ZPL).
+  useEffect(() => {
+    if (!id) return;
+    const saved = localStorage.getItem(`etiqueta-logo-${id}`);
+    if (saved) setLogoUrl(saved);
+  }, [id]);
+
+  const onLogoUpload = (file: File) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result || '');
+      setLogoUrl(url);
+      if (id) localStorage.setItem(`etiqueta-logo-${id}`, url);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearLogo = () => {
+    setLogoUrl('');
+    if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
+  };
 
   useEffect(() => {
     if (!template) return;
@@ -347,6 +371,41 @@ export default function EditarEtiquetaPage() {
                         </FormField>
                       </div>
                     </div>
+
+                    {/* Logo (imagem) */}
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Logo</div>
+                      <div className="flex items-center gap-3 border border-border/60 rounded-lg p-3 bg-background/60">
+                        <div className="h-14 w-24 rounded border border-border/60 bg-white flex items-center justify-center overflow-hidden shrink-0">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                          ) : (
+                            <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <label className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer text-primary hover:underline">
+                            <Upload className="h-3.5 w-3.5" />
+                            {logoUrl ? 'Trocar imagem' : 'Fazer upload'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => e.target.files?.[0] && onLogoUpload(e.target.files[0])}
+                            />
+                          </label>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Substitui o texto no bloco <code className="font-mono">{`{{logo}}`}</code>. PNG/JPG/SVG.
+                          </p>
+                        </div>
+                        {logoUrl && (
+                          <Button variant="ghost" size="icon" onClick={clearLogo} aria-label="Remover logo" className="text-muted-foreground hover:text-destructive">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
                       Tipografia, padding, alinhamento e borda são definidos diretamente no layout ZPL acima. Use o editor visual avançado para ajustes drag-and-drop.
                     </div>
@@ -532,9 +591,10 @@ export default function EditarEtiquetaPage() {
                       valores={valoresExemplo}
                       dimensoes={{ largura, altura }}
                       variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                      logoUrl={logoUrl}
                     />
                   ) : (
-                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
+                    <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
                   )}
                 </div>
               )}
@@ -576,9 +636,10 @@ export default function EditarEtiquetaPage() {
                     valores={valoresExemplo}
                     dimensoes={{ largura, altura }}
                     variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                    logoUrl={logoUrl}
                   />
                 ) : (
-                  <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} />
+                  <LiveZPLPreview zpl={zpl} valores={valoresExemplo} dimensoes={{ largura, altura }} logoUrl={logoUrl} />
                 )}
               </div>
             )}
