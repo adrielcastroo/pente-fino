@@ -130,12 +130,70 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                 <Slider value={[size]} min={10} max={120} step={1} onValueChange={(v) => setSize(v[0] ?? 24)} />
               </div>
 
+              <div className="space-y-1.5">
+                <Label className="text-xs">Alinhamento</Label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {([
+                    { v: 'L' as TextAlign, icon: AlignLeft, label: 'Esquerda' },
+                    { v: 'C' as TextAlign, icon: AlignCenter, label: 'Centro' },
+                    { v: 'R' as TextAlign, icon: AlignRight, label: 'Direita' },
+                  ]).map(({ v, icon: Icon, label }) => (
+                    <Button
+                      key={v}
+                      type="button"
+                      variant={align === v ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-9 gap-1.5"
+                      onClick={() => setAlign(v)}
+                    >
+                      <Icon className="h-3.5 w-3.5" /> {label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground">Usa <code className="font-mono">^FB</code> para alinhar o texto na etiqueta.</p>
+              </div>
+
               <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
                 <div>
                   <Label className="text-xs">Negativo (fundo preto)</Label>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Adiciona <code className="font-mono">^FR</code> — inverte cores.</p>
                 </div>
                 <Switch checked={reverse} onCheckedChange={setReverse} />
+              </div>
+            </>
+          )}
+
+          {isQr && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="fd-qr" className="text-xs">Payload do QR Code (texto ou variáveis)</Label>
+                <Input
+                  id="fd-qr" value={fd} onChange={(e) => setFd(e.target.value)}
+                  placeholder="Ex.: LA,ROM{{romaneio}}-NF{{nf}}"
+                  className="font-mono text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Prefixo <code className="font-mono">LA,</code> é padrão ZPL para QR alfanumérico.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Inserir variável</Label>
+                <Select onValueChange={insertVar}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Escolha uma variável…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {todasVariaveis.map((v) => (
+                      <SelectItem key={v.chave} value={v.chave}>
+                        <span className="flex items-center gap-2">
+                          <span>{v.label}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">{`{{${v.chave}}}`}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </>
           )}
