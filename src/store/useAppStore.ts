@@ -46,6 +46,13 @@ export interface LabelSettings {
   motorMargin?: number;
   motorMarginY?: number;
   motorOffsetX?: number;
+  // Expedição (etiquetas ZPL dinâmicas) — dimensões vêm do template.
+  expedicaoPrintOffsetXMm?: number;
+  expedicaoPrintOffsetYMm?: number;
+  expedicaoBorderWidth?: number;
+  expedicaoBorderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  expedicaoBorderRadius?: number;
+  expedicaoPadding?: number;
 }
 
 export interface AppState {
