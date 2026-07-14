@@ -117,7 +117,7 @@ export const etiquetaService = {
     if (input.dimensoes !== undefined) patch.dimensoes = input.dimensoes;
     if (input.zpl !== undefined) patch.zpl = input.zpl;
     if (input.variaveis !== undefined) patch.variaveis = input.variaveis;
-    const { data, error } = await supabase.from('etiqueta_templates').update(patch).eq('id', id).select().single();
+    const { data, error } = await supabase.from('etiqueta_templates').update(patch as never).eq('id', id).select().single();
     if (error) throw new ServiceError('UPDATE_FAILED', error.message);
     return mapTemplate(data as DbTemplateRow);
   },
