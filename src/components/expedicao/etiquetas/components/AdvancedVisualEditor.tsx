@@ -10,7 +10,7 @@
 //  - Zoom pela roda do mouse (Ctrl/Alt para passo fino)
 // ============================================================================
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import JsBarcode from 'jsbarcode';
 import bwipjs from 'bwip-js/browser';
 import {
@@ -45,6 +45,7 @@ type ElementType = 'text' | 'qr' | 'datamatrix' | 'aztec' | 'barcode' | 'line' |
 
 type LineStyle = 'solid' | 'dashed' | 'dotted';
 type RectFill = 'outline' | 'filled';
+type BorderStyle = 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge';
 
 interface LabelElement {
   id: string;
@@ -69,6 +70,9 @@ interface LabelElement {
   rectFill?: RectFill;
   borderWidth?: number;
   borderRadius?: number;
+  borderStyle?: BorderStyle;
+  borderColor?: string;
+  rectFillColor?: string;
   // imagem
   imageSrc?: string;
 }
@@ -1016,13 +1020,19 @@ function ElementView({
     left: `${el.x * MM_TO_PX}px`, top: `${el.y * MM_TO_PX}px`,
     width: `${el.w * MM_TO_PX}px`, height: `${el.h * MM_TO_PX}px`,
   };
+  // Contraste alto contra fundo branco/escuro (Req #1):
+  // - selecionado: outline duplo (branco por fora + primary por dentro) + ring cyan luminoso.
+  // - hover: outline tracejado escuro visível em qualquer cor de fundo.
+  const selectionShadow = selected
+    ? '0 0 0 1px #ffffff, 0 0 0 3px hsl(199 89% 48%), 0 0 0 4px rgba(0,0,0,0.55), 0 4px 14px rgba(0,0,0,0.25)'
+    : undefined;
+  const finalStyle: React.CSSProperties = { ...style, boxShadow: selectionShadow };
   return (
     <div
-      style={style}
+      style={finalStyle}
       className={cn('label-el',
         editable && 'cursor-move',
-        editable && selected && 'outline outline-2 outline-primary',
-        editable && !selected && 'hover:outline hover:outline-1 hover:outline-primary/50',
+        editable && !selected && 'hover:[outline-style:dashed] hover:[outline-width:2px] hover:[outline-color:rgba(0,0,0,0.55)] hover:[outline-offset:1px]',
       )}
       onPointerDown={(e) => onPointerDown(e, 'move')}
       onDoubleClick={(e) => {
@@ -1034,14 +1044,16 @@ function ElementView({
 
       {editable && selected && (
         <>
+          {/* Handle grande, alto contraste (anel branco + núcleo cyan + borda preta) */}
           <div onPointerDown={(e) => onPointerDown(e, 'resize')}
-            className="label-handle absolute -right-1 -bottom-1 w-3 h-3 bg-primary rounded-sm cursor-se-resize border border-white" />
+            className="label-handle absolute -right-2 -bottom-2 w-4 h-4 rounded-full cursor-se-resize"
+            style={{ background: 'hsl(199 89% 48%)', boxShadow: '0 0 0 2px #fff, 0 0 0 3px #000, 0 2px 6px rgba(0,0,0,0.4)' }} />
           <div onPointerDown={(e) => e.stopPropagation()}
-            className="label-actions absolute -top-8 left-0 flex items-center gap-0.5 bg-background border border-border rounded-md shadow-lg px-1 py-0.5 z-10">
-            <button className="p-1 hover:bg-accent rounded" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-3" /></button>
-            <button className="p-1 hover:bg-accent rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Frente"><ArrowUp className="size-3" /></button>
-            <button className="p-1 hover:bg-accent rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Trás"><ArrowDown className="size-3" /></button>
-            <button className="p-1 hover:bg-destructive/20 text-destructive rounded" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-3" /></button>
+            className="label-actions absolute -top-9 left-0 flex items-center gap-0.5 bg-slate-900 text-white border border-slate-700 rounded-md shadow-xl px-1 py-0.5 z-10">
+            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-3.5" /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Frente"><ArrowUp className="size-3.5" /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded" onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Trás"><ArrowDown className="size-3.5" /></button>
+            <button className="p-1.5 hover:bg-red-500/30 text-red-300 rounded" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-3.5" /></button>
           </div>
         </>
       )}
@@ -1084,11 +1096,18 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
     return (raw && raw.trim()) || 'PREVIEW';
   };
   if (el.type === 'qr') {
-    const size = Math.max(16, Math.min(el.w, el.h) * MM_TO_PX);
     const value = codePreview(el.payload);
+    // SVG vetorial: escala sem perda em qualquer tamanho (Req #2).
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white">
-        <QRCodeCanvas value={value} size={size} level="M" includeMargin={false} />
+      <div className="w-full h-full flex items-center justify-center bg-white overflow-hidden">
+        <QRCodeSVG
+          value={value}
+          level="H"
+          includeMargin={false}
+          bgColor="#ffffff"
+          fgColor="#000000"
+          style={{ width: '100%', height: '100%', display: 'block', shapeRendering: 'crispEdges' }}
+        />
       </div>
     );
   }
@@ -1114,10 +1133,12 @@ function ElementContent({ el, meta }: { el: LabelElement; meta: LabelState['meta
   if (el.type === 'rect') {
     const bw = (el.borderWidth ?? 0.4) * MM_TO_PX;
     const br = (el.borderRadius ?? 0) * MM_TO_PX;
+    const bs = el.borderStyle || 'solid';
+    const bc = el.borderColor || '#000';
     if (el.rectFill === 'filled') {
-      return <div className="w-full h-full bg-black" style={{ borderRadius: `${br}px` }} />;
+      return <div className="w-full h-full" style={{ background: el.rectFillColor || '#000', borderRadius: `${br}px` }} />;
     }
-    return <div className="w-full h-full" style={{ border: `${bw}px solid #000`, borderRadius: `${br}px` }} />;
+    return <div className="w-full h-full" style={{ border: `${bw}px ${bs} ${bc}`, borderRadius: `${br}px`, background: 'transparent' }} />;
   }
   if (el.type === 'image') {
     const br = (el.borderRadius ?? 0) * MM_TO_PX;
@@ -1292,8 +1313,36 @@ function ElementInspector({
                 </SelectContent>
               </Select>
             </div>
+            {element.rectFill === 'filled' && (
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor</Label>
+                <input type="color" value={element.rectFillColor || '#000000'} onChange={(e) => onUpdate({ rectFillColor: e.target.value })}
+                  className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5" />
+              </div>
+            )}
             {element.rectFill !== 'filled' && (
-              <NumField label="Borda (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
+              <>
+                <div className="flex flex-col gap-1 min-w-[130px]">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estilo da borda</Label>
+                  <Select value={element.borderStyle || 'solid'} onValueChange={(v) => onUpdate({ borderStyle: v as BorderStyle })}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solid">Sólida</SelectItem>
+                      <SelectItem value="dashed">Tracejada</SelectItem>
+                      <SelectItem value="dotted">Pontilhada</SelectItem>
+                      <SelectItem value="double">Dupla</SelectItem>
+                      <SelectItem value="groove">Baixo-relevo</SelectItem>
+                      <SelectItem value="ridge">Alto-relevo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <NumField label="Espessura (mm)" value={element.borderWidth ?? 0.4} onChange={(v) => onUpdate({ borderWidth: v })} />
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor da borda</Label>
+                  <input type="color" value={element.borderColor || '#000000'} onChange={(e) => onUpdate({ borderColor: e.target.value })}
+                    className="h-8 w-10 rounded-md border border-border bg-background cursor-pointer p-0.5" />
+                </div>
+              </>
             )}
             <NumField label="Raio (mm)" value={element.borderRadius ?? 0} onChange={(v) => onUpdate({ borderRadius: v })} />
           </InspectorGroup>
