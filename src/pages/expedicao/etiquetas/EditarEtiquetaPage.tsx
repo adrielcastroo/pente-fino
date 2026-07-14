@@ -12,6 +12,7 @@ import {
   ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
   AlertTriangle, Eye, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
   Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
+  Minus, Square, SquareDashed, FlaskConical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,9 +98,13 @@ export default function EditarEtiquetaPage() {
     if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
   };
 
-  const addElement = (tipo: 'text' | 'qr' | 'barcode') => {
+  const addElement = (tipo: 'text' | 'qr' | 'barcode' | 'line-h' | 'line-v' | 'rect' | 'box-filled') => {
     setZpl((prev) => appendZplBlock(prev, createNewBlock(tipo, { largura, altura })));
   };
+
+  // Overrides do preview — usuário injeta valores fictícios para testar tamanhos.
+  const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
+  const [showPreviewValues, setShowPreviewValues] = useState(false);
 
   useEffect(() => {
     if (!template) return;
