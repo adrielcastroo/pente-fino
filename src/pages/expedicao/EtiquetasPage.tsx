@@ -110,6 +110,25 @@ function loadState(): LabelState {
   } catch { return { ...DEFAULT_STATE, elements: defaultElements() }; }
 }
 
+// ---------------------------------------------------------------------------
+// Presets salvos pelo usuário — layouts nomeados que ficam no localStorage.
+// ---------------------------------------------------------------------------
+const PRESETS_KEY = 'exp_label_presets_v1';
+
+interface SavedPreset { id: string; name: string; createdAt: number; snapshot: LabelState }
+
+function loadPresets(): SavedPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function savePresets(list: SavedPreset[]) {
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(list));
+}
+
 // ============================================================================
 // Page
 // ============================================================================
