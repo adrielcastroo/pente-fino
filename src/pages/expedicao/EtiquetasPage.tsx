@@ -700,19 +700,34 @@ function PreviewWorkbench({
 
   return (
     <div className="space-y-2 exp-preview-workbench flex flex-col min-h-0 lg:h-full">
-      <div className="flex items-baseline justify-between shrink-0 print:hidden">
-        <Label className="text-xs font-semibold uppercase tracking-widest opacity-60">Pré-visualização</Label>
-        <div className="flex items-center gap-3 text-[10px] font-mono opacity-70">
-          <span>{widthMm}×{heightMm}mm</span>
-          <span>{Math.round(fit * 100)}%</span>
-          <button className="underline hover:text-primary" onClick={() => onZoomChange(0)}>Ajustar</button>
-          <span className="opacity-60">Scroll = zoom · Espaço + scroll = mover · Del = excluir · Ctrl+B = negrito</span>
+      <div className="flex items-center justify-between gap-3 shrink-0 print:hidden flex-wrap">
+        <div className="flex items-center gap-2">
+          <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Pré-visualização</Label>
+          <Badge variant="outline" className="font-mono text-[10px] gap-1 h-5">
+            <RulerIcon className="size-3" /> {widthMm}×{heightMm}mm
+          </Badge>
+          <Badge variant="secondary" className="font-mono text-[10px] h-5">{Math.round(fit * 100)}%</Badge>
+          <button className="text-[10px] font-medium text-primary hover:underline underline-offset-2 transition-colors" onClick={() => onZoomChange(0)}>
+            Ajustar à tela
+          </button>
+        </div>
+        <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <Keyboard className="size-3 mr-0.5 opacity-60" />
+          <Kbd>Scroll</Kbd><span className="opacity-60">zoom</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Space</Kbd>+<Kbd>Scroll</Kbd><span className="opacity-60">mover</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Del</Kbd><span className="opacity-60">excluir</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Ctrl</Kbd>+<Kbd>B</Kbd><span className="opacity-60">negrito</span>
+          <span className="opacity-30">·</span>
+          <Kbd>Alt</Kbd><span className="opacity-60">sem snap</span>
         </div>
       </div>
       <div
         ref={boxRef}
         className={cn(
-          'exp-preview-box relative rounded-lg border-2 border-dashed border-border/50 overflow-auto shadow-inner flex-1 min-h-0',
+          'exp-preview-box relative rounded-xl border border-border/60 overflow-auto shadow-inner flex-1 min-h-0 bg-background/50',
           spaceDown && 'cursor-grab',
         )}
         style={{
