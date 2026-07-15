@@ -13,7 +13,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import {
   History, Plus, Settings2, Layers, FileText, Sparkles, Loader2, Printer,
-  ExternalLink, ChevronDown,
+  ExternalLink, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,7 @@ import { useEtiquetas, useEtiquetaHistorico, useDuplicarTemplate } from '@/hooks
 import { usePrintQueue } from '@/hooks/usePrintQueue';
 import { XmlBatchImporter } from './XmlBatchImporter';
 import { PrintQueue } from './PrintQueue';
-import { BartenderOverlayCard } from './BartenderOverlayCard';
+import { ExpedicaoLayoutSection } from '@/components/settings/LabelLayoutPanel';
 
 const ACTIVE_KEY = 'etiqueta:active-template-id';
 
@@ -42,7 +42,7 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
   const duplicar = useDuplicarTemplate();
 
   const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem(ACTIVE_KEY));
-  const [tab, setTab] = useState<'operacao' | 'avancado'>('operacao');
+  const [tab, setTab] = useState<'operacao' | 'avancado' | 'layout'>('operacao');
 
   const queue = usePrintQueue();
 
@@ -144,10 +144,13 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
         </header>
 
         {/* ============ Tabs ============ */}
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'operacao' | 'avancado')}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as 'operacao' | 'avancado' | 'layout')}>
           <TabsList>
             <TabsTrigger value="operacao">Operação</TabsTrigger>
             <TabsTrigger value="avancado">Avançado</TabsTrigger>
+            <TabsTrigger value="layout" className="gap-1.5">
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Layout etiqueta
+            </TabsTrigger>
           </TabsList>
 
           {/* ============ OPERAÇÃO ============ */}
@@ -214,9 +217,9 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
 
           {/* ============ AVANÇADO ============ */}
           <TabsContent value="avancado" className="space-y-5 mt-4">
-            <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
+            <div className="grid gap-5 grid-cols-1">
               {/* Editor completo */}
-              <div className="border border-border/60 rounded-xl bg-card p-4 space-y-3">
+              <div className="border border-border/60 rounded-xl bg-card p-4 space-y-3 max-w-2xl">
                 <h3 className="text-sm font-medium flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" /> Editor visual completo
                 </h3>
@@ -260,9 +263,22 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
                   </div>
                 )}
               </div>
+            </div>
+          </TabsContent>
 
-              {/* BarTender */}
-              <BartenderOverlayCard templateId={activeId} />
+          {/* ============ LAYOUT ETIQUETA ============ */}
+          <TabsContent value="layout" className="space-y-4 mt-4">
+            <div className="border border-border/60 rounded-xl bg-card p-4">
+              <header className="mb-4">
+                <h2 className="text-sm font-medium flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-primary" /> Layout etiqueta — Expedição
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Ajustes finos globais aplicados na impressão de qualquer template ZPL desta central.
+                  Largura e altura vêm de cada template — aqui você controla offset, borda e padding.
+                </p>
+              </header>
+              <ExpedicaoLayoutSection />
             </div>
           </TabsContent>
         </Tabs>
