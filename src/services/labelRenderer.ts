@@ -229,9 +229,9 @@ export async function renderZplLabel(
   variaveis: Record<string, string>,
   dimensoes: { largura: number; altura: number },
   labelSettings: LabelSettings,
-  options: { applyPrintOffset?: boolean } = {},
+  options: { applyPrintOffset?: boolean; logoUrl?: string } = {},
 ): Promise<RenderedLabel> {
-  const { applyPrintOffset = true } = options;
+  const { applyPrintOffset = true, logoUrl } = options;
   const w = dimensoes.largura;
   const h = dimensoes.altura;
   const wPx = w * PREVIEW_SCALE;
