@@ -29,6 +29,9 @@ interface Elemento {
   height?: number;
   qrMag?: number;
   reverse?: boolean;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 }
 
 function parseZpl(zpl: string, rawFd: (fd: string) => string): { elementos: Elemento[]; pw: number; ll: number } {
