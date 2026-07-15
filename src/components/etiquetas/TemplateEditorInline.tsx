@@ -689,11 +689,23 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
               )}
             </div>
 
-            <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
               <Package className="h-3 w-3" />
-              {previewMode === 'interativo'
-                ? 'Arraste para mover · duplo-clique para ajustar variáveis, fonte, largura e alinhamento.'
-                : 'Código ZPL enviado à impressora.'}
+              {previewMode === 'interativo' ? (
+                <>
+                  <span>Arraste · duplo-clique edita ·</span>
+                  <kbd className="px-1 rounded border border-border/60 bg-background font-mono text-[10px]">←↑↓→</kbd>
+                  <span>move</span>
+                  <span>·</span>
+                  <kbd className="px-1 rounded border border-border/60 bg-background font-mono text-[10px]">Del</kbd>
+                  <span>remove</span>
+                  <span>·</span>
+                  <kbd className="px-1 rounded border border-border/60 bg-background font-mono text-[10px]">Ctrl+Z/Y</kbd>
+                  <span>desfaz</span>
+                </>
+              ) : (
+                <span>Código ZPL enviado à impressora.</span>
+              )}
             </div>
           </aside>
         </div>
