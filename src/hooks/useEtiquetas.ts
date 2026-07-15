@@ -50,14 +50,19 @@ export function useEtiquetaHistorico(filtro?: { templateId?: string }) {
  * padding) vêm do LabelSettings, aba "Expedição (ZPL)".
  */
 async function imprimirNavegador(
-  zplFinal: string,
+  zplRaw: string,
   variaveis: Record<string, string>,
   quantidade: number,
   dimensoes: { largura: number; altura: number },
   templateNome: string,
+  logoUrl?: string,
 ): Promise<void> {
   const labelSettings = useAppStore.getState().labelSettings;
-  const rendered = await renderZplLabel(zplFinal, variaveis, dimensoes, labelSettings);
+  // Passa o ZPL BRUTO (com placeholders {{...}}) — o ZPLPreview interpola as
+  // variáveis internamente e também detecta o marcador {{logo}} para renderizar
+  // a imagem. Se pré-substituíssemos aqui, o {{logo}} sumiria e a logo não
+  // apareceria na impressão real.
+  const rendered = await renderZplLabel(zplRaw, variaveis, dimensoes, labelSettings, { logoUrl });
   const copies = Math.max(1, quantidade);
   await printImagesInBrowser(
     rendered.dataUrl,
@@ -69,18 +74,42 @@ async function imprimirNavegador(
 }
 
 
+const LOGO_VAR_KEY = '__logo_src__';
+
 export function useImprimirEtiqueta() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ templateId, variaveis, quantidade, impressora }: ImprimirInput) => {
       const template = await etiquetaService.getById(templateId);
       if (!template) throw new Error('Template não encontrado');
-      const zplFinal = etiquetaService.renderZPL(template.zpl, variaveis);
-      await imprimirNavegador(zplFinal, variaveis, quantidade, template.dimensoes, template.nome);
+
+      // Mescla padrões do template com valores fornecidos: o operador nem
+      // sempre digita todas as variáveis, e os defaults (`padrao`) definidos
+      // no modelo precisam sair na impressão real — não só no preview.
+      const defaults: Record<string, string> = {};
+      let logoUrl: string | undefined;
+      for (const v of template.variaveis) {
+        if (v.chave === LOGO_VAR_KEY) {
+          if (v.padrao) logoUrl = v.padrao;
+          continue;
+        }
+        if (v.padrao && v.padrao !== '{{hoje}}') defaults[v.chave] = v.padrao;
+      }
+      // Fallback: logo salva no localStorage antigo do editor.
+      if (!logoUrl && typeof localStorage !== 'undefined') {
+        logoUrl = localStorage.getItem(`etiqueta-logo-${templateId}`) || undefined;
+      }
+      const filledVars: Record<string, string> = { ...defaults };
+      for (const [k, v] of Object.entries(variaveis || {})) {
+        if (v !== undefined && v !== '') filledVars[k] = v;
+      }
+
+      const zplFinal = etiquetaService.renderZPL(template.zpl, filledVars);
+      await imprimirNavegador(template.zpl, filledVars, quantidade, template.dimensoes, template.nome, logoUrl);
       await etiquetaService.registrarImpressao({
         templateId,
         template_nome: template.nome,
-        variaveis,
+        variaveis: filledVars,
         quantidade,
         impressora,
       });
