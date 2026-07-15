@@ -792,6 +792,23 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         })}
         </g>
 
+        {/* MULTI-SELECT: outline suave em todos os blocos selecionados quando 2+ */}
+        {selection.size > 1 && (
+          <g transform={`translate(${contentX}, ${contentY})`} pointerEvents="none">
+            {Array.from(selection).map((idx) => {
+              const b = blocks[idx];
+              if (!b) return null;
+              const { w, h } = elementBounds(b, logoUrl);
+              return (
+                <rect key={idx}
+                  x={b.x - 1} y={b.y - 1} width={w + 2} height={h + 2}
+                  fill="hsl(var(--primary) / 0.08)" stroke="hsl(var(--primary))" strokeWidth={1.2} strokeDasharray="4 3"
+                />
+              );
+            })}
+          </g>
+        )}
+
         {/* SELECTION FRAME — desenhado por cima */}
         <g transform={`translate(${contentX}, ${contentY})`}>
         {selectedBlock && (() => {
