@@ -53,6 +53,10 @@ export interface LabelSettings {
   expedicaoBorderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
   expedicaoBorderRadius?: number;
   expedicaoPadding?: number;
+  expedicaoLineThickness?: number;
+  expedicaoLineStyle?: 'solid' | 'dashed' | 'dotted';
+  expedicaoLineColor?: string;
+  expedicaoFontFamily?: string;
 }
 
 export interface AppState {
