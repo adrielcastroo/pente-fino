@@ -1444,7 +1444,7 @@ export async function printZplLabelsInBrowser(
           background: '#fff',
         },
       },
-        createElement(ZPLPreview, { zpl, variaveis, dimensoes }),
+        createElement(ZPLPreview, { zpl, variaveis, dimensoes, lineThickness, lineStyle, lineColor, fontFamily }),
       ),
     ),
   });
