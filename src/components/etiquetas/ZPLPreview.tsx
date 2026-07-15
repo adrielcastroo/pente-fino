@@ -8,6 +8,7 @@
 import { memo, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
+import { LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 interface FbConfig {
   width: number;
@@ -154,9 +155,12 @@ export const ZPLPreview = memo(function ZPLPreview({
     return parseZpl(zpl, interp);
   }, [zpl, variaveis]);
 
-  // Preferir dimensões físicas declaradas no ZPL (em dots @ 203dpi).
-  const viewW = parsed.pw || (dimensoes?.largura ?? 100) * 8;
-  const viewH = parsed.ll || (dimensoes?.altura ?? 150) * 8;
+  // Sistema lógico de coordenadas: usa ^PW/^LL do ZPL quando existirem.
+  // O SVG é esticado para o tamanho físico da etiqueta pelo container externo,
+  // exatamente como o PNG final é impresso em @page mm. Isso evita letterbox e
+  // faz linhas em x=0/width=^PW tangenciarem a borda física.
+  const viewW = parsed.pw || (dimensoes?.largura ?? 100) * LABEL_PX_PER_MM;
+  const viewH = parsed.ll || (dimensoes?.altura ?? 150) * LABEL_PX_PER_MM;
   // Margem de segurança da impressora térmica (área realmente imprimível).
   // Impressoras costumam descartar 1–2mm nas bordas (~8–16 dots @ 203dpi).
   const SAFE_MARGIN = 8;
@@ -164,7 +168,7 @@ export const ZPLPreview = memo(function ZPLPreview({
 
   return (
     <div className={cn('bg-white text-black relative w-full h-full overflow-hidden', className)}>
-      <svg viewBox={`0 0 ${viewW} ${viewH}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full">
+      <svg viewBox={`0 0 ${viewW} ${viewH}`} preserveAspectRatio="none" className="block w-full h-full">
         <defs>
           <clipPath id={clipId}>
             <rect x={0} y={0} width={viewW} height={viewH} />
@@ -209,7 +213,7 @@ export const ZPLPreview = memo(function ZPLPreview({
                   <text
                     key={k}
                     x={anchorX}
-                    y={el.y + el.size + k * lineH}
+                    y={el.y + el.size * 0.85 + k * lineH}
                     fontSize={el.size}
                     fontFamily={fontFamily}
                     fill={fillColor}
@@ -248,7 +252,7 @@ export const ZPLPreview = memo(function ZPLPreview({
             );
           }
           if (el.tipo === 'qr') {
-            const side = Math.max(60, (el.qrMag ?? 4) * 24);
+            const side = Math.max(60, (el.qrMag ?? 4) * 32);
             const payload = (el.text || 'QR').replace(/^LA,/, '');
             return (
               <foreignObject key={i} x={el.x} y={el.y} width={side} height={side}>
@@ -261,10 +265,15 @@ export const ZPLPreview = memo(function ZPLPreview({
           if (el.tipo === 'box') {
             const w = el.width ?? 0;
             const h = el.height ?? 0;
-            const isLine = w <= 2 || h <= 2;
+            const isHorizontalLine = h <= 2 && w > h;
+            const isVerticalLine = w <= 2 && h >= w;
+            const isLine = isHorizontalLine || isVerticalLine;
             // Clampa largura/altura para não passar da borda imprimível.
             const clampedW = Math.min(Math.max(1, w), Math.max(1, viewW - el.x));
             const clampedH = Math.min(Math.max(1, h), Math.max(1, viewH - el.y));
+            const effectiveLineThickness = lineThickness > 0 ? Math.max(1, lineThickness) : 0;
+            const renderedW = isVerticalLine && effectiveLineThickness > 0 ? effectiveLineThickness : clampedW;
+            const renderedH = isHorizontalLine && effectiveLineThickness > 0 ? effectiveLineThickness : clampedH;
             const dashArray =
               lineStyle === 'dashed' ? `${Math.max(4, lineThickness * 3)} ${Math.max(3, lineThickness * 2)}`
               : lineStyle === 'dotted' ? `${lineThickness} ${Math.max(2, lineThickness * 1.5)}`
@@ -274,11 +283,11 @@ export const ZPLPreview = memo(function ZPLPreview({
                 key={i}
                 x={el.x}
                 y={el.y}
-                width={clampedW}
-                height={clampedH}
+                width={renderedW}
+                height={renderedH}
                 fill={isLine ? lineColor : 'none'}
-                stroke={isLine || lineThickness <= 0 ? 'none' : lineColor}
-                strokeWidth={lineThickness}
+                stroke={isLine || effectiveLineThickness <= 0 ? 'none' : lineColor}
+                strokeWidth={effectiveLineThickness}
                 strokeDasharray={dashArray}
               />
             );
