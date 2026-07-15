@@ -65,18 +65,50 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
   const [categoria, setCategoria] = useState<CategoriaEtiqueta>('expedicao');
   const [largura, setLargura] = useState(100);
   const [altura, setAltura] = useState(150);
-  const [zpl, setZpl] = useState('');
+  const [zpl, setZplState] = useState('');
   const [variaveis, setVariaveis] = useState<VariavelTemplate[]>([]);
   const [previewMode, setPreviewMode] = useState<'interativo' | 'zpl'>('interativo');
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [dirty, setDirty] = useState(false);
   const skipDirtyRef = useRef(true);
 
-  useEffect(() => {
-    if (!templateId) return;
-    const saved = localStorage.getItem(`etiqueta-logo-${templateId}`);
-    setLogoUrl(saved || '');
-  }, [templateId]);
+  // Histórico para undo/redo do ZPL (mantém últimas 100 alterações).
+  const historyPast = useRef<string[]>([]);
+  const historyFuture = useRef<string[]>([]);
+  const historyLock = useRef(false);
+
+  const setZpl = useCallback((next: string | ((prev: string) => string)) => {
+    setZplState((prev) => {
+      const val = typeof next === 'function' ? (next as (p: string) => string)(prev) : next;
+      if (val === prev) return prev;
+      if (!historyLock.current) {
+        historyPast.current.push(prev);
+        if (historyPast.current.length > 100) historyPast.current.shift();
+        historyFuture.current = [];
+      }
+      return val;
+    });
+  }, []);
+
+  const undoZpl = useCallback(() => {
+    setZplState((prev) => {
+      const p = historyPast.current.pop();
+      if (p === undefined) return prev;
+      historyFuture.current.push(prev);
+      return p;
+    });
+  }, []);
+
+  const redoZpl = useCallback(() => {
+    setZplState((prev) => {
+      const f = historyFuture.current.pop();
+      if (f === undefined) return prev;
+      historyPast.current.push(prev);
+      return f;
+    });
+  }, []);
+
+  const LOGO_VAR_KEY = '__logo_src__';
 
   const onLogoUpload = (file: File) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -84,7 +116,9 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
     reader.onload = () => {
       const url = String(reader.result || '');
       setLogoUrl(url);
-      if (templateId) localStorage.setItem(`etiqueta-logo-${templateId}`, url);
+      if (templateId) {
+        try { localStorage.setItem(`etiqueta-logo-${templateId}`, url); } catch { /* quota */ }
+      }
       setZpl((prev) => (/\{\{\s*logo\s*\}\}/i.test(prev) ? prev : appendZplBlock(prev, createNewBlock('logo', { largura, altura }))));
     };
     reader.readAsDataURL(file);
@@ -105,22 +139,48 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
   useEffect(() => {
     if (!template) return;
     skipDirtyRef.current = true;
+    historyLock.current = true;
+    historyPast.current = [];
+    historyFuture.current = [];
     setNome(template.nome);
     setCategoria(template.categoria);
     setLargura(template.dimensoes.largura);
     setAltura(template.dimensoes.altura);
-    setZpl(template.zpl);
-    setVariaveis(template.variaveis);
-    queueMicrotask(() => { skipDirtyRef.current = false; setDirty(false); });
-  }, [template]);
+    setZplState(template.zpl);
+    // Extrai logo persistida na variável interna, mantém demais variáveis visíveis.
+    const logoVar = template.variaveis.find((v) => v.chave === LOGO_VAR_KEY);
+    const visibleVars = template.variaveis.filter((v) => v.chave !== LOGO_VAR_KEY);
+    setVariaveis(visibleVars);
+    // Preferência: logo salva no template > fallback localStorage antigo.
+    const fallback = templateId ? localStorage.getItem(`etiqueta-logo-${templateId}`) : null;
+    setLogoUrl(logoVar?.padrao || fallback || '');
+    queueMicrotask(() => {
+      skipDirtyRef.current = false;
+      historyLock.current = false;
+      setDirty(false);
+    });
+  }, [template, templateId]);
 
   useEffect(() => {
     if (skipDirtyRef.current) return;
     setDirty(true);
-  }, [nome, categoria, largura, altura, zpl, variaveis]);
+  }, [nome, categoria, largura, altura, zpl, variaveis, logoUrl]);
 
   const salvar = useCallback(async () => {
     if (!templateId) return;
+    // Serializa a logo dentro das variáveis persistidas — mesmo escopo do template.
+    const varsToSave: VariavelTemplate[] = [...variaveis];
+    if (logoUrl) {
+      varsToSave.push({
+        chave: LOGO_VAR_KEY,
+        label: 'Logo (imagem)',
+        tipo: 'auto',
+        obrigatorio: false,
+        padrao: logoUrl,
+        descricao: 'Logo do template — persistida como imagem base64.',
+        ordem: 9999,
+      });
+    }
     await atualizar.mutateAsync({
       id: templateId,
       data: {
@@ -128,20 +188,27 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
         categoria,
         dimensoes: { largura, altura },
         zpl,
-        variaveis,
+        variaveis: varsToSave,
       },
     });
     setDirty(false);
-  }, [templateId, nome, categoria, largura, altura, zpl, variaveis, atualizar]);
+  }, [templateId, nome, categoria, largura, altura, zpl, variaveis, logoUrl, atualizar]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return;
-      if (e.key.toLowerCase() === 's') { e.preventDefault(); salvar(); }
+      const target = e.target as HTMLElement | null;
+      const typing = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key.toLowerCase() === 's') { e.preventDefault(); salvar(); return; }
+      if (typing) return;
+      if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undoZpl(); return; }
+      if ((ctrl && e.key.toLowerCase() === 'y') || (ctrl && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        e.preventDefault(); redoZpl(); return;
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [salvar]);
+  }, [salvar, undoZpl, redoZpl]);
 
   const addVar = () => {
     setVariaveis((prev) => [
@@ -622,11 +689,23 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
               )}
             </div>
 
-            <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <div className="shrink-0 border-t border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
               <Package className="h-3 w-3" />
-              {previewMode === 'interativo'
-                ? 'Arraste para mover · duplo-clique para ajustar variáveis, fonte, largura e alinhamento.'
-                : 'Código ZPL enviado à impressora.'}
+              {previewMode === 'interativo' ? (
+                <>
+                  <span>Arraste · duplo-clique edita ·</span>
+                  <kbd className="px-1 rounded border border-border/60 bg-background font-mono text-[10px]">←↑↓→</kbd>
+                  <span>move</span>
+                  <span>·</span>
+                  <kbd className="px-1 rounded border border-border/60 bg-background font-mono text-[10px]">Del</kbd>
+                  <span>remove</span>
+                  <span>·</span>
+                  <kbd className="px-1 rounded border border-border/60 bg-background font-mono text-[10px]">Ctrl+Z/Y</kbd>
+                  <span>desfaz</span>
+                </>
+              ) : (
+                <span>Código ZPL enviado à impressora.</span>
+              )}
             </div>
           </aside>
         </div>
