@@ -48,6 +48,7 @@ export const LiveZPLPreview = memo(function LiveZPLPreview({
         height: '100%',
         background: '#fff',
         overflow: 'hidden',
+        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
       }}
     >
       <ZPLPreview
