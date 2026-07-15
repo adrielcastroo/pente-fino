@@ -30,6 +30,9 @@ export interface ElementEditValues {
   style?: ShapeStyle;
   x?: number;
   y?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 }
 
 interface Props {
