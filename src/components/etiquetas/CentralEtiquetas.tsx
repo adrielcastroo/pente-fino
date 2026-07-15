@@ -232,21 +232,25 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
                 </p>
               ) : (
                 <ul className="divide-y divide-border/60 max-h-[320px] overflow-y-auto">
-                  {historico.slice(0, 20).map((h) => (
-                    <li key={h.id} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                      <Printer className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm truncate">{h.template_nome}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(h.criado_em).toLocaleString('pt-BR')}
-                          {h.usuario_nome ? ` · ${h.usuario_nome}` : ''}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="text-[10px] font-mono">
-                        {h.quantidade}×
-                      </Badge>
-                    </li>
-                  ))}
+                  {historico.slice(0, 20).map((h) => {
+                    const nf = h.variaveis_usadas?.nf;
+                    const titulo = nf ? `NF ${nf}` : h.template_nome;
+                    return (
+                      <li key={h.id} className="flex items-center gap-3 p-3 hover:bg-muted/30">
+                        <Printer className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm truncate">{titulo}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(h.criado_em).toLocaleString('pt-BR')}
+                            {h.usuario_nome ? ` · ${h.usuario_nome}` : ''}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] font-mono">
+                          {h.quantidade}×
+                        </Badge>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
