@@ -61,6 +61,15 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
   const { data: template, isLoading } = useEtiqueta(templateId ?? undefined);
   const atualizar = useAtualizarTemplate();
   const duplicar = useDuplicarTemplate();
+  const labelSettings = useAppStore((s) => s.labelSettings);
+  const previewBorderWidth = labelSettings.expedicaoBorderWidth ?? 0;
+  const previewBorderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
+  const previewBorderRadius = labelSettings.expedicaoBorderRadius ?? 0;
+  const previewPadding = labelSettings.expedicaoPadding ?? 0;
+  const previewBorderCss =
+    previewBorderStyle === 'none' || previewBorderWidth <= 0
+      ? undefined
+      : `${previewBorderWidth}px ${previewBorderStyle} #000`;
 
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState<CategoriaEtiqueta>('expedicao');
