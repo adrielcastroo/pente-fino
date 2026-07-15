@@ -125,8 +125,15 @@ interface ZPLPreviewProps {
 export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, dimensoes, logoUrl }: ZPLPreviewProps) {
   const parsed = useMemo(() => {
     const hoje = new Date().toLocaleDateString('pt-BR');
+    const resolveVar = (key: string): string => {
+      if (key === 'hoje' || key === 'data') return hoje;
+      const direct = variaveis?.[key];
+      if (direct !== undefined) return direct;
+      const matchedKey = Object.keys(variaveis ?? {}).find((k) => k.toLowerCase() === key.toLowerCase());
+      return matchedKey ? (variaveis?.[matchedKey] ?? '') : '';
+    };
     const interp = (s: string) =>
-      s.replace(/\{\{(\w+)\}\}/g, (_, k: string) => (k === 'hoje' || k === 'data' ? hoje : (variaveis?.[k] ?? '')));
+      s.replace(/\{\{(\w+)\}\}/g, (_, k: string) => resolveVar(k));
     return parseZpl(zpl, interp);
   }, [zpl, variaveis]);
 
@@ -171,7 +178,7 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
             const h = el.size * 1.6;
             const w = h * 2.5;
             return logoUrl ? (
-              <image key={i} href={logoUrl} x={el.x} y={el.y} height={h} preserveAspectRatio="xMidYMid meet" />
+              <image key={i} href={logoUrl} x={el.x} y={el.y} width={w} height={h} preserveAspectRatio="xMidYMid meet" />
             ) : (
               <g key={i}>
                 <rect x={el.x} y={el.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />

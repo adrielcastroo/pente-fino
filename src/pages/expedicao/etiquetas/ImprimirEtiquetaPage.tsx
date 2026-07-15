@@ -18,6 +18,8 @@ interface Impressora {
   nome: string;
 }
 
+const LOGO_VAR_KEY = '__logo_src__';
+
 export default function ImprimirEtiquetaPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -38,11 +40,24 @@ export default function ImprimirEtiquetaPage() {
     if (!template) return;
     const iniciais: Record<string, string> = {};
     template.variaveis.forEach((v) => {
+      if (v.chave === LOGO_VAR_KEY) return;
       if (v.padrao === '{{hoje}}') iniciais[v.chave] = new Date().toISOString().split('T')[0];
       else if (v.padrao) iniciais[v.chave] = v.padrao;
     });
     setValores((prev) => ({ ...iniciais, ...prev }));
   }, [template]);
+
+  const logoUrl = useMemo(() => {
+    if (!template) return undefined;
+    const stored = template.variaveis.find((v) => v.chave === LOGO_VAR_KEY)?.padrao;
+    if (stored) return stored;
+    return id ? (localStorage.getItem(`etiqueta-logo-${id}`) || undefined) : undefined;
+  }, [template, id]);
+
+  const variaveisVisiveis = useMemo(
+    () => template?.variaveis.filter((v) => v.chave !== LOGO_VAR_KEY) ?? [],
+    [template],
+  );
 
   // Auto-preenchimento via ?picking=ID
   useEffect(() => {
@@ -71,8 +86,8 @@ export default function ImprimirEtiquetaPage() {
 
   const podeImprimir = useMemo(() => {
     if (!template) return false;
-    return template.variaveis.every((v) => !v.obrigatorio || (valores[v.chave] ?? '').trim().length > 0);
-  }, [template, valores]);
+    return variaveisVisiveis.every((v) => !v.obrigatorio || (valores[v.chave] ?? '').trim().length > 0);
+  }, [template, variaveisVisiveis, valores]);
 
   if (isLoading) {
     return <div className="p-8 text-center text-sm text-muted-foreground">Carregando template...</div>;
@@ -106,7 +121,7 @@ export default function ImprimirEtiquetaPage() {
         </div>
         <div className="flex-1 p-4 flex items-center justify-center overflow-auto min-h-[240px]">
           <div className="w-full max-w-[260px]" style={{ aspectRatio: `${template.dimensoes.largura} / ${template.dimensoes.altura}` }}>
-            <LiveZPLPreview zpl={template.zpl} valores={valores} dimensoes={template.dimensoes} />
+            <LiveZPLPreview zpl={template.zpl} valores={valores} dimensoes={template.dimensoes} logoUrl={logoUrl} />
           </div>
         </div>
         <div className="p-4 border-t border-border">
@@ -136,7 +151,7 @@ export default function ImprimirEtiquetaPage() {
             }}
             className="space-y-4"
           >
-            {template.variaveis
+            {variaveisVisiveis
               .slice()
               .sort((a, b) => a.ordem - b.ordem)
               .map((v) => (
