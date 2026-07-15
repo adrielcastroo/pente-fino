@@ -144,7 +144,7 @@ function buildPrintVariablePages(
 export function useImprimirEtiqueta() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ templateId, variaveis, quantidade, impressora }: ImprimirInput) => {
+    mutationFn: async ({ templateId, variaveis, quantidade, impressora, historyLabel }: ImprimirInput) => {
       const template = await etiquetaService.getById(templateId);
       if (!template) throw new Error('Template não encontrado');
 
@@ -182,7 +182,7 @@ export function useImprimirEtiqueta() {
       );
       await etiquetaService.registrarImpressao({
         templateId,
-        template_nome: template.nome,
+        template_nome: historyLabel || template.nome,
         variaveis: printVars.historyVars,
         quantidade,
         impressora,
@@ -244,5 +244,17 @@ export function useDeletarTemplate() {
       toast.success('Template excluído');
     },
     onError: (e: Error) => toast.error(`Erro ao excluir: ${e.message}`),
+  });
+}
+
+export function useLimparHistorico() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => etiquetaService.limparHistorico(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: etiquetaQueryKeys.historico({}) });
+      toast.success('Histórico de impressões limpo');
+    },
+    onError: (e: Error) => toast.error(`Erro ao limpar histórico: ${e.message}`),
   });
 }

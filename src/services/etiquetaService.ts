@@ -184,6 +184,15 @@ export const etiquetaService = {
     if (error) throw new ServiceError('REGISTRAR_FAILED', error.message);
     return mapHistorico(data as DbHistoricoRow);
   },
+
+  /** Remove todas as entradas do histórico de impressão (requer supervisor+). */
+  async limparHistorico(): Promise<void> {
+    const { error } = await supabase
+      .from('etiqueta_historico')
+      .delete()
+      .not('id', 'is', null);
+    if (error) throw new ServiceError('CLEAR_HISTORICO_FAILED', error.message);
+  },
 };
 
 export { ServiceError };
