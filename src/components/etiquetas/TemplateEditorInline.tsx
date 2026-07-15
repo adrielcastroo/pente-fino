@@ -1,18 +1,18 @@
 /**
- * Editor de modelo de etiqueta — layout 2 painéis estilo BarTender.
- * Esquerda: formulário em coluna única (Conteúdo / Estilo / Variáveis).
- * Direita: preview sticky sempre visível com toggle Visual | ZPL.
- * Barra fixa no topo com Modelo/Dimensões · Salvar · Imprimir ▾.
- * Preserva 100% o comportamento de geração/persistência de ZPL.
+ * Editor inline de modelo de etiqueta — usado dentro da aba "Layout etiqueta"
+ * da Central de Etiquetas (`/expedicao/etiquetas`).
+ *
+ * Encapsula todo o fluxo de edição que antes vivia em EditarEtiquetaPage:
+ * dimensões, ZPL interativo, variáveis, logo, presets, valores de teste e
+ * salvamento. Sem router, sem barra de topo global — a Central hospeda tudo.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Trash2, Plus, Printer, Package, Wand2, ChevronDown,
+  Save, Trash2, Plus, Printer, Package, ChevronDown,
   AlertTriangle, Code2, CheckCircle2, Loader2, Ruler, Sparkles, Layers,
-  Sliders, Variable, ExternalLink, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
-  Minus, Square, SquareDashed, FlaskConical,
+  Sliders, Variable, MousePointer2, Upload, ImageIcon, X, Type, QrCode, Barcode,
+  Minus, Square, SquareDashed, FlaskConical, FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,10 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useAtualizarTemplate, useEtiqueta } from '@/hooks/useEtiquetas';
-import { AutoCompleteZPL } from '@/components/etiquetas/AutoCompleteZPL';
-
+import { useAtualizarTemplate, useEtiqueta, useDuplicarTemplate } from '@/hooks/useEtiquetas';
 import { InteractiveZPLEditor, appendZplBlock, createNewBlock } from '@/components/etiquetas/InteractiveZPLEditor';
 import {
   PRESETS_TAMANHO,
@@ -38,7 +35,6 @@ import {
 import { cn } from '@/lib/utils';
 
 const TIPOS: TipoVariavel[] = ['text', 'select', 'date', 'barcode', 'qr', 'auto'];
-
 const CATEGORIAS: { key: CategoriaEtiqueta; label: string }[] = [
   { key: 'expedicao', label: 'Expedição' },
   { key: 'conferencia', label: 'Conferência' },
@@ -46,7 +42,6 @@ const CATEGORIAS: { key: CategoriaEtiqueta; label: string }[] = [
   { key: 'custom', label: 'Personalizada' },
 ];
 
-// Extrai chaves {{xxx}} referenciadas no ZPL.
 function extractReferencedVars(zpl: string): string[] {
   const set = new Set<string>();
   const re = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
@@ -55,12 +50,16 @@ function extractReferencedVars(zpl: string): string[] {
   return Array.from(set);
 }
 
-export default function EditarEtiquetaPage() {
-  const { id } = useParams<{ id: string }>();
+interface TemplateEditorInlineProps {
+  templateId: string | null;
+  onCreateNew?: () => void;
+}
+
+export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditorInlineProps) {
   const navigate = useNavigate();
-  const { data: template, isLoading } = useEtiqueta(id);
+  const { data: template, isLoading } = useEtiqueta(templateId ?? undefined);
   const atualizar = useAtualizarTemplate();
-  useDocumentTitle(template ? `Editar · ${template.nome}` : 'Editar Etiqueta');
+  const duplicar = useDuplicarTemplate();
 
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState<CategoriaEtiqueta>('expedicao');
@@ -73,12 +72,11 @@ export default function EditarEtiquetaPage() {
   const [dirty, setDirty] = useState(false);
   const skipDirtyRef = useRef(true);
 
-  // Persistência do logo por template (localStorage — imagem não vai para o ZPL).
   useEffect(() => {
-    if (!id) return;
-    const saved = localStorage.getItem(`etiqueta-logo-${id}`);
-    if (saved) setLogoUrl(saved);
-  }, [id]);
+    if (!templateId) return;
+    const saved = localStorage.getItem(`etiqueta-logo-${templateId}`);
+    setLogoUrl(saved || '');
+  }, [templateId]);
 
   const onLogoUpload = (file: File) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -86,8 +84,7 @@ export default function EditarEtiquetaPage() {
     reader.onload = () => {
       const url = String(reader.result || '');
       setLogoUrl(url);
-      if (id) localStorage.setItem(`etiqueta-logo-${id}`, url);
-      // Auto-injeta {{logo}} no ZPL se não existir — garante que apareça no preview.
+      if (templateId) localStorage.setItem(`etiqueta-logo-${templateId}`, url);
       setZpl((prev) => (/\{\{\s*logo\s*\}\}/i.test(prev) ? prev : appendZplBlock(prev, createNewBlock('logo', { largura, altura }))));
     };
     reader.readAsDataURL(file);
@@ -95,14 +92,13 @@ export default function EditarEtiquetaPage() {
 
   const clearLogo = () => {
     setLogoUrl('');
-    if (id) localStorage.removeItem(`etiqueta-logo-${id}`);
+    if (templateId) localStorage.removeItem(`etiqueta-logo-${templateId}`);
   };
 
   const addElement = (tipo: 'text' | 'qr' | 'barcode' | 'line-h' | 'line-v' | 'rect' | 'box-filled') => {
     setZpl((prev) => appendZplBlock(prev, createNewBlock(tipo, { largura, altura })));
   };
 
-  // Overrides do preview — usuário injeta valores fictícios para testar tamanhos.
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
   const [showPreviewValues, setShowPreviewValues] = useState(false);
 
@@ -115,20 +111,18 @@ export default function EditarEtiquetaPage() {
     setAltura(template.dimensoes.altura);
     setZpl(template.zpl);
     setVariaveis(template.variaveis);
-    // libera o marcador após o próximo tick
     queueMicrotask(() => { skipDirtyRef.current = false; setDirty(false); });
   }, [template]);
 
-  // marcador de "não salvo"
   useEffect(() => {
     if (skipDirtyRef.current) return;
     setDirty(true);
   }, [nome, categoria, largura, altura, zpl, variaveis]);
 
   const salvar = useCallback(async () => {
-    if (!id) return;
+    if (!templateId) return;
     await atualizar.mutateAsync({
-      id,
+      id: templateId,
       data: {
         nome: nome.trim(),
         categoria,
@@ -138,24 +132,16 @@ export default function EditarEtiquetaPage() {
       },
     });
     setDirty(false);
-  }, [id, nome, categoria, largura, altura, zpl, variaveis, atualizar]);
+  }, [templateId, nome, categoria, largura, altura, zpl, variaveis, atualizar]);
 
-  // Ctrl+S / Ctrl+P
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
-      const k = e.key.toLowerCase();
-      if (k === 's') {
-        e.preventDefault();
-        salvar();
-      } else if (k === 'p') {
-        e.preventDefault();
-        if (template) navigate(`/expedicao/etiquetas/${template.id}/imprimir`);
-      }
+      if (e.key.toLowerCase() === 's') { e.preventDefault(); salvar(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [salvar, navigate, template]);
+  }, [salvar]);
 
   const addVar = () => {
     setVariaveis((prev) => [
@@ -194,7 +180,6 @@ export default function EditarEtiquetaPage() {
     setAltura(p.altura);
   };
 
-  // valores de exemplo para o preview vivo (overrides do usuário têm precedência)
   const valoresExemplo = useMemo(() => {
     const v: Record<string, string> = {};
     variaveis.forEach((x) => {
@@ -205,10 +190,27 @@ export default function EditarEtiquetaPage() {
     return { ...v, ...previewOverrides };
   }, [variaveis, previewOverrides]);
 
-  // variáveis referenciadas no ZPL mas não definidas
   const referenced = useMemo(() => extractReferencedVars(zpl), [zpl]);
   const definidasSet = useMemo(() => new Set(variaveis.map((v) => v.chave)), [variaveis]);
   const naoDefinidas = useMemo(() => referenced.filter((k) => !definidasSet.has(k)), [referenced, definidasSet]);
+
+  if (!templateId) {
+    return (
+      <div className="border border-dashed border-border/60 rounded-xl p-10 text-center bg-muted/20">
+        <Sparkles className="h-8 w-8 mx-auto text-muted-foreground/40 mb-3" />
+        <h3 className="text-sm font-medium mb-1">Selecione um modelo para editar</h3>
+        <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
+          Escolha um modelo ativo no seletor acima, ou crie um novo modelo para começar a editar
+          seu layout de etiqueta.
+        </p>
+        {onCreateNew && (
+          <Button size="sm" onClick={onCreateNew} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> Criar novo modelo
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -217,11 +219,11 @@ export default function EditarEtiquetaPage() {
       </div>
     );
   }
+
   if (!template) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-sm text-muted-foreground mb-4">Template não encontrado.</p>
-        <Button onClick={() => navigate('/expedicao/etiquetas')}>Voltar</Button>
+      <div className="p-8 text-center text-sm text-muted-foreground">
+        Template não encontrado.
       </div>
     );
   }
@@ -230,24 +232,16 @@ export default function EditarEtiquetaPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-        <html lang="pt-BR" />
-      </Helmet>
-
-      <div className="flex flex-col h-[calc(100vh-64px)] min-h-0">
-        {/* ============ BARRA SUPERIOR FIXA ============ */}
-        <div className="shrink-0 h-14 border-b border-border/60 bg-card/60 backdrop-blur flex items-center gap-3 px-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/expedicao/etiquetas')} aria-label="Voltar">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-
-          <div className="min-w-0 flex items-center gap-2">
-            <h1 className="text-sm font-semibold truncate max-w-[220px]" title={nome}>{nome || 'Sem nome'}</h1>
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+        {/* ============ BARRA COMPACTA ============ */}
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-card/60">
+          <div className="min-w-0 flex items-center gap-2 flex-1">
+            <Sparkles className="h-4 w-4 text-primary shrink-0" />
+            <h2 className="text-sm font-semibold truncate max-w-[280px]" title={nome}>
+              {nome || 'Sem nome'}
+            </h2>
             <SaveIndicator dirty={dirty} saving={atualizar.isPending} />
           </div>
-
-          <div className="mx-2 h-6 w-px bg-border/60" />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -271,91 +265,81 @@ export default function EditarEtiquetaPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5 h-8 hidden md:inline-flex" disabled>
-                  <Wand2 className="h-3.5 w-3.5" /> Preencher com picking
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Popula o preview com dados reais do picking (em breve).</TooltipContent>
-            </Tooltip>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => duplicar.mutate(templateId)}
+            className="gap-1.5 h-8"
+          >
+            <FileText className="h-3.5 w-3.5" /> Duplicar
+          </Button>
 
-            <Button variant="outline" size="sm" onClick={salvar} disabled={atualizar.isPending || !dirty} className="gap-1.5 h-8">
-              {atualizar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              Salvar
-            </Button>
+          <Button
+            size="sm"
+            onClick={salvar}
+            disabled={atualizar.isPending || !dirty}
+            className="gap-1.5 h-8"
+          >
+            {atualizar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            Salvar
+          </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" className="gap-1.5 h-8">
-                  <Printer className="h-3.5 w-3.5" /> Imprimir
-                  <ChevronDown className="h-3.5 w-3.5 opacity-80" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${template.id}/imprimir`)}>
-                  <Printer className="mr-2 h-4 w-4" /> Imprimir agora
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${template.id}/imprimir?modo=teste`)}>
-                  <Sparkles className="mr-2 h-4 w-4" /> Impressão de teste
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${template.id}/imprimir?modo=lote`)}>
-                  <Layers className="mr-2 h-4 w-4" /> Impressão em lote
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/expedicao/etiquetas/historico')}>
-                  <ExternalLink className="mr-2 h-4 w-4" /> Ver histórico
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="gap-1.5 h-8">
+                <Printer className="h-3.5 w-3.5" /> Imprimir
+                <ChevronDown className="h-3.5 w-3.5 opacity-80" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${templateId}/imprimir`)}>
+                <Printer className="mr-2 h-4 w-4" /> Imprimir agora
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${templateId}/imprimir?modo=teste`)}>
+                <Sparkles className="mr-2 h-4 w-4" /> Impressão de teste
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${templateId}/imprimir?modo=lote`)}>
+                <Layers className="mr-2 h-4 w-4" /> Impressão em lote
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/expedicao/etiquetas/historico')}>
+                Ver histórico
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* ============ 2 PAINÉIS ============ */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] overflow-hidden">
-          {/* --------- FORMULÁRIO (esquerda) --------- */}
-          <main className="min-h-0 overflow-y-auto bg-background" aria-label="Editor de modelo de etiqueta">
-            <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
-              <div className="sr-only">
-                <h2>Configuração do modelo de etiqueta</h2>
-              </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(380px,480px)] min-h-[560px]">
+          {/* --------- FORMULÁRIO --------- */}
+          <main className="min-h-0 overflow-y-auto max-h-[calc(100vh-260px)]" aria-label="Editor de modelo de etiqueta">
+            <div className="p-4 md:p-5 space-y-4">
               <Accordion type="multiple" defaultValue={['content', 'style', 'vars']} className="space-y-3">
-                {/* ---- CONTEÚDO ---- */}
-                <AccordionItem value="content" className="border border-border/60 rounded-xl bg-card overflow-hidden data-[state=open]:shadow-sm">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <AccordionItem value="content" className="border border-border/60 rounded-lg bg-background/40 overflow-hidden">
+                  <AccordionTrigger className="px-4 py-2.5 hover:no-underline">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      Conteúdo
+                      <Sparkles className="h-4 w-4 text-primary" /> Conteúdo
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 pt-1 space-y-4">
+                  <AccordionContent className="px-4 pb-4 pt-1 space-y-3">
                     <FormField id="nome" label="Nome do modelo">
                       <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Romaneio Expedição Padrão" />
                     </FormField>
-
                     <FormField id="categoria" label="Categoria">
                       <Select value={categoria} onValueChange={(v) => setCategoria(v as CategoriaEtiqueta)}>
                         <SelectTrigger id="categoria"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {CATEGORIAS.map((c) => (
-                            <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                          ))}
+                          {CATEGORIAS.map((c) => (<SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>))}
                         </SelectContent>
                       </Select>
                     </FormField>
-
-                    {/* Editor ZPL textual removido — edição via preview interativo. */}
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* ---- ESTILO ---- */}
-                <AccordionItem value="style" className="border border-border/60 rounded-xl bg-card overflow-hidden data-[state=open]:shadow-sm">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <AccordionItem value="style" className="border border-border/60 rounded-lg bg-background/40 overflow-hidden">
+                  <AccordionTrigger className="px-4 py-2.5 hover:no-underline">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <Sliders className="h-4 w-4 text-primary" />
-                      Estilo
+                      <Sliders className="h-4 w-4 text-primary" /> Estilo
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4 pt-1 space-y-4">
@@ -373,7 +357,6 @@ export default function EditarEtiquetaPage() {
                       </div>
                     </div>
 
-                    {/* Logo (imagem) */}
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Logo</div>
                       <div className="flex items-center gap-3 border border-border/60 rounded-lg p-3 bg-background/60">
@@ -408,23 +391,15 @@ export default function EditarEtiquetaPage() {
                     </div>
 
                     <div className="rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
-                      Tipografia, padding, alinhamento e borda são definidos diretamente no layout ZPL acima. Use o editor visual avançado para ajustes drag-and-drop.
+                      Tipografia, padding, alinhamento e borda são definidos diretamente no layout ZPL — use o preview interativo à direita para arrastar e ajustar cada bloco.
                     </div>
-                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
-                      const el = document.getElementById('advanced-editor-anchor');
-                      el?.scrollIntoView({ behavior: 'smooth' });
-                    }}>
-                      <Layers className="h-3.5 w-3.5" /> Abrir editor visual avançado
-                    </Button>
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* ---- VARIÁVEIS ---- */}
-                <AccordionItem value="vars" className="border border-border/60 rounded-xl bg-card overflow-hidden data-[state=open]:shadow-sm">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <AccordionItem value="vars" className="border border-border/60 rounded-lg bg-background/40 overflow-hidden">
+                  <AccordionTrigger className="px-4 py-2.5 hover:no-underline">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <Variable className="h-4 w-4 text-primary" />
-                      Variáveis
+                      <Variable className="h-4 w-4 text-primary" /> Variáveis
                       {variaveis.length > 0 && (
                         <Badge variant="secondary" className="text-[10px] px-1.5 h-4 ml-1">{variaveis.length}</Badge>
                       )}
@@ -436,7 +411,6 @@ export default function EditarEtiquetaPage() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4 pt-1 space-y-4">
-                    {/* Validação: variáveis referenciadas mas não definidas */}
                     {naoDefinidas.length > 0 && (
                       <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
                         <div className="flex items-start gap-2">
@@ -476,7 +450,6 @@ export default function EditarEtiquetaPage() {
                       </div>
                     )}
 
-                    {/* Ações */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <Button size="sm" variant="outline" onClick={addVar} className="gap-1.5">
                         <Plus className="h-3.5 w-3.5" /> Adicionar variável
@@ -498,13 +471,12 @@ export default function EditarEtiquetaPage() {
                       </Select>
                     </div>
 
-                    {/* Lista */}
                     {variaveis.length === 0 ? (
-                      <div className="text-center p-6 border border-dashed border-border/60 rounded-lg bg-muted/20">
-                        <Variable className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                      <div className="text-center p-5 border border-dashed border-border/60 rounded-lg bg-muted/20">
+                        <Variable className="h-7 w-7 mx-auto text-muted-foreground/40 mb-2" />
                         <p className="text-sm font-medium mb-1">Nenhuma variável definida</p>
                         <p className="text-xs text-muted-foreground mb-3 max-w-xs mx-auto">
-                          Variáveis permitem preencher partes dinâmicas no momento da impressão (romaneio, cliente, código…).
+                          Variáveis permitem preencher partes dinâmicas no momento da impressão.
                         </p>
                         <Button size="sm" variant="secondary" onClick={addVar} className="gap-1.5">
                           <Plus className="h-3.5 w-3.5" /> Adicionar primeira variável
@@ -513,7 +485,7 @@ export default function EditarEtiquetaPage() {
                     ) : (
                       <div className="space-y-2">
                         {variaveis.map((v, i) => (
-                          <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_auto_auto] gap-2 items-end border border-border/60 rounded-lg p-3 bg-background/60">
+                          <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_120px_auto_auto] gap-2 items-end border border-border/60 rounded-lg p-3 bg-background/60">
                             <FormField id={`var-chave-${i}`} label="Chave">
                               <Input id={`var-chave-${i}`} value={v.chave}
                                 onChange={(e) => updateVar(i, { chave: e.target.value })}
@@ -545,18 +517,12 @@ export default function EditarEtiquetaPage() {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
-
-              {/* Âncora para editor visual avançado */}
-              <div id="advanced-editor-anchor" />
             </div>
           </main>
 
-          {/* --------- PREVIEW STICKY (direita) --------- */}
-          <aside
-            className="hidden lg:flex flex-col min-h-0 border-l border-border/60 bg-muted/20"
-            aria-label="Pré-visualização da etiqueta"
-          >
-            <div className="shrink-0 border-b border-border/60 bg-card/50 backdrop-blur px-3 py-2 flex items-center gap-2">
+          {/* --------- PREVIEW --------- */}
+          <aside className="flex flex-col min-h-0 border-t lg:border-t-0 lg:border-l border-border/60 bg-muted/20" aria-label="Pré-visualização da etiqueta">
+            <div className="shrink-0 border-b border-border/60 bg-card/50 backdrop-blur px-3 py-2 flex items-center gap-2 flex-wrap">
               <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
                 <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
                   <MousePointer2 className="h-3.5 w-3.5" /> Preview
@@ -579,16 +545,16 @@ export default function EditarEtiquetaPage() {
                     </TooltipTrigger><TooltipContent>Adicionar código de barras</TooltipContent></Tooltip>
                     <div className="w-px bg-border/60 self-stretch" />
                     <Tooltip><TooltipTrigger asChild>
-                      <button onClick={() => addElement('line-h')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar linha horizontal"><Minus className="h-3 w-3" /></button>
+                      <button onClick={() => addElement('line-h')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Linha horizontal"><Minus className="h-3 w-3" /></button>
                     </TooltipTrigger><TooltipContent>Linha horizontal</TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild>
-                      <button onClick={() => addElement('line-v')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar linha vertical"><Minus className="h-3 w-3 rotate-90" /></button>
+                      <button onClick={() => addElement('line-v')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Linha vertical"><Minus className="h-3 w-3 rotate-90" /></button>
                     </TooltipTrigger><TooltipContent>Linha vertical</TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild>
-                      <button onClick={() => addElement('rect')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar retângulo"><SquareDashed className="h-3 w-3" /></button>
+                      <button onClick={() => addElement('rect')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Retângulo"><SquareDashed className="h-3 w-3" /></button>
                     </TooltipTrigger><TooltipContent>Retângulo</TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild>
-                      <button onClick={() => addElement('box-filled')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Adicionar box preenchido"><Square className="h-3 w-3 fill-current" /></button>
+                      <button onClick={() => addElement('box-filled')} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent" aria-label="Box preenchido"><Square className="h-3 w-3 fill-current" /></button>
                     </TooltipTrigger><TooltipContent>Box preenchido</TooltipContent></Tooltip>
                   </div>
                 )}
@@ -662,36 +628,6 @@ export default function EditarEtiquetaPage() {
                 ? 'Arraste para mover · duplo-clique para ajustar variáveis, fonte, largura e alinhamento.'
                 : 'Código ZPL enviado à impressora.'}
             </div>
-          </aside>
-
-          {/* Preview colapsado mobile */}
-          <aside className="lg:hidden border-t border-border/60 bg-card/40 p-3" aria-label="Pré-visualização">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="inline-flex rounded-md border border-border/60 bg-background overflow-hidden">
-                <PreviewToggleBtn active={previewMode === 'interativo'} onClick={() => setPreviewMode('interativo')}>
-                  <MousePointer2 className="h-3.5 w-3.5" /> Preview
-                </PreviewToggleBtn>
-                <PreviewToggleBtn active={previewMode === 'zpl'} onClick={() => setPreviewMode('zpl')}>
-                  <Code2 className="h-3.5 w-3.5" /> ZPL
-                </PreviewToggleBtn>
-              </div>
-            </div>
-            {previewMode === 'zpl' ? (
-              <pre className="text-[10px] font-mono p-2 rounded-md border border-border/60 bg-background overflow-auto whitespace-pre-wrap break-all max-h-64">
-                {zpl}
-              </pre>
-            ) : (
-              <div className="bg-white border border-border rounded-md overflow-hidden mx-auto max-w-[260px]" style={{ aspectRatio: `${largura} / ${altura}` }}>
-                <InteractiveZPLEditor
-                  zpl={zpl}
-                  onChange={setZpl}
-                  valores={valoresExemplo}
-                  dimensoes={{ largura, altura }}
-                  variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
-                  logoUrl={logoUrl}
-                />
-              </div>
-            )}
           </aside>
         </div>
       </div>

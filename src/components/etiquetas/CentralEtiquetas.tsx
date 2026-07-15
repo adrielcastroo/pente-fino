@@ -3,17 +3,15 @@
  *
  * Duas abas:
  *  - Operação: importar XML em lote, fila de impressão e histórico recente.
- *  - Avançado: seleção do modelo ativo, editor completo (link) e overlay BarTender.
- *
- * A UI trata os templates como "modelo único" (não separa expedição/conferência/devolução).
- * A coluna categoria permanece no banco por retrocompatibilidade.
+ *  - Layout etiqueta: edição completa do template ativo (dimensões, ZPL,
+ *    variáveis, preview interativo) + ajustes finos globais de impressão.
  */
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import {
-  History, Plus, Settings2, Layers, FileText, Sparkles, Loader2, Printer,
-  ExternalLink, ChevronDown, SlidersHorizontal,
+  History, Plus, Settings2, Layers, FileText, Loader2, Printer,
+  ExternalLink, ChevronDown, SlidersHorizontal, Palette,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,12 +22,22 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useEtiquetas, useEtiquetaHistorico, useDuplicarTemplate } from '@/hooks/useEtiquetas';
+import {
+  useEtiquetas, useEtiquetaHistorico, useDuplicarTemplate, useCriarTemplate,
+} from '@/hooks/useEtiquetas';
 import { usePrintQueue } from '@/hooks/usePrintQueue';
 import { XmlBatchImporter } from './XmlBatchImporter';
 import { PrintQueue } from './PrintQueue';
+import { TemplateEditorInline } from './TemplateEditorInline';
 import { ExpedicaoLayoutSection } from '@/components/settings/LabelLayoutPanel';
+import {
+  PRESETS_TAMANHO, VARIAVEIS_INTELIGENTES, VARIAVEIS_PADRAO, ZPL_PADRAO,
+  type VariavelTemplate,
+} from '@/types/etiquetas';
 
 const ACTIVE_KEY = 'etiqueta:active-template-id';
 
@@ -40,13 +48,14 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
   const { data: templates, isLoading } = useEtiquetas();
   const { data: historico } = useEtiquetaHistorico();
   const duplicar = useDuplicarTemplate();
+  const criar = useCriarTemplate();
 
   const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem(ACTIVE_KEY));
-  const [tab, setTab] = useState<'operacao' | 'avancado' | 'layout'>('operacao');
+  const [tab, setTab] = useState<'operacao' | 'layout'>('operacao');
+  const [layoutSettingsOpen, setLayoutSettingsOpen] = useState(false);
 
   const queue = usePrintQueue();
 
-  // Autoselect: se não houver activeId, escolhe o primeiro template
   useEffect(() => {
     if (!templates || templates.length === 0) return;
     const stillExists = activeId && templates.some((t) => t.id === activeId);
@@ -64,6 +73,35 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
   const changeActive = (id: string) => {
     setActiveId(id);
     localStorage.setItem(ACTIVE_KEY, id);
+  };
+
+  const criarNovoModelo = async () => {
+    const preset = PRESETS_TAMANHO[0];
+    const variaveis: VariavelTemplate[] = VARIAVEIS_PADRAO.map((v, i) => {
+      const inteligente = VARIAVEIS_INTELIGENTES.find((x) => x.chave === v.chave);
+      return {
+        ...v,
+        opcoes: inteligente?.opcoes ? [...inteligente.opcoes] : v.opcoes,
+        padrao: inteligente?.padrao ?? v.padrao,
+        descricao: inteligente?.desc ?? v.descricao,
+        ordem: i,
+      };
+    });
+    const criado = await criar.mutateAsync({
+      nome: `Modelo ${new Date().toLocaleDateString('pt-BR')}`,
+      categoria: 'expedicao',
+      dimensoes: { largura: preset.largura, altura: preset.altura },
+      zpl: ZPL_PADRAO,
+      variaveis,
+    });
+    setActiveId(criado.id);
+    localStorage.setItem(ACTIVE_KEY, criado.id);
+    setTab('layout');
+  };
+
+  const editarAtivo = () => {
+    if (!activeTemplate) return;
+    setTab('layout');
   };
 
   return (
@@ -84,7 +122,7 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
               Central de Etiquetas
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Importe XMLs em lote e imprima etiquetas de expedição a partir do modelo ativo.
+              Importe XMLs em lote, edite o layout e imprima etiquetas de expedição.
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -122,13 +160,13 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate('/expedicao/etiquetas/nova')}>
+                <DropdownMenuItem onClick={criarNovoModelo} disabled={criar.isPending}>
                   <Plus className="mr-2 h-4 w-4" /> Novo modelo
                 </DropdownMenuItem>
                 {activeTemplate && (
                   <>
-                    <DropdownMenuItem onClick={() => navigate(`/expedicao/etiquetas/${activeTemplate.id}/editar`)}>
-                      <Sparkles className="mr-2 h-4 w-4" /> Editar modelo ativo
+                    <DropdownMenuItem onClick={editarAtivo}>
+                      <SlidersHorizontal className="mr-2 h-4 w-4" /> Editar modelo ativo
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => duplicar.mutate(activeTemplate.id)}>
                       <FileText className="mr-2 h-4 w-4" /> Duplicar modelo ativo
@@ -144,10 +182,9 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
         </header>
 
         {/* ============ Tabs ============ */}
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'operacao' | 'avancado' | 'layout')}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as 'operacao' | 'layout')}>
           <TabsList>
             <TabsTrigger value="operacao">Operação</TabsTrigger>
-            <TabsTrigger value="avancado">Avançado</TabsTrigger>
             <TabsTrigger value="layout" className="gap-1.5">
               <SlidersHorizontal className="h-3.5 w-3.5" /> Layout etiqueta
             </TabsTrigger>
@@ -160,7 +197,7 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
                 <Loader2 className="h-4 w-4 animate-spin" /> Carregando modelos...
               </div>
             ) : !templates?.length ? (
-              <EmptyTemplates onCreate={() => navigate('/expedicao/etiquetas/nova')} />
+              <EmptyTemplates onCreate={criarNovoModelo} loading={criar.isPending} />
             ) : (
               <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
                 <XmlBatchImporter onImport={queue.addMany} />
@@ -215,71 +252,40 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
             </section>
           </TabsContent>
 
-          {/* ============ AVANÇADO ============ */}
-          <TabsContent value="avancado" className="space-y-5 mt-4">
-            <div className="grid gap-5 grid-cols-1">
-              {/* Editor completo */}
-              <div className="border border-border/60 rounded-xl bg-card p-4 space-y-3 max-w-2xl">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" /> Editor visual completo
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Ajuste conteúdo, dimensões, variáveis dinâmicas e layout ZPL com o editor
-                  drag-and-drop estilo BarTender.
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    className="gap-1.5"
-                    disabled={!activeTemplate}
-                    onClick={() =>
-                      activeTemplate && navigate(`/expedicao/etiquetas/${activeTemplate.id}/editar`)
-                    }
-                  >
-                    <Sparkles className="h-3.5 w-3.5" /> Abrir editor
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => navigate('/expedicao/etiquetas/nova')}
-                  >
-                    <Plus className="h-3.5 w-3.5" /> Novo modelo
-                  </Button>
-                </div>
-                {activeTemplate && (
-                  <div className="rounded-md border border-border/60 bg-muted/30 p-3 text-xs space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Ativo:</span>
-                      <span className="font-medium">{activeTemplate.nome}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <span className="font-mono">
-                        {activeTemplate.dimensoes.largura}×{activeTemplate.dimensoes.altura}mm
-                      </span>
-                      <span>·</span>
-                      <span>{activeTemplate.variaveis.length} variáveis</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
           {/* ============ LAYOUT ETIQUETA ============ */}
           <TabsContent value="layout" className="space-y-4 mt-4">
-            <div className="border border-border/60 rounded-xl bg-card p-4">
-              <header className="mb-4">
-                <h2 className="text-sm font-medium flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4 text-primary" /> Layout etiqueta — Expedição
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Ajustes finos globais aplicados na impressão de qualquer template ZPL desta central.
-                  Largura e altura vêm de cada template — aqui você controla offset, borda e padding.
-                </p>
-              </header>
-              <ExpedicaoLayoutSection />
-            </div>
+            {/* Editor inline (preview + edição) */}
+            {!templates?.length ? (
+              <EmptyTemplates onCreate={criarNovoModelo} loading={criar.isPending} />
+            ) : (
+              <TemplateEditorInline templateId={activeId} onCreateNew={criarNovoModelo} />
+            )}
+
+            {/* Ajustes finos globais (colapsável) */}
+            <Collapsible open={layoutSettingsOpen} onOpenChange={setLayoutSettingsOpen}>
+              <div className="border border-border/60 rounded-xl bg-card overflow-hidden">
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+                  >
+                    <Palette className="h-4 w-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">Ajustes finos de impressão (globais)</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        Offset X/Y, borda e padding aplicados a todos os templates ZPL desta central.
+                      </div>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${layoutSettingsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="border-t border-border/60 p-4">
+                    <ExpedicaoLayoutSection />
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
           </TabsContent>
         </Tabs>
       </main>
@@ -288,7 +294,7 @@ export const CentralEtiquetas = memo(function CentralEtiquetas() {
 });
 CentralEtiquetas.displayName = 'CentralEtiquetas';
 
-function EmptyTemplates({ onCreate }: { onCreate: () => void }) {
+function EmptyTemplates({ onCreate, loading }: { onCreate: () => void; loading?: boolean }) {
   return (
     <div className="border border-dashed border-border rounded-xl p-12 text-center bg-card">
       <div className="mx-auto mb-3 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -298,8 +304,9 @@ function EmptyTemplates({ onCreate }: { onCreate: () => void }) {
       <p className="text-sm text-muted-foreground mb-4">
         Crie um modelo de etiqueta para começar a importar XMLs e imprimir.
       </p>
-      <Button onClick={onCreate}>
-        <Plus className="mr-2 h-4 w-4" /> Criar primeiro modelo
+      <Button onClick={onCreate} disabled={loading}>
+        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+        Criar primeiro modelo
       </Button>
     </div>
   );
