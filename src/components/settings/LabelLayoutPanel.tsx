@@ -557,6 +557,10 @@ export function ExpedicaoLayoutSection() {
   const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const padding = labelSettings.expedicaoPadding ?? 0;
+  const lineThickness = labelSettings.expedicaoLineThickness ?? 2;
+  const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
+  const lineColor = labelSettings.expedicaoLineColor ?? '#111111';
+  const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
 
   const handleReset = () => {
     setLabelSettings({
@@ -566,6 +570,10 @@ export function ExpedicaoLayoutSection() {
       expedicaoBorderStyle: 'none',
       expedicaoBorderRadius: 0,
       expedicaoPadding: 0,
+      expedicaoLineThickness: 2,
+      expedicaoLineStyle: 'solid',
+      expedicaoLineColor: '#111111',
+      expedicaoFontFamily: 'monospace',
     });
     toast.info('Ajustes de Expedição redefinidos.');
   };
