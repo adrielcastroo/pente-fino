@@ -549,7 +549,7 @@ export default function LabelLayoutPanel() {
  * Como as dimensões da etiqueta vêm do próprio template, aqui só expomos os
  * ajustes que valem para qualquer template: offset X/Y, borda e padding.
  */
-function ExpedicaoLayoutSection() {
+export function ExpedicaoLayoutSection() {
   const { labelSettings, setLabelSettings } = useAppStore();
   const offsetX = labelSettings.expedicaoPrintOffsetXMm ?? 0;
   const offsetY = labelSettings.expedicaoPrintOffsetYMm ?? 0;
