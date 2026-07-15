@@ -384,8 +384,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     let snapY = ny;
     const g: typeof guides = {};
 
-    if (Math.abs(cx - viewW / 2) < SNAP_THRESHOLD) { snapX = viewW / 2 - w / 2; g.vx = viewW / 2; }
-    if (Math.abs(cy - viewH / 2) < SNAP_THRESHOLD) { snapY = viewH / 2 - h / 2; g.hy = viewH / 2; }
+    if (Math.abs(cx - contentW / 2) < SNAP_THRESHOLD) { snapX = contentW / 2 - w / 2; g.vx = contentW / 2; }
+    if (Math.abs(cy - contentH / 2) < SNAP_THRESHOLD) { snapY = contentH / 2 - h / 2; g.hy = contentH / 2; }
     for (const other of blocks) {
       if (other.index === b.index) continue;
       const ob = elementBounds(other, logoUrl);
@@ -610,7 +610,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             const align = b.align ?? 'L';
             const lineH = b.size + (b.fbSpacing ?? 0);
             const naturalW = Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
-            const maxAvail = Math.max(20, viewW - b.x);
+            const maxAvail = Math.max(20, contentW - b.x);
             const boxW = Math.min(maxAvail, b.fbWidth ?? naturalW);
             const boxH = lines.length * lineH;
             let anchorX = b.x;
