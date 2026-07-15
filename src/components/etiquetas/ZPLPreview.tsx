@@ -132,6 +132,12 @@ interface ZPLPreviewProps {
   lineColor?: string;
   /** Família de fonte aplicada aos textos SVG. Default 'monospace'. */
   fontFamily?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export const ZPLPreview = memo(function ZPLPreview({
@@ -140,6 +146,12 @@ export const ZPLPreview = memo(function ZPLPreview({
   lineStyle = 'solid',
   lineColor = '#111',
   fontFamily = 'monospace',
+  borderWidth = 0,
+  borderStyle = 'none',
+  borderRadius = 0,
+  padding = 0,
+  offsetX = 0,
+  offsetY = 0,
 }: ZPLPreviewProps) {
   const parsed = useMemo(() => {
     const hoje = new Date().toLocaleDateString('pt-BR');
@@ -162,6 +174,51 @@ export const ZPLPreview = memo(function ZPLPreview({
   const viewW = parsed.pw || (dimensoes?.largura ?? 100) * LABEL_PX_PER_MM;
   const viewH = parsed.ll || (dimensoes?.altura ?? 150) * LABEL_PX_PER_MM;
   const clipId = useMemo(() => `zpl-clip-${Math.random().toString(36).slice(2, 9)}`, []);
+  const contentClipId = useMemo(() => `zpl-content-clip-${Math.random().toString(36).slice(2, 9)}`, []);
+  const effectiveBorderWidth = borderStyle === 'none' ? 0 : Math.max(0, borderWidth);
+  const contentX = padding + offsetX;
+  const contentY = padding + offsetY;
+  const contentW = Math.max(1, viewW - padding * 2);
+  const contentH = Math.max(1, viewH - padding * 2);
+  const borderDashArray =
+    borderStyle === 'dashed' ? `${Math.max(4, effectiveBorderWidth * 3)} ${Math.max(3, effectiveBorderWidth * 2)}`
+    : borderStyle === 'dotted' ? `${Math.max(1, effectiveBorderWidth)} ${Math.max(2, effectiveBorderWidth * 1.5)}`
+    : undefined;
+
+  const renderBorder = () => {
+    if (effectiveBorderWidth <= 0) return null;
+    const inset = effectiveBorderWidth / 2;
+    const rectProps = {
+      x: inset,
+      y: inset,
+      width: Math.max(1, viewW - effectiveBorderWidth),
+      height: Math.max(1, viewH - effectiveBorderWidth),
+      rx: borderRadius,
+      ry: borderRadius,
+      fill: 'none',
+      stroke: '#000',
+      strokeWidth: effectiveBorderWidth,
+      strokeDasharray: borderDashArray,
+    };
+    if (borderStyle !== 'double') return <rect {...rectProps} />;
+    const gap = Math.max(2, effectiveBorderWidth * 1.5);
+    return (
+      <>
+        <rect {...rectProps} strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)} />
+        <rect
+          x={inset + gap}
+          y={inset + gap}
+          width={Math.max(1, viewW - effectiveBorderWidth - gap * 2)}
+          height={Math.max(1, viewH - effectiveBorderWidth - gap * 2)}
+          rx={Math.max(0, borderRadius - gap)}
+          ry={Math.max(0, borderRadius - gap)}
+          fill="none"
+          stroke="#000"
+          strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)}
+        />
+      </>
+    );
+  };
 
   return (
     <div className={cn('bg-white text-black relative w-full h-full overflow-hidden', className)}>
@@ -170,9 +227,13 @@ export const ZPLPreview = memo(function ZPLPreview({
           <clipPath id={clipId}>
             <rect x={0} y={0} width={viewW} height={viewH} />
           </clipPath>
+          <clipPath id={contentClipId}>
+            <rect x={0} y={0} width={contentW} height={contentH} />
+          </clipPath>
         </defs>
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
         <g clipPath={`url(#${clipId})`}>
+        <g transform={`translate(${contentX}, ${contentY})`} clipPath={`url(#${contentClipId})`}>
         {parsed.elementos.map((el, i) => {
           if (el.tipo === 'text') {
             const lines = el.lines && el.lines.length > 0 ? el.lines : [el.text];
@@ -283,6 +344,8 @@ export const ZPLPreview = memo(function ZPLPreview({
           }
           return null;
         })}
+        </g>
+        {renderBorder()}
         </g>
       </svg>
     </div>
