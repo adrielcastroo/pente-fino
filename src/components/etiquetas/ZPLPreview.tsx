@@ -87,6 +87,8 @@ function parseZpl(zpl: string, rawFd: (fd: string) => string): { elementos: Elem
 
     if (!text) continue;
 
+    const reverse = /\^FR(?![A-Z])/.test(bloco);
+
     // Quebras de linha explícitas ZPL: "\&"
     let lines = text.split(/\\&/g).map((s) => s.trim());
 
@@ -109,7 +111,7 @@ function parseZpl(zpl: string, rawFd: (fd: string) => string): { elementos: Elem
       lines = wrapped.slice(0, fb.maxLines);
     }
 
-    out.push({ tipo: 'text', x, y, size, text, lines, fb });
+    out.push({ tipo: 'text', x, y, size, text, lines, fb, reverse });
   }
   return { elementos: out, pw, ll };
 }
