@@ -563,19 +563,31 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
                   {zpl || '// Layout ZPL vazio'}
                 </pre>
               ) : (
-                <div
-                  className="relative bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[360px]"
-                  style={{ aspectRatio: `${largura} / ${altura}` }}
-                >
-
-                  <InteractiveZPLEditor
-                    zpl={zpl}
-                    onChange={setZpl}
-                    valores={valoresExemplo}
-                    dimensoes={{ largura, altura }}
-                    variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
-                    logoUrl={logoUrl}
-                  />
+                <div className="w-full max-w-[360px]">
+                  <div
+                    className="relative bg-white shadow-sm overflow-hidden"
+                    style={{
+                      aspectRatio: `${largura} / ${altura}`,
+                      boxSizing: 'border-box',
+                      border: previewBorderCss ?? '1px solid hsl(var(--border))',
+                      borderRadius: `${previewBorderRadius}px`,
+                      padding: `${previewPadding}px`,
+                    }}
+                  >
+                    <InteractiveZPLEditor
+                      zpl={zpl}
+                      onChange={setZpl}
+                      valores={valoresExemplo}
+                      dimensoes={{ largura, altura }}
+                      variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
+                      logoUrl={logoUrl}
+                    />
+                  </div>
+                  {previewBorderCss && (
+                    <p className="mt-2 text-[10px] text-muted-foreground text-center">
+                      Borda ativa: {previewBorderWidth}px {previewBorderStyle} · padding {previewPadding}px · raio {previewBorderRadius}px
+                    </p>
+                  )}
                 </div>
               )}
             </div>
