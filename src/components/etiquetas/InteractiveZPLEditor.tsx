@@ -36,6 +36,24 @@ export interface ParsedBlock {
   fbMaxLines?: number;
   fbSpacing?: number;
   rotation?: Rotation;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+
+/** Marker embutido no bloco (via ^FX-TF:...-) para preservar formatação textual. */
+export function parseTextFormat(raw: string): { bold: boolean; italic: boolean; underline: boolean } {
+  const m = raw.match(/\^FX-TF:([BIU+]*)-/);
+  if (!m) return { bold: false, italic: false, underline: false };
+  const flags = m[1];
+  return { bold: flags.includes('B'), italic: flags.includes('I'), underline: flags.includes('U') };
+}
+
+function writeTextFormat(raw: string, bold: boolean, italic: boolean, underline: boolean): string {
+  const cleaned = raw.replace(/\^FX-TF:[BIU+]*-/g, '');
+  if (!bold && !italic && !underline) return cleaned;
+  const flags = [bold ? 'B' : '', italic ? 'I' : '', underline ? 'U' : ''].filter(Boolean).join('+');
+  return cleaned.replace(/\^FS$/, `^FX-TF:${flags}-^FS`);
 }
 
 function parseZplSize(zpl: string, fallback: { largura: number; altura: number }): { w: number; h: number } {
