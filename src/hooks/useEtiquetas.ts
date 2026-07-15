@@ -4,7 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { etiquetaService } from '@/services/etiquetaService';
-import { printImagesInBrowser } from '@/services/printService';
+import { printImagesInBrowser, printImagesInBrowserBatch } from '@/services/printService';
 import { renderZplLabel } from '@/services/labelRenderer';
 import { useAppStore } from '@/store/useAppStore';
 import type { CreateEtiquetaTemplateInput, ImprimirInput } from '@/types/etiquetas';
@@ -51,8 +51,8 @@ export function useEtiquetaHistorico(filtro?: { templateId?: string }) {
  */
 async function imprimirNavegador(
   zplRaw: string,
-  variaveis: Record<string, string>,
-  quantidade: number,
+  paginasVariaveis: Record<string, string>[],
+  copiasPorPagina: number,
   dimensoes: { largura: number; altura: number },
   templateNome: string,
   logoUrl?: string,
@@ -62,19 +62,84 @@ async function imprimirNavegador(
   // variáveis internamente e também detecta o marcador {{logo}} para renderizar
   // a imagem. Se pré-substituíssemos aqui, o {{logo}} sumiria e a logo não
   // apareceria na impressão real.
-  const rendered = await renderZplLabel(zplRaw, variaveis, dimensoes, labelSettings, { logoUrl });
-  const copies = Math.max(1, quantidade);
-  await printImagesInBrowser(
-    rendered.dataUrl,
-    rendered.widthMm,
-    rendered.heightMm,
-    copies,
-    `Etiqueta · ${templateNome}`,
+  const safePages = paginasVariaveis.length > 0 ? paginasVariaveis : [{}];
+  if (safePages.length === 1) {
+    const rendered = await renderZplLabel(zplRaw, safePages[0], dimensoes, labelSettings, { logoUrl });
+    await printImagesInBrowser(
+      rendered.dataUrl,
+      rendered.widthMm,
+      rendered.heightMm,
+      Math.max(1, copiasPorPagina),
+      `Etiqueta · ${templateNome}`,
+    );
+    return;
+  }
+
+  const renderedPages = await Promise.all(
+    safePages.map((vars) => renderZplLabel(zplRaw, vars, dimensoes, labelSettings, { logoUrl })),
+  );
+  await printImagesInBrowserBatch(
+    renderedPages.map((page) => ({ dataUrl: page.dataUrl, widthMm: page.widthMm, heightMm: page.heightMm })),
+    `Etiquetas · ${templateNome}`,
   );
 }
 
 
 const LOGO_VAR_KEY = '__logo_src__';
+const VOLUME_ATUAL_ALIASES = ['volume_atual', 'volumeAtual', 'volume'];
+const VOLUME_TOTAL_ALIASES = ['volume_total', 'volumeTotal', 'total', 'TOTAL'];
+
+function firstNonEmpty(vars: Record<string, string>, aliases: string[]): string | undefined {
+  for (const alias of aliases) {
+    const direct = vars[alias];
+    if (direct !== undefined && direct !== '') return direct;
+    const matchedKey = Object.keys(vars).find((key) => key.toLowerCase() === alias.toLowerCase());
+    const matched = matchedKey ? vars[matchedKey] : undefined;
+    if (matched !== undefined && matched !== '') return matched;
+  }
+  return undefined;
+}
+
+function fillAliases(vars: Record<string, string>, aliases: string[], value: string): void {
+  for (const alias of aliases) {
+    if (vars[alias] === undefined || vars[alias] === '') vars[alias] = value;
+  }
+}
+
+function normalizeEtiquetaVars(vars: Record<string, string>): Record<string, string> {
+  const normalized = { ...vars };
+  const volumeAtual = firstNonEmpty(normalized, VOLUME_ATUAL_ALIASES);
+  const volumeTotal = firstNonEmpty(normalized, VOLUME_TOTAL_ALIASES);
+  if (volumeAtual) fillAliases(normalized, VOLUME_ATUAL_ALIASES, volumeAtual);
+  if (volumeTotal) fillAliases(normalized, VOLUME_TOTAL_ALIASES, volumeTotal);
+  return normalized;
+}
+
+function buildPrintVariablePages(
+  baseVars: Record<string, string>,
+  inputVars: Record<string, string>,
+  quantidade: number,
+): { pages: Record<string, string>[]; copiesPerPage: number; historyVars: Record<string, string> } {
+  const copies = Math.max(1, Math.floor(quantidade || 1));
+  const normalizedBase = normalizeEtiquetaVars(baseVars);
+  const inputHasVolumeAtual = firstNonEmpty(inputVars, VOLUME_ATUAL_ALIASES);
+  const currentValue = firstNonEmpty(normalizedBase, VOLUME_ATUAL_ALIASES) ?? '1';
+  const totalValue = firstNonEmpty(normalizedBase, VOLUME_TOTAL_ALIASES) ?? String(copies);
+  fillAliases(normalizedBase, VOLUME_ATUAL_ALIASES, currentValue);
+  fillAliases(normalizedBase, VOLUME_TOTAL_ALIASES, totalValue);
+
+  if (copies > 1 && !inputHasVolumeAtual) {
+    const pages = Array.from({ length: copies }, (_, index) => {
+      const pageVars = { ...normalizedBase };
+      fillAliases(pageVars, VOLUME_ATUAL_ALIASES, String(index + 1));
+      fillAliases(pageVars, VOLUME_TOTAL_ALIASES, totalValue);
+      return pageVars;
+    });
+    return { pages, copiesPerPage: 1, historyVars: pages[0] };
+  }
+
+  return { pages: [normalizedBase], copiesPerPage: copies, historyVars: normalizedBase };
+}
 
 export function useImprimirEtiqueta() {
   const qc = useQueryClient();
@@ -99,17 +164,26 @@ export function useImprimirEtiqueta() {
       if (!logoUrl && typeof localStorage !== 'undefined') {
         logoUrl = localStorage.getItem(`etiqueta-logo-${templateId}`) || undefined;
       }
+      const originalVars = variaveis || {};
       const filledVars: Record<string, string> = { ...defaults };
-      for (const [k, v] of Object.entries(variaveis || {})) {
+      for (const [k, v] of Object.entries(originalVars)) {
         if (v !== undefined && v !== '') filledVars[k] = v;
       }
 
-      const zplFinal = etiquetaService.renderZPL(template.zpl, filledVars);
-      await imprimirNavegador(template.zpl, filledVars, quantidade, template.dimensoes, template.nome, logoUrl);
+      const printVars = buildPrintVariablePages(filledVars, originalVars, quantidade);
+      const zplFinal = etiquetaService.renderZPL(template.zpl, printVars.historyVars);
+      await imprimirNavegador(
+        template.zpl,
+        printVars.pages,
+        printVars.copiesPerPage,
+        template.dimensoes,
+        template.nome,
+        logoUrl,
+      );
       await etiquetaService.registrarImpressao({
         templateId,
         template_nome: template.nome,
-        variaveis: filledVars,
+        variaveis: printVars.historyVars,
         quantidade,
         impressora,
       });

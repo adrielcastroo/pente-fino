@@ -729,7 +729,7 @@ export async function printMotorLabel(
 // por vez, respeitando a lógica travada de `sendToWebhook`.
 // ============================================================================
 
-interface BatchPage {
+export interface BatchPage {
   dataUrl: string;
   widthMm: number;
   heightMm: number;
@@ -928,7 +928,7 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
   });
 }
 
-async function printImagesInBrowserBatch(pages: BatchPage[], title: string): Promise<void> {
+export async function printImagesInBrowserBatch(pages: BatchPage[], title: string): Promise<void> {
   if (pages.length === 0) return;
   if (pages.length === 1) {
     return printImageInBrowser(pages[0].dataUrl, pages[0].widthMm, pages[0].heightMm, title);
