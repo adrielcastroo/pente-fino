@@ -233,6 +233,22 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                 )}
               </div>
 
+              <div className="rounded-md border border-border/60 p-2.5 space-y-2">
+                <Label className="text-xs">Formatação do texto</Label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <Button type="button" variant={bold ? 'default' : 'outline'} size="sm" className="h-9 font-bold" onClick={() => setBold((v) => !v)}>
+                    B
+                  </Button>
+                  <Button type="button" variant={italic ? 'default' : 'outline'} size="sm" className="h-9 italic" onClick={() => setItalic((v) => !v)}>
+                    I
+                  </Button>
+                  <Button type="button" variant={underline ? 'default' : 'outline'} size="sm" className="h-9 underline" onClick={() => setUnderline((v) => !v)}>
+                    U
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Negrito, itálico e sublinhado aplicados no preview e no PNG impresso.</p>
+              </div>
+
               <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
                 <div>
                   <Label className="text-xs">Negativo (fundo preto)</Label>
