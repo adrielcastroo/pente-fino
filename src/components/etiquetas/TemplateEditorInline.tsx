@@ -33,6 +33,7 @@ import {
   type VariavelTemplate,
 } from '@/types/etiquetas';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/useAppStore';
 
 const TIPOS: TipoVariavel[] = ['text', 'select', 'date', 'barcode', 'qr', 'auto'];
 const CATEGORIAS: { key: CategoriaEtiqueta; label: string }[] = [
