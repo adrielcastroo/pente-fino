@@ -62,6 +62,8 @@ export interface ImprimirInput {
   variaveis: Record<string, string>;
   quantidade: number;
   impressora?: string;
+  /** Rótulo customizado para o histórico (ex: "NF 12345"). Se ausente, usa nome do template. */
+  historyLabel?: string;
 }
 
 export const PRESETS_TAMANHO = [
