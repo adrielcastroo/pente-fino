@@ -191,6 +191,9 @@ function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues, viewW: nu
   if (edit.reverse && !hasFR) raw = raw.replace(/\^FD/, '^FR^FD');
   else if (!edit.reverse && hasFR) raw = raw.replace(/\^FR(?![A-Z])/, '');
   raw = raw.replace(/\^FD[\s\S]*?\^FS$/, `^FD${edit.fd}^FS`);
+  if (block.tipo === 'text') {
+    raw = writeTextFormat(raw, !!edit.bold, !!edit.italic, !!edit.underline);
+  }
   return raw;
 }
 
