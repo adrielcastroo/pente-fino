@@ -123,7 +123,9 @@ function buildPrintVariablePages(
   const copies = Math.max(1, Math.floor(quantidade || 1));
   const normalizedBase = normalizeEtiquetaVars(baseVars);
   const inputHasVolumeAtual = firstNonEmpty(inputVars, VOLUME_ATUAL_ALIASES);
+  const currentValue = firstNonEmpty(normalizedBase, VOLUME_ATUAL_ALIASES) ?? '1';
   const totalValue = firstNonEmpty(normalizedBase, VOLUME_TOTAL_ALIASES) ?? String(copies);
+  fillAliases(normalizedBase, VOLUME_ATUAL_ALIASES, currentValue);
   fillAliases(normalizedBase, VOLUME_TOTAL_ALIASES, totalValue);
 
   if (copies > 1 && !inputHasVolumeAtual) {
