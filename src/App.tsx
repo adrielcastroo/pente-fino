@@ -210,10 +210,10 @@ const App = () => (
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
                   <Route path="configuracoes" element={<SettingsPage />} />
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
-                  <Route path="etiquetas/nova" element={<NovaEtiquetaPage />} />
+                  <Route path="etiquetas/nova" element={<Navigate to="/expedicao/etiquetas" replace />} />
                   <Route path="etiquetas/historico" element={<HistoricoEtiquetasPage />} />
                   <Route path="etiquetas/:id/imprimir" element={<ImprimirEtiquetaPage />} />
-                  <Route path="etiquetas/:id/editar" element={<EditarEtiquetaPage />} />
+                  <Route path="etiquetas/:id/editar" element={<Navigate to="/expedicao/etiquetas" replace />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
 
 
