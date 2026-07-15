@@ -508,14 +508,31 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     const rawY = p.y - contentY - dragging.offY;
     const { snapX, snapY, g } = computeSnap(b, rawX, rawY);
     setGuides(g);
-    if (Math.round(snapX) === b.x && Math.round(snapY) === b.y) return;
-    onChange(replaceBlock(zpl, b, rewriteBlockCoords(b, snapX, snapY)));
+    const dx = Math.round(snapX) - (dragging.origins[b.index]?.x ?? b.x);
+    const dy = Math.round(snapY) - (dragging.origins[b.index]?.y ?? b.y);
+    if (dx === 0 && dy === 0) return;
+
+    // Move todos os blocos selecionados pelo mesmo delta, processando de trás
+    // pra frente para preservar sourceStart/sourceEnd dos anteriores.
+    const targets = Object.keys(dragging.origins).map(Number).sort((a, b) => b - a);
+    let nextZpl = zpl;
+    for (const idx of targets) {
+      const cur = parseBlocks(nextZpl)[idx];
+      const origin = dragging.origins[idx];
+      if (!cur || !origin) continue;
+      const nx = Math.max(0, origin.x + dx);
+      const ny = Math.max(0, origin.y + dy);
+      if (nx === cur.x && ny === cur.y) continue;
+      nextZpl = replaceBlock(nextZpl, cur, rewriteBlockCoords(cur, nx, ny));
+    }
+    if (nextZpl !== zpl) onChange(nextZpl);
   };
 
   const onPointerUp = () => {
     setDragging(null);
     setResizing(null);
     setGuides({});
+    setMarquee(null);
   };
 
   const onDoubleClickBlock = (b: ParsedBlock) => setEditing(b);
