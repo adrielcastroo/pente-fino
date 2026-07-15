@@ -123,9 +123,23 @@ interface ZPLPreviewProps {
   /** largura/altura em mm da etiqueta (usado como fallback quando o ZPL não define ^PW/^LL). */
   dimensoes?: { largura: number; altura: number };
   logoUrl?: string;
+  /** Espessura das linhas/caixas (stroke) desenhadas via ^GB. Default 2. */
+  lineThickness?: number;
+  /** Estilo das linhas. Default 'solid'. */
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
+  /** Cor das linhas e preenchimento. Default '#111'. */
+  lineColor?: string;
+  /** Família de fonte aplicada aos textos SVG. Default 'monospace'. */
+  fontFamily?: string;
 }
 
-export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, dimensoes, logoUrl }: ZPLPreviewProps) {
+export const ZPLPreview = memo(function ZPLPreview({
+  zpl, variaveis, className, dimensoes, logoUrl,
+  lineThickness = 2,
+  lineStyle = 'solid',
+  lineColor = '#111',
+  fontFamily = 'monospace',
+}: ZPLPreviewProps) {
   const parsed = useMemo(() => {
     const hoje = new Date().toLocaleDateString('pt-BR');
     const resolveVar = (key: string): string => {
