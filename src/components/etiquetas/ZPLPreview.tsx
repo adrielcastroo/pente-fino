@@ -8,6 +8,7 @@
 import { memo, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
+import { LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 interface FbConfig {
   width: number;
@@ -131,6 +132,12 @@ interface ZPLPreviewProps {
   lineColor?: string;
   /** Família de fonte aplicada aos textos SVG. Default 'monospace'. */
   fontFamily?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export const ZPLPreview = memo(function ZPLPreview({
@@ -139,6 +146,12 @@ export const ZPLPreview = memo(function ZPLPreview({
   lineStyle = 'solid',
   lineColor = '#111',
   fontFamily = 'monospace',
+  borderWidth = 0,
+  borderStyle = 'none',
+  borderRadius = 0,
+  padding = 0,
+  offsetX = 0,
+  offsetY = 0,
 }: ZPLPreviewProps) {
   const parsed = useMemo(() => {
     const hoje = new Date().toLocaleDateString('pt-BR');
@@ -154,33 +167,79 @@ export const ZPLPreview = memo(function ZPLPreview({
     return parseZpl(zpl, interp);
   }, [zpl, variaveis]);
 
-  // Preferir dimensões físicas declaradas no ZPL (em dots @ 203dpi).
-  const viewW = parsed.pw || (dimensoes?.largura ?? 100) * 8;
-  const viewH = parsed.ll || (dimensoes?.altura ?? 150) * 8;
-  // Margem de segurança da impressora térmica (área realmente imprimível).
-  // Impressoras costumam descartar 1–2mm nas bordas (~8–16 dots @ 203dpi).
-  const SAFE_MARGIN = 8;
+  // Sistema lógico de coordenadas: usa ^PW/^LL do ZPL quando existirem.
+  // O SVG é esticado para o tamanho físico da etiqueta pelo container externo,
+  // exatamente como o PNG final é impresso em @page mm. Isso evita letterbox e
+  // faz linhas em x=0/width=^PW tangenciarem a borda física.
+  const viewW = parsed.pw || (dimensoes?.largura ?? 100) * LABEL_PX_PER_MM;
+  const viewH = parsed.ll || (dimensoes?.altura ?? 150) * LABEL_PX_PER_MM;
   const clipId = useMemo(() => `zpl-clip-${Math.random().toString(36).slice(2, 9)}`, []);
+  const contentClipId = useMemo(() => `zpl-content-clip-${Math.random().toString(36).slice(2, 9)}`, []);
+  const effectiveBorderWidth = borderStyle === 'none' ? 0 : Math.max(0, borderWidth);
+  const contentX = padding + offsetX;
+  const contentY = padding + offsetY;
+  const contentW = Math.max(1, viewW - padding * 2);
+  const contentH = Math.max(1, viewH - padding * 2);
+  const borderDashArray =
+    borderStyle === 'dashed' ? `${Math.max(4, effectiveBorderWidth * 3)} ${Math.max(3, effectiveBorderWidth * 2)}`
+    : borderStyle === 'dotted' ? `${Math.max(1, effectiveBorderWidth)} ${Math.max(2, effectiveBorderWidth * 1.5)}`
+    : undefined;
+
+  const renderBorder = () => {
+    if (effectiveBorderWidth <= 0) return null;
+    const inset = effectiveBorderWidth / 2;
+    const rectProps = {
+      x: inset,
+      y: inset,
+      width: Math.max(1, viewW - effectiveBorderWidth),
+      height: Math.max(1, viewH - effectiveBorderWidth),
+      rx: borderRadius,
+      ry: borderRadius,
+      fill: 'none',
+      stroke: '#000',
+      strokeWidth: effectiveBorderWidth,
+      strokeDasharray: borderDashArray,
+    };
+    if (borderStyle !== 'double') return <rect {...rectProps} />;
+    const gap = Math.max(2, effectiveBorderWidth * 1.5);
+    return (
+      <>
+        <rect {...rectProps} strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)} />
+        <rect
+          x={inset + gap}
+          y={inset + gap}
+          width={Math.max(1, viewW - effectiveBorderWidth - gap * 2)}
+          height={Math.max(1, viewH - effectiveBorderWidth - gap * 2)}
+          rx={Math.max(0, borderRadius - gap)}
+          ry={Math.max(0, borderRadius - gap)}
+          fill="none"
+          stroke="#000"
+          strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)}
+        />
+      </>
+    );
+  };
 
   return (
     <div className={cn('bg-white text-black relative w-full h-full overflow-hidden', className)}>
-      <svg viewBox={`0 0 ${viewW} ${viewH}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full">
+      <svg viewBox={`0 0 ${viewW} ${viewH}`} preserveAspectRatio="none" className="block w-full h-full">
         <defs>
           <clipPath id={clipId}>
             <rect x={0} y={0} width={viewW} height={viewH} />
           </clipPath>
+          <clipPath id={contentClipId}>
+            <rect x={0} y={0} width={contentW} height={contentH} />
+          </clipPath>
         </defs>
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
         <g clipPath={`url(#${clipId})`}>
+        <g transform={`translate(${contentX}, ${contentY})`} clipPath={`url(#${contentClipId})`}>
         {parsed.elementos.map((el, i) => {
           if (el.tipo === 'text') {
             const lines = el.lines && el.lines.length > 0 ? el.lines : [el.text];
             const lineH = el.size + (el.fb?.spacing ?? 0);
             const align = el.fb?.align ?? 'L';
-            // Clamp da largura do ^FB para não ultrapassar a área imprimível.
-            const fb = el.fb
-              ? { ...el.fb, width: Math.min(el.fb.width, Math.max(1, viewW - el.x - SAFE_MARGIN)) }
-              : undefined;
+            const fb = el.fb;
             let anchorX = el.x;
             let textAnchor: 'start' | 'middle' | 'end' = 'start';
             if (fb) {
@@ -209,7 +268,7 @@ export const ZPLPreview = memo(function ZPLPreview({
                   <text
                     key={k}
                     x={anchorX}
-                    y={el.y + el.size + k * lineH}
+                    y={el.y + el.size * 0.85 + k * lineH}
                     fontSize={el.size}
                     fontFamily={fontFamily}
                     fill={fillColor}
@@ -222,12 +281,10 @@ export const ZPLPreview = memo(function ZPLPreview({
             );
           }
           if (el.tipo === 'logo') {
-            // Aspect padrão 2.5:1, mas clampa para caber dentro da etiqueta.
+            // Aspect padrão 2.5:1. Se extrapolar, o clipPath corta como a área imprimível real.
             const desiredH = el.size * 1.6;
-            const availW = Math.max(10, viewW - el.x - SAFE_MARGIN);
-            const availH = Math.max(10, viewH - el.y - SAFE_MARGIN);
-            const w = Math.min(desiredH * 2.5, availW);
-            const h = Math.min(desiredH, availH, w / 2.5);
+            const w = desiredH * 2.5;
+            const h = desiredH;
             return logoUrl ? (
               <image key={i} href={logoUrl} x={el.x} y={el.y} width={w} height={h} preserveAspectRatio="xMidYMid meet" />
             ) : (
@@ -248,7 +305,7 @@ export const ZPLPreview = memo(function ZPLPreview({
             );
           }
           if (el.tipo === 'qr') {
-            const side = Math.max(60, (el.qrMag ?? 4) * 24);
+            const side = Math.max(60, (el.qrMag ?? 4) * 32);
             const payload = (el.text || 'QR').replace(/^LA,/, '');
             return (
               <foreignObject key={i} x={el.x} y={el.y} width={side} height={side}>
@@ -261,10 +318,12 @@ export const ZPLPreview = memo(function ZPLPreview({
           if (el.tipo === 'box') {
             const w = el.width ?? 0;
             const h = el.height ?? 0;
-            const isLine = w <= 2 || h <= 2;
-            // Clampa largura/altura para não passar da borda imprimível.
-            const clampedW = Math.min(Math.max(1, w), Math.max(1, viewW - el.x));
-            const clampedH = Math.min(Math.max(1, h), Math.max(1, viewH - el.y));
+            const isHorizontalLine = h <= 2 && w > h;
+            const isVerticalLine = w <= 2 && h >= w;
+            const isLine = isHorizontalLine || isVerticalLine;
+            const effectiveLineThickness = lineThickness > 0 ? Math.max(1, lineThickness) : 0;
+            const renderedW = isVerticalLine && effectiveLineThickness > 0 ? effectiveLineThickness : Math.max(1, w);
+            const renderedH = isHorizontalLine && effectiveLineThickness > 0 ? effectiveLineThickness : Math.max(1, h);
             const dashArray =
               lineStyle === 'dashed' ? `${Math.max(4, lineThickness * 3)} ${Math.max(3, lineThickness * 2)}`
               : lineStyle === 'dotted' ? `${lineThickness} ${Math.max(2, lineThickness * 1.5)}`
@@ -274,17 +333,19 @@ export const ZPLPreview = memo(function ZPLPreview({
                 key={i}
                 x={el.x}
                 y={el.y}
-                width={clampedW}
-                height={clampedH}
+                width={renderedW}
+                height={renderedH}
                 fill={isLine ? lineColor : 'none'}
-                stroke={isLine || lineThickness <= 0 ? 'none' : lineColor}
-                strokeWidth={lineThickness}
+                stroke={isLine || effectiveLineThickness <= 0 ? 'none' : lineColor}
+                strokeWidth={effectiveLineThickness}
                 strokeDasharray={dashArray}
               />
             );
           }
           return null;
         })}
+        </g>
+        {renderBorder()}
         </g>
       </svg>
     </div>

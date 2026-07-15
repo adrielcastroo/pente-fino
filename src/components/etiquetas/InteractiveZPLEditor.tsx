@@ -8,6 +8,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ElementEditDialog, type ElementEditValues } from './ElementEditDialog';
+import { LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 export type ShapeStyle = 'solid' | 'dashed' | 'dotted';
 export type TextAlign = 'L' | 'C' | 'R';
@@ -35,6 +36,15 @@ export interface ParsedBlock {
   fbMaxLines?: number;
   fbSpacing?: number;
   rotation?: Rotation;
+}
+
+function parseZplSize(zpl: string, fallback: { largura: number; altura: number }): { w: number; h: number } {
+  const pw = zpl.match(/\^PW(\d+)/);
+  const ll = zpl.match(/\^LL(\d+)/);
+  return {
+    w: pw ? parseInt(pw[1], 10) : fallback.largura * LABEL_PX_PER_MM,
+    h: ll ? parseInt(ll[1], 10) : fallback.altura * LABEL_PX_PER_MM,
+  };
 }
 
 const BLOCK_RE = /\^FO(\d+),(\d+)([\s\S]*?)\^FS/g;
@@ -215,10 +225,30 @@ interface Props {
   dimensoes: { largura: number; altura: number };
   variaveis: { chave: string; label: string }[];
   logoUrl?: string;
+  lineThickness?: number;
+  lineStyle?: ShapeStyle;
+  lineColor?: string;
+  fontFamily?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   zpl, onChange, valores, dimensoes, variaveis, logoUrl,
+  lineThickness = 2,
+  lineStyle = 'solid',
+  lineColor = '#111111',
+  fontFamily = 'monospace',
+  borderWidth = 0,
+  borderStyle = 'none',
+  borderRadius = 0,
+  padding = 0,
+  offsetX = 0,
+  offsetY = 0,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<null | { idx: number; offX: number; offY: number }>(null);
@@ -232,8 +262,55 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   const blocks = useMemo(() => parseBlocks(zpl), [zpl]);
-  const viewW = dimensoes.largura * 8;
-  const viewH = dimensoes.altura * 8;
+  const zplSize = useMemo(() => parseZplSize(zpl, dimensoes), [zpl, dimensoes]);
+  const viewW = zplSize.w;
+  const viewH = zplSize.h;
+  const contentX = padding + offsetX;
+  const contentY = padding + offsetY;
+  const contentW = Math.max(1, viewW - padding * 2);
+  const contentH = Math.max(1, viewH - padding * 2);
+  const effectiveBorderWidth = borderStyle === 'none' ? 0 : Math.max(0, borderWidth);
+  const borderDashArray =
+    borderStyle === 'dashed' ? `${Math.max(4, effectiveBorderWidth * 3)} ${Math.max(3, effectiveBorderWidth * 2)}`
+    : borderStyle === 'dotted' ? `${Math.max(1, effectiveBorderWidth)} ${Math.max(2, effectiveBorderWidth * 1.5)}`
+    : undefined;
+  const contentClipId = useMemo(() => `interactive-content-${Math.random().toString(36).slice(2, 9)}`, []);
+
+  const renderBorder = () => {
+    if (effectiveBorderWidth <= 0) return null;
+    const inset = effectiveBorderWidth / 2;
+    const outer = {
+      x: inset,
+      y: inset,
+      width: Math.max(1, viewW - effectiveBorderWidth),
+      height: Math.max(1, viewH - effectiveBorderWidth),
+      rx: borderRadius,
+      ry: borderRadius,
+      fill: 'none',
+      stroke: '#000',
+      strokeWidth: effectiveBorderWidth,
+      strokeDasharray: borderDashArray,
+    };
+    if (borderStyle !== 'double') return <rect {...outer} pointerEvents="none" />;
+    const gap = Math.max(2, effectiveBorderWidth * 1.5);
+    return (
+      <>
+        <rect {...outer} strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)} pointerEvents="none" />
+        <rect
+          x={inset + gap}
+          y={inset + gap}
+          width={Math.max(1, viewW - effectiveBorderWidth - gap * 2)}
+          height={Math.max(1, viewH - effectiveBorderWidth - gap * 2)}
+          rx={Math.max(0, borderRadius - gap)}
+          ry={Math.max(0, borderRadius - gap)}
+          fill="none"
+          stroke="#000"
+          strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)}
+          pointerEvents="none"
+        />
+      </>
+    );
+  };
 
   // Detecta elementos que extrapolam a área imprimível — na impressão real
   // qualquer parte fora do ^PW/^LL é descartada pelo firmware da impressora.
@@ -241,8 +318,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     return blocks
       .map((b) => {
         const { w, h } = elementBounds(b, logoUrl);
-        const overRight = Math.max(0, b.x + w - viewW);
-        const overBottom = Math.max(0, b.y + h - viewH);
+        const overRight = Math.max(0, b.x + w - contentW);
+        const overBottom = Math.max(0, b.y + h - contentH);
         const overLeft = Math.max(0, -b.x);
         const overTop = Math.max(0, -b.y);
         if (!overRight && !overBottom && !overLeft && !overTop) return null;
@@ -255,7 +332,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         return { block: b, w, h, label };
       })
       .filter(Boolean) as Array<{ block: ParsedBlock; w: number; h: number; label: string }>;
-  }, [blocks, viewW, viewH, logoUrl]);
+  }, [blocks, contentW, contentH, logoUrl]);
 
 
   const interpolate = useCallback((s: string) => {
@@ -279,7 +356,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     (e.target as Element).setPointerCapture?.(e.pointerId);
     setSelectedIdx(b.index);
     const p = svgPoint(e.clientX, e.clientY);
-    setDragging({ idx: b.index, offX: p.x - b.x, offY: p.y - b.y });
+    setDragging({ idx: b.index, offX: p.x - contentX - b.x, offY: p.y - contentY - b.y });
   };
 
   const onResizeDown = (e: React.PointerEvent, b: ParsedBlock, dir: HandleDir) => {
@@ -307,8 +384,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     let snapY = ny;
     const g: typeof guides = {};
 
-    if (Math.abs(cx - viewW / 2) < SNAP_THRESHOLD) { snapX = viewW / 2 - w / 2; g.vx = viewW / 2; }
-    if (Math.abs(cy - viewH / 2) < SNAP_THRESHOLD) { snapY = viewH / 2 - h / 2; g.hy = viewH / 2; }
+    if (Math.abs(cx - contentW / 2) < SNAP_THRESHOLD) { snapX = contentW / 2 - w / 2; g.vx = contentW / 2; }
+    if (Math.abs(cy - contentH / 2) < SNAP_THRESHOLD) { snapY = contentH / 2 - h / 2; g.hy = contentH / 2; }
     for (const other of blocks) {
       if (other.index === b.index) continue;
       const ob = elementBounds(other, logoUrl);
@@ -382,8 +459,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     if (!dragging) return;
     const b = blocks[dragging.idx];
     if (!b) return;
-    const rawX = p.x - dragging.offX;
-    const rawY = p.y - dragging.offY;
+    const rawX = p.x - contentX - dragging.offX;
+    const rawY = p.y - contentY - dragging.offY;
     const { snapX, snapY, g } = computeSnap(b, rawX, rawY);
     setGuides(g);
     if (Math.round(snapX) === b.x && Math.round(snapY) === b.y) return;
@@ -462,7 +539,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${viewW} ${viewH}`}
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="none"
         className="w-full h-full bg-white select-none touch-none"
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -471,10 +548,16 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         role="img"
         aria-label="Preview interativo da etiqueta"
       >
+        <defs>
+          <clipPath id={contentClipId}>
+            <rect x={0} y={0} width={contentW} height={contentH} />
+          </clipPath>
+        </defs>
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
         <line x1={viewW / 2} y1={0} x2={viewW / 2} y2={viewH} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
         <line x1={0} y1={viewH / 2} x2={viewW} y2={viewH / 2} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
 
+        <g transform={`translate(${contentX}, ${contentY})`} clipPath={`url(#${contentClipId})`}>
         {blocks.map((b) => {
           const commonHandlers = {
             onPointerDown: (e: React.PointerEvent) => onPointerDown(e, b),
@@ -495,7 +578,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                   ) : (
                     <>
                       <rect x={b.x} y={b.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
-                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily="monospace" fill="#6b7280" textAnchor="middle" pointerEvents="none">LOGO</text>
+                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily={fontFamily} fill="#6b7280" textAnchor="middle" pointerEvents="none">LOGO</text>
                     </>
                   )}
                   <rect x={b.x} y={b.y} width={w} height={h} fill="transparent" className="hover:stroke-primary/40" stroke="transparent" strokeWidth={1} />
@@ -527,7 +610,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             const align = b.align ?? 'L';
             const lineH = b.size + (b.fbSpacing ?? 0);
             const naturalW = Math.max(20, lines.reduce((a, l) => Math.max(a, l.length), 1) * charW);
-            const maxAvail = Math.max(20, viewW - b.x);
+            const maxAvail = Math.max(20, contentW - b.x);
             const boxW = Math.min(maxAvail, b.fbWidth ?? naturalW);
             const boxH = lines.length * lineH;
             let anchorX = b.x;
@@ -538,10 +621,10 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             }
             return (
               <g key={b.index} transform={rotTransform} {...commonHandlers}>
-                {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="#111" />}
+                {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill={lineColor} />}
                 <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
                 {lines.map((ln, k) => (
-                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily="monospace" fill={b.reverse ? '#fff' : '#111'} textAnchor={textAnchor} pointerEvents="none">
+                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily={fontFamily} fill={b.reverse ? '#fff' : lineColor} textAnchor={textAnchor} pointerEvents="none">
                     {ln}
                   </text>
                 ))}
@@ -553,9 +636,9 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             return (
               <g key={b.index} {...commonHandlers}>
                 {Array.from({ length: 40 }).map((_, i) => (
-                  <rect key={i} x={b.x + i * 6} y={b.y} width={i % 3 === 0 ? 4 : 2} height={80} fill="#111" />
+                  <rect key={i} x={b.x + i * 6} y={b.y} width={i % 3 === 0 ? 4 : 2} height={80} fill={lineColor} />
                 ))}
-                <text x={b.x} y={b.y + 100} fontSize={18} fontFamily="monospace" fill="#111" pointerEvents="none">{text}</text>
+                <text x={b.x} y={b.y + 100} fontSize={18} fontFamily={fontFamily} fill={lineColor} pointerEvents="none">{text}</text>
                 <rect x={b.x} y={b.y} width={240} height={100} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
               </g>
             );
@@ -578,19 +661,26 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           if (b.tipo === 'box' || b.tipo === 'line') {
             const w = b.width ?? 0;
             const h = b.height ?? 0;
-            const t = Math.max(1, b.thickness ?? 2);
-            const dash = strokeDashFor(b.style);
+            const t = lineThickness > 0 ? Math.max(1, lineThickness) : 0;
+            const dash = strokeDashFor(lineStyle);
+            const isHorizontalLine = h <= 2 && w > h;
+            const isVerticalLine = w <= 2 && h >= w;
+            const isLine = isHorizontalLine || isVerticalLine;
+            const renderedW = isVerticalLine && t > 0 ? t : Math.max(1, w);
+            const renderedH = isHorizontalLine && t > 0 ? t : Math.max(1, h);
             return (
               <g key={b.index} {...commonHandlers}>
-                <rect x={b.x} y={b.y} width={w} height={h} fill="none" stroke="#111" strokeWidth={t} strokeDasharray={dash} />
-                <rect x={b.x} y={b.y} width={w} height={h} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
+                <rect x={b.x} y={b.y} width={renderedW} height={renderedH} fill={isLine ? lineColor : 'none'} stroke={isLine || t <= 0 ? 'none' : lineColor} strokeWidth={t} strokeDasharray={dash} />
+                <rect x={b.x} y={b.y} width={Math.max(1, w)} height={Math.max(1, h)} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
               </g>
             );
           }
           return null;
         })}
+        </g>
 
         {/* SELECTION FRAME — desenhado por cima */}
+        <g transform={`translate(${contentX}, ${contentY})`}>
         {selectedBlock && (() => {
           const b = selectedBlock;
           const { w, h } = elementBounds(b, logoUrl);
@@ -682,18 +772,21 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             </g>
           );
         })()}
+        </g>
 
         {(dragging || resizing) && guides.vx !== undefined && (
-          <line x1={guides.vx} y1={0} x2={guides.vx} y2={viewH} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={contentX + guides.vx} y1={contentY} x2={contentX + guides.vx} y2={contentY + contentH} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
         {(dragging || resizing) && guides.hy !== undefined && (
-          <line x1={0} y1={guides.hy} x2={viewW} y2={guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={contentX} y1={contentY + guides.hy} x2={contentX + contentW} y2={contentY + guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
+
+        {renderBorder()}
 
         {/* Borda da área imprimível — realçada apenas quando há overflow. */}
         {overflows.length > 0 && (
           <rect
-            x={1} y={1} width={viewW - 2} height={viewH - 2}
+            x={contentX + 1} y={contentY + 1} width={contentW - 2} height={contentH - 2}
             fill="none" stroke="#dc2626" strokeWidth={2} strokeDasharray="8 6"
             pointerEvents="none"
           />
@@ -702,12 +795,12 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         {/* Marcadores de overflow: cada elemento fora dos limites ganha um contorno
             vermelho tracejado + uma etiqueta com o motivo. */}
         {overflows.map(({ block: b, w, h, label }) => {
-          const badgeX = Math.min(Math.max(0, b.x), viewW - 140);
-          const badgeY = b.y > 24 ? b.y - 22 : Math.min(b.y + h + 4, viewH - 22);
+          const badgeX = contentX + Math.min(Math.max(0, b.x), contentW - 140);
+          const badgeY = contentY + (b.y > 24 ? b.y - 22 : Math.min(b.y + h + 4, contentH - 22));
           return (
             <g key={`ovf-${b.index}`} pointerEvents="none">
               <rect
-                x={b.x} y={b.y} width={Math.max(4, w)} height={Math.max(4, h)}
+                x={contentX + b.x} y={contentY + b.y} width={Math.max(4, w)} height={Math.max(4, h)}
                 fill="none" stroke="#dc2626" strokeWidth={2} strokeDasharray="6 4"
               />
               <g>

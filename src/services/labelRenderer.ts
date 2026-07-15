@@ -246,10 +246,6 @@ export async function renderZplLabel(
   const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
   const lineColor = labelSettings.expedicaoLineColor ?? '#111';
   const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
-  const borderCss = borderStyle === 'none' || borderWidth <= 0
-    ? 'none'
-    : `${borderWidth}px ${borderStyle} #000`;
-
   const { container, root, cleanup } = mountOffscreen();
   try {
     root.render(
@@ -260,23 +256,24 @@ export async function renderZplLabel(
           height: `${hPx}px`,
           background: '#fff',
           overflow: 'hidden',
-          boxSizing: 'border-box',
-          border: borderCss,
-          borderRadius: `${borderRadius}px`,
-          padding: `${padding}px`,
         },
       },
-        createElement('div', {
-          style: {
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            transform: `translate(${offsetXPx}px, ${offsetYPx}px)`,
-            background: '#fff',
-          },
-        },
-          createElement(ZPLPreview, { zpl, variaveis, dimensoes, logoUrl, lineThickness, lineStyle, lineColor, fontFamily }),
-        ),
+        createElement(ZPLPreview, {
+          zpl,
+          variaveis,
+          dimensoes,
+          logoUrl,
+          lineThickness,
+          lineStyle,
+          lineColor,
+          fontFamily,
+          borderWidth,
+          borderStyle,
+          borderRadius,
+          padding,
+          offsetX: offsetXPx,
+          offsetY: offsetYPx,
+        }),
       ),
     );
     await new Promise((r) => setTimeout(r, 80));
