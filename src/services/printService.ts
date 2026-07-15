@@ -1414,10 +1414,6 @@ export async function printZplLabelsInBrowser(
   const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
   const lineColor = labelSettings.expedicaoLineColor ?? '#111';
   const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
-  const borderCss = borderStyle === 'none' || borderWidth <= 0
-    ? 'none'
-    : `${borderWidth}px ${borderStyle} #000`;
-
   const buildPage = (): DirectBrowserPage => ({
     widthMm: w,
     heightMm: h,

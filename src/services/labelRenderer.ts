@@ -246,10 +246,6 @@ export async function renderZplLabel(
   const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
   const lineColor = labelSettings.expedicaoLineColor ?? '#111';
   const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
-  const borderCss = borderStyle === 'none' || borderWidth <= 0
-    ? 'none'
-    : `${borderWidth}px ${borderStyle} #000`;
-
   const { container, root, cleanup } = mountOffscreen();
   try {
     root.render(

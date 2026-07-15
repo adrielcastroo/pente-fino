@@ -66,10 +66,12 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
   const previewBorderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const previewBorderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const previewPadding = labelSettings.expedicaoPadding ?? 0;
-  const previewBorderCss =
-    previewBorderStyle === 'none' || previewBorderWidth <= 0
-      ? undefined
-      : `${previewBorderWidth}px ${previewBorderStyle} #000`;
+  const previewOffsetX = (labelSettings.expedicaoPrintOffsetXMm ?? 0) * 8;
+  const previewOffsetY = (labelSettings.expedicaoPrintOffsetYMm ?? 0) * 8;
+  const previewLineThickness = labelSettings.expedicaoLineThickness ?? 2;
+  const previewLineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
+  const previewLineColor = labelSettings.expedicaoLineColor ?? '#111111';
+  const previewFontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
 
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState<CategoriaEtiqueta>('expedicao');
@@ -568,10 +570,7 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
                     className="relative bg-white shadow-sm overflow-hidden"
                     style={{
                       aspectRatio: `${largura} / ${altura}`,
-                      boxSizing: 'border-box',
-                      border: previewBorderCss ?? '1px solid hsl(var(--border))',
-                      borderRadius: `${previewBorderRadius}px`,
-                      padding: `${previewPadding}px`,
+                      border: '1px solid hsl(var(--border))',
                     }}
                   >
                     <InteractiveZPLEditor
@@ -581,9 +580,19 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
                       dimensoes={{ largura, altura }}
                       variaveis={variaveis.map((v) => ({ chave: v.chave, label: v.label }))}
                       logoUrl={logoUrl}
+                      lineThickness={previewLineThickness}
+                      lineStyle={previewLineStyle}
+                      lineColor={previewLineColor}
+                      fontFamily={previewFontFamily}
+                      borderWidth={previewBorderWidth}
+                      borderStyle={previewBorderStyle}
+                      borderRadius={previewBorderRadius}
+                      padding={previewPadding}
+                      offsetX={previewOffsetX}
+                      offsetY={previewOffsetY}
                     />
                   </div>
-                  {previewBorderCss && (
+                  {previewBorderStyle !== 'none' && previewBorderWidth > 0 && (
                     <p className="mt-2 text-[10px] text-muted-foreground text-center">
                       Borda ativa: {previewBorderWidth}px {previewBorderStyle} · padding {previewPadding}px · raio {previewBorderRadius}px
                     </p>
