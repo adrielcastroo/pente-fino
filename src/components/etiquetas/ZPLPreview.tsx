@@ -159,8 +159,25 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
               if (align === 'C') { anchorX = el.x + el.fb.width / 2; textAnchor = 'middle'; }
               else if (align === 'R') { anchorX = el.x + el.fb.width; textAnchor = 'end'; }
             }
+            const fillColor = el.reverse ? '#fff' : '#111';
+            // Retângulo preto de fundo para texto em negativo (^FR).
+            let bgRect: JSX.Element | null = null;
+            if (el.reverse) {
+              const padX = Math.max(2, el.size * 0.15);
+              const padY = Math.max(1, el.size * 0.1);
+              const totalH = lines.length * lineH + padY * 2;
+              if (el.fb) {
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={el.fb.width + padX * 2} height={totalH} fill="#111" />;
+              } else {
+                const charW = el.size * 0.6;
+                const longest = lines.reduce((m, l) => Math.max(m, l.length), 0);
+                const w = longest * charW + padX * 2;
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={w} height={totalH} fill="#111" />;
+              }
+            }
             return (
               <g key={i}>
+                {bgRect}
                 {lines.map((ln, k) => (
                   <text
                     key={k}
@@ -168,7 +185,7 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
                     y={el.y + el.size + k * lineH}
                     fontSize={el.size}
                     fontFamily="monospace"
-                    fill="#111"
+                    fill={fillColor}
                     textAnchor={textAnchor}
                   >
                     {ln}
