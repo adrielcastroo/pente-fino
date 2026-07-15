@@ -548,10 +548,16 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         role="img"
         aria-label="Preview interativo da etiqueta"
       >
+        <defs>
+          <clipPath id={contentClipId}>
+            <rect x={0} y={0} width={contentW} height={contentH} />
+          </clipPath>
+        </defs>
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
         <line x1={viewW / 2} y1={0} x2={viewW / 2} y2={viewH} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
         <line x1={0} y1={viewH / 2} x2={viewW} y2={viewH / 2} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
 
+        <g transform={`translate(${contentX}, ${contentY})`} clipPath={`url(#${contentClipId})`}>
         {blocks.map((b) => {
           const commonHandlers = {
             onPointerDown: (e: React.PointerEvent) => onPointerDown(e, b),
@@ -671,8 +677,10 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           }
           return null;
         })}
+        </g>
 
         {/* SELECTION FRAME — desenhado por cima */}
+        <g transform={`translate(${contentX}, ${contentY})`}>
         {selectedBlock && (() => {
           const b = selectedBlock;
           const { w, h } = elementBounds(b, logoUrl);
@@ -764,13 +772,16 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             </g>
           );
         })()}
+        </g>
 
         {(dragging || resizing) && guides.vx !== undefined && (
-          <line x1={guides.vx} y1={0} x2={guides.vx} y2={viewH} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={contentX + guides.vx} y1={contentY} x2={contentX + guides.vx} y2={contentY + contentH} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
         {(dragging || resizing) && guides.hy !== undefined && (
-          <line x1={0} y1={guides.hy} x2={viewW} y2={guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
+          <line x1={contentX} y1={contentY + guides.hy} x2={contentX + contentW} y2={contentY + guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
+
+        {renderBorder()}
 
         {/* Borda da área imprimível — realçada apenas quando há overflow. */}
         {overflows.length > 0 && (
