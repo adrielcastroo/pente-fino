@@ -95,30 +95,29 @@ export const VARIAVEIS_INTELIGENTES: readonly VariavelInteligente[] = [
 // Layout: LOGO (imagem) no topo · TRANSPORTADORA centralizada · QR Code central ·
 // NF abaixo do QR · VOLUME atual / total · DATA de emissão no canto inferior direito.
 export const ZPL_PADRAO = `^XA
-^PW800
+^PW480
 ^LL400
 ^LH0,0
 ^CI28
 ^FX =============================== LOGO (imagem via upload)
-^FO227,0^A0N,52,52^FD{{logo}}^FS
+^FO322,16^A0N,41,41^FD{{logo}}^FS
+^FX =============================== NF
+^FO7,7^A0N,25,25^FR^FB50,1,0,C^FDNF:^FS
+^FO68,7^A0N,63,63^FB297,1,0,C^FD{{nf}}^FS
 ^FX =============================== TRANSPORTADORA
-^FO45,89^A0N,20,20^FR^FDTRANSPORTADORA:^FS
-^FO78,136^FB733,1,0,C^A0N,28,28^FD{{transportadora}}^FS
-^FX =============================== QR CODE CENTRAL
-^FO495,136^BQN,2,4^FDLA,ROM{{romaneio}}^FS
-^FX =============================== NF (abaixo do QR)
-^FO498,89^FB733,1,0,C^A0N,25,25^FR^FDNF {{nf}}^FS
+^FO7,90^A0N,25,25^FR^FDTRANSPORTADORA:^FS
+^FO50,133^A0N,41,41^FB380,5,0,C^FD{{transportadora}}^FS
 ^FX =============================== VOLUME ATUAL / TOTAL
-^FO113,298^A0N,50,50^FD{{volume_atual}}^FS
-^FO380,298^A0N,45,45^FD/^FS
-^FO527,298^A0N,50,50^FD{{volume_total}}^FS
-^FO133,362^A0N,18,18^FDVOLUME^FS
-^FO560,362^A0N,18,18^FDTOTAL^FS
-^FX =============================== DATA EMISSAO (canto inferior direito)
-^FO622,12^A0N,18,18^FD{{data}}^FS
-^FO0,86^GB800,1,2^FS
-^FO408,86^GB1,213,2^FS
-^FO0,298^GB800,1,2^FS
+^FO43,294^A0N,70,70^FB135,1,0,C^FD{{volume_atual}}^FS
+^FO221,294^A0N,70,70^FD/^FS
+^FO293,294^A0N,70,70^FB131,1,0,C^FD{{volume_total}}^FS
+^FO68,254^A0N,23,23^FR^FB86,1,0,C^FDVOLUME^FS
+^FO322,254^A0N,23,23^FR^FB72,1,0,C^FDTOTAL^FS
+^FX =============================== DATA EMISSAO (canto inferior direito interno)
+^FO340,370^A0N,20,20^FB130,1,0,R^FD{{data}}^FS
+^FX =============================== LINHAS DIVISORAS
+^FO0,90^GB479,1,2^FS
+^FO0,254^GB478,1,2^FS
 ^XZ`;
 
 export const VARIAVEIS_PADRAO: VariavelTemplate[] = [
