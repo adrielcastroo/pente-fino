@@ -36,6 +36,24 @@ export interface ParsedBlock {
   fbMaxLines?: number;
   fbSpacing?: number;
   rotation?: Rotation;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+
+/** Marker embutido no bloco (via ^FX-TF:...-) para preservar formatação textual. */
+export function parseTextFormat(raw: string): { bold: boolean; italic: boolean; underline: boolean } {
+  const m = raw.match(/\^FX-TF:([BIU+]*)-/);
+  if (!m) return { bold: false, italic: false, underline: false };
+  const flags = m[1];
+  return { bold: flags.includes('B'), italic: flags.includes('I'), underline: flags.includes('U') };
+}
+
+function writeTextFormat(raw: string, bold: boolean, italic: boolean, underline: boolean): string {
+  const cleaned = raw.replace(/\^FX-TF:[BIU+]*-/g, '');
+  if (!bold && !italic && !underline) return cleaned;
+  const flags = [bold ? 'B' : '', italic ? 'I' : '', underline ? 'U' : ''].filter(Boolean).join('+');
+  return cleaned.replace(/\^FS$/, `^FX-TF:${flags}-^FS`);
 }
 
 function parseZplSize(zpl: string, fallback: { largura: number; altura: number }): { w: number; h: number } {
@@ -99,7 +117,8 @@ export function parseBlocks(zpl: string): ParsedBlock[] {
       tipo = (width === 1 || height === 1) ? 'line' : 'box';
       rotation = 'N';
     }
-    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag, align, fbWidth, fbMaxLines, fbSpacing, rotation });
+    const fmt = parseTextFormat(raw);
+    out.push({ index: i++, sourceStart: start, sourceEnd: end, raw, x, y, size, reverse, fd, tipo, width, height, thickness, style, qrMag, align, fbWidth, fbMaxLines, fbSpacing, rotation, bold: fmt.bold, italic: fmt.italic, underline: fmt.underline });
   }
   return out;
 }
@@ -172,6 +191,9 @@ function applyEditToBlock(block: ParsedBlock, edit: ElementEditValues, viewW: nu
   if (edit.reverse && !hasFR) raw = raw.replace(/\^FD/, '^FR^FD');
   else if (!edit.reverse && hasFR) raw = raw.replace(/\^FR(?![A-Z])/, '');
   raw = raw.replace(/\^FD[\s\S]*?\^FS$/, `^FD${edit.fd}^FS`);
+  if (block.tipo === 'text') {
+    raw = writeTextFormat(raw, !!edit.bold, !!edit.italic, !!edit.underline);
+  }
   return raw;
 }
 
@@ -251,7 +273,12 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   offsetY = 0,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [dragging, setDragging] = useState<null | { idx: number; offX: number; offY: number }>(null);
+  const [dragging, setDragging] = useState<null | {
+    idx: number;
+    offX: number;
+    offY: number;
+    origins: Record<number, { x: number; y: number }>;
+  }>(null);
   const [resizing, setResizing] = useState<null | {
     idx: number; dir: HandleDir;
     startX: number; startY: number; startW: number; startH: number;
@@ -259,7 +286,9 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   }>(null);
   const [guides, setGuides] = useState<{ vx?: number; vy?: number; hx?: number; hy?: number }>({});
   const [editing, setEditing] = useState<ParsedBlock | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [selection, setSelection] = useState<Set<number>>(new Set());
+  const [marquee, setMarquee] = useState<null | { x0: number; y0: number; x1: number; y1: number }>(null);
+  const selectedIdx = selection.size === 1 ? Array.from(selection)[0] : null;
 
   const blocks = useMemo(() => parseBlocks(zpl), [zpl]);
   const zplSize = useMemo(() => parseZplSize(zpl, dimensoes), [zpl, dimensoes]);
@@ -354,9 +383,25 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const onPointerDown = (e: React.PointerEvent, b: ParsedBlock) => {
     e.stopPropagation();
     (e.target as Element).setPointerCapture?.(e.pointerId);
-    setSelectedIdx(b.index);
+    const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+    let nextSelection: Set<number>;
+    if (additive) {
+      nextSelection = new Set(selection);
+      if (nextSelection.has(b.index)) nextSelection.delete(b.index);
+      else nextSelection.add(b.index);
+    } else if (selection.has(b.index) && selection.size > 1) {
+      nextSelection = new Set(selection);
+    } else {
+      nextSelection = new Set([b.index]);
+    }
+    setSelection(nextSelection);
     const p = svgPoint(e.clientX, e.clientY);
-    setDragging({ idx: b.index, offX: p.x - contentX - b.x, offY: p.y - contentY - b.y });
+    const origins: Record<number, { x: number; y: number }> = {};
+    nextSelection.forEach((idx) => {
+      const blk = blocks[idx];
+      if (blk) origins[idx] = { x: blk.x, y: blk.y };
+    });
+    setDragging({ idx: b.index, offX: p.x - contentX - b.x, offY: p.y - contentY - b.y, origins });
   };
 
   const onResizeDown = (e: React.PointerEvent, b: ParsedBlock, dir: HandleDir) => {
@@ -463,14 +508,31 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     const rawY = p.y - contentY - dragging.offY;
     const { snapX, snapY, g } = computeSnap(b, rawX, rawY);
     setGuides(g);
-    if (Math.round(snapX) === b.x && Math.round(snapY) === b.y) return;
-    onChange(replaceBlock(zpl, b, rewriteBlockCoords(b, snapX, snapY)));
+    const dx = Math.round(snapX) - (dragging.origins[b.index]?.x ?? b.x);
+    const dy = Math.round(snapY) - (dragging.origins[b.index]?.y ?? b.y);
+    if (dx === 0 && dy === 0) return;
+
+    // Move todos os blocos selecionados pelo mesmo delta, processando de trás
+    // pra frente para preservar sourceStart/sourceEnd dos anteriores.
+    const targets = Object.keys(dragging.origins).map(Number).sort((a, b) => b - a);
+    let nextZpl = zpl;
+    for (const idx of targets) {
+      const cur = parseBlocks(nextZpl)[idx];
+      const origin = dragging.origins[idx];
+      if (!cur || !origin) continue;
+      const nx = Math.max(0, origin.x + dx);
+      const ny = Math.max(0, origin.y + dy);
+      if (nx === cur.x && ny === cur.y) continue;
+      nextZpl = replaceBlock(nextZpl, cur, rewriteBlockCoords(cur, nx, ny));
+    }
+    if (nextZpl !== zpl) onChange(nextZpl);
   };
 
   const onPointerUp = () => {
     setDragging(null);
     setResizing(null);
     setGuides({});
+    setMarquee(null);
   };
 
   const onDoubleClickBlock = (b: ParsedBlock) => setEditing(b);
@@ -489,28 +551,40 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
     onChange(before + after);
     setEditing(null);
-    setSelectedIdx(null);
+    setSelection(new Set());
   };
 
   const selectedBlock = selectedIdx != null ? blocks[selectedIdx] : null;
 
   // Atalhos de teclado: Delete remove · setas movem (Shift = passo maior).
-  // Ctrl+Z/Y ficam a cargo do componente pai (histórico do ZPL completo).
+  // Operam em TODOS os blocos selecionados (multi-seleção).
   useEffect(() => {
-    if (selectedIdx == null) return;
+    if (selection.size === 0) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const typing = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
       if (typing) return;
-      const current = parseBlocks(zpl)[selectedIdx];
-      if (!current) return;
+      const indices = Array.from(selection).sort((a, b) => b - a);
+      const parsed = parseBlocks(zpl);
 
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
-        const before = zpl.slice(0, current.sourceStart).replace(/\n\s*$/, '\n');
-        const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
-        onChange(before + after);
-        setSelectedIdx(null);
+        let next = zpl;
+        for (const idx of indices) {
+          const cur = parseBlocks(next)[idx];
+          if (!cur) continue;
+          const before = next.slice(0, cur.sourceStart).replace(/\n\s*$/, '\n');
+          const after = next.slice(cur.sourceEnd).replace(/^\s*\n/, '\n');
+          next = before + after;
+        }
+        onChange(next);
+        setSelection(new Set());
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelection(new Set());
         return;
       }
 
@@ -523,16 +597,33 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         else if (e.key === 'ArrowDown') dy = step;
         else return;
         e.preventDefault();
-        const nx = Math.max(0, current.x + dx);
-        const ny = Math.max(0, current.y + dy);
-        if (nx === current.x && ny === current.y) return;
-        onChange(replaceBlock(zpl, current, rewriteBlockCoords(current, nx, ny)));
+        let next = zpl;
+        for (const idx of indices) {
+          const cur = parseBlocks(next)[idx];
+          if (!cur) continue;
+          const nx = Math.max(0, cur.x + dx);
+          const ny = Math.max(0, cur.y + dy);
+          if (nx === cur.x && ny === cur.y) continue;
+          next = replaceBlock(next, cur, rewriteBlockCoords(cur, nx, ny));
+        }
+        if (next !== zpl) onChange(next);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedIdx, zpl, onChange]);
+  }, [selection, zpl, onChange]);
 
+
+  const onBackgroundPointerDown = (e: React.PointerEvent) => {
+    // Inicia marquee de seleção quando clicando no fundo (fora dos blocos).
+    if (e.target !== e.currentTarget && (e.target as SVGElement).tagName !== 'rect' && (e.target as SVGElement).tagName !== 'line') {
+      // Só limpa seleção; caso o pointerDown veio de dentro de um bloco, esse handler não roda por stopPropagation.
+    }
+    const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+    if (!additive) setSelection(new Set());
+    const p = svgPoint(e.clientX, e.clientY);
+    setMarquee({ x0: p.x - contentX, y0: p.y - contentY, x1: p.x - contentX, y1: p.y - contentY });
+  };
 
   return (
     <>
@@ -541,10 +632,35 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         viewBox={`0 0 ${viewW} ${viewH}`}
         preserveAspectRatio="none"
         className="w-full h-full bg-white select-none touch-none"
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onPointerMove={(e) => {
+          if (marquee) {
+            const p = svgPoint(e.clientX, e.clientY);
+            setMarquee({ ...marquee, x1: p.x - contentX, y1: p.y - contentY });
+            return;
+          }
+          onPointerMove(e);
+        }}
+        onPointerUp={() => {
+          if (marquee) {
+            const x0 = Math.min(marquee.x0, marquee.x1);
+            const y0 = Math.min(marquee.y0, marquee.y1);
+            const x1 = Math.max(marquee.x0, marquee.x1);
+            const y1 = Math.max(marquee.y0, marquee.y1);
+            if (Math.abs(x1 - x0) > 3 || Math.abs(y1 - y0) > 3) {
+              const next = new Set(selection);
+              blocks.forEach((b) => {
+                const { w, h } = elementBounds(b, logoUrl);
+                const bx1 = b.x + w, by1 = b.y + h;
+                const intersects = !(b.x > x1 || bx1 < x0 || b.y > y1 || by1 < y0);
+                if (intersects) next.add(b.index);
+              });
+              setSelection(next);
+            }
+          }
+          onPointerUp();
+        }}
         onPointerLeave={onPointerUp}
-        onPointerDown={() => setSelectedIdx(null)}
+        onPointerDown={onBackgroundPointerDown}
         role="img"
         aria-label="Preview interativo da etiqueta"
       >
@@ -621,7 +737,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                 {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill={lineColor} />}
                 <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
                 {lines.map((ln, k) => (
-                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily={fontFamily} fill={b.reverse ? '#fff' : lineColor} textAnchor={textAnchor} pointerEvents="none">
+                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily={fontFamily} fill={b.reverse ? '#fff' : lineColor} textAnchor={textAnchor} fontWeight={b.bold ? 'bold' : undefined} fontStyle={b.italic ? 'italic' : undefined} textDecoration={b.underline ? 'underline' : undefined} pointerEvents="none">
                     {ln}
                   </text>
                 ))}
@@ -675,6 +791,23 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           return null;
         })}
         </g>
+
+        {/* MULTI-SELECT: outline suave em todos os blocos selecionados quando 2+ */}
+        {selection.size > 1 && (
+          <g transform={`translate(${contentX}, ${contentY})`} pointerEvents="none">
+            {Array.from(selection).map((idx) => {
+              const b = blocks[idx];
+              if (!b) return null;
+              const { w, h } = elementBounds(b, logoUrl);
+              return (
+                <rect key={idx}
+                  x={b.x - 1} y={b.y - 1} width={w + 2} height={h + 2}
+                  fill="hsl(var(--primary) / 0.08)" stroke="hsl(var(--primary))" strokeWidth={1.2} strokeDasharray="4 3"
+                />
+              );
+            })}
+          </g>
+        )}
 
         {/* SELECTION FRAME — desenhado por cima */}
         <g transform={`translate(${contentX}, ${contentY})`}>
@@ -776,6 +909,20 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         )}
         {(dragging || resizing) && guides.hy !== undefined && (
           <line x1={contentX} y1={contentY + guides.hy} x2={contentX + contentW} y2={contentY + guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
+        )}
+
+        {marquee && (
+          <rect
+            x={contentX + Math.min(marquee.x0, marquee.x1)}
+            y={contentY + Math.min(marquee.y0, marquee.y1)}
+            width={Math.abs(marquee.x1 - marquee.x0)}
+            height={Math.abs(marquee.y1 - marquee.y0)}
+            fill="hsl(var(--primary) / 0.1)"
+            stroke="hsl(var(--primary))"
+            strokeWidth={1}
+            strokeDasharray="4 3"
+            pointerEvents="none"
+          />
         )}
 
         {renderBorder()}

@@ -29,6 +29,9 @@ interface Elemento {
   height?: number;
   qrMag?: number;
   reverse?: boolean;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 }
 
 function parseZpl(zpl: string, rawFd: (fd: string) => string): { elementos: Elemento[]; pw: number; ll: number } {
@@ -112,7 +115,11 @@ function parseZpl(zpl: string, rawFd: (fd: string) => string): { elementos: Elem
       lines = wrapped.slice(0, fb.maxLines);
     }
 
-    out.push({ tipo: 'text', x, y, size, text, lines, fb, reverse });
+    const tfMatch = bloco.match(/\^FX-TF:([BIU+]*)-/);
+    const bold = !!tfMatch && tfMatch[1].includes('B');
+    const italic = !!tfMatch && tfMatch[1].includes('I');
+    const underline = !!tfMatch && tfMatch[1].includes('U');
+    out.push({ tipo: 'text', x, y, size, text, lines, fb, reverse, bold, italic, underline });
   }
   return { elementos: out, pw, ll };
 }
@@ -273,6 +280,9 @@ export const ZPLPreview = memo(function ZPLPreview({
                     fontFamily={fontFamily}
                     fill={fillColor}
                     textAnchor={textAnchor}
+                    fontWeight={el.bold ? 'bold' : undefined}
+                    fontStyle={el.italic ? 'italic' : undefined}
+                    textDecoration={el.underline ? 'underline' : undefined}
                   >
                     {ln}
                   </text>

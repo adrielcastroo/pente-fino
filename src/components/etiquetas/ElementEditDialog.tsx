@@ -30,6 +30,9 @@ export interface ElementEditValues {
   style?: ShapeStyle;
   x?: number;
   y?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 }
 
 interface Props {
@@ -62,6 +65,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [fbMaxLines, setFbMaxLines] = useState(1);
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
+  const [bold, setBold] = useState(false);
+  const [italic, setItalic] = useState(false);
+  const [underline, setUnderline] = useState(false);
 
   useEffect(() => {
     if (!block) return;
@@ -79,6 +85,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setFbMaxLines(block.fbMaxLines ?? 1);
     setPosX(block.x);
     setPosY(block.y);
+    setBold(!!block.bold);
+    setItalic(!!block.italic);
+    setUnderline(!!block.underline);
   }, [block]);
 
   if (!block) return null;
@@ -224,6 +233,22 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
                 )}
               </div>
 
+              <div className="rounded-md border border-border/60 p-2.5 space-y-2">
+                <Label className="text-xs">Formatação do texto</Label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <Button type="button" variant={bold ? 'default' : 'outline'} size="sm" className="h-9 font-bold" onClick={() => setBold((v) => !v)}>
+                    B
+                  </Button>
+                  <Button type="button" variant={italic ? 'default' : 'outline'} size="sm" className="h-9 italic" onClick={() => setItalic((v) => !v)}>
+                    I
+                  </Button>
+                  <Button type="button" variant={underline ? 'default' : 'outline'} size="sm" className="h-9 underline" onClick={() => setUnderline((v) => !v)}>
+                    U
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Negrito, itálico e sublinhado aplicados no preview e no PNG impresso.</p>
+              </div>
+
               <div className="flex items-center justify-between rounded-md border border-border/60 p-2.5">
                 <div>
                   <Label className="text-xs">Negativo (fundo preto)</Label>
@@ -312,7 +337,7 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
           ) : <span />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={() => onSubmit({ fd, size, reverse, align, fbWidth: wrapEnabled ? fbWidth : undefined, fbMaxLines: wrapEnabled ? fbMaxLines : 1, width, height, thickness, style, x: posX, y: posY })}>Aplicar</Button>
+            <Button onClick={() => onSubmit({ fd, size, reverse, align, fbWidth: wrapEnabled ? fbWidth : undefined, fbMaxLines: wrapEnabled ? fbMaxLines : 1, width, height, thickness, style, x: posX, y: posY, bold, italic, underline })}>Aplicar</Button>
           </div>
         </DialogFooter>
       </DialogContent>
