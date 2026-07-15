@@ -643,7 +643,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                 {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill={lineColor} />}
                 <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
                 {lines.map((ln, k) => (
-                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily={fontFamily} fill={b.reverse ? '#fff' : lineColor} textAnchor={textAnchor} pointerEvents="none">
+                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily={fontFamily} fill={b.reverse ? '#fff' : lineColor} textAnchor={textAnchor} fontWeight={b.bold ? 'bold' : undefined} fontStyle={b.italic ? 'italic' : undefined} textDecoration={b.underline ? 'underline' : undefined} pointerEvents="none">
                     {ln}
                   </text>
                 ))}
