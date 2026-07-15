@@ -13,7 +13,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import {
   History, Plus, Settings2, Layers, FileText, Sparkles, Loader2, Printer,
-  ExternalLink, ChevronDown,
+  ExternalLink, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
