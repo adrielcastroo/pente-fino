@@ -131,9 +131,13 @@ export function PrintQueue({ items, activeTemplateId, onRemove, onClear, onPatch
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-sm font-medium">NF {item.nfNumero}</span>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  {item.volumes} vol
-                </Badge>
+                {(item.volumes ?? 0) > 0 ? (
+                  <Badge variant="outline" className="text-[10px] font-mono">
+                    {item.volumes} vol
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="text-[10px]">Sem volumes</Badge>
+                )}
                 {item.transportadora && (
                   <span className="text-xs text-muted-foreground truncate">· {item.transportadora}</span>
                 )}
@@ -149,8 +153,9 @@ export function PrintQueue({ items, activeTemplateId, onRemove, onClear, onPatch
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => printOne(item)}
-                disabled={item.status === 'printing' || !activeTemplateId}
+                disabled={item.status === 'printing' || !activeTemplateId || !item.volumes || item.volumes <= 0}
                 aria-label={`Imprimir NF ${item.nfNumero}`}
+                title={!item.volumes || item.volumes <= 0 ? 'NF sem volumes — impressão desabilitada' : undefined}
               >
                 <Printer className="h-4 w-4" />
               </Button>
