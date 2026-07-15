@@ -235,6 +235,29 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const viewW = dimensoes.largura * 8;
   const viewH = dimensoes.altura * 8;
 
+  // Detecta elementos que extrapolam a área imprimível — na impressão real
+  // qualquer parte fora do ^PW/^LL é descartada pelo firmware da impressora.
+  const overflows = useMemo(() => {
+    return blocks
+      .map((b) => {
+        const { w, h } = elementBounds(b, logoUrl);
+        const overRight = Math.max(0, b.x + w - viewW);
+        const overBottom = Math.max(0, b.y + h - viewH);
+        const overLeft = Math.max(0, -b.x);
+        const overTop = Math.max(0, -b.y);
+        if (!overRight && !overBottom && !overLeft && !overTop) return null;
+        const label =
+          b.tipo === 'text' ? (b.fd || 'texto').slice(0, 24) :
+          b.tipo === 'barcode' ? 'código de barras' :
+          b.tipo === 'qr' ? 'QR' :
+          b.tipo === 'box' ? 'caixa' :
+          b.tipo === 'line' ? 'linha' : 'elemento';
+        return { block: b, w, h, label };
+      })
+      .filter(Boolean) as Array<{ block: ParsedBlock; w: number; h: number; label: string }>;
+  }, [blocks, viewW, viewH, logoUrl]);
+
+
   const interpolate = useCallback((s: string) => {
     const hoje = new Date().toLocaleDateString('pt-BR');
     return s.replace(/\{\{(\w+)\}\}/g, (_, k: string) => (k === 'hoje' || k === 'data' ? hoje : valores[k] ?? `{{${k}}}`));
