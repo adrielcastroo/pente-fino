@@ -548,16 +548,13 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         role="img"
         aria-label="Preview interativo da etiqueta"
       >
-        <defs>
-          <clipPath id={contentClipId}>
-            <rect x={0} y={0} width={contentW} height={contentH} />
-          </clipPath>
-        </defs>
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
         <line x1={viewW / 2} y1={0} x2={viewW / 2} y2={viewH} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
         <line x1={0} y1={viewH / 2} x2={viewW} y2={viewH / 2} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
 
-        <g transform={`translate(${contentX}, ${contentY})`} clipPath={`url(#${contentClipId})`}>
+        {/* Grupo de conteúdo: SEM clipPath no editor — elementos fora dos limites
+            precisam continuar visíveis/arrastáveis para o usuário reposicioná-los. */}
+        <g transform={`translate(${contentX}, ${contentY})`}>
         {blocks.map((b) => {
           const commonHandlers = {
             onPointerDown: (e: React.PointerEvent) => onPointerDown(e, b),
