@@ -65,6 +65,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
   const [fbMaxLines, setFbMaxLines] = useState(1);
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
+  const [bold, setBold] = useState(false);
+  const [italic, setItalic] = useState(false);
+  const [underline, setUnderline] = useState(false);
 
   useEffect(() => {
     if (!block) return;
@@ -82,6 +85,9 @@ export function ElementEditDialog({ open, onOpenChange, block, variaveis, onSubm
     setFbMaxLines(block.fbMaxLines ?? 1);
     setPosX(block.x);
     setPosY(block.y);
+    setBold(!!block.bold);
+    setItalic(!!block.italic);
+    setUnderline(!!block.underline);
   }, [block]);
 
   if (!block) return null;
