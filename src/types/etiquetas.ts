@@ -65,11 +65,11 @@ export interface ImprimirInput {
 }
 
 export const PRESETS_TAMANHO = [
-  { nome: 'Expedição Padrão', largura: 100, altura: 150, uso: 'Romaneio + cliente + código' },
+  { nome: 'Expedição Padrão', largura: 100, altura: 50, uso: 'Romaneio + cliente + código' },
   { nome: 'Etiqueta Caixa', largura: 100, altura: 100, uso: 'Código de barras grande' },
   { nome: 'Conferência', largura: 80, altura: 120, uso: 'Double-check' },
   { nome: 'Correios PAC/Sedex', largura: 100, altura: 150, uso: 'Layout Correios' },
-  { nome: 'Personalizado', largura: 100, altura: 150, uso: 'Livre' },
+  { nome: 'Personalizado', largura: 100, altura: 50, uso: 'Livre' },
 ] as const;
 
 export interface VariavelInteligente {
@@ -95,30 +95,30 @@ export const VARIAVEIS_INTELIGENTES: readonly VariavelInteligente[] = [
 // Layout: LOGO (imagem) no topo · TRANSPORTADORA centralizada · QR Code central ·
 // NF abaixo do QR · VOLUME atual / total · DATA de emissão no canto inferior direito.
 export const ZPL_PADRAO = `^XA
-^PW480
+^PW800
 ^LL400
 ^LH0,0
 ^CI28
 ^FX =============================== LOGO (imagem via upload)
-^FO136,0^A0N,52,52^FD{{logo}}^FS
+^FO227,0^A0N,52,52^FD{{logo}}^FS
 ^FX =============================== TRANSPORTADORA
-^FO27,89^A0N,20,20^FR^FDTRANSPORTADORA:^FS
-^FO47,136^FB440,1,0,C^A0N,28,28^FD{{transportadora}}^FS
+^FO45,89^A0N,20,20^FR^FDTRANSPORTADORA:^FS
+^FO78,136^FB733,1,0,C^A0N,28,28^FD{{transportadora}}^FS
 ^FX =============================== QR CODE CENTRAL
-^FO297,136^BQN,2,4^FDLA,ROM{{romaneio}}^FS
+^FO495,136^BQN,2,4^FDLA,ROM{{romaneio}}^FS
 ^FX =============================== NF (abaixo do QR)
-^FO299,89^FB440,1,0,C^A0N,25,25^FR^FDNF {{nf}}^FS
+^FO498,89^FB733,1,0,C^A0N,25,25^FR^FDNF {{nf}}^FS
 ^FX =============================== VOLUME ATUAL / TOTAL
-^FO68,298^A0N,50,50^FD{{volume_atual}}^FS
-^FO228,298^A0N,45,45^FD/^FS
-^FO316,298^A0N,50,50^FD{{volume_total}}^FS
-^FO80,362^A0N,18,18^FDVOLUME^FS
-^FO336,362^A0N,18,18^FDTOTAL^FS
+^FO113,298^A0N,50,50^FD{{volume_atual}}^FS
+^FO380,298^A0N,45,45^FD/^FS
+^FO527,298^A0N,50,50^FD{{volume_total}}^FS
+^FO133,362^A0N,18,18^FDVOLUME^FS
+^FO560,362^A0N,18,18^FDTOTAL^FS
 ^FX =============================== DATA EMISSAO (canto inferior direito)
-^FO373,12^A0N,18,18^FD{{data}}^FS
-^FO0,86^GB490,1,2^FS
-^FO245,86^GB1,213,2^FS
-^FO0,298^GB492,1,2^FS
+^FO622,12^A0N,18,18^FD{{data}}^FS
+^FO0,86^GB800,1,2^FS
+^FO408,86^GB1,213,2^FS
+^FO0,298^GB800,1,2^FS
 ^XZ`;
 
 export const VARIAVEIS_PADRAO: VariavelTemplate[] = [

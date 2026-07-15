@@ -47,10 +47,6 @@ export const LiveZPLPreview = memo(function LiveZPLPreview({
       style={{
         width: '100%',
         height: '100%',
-        boxSizing: 'border-box',
-        border: borderCss,
-        borderRadius: `${borderRadius}px`,
-        padding: `${padding}px`,
         background: '#fff',
         overflow: 'hidden',
       }}
@@ -64,6 +60,10 @@ export const LiveZPLPreview = memo(function LiveZPLPreview({
         lineStyle={lineStyle}
         lineColor={lineColor}
         fontFamily={fontFamily}
+        borderWidth={borderWidth}
+        borderStyle={borderStyle}
+        borderRadius={borderRadius}
+        padding={padding}
       />
     </div>
   );
