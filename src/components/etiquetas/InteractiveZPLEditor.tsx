@@ -273,7 +273,12 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   offsetY = 0,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [dragging, setDragging] = useState<null | { idx: number; offX: number; offY: number }>(null);
+  const [dragging, setDragging] = useState<null | {
+    idx: number;
+    offX: number;
+    offY: number;
+    origins: Record<number, { x: number; y: number }>;
+  }>(null);
   const [resizing, setResizing] = useState<null | {
     idx: number; dir: HandleDir;
     startX: number; startY: number; startW: number; startH: number;
@@ -281,7 +286,9 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   }>(null);
   const [guides, setGuides] = useState<{ vx?: number; vy?: number; hx?: number; hy?: number }>({});
   const [editing, setEditing] = useState<ParsedBlock | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [selection, setSelection] = useState<Set<number>>(new Set());
+  const [marquee, setMarquee] = useState<null | { x0: number; y0: number; x1: number; y1: number }>(null);
+  const selectedIdx = selection.size === 1 ? Array.from(selection)[0] : null;
 
   const blocks = useMemo(() => parseBlocks(zpl), [zpl]);
   const zplSize = useMemo(() => parseZplSize(zpl, dimensoes), [zpl, dimensoes]);
