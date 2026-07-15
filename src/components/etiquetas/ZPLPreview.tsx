@@ -161,9 +161,6 @@ export const ZPLPreview = memo(function ZPLPreview({
   // faz linhas em x=0/width=^PW tangenciarem a borda física.
   const viewW = parsed.pw || (dimensoes?.largura ?? 100) * LABEL_PX_PER_MM;
   const viewH = parsed.ll || (dimensoes?.altura ?? 150) * LABEL_PX_PER_MM;
-  // Margem de segurança da impressora térmica (área realmente imprimível).
-  // Impressoras costumam descartar 1–2mm nas bordas (~8–16 dots @ 203dpi).
-  const SAFE_MARGIN = 8;
   const clipId = useMemo(() => `zpl-clip-${Math.random().toString(36).slice(2, 9)}`, []);
 
   return (
@@ -181,10 +178,7 @@ export const ZPLPreview = memo(function ZPLPreview({
             const lines = el.lines && el.lines.length > 0 ? el.lines : [el.text];
             const lineH = el.size + (el.fb?.spacing ?? 0);
             const align = el.fb?.align ?? 'L';
-            // Clamp da largura do ^FB para não ultrapassar a área imprimível.
-            const fb = el.fb
-              ? { ...el.fb, width: Math.min(el.fb.width, Math.max(1, viewW - el.x - SAFE_MARGIN)) }
-              : undefined;
+            const fb = el.fb;
             let anchorX = el.x;
             let textAnchor: 'start' | 'middle' | 'end' = 'start';
             if (fb) {
@@ -226,12 +220,10 @@ export const ZPLPreview = memo(function ZPLPreview({
             );
           }
           if (el.tipo === 'logo') {
-            // Aspect padrão 2.5:1, mas clampa para caber dentro da etiqueta.
+            // Aspect padrão 2.5:1. Se extrapolar, o clipPath corta como a área imprimível real.
             const desiredH = el.size * 1.6;
-            const availW = Math.max(10, viewW - el.x - SAFE_MARGIN);
-            const availH = Math.max(10, viewH - el.y - SAFE_MARGIN);
-            const w = Math.min(desiredH * 2.5, availW);
-            const h = Math.min(desiredH, availH, w / 2.5);
+            const w = desiredH * 2.5;
+            const h = desiredH;
             return logoUrl ? (
               <image key={i} href={logoUrl} x={el.x} y={el.y} width={w} height={h} preserveAspectRatio="xMidYMid meet" />
             ) : (
@@ -268,12 +260,9 @@ export const ZPLPreview = memo(function ZPLPreview({
             const isHorizontalLine = h <= 2 && w > h;
             const isVerticalLine = w <= 2 && h >= w;
             const isLine = isHorizontalLine || isVerticalLine;
-            // Clampa largura/altura para não passar da borda imprimível.
-            const clampedW = Math.min(Math.max(1, w), Math.max(1, viewW - el.x));
-            const clampedH = Math.min(Math.max(1, h), Math.max(1, viewH - el.y));
             const effectiveLineThickness = lineThickness > 0 ? Math.max(1, lineThickness) : 0;
-            const renderedW = isVerticalLine && effectiveLineThickness > 0 ? effectiveLineThickness : clampedW;
-            const renderedH = isHorizontalLine && effectiveLineThickness > 0 ? effectiveLineThickness : clampedH;
+            const renderedW = isVerticalLine && effectiveLineThickness > 0 ? effectiveLineThickness : Math.max(1, w);
+            const renderedH = isHorizontalLine && effectiveLineThickness > 0 ? effectiveLineThickness : Math.max(1, h);
             const dashArray =
               lineStyle === 'dashed' ? `${Math.max(4, lineThickness * 3)} ${Math.max(3, lineThickness * 2)}`
               : lineStyle === 'dotted' ? `${lineThickness} ${Math.max(2, lineThickness * 1.5)}`
