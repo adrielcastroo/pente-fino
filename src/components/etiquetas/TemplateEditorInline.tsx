@@ -674,9 +674,10 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
                 </pre>
               ) : (
                 <div
-                  className="bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[360px]"
+                  className="relative bg-white border border-border rounded-md shadow-sm overflow-hidden w-full max-w-[360px]"
                   style={{ aspectRatio: `${largura} / ${altura}` }}
                 >
+
                   <InteractiveZPLEditor
                     zpl={zpl}
                     onChange={setZpl}
