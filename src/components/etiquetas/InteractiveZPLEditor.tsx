@@ -780,52 +780,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
 
         {renderBorder()}
 
-        {/* Borda da área imprimível — realçada apenas quando há overflow. */}
-        {overflows.length > 0 && (
-          <rect
-            x={contentX + 1} y={contentY + 1} width={contentW - 2} height={contentH - 2}
-            fill="none" stroke="#dc2626" strokeWidth={2} strokeDasharray="8 6"
-            pointerEvents="none"
-          />
-        )}
-
-        {/* Marcadores de overflow: cada elemento fora dos limites ganha um contorno
-            vermelho tracejado + uma etiqueta com o motivo. */}
-        {overflows.map(({ block: b, w, h, label }) => {
-          const badgeX = contentX + Math.min(Math.max(0, b.x), contentW - 140);
-          const badgeY = contentY + (b.y > 24 ? b.y - 22 : Math.min(b.y + h + 4, contentH - 22));
-          return (
-            <g key={`ovf-${b.index}`} pointerEvents="none">
-              <rect
-                x={contentX + b.x} y={contentY + b.y} width={Math.max(4, w)} height={Math.max(4, h)}
-                fill="none" stroke="#dc2626" strokeWidth={2} strokeDasharray="6 4"
-              />
-              <g>
-                <rect x={badgeX} y={badgeY} width={Math.min(240, Math.max(120, label.length * 7 + 40))} height={18} rx={3} fill="#dc2626" />
-                <text x={badgeX + 6} y={badgeY + 13} fontSize={12} fontFamily="system-ui, sans-serif" fill="#fff">
-                  ⚠ Fora da área: {label}
-                </text>
-              </g>
-            </g>
-          );
-        })}
       </svg>
 
-      {overflows.length > 0 && (
-        <div
-          role="alert"
-          className="absolute left-2 top-2 z-10 flex items-start gap-2 rounded-md border border-destructive/60 bg-destructive/95 px-2.5 py-1.5 text-[11px] font-medium text-destructive-foreground shadow-lg max-w-[min(90%,340px)]"
-        >
-          <span aria-hidden className="mt-[1px]">⚠</span>
-          <div className="leading-tight">
-            <div>{overflows.length} elemento{overflows.length > 1 ? 's' : ''} fora da área imprimível</div>
-            <div className="mt-0.5 text-[10px] font-normal opacity-90 line-clamp-2">
-              {overflows.map((o) => o.label).slice(0, 4).join(' · ')}
-              {overflows.length > 4 ? ' …' : ''}
-            </div>
-          </div>
-        </div>
-      )}
 
       <ElementEditDialog
         open={!!editing}
