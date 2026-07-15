@@ -551,28 +551,40 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
     onChange(before + after);
     setEditing(null);
-    setSelectedIdx(null);
+    setSelection(new Set());
   };
 
   const selectedBlock = selectedIdx != null ? blocks[selectedIdx] : null;
 
   // Atalhos de teclado: Delete remove · setas movem (Shift = passo maior).
-  // Ctrl+Z/Y ficam a cargo do componente pai (histórico do ZPL completo).
+  // Operam em TODOS os blocos selecionados (multi-seleção).
   useEffect(() => {
-    if (selectedIdx == null) return;
+    if (selection.size === 0) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const typing = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
       if (typing) return;
-      const current = parseBlocks(zpl)[selectedIdx];
-      if (!current) return;
+      const indices = Array.from(selection).sort((a, b) => b - a);
+      const parsed = parseBlocks(zpl);
 
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
-        const before = zpl.slice(0, current.sourceStart).replace(/\n\s*$/, '\n');
-        const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
-        onChange(before + after);
-        setSelectedIdx(null);
+        let next = zpl;
+        for (const idx of indices) {
+          const cur = parseBlocks(next)[idx];
+          if (!cur) continue;
+          const before = next.slice(0, cur.sourceStart).replace(/\n\s*$/, '\n');
+          const after = next.slice(cur.sourceEnd).replace(/^\s*\n/, '\n');
+          next = before + after;
+        }
+        onChange(next);
+        setSelection(new Set());
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelection(new Set());
         return;
       }
 
@@ -585,16 +597,33 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         else if (e.key === 'ArrowDown') dy = step;
         else return;
         e.preventDefault();
-        const nx = Math.max(0, current.x + dx);
-        const ny = Math.max(0, current.y + dy);
-        if (nx === current.x && ny === current.y) return;
-        onChange(replaceBlock(zpl, current, rewriteBlockCoords(current, nx, ny)));
+        let next = zpl;
+        for (const idx of indices) {
+          const cur = parseBlocks(next)[idx];
+          if (!cur) continue;
+          const nx = Math.max(0, cur.x + dx);
+          const ny = Math.max(0, cur.y + dy);
+          if (nx === cur.x && ny === cur.y) continue;
+          next = replaceBlock(next, cur, rewriteBlockCoords(cur, nx, ny));
+        }
+        if (next !== zpl) onChange(next);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedIdx, zpl, onChange]);
+  }, [selection, zpl, onChange]);
 
+
+  const onBackgroundPointerDown = (e: React.PointerEvent) => {
+    // Inicia marquee de seleção quando clicando no fundo (fora dos blocos).
+    if (e.target !== e.currentTarget && (e.target as SVGElement).tagName !== 'rect' && (e.target as SVGElement).tagName !== 'line') {
+      // Só limpa seleção; caso o pointerDown veio de dentro de um bloco, esse handler não roda por stopPropagation.
+    }
+    const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+    if (!additive) setSelection(new Set());
+    const p = svgPoint(e.clientX, e.clientY);
+    setMarquee({ x0: p.x - contentX, y0: p.y - contentY, x1: p.x - contentX, y1: p.y - contentY });
+  };
 
   return (
     <>
@@ -603,10 +632,35 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         viewBox={`0 0 ${viewW} ${viewH}`}
         preserveAspectRatio="none"
         className="w-full h-full bg-white select-none touch-none"
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onPointerMove={(e) => {
+          if (marquee) {
+            const p = svgPoint(e.clientX, e.clientY);
+            setMarquee({ ...marquee, x1: p.x - contentX, y1: p.y - contentY });
+            return;
+          }
+          onPointerMove(e);
+        }}
+        onPointerUp={() => {
+          if (marquee) {
+            const x0 = Math.min(marquee.x0, marquee.x1);
+            const y0 = Math.min(marquee.y0, marquee.y1);
+            const x1 = Math.max(marquee.x0, marquee.x1);
+            const y1 = Math.max(marquee.y0, marquee.y1);
+            if (Math.abs(x1 - x0) > 3 || Math.abs(y1 - y0) > 3) {
+              const next = new Set(selection);
+              blocks.forEach((b) => {
+                const { w, h } = elementBounds(b, logoUrl);
+                const bx1 = b.x + w, by1 = b.y + h;
+                const intersects = !(b.x > x1 || bx1 < x0 || b.y > y1 || by1 < y0);
+                if (intersects) next.add(b.index);
+              });
+              setSelection(next);
+            }
+          }
+          onPointerUp();
+        }}
         onPointerLeave={onPointerUp}
-        onPointerDown={() => setSelectedIdx(null)}
+        onPointerDown={onBackgroundPointerDown}
         role="img"
         aria-label="Preview interativo da etiqueta"
       >
