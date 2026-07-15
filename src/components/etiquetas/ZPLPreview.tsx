@@ -143,31 +143,44 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
   // Preferir dimensões físicas declaradas no ZPL (em dots @ 203dpi).
   const viewW = parsed.pw || (dimensoes?.largura ?? 100) * 8;
   const viewH = parsed.ll || (dimensoes?.altura ?? 150) * 8;
+  // Margem de segurança da impressora térmica (área realmente imprimível).
+  // Impressoras costumam descartar 1–2mm nas bordas (~8–16 dots @ 203dpi).
+  const SAFE_MARGIN = 8;
+  const clipId = useMemo(() => `zpl-clip-${Math.random().toString(36).slice(2, 9)}`, []);
 
   return (
     <div className={cn('bg-white text-black relative w-full h-full overflow-hidden', className)}>
       <svg viewBox={`0 0 ${viewW} ${viewH}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full">
+        <defs>
+          <clipPath id={clipId}>
+            <rect x={0} y={0} width={viewW} height={viewH} />
+          </clipPath>
+        </defs>
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
+        <g clipPath={`url(#${clipId})`}>
         {parsed.elementos.map((el, i) => {
           if (el.tipo === 'text') {
             const lines = el.lines && el.lines.length > 0 ? el.lines : [el.text];
             const lineH = el.size + (el.fb?.spacing ?? 0);
             const align = el.fb?.align ?? 'L';
+            // Clamp da largura do ^FB para não ultrapassar a área imprimível.
+            const fb = el.fb
+              ? { ...el.fb, width: Math.min(el.fb.width, Math.max(1, viewW - el.x - SAFE_MARGIN)) }
+              : undefined;
             let anchorX = el.x;
             let textAnchor: 'start' | 'middle' | 'end' = 'start';
-            if (el.fb) {
-              if (align === 'C') { anchorX = el.x + el.fb.width / 2; textAnchor = 'middle'; }
-              else if (align === 'R') { anchorX = el.x + el.fb.width; textAnchor = 'end'; }
+            if (fb) {
+              if (align === 'C') { anchorX = el.x + fb.width / 2; textAnchor = 'middle'; }
+              else if (align === 'R') { anchorX = el.x + fb.width; textAnchor = 'end'; }
             }
             const fillColor = el.reverse ? '#fff' : '#111';
-            // Retângulo preto de fundo para texto em negativo (^FR).
             let bgRect: JSX.Element | null = null;
             if (el.reverse) {
               const padX = Math.max(2, el.size * 0.15);
               const padY = Math.max(1, el.size * 0.1);
               const totalH = lines.length * lineH + padY * 2;
-              if (el.fb) {
-                bgRect = <rect x={el.x - padX} y={el.y - padY} width={el.fb.width + padX * 2} height={totalH} fill="#111" />;
+              if (fb) {
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={fb.width + padX * 2} height={totalH} fill="#111" />;
               } else {
                 const charW = el.size * 0.6;
                 const longest = lines.reduce((m, l) => Math.max(m, l.length), 0);
@@ -195,8 +208,12 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
             );
           }
           if (el.tipo === 'logo') {
-            const h = el.size * 1.6;
-            const w = h * 2.5;
+            // Aspect padrão 2.5:1, mas clampa para caber dentro da etiqueta.
+            const desiredH = el.size * 1.6;
+            const availW = Math.max(10, viewW - el.x - SAFE_MARGIN);
+            const availH = Math.max(10, viewH - el.y - SAFE_MARGIN);
+            const w = Math.min(desiredH * 2.5, availW);
+            const h = Math.min(desiredH, availH, w / 2.5);
             return logoUrl ? (
               <image key={i} href={logoUrl} x={el.x} y={el.y} width={w} height={h} preserveAspectRatio="xMidYMid meet" />
             ) : (
@@ -230,15 +247,17 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
           if (el.tipo === 'box') {
             const w = el.width ?? 0;
             const h = el.height ?? 0;
-            // Linhas finas (w=1 ou h=1) desenhadas como retângulo sólido preto.
             const isLine = w <= 2 || h <= 2;
+            // Clampa largura/altura para não passar da borda imprimível.
+            const clampedW = Math.min(Math.max(1, w), Math.max(1, viewW - el.x));
+            const clampedH = Math.min(Math.max(1, h), Math.max(1, viewH - el.y));
             return (
               <rect
                 key={i}
                 x={el.x}
                 y={el.y}
-                width={Math.max(1, w)}
-                height={Math.max(1, h)}
+                width={clampedW}
+                height={clampedH}
                 fill={isLine ? '#111' : 'none'}
                 stroke={isLine ? 'none' : '#111'}
                 strokeWidth={2}
@@ -247,6 +266,7 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
           }
           return null;
         })}
+        </g>
       </svg>
     </div>
   );
