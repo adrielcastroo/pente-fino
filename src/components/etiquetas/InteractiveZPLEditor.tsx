@@ -911,6 +911,20 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           <line x1={contentX} y1={contentY + guides.hy} x2={contentX + contentW} y2={contentY + guides.hy} stroke="#06b6d4" strokeWidth={1.5} strokeDasharray="4 3" />
         )}
 
+        {marquee && (
+          <rect
+            x={contentX + Math.min(marquee.x0, marquee.x1)}
+            y={contentY + Math.min(marquee.y0, marquee.y1)}
+            width={Math.abs(marquee.x1 - marquee.x0)}
+            height={Math.abs(marquee.y1 - marquee.y0)}
+            fill="hsl(var(--primary) / 0.1)"
+            stroke="hsl(var(--primary))"
+            strokeWidth={1}
+            strokeDasharray="4 3"
+            pointerEvents="none"
+          />
+        )}
+
         {renderBorder()}
 
       </svg>
