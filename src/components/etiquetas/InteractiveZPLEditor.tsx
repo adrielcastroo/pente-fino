@@ -383,9 +383,25 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const onPointerDown = (e: React.PointerEvent, b: ParsedBlock) => {
     e.stopPropagation();
     (e.target as Element).setPointerCapture?.(e.pointerId);
-    setSelectedIdx(b.index);
+    const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+    let nextSelection: Set<number>;
+    if (additive) {
+      nextSelection = new Set(selection);
+      if (nextSelection.has(b.index)) nextSelection.delete(b.index);
+      else nextSelection.add(b.index);
+    } else if (selection.has(b.index) && selection.size > 1) {
+      nextSelection = new Set(selection);
+    } else {
+      nextSelection = new Set([b.index]);
+    }
+    setSelection(nextSelection);
     const p = svgPoint(e.clientX, e.clientY);
-    setDragging({ idx: b.index, offX: p.x - contentX - b.x, offY: p.y - contentY - b.y });
+    const origins: Record<number, { x: number; y: number }> = {};
+    nextSelection.forEach((idx) => {
+      const blk = blocks[idx];
+      if (blk) origins[idx] = { x: blk.x, y: blk.y };
+    });
+    setDragging({ idx: b.index, offX: p.x - contentX - b.x, offY: p.y - contentY - b.y, origins });
   };
 
   const onResizeDown = (e: React.PointerEvent, b: ParsedBlock, dir: HandleDir) => {
