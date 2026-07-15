@@ -8,6 +8,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ElementEditDialog, type ElementEditValues } from './ElementEditDialog';
+import { LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 export type ShapeStyle = 'solid' | 'dashed' | 'dotted';
 export type TextAlign = 'L' | 'C' | 'R';
@@ -35,6 +36,15 @@ export interface ParsedBlock {
   fbMaxLines?: number;
   fbSpacing?: number;
   rotation?: Rotation;
+}
+
+function parseZplSize(zpl: string, fallback: { largura: number; altura: number }): { w: number; h: number } {
+  const pw = zpl.match(/\^PW(\d+)/);
+  const ll = zpl.match(/\^LL(\d+)/);
+  return {
+    w: pw ? parseInt(pw[1], 10) : fallback.largura * LABEL_PX_PER_MM,
+    h: ll ? parseInt(ll[1], 10) : fallback.altura * LABEL_PX_PER_MM,
+  };
 }
 
 const BLOCK_RE = /\^FO(\d+),(\d+)([\s\S]*?)\^FS/g;
@@ -215,10 +225,18 @@ interface Props {
   dimensoes: { largura: number; altura: number };
   variaveis: { chave: string; label: string }[];
   logoUrl?: string;
+  lineThickness?: number;
+  lineStyle?: ShapeStyle;
+  lineColor?: string;
+  fontFamily?: string;
 }
 
 export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   zpl, onChange, valores, dimensoes, variaveis, logoUrl,
+  lineThickness = 2,
+  lineStyle = 'solid',
+  lineColor = '#111111',
+  fontFamily = 'monospace',
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<null | { idx: number; offX: number; offY: number }>(null);
@@ -232,8 +250,9 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   const blocks = useMemo(() => parseBlocks(zpl), [zpl]);
-  const viewW = dimensoes.largura * 8;
-  const viewH = dimensoes.altura * 8;
+  const zplSize = useMemo(() => parseZplSize(zpl, dimensoes), [zpl, dimensoes]);
+  const viewW = zplSize.w;
+  const viewH = zplSize.h;
 
   // Detecta elementos que extrapolam a área imprimível — na impressão real
   // qualquer parte fora do ^PW/^LL é descartada pelo firmware da impressora.
@@ -462,7 +481,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${viewW} ${viewH}`}
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="none"
         className="w-full h-full bg-white select-none touch-none"
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -495,7 +514,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                   ) : (
                     <>
                       <rect x={b.x} y={b.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
-                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily="monospace" fill="#6b7280" textAnchor="middle" pointerEvents="none">LOGO</text>
+                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily={fontFamily} fill="#6b7280" textAnchor="middle" pointerEvents="none">LOGO</text>
                     </>
                   )}
                   <rect x={b.x} y={b.y} width={w} height={h} fill="transparent" className="hover:stroke-primary/40" stroke="transparent" strokeWidth={1} />
@@ -538,10 +557,10 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             }
             return (
               <g key={b.index} transform={rotTransform} {...commonHandlers}>
-                {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="#111" />}
+                {b.reverse && <rect x={b.x} y={b.y} width={boxW} height={boxH} fill={lineColor} />}
                 <rect x={b.x} y={b.y} width={boxW} height={boxH} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
                 {lines.map((ln, k) => (
-                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily="monospace" fill={b.reverse ? '#fff' : '#111'} textAnchor={textAnchor} pointerEvents="none">
+                  <text key={k} x={anchorX} y={b.y + b.size * 0.85 + k * lineH} fontSize={b.size} fontFamily={fontFamily} fill={b.reverse ? '#fff' : lineColor} textAnchor={textAnchor} pointerEvents="none">
                     {ln}
                   </text>
                 ))}
@@ -553,9 +572,9 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
             return (
               <g key={b.index} {...commonHandlers}>
                 {Array.from({ length: 40 }).map((_, i) => (
-                  <rect key={i} x={b.x + i * 6} y={b.y} width={i % 3 === 0 ? 4 : 2} height={80} fill="#111" />
+                  <rect key={i} x={b.x + i * 6} y={b.y} width={i % 3 === 0 ? 4 : 2} height={80} fill={lineColor} />
                 ))}
-                <text x={b.x} y={b.y + 100} fontSize={18} fontFamily="monospace" fill="#111" pointerEvents="none">{text}</text>
+                <text x={b.x} y={b.y + 100} fontSize={18} fontFamily={fontFamily} fill={lineColor} pointerEvents="none">{text}</text>
                 <rect x={b.x} y={b.y} width={240} height={100} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
               </g>
             );
@@ -578,12 +597,17 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
           if (b.tipo === 'box' || b.tipo === 'line') {
             const w = b.width ?? 0;
             const h = b.height ?? 0;
-            const t = Math.max(1, b.thickness ?? 2);
-            const dash = strokeDashFor(b.style);
+            const t = lineThickness > 0 ? Math.max(1, lineThickness) : 0;
+            const dash = strokeDashFor(lineStyle);
+            const isHorizontalLine = h <= 2 && w > h;
+            const isVerticalLine = w <= 2 && h >= w;
+            const isLine = isHorizontalLine || isVerticalLine;
+            const renderedW = isVerticalLine && t > 0 ? t : Math.max(1, w);
+            const renderedH = isHorizontalLine && t > 0 ? t : Math.max(1, h);
             return (
               <g key={b.index} {...commonHandlers}>
-                <rect x={b.x} y={b.y} width={w} height={h} fill="none" stroke="#111" strokeWidth={t} strokeDasharray={dash} />
-                <rect x={b.x} y={b.y} width={w} height={h} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
+                <rect x={b.x} y={b.y} width={renderedW} height={renderedH} fill={isLine ? lineColor : 'none'} stroke={isLine || t <= 0 ? 'none' : lineColor} strokeWidth={t} strokeDasharray={dash} />
+                <rect x={b.x} y={b.y} width={Math.max(1, w)} height={Math.max(1, h)} fill="transparent" stroke="transparent" strokeWidth={1} className="hover:stroke-primary/40" />
               </g>
             );
           }
