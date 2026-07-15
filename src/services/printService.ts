@@ -1410,6 +1410,10 @@ export async function printZplLabelsInBrowser(
   const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const padding = labelSettings.expedicaoPadding ?? 0;
+  const lineThickness = labelSettings.expedicaoLineThickness ?? 2;
+  const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
+  const lineColor = labelSettings.expedicaoLineColor ?? '#111';
+  const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
   const borderCss = borderStyle === 'none' || borderWidth <= 0
     ? 'none'
     : `${borderWidth}px ${borderStyle} #000`;
@@ -1440,7 +1444,7 @@ export async function printZplLabelsInBrowser(
           background: '#fff',
         },
       },
-        createElement(ZPLPreview, { zpl, variaveis, dimensoes }),
+        createElement(ZPLPreview, { zpl, variaveis, dimensoes, lineThickness, lineStyle, lineColor, fontFamily }),
       ),
     ),
   });

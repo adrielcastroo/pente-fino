@@ -32,6 +32,10 @@ export const LiveZPLPreview = memo(function LiveZPLPreview({
   const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const padding = labelSettings.expedicaoPadding ?? 0;
+  const lineThickness = labelSettings.expedicaoLineThickness ?? 2;
+  const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
+  const lineColor = labelSettings.expedicaoLineColor ?? '#111';
+  const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
   const borderCss =
     borderStyle === 'none' || borderWidth <= 0
       ? 'none'
@@ -51,7 +55,16 @@ export const LiveZPLPreview = memo(function LiveZPLPreview({
         overflow: 'hidden',
       }}
     >
-      <ZPLPreview zpl={zpl} variaveis={valores} dimensoes={dimensoes} logoUrl={logoUrl} />
+      <ZPLPreview
+        zpl={zpl}
+        variaveis={valores}
+        dimensoes={dimensoes}
+        logoUrl={logoUrl}
+        lineThickness={lineThickness}
+        lineStyle={lineStyle}
+        lineColor={lineColor}
+        fontFamily={fontFamily}
+      />
     </div>
   );
 });

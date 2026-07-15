@@ -123,9 +123,23 @@ interface ZPLPreviewProps {
   /** largura/altura em mm da etiqueta (usado como fallback quando o ZPL não define ^PW/^LL). */
   dimensoes?: { largura: number; altura: number };
   logoUrl?: string;
+  /** Espessura das linhas/caixas (stroke) desenhadas via ^GB. Default 2. */
+  lineThickness?: number;
+  /** Estilo das linhas. Default 'solid'. */
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
+  /** Cor das linhas e preenchimento. Default '#111'. */
+  lineColor?: string;
+  /** Família de fonte aplicada aos textos SVG. Default 'monospace'. */
+  fontFamily?: string;
 }
 
-export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, dimensoes, logoUrl }: ZPLPreviewProps) {
+export const ZPLPreview = memo(function ZPLPreview({
+  zpl, variaveis, className, dimensoes, logoUrl,
+  lineThickness = 2,
+  lineStyle = 'solid',
+  lineColor = '#111',
+  fontFamily = 'monospace',
+}: ZPLPreviewProps) {
   const parsed = useMemo(() => {
     const hoje = new Date().toLocaleDateString('pt-BR');
     const resolveVar = (key: string): string => {
@@ -173,19 +187,19 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
               if (align === 'C') { anchorX = el.x + fb.width / 2; textAnchor = 'middle'; }
               else if (align === 'R') { anchorX = el.x + fb.width; textAnchor = 'end'; }
             }
-            const fillColor = el.reverse ? '#fff' : '#111';
+            const fillColor = el.reverse ? '#fff' : lineColor;
             let bgRect: JSX.Element | null = null;
             if (el.reverse) {
               const padX = Math.max(2, el.size * 0.15);
               const padY = Math.max(1, el.size * 0.1);
               const totalH = lines.length * lineH + padY * 2;
               if (fb) {
-                bgRect = <rect x={el.x - padX} y={el.y - padY} width={fb.width + padX * 2} height={totalH} fill="#111" />;
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={fb.width + padX * 2} height={totalH} fill={lineColor} />;
               } else {
                 const charW = el.size * 0.6;
                 const longest = lines.reduce((m, l) => Math.max(m, l.length), 0);
                 const w = longest * charW + padX * 2;
-                bgRect = <rect x={el.x - padX} y={el.y - padY} width={w} height={totalH} fill="#111" />;
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={w} height={totalH} fill={lineColor} />;
               }
             }
             return (
@@ -197,7 +211,7 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
                     x={anchorX}
                     y={el.y + el.size + k * lineH}
                     fontSize={el.size}
-                    fontFamily="monospace"
+                    fontFamily={fontFamily}
                     fill={fillColor}
                     textAnchor={textAnchor}
                   >
@@ -219,7 +233,7 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
             ) : (
               <g key={i}>
                 <rect x={el.x} y={el.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
-                <text x={el.x + w / 2} y={el.y + h / 2 + 4} fontSize={12} fontFamily="monospace" fill="#6b7280" textAnchor="middle">LOGO</text>
+                <text x={el.x + w / 2} y={el.y + h / 2 + 4} fontSize={12} fontFamily={fontFamily} fill="#6b7280" textAnchor="middle">LOGO</text>
               </g>
             );
           }
@@ -227,9 +241,9 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
             return (
               <g key={i}>
                 {Array.from({ length: 40 }).map((_, b) => (
-                  <rect key={b} x={el.x + b * 6} y={el.y} width={b % 3 === 0 ? 4 : 2} height={80} fill="#111" />
+                  <rect key={b} x={el.x + b * 6} y={el.y} width={b % 3 === 0 ? 4 : 2} height={80} fill={lineColor} />
                 ))}
-                <text x={el.x} y={el.y + 100} fontSize={18} fontFamily="monospace" fill="#111">{el.text}</text>
+                <text x={el.x} y={el.y + 100} fontSize={18} fontFamily={fontFamily} fill={lineColor}>{el.text}</text>
               </g>
             );
           }
@@ -251,6 +265,10 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
             // Clampa largura/altura para não passar da borda imprimível.
             const clampedW = Math.min(Math.max(1, w), Math.max(1, viewW - el.x));
             const clampedH = Math.min(Math.max(1, h), Math.max(1, viewH - el.y));
+            const dashArray =
+              lineStyle === 'dashed' ? `${Math.max(4, lineThickness * 3)} ${Math.max(3, lineThickness * 2)}`
+              : lineStyle === 'dotted' ? `${lineThickness} ${Math.max(2, lineThickness * 1.5)}`
+              : undefined;
             return (
               <rect
                 key={i}
@@ -258,9 +276,10 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
                 y={el.y}
                 width={clampedW}
                 height={clampedH}
-                fill={isLine ? '#111' : 'none'}
-                stroke={isLine ? 'none' : '#111'}
-                strokeWidth={2}
+                fill={isLine ? lineColor : 'none'}
+                stroke={isLine || lineThickness <= 0 ? 'none' : lineColor}
+                strokeWidth={lineThickness}
+                strokeDasharray={dashArray}
               />
             );
           }

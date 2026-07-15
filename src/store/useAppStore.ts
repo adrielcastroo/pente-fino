@@ -53,6 +53,10 @@ export interface LabelSettings {
   expedicaoBorderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
   expedicaoBorderRadius?: number;
   expedicaoPadding?: number;
+  expedicaoLineThickness?: number;
+  expedicaoLineStyle?: 'solid' | 'dashed' | 'dotted';
+  expedicaoLineColor?: string;
+  expedicaoFontFamily?: string;
 }
 
 export interface AppState {
@@ -267,6 +271,10 @@ export const useAppStore = create<AppState>()(
         expedicaoBorderStyle: 'none',
         expedicaoBorderRadius: 0,
         expedicaoPadding: 0,
+        expedicaoLineThickness: 2,
+        expedicaoLineStyle: 'solid',
+        expedicaoLineColor: '#111111',
+        expedicaoFontFamily: 'monospace',
       },
       
       isArchiving: false,

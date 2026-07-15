@@ -557,6 +557,10 @@ export function ExpedicaoLayoutSection() {
   const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const padding = labelSettings.expedicaoPadding ?? 0;
+  const lineThickness = labelSettings.expedicaoLineThickness ?? 2;
+  const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
+  const lineColor = labelSettings.expedicaoLineColor ?? '#111111';
+  const fontFamily = labelSettings.expedicaoFontFamily ?? 'monospace';
 
   const handleReset = () => {
     setLabelSettings({
@@ -566,6 +570,10 @@ export function ExpedicaoLayoutSection() {
       expedicaoBorderStyle: 'none',
       expedicaoBorderRadius: 0,
       expedicaoPadding: 0,
+      expedicaoLineThickness: 2,
+      expedicaoLineStyle: 'solid',
+      expedicaoLineColor: '#111111',
+      expedicaoFontFamily: 'monospace',
     });
     toast.info('Ajustes de Expedição redefinidos.');
   };
@@ -649,6 +657,86 @@ export function ExpedicaoLayoutSection() {
               </Label>
               <Slider value={[padding]} min={0} max={40} step={1}
                 onValueChange={([v]) => setLabelSettings({ expedicaoPadding: v })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader className="p-5 border-b border-border/40 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                <Palette className="w-4 h-4" />
+              </div>
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Linhas internas</CardTitle>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground pl-11">
+              Espessura, estilo e cor das linhas e caixas (comando <code>^GB</code>) desenhadas dentro da etiqueta.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex justify-between">
+                <span>Espessura da linha</span><span className="font-mono opacity-70">{lineThickness}px</span>
+              </Label>
+              <Slider value={[lineThickness]} min={0} max={8} step={1}
+                onValueChange={([v]) => setLabelSettings({ expedicaoLineThickness: v })} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold">Estilo da linha</Label>
+              <Select value={lineStyle} onValueChange={(v) => setLabelSettings({ expedicaoLineStyle: v as typeof lineStyle })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solid">Sólida</SelectItem>
+                  <SelectItem value="dashed">Tracejada</SelectItem>
+                  <SelectItem value="dotted">Pontilhada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold">Cor da linha</Label>
+              <Select value={lineColor} onValueChange={(v) => setLabelSettings({ expedicaoLineColor: v })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="#111111">Preto</SelectItem>
+                  <SelectItem value="#374151">Cinza escuro</SelectItem>
+                  <SelectItem value="#6b7280">Cinza médio</SelectItem>
+                  <SelectItem value="#9ca3af">Cinza claro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader className="p-5 border-b border-border/40 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                <Palette className="w-4 h-4" />
+              </div>
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Fonte da etiqueta</CardTitle>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground pl-11">
+              Família de fonte aplicada aos textos do preview e do PNG enviado à impressora.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold">Família</Label>
+              <Select value={fontFamily} onValueChange={(v) => setLabelSettings({ expedicaoFontFamily: v })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monospace">Monospace (padrão)</SelectItem>
+                  <SelectItem value="'IBM Plex Mono', monospace">IBM Plex Mono</SelectItem>
+                  <SelectItem value="'IBM Plex Sans', sans-serif">IBM Plex Sans</SelectItem>
+                  <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                  <SelectItem value="'Courier New', Courier, monospace">Courier</SelectItem>
+                  <SelectItem value="Georgia, serif">Georgia (serif)</SelectItem>
+                  <SelectItem value="system-ui, sans-serif">System UI</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground" style={{ fontFamily }}>
+                Amostra: EXPEDIÇÃO 001 — Ordem #12345
+              </p>
             </div>
           </CardContent>
         </Card>
