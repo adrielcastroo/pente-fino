@@ -271,6 +271,10 @@ export const useAppStore = create<AppState>()(
         expedicaoBorderStyle: 'none',
         expedicaoBorderRadius: 0,
         expedicaoPadding: 0,
+        expedicaoLineThickness: 2,
+        expedicaoLineStyle: 'solid',
+        expedicaoLineColor: '#111111',
+        expedicaoFontFamily: 'monospace',
       },
       
       isArchiving: false,
