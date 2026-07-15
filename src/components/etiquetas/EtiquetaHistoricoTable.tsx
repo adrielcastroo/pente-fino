@@ -27,26 +27,30 @@ export const EtiquetaHistoricoTable = memo(function EtiquetaHistoricoTable({ his
         <TableHeader>
           <TableRow>
             <TableHead>Data</TableHead>
-            <TableHead>Template</TableHead>
+            <TableHead>Etiqueta / NF</TableHead>
             <TableHead>Usuário</TableHead>
             <TableHead>Impressora</TableHead>
             <TableHead className="text-right">Qtd</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {historico.map((h) => (
-            <TableRow key={h.id}>
-              <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                {format(new Date(h.criado_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-              </TableCell>
-              <TableCell className="font-medium">{h.template_nome}</TableCell>
-              <TableCell>{h.usuario_nome ?? '—'}</TableCell>
-              <TableCell>
-                {h.impressora ? <Badge variant="outline">{h.impressora}</Badge> : <span className="text-muted-foreground">—</span>}
-              </TableCell>
-              <TableCell className="text-right font-mono">{h.quantidade}</TableCell>
-            </TableRow>
-          ))}
+          {historico.map((h) => {
+            const nf = h.variaveis_usadas?.nf;
+            const titulo = nf ? `NF ${nf}` : h.template_nome;
+            return (
+              <TableRow key={h.id}>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                  {format(new Date(h.criado_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </TableCell>
+                <TableCell className="font-medium">{titulo}</TableCell>
+                <TableCell>{h.usuario_nome ?? '—'}</TableCell>
+                <TableCell>
+                  {h.impressora ? <Badge variant="outline">{h.impressora}</Badge> : <span className="text-muted-foreground">—</span>}
+                </TableCell>
+                <TableCell className="text-right font-mono">{h.quantidade}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
