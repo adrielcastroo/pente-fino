@@ -229,6 +229,12 @@ interface Props {
   lineStyle?: ShapeStyle;
   lineColor?: string;
   fontFamily?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
@@ -237,6 +243,12 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   lineStyle = 'solid',
   lineColor = '#111111',
   fontFamily = 'monospace',
+  borderWidth = 0,
+  borderStyle = 'none',
+  borderRadius = 0,
+  padding = 0,
+  offsetX = 0,
+  offsetY = 0,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<null | { idx: number; offX: number; offY: number }>(null);
@@ -253,6 +265,52 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   const zplSize = useMemo(() => parseZplSize(zpl, dimensoes), [zpl, dimensoes]);
   const viewW = zplSize.w;
   const viewH = zplSize.h;
+  const contentX = padding + offsetX;
+  const contentY = padding + offsetY;
+  const contentW = Math.max(1, viewW - padding * 2);
+  const contentH = Math.max(1, viewH - padding * 2);
+  const effectiveBorderWidth = borderStyle === 'none' ? 0 : Math.max(0, borderWidth);
+  const borderDashArray =
+    borderStyle === 'dashed' ? `${Math.max(4, effectiveBorderWidth * 3)} ${Math.max(3, effectiveBorderWidth * 2)}`
+    : borderStyle === 'dotted' ? `${Math.max(1, effectiveBorderWidth)} ${Math.max(2, effectiveBorderWidth * 1.5)}`
+    : undefined;
+  const contentClipId = useMemo(() => `interactive-content-${Math.random().toString(36).slice(2, 9)}`, []);
+
+  const renderBorder = () => {
+    if (effectiveBorderWidth <= 0) return null;
+    const inset = effectiveBorderWidth / 2;
+    const outer = {
+      x: inset,
+      y: inset,
+      width: Math.max(1, viewW - effectiveBorderWidth),
+      height: Math.max(1, viewH - effectiveBorderWidth),
+      rx: borderRadius,
+      ry: borderRadius,
+      fill: 'none',
+      stroke: '#000',
+      strokeWidth: effectiveBorderWidth,
+      strokeDasharray: borderDashArray,
+    };
+    if (borderStyle !== 'double') return <rect {...outer} pointerEvents="none" />;
+    const gap = Math.max(2, effectiveBorderWidth * 1.5);
+    return (
+      <>
+        <rect {...outer} strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)} pointerEvents="none" />
+        <rect
+          x={inset + gap}
+          y={inset + gap}
+          width={Math.max(1, viewW - effectiveBorderWidth - gap * 2)}
+          height={Math.max(1, viewH - effectiveBorderWidth - gap * 2)}
+          rx={Math.max(0, borderRadius - gap)}
+          ry={Math.max(0, borderRadius - gap)}
+          fill="none"
+          stroke="#000"
+          strokeWidth={Math.max(1, effectiveBorderWidth * 0.55)}
+          pointerEvents="none"
+        />
+      </>
+    );
+  };
 
   // Detecta elementos que extrapolam a área imprimível — na impressão real
   // qualquer parte fora do ^PW/^LL é descartada pelo firmware da impressora.
@@ -298,7 +356,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     (e.target as Element).setPointerCapture?.(e.pointerId);
     setSelectedIdx(b.index);
     const p = svgPoint(e.clientX, e.clientY);
-    setDragging({ idx: b.index, offX: p.x - b.x, offY: p.y - b.y });
+    setDragging({ idx: b.index, offX: p.x - contentX - b.x, offY: p.y - contentY - b.y });
   };
 
   const onResizeDown = (e: React.PointerEvent, b: ParsedBlock, dir: HandleDir) => {
@@ -401,8 +459,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     if (!dragging) return;
     const b = blocks[dragging.idx];
     if (!b) return;
-    const rawX = p.x - dragging.offX;
-    const rawY = p.y - dragging.offY;
+    const rawX = p.x - contentX - dragging.offX;
+    const rawY = p.y - contentY - dragging.offY;
     const { snapX, snapY, g } = computeSnap(b, rawX, rawY);
     setGuides(g);
     if (Math.round(snapX) === b.x && Math.round(snapY) === b.y) return;
