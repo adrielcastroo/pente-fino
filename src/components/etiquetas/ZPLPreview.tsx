@@ -237,29 +237,13 @@ export const ZPLPreview = memo(function ZPLPreview({
               </g>
             );
           }
-          if (el.tipo === 'logo') {
-            // Aspect padrão 2.5:1, mas clampa para caber dentro da etiqueta.
-            const desiredH = el.size * 1.6;
-            const availW = Math.max(10, viewW - el.x - SAFE_MARGIN);
-            const availH = Math.max(10, viewH - el.y - SAFE_MARGIN);
-            const w = Math.min(desiredH * 2.5, availW);
-            const h = Math.min(desiredH, availH, w / 2.5);
-            return logoUrl ? (
-              <image key={i} href={logoUrl} x={el.x} y={el.y} width={w} height={h} preserveAspectRatio="xMidYMid meet" />
-            ) : (
-              <g key={i}>
-                <rect x={el.x} y={el.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
-                <text x={el.x + w / 2} y={el.y + h / 2 + 4} fontSize={12} fontFamily="monospace" fill="#6b7280" textAnchor="middle">LOGO</text>
-              </g>
-            );
-          }
           if (el.tipo === 'barcode') {
             return (
               <g key={i}>
                 {Array.from({ length: 40 }).map((_, b) => (
-                  <rect key={b} x={el.x + b * 6} y={el.y} width={b % 3 === 0 ? 4 : 2} height={80} fill="#111" />
+                  <rect key={b} x={el.x + b * 6} y={el.y} width={b % 3 === 0 ? 4 : 2} height={80} fill={lineColor} />
                 ))}
-                <text x={el.x} y={el.y + 100} fontSize={18} fontFamily="monospace" fill="#111">{el.text}</text>
+                <text x={el.x} y={el.y + 100} fontSize={18} fontFamily={fontFamily} fill={lineColor}>{el.text}</text>
               </g>
             );
           }
@@ -281,6 +265,10 @@ export const ZPLPreview = memo(function ZPLPreview({
             // Clampa largura/altura para não passar da borda imprimível.
             const clampedW = Math.min(Math.max(1, w), Math.max(1, viewW - el.x));
             const clampedH = Math.min(Math.max(1, h), Math.max(1, viewH - el.y));
+            const dashArray =
+              lineStyle === 'dashed' ? `${Math.max(4, lineThickness * 3)} ${Math.max(3, lineThickness * 2)}`
+              : lineStyle === 'dotted' ? `${lineThickness} ${Math.max(2, lineThickness * 1.5)}`
+              : undefined;
             return (
               <rect
                 key={i}
@@ -288,9 +276,10 @@ export const ZPLPreview = memo(function ZPLPreview({
                 y={el.y}
                 width={clampedW}
                 height={clampedH}
-                fill={isLine ? '#111' : 'none'}
-                stroke={isLine ? 'none' : '#111'}
-                strokeWidth={2}
+                fill={isLine ? lineColor : 'none'}
+                stroke={isLine || lineThickness <= 0 ? 'none' : lineColor}
+                strokeWidth={lineThickness}
+                strokeDasharray={dashArray}
               />
             );
           }
