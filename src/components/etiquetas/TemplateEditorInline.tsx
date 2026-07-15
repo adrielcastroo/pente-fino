@@ -34,6 +34,7 @@ import {
 } from '@/types/etiquetas';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
+import { LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 const TIPOS: TipoVariavel[] = ['text', 'select', 'date', 'barcode', 'qr', 'auto'];
 const CATEGORIAS: { key: CategoriaEtiqueta; label: string }[] = [
@@ -66,8 +67,8 @@ export function TemplateEditorInline({ templateId, onCreateNew }: TemplateEditor
   const previewBorderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const previewBorderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const previewPadding = labelSettings.expedicaoPadding ?? 0;
-  const previewOffsetX = (labelSettings.expedicaoPrintOffsetXMm ?? 0) * 8;
-  const previewOffsetY = (labelSettings.expedicaoPrintOffsetYMm ?? 0) * 8;
+  const previewOffsetX = (labelSettings.expedicaoPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const previewOffsetY = (labelSettings.expedicaoPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
   const previewLineThickness = labelSettings.expedicaoLineThickness ?? 2;
   const previewLineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
   const previewLineColor = labelSettings.expedicaoLineColor ?? '#111111';

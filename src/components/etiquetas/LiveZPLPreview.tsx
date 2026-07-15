@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { ZPLPreview } from './ZPLPreview';
 import { useAppStore } from '@/store/useAppStore';
+import { LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
 
 interface LiveZPLPreviewProps {
   zpl: string;
@@ -32,8 +33,8 @@ export const LiveZPLPreview = memo(function LiveZPLPreview({
   const borderStyle = labelSettings.expedicaoBorderStyle ?? 'none';
   const borderRadius = labelSettings.expedicaoBorderRadius ?? 0;
   const padding = labelSettings.expedicaoPadding ?? 0;
-  const offsetX = (labelSettings.expedicaoPrintOffsetXMm ?? 0) * 8;
-  const offsetY = (labelSettings.expedicaoPrintOffsetYMm ?? 0) * 8;
+  const offsetX = (labelSettings.expedicaoPrintOffsetXMm ?? 0) * LABEL_PX_PER_MM;
+  const offsetY = (labelSettings.expedicaoPrintOffsetYMm ?? 0) * LABEL_PX_PER_MM;
   const lineThickness = labelSettings.expedicaoLineThickness ?? 2;
   const lineStyle = labelSettings.expedicaoLineStyle ?? 'solid';
   const lineColor = labelSettings.expedicaoLineColor ?? '#111';

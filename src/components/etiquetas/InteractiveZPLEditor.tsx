@@ -318,8 +318,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
     return blocks
       .map((b) => {
         const { w, h } = elementBounds(b, logoUrl);
-        const overRight = Math.max(0, b.x + w - viewW);
-        const overBottom = Math.max(0, b.y + h - viewH);
+        const overRight = Math.max(0, b.x + w - contentW);
+        const overBottom = Math.max(0, b.y + h - contentH);
         const overLeft = Math.max(0, -b.x);
         const overTop = Math.max(0, -b.y);
         if (!overRight && !overBottom && !overLeft && !overTop) return null;
@@ -332,7 +332,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         return { block: b, w, h, label };
       })
       .filter(Boolean) as Array<{ block: ParsedBlock; w: number; h: number; label: string }>;
-  }, [blocks, viewW, viewH, logoUrl]);
+  }, [blocks, contentW, contentH, logoUrl]);
 
 
   const interpolate = useCallback((s: string) => {
@@ -786,7 +786,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         {/* Borda da área imprimível — realçada apenas quando há overflow. */}
         {overflows.length > 0 && (
           <rect
-            x={1} y={1} width={viewW - 2} height={viewH - 2}
+            x={contentX + 1} y={contentY + 1} width={contentW - 2} height={contentH - 2}
             fill="none" stroke="#dc2626" strokeWidth={2} strokeDasharray="8 6"
             pointerEvents="none"
           />
@@ -795,12 +795,12 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         {/* Marcadores de overflow: cada elemento fora dos limites ganha um contorno
             vermelho tracejado + uma etiqueta com o motivo. */}
         {overflows.map(({ block: b, w, h, label }) => {
-          const badgeX = Math.min(Math.max(0, b.x), viewW - 140);
-          const badgeY = b.y > 24 ? b.y - 22 : Math.min(b.y + h + 4, viewH - 22);
+          const badgeX = contentX + Math.min(Math.max(0, b.x), contentW - 140);
+          const badgeY = contentY + (b.y > 24 ? b.y - 22 : Math.min(b.y + h + 4, contentH - 22));
           return (
             <g key={`ovf-${b.index}`} pointerEvents="none">
               <rect
-                x={b.x} y={b.y} width={Math.max(4, w)} height={Math.max(4, h)}
+                x={contentX + b.x} y={contentY + b.y} width={Math.max(4, w)} height={Math.max(4, h)}
                 fill="none" stroke="#dc2626" strokeWidth={2} strokeDasharray="6 4"
               />
               <g>
