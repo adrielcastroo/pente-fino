@@ -187,19 +187,19 @@ export const ZPLPreview = memo(function ZPLPreview({
               if (align === 'C') { anchorX = el.x + fb.width / 2; textAnchor = 'middle'; }
               else if (align === 'R') { anchorX = el.x + fb.width; textAnchor = 'end'; }
             }
-            const fillColor = el.reverse ? '#fff' : '#111';
+            const fillColor = el.reverse ? '#fff' : lineColor;
             let bgRect: JSX.Element | null = null;
             if (el.reverse) {
               const padX = Math.max(2, el.size * 0.15);
               const padY = Math.max(1, el.size * 0.1);
               const totalH = lines.length * lineH + padY * 2;
               if (fb) {
-                bgRect = <rect x={el.x - padX} y={el.y - padY} width={fb.width + padX * 2} height={totalH} fill="#111" />;
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={fb.width + padX * 2} height={totalH} fill={lineColor} />;
               } else {
                 const charW = el.size * 0.6;
                 const longest = lines.reduce((m, l) => Math.max(m, l.length), 0);
                 const w = longest * charW + padX * 2;
-                bgRect = <rect x={el.x - padX} y={el.y - padY} width={w} height={totalH} fill="#111" />;
+                bgRect = <rect x={el.x - padX} y={el.y - padY} width={w} height={totalH} fill={lineColor} />;
               }
             }
             return (
@@ -211,13 +211,29 @@ export const ZPLPreview = memo(function ZPLPreview({
                     x={anchorX}
                     y={el.y + el.size + k * lineH}
                     fontSize={el.size}
-                    fontFamily="monospace"
+                    fontFamily={fontFamily}
                     fill={fillColor}
                     textAnchor={textAnchor}
                   >
                     {ln}
                   </text>
                 ))}
+              </g>
+            );
+          }
+          if (el.tipo === 'logo') {
+            // Aspect padrão 2.5:1, mas clampa para caber dentro da etiqueta.
+            const desiredH = el.size * 1.6;
+            const availW = Math.max(10, viewW - el.x - SAFE_MARGIN);
+            const availH = Math.max(10, viewH - el.y - SAFE_MARGIN);
+            const w = Math.min(desiredH * 2.5, availW);
+            const h = Math.min(desiredH, availH, w / 2.5);
+            return logoUrl ? (
+              <image key={i} href={logoUrl} x={el.x} y={el.y} width={w} height={h} preserveAspectRatio="xMidYMid meet" />
+            ) : (
+              <g key={i}>
+                <rect x={el.x} y={el.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
+                <text x={el.x + w / 2} y={el.y + h / 2 + 4} fontSize={12} fontFamily={fontFamily} fill="#6b7280" textAnchor="middle">LOGO</text>
               </g>
             );
           }
