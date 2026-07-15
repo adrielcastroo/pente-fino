@@ -38,9 +38,7 @@ const ExpedicaoHistoricoPage = lazy(() => import("@/pages/expedicao/HistoricoPag
 const ExpedicaoRelatoriosPage = lazy(() => import("@/pages/expedicao/RelatoriosPage"));
 
 const ExpedicaoEtiquetasPage = lazy(() => import("@/pages/expedicao/EtiquetasPage"));
-const NovaEtiquetaPage = lazy(() => import("@/pages/expedicao/etiquetas/NovaEtiquetaPage"));
 const ImprimirEtiquetaPage = lazy(() => import("@/pages/expedicao/etiquetas/ImprimirEtiquetaPage"));
-const EditarEtiquetaPage = lazy(() => import("@/pages/expedicao/etiquetas/EditarEtiquetaPage"));
 const HistoricoEtiquetasPage = lazy(() => import("@/pages/expedicao/etiquetas/HistoricoEtiquetasPage"));
 const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoHomePage"));
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
