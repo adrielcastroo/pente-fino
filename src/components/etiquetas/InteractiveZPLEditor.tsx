@@ -394,6 +394,46 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
 
   const selectedBlock = selectedIdx != null ? blocks[selectedIdx] : null;
 
+  // Atalhos de teclado: Delete remove · setas movem (Shift = passo maior).
+  // Ctrl+Z/Y ficam a cargo do componente pai (histórico do ZPL completo).
+  useEffect(() => {
+    if (selectedIdx == null) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (typing) return;
+      const current = parseBlocks(zpl)[selectedIdx];
+      if (!current) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const before = zpl.slice(0, current.sourceStart).replace(/\n\s*$/, '\n');
+        const after = zpl.slice(current.sourceEnd).replace(/^\s*\n/, '\n');
+        onChange(before + after);
+        setSelectedIdx(null);
+        return;
+      }
+
+      if (e.key.startsWith('Arrow')) {
+        const step = e.shiftKey ? 10 : 1;
+        let dx = 0, dy = 0;
+        if (e.key === 'ArrowLeft') dx = -step;
+        else if (e.key === 'ArrowRight') dx = step;
+        else if (e.key === 'ArrowUp') dy = -step;
+        else if (e.key === 'ArrowDown') dy = step;
+        else return;
+        e.preventDefault();
+        const nx = Math.max(0, current.x + dx);
+        const ny = Math.max(0, current.y + dy);
+        if (nx === current.x && ny === current.y) return;
+        onChange(replaceBlock(zpl, current, rewriteBlockCoords(current, nx, ny)));
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedIdx, zpl, onChange]);
+
+
   return (
     <>
       <svg
