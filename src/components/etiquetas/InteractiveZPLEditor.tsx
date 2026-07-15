@@ -5,7 +5,7 @@
  * - Duplo-clique abre o dialog.
  * - Snap-to-grid com guias.
  */
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ElementEditDialog, type ElementEditValues } from './ElementEditDialog';
 
