@@ -41,34 +41,26 @@ export function PrintQueue({ items, activeTemplateId, onRemove, onClear, onPatch
     onPatch(item.id, { status: 'printing', errorMsg: undefined });
     try {
       const total = Math.max(1, item.volumes);
-      // Impressão sequencial dos N volumes, sem confirmação intermediária.
-      for (let i = 1; i <= total; i++) {
-        if (cancelAllRef.current) {
-          onPatch(item.id, { status: 'error', errorMsg: 'Impressão cancelada.' });
-          return;
-        }
-        // eslint-disable-next-line no-await-in-loop
-        await imprimir.mutateAsync({
-          templateId: activeTemplateId,
-          variaveis: {
-            nf: item.nfNumero,
-            cliente: item.destinatario,
-            transportadora: item.transportadora,
-            volume_atual: String(i),
-            volumeAtual: String(i),
-            volume: String(i),
-            volume_total: String(total),
-            volumeTotal: String(total),
-            total: String(total),
-            TOTAL: String(total),
-            codigo_barras: item.chaveAcesso,
-            peso: String(item.pesoBruto || ''),
-            romaneio: item.nfNumero,
-          },
-          quantidade: 1,
-          historyLabel: `NF ${item.nfNumero}`,
-        });
-      }
+      // UMA única chamada com quantidade=total e SEM volume_atual: o pipeline
+      // gera N páginas com enumeração automática (1/N, 2/N, ...) e envia todas
+      // ao navegador num único diálogo de impressão.
+      await imprimir.mutateAsync({
+        templateId: activeTemplateId,
+        variaveis: {
+          nf: item.nfNumero,
+          cliente: item.destinatario,
+          transportadora: item.transportadora,
+          volume_total: String(total),
+          volumeTotal: String(total),
+          total: String(total),
+          TOTAL: String(total),
+          codigo_barras: item.chaveAcesso,
+          peso: String(item.pesoBruto || ''),
+          romaneio: item.nfNumero,
+        },
+        quantidade: total,
+        historyLabel: `NF ${item.nfNumero}`,
+      });
       onPatch(item.id, { status: 'done' });
     } catch (e) {
       onPatch(item.id, { status: 'error', errorMsg: e instanceof Error ? e.message : 'Falha' });
