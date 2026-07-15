@@ -246,3 +246,15 @@ export function useDeletarTemplate() {
     onError: (e: Error) => toast.error(`Erro ao excluir: ${e.message}`),
   });
 }
+
+export function useLimparHistorico() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => etiquetaService.limparHistorico(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: etiquetaQueryKeys.historico({}) });
+      toast.success('Histórico de impressões limpo');
+    },
+    onError: (e: Error) => toast.error(`Erro ao limpar histórico: ${e.message}`),
+  });
+}
