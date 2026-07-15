@@ -270,7 +270,7 @@ export async function renderZplLabel(
             background: '#fff',
           },
         },
-          createElement(ZPLPreview, { zpl, variaveis, dimensoes }),
+          createElement(ZPLPreview, { zpl, variaveis, dimensoes, logoUrl }),
         ),
       ),
     );
