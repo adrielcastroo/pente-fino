@@ -131,8 +131,19 @@ function buildPrintVariablePages(
   if (copies > 1 && !inputHasVolumeAtual) {
     const pages = Array.from({ length: copies }, (_, index) => {
       const pageVars = { ...normalizedBase };
-      fillAliases(pageVars, VOLUME_ATUAL_ALIASES, String(index + 1));
-      fillAliases(pageVars, VOLUME_TOTAL_ALIASES, totalValue);
+      const atual = String(index + 1);
+      // Sobrescreve TODOS os aliases de volume atual/total para cada página,
+      // mesmo que o template tenha `padrao` — do contrário, a enumeração
+      // (1/N, 2/N, ...) fica travada no valor padrão do template.
+      for (const alias of VOLUME_ATUAL_ALIASES) pageVars[alias] = atual;
+      for (const alias of VOLUME_TOTAL_ALIASES) pageVars[alias] = totalValue;
+      // Também sobrescreve variantes case-insensitive já existentes no objeto
+      // (ex.: `Volume_Atual` definido na variável do template).
+      for (const key of Object.keys(pageVars)) {
+        const lower = key.toLowerCase();
+        if (VOLUME_ATUAL_ALIASES.some((a) => a.toLowerCase() === lower)) pageVars[key] = atual;
+        else if (VOLUME_TOTAL_ALIASES.some((a) => a.toLowerCase() === lower)) pageVars[key] = totalValue;
+      }
       return pageVars;
     });
     return { pages, copiesPerPage: 1, historyVars: pages[0] };
