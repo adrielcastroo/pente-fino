@@ -142,9 +142,10 @@ export const etiquetaService = {
   /** Substitui {{variavel}} no ZPL pelos valores. `{{hoje}}` vira data atual. */
   renderZPL(zpl: string, variaveis: Record<string, string>): string {
     const hoje = new Date().toLocaleDateString('pt-BR');
-    return zpl.replace(/\{\{(\w+)\}\}/g, (_, key: string) => {
-      if (key === 'hoje') return hoje;
-      const v = variaveis[key];
+    return zpl.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => {
+      if (key === 'hoje' || key === 'data') return hoje;
+      const matchedKey = Object.keys(variaveis).find((k) => k.toLowerCase() === key.toLowerCase());
+      const v = matchedKey ? variaveis[matchedKey] : undefined;
       if (v === undefined || v === '') return '';
       return v;
     });

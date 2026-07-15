@@ -133,7 +133,7 @@ export const ZPLPreview = memo(function ZPLPreview({ zpl, variaveis, className, 
       return matchedKey ? (variaveis?.[matchedKey] ?? '') : '';
     };
     const interp = (s: string) =>
-      s.replace(/\{\{(\w+)\}\}/g, (_, k: string) => resolveVar(k));
+      s.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k: string) => resolveVar(k));
     return parseZpl(zpl, interp);
   }, [zpl, variaveis]);
 
