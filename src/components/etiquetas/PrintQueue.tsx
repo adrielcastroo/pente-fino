@@ -28,24 +28,39 @@ export function PrintQueue({ items, activeTemplateId, onRemove, onClear, onPatch
       toast.error('Selecione um modelo ativo antes de imprimir.');
       return;
     }
+    if (!item.volumes || item.volumes <= 0) {
+      toast.error(`NF ${item.nfNumero}: sem volumes informados — impressão desabilitada.`);
+      onPatch(item.id, { status: 'error', errorMsg: 'NF sem volumes — nada a imprimir.' });
+      return;
+    }
     onPatch(item.id, { status: 'printing', errorMsg: undefined });
     try {
-      await imprimir.mutateAsync({
-        templateId: activeTemplateId,
-        variaveis: {
-          nf: item.nfNumero,
-          cliente: item.destinatario,
-          transportadora: item.transportadora,
-          volume_total: String(Math.max(1, item.volumes || 1)),
-          volumeTotal: String(Math.max(1, item.volumes || 1)),
-          total: String(Math.max(1, item.volumes || 1)),
-          TOTAL: String(Math.max(1, item.volumes || 1)),
-          codigo_barras: item.chaveAcesso,
-          peso: String(item.pesoBruto || ''),
-          romaneio: item.nfNumero,
-        },
-        quantidade: Math.max(1, item.volumes),
-      });
+      const total = Math.max(1, item.volumes);
+      // Uma impressão por volume — garante enumeração correta (1/N, 2/N, ...)
+      // e registra cada NF individualmente no histórico com o número da NF.
+      for (let i = 1; i <= total; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        await imprimir.mutateAsync({
+          templateId: activeTemplateId,
+          variaveis: {
+            nf: item.nfNumero,
+            cliente: item.destinatario,
+            transportadora: item.transportadora,
+            volume_atual: String(i),
+            volumeAtual: String(i),
+            volume: String(i),
+            volume_total: String(total),
+            volumeTotal: String(total),
+            total: String(total),
+            TOTAL: String(total),
+            codigo_barras: item.chaveAcesso,
+            peso: String(item.pesoBruto || ''),
+            romaneio: item.nfNumero,
+          },
+          quantidade: 1,
+          historyLabel: `NF ${item.nfNumero}`,
+        });
+      }
       onPatch(item.id, { status: 'done' });
     } catch (e) {
       onPatch(item.id, { status: 'error', errorMsg: e instanceof Error ? e.message : 'Falha' });
@@ -60,13 +75,14 @@ export function PrintQueue({ items, activeTemplateId, onRemove, onClear, onPatch
     setBatchRunning(true);
     for (const item of items) {
       if (item.status === 'done') continue;
+      if (!item.volumes || item.volumes <= 0) continue;
       // eslint-disable-next-line no-await-in-loop
       await printOne(item);
     }
     setBatchRunning(false);
   };
 
-  const pendingCount = items.filter((i) => i.status !== 'done').length;
+  const pendingCount = items.filter((i) => i.status !== 'done' && (i.volumes ?? 0) > 0).length;
 
   if (items.length === 0) {
     return (
