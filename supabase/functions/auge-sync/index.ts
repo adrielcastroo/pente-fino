@@ -127,10 +127,24 @@ async function login(jar: Jar): Promise<string> {
     },
   });
   jar.ingest(homeRes);
+  const homeStatus = homeRes.status;
+  const homeLoc = homeRes.headers.get('location') ?? '';
   const homeHtml = await homeRes.text();
+
+  if (homeStatus !== 200) {
+    throw new Error(`GET /home retornou ${homeStatus} (Location: ${homeLoc}) — sessão não autenticada após login.`);
+  }
 
   const metaCsrf = homeHtml.match(/<meta[^>]+name="csrf-token"[^>]+content="([^"]+)"/i)?.[1];
   if (metaCsrf) return metaCsrf;
+
+  // Fallback: XSRF-TOKEN cookie (URL-encoded)
+  const xsrf = jar.get('XSRF-TOKEN');
+  if (xsrf) {
+    try { return decodeURIComponent(xsrf); } catch { return xsrf; }
+  }
+
+  throw new Error(`Login OK (302→${loc}), /home ${homeStatus}, mas nenhum CSRF encontrado (HTML len=${homeHtml.length}).`);
 
   // Fallback: XSRF-TOKEN cookie (URL-encoded)
   const xsrf = jar.get('XSRF-TOKEN');
