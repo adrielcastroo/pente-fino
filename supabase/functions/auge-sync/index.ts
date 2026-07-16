@@ -308,8 +308,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ ok: false, error: msg }), {
-      status: 500,
+    // Return 200 so supabase.functions.invoke() doesn't throw; UI reads ok:false
+    return new Response(JSON.stringify({ ok: false, error: msg, fallback: true }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
