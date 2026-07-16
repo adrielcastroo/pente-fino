@@ -105,16 +105,51 @@ async function tryRoutes(jar: Jar, paths: string[]): Promise<any[] | null> {
           'User-Agent': 'PenteFinoBot/1.0',
         },
       });
-      if (!res.ok) continue;
-      const ct = res.headers.get('content-type') ?? '';
-      if (ct.includes('application/json')) {
-        const data = await res.json();
+      if (!res.ok) { await res.body?.cancel(); continue; }
+      const text = await res.text();
+      // Endpoint retorna text/html mas com corpo JSON
+      try {
+        const data = JSON.parse(text);
         const arr = Array.isArray(data) ? data : (data.data ?? data.rows ?? data.items ?? data.results ?? []);
         if (Array.isArray(arr) && arr.length > 0) return arr;
-      }
+      } catch { /* not json */ }
     } catch (_) { /* try next */ }
   }
   return null;
+}
+
+// Rota real das Saídas (HAR): POST form-urlencoded, retorna {data: [...]}
+async function fetchSaidas(jar: Jar, sinceDaysAgo = 60): Promise<any[] | null> {
+  const from = new Date(Date.now() - sinceDaysAgo * 86400000);
+  const dd = String(from.getDate()).padStart(2, '0');
+  const mm = String(from.getMonth() + 1).padStart(2, '0');
+  const yy = from.getFullYear();
+  const body = new URLSearchParams({
+    dtCriacaoDe: `${dd}/${mm}/${yy}`,
+    dtCriacaoAte: '',
+    idSituacao: '',
+    cdDepositoOrigem: '',
+    cdItem: '',
+  });
+  const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php`, {
+    method: 'POST',
+    headers: {
+      'Cookie': jar.header(),
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'X-Requested-With': 'XMLHttpRequest',
+      'Origin': AUGE_BASE_URL,
+      'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirSaidaEstoque.php`,
+      'User-Agent': 'PenteFinoBot/1.0',
+      'Accept': 'application/json, text/plain, */*',
+    },
+    body,
+  });
+  if (!res.ok) { await res.body?.cancel(); return null; }
+  const text = await res.text();
+  try {
+    const j = JSON.parse(text);
+    return Array.isArray(j?.data) ? j.data : null;
+  } catch { return null; }
 }
 
 const CANDIDATES: Record<Entity, string[]> = {
@@ -175,15 +210,28 @@ function mapDeposito(r: any) {
   };
 }
 function mapMovimentacao(r: any) {
+  // Fields from real Auge endpoint /l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php
+  const idExt = String(r.cdMovEstoqueERP ?? r.id ?? r.id_externo ?? '').trim();
+  const dt = r.dtCriacao ?? r.data ?? r.data_movimento ?? null;
+  // Parse "DD/MM/YYYY HH:mm:ss" -> ISO
+  let iso: string | null = null;
+  if (typeof dt === 'string' && dt.includes('/')) {
+    const [d, t] = dt.split(' ');
+    const [dd, mm, yy] = d.split('/');
+    iso = `${yy}-${mm}-${dd}T${t ?? '00:00:00'}-03:00`;
+  } else if (dt) {
+    iso = String(dt);
+  }
+  const qt = typeof r.qtItem === 'string' ? Number(r.qtItem.replace(',', '.')) : Number(r.qtItem ?? r.quantidade ?? r.qtd ?? 0);
   return {
-    id_externo: String(r.id ?? r.id_externo ?? `${r.documento ?? ''}-${r.codigo ?? ''}-${r.data ?? ''}`),
-    tipo: String(r.tipo ?? r.natureza ?? 'movimento').toLowerCase(),
-    codigo_produto: String(r.codigo ?? r.produto ?? r.sku ?? '').trim(),
-    deposito: r.deposito ?? r.armazem ?? null,
-    quantidade: Number(r.quantidade ?? r.qtd ?? 0),
-    documento: r.documento ?? r.nf ?? r.pedido ?? null,
-    data_movimento: r.data ?? r.data_movimento ?? r.emissao ?? null,
-    observacao: r.observacao ?? r.obs ?? null,
+    id_externo: idExt,
+    tipo: (r.idTipoMovimentacao === 'S' ? 'saida' : r.idTipoMovimentacao === 'E' ? 'entrada' : String(r.tipo ?? 'movimento')).toLowerCase(),
+    codigo_produto: String(r.cdItem ?? r.codigo ?? r.produto ?? '').trim() || '-', // header endpoint has no item
+    deposito: r.cdDepositoOrigem ?? r.deposito ?? r.armazem ?? null,
+    quantidade: isFinite(qt) ? qt : 0,
+    documento: r.nrTransfEstoqueERP ?? r.documento ?? r.nf ?? null,
+    data_movimento: iso,
+    observacao: r.dsObservacao ?? r.observacao ?? null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
@@ -210,9 +258,12 @@ async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: str
   const runId = run?.id;
 
   try {
-    const raw = await tryRoutes(jar, CANDIDATES[entity]);
+    // Movimentações (saídas) usa endpoint POST específico mapeado no HAR
+    const raw = entity === 'movimentacoes'
+      ? await fetchSaidas(jar)
+      : await tryRoutes(jar, CANDIDATES[entity]);
     if (!raw) {
-      throw new Error(`Nenhuma rota candidata respondeu com dados para ${entity}.`);
+      throw new Error(`Nenhuma rota respondeu com dados para ${entity}. Envie HAR desta entidade.`);
     }
 
     let upserted = 0;
@@ -235,7 +286,7 @@ async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: str
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'movimentacoes') {
-      const rows = raw.map(mapMovimentacao).filter(r => r.codigo_produto && r.id_externo);
+      const rows = raw.map(mapMovimentacao).filter(r => r.id_externo);
       const { error, count } = await admin.from('auge_movimentacoes')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
