@@ -32,11 +32,11 @@ interface AugeRun {
 }
 
 const ENTIDADES = [
-  { key: 'produtos', label: 'Produtos' },
-  { key: 'depositos', label: 'Depósitos' },
-  { key: 'saldo', label: 'Saldo' },
-  { key: 'movimentacoes', label: 'Movimentações' },
-  { key: 'lotes', label: 'Lotes' },
+  { key: 'produtos', label: 'Produtos', mapped: true },
+  { key: 'saldo', label: 'Saldo', mapped: true },
+  { key: 'movimentacoes', label: 'Movimentações', mapped: true },
+  { key: 'depositos', label: 'Depósitos', mapped: false },
+  { key: 'lotes', label: 'Lotes', mapped: false },
 ] as const;
 
 export default function AugeSyncPage() {
