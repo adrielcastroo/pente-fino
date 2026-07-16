@@ -575,7 +575,6 @@ function mapTransferencia(r: any) {
 }
 
 
-async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
 // Calcula quantos dias precisamos buscar com base no último sync.
 // Adiciona 2 dias de overlap para não perder registros que chegaram atrasados.
 function daysSince(iso: string | null | undefined, min = 3, max = 90): number {
