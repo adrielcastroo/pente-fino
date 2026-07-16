@@ -57,6 +57,7 @@ import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner"
 import ErrorWatcherWidget from "@/components/admin/ErrorWatcherWidget";
 const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
+const HarTransferenciasPage = lazy(() => import("@/pages/admin/HarTransferenciasPage"));
 import RequireModule from "@/components/auth/RequireModule";
 
 
@@ -241,6 +242,7 @@ const App = () => (
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="/admin" element={<AdminPanelPage />} />
                   <Route path="/admin/n8n" element={<N8nMonitorPage />} />
+                  <Route path="/admin/har-transferencias" element={<HarTransferenciasPage />} />
                 </Route>
                 <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
                 <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
