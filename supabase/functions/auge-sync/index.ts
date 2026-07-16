@@ -617,9 +617,17 @@ Deno.serve(async (req) => {
       throw new Error('Credenciais AUGE_USERNAME / AUGE_PASSWORD não configuradas.');
     }
 
+    const t0 = Date.now();
     const jar = new Jar();
     const { csrf, apiToken } = await login(jar);
     const auth = { jar, csrf, apiToken };
+
+    if (action === 'ping') {
+      return new Response(JSON.stringify({
+        ok: true, connected: true, latency_ms: Date.now() - t0,
+        has_api_token: !!apiToken, csrf_prefix: csrf.slice(0, 8),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     const results = [];
     for (const e of entities) {
