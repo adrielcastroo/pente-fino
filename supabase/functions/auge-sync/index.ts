@@ -145,9 +145,7 @@ async function login(jar: Jar): Promise<string> {
   }
 
   throw new Error(`Login OK (302→${loc}), /home ${homeStatus}, mas nenhum CSRF encontrado (HTML len=${homeHtml.length}).`);
-
-  // Fallback: XSRF-TOKEN cookie (URL-encoded)
-  const xsrf = jar.get('XSRF-TOKEN');
+}
   if (xsrf) {
     try { return decodeURIComponent(xsrf); } catch { return xsrf; }
   }
