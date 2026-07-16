@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import LoteMestreSelector from '@/components/madeira/LoteMestreSelector';
 import AvariaForm, { AvariaTipo } from '@/components/madeira/AvariaForm';
+import ItemVinculoBadge from '@/components/ItemVinculoBadge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
