@@ -113,6 +113,171 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_depositos: {
+        Row: {
+          ativo: boolean | null
+          codigo: string
+          created_at: string
+          id: string
+          localizacao: string | null
+          nome: string | null
+          raw: Json | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          codigo: string
+          created_at?: string
+          id?: string
+          localizacao?: string | null
+          nome?: string | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          codigo?: string
+          created_at?: string
+          id?: string
+          localizacao?: string | null
+          nome?: string | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auge_lotes: {
+        Row: {
+          codigo_produto: string
+          created_at: string
+          data_fabricacao: string | null
+          data_validade: string | null
+          deposito: string | null
+          id: string
+          lote: string
+          quantidade: number | null
+          raw: Json | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          codigo_produto: string
+          created_at?: string
+          data_fabricacao?: string | null
+          data_validade?: string | null
+          deposito?: string | null
+          id?: string
+          lote: string
+          quantidade?: number | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          codigo_produto?: string
+          created_at?: string
+          data_fabricacao?: string | null
+          data_validade?: string | null
+          deposito?: string | null
+          id?: string
+          lote?: string
+          quantidade?: number | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auge_movimentacoes: {
+        Row: {
+          codigo_produto: string
+          created_at: string
+          data_movimento: string | null
+          deposito: string | null
+          documento: string | null
+          id: string
+          id_externo: string | null
+          observacao: string | null
+          quantidade: number
+          raw: Json | null
+          synced_at: string
+          tipo: string
+        }
+        Insert: {
+          codigo_produto: string
+          created_at?: string
+          data_movimento?: string | null
+          deposito?: string | null
+          documento?: string | null
+          id?: string
+          id_externo?: string | null
+          observacao?: string | null
+          quantidade?: number
+          raw?: Json | null
+          synced_at?: string
+          tipo: string
+        }
+        Update: {
+          codigo_produto?: string
+          created_at?: string
+          data_movimento?: string | null
+          deposito?: string | null
+          documento?: string | null
+          id?: string
+          id_externo?: string | null
+          observacao?: string | null
+          quantidade?: number
+          raw?: Json | null
+          synced_at?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      auge_produtos: {
+        Row: {
+          ativo: boolean | null
+          categoria: string | null
+          codigo: string
+          created_at: string
+          descricao: string | null
+          id: string
+          ncm: string | null
+          raw: Json | null
+          synced_at: string
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria?: string | null
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ncm?: string | null
+          raw?: Json | null
+          synced_at?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string | null
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ncm?: string | null
+          raw?: Json | null
+          synced_at?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       auge_produtos_saldo: {
         Row: {
           codigo: string
@@ -155,6 +320,8 @@ export type Database = {
       auge_sync_runs: {
         Row: {
           created_at: string
+          detalhes: Json | null
+          entidade: string | null
           error_message: string | null
           finished_at: string | null
           id: string
@@ -167,6 +334,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          detalhes?: Json | null
+          entidade?: string | null
           error_message?: string | null
           finished_at?: string | null
           id?: string
@@ -179,6 +348,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          detalhes?: Json | null
+          entidade?: string | null
           error_message?: string | null
           finished_at?: string | null
           id?: string
