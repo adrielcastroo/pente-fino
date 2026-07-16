@@ -268,7 +268,7 @@ function mapMovimentacao(r: any) {
 }
 
 // ---------- Sync ----------
-async function syncEntity(admin: any, jar: Jar, csrf: string, entity: Entity, triggeredBy: string | null) {
+async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
   if (UNMAPPED.includes(entity)) {
     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
   }
@@ -283,7 +283,7 @@ async function syncEntity(admin: any, jar: Jar, csrf: string, entity: Entity, tr
     let upserted = 0;
 
     if (entity === 'saldo') {
-      const items = await fetchSaldo(jar, csrf);
+      const items = await fetchSaldo(auth);
       processed = items.length;
       const rows = items.map(mapSaldo).filter(r => r.codigo);
       const { error, count } = await admin.from('auge_produtos_saldo')
@@ -291,7 +291,7 @@ async function syncEntity(admin: any, jar: Jar, csrf: string, entity: Entity, tr
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'produtos') {
-      const items = await fetchOutgoing(jar, csrf);
+      const items = await fetchOutgoing(auth);
       processed = items.length;
       const rows = items.map(mapProduto).filter(r => r.codigo);
       const { error, count } = await admin.from('auge_produtos')
@@ -299,7 +299,7 @@ async function syncEntity(admin: any, jar: Jar, csrf: string, entity: Entity, tr
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'movimentacoes') {
-      const items = await fetchOutgoing(jar, csrf);
+      const items = await fetchOutgoing(auth);
       processed = items.length;
       const rows = items.map(mapMovimentacao).filter(r => r.codigo_produto);
       const { error, count } = await admin.from('auge_movimentacoes')
