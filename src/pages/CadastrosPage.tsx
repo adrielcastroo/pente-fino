@@ -179,6 +179,7 @@ export default function CadastrosPage() {
           </p>
         </div>
         <div className="md:ml-auto flex flex-wrap items-center gap-2">
+          <AugeItemLookup />
           <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none min-w-[150px]" aria-label="Importar planilha">
             <span className="truncate">Importar planilha</span>
           </Button>
