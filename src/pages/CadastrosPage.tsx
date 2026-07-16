@@ -259,14 +259,17 @@ export default function CadastrosPage() {
 
       {/* Bulk action bar */}
       {someSelected && (
-        <div role="region" aria-label="Ações em lote" className="rounded-lg border bg-card px-3 py-2 flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium">{selected.size} selecionado(s)</span>
-          <Button size="sm" variant="ghost" onClick={clearSelection}>Limpar</Button>
+        <div role="region" aria-label="Ações em lote" className="rounded-lg border bg-card px-3 py-2 flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+          <span className="text-xs sm:text-sm font-medium">{selected.size} selecionado(s)</span>
+          <Button size="sm" variant="ghost" onClick={clearSelection} className="h-8">Limpar</Button>
           {selected.size < filtered.length && (
-            <Button size="sm" variant="ghost" onClick={selectAllFiltered}>Selecionar todos os {filtered.length}</Button>
+            <Button size="sm" variant="ghost" onClick={selectAllFiltered} className="h-8 text-xs">
+              <span className="hidden sm:inline">Selecionar todos os {filtered.length}</span>
+              <span className="sm:hidden">Todos ({filtered.length})</span>
+            </Button>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5" aria-label="Excluir selecionados">
+          <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
+            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5 w-full sm:w-auto h-9" aria-label="Excluir selecionados">
               <Trash2 className="h-3.5 w-3.5" /> Excluir selecionados
             </Button>
           </div>
