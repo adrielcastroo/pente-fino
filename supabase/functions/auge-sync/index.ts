@@ -35,13 +35,33 @@ class Jar {
   }
 }
 
+const LOGIN_PATH_CANDIDATES = ['/login', '/auth/login', '/entrar', '/acesso', '/signin', '/sign-in', '/usuarios/login', '/api/login', '/api/auth/login'];
+
 async function login(jar: Jar): Promise<void> {
-  const loginPageRes = await fetch(`${AUGE_BASE_URL}/login`, {
-    redirect: 'manual',
-    headers: { 'User-Agent': 'PenteFinoBot/1.0' },
-  });
-  jar.ingest(loginPageRes);
-  const loginHtml = await loginPageRes.text();
+  let loginHtml = '';
+  let loginPath: string | null = null;
+  let lastStatus = 0;
+
+  for (const p of LOGIN_PATH_CANDIDATES) {
+    try {
+      const res = await fetch(`${AUGE_BASE_URL}${p}`, {
+        redirect: 'manual',
+        headers: { 'User-Agent': 'PenteFinoBot/1.0', 'Accept': 'text/html,application/json' },
+      });
+      lastStatus = res.status;
+      jar.ingest(res);
+      if (res.status === 200 || res.status === 302) {
+        loginHtml = await res.text();
+        loginPath = p;
+        break;
+      }
+      await res.body?.cancel();
+    } catch (_) { /* try next */ }
+  }
+
+  if (!loginPath) {
+    throw new Error(`Nenhuma rota de login respondeu em ${AUGE_BASE_URL} (último HTTP ${lastStatus}). Envie o HAR da tela de login para mapear a URL correta.`);
+  }
 
   const csrfMatch =
     loginHtml.match(/name="_token"\s+value="([^"]+)"/i) ||
@@ -55,13 +75,13 @@ async function login(jar: Jar): Promise<void> {
   body.set('senha', AUGE_PASSWORD);
   if (csrf) body.set('_token', csrf);
 
-  const postRes = await fetch(`${AUGE_BASE_URL}/login`, {
+  const postRes = await fetch(`${AUGE_BASE_URL}${loginPath}`, {
     method: 'POST',
     redirect: 'manual',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Cookie': jar.header(),
-      'Referer': `${AUGE_BASE_URL}/login`,
+      'Referer': `${AUGE_BASE_URL}${loginPath}`,
       'User-Agent': 'PenteFinoBot/1.0',
       ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
     },
@@ -69,8 +89,8 @@ async function login(jar: Jar): Promise<void> {
   });
   jar.ingest(postRes);
 
-  if (postRes.status !== 302 && postRes.status !== 200) {
-    throw new Error(`Login Auge falhou (HTTP ${postRes.status}).`);
+  if (postRes.status !== 302 && postRes.status !== 200 && postRes.status !== 204) {
+    throw new Error(`Login Auge falhou em ${loginPath} (HTTP ${postRes.status}). Envie o HAR do login para mapear os campos e a URL corretos.`);
   }
 }
 
