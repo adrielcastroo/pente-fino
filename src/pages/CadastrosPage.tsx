@@ -515,9 +515,16 @@ export default function CadastrosPage() {
           </div>
         </nav>
       )}
+        </TabsContent>
+
+        <TabsContent value="auge" className="flex-1 overflow-hidden mt-0">
+          <AugeProdutosTab />
+        </TabsContent>
+      </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
       <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />
+
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
