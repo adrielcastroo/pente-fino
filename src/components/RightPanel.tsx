@@ -505,52 +505,51 @@ export default function RightPanel() {
       <div className="flex-1 overflow-y-auto overflow-x-auto bg-background/20 custom-scrollbar relative min-h-0">
         <div className="min-w-full inline-block align-middle">
           {isMotorControle ? (
-            <table className="w-full border-separate border-spacing-0 table-auto">
+            <table className="w-full border-separate border-spacing-0 table-auto min-w-[560px]">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background/80 whitespace-nowrap">
                     Séries Bipadas
                   </th>
-                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-border/40 bg-background">
+                  <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap">
                     Séries Sistema
                   </th>
                   {showActions && (
-                    <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[60px] sm:w-[80px] text-[8px] sm:text-[10px] font-semibold text-muted-foreground ">
+                    <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[80px] sm:w-[100px] text-[8px] sm:text-[10px] font-semibold text-muted-foreground">
                       Ações
                     </th>
                   )}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border/20">
                 {motorGroups.map((group, gi) => (
                   <React.Fragment key={`grp-${gi}-${group.cxLabel}-${group.item}`}>
                     {gi > 0 && (
-                      <>
-                        <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
-                        <tr><td colSpan={3} className="h-4 bg-background"></td></tr>
-                      </>
+                      <tr aria-hidden="true"><td colSpan={showActions ? 3 : 2} className="h-3 bg-background"></td></tr>
                     )}
-                    <tr className="bg-primary/10">
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-foreground">
+                    <tr className="bg-muted/40 border-b border-border/40">
+                      <td className="px-3 sm:px-5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-foreground border-r border-border/20">
                         {group.cxLabel} {group.item}
                       </td>
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-primary">
+                      <td className="px-3 sm:px-5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-primary border-r border-border/20">
                         séries
                       </td>
-                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] text-muted-foreground font-bold">
-                        {group.rows.length} itens
-                      </td>
+                      {showActions && (
+                        <td className="px-3 sm:px-5 py-2 sm:py-2.5 text-right text-[10px] text-muted-foreground font-semibold tabular-nums">
+                          {group.rows.length} {group.rows.length === 1 ? 'item' : 'itens'}
+                        </td>
+                      )}
                     </tr>
                     {group.rows.map((r) => {
                       if (!r) return null;
                       return (
-                        <tr key={r.id} className={`group hover:bg-muted/40 border-b border-border/20 ${r.isNew ? 'bg-primary/5' : ''}`}>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-muted-foreground/90">
+                        <tr key={r.id} className={`group hover:bg-primary/[0.03] border-b border-border/30 ${r.isNew ? 'bg-primary/[0.08] animate-pulse-subtle' : ''} transition-all duration-300`}>
+                          <td className="px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-mono text-muted-foreground/90 border-r border-border/20">
                             {r.item} {r.lote}
                           </td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-mono text-foreground font-bold">
-                            <Badge 
-                              variant="outline" 
+                          <td className="px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-mono text-foreground font-bold border-r border-border/20">
+                            <Badge
+                              variant="outline"
                               className="cursor-pointer border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-white hover:scale-105 active:scale-95 transition-all font-mono py-1.5 px-3 rounded-md border-dashed shadow-sm"
                               onClick={() => copyText(r.loteSistema)}
                             >
@@ -558,24 +557,24 @@ export default function RightPanel() {
                             </Badge>
                           </td>
                           {showActions && (
-                            <td className="px-2 sm:px-4 py-2 sm:py-3">
-                              <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <td className="px-3 sm:px-5 py-3 sm:py-4">
+                              <div className="flex justify-end gap-2 opacity-100 transition-all duration-200">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary">
-                                      <Copy className="w-3 h-3" />
+                                    <Button variant="ghost" size="icon" onClick={() => copyText(r.loteSistema)} className="h-9 w-9 rounded-md hover:bg-primary/10 hover:text-primary transition-all active:scale-90 shadow-none hover:shadow-sm">
+                                      <Copy className="w-4 h-4" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Copiar</TooltipContent>
+                                  <TooltipContent className="rounded-lg shadow-xl border-border/40">Copiar Lote Sistema</TooltipContent>
                                 </Tooltip>
                                 {!isGuest && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                                        <Trash2 className="w-3.5 h-3.5" />
+                                      <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-9 w-9 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm">
+                                        <Trash2 className="w-4 h-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Remover</TooltipContent>
+                                    <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
                                   </Tooltip>
                                 )}
                               </div>
@@ -587,7 +586,6 @@ export default function RightPanel() {
                   </React.Fragment>
                 ))}
               </tbody>
-
             </table>
           ) : (
             <table className="w-full border-separate border-spacing-0 table-auto min-w-[720px]">
