@@ -355,11 +355,12 @@ Deno.serve(async (req) => {
     }
 
     const jar = new Jar();
-    const csrf = await login(jar);
+    const { csrf, apiToken } = await login(jar);
+    const auth = { jar, csrf, apiToken };
 
     const results = [];
     for (const e of entities) {
-      results.push(await syncEntity(admin, jar, csrf, e, triggeredBy));
+      results.push(await syncEntity(admin, auth, e, triggeredBy));
     }
 
     const totalUpserted = results.reduce((s, r: any) => s + (r.upserted ?? 0), 0);
