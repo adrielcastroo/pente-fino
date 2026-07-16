@@ -541,6 +541,33 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       upserted = count ?? rows.length;
+    } else if (entity === 'depositos') {
+      const { data: items, path } = await fetchDepositosPHP(auth);
+      processed = items.length;
+      const rows = items.map(mapDeposito).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_depositos')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+    } else if (entity === 'lotes') {
+      const { data: items, path } = await fetchLotesPHP(auth);
+      processed = items.length;
+      const rows = items.map(mapLote).filter(r => r.codigo_produto && r.lote);
+      const { error, count } = await admin.from('auge_lotes')
+        .upsert(rows, { onConflict: 'codigo_produto,lote,deposito', count: 'exact', ignoreDuplicates: false });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+    } else if (entity === 'transferencias') {
+      const { data: items, path } = await fetchTransferenciasPHP(auth, 60);
+      processed = items.length;
+      const rows = items.map(mapTransferencia).filter(r => r.id_externo);
+      const { error, count } = await admin.from('auge_transferencias')
+        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
     }
 
     await admin.from('auge_sync_runs').update({
