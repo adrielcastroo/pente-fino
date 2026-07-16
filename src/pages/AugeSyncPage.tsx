@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Database, Package, Warehouse, ArrowRightLeft, Boxes, FileText, GitCompare } from 'lucide-react';
+import { Database, Package, ArrowRightLeft, Boxes, FileText, GitCompare } from 'lucide-react';
 import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
 import AugeSaldoTab from '@/components/auge/AugeSaldoTab';
-import AugeDepositosTab from '@/components/auge/AugeDepositosTab';
-import AugeLotesTab from '@/components/auge/AugeLotesTab';
 import AugeTransferenciasTab from '@/components/auge/AugeTransferenciasTab';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 
@@ -30,9 +28,7 @@ export default function AugeSyncPage() {
           <TabTrigger v="produtos" icon={Package}>Produtos</TabTrigger>
           <TabTrigger v="saldo" icon={Boxes}>Saldo</TabTrigger>
           <TabTrigger v="saidas" icon={FileText}>Saídas</TabTrigger>
-          <TabTrigger v="depositos" icon={Warehouse}>Depósitos</TabTrigger>
           <TabTrigger v="transferencias" icon={ArrowRightLeft}>Transferências</TabTrigger>
-          <TabTrigger v="lotes" icon={Package}>Lotes</TabTrigger>
           <TabTrigger v="reconciliacao" icon={GitCompare}>Reconciliação</TabTrigger>
         </TabsList>
 
@@ -40,9 +36,7 @@ export default function AugeSyncPage() {
           <TabsContent value="produtos" className="h-full m-0"><AugeProdutosTab /></TabsContent>
           <TabsContent value="saldo" className="h-full m-0"><AugeSaldoTab /></TabsContent>
           <TabsContent value="saidas" className="h-full m-0"><AugeSaidasTab /></TabsContent>
-          <TabsContent value="depositos" className="h-full m-0"><AugeDepositosTab /></TabsContent>
           <TabsContent value="transferencias" className="h-full m-0"><AugeTransferenciasTab /></TabsContent>
-          <TabsContent value="lotes" className="h-full m-0"><AugeLotesTab /></TabsContent>
           <TabsContent value="reconciliacao" className="h-full m-0"><AugeReconciliacaoTab /></TabsContent>
         </Card>
       </Tabs>
