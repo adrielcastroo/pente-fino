@@ -360,9 +360,9 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'movimentacoes') {
-      const items = await fetchOutgoing(auth);
+      const items = await fetchSaidasPHP(auth, 60);
       processed = items.length;
-      const rows = items.map(mapMovimentacao).filter(r => r.codigo_produto);
+      const rows = items.map(mapSaidaPHP).filter(r => r.id_externo);
       const { error, count } = await admin.from('auge_movimentacoes')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
