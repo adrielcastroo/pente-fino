@@ -193,46 +193,73 @@ export type Database = {
       }
       auge_movimentacoes: {
         Row: {
-          codigo_produto: string
+          cd_transferencia: string | null
+          codigo_produto: string | null
           created_at: string
           data_movimento: string | null
           deposito: string | null
           documento: string | null
+          documento_tipo: string | null
+          ds_efetivacao: string | null
+          ds_situacao: string | null
+          dt_efetivacao: string | null
           id: string
           id_externo: string | null
           observacao: string | null
           quantidade: number
           raw: Json | null
+          situacao: string | null
           synced_at: string
           tipo: string
+          usuario_criacao: string | null
+          usuario_efetivacao: string | null
+          valor: number | null
         }
         Insert: {
-          codigo_produto: string
+          cd_transferencia?: string | null
+          codigo_produto?: string | null
           created_at?: string
           data_movimento?: string | null
           deposito?: string | null
           documento?: string | null
+          documento_tipo?: string | null
+          ds_efetivacao?: string | null
+          ds_situacao?: string | null
+          dt_efetivacao?: string | null
           id?: string
           id_externo?: string | null
           observacao?: string | null
           quantidade?: number
           raw?: Json | null
+          situacao?: string | null
           synced_at?: string
           tipo: string
+          usuario_criacao?: string | null
+          usuario_efetivacao?: string | null
+          valor?: number | null
         }
         Update: {
-          codigo_produto?: string
+          cd_transferencia?: string | null
+          codigo_produto?: string | null
           created_at?: string
           data_movimento?: string | null
           deposito?: string | null
           documento?: string | null
+          documento_tipo?: string | null
+          ds_efetivacao?: string | null
+          ds_situacao?: string | null
+          dt_efetivacao?: string | null
           id?: string
           id_externo?: string | null
           observacao?: string | null
           quantidade?: number
           raw?: Json | null
+          situacao?: string | null
           synced_at?: string
           tipo?: string
+          usuario_criacao?: string | null
+          usuario_efetivacao?: string | null
+          valor?: number | null
         }
         Relationships: []
       }
