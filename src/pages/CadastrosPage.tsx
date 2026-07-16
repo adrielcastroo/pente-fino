@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight, GitCompare } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import AugeItemLookup from '@/components/auge/AugeItemLookup';
 import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
+import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
@@ -201,6 +202,9 @@ export default function CadastrosPage() {
           </TabsTrigger>
           <TabsTrigger value="auge" className="gap-2 flex-1 sm:flex-none">
             <History className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Auge (ERP)</span>
+          </TabsTrigger>
+          <TabsTrigger value="reconciliacao" className="gap-2 flex-1 sm:flex-none">
+            <GitCompare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Reconciliação</span>
           </TabsTrigger>
         </TabsList>
 
@@ -525,6 +529,10 @@ export default function CadastrosPage() {
 
         <TabsContent value="auge" className="flex-1 overflow-hidden mt-0">
           <AugeProdutosTab />
+        </TabsContent>
+
+        <TabsContent value="reconciliacao" className="flex-1 overflow-hidden mt-0">
+          <AugeReconciliacaoTab />
         </TabsContent>
       </Tabs>
 
