@@ -73,7 +73,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
     queryFn: async () => {
       const { data } = await supabase
         .from('itens_cadastro')
-        .select('id, codigo_interno, descricao, codigos_fornecedor, fornecedor, categoria, unidade')
+        .select('id, codigo_interno, descricao, codigos_fornecedor, updated_by_name, updated_at')
         .or(`codigo_interno.eq.${cod},codigos_fornecedor_normalizado.cs.{${cod}}`)
         .limit(5);
       return data ?? [];
