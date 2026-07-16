@@ -10,6 +10,8 @@ import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, Ch
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import AugeItemLookup from '@/components/auge/AugeItemLookup';
+import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -189,7 +191,19 @@ export default function CadastrosPage() {
         </div>
       </header>
 
+      <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-4">
+        <TabsList className="w-fit">
+          <TabsTrigger value="interno" className="gap-2">
+            <Package className="h-3.5 w-3.5" /> Cadastro interno
+          </TabsTrigger>
+          <TabsTrigger value="auge" className="gap-2">
+            <History className="h-3.5 w-3.5" /> Auge (ERP)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="interno" className="flex-1 flex flex-col gap-4 overflow-hidden mt-0">
       <div className="flex flex-col md:flex-row md:items-center gap-3">
+
         <div className="relative w-full md:flex-1 md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -501,9 +515,16 @@ export default function CadastrosPage() {
           </div>
         </nav>
       )}
+        </TabsContent>
+
+        <TabsContent value="auge" className="flex-1 overflow-hidden mt-0">
+          <AugeProdutosTab />
+        </TabsContent>
+      </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
       <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />
+
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
