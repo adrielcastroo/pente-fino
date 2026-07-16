@@ -13,6 +13,8 @@ import { usePerformance } from '@/hooks/use-performance';
 import { formatDateBR } from '@/lib/app-utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/page-header';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
 
 interface SaidaRegistro {
   id: string;
