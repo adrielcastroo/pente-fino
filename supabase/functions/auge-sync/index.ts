@@ -286,7 +286,7 @@ async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: str
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'movimentacoes') {
-      const rows = raw.map(mapMovimentacao).filter(r => r.codigo_produto && r.id_externo);
+      const rows = raw.map(mapMovimentacao).filter(r => r.id_externo);
       const { error, count } = await admin.from('auge_movimentacoes')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
