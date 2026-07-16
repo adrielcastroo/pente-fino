@@ -204,8 +204,8 @@ export default function CadastrosPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="interno" className="flex-1 flex flex-col gap-4 overflow-hidden mt-0">
-      <div className="flex flex-col md:flex-row md:items-center gap-3">
+        <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
 
         <div className="relative w-full md:flex-1 md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -213,11 +213,11 @@ export default function CadastrosPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por código, descrição ou fornecedor..."
-            className="pl-9 h-10"
+            className="pl-9 h-10 w-full"
             aria-label="Buscar itens"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2 md:contents">
+        <div className="flex flex-wrap items-center gap-2 md:contents min-w-0">
         <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
           <SelectTrigger className="flex-1 min-w-[140px] md:w-[180px] md:flex-none h-10" aria-label="Filtrar por fornecedor">
             <SelectValue placeholder="Mostrar" />
@@ -238,10 +238,10 @@ export default function CadastrosPage() {
             <SelectItem value="updated_at">Atualizado recente</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-2 md:ml-auto">
-          <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
+          <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
           {semFornecedorCount > 0 && (
-            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30">
+            <Badge variant="outline" className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 border-amber-500/30">
               {semFornecedorCount} sem fornecedor
             </Badge>
           )}
