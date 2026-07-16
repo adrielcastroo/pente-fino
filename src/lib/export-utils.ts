@@ -489,29 +489,92 @@ function normalizeProcToken(value: string): string {
   return out;
 }
 
+// Paleta de cores para "títulos" de grupos de modelos distintos (ARGB para ExcelJS)
+const MODEL_HEADER_COLORS = [
+  'FFFCD5B4', // pêssego
+  'FFB4C7E7', // azul claro
+  'FFC6EFCE', // verde claro
+  'FFF4CCCC', // rosa claro
+  'FFFFF2CC', // amarelo claro
+  'FFD9D2E9', // lavanda
+  'FFD0E0E3', // ciano claro
+  'FFEAD1DC', // rosa pastel
+];
+
+function cxSortKey(cx: string): number {
+  if (!cx || /^S\/?CX$/i.test(cx)) return -1; // S/CX sempre primeiro
+  const m = cx.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 9999;
+}
+
 export async function exportMotorControleToExcel(registros: Registro[], fileName: string) {
   try {
     const toastId = toast.loading('Preparando arquivo Excel...');
-    const XLSX = await import('xlsx');
     const motorRegs = registros.filter(r => r.modoOrigem === 'motor' && r.tipoTecido !== 'Coulisse');
     const controleRegs = registros.filter(r => r.modoOrigem === 'controle');
     const coulisseRegs = registros.filter(r => r.tipoTecido === 'Coulisse');
-    const rows: any[][] = [];
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Motores');
+    ws.columns = [{ width: 50 }, { width: 8 }, { width: 50 }];
+
+    const yellowFill: ExcelJS.Fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFFF00' },
+    };
+
+    const paintSeriesYellow = (rowNumber: number) => {
+      const cell = ws.getCell(rowNumber, 3);
+      cell.fill = yellowFill;
+    };
 
     if (motorRegs.length > 0) {
-      const groups = new Map<string, Registro[]>();
+      // Agrupa por (CX + item) para separar modelos distintos mesmo dentro da mesma caixa
+      const groups = new Map<string, { cx: string; item: string; regs: Registro[] }>();
       for (const r of motorRegs) {
         const cx = extractCaixaLabel(r.loteSistema);
-        if (!groups.has(cx)) groups.set(cx, []);
-        groups.get(cx)!.push(r);
+        const key = `${cx}__${r.item}`;
+        if (!groups.has(key)) groups.set(key, { cx, item: r.item, regs: [] });
+        groups.get(key)!.regs.push(r);
       }
-      for (const [cx, regs] of groups) {
-        const firstItem = regs[0]?.item || '';
-        rows.push([`${cx} ${firstItem}`, '', 'séries']);
-        for (const r of regs) {
-          rows.push([`${r.item} ${r.lote}`, '', normalizeProcToken(r.loteSistema)]);
+
+      // Ordena: S/CX primeiro, depois CX01, CX02... e por item dentro da mesma CX
+      const ordered = Array.from(groups.values()).sort((a, b) => {
+        const ka = cxSortKey(a.cx);
+        const kb = cxSortKey(b.cx);
+        if (ka !== kb) return ka - kb;
+        return a.item.localeCompare(b.item);
+      });
+
+      // Atribui uma cor para cada modelo distinto (item)
+      const itemColorMap = new Map<string, string>();
+      let colorIdx = 0;
+      for (const g of ordered) {
+        if (!itemColorMap.has(g.item)) {
+          itemColorMap.set(g.item, MODEL_HEADER_COLORS[colorIdx % MODEL_HEADER_COLORS.length]);
+          colorIdx++;
         }
-        rows.push(['', '', '']);
+      }
+
+      for (const g of ordered) {
+        const color = itemColorMap.get(g.item)!;
+        const headerRow = ws.addRow([`${g.cx} ${g.item}`, '', 'séries']);
+        const headerFill: ExcelJS.Fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: color },
+        };
+        headerRow.getCell(1).fill = headerFill;
+        headerRow.getCell(1).font = { bold: true };
+        headerRow.getCell(3).fill = headerFill;
+        headerRow.getCell(3).font = { bold: true };
+
+        for (const r of g.regs) {
+          const dataRow = ws.addRow([`${r.item} ${r.lote}`, '', normalizeProcToken(r.loteSistema)]);
+          paintSeriesYellow(dataRow.number);
+        }
+        ws.addRow(['', '', '']);
       }
     }
 
@@ -522,31 +585,49 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key)!.push(r);
       }
+      let colorIdx = 0;
       for (const [modelo, regs] of groups) {
         const firstNf = regs[0]?.nf || '';
         const headerLabel = firstNf ? `${modelo} ${firstNf}` : modelo;
-        rows.push([headerLabel, '', 'Séries']);
+        const color = MODEL_HEADER_COLORS[colorIdx % MODEL_HEADER_COLORS.length];
+        colorIdx++;
+        const headerRow = ws.addRow([headerLabel, '', 'Séries']);
+        const headerFill: ExcelJS.Fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: color },
+        };
+        headerRow.getCell(1).fill = headerFill;
+        headerRow.getCell(1).font = { bold: true };
+        headerRow.getCell(3).fill = headerFill;
+        headerRow.getCell(3).font = { bold: true };
+
         for (const r of regs) {
           const seqMatch = r.loteSistema.match(/\*(\d+)$/);
           const seqLabel = seqMatch ? `*${seqMatch[1]}` : '';
-          rows.push([r.lote, seqLabel, normalizeProcToken(r.loteSistema)]);
+          const dataRow = ws.addRow([r.lote, seqLabel, normalizeProcToken(r.loteSistema)]);
+          paintSeriesYellow(dataRow.number);
         }
-        rows.push(['', '', '']);
+        ws.addRow(['', '', '']);
       }
-    }
-    if (coulisseRegs.length > 0) {
-      rows.push(['COULISSE', 'Proc', 'Cx', 'Lote', 'Lote Final']);
-      for (const r of coulisseRegs) {
-        rows.push([r.item, r.processo, r.quantidade, r.lote, normalizeProcToken(r.loteSistema)]);
-      }
-      rows.push(['', '', '', '', '']);
     }
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{ wch: 50 }, { wch: 8 }, { wch: 50 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Motores');
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
+    if (coulisseRegs.length > 0) {
+      ws.addRow(['COULISSE', 'Proc', 'Cx', 'Lote', 'Lote Final']);
+      for (const r of coulisseRegs) {
+        ws.addRow([r.item, r.processo, r.quantidade, r.lote, normalizeProcToken(r.loteSistema)]);
+      }
+      ws.addRow(['', '', '', '', '']);
+    }
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
     toast.dismiss(toastId);
     toast.success('Conferência exportada com sucesso!');
   } catch (error) {
