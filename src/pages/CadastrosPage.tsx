@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
+import AugeItemLookup from '@/components/auge/AugeItemLookup';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
