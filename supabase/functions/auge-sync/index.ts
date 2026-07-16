@@ -105,16 +105,51 @@ async function tryRoutes(jar: Jar, paths: string[]): Promise<any[] | null> {
           'User-Agent': 'PenteFinoBot/1.0',
         },
       });
-      if (!res.ok) continue;
-      const ct = res.headers.get('content-type') ?? '';
-      if (ct.includes('application/json')) {
-        const data = await res.json();
+      if (!res.ok) { await res.body?.cancel(); continue; }
+      const text = await res.text();
+      // Endpoint retorna text/html mas com corpo JSON
+      try {
+        const data = JSON.parse(text);
         const arr = Array.isArray(data) ? data : (data.data ?? data.rows ?? data.items ?? data.results ?? []);
         if (Array.isArray(arr) && arr.length > 0) return arr;
-      }
+      } catch { /* not json */ }
     } catch (_) { /* try next */ }
   }
   return null;
+}
+
+// Rota real das Saídas (HAR): POST form-urlencoded, retorna {data: [...]}
+async function fetchSaidas(jar: Jar, sinceDaysAgo = 60): Promise<any[] | null> {
+  const from = new Date(Date.now() - sinceDaysAgo * 86400000);
+  const dd = String(from.getDate()).padStart(2, '0');
+  const mm = String(from.getMonth() + 1).padStart(2, '0');
+  const yy = from.getFullYear();
+  const body = new URLSearchParams({
+    dtCriacaoDe: `${dd}/${mm}/${yy}`,
+    dtCriacaoAte: '',
+    idSituacao: '',
+    cdDepositoOrigem: '',
+    cdItem: '',
+  });
+  const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php`, {
+    method: 'POST',
+    headers: {
+      'Cookie': jar.header(),
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'X-Requested-With': 'XMLHttpRequest',
+      'Origin': AUGE_BASE_URL,
+      'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirSaidaEstoque.php`,
+      'User-Agent': 'PenteFinoBot/1.0',
+      'Accept': 'application/json, text/plain, */*',
+    },
+    body,
+  });
+  if (!res.ok) { await res.body?.cancel(); return null; }
+  const text = await res.text();
+  try {
+    const j = JSON.parse(text);
+    return Array.isArray(j?.data) ? j.data : null;
+  } catch { return null; }
 }
 
 const CANDIDATES: Record<Entity, string[]> = {
