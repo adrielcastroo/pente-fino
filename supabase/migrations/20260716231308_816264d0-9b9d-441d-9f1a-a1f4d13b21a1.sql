@@ -1,0 +1,1 @@
+ALTER VIEW public.auge_kardex SET (security_invoker = true);
