@@ -594,6 +594,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
   const url = new URL(req.url);
+  const action = url.searchParams.get('action');
   const entityParam = url.searchParams.get('entity');
   const entities: Entity[] = entityParam
     ? entityParam.split(',').filter(e => (ALL_ENTITIES as string[]).includes(e)) as Entity[]
