@@ -175,15 +175,28 @@ function mapDeposito(r: any) {
   };
 }
 function mapMovimentacao(r: any) {
+  // Fields from real Auge endpoint /l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php
+  const idExt = String(r.cdMovEstoqueERP ?? r.id ?? r.id_externo ?? '').trim();
+  const dt = r.dtCriacao ?? r.data ?? r.data_movimento ?? null;
+  // Parse "DD/MM/YYYY HH:mm:ss" -> ISO
+  let iso: string | null = null;
+  if (typeof dt === 'string' && dt.includes('/')) {
+    const [d, t] = dt.split(' ');
+    const [dd, mm, yy] = d.split('/');
+    iso = `${yy}-${mm}-${dd}T${t ?? '00:00:00'}-03:00`;
+  } else if (dt) {
+    iso = String(dt);
+  }
+  const qt = typeof r.qtItem === 'string' ? Number(r.qtItem.replace(',', '.')) : Number(r.qtItem ?? r.quantidade ?? r.qtd ?? 0);
   return {
-    id_externo: String(r.id ?? r.id_externo ?? `${r.documento ?? ''}-${r.codigo ?? ''}-${r.data ?? ''}`),
-    tipo: String(r.tipo ?? r.natureza ?? 'movimento').toLowerCase(),
-    codigo_produto: String(r.codigo ?? r.produto ?? r.sku ?? '').trim(),
-    deposito: r.deposito ?? r.armazem ?? null,
-    quantidade: Number(r.quantidade ?? r.qtd ?? 0),
-    documento: r.documento ?? r.nf ?? r.pedido ?? null,
-    data_movimento: r.data ?? r.data_movimento ?? r.emissao ?? null,
-    observacao: r.observacao ?? r.obs ?? null,
+    id_externo: idExt,
+    tipo: (r.idTipoMovimentacao === 'S' ? 'saida' : r.idTipoMovimentacao === 'E' ? 'entrada' : String(r.tipo ?? 'movimento')).toLowerCase(),
+    codigo_produto: String(r.cdItem ?? r.codigo ?? r.produto ?? '').trim() || '-', // header endpoint has no item
+    deposito: r.cdDepositoOrigem ?? r.deposito ?? r.armazem ?? null,
+    quantidade: isFinite(qt) ? qt : 0,
+    documento: r.nrTransfEstoqueERP ?? r.documento ?? r.nf ?? null,
+    data_movimento: iso,
+    observacao: r.dsObservacao ?? r.observacao ?? null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
