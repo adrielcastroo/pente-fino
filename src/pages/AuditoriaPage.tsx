@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, Search, Filter, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Search, Filter, ChevronDown, ChevronRight, RefreshCw, History } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import AugeKardexTab from '@/components/auge/AugeKardexTab';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 interface AuditLog {
@@ -113,11 +115,25 @@ function AuditoriaContent() {
             Trilha imutável de todas as alterações no sistema. Visível para Gerente e Admin.
           </p>
         </div>
-        <Button onClick={load} variant="outline" size="sm" disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
       </header>
+
+      <Tabs defaultValue="auditoria" className="w-full">
+        <TabsList className="bg-card/40 border border-border/40 rounded-md">
+          <TabsTrigger value="auditoria" className="gap-2 text-xs font-bold uppercase tracking-wider">
+            <ShieldAlert className="h-3.5 w-3.5" /> Auditoria
+          </TabsTrigger>
+          <TabsTrigger value="kardex" className="gap-2 text-xs font-bold uppercase tracking-wider">
+            <History className="h-3.5 w-3.5" /> Kardex (Auge)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="auditoria" className="mt-4 space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={load} variant="outline" size="sm" disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+          </div>
 
       <Card className="p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_180px_220px] gap-3">
