@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Database, Package, ArrowRightLeft, Boxes, FileText, GitCompare } from 'lucide-react';
+import { Database, Package, ArrowRightLeft, Boxes, FileText, GitCompare, History } from 'lucide-react';
 import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
 import AugeSaldoTab from '@/components/auge/AugeSaldoTab';
 import AugeTransferenciasTab from '@/components/auge/AugeTransferenciasTab';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
+import AugeKardexTab from '@/components/auge/AugeKardexTab';
 
 export default function AugeSyncPage() {
   const [tab, setTab] = useState('produtos');
@@ -29,6 +30,7 @@ export default function AugeSyncPage() {
           <TabTrigger v="saldo" icon={Boxes}>Saldo</TabTrigger>
           <TabTrigger v="saidas" icon={FileText}>Saídas</TabTrigger>
           <TabTrigger v="transferencias" icon={ArrowRightLeft}>Transferências</TabTrigger>
+          <TabTrigger v="kardex" icon={History}>Kardex</TabTrigger>
           <TabTrigger v="reconciliacao" icon={GitCompare}>Reconciliação</TabTrigger>
         </TabsList>
 
@@ -37,6 +39,7 @@ export default function AugeSyncPage() {
           <TabsContent value="saldo" className="h-full m-0"><AugeSaldoTab /></TabsContent>
           <TabsContent value="saidas" className="h-full m-0"><AugeSaidasTab /></TabsContent>
           <TabsContent value="transferencias" className="h-full m-0"><AugeTransferenciasTab /></TabsContent>
+          <TabsContent value="kardex" className="h-full m-0"><AugeKardexTab /></TabsContent>
           <TabsContent value="reconciliacao" className="h-full m-0"><AugeReconciliacaoTab /></TabsContent>
         </Card>
       </Tabs>

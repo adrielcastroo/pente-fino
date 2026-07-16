@@ -419,6 +419,33 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_sync_state: {
+        Row: {
+          entidade: string
+          last_error: string | null
+          last_max_dt: string | null
+          last_status: string | null
+          last_synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          entidade: string
+          last_error?: string | null
+          last_max_dt?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          entidade?: string
+          last_error?: string | null
+          last_max_dt?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       auge_transferencias: {
         Row: {
           codigo_produto: string | null
@@ -3041,7 +3068,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      auge_kardex: {
+        Row: {
+          codigo_produto: string | null
+          data_movimento: string | null
+          deposito_destino: string | null
+          deposito_origem: string | null
+          documento: string | null
+          ds_situacao: string | null
+          operacao: string | null
+          origem: string | null
+          quantidade: number | null
+          ref_id: string | null
+          synced_at: string | null
+          usuario_criacao: string | null
+          valor: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       aplicar_descricao_cadastro: {

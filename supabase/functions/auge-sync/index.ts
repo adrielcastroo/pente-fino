@@ -506,9 +506,37 @@ function mapTransferencia(r: any) {
 
 
 async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
+// Calcula quantos dias precisamos buscar com base no último sync.
+// Adiciona 2 dias de overlap para não perder registros que chegaram atrasados.
+function daysSince(iso: string | null | undefined, min = 3, max = 90): number {
+  if (!iso) return max;
+  const diff = Math.ceil((Date.now() - new Date(iso).getTime()) / 86_400_000) + 2;
+  return Math.min(Math.max(diff, min), max);
+}
+
+function maxDateISO(rows: any[], field = 'data_movimento'): string | null {
+  let m: number | null = null;
+  for (const r of rows) {
+    const v = r?.[field];
+    if (!v) continue;
+    const t = new Date(v).getTime();
+    if (isFinite(t) && (m == null || t > m)) m = t;
+  }
+  return m ? new Date(m).toISOString() : null;
+}
+
+async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
   if (UNMAPPED.includes(entity)) {
     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
   }
+
+  // Estado anterior (para sync incremental)
+  const { data: prevState } = await admin
+    .from('auge_sync_state')
+    .select('last_max_dt')
+    .eq('entidade', entity)
+    .maybeSingle();
+  const lastMax: string | null = prevState?.last_max_dt ?? null;
 
   const { data: run } = await admin.from('auge_sync_runs')
     .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
@@ -518,6 +546,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
   try {
     let processed = 0;
     let upserted = 0;
+    let newMaxDt: string | null = null;
 
     if (entity === 'saldo') {
       const items = await fetchSaldo(auth);
@@ -536,13 +565,16 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'movimentacoes') {
-      const items = await fetchSaidasPHP(auth, 60);
+      const days = daysSince(lastMax);
+      const items = await fetchSaidasPHP(auth, days);
       processed = items.length;
       const rows = items.map(mapSaidaPHP).filter(r => r.id_externo);
+      newMaxDt = maxDateISO(rows);
       const { error, count } = await admin.from('auge_movimentacoes')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { days_back: days, last_max_dt: lastMax } }).eq('id', runId);
     } else if (entity === 'depositos') {
       const { data: items, path } = await fetchDepositosPHP(auth);
       processed = items.length;
@@ -562,31 +594,50 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       upserted = count ?? rows.length;
       await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
     } else if (entity === 'transferencias') {
-      const { data: items, path } = await fetchTransferenciasPHP(auth, 60);
+      const days = daysSince(lastMax);
+      const { data: items, path } = await fetchTransferenciasPHP(auth, days);
       processed = items.length;
       const rows = items.map(mapTransferencia).filter(r => r.id_externo);
+      newMaxDt = maxDateISO(rows);
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       upserted = count ?? rows.length;
-      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+      await admin.from('auge_sync_runs').update({ detalhes: { path, days_back: days, last_max_dt: lastMax } }).eq('id', runId);
     }
 
+    const nowIso = new Date().toISOString();
     await admin.from('auge_sync_runs').update({
       status: 'success',
-      finished_at: new Date().toISOString(),
+      finished_at: nowIso,
       rows_processed: processed,
       rows_upserted: upserted,
     }).eq('id', runId);
 
-    return { entity, processed, upserted };
+    // Persiste estado de sync incremental
+    await admin.from('auge_sync_state').upsert({
+      entidade: entity,
+      last_synced_at: nowIso,
+      last_max_dt: newMaxDt ?? lastMax,
+      last_status: 'success',
+      last_error: null,
+    }, { onConflict: 'entidade' });
+
+    return { entity, processed, upserted, incremental: !!lastMax };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
+    const nowIso = new Date().toISOString();
     await admin.from('auge_sync_runs').update({
       status: 'error',
-      finished_at: new Date().toISOString(),
+      finished_at: nowIso,
       error_message: msg,
     }).eq('id', runId);
+    await admin.from('auge_sync_state').upsert({
+      entidade: entity,
+      last_synced_at: nowIso,
+      last_status: 'error',
+      last_error: msg,
+    }, { onConflict: 'entidade' });
     return { entity, error: msg };
   }
 }

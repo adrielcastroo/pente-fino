@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, RefreshCw, Loader2, Warehouse } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
-import AugeDetailDialog from './AugeDetailDialog';
+import FichaItemDialog from './FichaItemDialog';
 
 interface AugeSaldo {
   id: string;
@@ -27,7 +27,7 @@ export default function AugeSaldoTab() {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
   const [dep, setDep] = useState('todos');
-  const [detail, setDetail] = useState<AugeSaldo | null>(null);
+  const [fichaCodigo, setFichaCodigo] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -135,7 +135,7 @@ export default function AugeSaldoTab() {
             </TableHeader>
             <TableBody>
               {filtered.slice(0, 300).map(r => (
-                <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetail(r)}>
+                <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setFichaCodigo(r.codigo)}>
                   <TableCell className="font-mono text-xs font-bold text-primary">{r.codigo}</TableCell>
                   <TableCell className="text-xs">{r.descricao || '—'}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{r.deposito}</Badge></TableCell>
@@ -153,21 +153,11 @@ export default function AugeSaldoTab() {
         </div>
       )}
 
-      {detail && (
-        <AugeDetailDialog
-          open={!!detail} onOpenChange={v => !v && setDetail(null)}
-          title={detail.codigo}
-          subtitle={detail.descricao || undefined}
-          syncedAt={detail.synced_at}
-          fields={[
-            { label: 'Depósito', value: detail.deposito, mono: true },
-            { label: 'Quantidade', value: Number(detail.quantidade).toLocaleString('pt-BR'), mono: true },
-            { label: 'Unidade', value: detail.unidade },
-            { label: 'Descrição', value: detail.descricao, span: 2 },
-          ]}
-          raw={detail.raw}
-        />
-      )}
+      <FichaItemDialog
+        codigo={fichaCodigo}
+        open={!!fichaCodigo}
+        onOpenChange={(o) => !o && setFichaCodigo(null)}
+      />
     </div>
   );
 }

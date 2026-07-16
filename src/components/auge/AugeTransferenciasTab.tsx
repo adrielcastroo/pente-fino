@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RefreshCw, Loader2, ArrowRightLeft, Search } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
-import AugeDetailDialog from './AugeDetailDialog';
+import TransferenciaDetailDialog from './TransferenciaDetailDialog';
 
 export default function AugeTransferenciasTab() {
   const [rows, setRows] = useState<any[]>([]);
@@ -106,24 +106,11 @@ export default function AugeTransferenciasTab() {
         </div>
       )}
 
-      {detail && (
-        <AugeDetailDialog
-          open={!!detail} onOpenChange={v => !v && setDetail(null)}
-          title={detail.documento || detail.id_externo}
-          syncedAt={detail.synced_at}
-          fields={[
-            { label: 'Origem', value: detail.deposito_origem },
-            { label: 'Destino', value: detail.deposito_destino },
-            { label: 'Produto', value: detail.codigo_produto, mono: true },
-            { label: 'Quantidade', value: detail.quantidade },
-            { label: 'Situação', value: detail.ds_situacao || detail.situacao },
-            { label: 'Data', value: detail.data_movimento ? formatDateBR(detail.data_movimento) : null },
-            { label: 'Usuário', value: detail.usuario_criacao },
-            { label: 'Valor', value: detail.valor },
-          ]}
-          raw={detail.raw}
-        />
-      )}
+      <TransferenciaDetailDialog
+        transferencia={detail}
+        open={!!detail}
+        onOpenChange={(o) => !o && setDetail(null)}
+      />
     </div>
   );
 }
