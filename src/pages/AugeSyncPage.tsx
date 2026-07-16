@@ -74,6 +74,7 @@ export default function AugeSyncPage() {
       const path = entity ? `auge-sync?entity=${entity}` : 'auge-sync';
       const { data, error } = await supabase.functions.invoke(path);
       if (error) throw error;
+      if (data && data.ok === false) throw new Error(data.error ?? 'Falha desconhecida');
       return data;
     },
     onSuccess: (d: any) => {
