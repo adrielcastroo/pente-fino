@@ -1,6 +1,8 @@
 // Auge (Unilux ERP) -> Pente Fino sync
-// Espelha: saldo, produtos, depósitos, movimentações, lotes
-// Sem API oficial: scraper autenticado com rotas candidatas.
+// Endpoints confirmados via HAR:
+//   - Login: GET /login (extrai _token) + POST /login (form-urlencoded)
+//   - Produtos + Saldos: GET /l.unilux/modInventario/Ajax/getItensEstoque.php
+//   - Saídas: POST /l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -10,14 +12,17 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
 
-const AUGE_BASE_URL = Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app';
+const AUGE_BASE_URL = (Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app').replace(/\/$/, '');
 const AUGE_USERNAME = Deno.env.get('AUGE_USERNAME') ?? '';
 const AUGE_PASSWORD = Deno.env.get('AUGE_PASSWORD') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
 type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes';
-const ALL_ENTITIES: Entity[] = ['produtos', 'depositos', 'saldo', 'movimentacoes', 'lotes'];
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'depositos', 'lotes'];
+const UNMAPPED: Entity[] = ['depositos', 'lotes'];
 
 // ---------- Cookie jar ----------
 class Jar {
@@ -35,91 +40,99 @@ class Jar {
   }
 }
 
-const LOGIN_PATH_CANDIDATES = ['/login', '/auth/login', '/entrar', '/acesso', '/signin', '/sign-in', '/usuarios/login', '/api/login', '/api/auth/login'];
-
+// ---------- Login (Laravel padrão) ----------
 async function login(jar: Jar): Promise<void> {
-  let loginHtml = '';
-  let loginPath: string | null = null;
-  let lastStatus = 0;
-
-  for (const p of LOGIN_PATH_CANDIDATES) {
-    try {
-      const res = await fetch(`${AUGE_BASE_URL}${p}`, {
-        redirect: 'manual',
-        headers: { 'User-Agent': 'PenteFinoBot/1.0', 'Accept': 'text/html,application/json' },
-      });
-      lastStatus = res.status;
-      jar.ingest(res);
-      if (res.status === 200 || res.status === 302) {
-        loginHtml = await res.text();
-        loginPath = p;
-        break;
-      }
-      await res.body?.cancel();
-    } catch (_) { /* try next */ }
-  }
-
-  if (!loginPath) {
-    throw new Error(`Nenhuma rota de login respondeu em ${AUGE_BASE_URL} (último HTTP ${lastStatus}). Envie o HAR da tela de login para mapear a URL correta.`);
-  }
+  const loginUrl = `${AUGE_BASE_URL}/login`;
+  const getRes = await fetch(loginUrl, {
+    redirect: 'manual',
+    headers: {
+      'User-Agent': UA,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+    },
+  });
+  jar.ingest(getRes);
+  const html = await getRes.text();
 
   const csrfMatch =
-    loginHtml.match(/name="_token"\s+value="([^"]+)"/i) ||
-    loginHtml.match(/name="csrf-token"\s+content="([^"]+)"/i) ||
-    loginHtml.match(/name="csrfmiddlewaretoken"\s+value="([^"]+)"/i);
+    html.match(/name="_token"\s+value="([^"]+)"/i) ||
+    html.match(/name="csrf-token"\s+content="([^"]+)"/i);
   const csrf = csrfMatch?.[1];
+  if (!csrf) {
+    throw new Error(`Não foi possível extrair _token da página de login (HTTP ${getRes.status}).`);
+  }
 
-  const body = new URLSearchParams();
-  for (const k of ['email', 'username', 'user', 'login']) body.set(k, AUGE_USERNAME);
-  body.set('password', AUGE_PASSWORD);
-  body.set('senha', AUGE_PASSWORD);
-  if (csrf) body.set('_token', csrf);
+  const body = new URLSearchParams({
+    _token: csrf,
+    email: AUGE_USERNAME,
+    password: AUGE_PASSWORD,
+  });
 
-  const postRes = await fetch(`${AUGE_BASE_URL}${loginPath}`, {
+  const postRes = await fetch(loginUrl, {
     method: 'POST',
     redirect: 'manual',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Cookie': jar.header(),
-      'Referer': `${AUGE_BASE_URL}${loginPath}`,
-      'User-Agent': 'PenteFinoBot/1.0',
-      ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+      'Referer': loginUrl,
+      'Origin': AUGE_BASE_URL,
+      'User-Agent': UA,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+      'Upgrade-Insecure-Requests': '1',
     },
     body,
   });
   jar.ingest(postRes);
+  await postRes.body?.cancel();
 
-  if (postRes.status !== 302 && postRes.status !== 200 && postRes.status !== 204) {
-    throw new Error(`Login Auge falhou em ${loginPath} (HTTP ${postRes.status}). Envie o HAR do login para mapear os campos e a URL corretos.`);
+  // Sucesso = 302 para /home. 200 = página de login re-renderizada (credenciais inválidas).
+  if (postRes.status !== 302) {
+    throw new Error(`Login Auge falhou (HTTP ${postRes.status}). Verifique AUGE_USERNAME/AUGE_PASSWORD.`);
+  }
+  const loc = postRes.headers.get('location') ?? '';
+  if (loc.includes('/login')) {
+    throw new Error('Login Auge redirecionou de volta para /login — credenciais inválidas.');
   }
 }
 
-// Tenta candidatos de rota, devolve o primeiro payload JSON não-vazio (array)
-async function tryRoutes(jar: Jar, paths: string[]): Promise<any[] | null> {
-  for (const path of paths) {
-    try {
-      const res = await fetch(`${AUGE_BASE_URL}${path}`, {
-        headers: {
-          'Cookie': jar.header(),
-          'Accept': 'application/json, text/html;q=0.9',
-          'User-Agent': 'PenteFinoBot/1.0',
-        },
-      });
-      if (!res.ok) { await res.body?.cancel(); continue; }
-      const text = await res.text();
-      // Endpoint retorna text/html mas com corpo JSON
-      try {
-        const data = JSON.parse(text);
-        const arr = Array.isArray(data) ? data : (data.data ?? data.rows ?? data.items ?? data.results ?? []);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch { /* not json */ }
-    } catch (_) { /* try next */ }
-  }
-  return null;
+// ---------- Parser numérico BR: "2.995,00" -> 2995 ----------
+function parseNumBR(v: any): number {
+  if (v == null) return 0;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim();
+  if (!s) return 0;
+  // remove separador de milhar, troca vírgula por ponto
+  const norm = s.replace(/\./g, '').replace(',', '.');
+  const n = Number(norm);
+  return isFinite(n) ? n : 0;
 }
 
-// Rota real das Saídas (HAR): POST form-urlencoded, retorna {data: [...]}
-async function fetchSaidas(jar: Jar, sinceDaysAgo = 60): Promise<any[] | null> {
+// ---------- Produtos + Saldos (endpoint único) ----------
+async function fetchItensEstoque(jar: Jar): Promise<any[]> {
+  const url = `${AUGE_BASE_URL}/l.unilux/modInventario/Ajax/getItensEstoque.php`
+    + `?idEstoca=Y&idVende=&idCompra=&idLiquidavel=Y&idEmEstoque=&idAtivo=Y`
+    + `&dsPesquisaGeralCdItem=**&dsPesquisaGeralNmItem=&cdGrupo=&idTipoItem=N&_=${Date.now()}`;
+  const res = await fetch(url, {
+    headers: {
+      'Cookie': jar.header(),
+      'X-Requested-With': 'XMLHttpRequest',
+      'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/consultaItens.php`,
+      'User-Agent': UA,
+      'Accept': 'application/json, text/javascript, */*; q=0.01',
+    },
+  });
+  if (!res.ok) {
+    await res.body?.cancel();
+    throw new Error(`getItensEstoque falhou (HTTP ${res.status}).`);
+  }
+  const text = await res.text();
+  const j = JSON.parse(text);
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
+// ---------- Saídas ----------
+async function fetchSaidas(jar: Jar, sinceDaysAgo = 60): Promise<any[]> {
   const from = new Date(Date.now() - sinceDaysAgo * 86400000);
   const dd = String(from.getDate()).padStart(2, '0');
   const mm = String(from.getMonth() + 1).padStart(2, '0');
@@ -139,162 +152,114 @@ async function fetchSaidas(jar: Jar, sinceDaysAgo = 60): Promise<any[] | null> {
       'X-Requested-With': 'XMLHttpRequest',
       'Origin': AUGE_BASE_URL,
       'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirSaidaEstoque.php`,
-      'User-Agent': 'PenteFinoBot/1.0',
+      'User-Agent': UA,
       'Accept': 'application/json, text/plain, */*',
     },
     body,
   });
-  if (!res.ok) { await res.body?.cancel(); return null; }
+  if (!res.ok) {
+    await res.body?.cancel();
+    throw new Error(`getSaidaEstoque falhou (HTTP ${res.status}).`);
+  }
   const text = await res.text();
-  try {
-    const j = JSON.parse(text);
-    return Array.isArray(j?.data) ? j.data : null;
-  } catch { return null; }
+  const j = JSON.parse(text);
+  return Array.isArray(j?.data) ? j.data : [];
 }
-
-const CANDIDATES: Record<Entity, string[]> = {
-  saldo: [
-    '/api/estoque/saldos', '/api/saldos', '/estoque/saldos.json',
-    '/estoque/saldos', '/relatorios/saldo-estoque.json',
-  ],
-  produtos: [
-    '/api/produtos', '/api/cadastros/produtos', '/produtos.json',
-    '/cadastros/produtos.json', '/api/itens',
-  ],
-  depositos: [
-    '/api/depositos', '/api/armazens', '/depositos.json', '/cadastros/depositos.json',
-  ],
-  movimentacoes: [
-    '/api/estoque/movimentacoes', '/api/movimentacoes',
-    '/estoque/movimentacoes.json', '/relatorios/movimentacoes.json',
-  ],
-  lotes: [
-    '/api/lotes', '/api/estoque/lotes', '/lotes.json', '/estoque/lotes.json',
-  ],
-};
 
 // ---------- Normalizadores ----------
-function mapSaldo(r: any) {
+function mapProdutoFromItem(r: any) {
   return {
-    codigo: String(r.codigo ?? r.sku ?? r.produto ?? r.codigo_produto ?? '').trim(),
-    descricao: r.descricao ?? r.nome ?? null,
-    deposito: String(r.deposito ?? r.armazem ?? r.deposito_codigo ?? 'PADRAO'),
-    quantidade: Number(r.saldo ?? r.quantidade ?? r.qtd ?? 0),
-    unidade: r.unidade ?? r.un ?? null,
-    raw: r,
-    synced_at: new Date().toISOString(),
-  };
-}
-function mapProduto(r: any) {
-  return {
-    codigo: String(r.codigo ?? r.sku ?? r.id_externo ?? '').trim(),
-    descricao: r.descricao ?? r.nome ?? null,
-    unidade: r.unidade ?? r.un ?? null,
-    ncm: r.ncm ?? null,
-    categoria: r.categoria ?? r.grupo ?? null,
-    ativo: r.ativo ?? true,
+    codigo: String(r.cdItem ?? '').trim(),
+    descricao: r.nmItem ?? null,
+    unidade: r.idUMEstoque ?? null,
+    ncm: r.idNCM ?? null,
+    categoria: r.nmGrupoItem ?? null,
+    ativo: r.idAtivo === 'Y' || r.idAtivo === true,
     raw: r,
     synced_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 }
-function mapDeposito(r: any) {
+
+function mapSaldoFromItem(r: any) {
+  const disponivel = r['qtDisponível'] ?? r.qtDisponivel ?? r.qtEstoque;
   return {
-    codigo: String(r.codigo ?? r.id ?? r.sigla ?? '').trim(),
-    nome: r.nome ?? r.descricao ?? null,
-    localizacao: r.localizacao ?? r.endereco ?? null,
-    ativo: r.ativo ?? true,
-    raw: r,
+    codigo: String(r.cdItem ?? '').trim(),
+    descricao: r.nmItem ?? null,
+    deposito: 'PADRAO',
+    quantidade: parseNumBR(disponivel),
+    unidade: r.idUMEstoque ?? null,
+    raw: {
+      qtEstoque: r.qtEstoque,
+      qtEntradaPrevista: r.qtEntradaPrevista,
+      qtSaidaPrevista: r.qtSaidaPrevista,
+      qtDisponivel: disponivel,
+    },
     synced_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 }
+
 function mapMovimentacao(r: any) {
-  // Fields from real Auge endpoint /l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php
-  const idExt = String(r.cdMovEstoqueERP ?? r.id ?? r.id_externo ?? '').trim();
-  const dt = r.dtCriacao ?? r.data ?? r.data_movimento ?? null;
-  // Parse "DD/MM/YYYY HH:mm:ss" -> ISO
+  const idExt = String(r.cdMovEstoqueERP ?? '').trim();
+  const dt = r.dtCriacao;
   let iso: string | null = null;
   if (typeof dt === 'string' && dt.includes('/')) {
     const [d, t] = dt.split(' ');
     const [dd, mm, yy] = d.split('/');
     iso = `${yy}-${mm}-${dd}T${t ?? '00:00:00'}-03:00`;
-  } else if (dt) {
-    iso = String(dt);
   }
-  const qt = typeof r.qtItem === 'string' ? Number(r.qtItem.replace(',', '.')) : Number(r.qtItem ?? r.quantidade ?? r.qtd ?? 0);
   return {
     id_externo: idExt,
-    tipo: (r.idTipoMovimentacao === 'S' ? 'saida' : r.idTipoMovimentacao === 'E' ? 'entrada' : String(r.tipo ?? 'movimento')).toLowerCase(),
-    codigo_produto: String(r.cdItem ?? r.codigo ?? r.produto ?? '').trim() || '-', // header endpoint has no item
-    deposito: r.cdDepositoOrigem ?? r.deposito ?? r.armazem ?? null,
-    quantidade: isFinite(qt) ? qt : 0,
-    documento: r.nrTransfEstoqueERP ?? r.documento ?? r.nf ?? null,
+    tipo: r.idTipoMovimentacao === 'S' ? 'saida' : r.idTipoMovimentacao === 'E' ? 'entrada' : 'movimento',
+    codigo_produto: '-', // endpoint de cabeçalho não retorna item; aguarda HAR do drill-down
+    deposito: null,
+    quantidade: parseNumBR(r.qtItem),
+    documento: r.nrTransfEstoqueERP ?? null,
     data_movimento: iso,
-    observacao: r.dsObservacao ?? r.observacao ?? null,
+    observacao: r.dsObservacao ?? null,
     raw: r,
     synced_at: new Date().toISOString(),
-  };
-}
-function mapLote(r: any) {
-  return {
-    codigo_produto: String(r.codigo ?? r.produto ?? r.sku ?? '').trim(),
-    lote: String(r.lote ?? r.numero_lote ?? '').trim(),
-    deposito: r.deposito ?? r.armazem ?? null,
-    quantidade: Number(r.quantidade ?? r.saldo ?? 0),
-    data_fabricacao: r.data_fabricacao ?? r.fabricacao ?? null,
-    data_validade: r.data_validade ?? r.validade ?? null,
-    raw: r,
-    synced_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 }
 
 // ---------- Sync por entidade ----------
 async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: string | null) {
+  if (UNMAPPED.includes(entity)) {
+    return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
+  }
+
   const { data: run } = await admin.from('auge_sync_runs')
     .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
     .select('id').single();
   const runId = run?.id;
 
   try {
-    // Movimentações (saídas) usa endpoint POST específico mapeado no HAR
-    const raw = entity === 'movimentacoes'
-      ? await fetchSaidas(jar)
-      : await tryRoutes(jar, CANDIDATES[entity]);
-    if (!raw) {
-      throw new Error(`Nenhuma rota respondeu com dados para ${entity}. Envie HAR desta entidade.`);
-    }
-
+    let processed = 0;
     let upserted = 0;
-    if (entity === 'saldo') {
-      const rows = raw.map(mapSaldo).filter(r => r.codigo);
-      const { error, count } = await admin.from('auge_produtos_saldo')
-        .upsert(rows, { onConflict: 'codigo,deposito', count: 'exact' });
-      if (error) throw error;
-      upserted = count ?? rows.length;
-    } else if (entity === 'produtos') {
-      const rows = raw.map(mapProduto).filter(r => r.codigo);
-      const { error, count } = await admin.from('auge_produtos')
-        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
-      if (error) throw error;
-      upserted = count ?? rows.length;
-    } else if (entity === 'depositos') {
-      const rows = raw.map(mapDeposito).filter(r => r.codigo);
-      const { error, count } = await admin.from('auge_depositos')
-        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
-      if (error) throw error;
-      upserted = count ?? rows.length;
+
+    if (entity === 'produtos' || entity === 'saldo') {
+      const items = await fetchItensEstoque(jar);
+      processed = items.length;
+
+      if (entity === 'produtos') {
+        const rows = items.map(mapProdutoFromItem).filter(r => r.codigo);
+        const { error, count } = await admin.from('auge_produtos')
+          .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+        if (error) throw error;
+        upserted = count ?? rows.length;
+      } else {
+        const rows = items.map(mapSaldoFromItem).filter(r => r.codigo);
+        const { error, count } = await admin.from('auge_produtos_saldo')
+          .upsert(rows, { onConflict: 'codigo,deposito', count: 'exact' });
+        if (error) throw error;
+        upserted = count ?? rows.length;
+      }
     } else if (entity === 'movimentacoes') {
-      const rows = raw.map(mapMovimentacao).filter(r => r.id_externo);
+      const saidas = await fetchSaidas(jar);
+      processed = saidas.length;
+      const rows = saidas.map(mapMovimentacao).filter(r => r.id_externo);
       const { error, count } = await admin.from('auge_movimentacoes')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
-      if (error) throw error;
-      upserted = count ?? rows.length;
-    } else if (entity === 'lotes') {
-      const rows = raw.map(mapLote).filter(r => r.codigo_produto && r.lote);
-      const { error, count } = await admin.from('auge_lotes')
-        .upsert(rows, { onConflict: 'codigo_produto,lote,deposito', count: 'exact' });
       if (error) throw error;
       upserted = count ?? rows.length;
     }
@@ -302,11 +267,11 @@ async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: str
     await admin.from('auge_sync_runs').update({
       status: 'success',
       finished_at: new Date().toISOString(),
-      rows_processed: raw.length,
+      rows_processed: processed,
       rows_upserted: upserted,
     }).eq('id', runId);
 
-    return { entity, processed: raw.length, upserted };
+    return { entity, processed, upserted };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await admin.from('auge_sync_runs').update({
@@ -326,7 +291,7 @@ Deno.serve(async (req) => {
   const entityParam = url.searchParams.get('entity');
   const entities: Entity[] = entityParam
     ? entityParam.split(',').filter(e => (ALL_ENTITIES as string[]).includes(e)) as Entity[]
-    : ALL_ENTITIES;
+    : ALL_ENTITIES.filter(e => !UNMAPPED.includes(e));
 
   const authHeader = req.headers.get('Authorization');
   let triggeredBy: string | null = null;
@@ -359,7 +324,6 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    // Return 200 so supabase.functions.invoke() doesn't throw; UI reads ok:false
     return new Response(JSON.stringify({ ok: false, error: msg, fallback: true }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -32,11 +32,11 @@ interface AugeRun {
 }
 
 const ENTIDADES = [
-  { key: 'produtos', label: 'Produtos' },
-  { key: 'depositos', label: 'Depósitos' },
-  { key: 'saldo', label: 'Saldo' },
-  { key: 'movimentacoes', label: 'Movimentações' },
-  { key: 'lotes', label: 'Lotes' },
+  { key: 'produtos', label: 'Produtos', mapped: true },
+  { key: 'saldo', label: 'Saldo', mapped: true },
+  { key: 'movimentacoes', label: 'Movimentações', mapped: true },
+  { key: 'depositos', label: 'Depósitos', mapped: false },
+  { key: 'lotes', label: 'Lotes', mapped: false },
 ] as const;
 
 export default function AugeSyncPage() {
@@ -113,23 +113,31 @@ export default function AugeSyncPage() {
         {ENTIDADES.map(e => {
           const r = lastByEntity.get(e.key);
           return (
-            <Card key={e.key} className="p-3 space-y-2">
+            <Card key={e.key} className={`p-3 space-y-2 ${!e.mapped ? 'opacity-60' : ''}`}>
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-sm">{e.label}</span>
-                {r?.status === 'success' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
-                {r?.status === 'error' && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
-                {r?.status === 'running' && <Clock className="h-3.5 w-3.5 text-amber-500 animate-pulse" />}
+                {e.mapped && r?.status === 'success' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                {e.mapped && r?.status === 'error' && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+                {e.mapped && r?.status === 'running' && <Clock className="h-3.5 w-3.5 text-amber-500 animate-pulse" />}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {r ? `${r.rows_upserted} linhas` : 'sem sync'}
-              </div>
-              {r?.error_message && (
-                <p className="text-destructive text-[10px] line-clamp-2">{r.error_message}</p>
+              {e.mapped ? (
+                <>
+                  <div className="text-xs text-muted-foreground">
+                    {r ? `${r.rows_upserted} linhas` : 'sem sync'}
+                  </div>
+                  {r?.error_message && (
+                    <p className="text-destructive text-[10px] line-clamp-2">{r.error_message}</p>
+                  )}
+                  <Button size="sm" variant="outline" className="w-full h-7 text-xs"
+                    onClick={() => sync.mutate(e.key)} disabled={sync.isPending}>
+                    Sync
+                  </Button>
+                </>
+              ) : (
+                <div className="text-[10px] text-muted-foreground italic">
+                  Aguardando HAR
+                </div>
               )}
-              <Button size="sm" variant="outline" className="w-full h-7 text-xs"
-                onClick={() => sync.mutate(e.key)} disabled={sync.isPending}>
-                Sync
-              </Button>
             </Card>
           );
         })}
