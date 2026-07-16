@@ -28,7 +28,16 @@ interface AugeRun {
   rows_processed: number;
   rows_upserted: number;
   error_message: string | null;
+  entidade: string | null;
 }
+
+const ENTIDADES = [
+  { key: 'produtos', label: 'Produtos' },
+  { key: 'depositos', label: 'Depósitos' },
+  { key: 'saldo', label: 'Saldo' },
+  { key: 'movimentacoes', label: 'Movimentações' },
+  { key: 'lotes', label: 'Lotes' },
+] as const;
 
 export default function AugeSyncPage() {
   const qc = useQueryClient();
@@ -61,8 +70,9 @@ export default function AugeSyncPage() {
   });
 
   const sync = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('auge-sync');
+    mutationFn: async (entity?: string) => {
+      const path = entity ? `auge-sync?entity=${entity}` : 'auge-sync';
+      const { data, error } = await supabase.functions.invoke(path);
       if (error) throw error;
       return data;
     },
@@ -75,6 +85,11 @@ export default function AugeSyncPage() {
   });
 
   const lastRun = runs?.[0];
+  const lastByEntity = new Map<string, AugeRun>();
+  (runs ?? []).forEach(r => {
+    const key = r.entidade ?? 'all';
+    if (!lastByEntity.has(key)) lastByEntity.set(key, r);
+  });
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -84,13 +99,39 @@ export default function AugeSyncPage() {
             <Database className="h-6 w-6 text-primary" /> Espelho Auge (Unilux)
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Sincroniza saldos de estoque do ERP Auge para consulta dentro do Pente Fino.
+            Espelha produtos, depósitos, saldo, movimentações e lotes do ERP Auge. Cron a cada 5 min.
           </p>
         </div>
-        <Button onClick={() => sync.mutate()} disabled={sync.isPending} size="lg">
+        <Button onClick={() => sync.mutate(undefined)} disabled={sync.isPending} size="lg">
           <RefreshCw className={`h-4 w-4 mr-2 ${sync.isPending ? 'animate-spin' : ''}`} />
-          Sincronizar agora
+          Sincronizar tudo
         </Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        {ENTIDADES.map(e => {
+          const r = lastByEntity.get(e.key);
+          return (
+            <Card key={e.key} className="p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-sm">{e.label}</span>
+                {r?.status === 'success' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                {r?.status === 'error' && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+                {r?.status === 'running' && <Clock className="h-3.5 w-3.5 text-amber-500 animate-pulse" />}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {r ? `${r.rows_upserted} linhas` : 'sem sync'}
+              </div>
+              {r?.error_message && (
+                <p className="text-destructive text-[10px] line-clamp-2">{r.error_message}</p>
+              )}
+              <Button size="sm" variant="outline" className="w-full h-7 text-xs"
+                onClick={() => sync.mutate(e.key)} disabled={sync.isPending}>
+                Sync
+              </Button>
+            </Card>
+          );
+        })}
       </div>
 
       {lastRun && (
@@ -100,6 +141,7 @@ export default function AugeSyncPage() {
           {lastRun.status === 'running' && <Clock className="h-4 w-4 text-amber-500 animate-pulse" />}
           <div className="flex-1">
             <span className="font-semibold capitalize">{lastRun.status}</span>
+            {lastRun.entidade && <Badge variant="outline" className="ml-2">{lastRun.entidade}</Badge>}
             <span className="text-muted-foreground ml-2">
               {formatDistanceToNow(new Date(lastRun.started_at), { addSuffix: true, locale: ptBR })}
               {' · '}{lastRun.rows_upserted} linhas
