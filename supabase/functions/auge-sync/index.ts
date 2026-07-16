@@ -181,7 +181,8 @@ async function postApi(jar: Jar, csrf: string, path: string, body: URLSearchPara
   jar.ingest(res);
   const text = await res.text();
   if (!res.ok) {
-    throw new Error(`POST ${path} falhou (HTTP ${res.status}): ${text.slice(0, 200)}`);
+    const cookieNames = [...(jar as any).store.keys()].join(',');
+    throw new Error(`POST ${path} HTTP ${res.status} | cookies=[${cookieNames}] | csrf=${csrf.slice(0,8)}… | body=${text.slice(0, 150)}`);
   }
   let j: any;
   try { j = JSON.parse(text); } catch {
