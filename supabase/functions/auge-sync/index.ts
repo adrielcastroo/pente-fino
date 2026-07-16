@@ -403,7 +403,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'produtos') {
-      const items = await fetchOutgoing(auth);
+      const items = await fetchItensPHP(auth);
       processed = items.length;
       const rows = items.map(mapProduto).filter(r => r.codigo);
       const { error, count } = await admin.from('auge_produtos')
