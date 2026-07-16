@@ -172,32 +172,35 @@ export default function CadastrosPage() {
   }, [safePage, totalPages]);
 
   return (
-    <div className="flex flex-col h-full p-4 md:p-6 gap-4 overflow-hidden">
-      <header className="flex flex-col md:flex-row md:items-center gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
-          <p className="text-xs text-muted-foreground">
+    <div className="flex flex-col h-full min-w-0 p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 overflow-hidden">
+      <header className="flex flex-col md:flex-row md:items-center gap-3 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
+          <p className="text-[11px] sm:text-xs text-muted-foreground">
             Base usada para validar etiquetas: código interno + descrição + código fornecedor
           </p>
         </div>
-        <div className="md:ml-auto flex flex-wrap items-center gap-2">
+        <div className="md:ml-auto flex flex-wrap items-center gap-2 min-w-0">
           <AugeItemLookup />
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none min-w-[150px]" aria-label="Importar planilha">
-            <span className="truncate">Importar planilha</span>
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none sm:min-w-[150px] h-10" aria-label="Importar planilha">
+            <Upload className="h-4 w-4 sm:mr-2 shrink-0" />
+            <span className="truncate hidden sm:inline">Importar planilha</span>
+            <span className="truncate sm:hidden">Importar</span>
           </Button>
-          <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none min-w-[130px]" aria-label="Novo item">
-            <Plus className="h-4 w-4" /> Novo item
+          <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10" aria-label="Novo item">
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="truncate">Novo item</span>
           </Button>
         </div>
       </header>
 
-      <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-4">
-        <TabsList className="w-fit">
-          <TabsTrigger value="interno" className="gap-2">
-            <Package className="h-3.5 w-3.5" /> Cadastro interno
+      <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-3 sm:gap-4 min-w-0">
+        <TabsList className="w-full sm:w-fit overflow-x-auto no-scrollbar">
+          <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
+            <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
           </TabsTrigger>
-          <TabsTrigger value="auge" className="gap-2">
-            <History className="h-3.5 w-3.5" /> Auge (ERP)
+          <TabsTrigger value="auge" className="gap-2 flex-1 sm:flex-none">
+            <History className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Auge (ERP)</span>
           </TabsTrigger>
         </TabsList>
 
