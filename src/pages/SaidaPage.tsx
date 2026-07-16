@@ -57,6 +57,7 @@ export default function SaidaPage() {
   const [observacoes, setObservacoes] = useState('');
   const [destino, setDestino] = useState('');
   const conferente = useAppStore(s => s.conferente);
+  const [tab, setTab] = useState<'interno' | 'auge'>('interno');
   useDocumentTitle('Saídas');
 
   const loadSaidas = async () => {
