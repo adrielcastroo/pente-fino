@@ -446,6 +446,8 @@ async function fetchTransferenciasPHP(auth: any, daysBack = 60) {
     cdDepositoOrigem: '',
     cdDepositoDestino: '',
     cdItem: '',
+    idLogisticaTransf: 'N',
+    idUsuario: '',
   });
   return tryPHP(auth, [
     { method: 'POST', path: '/l.unilux/modInventario/estoque/ajax/getTransferenciaEstoque.php', body },
