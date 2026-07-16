@@ -1677,6 +1677,7 @@ export const LeftPanel = memo(function LeftPanel() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+            <ItemVinculoBadge item={item} enabled={!isEtiqPronta} />
             {isMadeira ? (
               <>
                 <div className="space-y-1">
