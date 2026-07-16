@@ -66,7 +66,7 @@ export default function AugeEntradasTab() {
     setSyncing(true);
     const t = toast.loading('Sincronizando entradas do Auge...');
     try {
-      const { data, error } = await supabase.functions.invoke('auge-sync?entity=entradas', {
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
         body: {},
         method: 'POST' as any,
       });
