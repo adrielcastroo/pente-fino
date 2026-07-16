@@ -5,8 +5,6 @@ import { Database, Package, Warehouse, ArrowRightLeft, Boxes, FileText, GitCompa
 import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
 import AugeSaldoTab from '@/components/auge/AugeSaldoTab';
-import AugeDepositosTab from '@/components/auge/AugeDepositosTab';
-import AugeLotesTab from '@/components/auge/AugeLotesTab';
 import AugeTransferenciasTab from '@/components/auge/AugeTransferenciasTab';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 
