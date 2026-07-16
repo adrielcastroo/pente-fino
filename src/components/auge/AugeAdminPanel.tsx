@@ -28,8 +28,6 @@ const ENTIDADES = [
   { key: 'produtos', label: 'Produtos', mapped: true },
   { key: 'saldo', label: 'Saldo', mapped: true },
   { key: 'movimentacoes', label: 'Saídas', mapped: true },
-  { key: 'depositos', label: 'Depósitos', mapped: false },
-  { key: 'lotes', label: 'Lotes', mapped: false },
   { key: 'transferencias', label: 'Transferências', mapped: false },
 ];
 
