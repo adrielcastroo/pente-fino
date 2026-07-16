@@ -271,7 +271,14 @@ export type Database = {
           created_at: string
           descricao: string | null
           id: string
+          id_compra: boolean | null
+          id_estoque: boolean | null
+          id_venda: boolean | null
           ncm: string | null
+          qt_disponivel: number | null
+          qt_entrada_prevista: number | null
+          qt_estoque: number | null
+          qt_saida_prevista: number | null
           raw: Json | null
           synced_at: string
           unidade: string | null
@@ -284,7 +291,14 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          id_compra?: boolean | null
+          id_estoque?: boolean | null
+          id_venda?: boolean | null
           ncm?: string | null
+          qt_disponivel?: number | null
+          qt_entrada_prevista?: number | null
+          qt_estoque?: number | null
+          qt_saida_prevista?: number | null
           raw?: Json | null
           synced_at?: string
           unidade?: string | null
@@ -297,7 +311,14 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          id_compra?: boolean | null
+          id_estoque?: boolean | null
+          id_venda?: boolean | null
           ncm?: string | null
+          qt_disponivel?: number | null
+          qt_entrada_prevista?: number | null
+          qt_estoque?: number | null
+          qt_saida_prevista?: number | null
           raw?: Json | null
           synced_at?: string
           unidade?: string | null
