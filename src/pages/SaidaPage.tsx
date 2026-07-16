@@ -362,7 +362,10 @@ export default function SaidaPage() {
             )}
           </div>
         )}
+          </>
+        )}
       </div>
+
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
