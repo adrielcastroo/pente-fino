@@ -253,7 +253,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                       <th className="p-2">Código interno</th>
                       <th className="p-2">Descrição</th>
                       <th className="p-2">Cód. Fornecedor</th>
-                      <th className="p-2">Fornecedor</th>
+                      <th className="p-2">Última edição</th>
                     </tr></thead>
                     <tbody>
                       {(cadastroInterno ?? []).map((c: any) => (
@@ -263,7 +263,10 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                           <td className="p-2 font-mono text-[10px]">
                             {Array.isArray(c.codigos_fornecedor) ? c.codigos_fornecedor.join(', ') : '—'}
                           </td>
-                          <td className="p-2 text-[10px] text-muted-foreground">{c.fornecedor ?? '—'}</td>
+                          <td className="p-2 text-[10px] text-muted-foreground">
+                            {c.updated_by_name ?? '—'}
+                            {c.updated_at && ` · ${formatDistanceToNow(new Date(c.updated_at), { addSuffix: true, locale: ptBR })}`}
+                          </td>
                         </tr>
                       ))}
                       {(!cadastroInterno || cadastroInterno.length === 0) && (
