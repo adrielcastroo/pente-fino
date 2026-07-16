@@ -49,7 +49,7 @@ const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"))
 const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
 const RastreamentoPage = lazy(() => import("@/pages/RastreamentoPage"));
-const AugeSyncPage = lazy(() => import("@/pages/AugeSyncPage"));
+const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
 const TransferenciasPage = lazy(() => import("@/pages/TransferenciasPage"));
 const OAuthCallbackPage = lazy(() => import("@/pages/OAuthCallbackPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
@@ -167,7 +167,8 @@ const App = () => (
                   />
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
                   <Route path="/estoque/rastreamento" element={<RastreamentoPage />} />
-                  <Route path="/estoque/auge" element={<RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}><AugeSyncPage /></RequireRole>} />
+                  <Route path="/estoque/entradas" element={<EntradasPage />} />
+                  <Route path="/estoque/auge" element={<Navigate to="/estoque/cadastros" replace />} />
                   <Route path="/estoque/transferencias" element={<TransferenciasPage />} />
                   <Route path="/transferencias" element={<Navigate to="/estoque/transferencias" replace />} />
                   <Route path="/rastreamento" element={<Navigate to="/estoque/rastreamento" replace />} />
