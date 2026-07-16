@@ -208,6 +208,46 @@ function fetchOutgoing(auth: { jar: Jar; csrf: string; apiToken: string | null }
     dtBody(['item_full_name', 'quantity']));
 }
 
+// Endpoint real de saídas (Auge legado / módulo PHP)
+// POST /l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php
+// Body: dtCriacaoDe (dd/MM/yyyy), dtCriacaoAte, idSituacao, cdDepositoOrigem, cdItem
+async function fetchSaidasPHP(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  daysBack = 30,
+): Promise<any[]> {
+  const path = '/l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php';
+  const de = new Date(Date.now() - daysBack * 24 * 3600 * 1000);
+  const dd = String(de.getDate()).padStart(2, '0');
+  const mm = String(de.getMonth() + 1).padStart(2, '0');
+  const yyyy = de.getFullYear();
+  const body = new URLSearchParams({
+    dtCriacaoDe: `${dd}/${mm}/${yyyy}`,
+    dtCriacaoAte: '',
+    idSituacao: '',
+    cdDepositoOrigem: '',
+    cdItem: '',
+  });
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirSaidaEstoque.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status} body=${text.slice(0,200)}`);
+  let j: any;
+  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON: ${text.slice(0,120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
 function parseNum(v: any): number {
   if (v == null) return 0;
   if (typeof v === 'number') return v;
@@ -216,7 +256,15 @@ function parseNum(v: any): number {
   return isFinite(n) ? n : Number(v) || 0;
 }
 
-// Extrai [CODIGO] do item_full_name "Descrição -- obs -- [CODIGO]"
+function parseDateBR(v: any): string | null {
+  if (!v) return null;
+  const s = String(v).trim();
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/);
+  if (!m) return null;
+  const [, dd, mm, yyyy, hh = '00', mi = '00', ss = '00'] = m;
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}-03:00`;
+}
+
 function extractCode(fullName: string): { code: string; name: string } {
   const m = fullName.match(/\[([^\]]+)\]\s*$/);
   if (m) return { code: m[1].trim(), name: fullName.slice(0, m.index).trim().replace(/\s+--\s*$/, '') };
@@ -250,22 +298,35 @@ function mapProduto(r: any) {
   };
 }
 
-function mapMovimentacao(r: any) {
-  const { code, name } = extractCode(String(r.item_full_name ?? ''));
-  const codigo = code || String(r.item_code ?? '');
+function mapSaidaPHP(r: any) {
+  const cd = r.cdTransferenciaEstoque ?? null;
+  const cdErp = r.cdMovEstoqueERP ?? null;
+  const nrErp = r.nrTransfEstoqueERP ?? null;
+  const dtCri = r.dtCriacao ?? '';
+  const keySeed = cd ?? cdErp ?? nrErp ?? `${r.nmUsuarioCriacao ?? ''}-${dtCri}`;
   return {
-    id_externo: `outgoing:${codigo}`,
-    tipo: 'saida_prevista',
-    codigo_produto: codigo,
+    id_externo: `saida-php:${keySeed}`,
+    tipo: 'saida',
+    codigo_produto: null,
     deposito: null,
-    quantidade: parseNum(r.quantity),
-    documento: null,
-    data_movimento: null,
-    observacao: name || null,
+    quantidade: parseNum(r.qtItem),
+    documento: cd ? String(cd) : (nrErp ? String(nrErp) : null),
+    data_movimento: parseDateBR(dtCri),
+    observacao: r.dsObservacao ?? null,
+    situacao: r.idSituacao ?? null,
+    ds_situacao: r.dsSituacao ?? null,
+    usuario_criacao: r.nmUsuarioCriacao ?? null,
+    usuario_efetivacao: r.nmUsuarioEfetivacao ?? null,
+    dt_efetivacao: parseDateBR(r.dtEfetivacao),
+    documento_tipo: r.idTipoDocumento ?? null,
+    valor: parseNum(r.vlCustoMovimentacao),
+    ds_efetivacao: r.dsEfetivacao ?? null,
+    cd_transferencia: cd ? String(cd) : null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
 }
+
 
 // ---------- Sync ----------
 async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
