@@ -29,6 +29,7 @@ import {
   Bug,
   LineChart,
   Workflow,
+  Warehouse,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
