@@ -29,6 +29,7 @@ import {
   Bug,
   LineChart,
   Workflow,
+  Warehouse,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
@@ -41,6 +42,7 @@ const BackupTab = lazy(() => import('./tabs/BackupTab'));
 const SentryTab = lazy(() => import('./tabs/SentryTab'));
 const PostHogTab = lazy(() => import('./tabs/PostHogTab'));
 const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
+const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
 
 declare const __APP_VERSION__: string;
 
@@ -63,6 +65,7 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'sentry', label: 'Sentry', icon: Bug },
       { key: 'posthog', label: 'PostHog', icon: LineChart },
       { key: 'n8n', label: 'n8n', icon: Workflow },
+      { key: 'auge', label: 'Auge ERP', icon: Warehouse },
     ],
   },
   {
@@ -178,6 +181,9 @@ export default function AdminPanelPage() {
           </TabsContent>
           <TabsContent value="n8n" className="mt-0">
             <Suspense fallback={tabFallback}><N8nMonitorPage /></Suspense>
+          </TabsContent>
+          <TabsContent value="auge" className="mt-0">
+            <Suspense fallback={tabFallback}><AugeAdminPanel /></Suspense>
           </TabsContent>
           <TabsContent value="flags" className="mt-0">
             <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>

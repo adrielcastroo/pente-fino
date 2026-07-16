@@ -118,33 +118,42 @@ export type Database = {
           ativo: boolean | null
           codigo: string
           created_at: string
+          empresa: string | null
+          filial: string | null
           id: string
           localizacao: string | null
           nome: string | null
           raw: Json | null
           synced_at: string
+          tipo: string | null
           updated_at: string
         }
         Insert: {
           ativo?: boolean | null
           codigo: string
           created_at?: string
+          empresa?: string | null
+          filial?: string | null
           id?: string
           localizacao?: string | null
           nome?: string | null
           raw?: Json | null
           synced_at?: string
+          tipo?: string | null
           updated_at?: string
         }
         Update: {
           ativo?: boolean | null
           codigo?: string
           created_at?: string
+          empresa?: string | null
+          filial?: string | null
           id?: string
           localizacao?: string | null
           nome?: string | null
           raw?: Json | null
           synced_at?: string
+          tipo?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -407,6 +416,63 @@ export type Database = {
           started_at?: string
           status?: string
           triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      auge_transferencias: {
+        Row: {
+          codigo_produto: string | null
+          created_at: string
+          data_movimento: string | null
+          deposito_destino: string | null
+          deposito_origem: string | null
+          documento: string | null
+          ds_situacao: string | null
+          id: string
+          id_externo: string
+          quantidade: number | null
+          raw: Json | null
+          situacao: string | null
+          synced_at: string
+          updated_at: string
+          usuario_criacao: string | null
+          valor: number | null
+        }
+        Insert: {
+          codigo_produto?: string | null
+          created_at?: string
+          data_movimento?: string | null
+          deposito_destino?: string | null
+          deposito_origem?: string | null
+          documento?: string | null
+          ds_situacao?: string | null
+          id?: string
+          id_externo: string
+          quantidade?: number | null
+          raw?: Json | null
+          situacao?: string | null
+          synced_at?: string
+          updated_at?: string
+          usuario_criacao?: string | null
+          valor?: number | null
+        }
+        Update: {
+          codigo_produto?: string | null
+          created_at?: string
+          data_movimento?: string | null
+          deposito_destino?: string | null
+          deposito_origem?: string | null
+          documento?: string | null
+          ds_situacao?: string | null
+          id?: string
+          id_externo?: string
+          quantidade?: number | null
+          raw?: Json | null
+          situacao?: string | null
+          synced_at?: string
+          updated_at?: string
+          usuario_criacao?: string | null
+          valor?: number | null
         }
         Relationships: []
       }

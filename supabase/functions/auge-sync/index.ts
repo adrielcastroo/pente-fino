@@ -22,9 +22,9 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes';
-const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'depositos', 'lotes'];
-const UNMAPPED: Entity[] = ['depositos', 'lotes'];
+type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes' | 'transferencias';
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'depositos', 'lotes', 'transferencias'];
+const UNMAPPED: Entity[] = []; // todos tentam endpoints; erros são registrados no run
 
 // ---------- Cookie jar ----------
 class Jar {
@@ -378,8 +378,131 @@ function mapSaidaPHP(r: any) {
   };
 }
 
+// ---------- Endpoints tentativos (Auge legado / PHP) ----------
+// Sem HAR confirmado — tentamos rotas prováveis. Se todas 404, run marca error.
+async function tryPHP(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  paths: Array<{ method: 'GET' | 'POST'; path: string; body?: URLSearchParams; referer?: string }>,
+): Promise<{ data: any[]; path: string }> {
+  const errors: string[] = [];
+  for (const p of paths) {
+    try {
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Referer': p.referer ?? `${AUGE_BASE_URL}/home`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+      };
+      if (p.method === 'POST') headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+      const res = await fetch(`${AUGE_BASE_URL}${p.path}`, {
+        method: p.method,
+        headers,
+        body: p.method === 'POST' ? p.body : undefined,
+      });
+      auth.jar.ingest(res);
+      const text = await res.text();
+      if (!res.ok) { errors.push(`${p.path} HTTP ${res.status}`); continue; }
+      let j: any;
+      try { j = JSON.parse(text); } catch { errors.push(`${p.path} não-JSON`); continue; }
+      const data = Array.isArray(j?.data) ? j.data : (Array.isArray(j) ? j : null);
+      if (data && data.length >= 0) return { data, path: p.path };
+      errors.push(`${p.path} sem data[]`);
+    } catch (e) {
+      errors.push(`${p.path}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  throw new Error(`Nenhum endpoint respondeu. Tentativas: ${errors.join(' | ')}`);
+}
 
-// ---------- Sync ----------
+async function fetchDepositosPHP(auth: any) {
+  return tryPHP(auth, [
+    { method: 'GET', path: '/l.unilux/modInventario/Ajax/getDepositos.php' },
+    { method: 'GET', path: '/l.unilux/modInventario/Ajax/getEstoques.php' },
+    { method: 'POST', path: '/l.unilux/modInventario/estoque/ajax/getDepositos.php', body: new URLSearchParams({ idAtivo: 'Y' }) },
+    { method: 'GET', path: '/l.unilux/modCadastro/Ajax/getDepositos.php' },
+  ]);
+}
+
+async function fetchLotesPHP(auth: any) {
+  return tryPHP(auth, [
+    { method: 'GET', path: '/l.unilux/modInventario/Ajax/getLotes.php?dsPesquisaGeralCdItem=&dsPesquisaGeralNmItem=**' },
+    { method: 'POST', path: '/l.unilux/modInventario/estoque/ajax/getLotes.php', body: new URLSearchParams({ idAtivo: 'Y', dsPesquisaGeralNmItem: '**' }) },
+    { method: 'GET', path: '/l.unilux/modInventario/Ajax/getItensLote.php' },
+  ]);
+}
+
+async function fetchTransferenciasPHP(auth: any, daysBack = 60) {
+  const de = new Date(Date.now() - daysBack * 24 * 3600 * 1000);
+  const dd = String(de.getDate()).padStart(2, '0');
+  const mm = String(de.getMonth() + 1).padStart(2, '0');
+  const yyyy = de.getFullYear();
+  const body = new URLSearchParams({
+    dtCriacaoDe: `${dd}/${mm}/${yyyy}`,
+    dtCriacaoAte: '',
+    idSituacao: '',
+    cdDepositoOrigem: '',
+    cdDepositoDestino: '',
+    cdItem: '',
+  });
+  return tryPHP(auth, [
+    { method: 'POST', path: '/l.unilux/modInventario/estoque/ajax/getTransferenciaEstoque.php', body },
+    { method: 'POST', path: '/l.unilux/modInventario/estoque/ajax/getTransfDeposito.php', body },
+    { method: 'POST', path: '/l.unilux/modInventario/estoque/ajax/getTransferencias.php', body },
+  ]);
+}
+
+function mapDeposito(r: any) {
+  return {
+    codigo: String(r.cdDeposito ?? r.cdEstoque ?? r.id ?? '').trim(),
+    nome: r.nmDeposito ?? r.nmEstoque ?? r.nome ?? r.description ?? null,
+    localizacao: r.dsLocalizacao ?? r.localizacao ?? null,
+    ativo: (r.idAtivo ?? 'Y') === 'Y',
+    tipo: r.idTipoDeposito ?? r.tipo ?? null,
+    empresa: r.nmEmpresa ?? r.empresa ?? null,
+    filial: r.nmFilial ?? r.filial ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function mapLote(r: any) {
+  return {
+    codigo_produto: String(r.cdItem ?? r.codigo_produto ?? '').trim(),
+    lote: String(r.nrLote ?? r.cdLote ?? r.lote ?? '').trim(),
+    deposito: r.cdDeposito ?? r.deposito ?? null,
+    quantidade: parseNum(r.qtItem ?? r.quantidade),
+    data_fabricacao: r.dtFabricacao ? (parseDateBR(r.dtFabricacao) ?? null)?.slice(0, 10) : null,
+    data_validade: r.dtValidade ? (parseDateBR(r.dtValidade) ?? null)?.slice(0, 10) : null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function mapTransferencia(r: any) {
+  const cd = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? r.id ?? '';
+  return {
+    id_externo: `transf-php:${cd || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
+    deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
+    deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
+    codigo_produto: r.cdItem ?? null,
+    quantidade: parseNum(r.qtItem),
+    situacao: r.idSituacao ?? null,
+    ds_situacao: r.dsSituacao ?? null,
+    data_movimento: parseDateBR(r.dtCriacao),
+    usuario_criacao: r.nmUsuarioCriacao ?? null,
+    valor: parseNum(r.vlCustoMovimentacao),
+    documento: cd ? String(cd) : null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+
 async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
   if (UNMAPPED.includes(entity)) {
     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
@@ -418,6 +541,33 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       upserted = count ?? rows.length;
+    } else if (entity === 'depositos') {
+      const { data: items, path } = await fetchDepositosPHP(auth);
+      processed = items.length;
+      const rows = items.map(mapDeposito).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_depositos')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+    } else if (entity === 'lotes') {
+      const { data: items, path } = await fetchLotesPHP(auth);
+      processed = items.length;
+      const rows = items.map(mapLote).filter(r => r.codigo_produto && r.lote);
+      const { error, count } = await admin.from('auge_lotes')
+        .upsert(rows, { onConflict: 'codigo_produto,lote,deposito', count: 'exact', ignoreDuplicates: false });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+    } else if (entity === 'transferencias') {
+      const { data: items, path } = await fetchTransferenciasPHP(auth, 60);
+      processed = items.length;
+      const rows = items.map(mapTransferencia).filter(r => r.id_externo);
+      const { error, count } = await admin.from('auge_transferencias')
+        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
     }
 
     await admin.from('auge_sync_runs').update({
@@ -444,6 +594,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
   const url = new URL(req.url);
+  const action = url.searchParams.get('action');
   const entityParam = url.searchParams.get('entity');
   const entities: Entity[] = entityParam
     ? entityParam.split(',').filter(e => (ALL_ENTITIES as string[]).includes(e)) as Entity[]
@@ -466,9 +617,17 @@ Deno.serve(async (req) => {
       throw new Error('Credenciais AUGE_USERNAME / AUGE_PASSWORD não configuradas.');
     }
 
+    const t0 = Date.now();
     const jar = new Jar();
     const { csrf, apiToken } = await login(jar);
     const auth = { jar, csrf, apiToken };
+
+    if (action === 'ping') {
+      return new Response(JSON.stringify({
+        ok: true, connected: true, latency_ms: Date.now() - t0,
+        has_api_token: !!apiToken, csrf_prefix: csrf.slice(0, 8),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     const results = [];
     for (const e of entities) {
