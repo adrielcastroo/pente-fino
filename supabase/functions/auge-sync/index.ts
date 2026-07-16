@@ -22,9 +22,9 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes';
-const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'depositos', 'lotes'];
-const UNMAPPED: Entity[] = ['depositos', 'lotes'];
+type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes' | 'transferencias';
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'depositos', 'lotes', 'transferencias'];
+const UNMAPPED: Entity[] = []; // todos tentam endpoints; erros são registrados no run
 
 // ---------- Cookie jar ----------
 class Jar {
