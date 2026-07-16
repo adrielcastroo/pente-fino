@@ -146,12 +146,6 @@ async function login(jar: Jar): Promise<string> {
 
   throw new Error(`Login OK (302→${loc}), /home ${homeStatus}, mas nenhum CSRF encontrado (HTML len=${homeHtml.length}).`);
 }
-  if (xsrf) {
-    try { return decodeURIComponent(xsrf); } catch { return xsrf; }
-  }
-
-  throw new Error('Login OK, mas não foi possível obter CSRF autenticado de /home.');
-}
 
 // ---------- DataTables helper ----------
 function dtBody(columns: string[], length = -1): URLSearchParams {
