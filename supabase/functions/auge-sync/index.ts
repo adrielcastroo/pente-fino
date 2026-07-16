@@ -171,27 +171,26 @@ function dtBody(columns: string[], length = -1): URLSearchParams {
   return p;
 }
 
-async function postApi(jar: Jar, csrf: string, path: string, body: URLSearchParams): Promise<any[]> {
-  const res = await fetch(`${AUGE_BASE_URL}${path}`, {
-    method: 'POST',
-    headers: {
-      'Cookie': jar.header(),
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN': csrf,
-      'Origin': AUGE_BASE_URL,
-      'Referer': `${AUGE_BASE_URL}/home`,
-      'User-Agent': UA,
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-    },
-    body,
-  });
-  jar.ingest(res);
+async function postApi(auth: { jar: Jar; csrf: string; apiToken: string | null }, path: string, body: URLSearchParams): Promise<any[]> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/home`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
   const text = await res.text();
   if (!res.ok) {
-    const cookieNames = [...(jar as any).store.keys()].join(',');
-    throw new Error(`POST ${path} HTTP ${res.status} | cookies=[${cookieNames}] | csrf=${csrf.slice(0,8)}… | body=${text.slice(0, 150)}`);
+    const cookieNames = [...(auth.jar as any).store.keys()].join(',');
+    throw new Error(`POST ${path} HTTP ${res.status} | cookies=[${cookieNames}] | csrf=${auth.csrf.slice(0,8)}… | bearer=${auth.apiToken ? auth.apiToken.slice(0,8)+'…' : 'none'} | body=${text.slice(0, 150)}`);
   }
   let j: any;
   try { j = JSON.parse(text); } catch {
@@ -200,12 +199,12 @@ async function postApi(jar: Jar, csrf: string, path: string, body: URLSearchPara
   return Array.isArray(j?.data) ? j.data : [];
 }
 
-function fetchSaldo(jar: Jar, csrf: string) {
-  return postApi(jar, csrf, '/api/v1/inventory/invty-available-by-categories',
+function fetchSaldo(auth: { jar: Jar; csrf: string; apiToken: string | null }) {
+  return postApi(auth, '/api/v1/inventory/invty-available-by-categories',
     dtBody(['description', 'inventory_um', 'available_qty']));
 }
-function fetchOutgoing(jar: Jar, csrf: string) {
-  return postApi(jar, csrf, '/api/v1/inventory/outgoing-items',
+function fetchOutgoing(auth: { jar: Jar; csrf: string; apiToken: string | null }) {
+  return postApi(auth, '/api/v1/inventory/outgoing-items',
     dtBody(['item_full_name', 'quantity']));
 }
 
