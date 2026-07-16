@@ -284,18 +284,69 @@ function mapSaldo(r: any) {
 }
 
 function mapProduto(r: any) {
-  const { code, name } = extractCode(String(r.item_full_name ?? r.item_name ?? r.item_code ?? ''));
+  // r vem do endpoint getItensEstoque.php:
+  // { cdItem, nmItem, nmGrupoItem, idNCM, idItemEstoque(Y/N), idItemVenda, idItemCompra,
+  //   idAtivo, idUMEstoque, qtEstoque, qtEntradaPrevista, qtSaidaPrevista, "qtDisponível" }
+  const yn = (v: any) => v === 'Y' || v === true;
+  const qtDisp = r['qtDisponível'] ?? r.qtDisponivel ?? r.qtDisponivél;
   return {
-    codigo: code || String(r.item_code ?? ''),
-    descricao: name || r.item_name || null,
-    unidade: null,
-    ncm: null,
-    categoria: null,
-    ativo: true,
+    codigo: String(r.cdItem ?? '').trim(),
+    descricao: r.nmItem ?? null,
+    unidade: r.idUMEstoque ?? null,
+    ncm: r.idNCM ?? null,
+    categoria: r.nmGrupoItem ?? null,
+    ativo: yn(r.idAtivo),
+    id_estoque: yn(r.idItemEstoque),
+    id_venda: yn(r.idItemVenda),
+    id_compra: yn(r.idItemCompra),
+    qt_estoque: parseNum(r.qtEstoque),
+    qt_entrada_prevista: parseNum(r.qtEntradaPrevista),
+    qt_saida_prevista: parseNum(r.qtSaidaPrevista),
+    qt_disponivel: parseNum(qtDisp),
     raw: r,
     synced_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
+}
+
+// Endpoint real de itens/cadastro (Auge legado / módulo PHP)
+// GET /l.unilux/modInventario/Ajax/getItensEstoque.php
+// Query: idEstoca, idVende, idCompra, idLiquidavel, idEmEstoque, idAtivo,
+//        dsPesquisaGeralCdItem, dsPesquisaGeralNmItem(**=todos), cdGrupo, idTipoItem
+async function fetchItensPHP(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+): Promise<any[]> {
+  const qs = new URLSearchParams({
+    idEstoca: 'Y',
+    idVende: '',
+    idCompra: '',
+    idLiquidavel: 'Y',
+    idEmEstoque: '',
+    idAtivo: 'Y',
+    dsPesquisaGeralCdItem: '',
+    dsPesquisaGeralNmItem: '**',
+    cdGrupo: '102',
+    idTipoItem: 'N',
+    _: String(Date.now()),
+  });
+  const path = `/l.unilux/modInventario/Ajax/getItensEstoque.php?${qs.toString()}`;
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/consultaItens.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`GET getItensEstoque HTTP ${res.status} body=${text.slice(0,200)}`);
+  let j: any;
+  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON: ${text.slice(0,120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
 }
 
 function mapSaidaPHP(r: any) {
