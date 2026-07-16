@@ -1,8 +1,10 @@
 // Auge (Unilux ERP) -> Pente Fino sync
-// Endpoints confirmados via HAR:
-//   - Login: GET /login (extrai _token) + POST /login (form-urlencoded)
-//   - Produtos + Saldos: GET /l.unilux/modInventario/Ajax/getItensEstoque.php
-//   - Saídas: POST /l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php
+// Endpoints confirmados via HAR (login.har, 2026-07-16):
+//   - GET  /login                                            -> HTML com <input name="_token">
+//   - POST /login (form-urlencoded, _token+email+password)   -> 302 /home
+//   - GET  /home                                             -> HTML com <meta name="csrf-token"> (novo CSRF autenticado)
+//   - POST /api/v1/inventory/invty-available-by-categories   -> saldo (DataTables server-side)
+//   - POST /api/v1/inventory/outgoing-items                  -> saídas agregadas por item (DataTables)
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -28,20 +30,35 @@ const UNMAPPED: Entity[] = ['depositos', 'lotes'];
 class Jar {
   private store = new Map<string, string>();
   ingest(res: Response) {
-    const cookies = (res.headers as any).getSetCookie?.() ?? [];
+    // Deno: getSetCookie retorna array; fallback para header combinado
+    const anyHeaders = res.headers as any;
+    let cookies: string[] = [];
+    if (typeof anyHeaders.getSetCookie === 'function') {
+      cookies = anyHeaders.getSetCookie();
+    } else {
+      const raw = res.headers.get('set-cookie');
+      if (raw) cookies = raw.split(/,(?=\s*[^;=]+=)/);
+    }
     for (const c of cookies) {
       const [pair] = c.split(';');
       const eq = pair.indexOf('=');
-      if (eq > 0) this.store.set(pair.slice(0, eq).trim(), pair.slice(eq + 1).trim());
+      if (eq > 0) {
+        const k = pair.slice(0, eq).trim();
+        const v = pair.slice(eq + 1).trim();
+        if (v && v !== 'deleted') this.store.set(k, v);
+      }
     }
   }
   header(): string {
     return [...this.store.entries()].map(([k, v]) => `${k}=${v}`).join('; ');
   }
+  get(name: string): string | undefined {
+    return this.store.get(name);
+  }
 }
 
-// ---------- Login (Laravel padrão) ----------
-async function login(jar: Jar): Promise<void> {
+// ---------- Login (Laravel) ----------
+async function login(jar: Jar): Promise<{ csrf: string; apiToken: string | null }> {
   const loginUrl = `${AUGE_BASE_URL}/login`;
   const getRes = await fetch(loginUrl, {
     redirect: 'manual',
@@ -54,12 +71,16 @@ async function login(jar: Jar): Promise<void> {
   jar.ingest(getRes);
   const html = await getRes.text();
 
+  if (getRes.status !== 200) {
+    throw new Error(`GET /login retornou HTTP ${getRes.status} — base URL configurada: ${AUGE_BASE_URL}`);
+  }
+
   const csrfMatch =
     html.match(/name="_token"\s+value="([^"]+)"/i) ||
     html.match(/name="csrf-token"\s+content="([^"]+)"/i);
   const csrf = csrfMatch?.[1];
   if (!csrf) {
-    throw new Error(`Não foi possível extrair _token da página de login (HTTP ${getRes.status}).`);
+    throw new Error('Não foi possível extrair _token da página de login (HTML inesperado).');
   }
 
   const body = new URLSearchParams({
@@ -86,144 +107,168 @@ async function login(jar: Jar): Promise<void> {
   jar.ingest(postRes);
   await postRes.body?.cancel();
 
-  // Sucesso = 302 para /home. 200 = página de login re-renderizada (credenciais inválidas).
   if (postRes.status !== 302) {
-    throw new Error(`Login Auge falhou (HTTP ${postRes.status}). Verifique AUGE_USERNAME/AUGE_PASSWORD.`);
+    throw new Error(`Login Auge falhou (HTTP ${postRes.status}) — verifique credenciais.`);
   }
   const loc = postRes.headers.get('location') ?? '';
   if (loc.includes('/login')) {
-    throw new Error('Login Auge redirecionou de volta para /login — credenciais inválidas.');
+    throw new Error('Login redirecionou de volta para /login — credenciais inválidas.');
   }
+
+  // GET /home para pegar CSRF autenticado (Laravel rotaciona após login)
+  const homeUrl = `${AUGE_BASE_URL}/home`;
+  const homeRes = await fetch(homeUrl, {
+    redirect: 'manual',
+    headers: {
+      'Cookie': jar.header(),
+      'User-Agent': UA,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Referer': loginUrl,
+    },
+  });
+  jar.ingest(homeRes);
+  const homeStatus = homeRes.status;
+  const homeLoc = homeRes.headers.get('location') ?? '';
+  const homeHtml = await homeRes.text();
+
+  if (homeStatus !== 200) {
+    throw new Error(`GET /home retornou ${homeStatus} (Location: ${homeLoc}) — sessão não autenticada após login.`);
+  }
+
+  const metaCsrf = homeHtml.match(/<meta[^>]+name="csrf-token"[^>]+content="([^"]+)"/i)?.[1];
+  const apiTokenMatch = homeHtml.match(/userApiToken\s*:\s*['"]([^'"]+)['"]/);
+  const apiToken = apiTokenMatch?.[1] ?? null;
+
+  if (metaCsrf) return { csrf: metaCsrf, apiToken };
+
+  // Fallback: XSRF-TOKEN cookie (URL-encoded)
+  const xsrf = jar.get('XSRF-TOKEN');
+  if (xsrf) {
+    try { return { csrf: decodeURIComponent(xsrf), apiToken }; } catch { return { csrf: xsrf, apiToken }; }
+  }
+
+  throw new Error(`Login OK (302→${loc}), /home ${homeStatus}, mas nenhum CSRF encontrado (HTML len=${homeHtml.length}).`);
 }
 
-// ---------- Parser numérico BR: "2.995,00" -> 2995 ----------
-function parseNumBR(v: any): number {
+// ---------- DataTables helper ----------
+function dtBody(columns: string[], length = -1): URLSearchParams {
+  const p = new URLSearchParams();
+  p.set('draw', '1');
+  columns.forEach((c, i) => {
+    p.set(`columns[${i}][data]`, c);
+    p.set(`columns[${i}][name]`, c);
+    p.set(`columns[${i}][searchable]`, 'true');
+    p.set(`columns[${i}][orderable]`, 'true');
+    p.set(`columns[${i}][search][value]`, '');
+    p.set(`columns[${i}][search][regex]`, 'false');
+  });
+  p.set('order[0][column]', '0');
+  p.set('order[0][dir]', 'asc');
+  p.set('start', '0');
+  p.set('length', String(length));
+  p.set('search[value]', '');
+  p.set('search[regex]', 'false');
+  return p;
+}
+
+async function postApi(auth: { jar: Jar; csrf: string; apiToken: string | null }, path: string, body: URLSearchParams): Promise<any[]> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/home`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) {
+    const cookieNames = [...(auth.jar as any).store.keys()].join(',');
+    throw new Error(`POST ${path} HTTP ${res.status} | cookies=[${cookieNames}] | csrf=${auth.csrf.slice(0,8)}… | bearer=${auth.apiToken ? auth.apiToken.slice(0,8)+'…' : 'none'} | body=${text.slice(0, 150)}`);
+  }
+  let j: any;
+  try { j = JSON.parse(text); } catch {
+    throw new Error(`POST ${path}: resposta não-JSON (${text.slice(0, 120)})`);
+  }
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
+function fetchSaldo(auth: { jar: Jar; csrf: string; apiToken: string | null }) {
+  return postApi(auth, '/api/v1/inventory/invty-available-by-categories',
+    dtBody(['description', 'inventory_um', 'available_qty']));
+}
+function fetchOutgoing(auth: { jar: Jar; csrf: string; apiToken: string | null }) {
+  return postApi(auth, '/api/v1/inventory/outgoing-items',
+    dtBody(['item_full_name', 'quantity']));
+}
+
+function parseNum(v: any): number {
   if (v == null) return 0;
   if (typeof v === 'number') return v;
-  const s = String(v).trim();
-  if (!s) return 0;
-  // remove separador de milhar, troca vírgula por ponto
-  const norm = s.replace(/\./g, '').replace(',', '.');
-  const n = Number(norm);
-  return isFinite(n) ? n : 0;
+  const s = String(v).trim().replace(/\./g, '').replace(',', '.');
+  const n = Number(s);
+  return isFinite(n) ? n : Number(v) || 0;
 }
 
-// ---------- Produtos + Saldos (endpoint único) ----------
-async function fetchItensEstoque(jar: Jar): Promise<any[]> {
-  const url = `${AUGE_BASE_URL}/l.unilux/modInventario/Ajax/getItensEstoque.php`
-    + `?idEstoca=Y&idVende=&idCompra=&idLiquidavel=Y&idEmEstoque=&idAtivo=Y`
-    + `&dsPesquisaGeralCdItem=**&dsPesquisaGeralNmItem=&cdGrupo=&idTipoItem=N&_=${Date.now()}`;
-  const res = await fetch(url, {
-    headers: {
-      'Cookie': jar.header(),
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/consultaItens.php`,
-      'User-Agent': UA,
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-    },
-  });
-  if (!res.ok) {
-    await res.body?.cancel();
-    throw new Error(`getItensEstoque falhou (HTTP ${res.status}).`);
-  }
-  const text = await res.text();
-  const j = JSON.parse(text);
-  return Array.isArray(j?.data) ? j.data : [];
+// Extrai [CODIGO] do item_full_name "Descrição -- obs -- [CODIGO]"
+function extractCode(fullName: string): { code: string; name: string } {
+  const m = fullName.match(/\[([^\]]+)\]\s*$/);
+  if (m) return { code: m[1].trim(), name: fullName.slice(0, m.index).trim().replace(/\s+--\s*$/, '') };
+  return { code: fullName.trim(), name: fullName.trim() };
 }
 
-// ---------- Saídas ----------
-async function fetchSaidas(jar: Jar, sinceDaysAgo = 60): Promise<any[]> {
-  const from = new Date(Date.now() - sinceDaysAgo * 86400000);
-  const dd = String(from.getDate()).padStart(2, '0');
-  const mm = String(from.getMonth() + 1).padStart(2, '0');
-  const yy = from.getFullYear();
-  const body = new URLSearchParams({
-    dtCriacaoDe: `${dd}/${mm}/${yy}`,
-    dtCriacaoAte: '',
-    idSituacao: '',
-    cdDepositoOrigem: '',
-    cdItem: '',
-  });
-  const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/estoque/ajax/getSaidaEstoque.php`, {
-    method: 'POST',
-    headers: {
-      'Cookie': jar.header(),
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Origin': AUGE_BASE_URL,
-      'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirSaidaEstoque.php`,
-      'User-Agent': UA,
-      'Accept': 'application/json, text/plain, */*',
-    },
-    body,
-  });
-  if (!res.ok) {
-    await res.body?.cancel();
-    throw new Error(`getSaidaEstoque falhou (HTTP ${res.status}).`);
-  }
-  const text = await res.text();
-  const j = JSON.parse(text);
-  return Array.isArray(j?.data) ? j.data : [];
-}
-
-// ---------- Normalizadores ----------
-function mapProdutoFromItem(r: any) {
+function mapSaldo(r: any) {
   return {
-    codigo: String(r.cdItem ?? '').trim(),
-    descricao: r.nmItem ?? null,
-    unidade: r.idUMEstoque ?? null,
-    ncm: r.idNCM ?? null,
-    categoria: r.nmGrupoItem ?? null,
-    ativo: r.idAtivo === 'Y' || r.idAtivo === true,
+    codigo: String(r.id ?? r.description ?? '').trim(),
+    descricao: r.description ?? null,
+    deposito: 'PADRAO',
+    quantidade: parseNum(r.available_qty),
+    unidade: r.inventory_um ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+function mapProduto(r: any) {
+  const { code, name } = extractCode(String(r.item_full_name ?? r.item_name ?? r.item_code ?? ''));
+  return {
+    codigo: code || String(r.item_code ?? ''),
+    descricao: name || r.item_name || null,
+    unidade: null,
+    ncm: null,
+    categoria: null,
+    ativo: true,
     raw: r,
     synced_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 }
 
-function mapSaldoFromItem(r: any) {
-  const disponivel = r['qtDisponível'] ?? r.qtDisponivel ?? r.qtEstoque;
-  return {
-    codigo: String(r.cdItem ?? '').trim(),
-    descricao: r.nmItem ?? null,
-    deposito: 'PADRAO',
-    quantidade: parseNumBR(disponivel),
-    unidade: r.idUMEstoque ?? null,
-    raw: {
-      qtEstoque: r.qtEstoque,
-      qtEntradaPrevista: r.qtEntradaPrevista,
-      qtSaidaPrevista: r.qtSaidaPrevista,
-      qtDisponivel: disponivel,
-    },
-    synced_at: new Date().toISOString(),
-  };
-}
-
 function mapMovimentacao(r: any) {
-  const idExt = String(r.cdMovEstoqueERP ?? '').trim();
-  const dt = r.dtCriacao;
-  let iso: string | null = null;
-  if (typeof dt === 'string' && dt.includes('/')) {
-    const [d, t] = dt.split(' ');
-    const [dd, mm, yy] = d.split('/');
-    iso = `${yy}-${mm}-${dd}T${t ?? '00:00:00'}-03:00`;
-  }
+  const { code, name } = extractCode(String(r.item_full_name ?? ''));
+  const codigo = code || String(r.item_code ?? '');
   return {
-    id_externo: idExt,
-    tipo: r.idTipoMovimentacao === 'S' ? 'saida' : r.idTipoMovimentacao === 'E' ? 'entrada' : 'movimento',
-    codigo_produto: '-', // endpoint de cabeçalho não retorna item; aguarda HAR do drill-down
+    id_externo: `outgoing:${codigo}`,
+    tipo: 'saida_prevista',
+    codigo_produto: codigo,
     deposito: null,
-    quantidade: parseNumBR(r.qtItem),
-    documento: r.nrTransfEstoqueERP ?? null,
-    data_movimento: iso,
-    observacao: r.dsObservacao ?? null,
+    quantidade: parseNum(r.quantity),
+    documento: null,
+    data_movimento: null,
+    observacao: name || null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
 }
 
-// ---------- Sync por entidade ----------
-async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: string | null) {
+// ---------- Sync ----------
+async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
   if (UNMAPPED.includes(entity)) {
     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
   }
@@ -237,27 +282,26 @@ async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: str
     let processed = 0;
     let upserted = 0;
 
-    if (entity === 'produtos' || entity === 'saldo') {
-      const items = await fetchItensEstoque(jar);
+    if (entity === 'saldo') {
+      const items = await fetchSaldo(auth);
       processed = items.length;
-
-      if (entity === 'produtos') {
-        const rows = items.map(mapProdutoFromItem).filter(r => r.codigo);
-        const { error, count } = await admin.from('auge_produtos')
-          .upsert(rows, { onConflict: 'codigo', count: 'exact' });
-        if (error) throw error;
-        upserted = count ?? rows.length;
-      } else {
-        const rows = items.map(mapSaldoFromItem).filter(r => r.codigo);
-        const { error, count } = await admin.from('auge_produtos_saldo')
-          .upsert(rows, { onConflict: 'codigo,deposito', count: 'exact' });
-        if (error) throw error;
-        upserted = count ?? rows.length;
-      }
+      const rows = items.map(mapSaldo).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_produtos_saldo')
+        .upsert(rows, { onConflict: 'codigo,deposito', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+    } else if (entity === 'produtos') {
+      const items = await fetchOutgoing(auth);
+      processed = items.length;
+      const rows = items.map(mapProduto).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_produtos')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
     } else if (entity === 'movimentacoes') {
-      const saidas = await fetchSaidas(jar);
-      processed = saidas.length;
-      const rows = saidas.map(mapMovimentacao).filter(r => r.id_externo);
+      const items = await fetchOutgoing(auth);
+      processed = items.length;
+      const rows = items.map(mapMovimentacao).filter(r => r.codigo_produto);
       const { error, count } = await admin.from('auge_movimentacoes')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
@@ -311,11 +355,12 @@ Deno.serve(async (req) => {
     }
 
     const jar = new Jar();
-    await login(jar);
+    const { csrf, apiToken } = await login(jar);
+    const auth = { jar, csrf, apiToken };
 
     const results = [];
     for (const e of entities) {
-      results.push(await syncEntity(admin, jar, e, triggeredBy));
+      results.push(await syncEntity(admin, auth, e, triggeredBy));
     }
 
     const totalUpserted = results.reduce((s, r: any) => s + (r.upserted ?? 0), 0);
