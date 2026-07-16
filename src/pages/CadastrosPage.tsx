@@ -172,37 +172,40 @@ export default function CadastrosPage() {
   }, [safePage, totalPages]);
 
   return (
-    <div className="flex flex-col h-full p-4 md:p-6 gap-4 overflow-hidden">
-      <header className="flex flex-col md:flex-row md:items-center gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
-          <p className="text-xs text-muted-foreground">
+    <div className="flex flex-col h-full min-w-0 p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 overflow-hidden">
+      <header className="flex flex-col md:flex-row md:items-center gap-3 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
+          <p className="text-[11px] sm:text-xs text-muted-foreground">
             Base usada para validar etiquetas: código interno + descrição + código fornecedor
           </p>
         </div>
-        <div className="md:ml-auto flex flex-wrap items-center gap-2">
+        <div className="md:ml-auto flex flex-wrap items-center gap-2 min-w-0">
           <AugeItemLookup />
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none min-w-[150px]" aria-label="Importar planilha">
-            <span className="truncate">Importar planilha</span>
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none sm:min-w-[150px] h-10" aria-label="Importar planilha">
+            <Upload className="h-4 w-4 sm:mr-2 shrink-0" />
+            <span className="truncate hidden sm:inline">Importar planilha</span>
+            <span className="truncate sm:hidden">Importar</span>
           </Button>
-          <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none min-w-[130px]" aria-label="Novo item">
-            <Plus className="h-4 w-4" /> Novo item
+          <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10" aria-label="Novo item">
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="truncate">Novo item</span>
           </Button>
         </div>
       </header>
 
-      <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-4">
-        <TabsList className="w-fit">
-          <TabsTrigger value="interno" className="gap-2">
-            <Package className="h-3.5 w-3.5" /> Cadastro interno
+      <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-3 sm:gap-4 min-w-0">
+        <TabsList className="w-full sm:w-fit overflow-x-auto no-scrollbar">
+          <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
+            <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
           </TabsTrigger>
-          <TabsTrigger value="auge" className="gap-2">
-            <History className="h-3.5 w-3.5" /> Auge (ERP)
+          <TabsTrigger value="auge" className="gap-2 flex-1 sm:flex-none">
+            <History className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Auge (ERP)</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="interno" className="flex-1 flex flex-col gap-4 overflow-hidden mt-0">
-      <div className="flex flex-col md:flex-row md:items-center gap-3">
+        <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
 
         <div className="relative w-full md:flex-1 md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -210,11 +213,11 @@ export default function CadastrosPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por código, descrição ou fornecedor..."
-            className="pl-9 h-10"
+            className="pl-9 h-10 w-full"
             aria-label="Buscar itens"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2 md:contents">
+        <div className="flex flex-wrap items-center gap-2 md:contents min-w-0">
         <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
           <SelectTrigger className="flex-1 min-w-[140px] md:w-[180px] md:flex-none h-10" aria-label="Filtrar por fornecedor">
             <SelectValue placeholder="Mostrar" />
@@ -235,10 +238,10 @@ export default function CadastrosPage() {
             <SelectItem value="updated_at">Atualizado recente</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-2 md:ml-auto">
-          <Badge variant="secondary">{filtered.length} de {itens.length}</Badge>
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
+          <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
           {semFornecedorCount > 0 && (
-            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30">
+            <Badge variant="outline" className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 border-amber-500/30">
               {semFornecedorCount} sem fornecedor
             </Badge>
           )}
@@ -256,14 +259,17 @@ export default function CadastrosPage() {
 
       {/* Bulk action bar */}
       {someSelected && (
-        <div role="region" aria-label="Ações em lote" className="rounded-lg border bg-card px-3 py-2 flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium">{selected.size} selecionado(s)</span>
-          <Button size="sm" variant="ghost" onClick={clearSelection}>Limpar</Button>
+        <div role="region" aria-label="Ações em lote" className="rounded-lg border bg-card px-3 py-2 flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+          <span className="text-xs sm:text-sm font-medium">{selected.size} selecionado(s)</span>
+          <Button size="sm" variant="ghost" onClick={clearSelection} className="h-8">Limpar</Button>
           {selected.size < filtered.length && (
-            <Button size="sm" variant="ghost" onClick={selectAllFiltered}>Selecionar todos os {filtered.length}</Button>
+            <Button size="sm" variant="ghost" onClick={selectAllFiltered} className="h-8 text-xs">
+              <span className="hidden sm:inline">Selecionar todos os {filtered.length}</span>
+              <span className="sm:hidden">Todos ({filtered.length})</span>
+            </Button>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5" aria-label="Excluir selecionados">
+          <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
+            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5 w-full sm:w-auto h-9" aria-label="Excluir selecionados">
               <Trash2 className="h-3.5 w-3.5" /> Excluir selecionados
             </Button>
           </div>
@@ -468,20 +474,20 @@ export default function CadastrosPage() {
 
       {/* Pagination */}
       {filtered.length > 0 && (
-        <nav aria-label="Paginação" className="flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <nav aria-label="Paginação" className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-border/40 pt-3 min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
             Mostrando {start + 1}–{end} de {filtered.length}
           </p>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1 min-w-0">
             <Button
               size="sm"
               variant="outline"
               disabled={safePage <= 1}
               onClick={() => setPage(p => Math.max(1, p - 1))}
               aria-label="Página anterior"
-              className="gap-1 h-8"
+              className="gap-1 h-8 px-2"
             >
-              <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+              <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Anterior</span>
             </Button>
             {pageNumbers.map((n, i) => {
               const prev = pageNumbers[i - 1];
@@ -508,9 +514,9 @@ export default function CadastrosPage() {
               disabled={safePage >= totalPages}
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               aria-label="Próxima página"
-              className="gap-1 h-8"
+              className="gap-1 h-8 px-2"
             >
-              Próximo <ChevronRight className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Próximo</span> <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </nav>
