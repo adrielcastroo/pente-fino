@@ -1,6 +1,6 @@
-// Auge (Unilux ERP) -> Pente Fino stock sync
-// Scraper de leitura autenticado. Sem API oficial.
-// Precisa de: AUGE_BASE_URL, AUGE_USERNAME, AUGE_PASSWORD
+// Auge (Unilux ERP) -> Pente Fino sync
+// Espelha: saldo, produtos, depósitos, movimentações, lotes
+// Sem API oficial: scraper autenticado com rotas candidatas.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -16,20 +16,13 @@ const AUGE_PASSWORD = Deno.env.get('AUGE_PASSWORD') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-interface SaldoRow {
-  codigo: string;
-  descricao?: string;
-  deposito: string;
-  quantidade: number;
-  unidade?: string;
-  raw?: unknown;
-}
+type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes';
+const ALL_ENTITIES: Entity[] = ['produtos', 'depositos', 'saldo', 'movimentacoes', 'lotes'];
 
-// ---------- Cookie jar minimalista ----------
+// ---------- Cookie jar ----------
 class Jar {
   private store = new Map<string, string>();
   ingest(res: Response) {
-    // Deno agrega Set-Cookie em getSetCookie()
     const cookies = (res.headers as any).getSetCookie?.() ?? [];
     for (const c of cookies) {
       const [pair] = c.split(';');
@@ -42,9 +35,7 @@ class Jar {
   }
 }
 
-// ---------- Login (form-based, tenta descoberta) ----------
 async function login(jar: Jar): Promise<void> {
-  // 1) GET página de login para pegar cookies iniciais + eventual csrf/token
   const loginPageRes = await fetch(`${AUGE_BASE_URL}/login`, {
     redirect: 'manual',
     headers: { 'User-Agent': 'PenteFinoBot/1.0' },
@@ -52,19 +43,14 @@ async function login(jar: Jar): Promise<void> {
   jar.ingest(loginPageRes);
   const loginHtml = await loginPageRes.text();
 
-  // Detecta token CSRF comum (Laravel/Django/Rails)
   const csrfMatch =
     loginHtml.match(/name="_token"\s+value="([^"]+)"/i) ||
     loginHtml.match(/name="csrf-token"\s+content="([^"]+)"/i) ||
     loginHtml.match(/name="csrfmiddlewaretoken"\s+value="([^"]+)"/i);
   const csrf = csrfMatch?.[1];
 
-  // 2) POST credenciais. Nomes de campo comuns; ajustar após HAR real.
   const body = new URLSearchParams();
-  body.set('email', AUGE_USERNAME);
-  body.set('username', AUGE_USERNAME);
-  body.set('user', AUGE_USERNAME);
-  body.set('login', AUGE_USERNAME);
+  for (const k of ['email', 'username', 'user', 'login']) body.set(k, AUGE_USERNAME);
   body.set('password', AUGE_PASSWORD);
   body.set('senha', AUGE_PASSWORD);
   if (csrf) body.set('_token', csrf);
@@ -83,97 +69,205 @@ async function login(jar: Jar): Promise<void> {
   });
   jar.ingest(postRes);
 
-  // Sucesso geralmente = 302 para /home ou /dashboard
   if (postRes.status !== 302 && postRes.status !== 200) {
-    throw new Error(`Login Auge falhou (HTTP ${postRes.status}). Verifique campos do formulário reais.`);
+    throw new Error(`Login Auge falhou (HTTP ${postRes.status}).`);
   }
 }
 
-// ---------- Scrape do saldo ----------
-// TODO: ajustar path e parser após inspecionar a tela real de estoque do Auge.
-async function fetchSaldos(jar: Jar): Promise<SaldoRow[]> {
-  const candidates = [
-    '/api/estoque/saldos',
-    '/estoque/saldos.json',
-    '/estoque',
-    '/relatorios/saldo-estoque',
-  ];
-
-  for (const path of candidates) {
-    const res = await fetch(`${AUGE_BASE_URL}${path}`, {
-      headers: {
-        'Cookie': jar.header(),
-        'Accept': 'application/json, text/html;q=0.9',
-        'User-Agent': 'PenteFinoBot/1.0',
-      },
-    });
-    if (!res.ok) continue;
-    const ct = res.headers.get('content-type') ?? '';
-    if (ct.includes('application/json')) {
-      const data = await res.json();
-      const arr = Array.isArray(data) ? data : (data.data ?? data.rows ?? data.items ?? []);
-      if (!Array.isArray(arr) || arr.length === 0) continue;
-      return arr.map((r: any) => ({
-        codigo: String(r.codigo ?? r.sku ?? r.produto ?? '').trim(),
-        descricao: r.descricao ?? r.nome ?? undefined,
-        deposito: String(r.deposito ?? r.armazem ?? 'PADRAO'),
-        quantidade: Number(r.saldo ?? r.quantidade ?? r.qtd ?? 0),
-        unidade: r.unidade ?? r.un ?? undefined,
-        raw: r,
-      })).filter(r => r.codigo);
-    }
-    // Fallback: parse tabela HTML — placeholder até termos o HTML real
-    const html = await res.text();
-    if (html.includes('<table')) {
-      return parseHtmlTable(html);
-    }
-  }
-  throw new Error('Nenhum endpoint conhecido de saldo respondeu. Colar HAR de /estoque para eu ajustar o parser.');
-}
-
-function parseHtmlTable(html: string): SaldoRow[] {
-  const rows: SaldoRow[] = [];
-  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  const tdRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = trRe.exec(html))) {
-    const cells: string[] = [];
-    let c: RegExpExecArray | null;
-    while ((c = tdRe.exec(m[1]))) cells.push(c[1].replace(/<[^>]+>/g, '').trim());
-    if (cells.length >= 3 && /^[A-Z0-9-]+$/i.test(cells[0])) {
-      rows.push({
-        codigo: cells[0],
-        descricao: cells[1],
-        deposito: cells[2] || 'PADRAO',
-        quantidade: Number(cells[3]?.replace(/\./g, '').replace(',', '.') || 0),
-        unidade: cells[4],
+// Tenta candidatos de rota, devolve o primeiro payload JSON não-vazio (array)
+async function tryRoutes(jar: Jar, paths: string[]): Promise<any[] | null> {
+  for (const path of paths) {
+    try {
+      const res = await fetch(`${AUGE_BASE_URL}${path}`, {
+        headers: {
+          'Cookie': jar.header(),
+          'Accept': 'application/json, text/html;q=0.9',
+          'User-Agent': 'PenteFinoBot/1.0',
+        },
       });
-    }
+      if (!res.ok) continue;
+      const ct = res.headers.get('content-type') ?? '';
+      if (ct.includes('application/json')) {
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : (data.data ?? data.rows ?? data.items ?? data.results ?? []);
+        if (Array.isArray(arr) && arr.length > 0) return arr;
+      }
+    } catch (_) { /* try next */ }
   }
-  return rows;
+  return null;
 }
 
-// ---------- Handler ----------
+const CANDIDATES: Record<Entity, string[]> = {
+  saldo: [
+    '/api/estoque/saldos', '/api/saldos', '/estoque/saldos.json',
+    '/estoque/saldos', '/relatorios/saldo-estoque.json',
+  ],
+  produtos: [
+    '/api/produtos', '/api/cadastros/produtos', '/produtos.json',
+    '/cadastros/produtos.json', '/api/itens',
+  ],
+  depositos: [
+    '/api/depositos', '/api/armazens', '/depositos.json', '/cadastros/depositos.json',
+  ],
+  movimentacoes: [
+    '/api/estoque/movimentacoes', '/api/movimentacoes',
+    '/estoque/movimentacoes.json', '/relatorios/movimentacoes.json',
+  ],
+  lotes: [
+    '/api/lotes', '/api/estoque/lotes', '/lotes.json', '/estoque/lotes.json',
+  ],
+};
+
+// ---------- Normalizadores ----------
+function mapSaldo(r: any) {
+  return {
+    codigo: String(r.codigo ?? r.sku ?? r.produto ?? r.codigo_produto ?? '').trim(),
+    descricao: r.descricao ?? r.nome ?? null,
+    deposito: String(r.deposito ?? r.armazem ?? r.deposito_codigo ?? 'PADRAO'),
+    quantidade: Number(r.saldo ?? r.quantidade ?? r.qtd ?? 0),
+    unidade: r.unidade ?? r.un ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+function mapProduto(r: any) {
+  return {
+    codigo: String(r.codigo ?? r.sku ?? r.id_externo ?? '').trim(),
+    descricao: r.descricao ?? r.nome ?? null,
+    unidade: r.unidade ?? r.un ?? null,
+    ncm: r.ncm ?? null,
+    categoria: r.categoria ?? r.grupo ?? null,
+    ativo: r.ativo ?? true,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+function mapDeposito(r: any) {
+  return {
+    codigo: String(r.codigo ?? r.id ?? r.sigla ?? '').trim(),
+    nome: r.nome ?? r.descricao ?? null,
+    localizacao: r.localizacao ?? r.endereco ?? null,
+    ativo: r.ativo ?? true,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+function mapMovimentacao(r: any) {
+  return {
+    id_externo: String(r.id ?? r.id_externo ?? `${r.documento ?? ''}-${r.codigo ?? ''}-${r.data ?? ''}`),
+    tipo: String(r.tipo ?? r.natureza ?? 'movimento').toLowerCase(),
+    codigo_produto: String(r.codigo ?? r.produto ?? r.sku ?? '').trim(),
+    deposito: r.deposito ?? r.armazem ?? null,
+    quantidade: Number(r.quantidade ?? r.qtd ?? 0),
+    documento: r.documento ?? r.nf ?? r.pedido ?? null,
+    data_movimento: r.data ?? r.data_movimento ?? r.emissao ?? null,
+    observacao: r.observacao ?? r.obs ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+function mapLote(r: any) {
+  return {
+    codigo_produto: String(r.codigo ?? r.produto ?? r.sku ?? '').trim(),
+    lote: String(r.lote ?? r.numero_lote ?? '').trim(),
+    deposito: r.deposito ?? r.armazem ?? null,
+    quantidade: Number(r.quantidade ?? r.saldo ?? 0),
+    data_fabricacao: r.data_fabricacao ?? r.fabricacao ?? null,
+    data_validade: r.data_validade ?? r.validade ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+// ---------- Sync por entidade ----------
+async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: string | null) {
+  const { data: run } = await admin.from('auge_sync_runs')
+    .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
+    .select('id').single();
+  const runId = run?.id;
+
+  try {
+    const raw = await tryRoutes(jar, CANDIDATES[entity]);
+    if (!raw) {
+      throw new Error(`Nenhuma rota candidata respondeu com dados para ${entity}.`);
+    }
+
+    let upserted = 0;
+    if (entity === 'saldo') {
+      const rows = raw.map(mapSaldo).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_produtos_saldo')
+        .upsert(rows, { onConflict: 'codigo,deposito', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+    } else if (entity === 'produtos') {
+      const rows = raw.map(mapProduto).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_produtos')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+    } else if (entity === 'depositos') {
+      const rows = raw.map(mapDeposito).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_depositos')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+    } else if (entity === 'movimentacoes') {
+      const rows = raw.map(mapMovimentacao).filter(r => r.codigo_produto && r.id_externo);
+      const { error, count } = await admin.from('auge_movimentacoes')
+        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+    } else if (entity === 'lotes') {
+      const rows = raw.map(mapLote).filter(r => r.codigo_produto && r.lote);
+      const { error, count } = await admin.from('auge_lotes')
+        .upsert(rows, { onConflict: 'codigo_produto,lote,deposito', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+    }
+
+    await admin.from('auge_sync_runs').update({
+      status: 'success',
+      finished_at: new Date().toISOString(),
+      rows_processed: raw.length,
+      rows_upserted: upserted,
+    }).eq('id', runId);
+
+    return { entity, processed: raw.length, upserted };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await admin.from('auge_sync_runs').update({
+      status: 'error',
+      finished_at: new Date().toISOString(),
+      error_message: msg,
+    }).eq('id', runId);
+    return { entity, error: msg };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  const url = new URL(req.url);
+  const entityParam = url.searchParams.get('entity');
+  const entities: Entity[] = entityParam
+    ? entityParam.split(',').filter(e => (ALL_ENTITIES as string[]).includes(e)) as Entity[]
+    : ALL_ENTITIES;
+
   const authHeader = req.headers.get('Authorization');
   let triggeredBy: string | null = null;
   if (authHeader?.startsWith('Bearer ')) {
-    const anon = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data } = await anon.auth.getClaims(authHeader.replace('Bearer ', ''));
-    triggeredBy = data?.claims?.sub ?? null;
+    try {
+      const anon = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data } = await anon.auth.getClaims(authHeader.replace('Bearer ', ''));
+      triggeredBy = data?.claims?.sub ?? null;
+    } catch (_) { /* cron/anon */ }
   }
-
-  const { data: run } = await admin
-    .from('auge_sync_runs')
-    .insert({ status: 'running', triggered_by: triggeredBy })
-    .select('id')
-    .single();
-  const runId = run?.id;
 
   try {
     if (!AUGE_USERNAME || !AUGE_PASSWORD) {
@@ -182,43 +276,18 @@ Deno.serve(async (req) => {
 
     const jar = new Jar();
     await login(jar);
-    const rows = await fetchSaldos(jar);
 
-    let upserted = 0;
-    if (rows.length > 0) {
-      const payload = rows.map(r => ({
-        codigo: r.codigo,
-        descricao: r.descricao ?? null,
-        deposito: r.deposito,
-        quantidade: r.quantidade,
-        unidade: r.unidade ?? null,
-        raw: r.raw ?? null,
-        synced_at: new Date().toISOString(),
-      }));
-      const { error, count } = await admin
-        .from('auge_produtos_saldo')
-        .upsert(payload, { onConflict: 'codigo,deposito', count: 'exact' });
-      if (error) throw error;
-      upserted = count ?? payload.length;
+    const results = [];
+    for (const e of entities) {
+      results.push(await syncEntity(admin, jar, e, triggeredBy));
     }
 
-    await admin.from('auge_sync_runs').update({
-      status: 'success',
-      finished_at: new Date().toISOString(),
-      rows_processed: rows.length,
-      rows_upserted: upserted,
-    }).eq('id', runId);
-
-    return new Response(JSON.stringify({ ok: true, rows: rows.length, upserted }), {
+    const totalUpserted = results.reduce((s, r: any) => s + (r.upserted ?? 0), 0);
+    return new Response(JSON.stringify({ ok: true, upserted: totalUpserted, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    await admin.from('auge_sync_runs').update({
-      status: 'error',
-      finished_at: new Date().toISOString(),
-      error_message: msg,
-    }).eq('id', runId);
     return new Response(JSON.stringify({ ok: false, error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
