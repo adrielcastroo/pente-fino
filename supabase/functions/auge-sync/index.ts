@@ -136,12 +136,15 @@ async function login(jar: Jar): Promise<{ csrf: string; apiToken: string | null 
   }
 
   const metaCsrf = homeHtml.match(/<meta[^>]+name="csrf-token"[^>]+content="([^"]+)"/i)?.[1];
-  if (metaCsrf) return metaCsrf;
+  const apiTokenMatch = homeHtml.match(/userApiToken\s*:\s*['"]([^'"]+)['"]/);
+  const apiToken = apiTokenMatch?.[1] ?? null;
+
+  if (metaCsrf) return { csrf: metaCsrf, apiToken };
 
   // Fallback: XSRF-TOKEN cookie (URL-encoded)
   const xsrf = jar.get('XSRF-TOKEN');
   if (xsrf) {
-    try { return decodeURIComponent(xsrf); } catch { return xsrf; }
+    try { return { csrf: decodeURIComponent(xsrf), apiToken }; } catch { return { csrf: xsrf, apiToken }; }
   }
 
   throw new Error(`Login OK (302→${loc}), /home ${homeStatus}, mas nenhum CSRF encontrado (HTML len=${homeHtml.length}).`);
