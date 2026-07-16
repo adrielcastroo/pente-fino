@@ -28,7 +28,16 @@ interface AugeRun {
   rows_processed: number;
   rows_upserted: number;
   error_message: string | null;
+  entidade: string | null;
 }
+
+const ENTIDADES = [
+  { key: 'produtos', label: 'Produtos' },
+  { key: 'depositos', label: 'Depósitos' },
+  { key: 'saldo', label: 'Saldo' },
+  { key: 'movimentacoes', label: 'Movimentações' },
+  { key: 'lotes', label: 'Lotes' },
+] as const;
 
 export default function AugeSyncPage() {
   const qc = useQueryClient();
