@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
   Truck,
+  ArrowRightLeft,
 } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
@@ -44,6 +45,7 @@ const EstoqueSidebar = memo(() => {
             { key: 'mapa', label: 'Estoque', icon: Package, path: '/estoque/mapa' },
             { key: 'reservas', label: 'Reservas', icon: Table, path: '/estoque/reservas', badge: reservasCount },
             { key: 'rastreamento', label: 'Rastreamento', icon: Truck, path: '/estoque/rastreamento' },
+            { key: 'transferencias', label: 'Transferências', icon: ArrowRightLeft, path: '/estoque/transferencias' },
             { key: 'historico', label: 'Histórico', icon: FolderOpen, path: '/estoque/historico' },
           ],
         },
