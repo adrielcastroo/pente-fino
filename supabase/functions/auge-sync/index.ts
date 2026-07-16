@@ -645,6 +645,17 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       if (error) throw error;
       upserted = count ?? rows.length;
       await admin.from('auge_sync_runs').update({ detalhes: { days_back: days, last_max_dt: lastMax } }).eq('id', runId);
+    } else if (entity === 'entradas') {
+      const days = daysSince(lastMax);
+      const items = await fetchEntradasPHP(auth, days);
+      processed = items.length;
+      const rows = items.map(mapEntradaPHP).filter(r => r.id_externo);
+      newMaxDt = maxDateISO(rows);
+      const { error, count } = await admin.from('auge_movimentacoes')
+        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { days_back: days, last_max_dt: lastMax, tipo: 'entrada' } }).eq('id', runId);
     } else if (entity === 'depositos') {
       const { data: items, path } = await fetchDepositosPHP(auth);
       processed = items.length;
