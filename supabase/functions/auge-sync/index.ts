@@ -258,9 +258,12 @@ async function syncEntity(admin: any, jar: Jar, entity: Entity, triggeredBy: str
   const runId = run?.id;
 
   try {
-    const raw = await tryRoutes(jar, CANDIDATES[entity]);
+    // Movimentações (saídas) usa endpoint POST específico mapeado no HAR
+    const raw = entity === 'movimentacoes'
+      ? await fetchSaidas(jar)
+      : await tryRoutes(jar, CANDIDATES[entity]);
     if (!raw) {
-      throw new Error(`Nenhuma rota candidata respondeu com dados para ${entity}.`);
+      throw new Error(`Nenhuma rota respondeu com dados para ${entity}. Envie HAR desta entidade.`);
     }
 
     let upserted = 0;
