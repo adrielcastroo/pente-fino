@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Database, Package, Warehouse, ArrowRightLeft, Boxes, FileText, GitCompare } from 'lucide-react';
+import { Database, Package, ArrowRightLeft, Boxes, FileText, GitCompare } from 'lucide-react';
 import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
 import AugeSaldoTab from '@/components/auge/AugeSaldoTab';
