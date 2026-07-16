@@ -247,7 +247,12 @@ function AuditoriaContent() {
             );
           })
         )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="kardex" className="mt-4">
+          <AugeKardexTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
