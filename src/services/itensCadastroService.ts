@@ -336,7 +336,7 @@ export const itensCadastroService = {
   async resolveItemFromScan(
     bipado: string,
     fallbackDescricao = '',
-  ): Promise<{ codigoInterno: string; descricao: string; resolved: boolean; source: 'interno' | 'fornecedor' | 'none' }> {
+  ): Promise<{ codigoInterno: string; descricao: string; resolved: boolean; source: 'interno' | 'fornecedor' | 'auge' | 'none' }> {
     const raw = (bipado || '').trim();
     if (!raw) return { codigoInterno: raw, descricao: fallbackDescricao, resolved: false, source: 'none' };
     try {
@@ -358,10 +358,70 @@ export const itensCadastroService = {
           source: 'fornecedor',
         };
       }
+      // Fallback: consulta o espelho do ERP Auge por código exato
+      const { data: augeHit } = await supabase
+        .from('auge_produtos')
+        .select('codigo, descricao')
+        .eq('codigo', raw)
+        .limit(1)
+        .maybeSingle();
+      if (augeHit) {
+        return {
+          codigoInterno: augeHit.codigo,
+          descricao: augeHit.descricao || fallbackDescricao,
+          resolved: true,
+          source: 'auge',
+        };
+      }
     } catch (e) {
       console.warn('resolveItemFromScan falhou:', e);
     }
     return { codigoInterno: raw, descricao: fallbackDescricao, resolved: false, source: 'none' };
+  },
+
+  /**
+   * Consulta leve para o preview do formulário: retorna o vínculo do valor
+   * bipado com o cadastro local (itens_cadastro) e/ou com o espelho do Auge
+   * (auge_produtos). Não altera dados nem grava — apenas informa se o item
+   * é conhecido, em qual base e a descrição correspondente.
+   */
+  async lookupVinculo(bipado: string): Promise<{
+    codigoBipado: string;
+    local: { codigoInterno: string; descricao: string; via: 'interno' | 'fornecedor' } | null;
+    auge: { codigo: string; descricao: string | null } | null;
+  }> {
+    const raw = (bipado || '').trim();
+    const empty = { codigoBipado: raw, local: null, auge: null };
+    if (!raw) return empty;
+    try {
+      let local: { codigoInterno: string; descricao: string; via: 'interno' | 'fornecedor' } | null = null;
+      const porInterno = await this.findByCodigoInterno(raw);
+      if (porInterno) {
+        local = { codigoInterno: porInterno.codigo_interno, descricao: porInterno.descricao || '', via: 'interno' };
+      } else {
+        const porFornecedor = await this.findByCodigoFornecedor(raw);
+        if (porFornecedor) {
+          local = { codigoInterno: porFornecedor.codigo_interno, descricao: porFornecedor.descricao || '', via: 'fornecedor' };
+        }
+      }
+
+      // Auge: tenta pelo código bipado e, se achou local, também pelo código interno
+      const codigosParaTentar = Array.from(new Set([raw, local?.codigoInterno].filter(Boolean) as string[]));
+      let auge: { codigo: string; descricao: string | null } | null = null;
+      for (const c of codigosParaTentar) {
+        const { data } = await supabase
+          .from('auge_produtos')
+          .select('codigo, descricao')
+          .eq('codigo', c)
+          .limit(1)
+          .maybeSingle();
+        if (data) { auge = data; break; }
+      }
+      return { codigoBipado: raw, local, auge };
+    } catch (e) {
+      console.warn('lookupVinculo falhou:', e);
+      return empty;
+    }
   },
 
   /**
