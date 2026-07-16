@@ -474,20 +474,20 @@ export default function CadastrosPage() {
 
       {/* Pagination */}
       {filtered.length > 0 && (
-        <nav aria-label="Paginação" className="flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <nav aria-label="Paginação" className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-border/40 pt-3 min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
             Mostrando {start + 1}–{end} de {filtered.length}
           </p>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1 min-w-0">
             <Button
               size="sm"
               variant="outline"
               disabled={safePage <= 1}
               onClick={() => setPage(p => Math.max(1, p - 1))}
               aria-label="Página anterior"
-              className="gap-1 h-8"
+              className="gap-1 h-8 px-2"
             >
-              <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+              <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Anterior</span>
             </Button>
             {pageNumbers.map((n, i) => {
               const prev = pageNumbers[i - 1];
@@ -514,9 +514,9 @@ export default function CadastrosPage() {
               disabled={safePage >= totalPages}
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               aria-label="Próxima página"
-              className="gap-1 h-8"
+              className="gap-1 h-8 px-2"
             >
-              Próximo <ChevronRight className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Próximo</span> <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </nav>
