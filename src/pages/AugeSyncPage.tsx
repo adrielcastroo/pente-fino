@@ -29,6 +29,7 @@ export default function AugeSyncPage() {
         <TabsList className="w-full overflow-x-auto justify-start h-auto p-1 bg-card/60 border border-border/40">
           <TabTrigger v="produtos" icon={Package}>Produtos</TabTrigger>
           <TabTrigger v="saldo" icon={Boxes}>Saldo</TabTrigger>
+          <TabTrigger v="entradas" icon={PackagePlus}>Entradas</TabTrigger>
           <TabTrigger v="saidas" icon={FileText}>Saídas</TabTrigger>
           <TabTrigger v="transferencias" icon={ArrowRightLeft}>Transferências</TabTrigger>
           <TabTrigger v="kardex" icon={History}>Kardex</TabTrigger>
@@ -38,6 +39,7 @@ export default function AugeSyncPage() {
         <Card className="flex-1 p-4 mt-3 rounded-md border-border/40 overflow-hidden">
           <TabsContent value="produtos" className="h-full m-0"><AugeProdutosTab /></TabsContent>
           <TabsContent value="saldo" className="h-full m-0"><AugeSaldoTab /></TabsContent>
+          <TabsContent value="entradas" className="h-full m-0"><AugeEntradasTab /></TabsContent>
           <TabsContent value="saidas" className="h-full m-0"><AugeSaidasTab /></TabsContent>
           <TabsContent value="transferencias" className="h-full m-0"><AugeTransferenciasTab /></TabsContent>
           <TabsContent value="kardex" className="h-full m-0"><AugeKardexTab /></TabsContent>
