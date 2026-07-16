@@ -28,7 +28,8 @@ const ENTIDADES = [
   { key: 'produtos', label: 'Produtos', mapped: true },
   { key: 'saldo', label: 'Saldo', mapped: true },
   { key: 'movimentacoes', label: 'Saídas', mapped: true },
-  { key: 'transferencias', label: 'Transferências', mapped: false },
+  { key: 'entradas', label: 'Entradas', mapped: true },
+  { key: 'transferencias', label: 'Transferências', mapped: true },
 ];
 
 export default function AugeAdminPanel() {
