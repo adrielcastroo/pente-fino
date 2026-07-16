@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Database, Package, ArrowRightLeft, Boxes, FileText, GitCompare, History } from 'lucide-react';
+import { Database, Package, ArrowRightLeft, Boxes, FileText, GitCompare, History, PackagePlus } from 'lucide-react';
 import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
+import AugeEntradasTab from '@/components/auge/AugeEntradasTab';
 import AugeSaldoTab from '@/components/auge/AugeSaldoTab';
 import AugeTransferenciasTab from '@/components/auge/AugeTransferenciasTab';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
@@ -28,6 +29,7 @@ export default function AugeSyncPage() {
         <TabsList className="w-full overflow-x-auto justify-start h-auto p-1 bg-card/60 border border-border/40">
           <TabTrigger v="produtos" icon={Package}>Produtos</TabTrigger>
           <TabTrigger v="saldo" icon={Boxes}>Saldo</TabTrigger>
+          <TabTrigger v="entradas" icon={PackagePlus}>Entradas</TabTrigger>
           <TabTrigger v="saidas" icon={FileText}>Saídas</TabTrigger>
           <TabTrigger v="transferencias" icon={ArrowRightLeft}>Transferências</TabTrigger>
           <TabTrigger v="kardex" icon={History}>Kardex</TabTrigger>
@@ -37,6 +39,7 @@ export default function AugeSyncPage() {
         <Card className="flex-1 p-4 mt-3 rounded-md border-border/40 overflow-hidden">
           <TabsContent value="produtos" className="h-full m-0"><AugeProdutosTab /></TabsContent>
           <TabsContent value="saldo" className="h-full m-0"><AugeSaldoTab /></TabsContent>
+          <TabsContent value="entradas" className="h-full m-0"><AugeEntradasTab /></TabsContent>
           <TabsContent value="saidas" className="h-full m-0"><AugeSaidasTab /></TabsContent>
           <TabsContent value="transferencias" className="h-full m-0"><AugeTransferenciasTab /></TabsContent>
           <TabsContent value="kardex" className="h-full m-0"><AugeKardexTab /></TabsContent>

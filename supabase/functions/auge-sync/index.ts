@@ -22,8 +22,8 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'lotes' | 'transferencias';
-const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'depositos', 'lotes', 'transferencias'];
+type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias';
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias'];
 const UNMAPPED: Entity[] = []; // todos tentam endpoints; erros são registrados no run
 
 // ---------- Cookie jar ----------
@@ -246,6 +246,76 @@ async function fetchSaidasPHP(
   let j: any;
   try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON: ${text.slice(0,120)}`); }
   return Array.isArray(j?.data) ? j.data : [];
+}
+
+// Endpoint real de entradas (Auge legado / módulo PHP)
+// POST /l.unilux/modInventario/estoque/ajax/getEntradaEstoque.php
+// Body: dtCriacaoDe (dd/MM/yyyy), dtCriacaoAte, idSituacao, cdDepositoOrigem, cdItem
+async function fetchEntradasPHP(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  daysBack = 30,
+): Promise<any[]> {
+  const path = '/l.unilux/modInventario/estoque/ajax/getEntradaEstoque.php';
+  const de = new Date(Date.now() - daysBack * 24 * 3600 * 1000);
+  const dd = String(de.getDate()).padStart(2, '0');
+  const mm = String(de.getMonth() + 1).padStart(2, '0');
+  const yyyy = de.getFullYear();
+  const body = new URLSearchParams({
+    dtCriacaoDe: `${dd}/${mm}/${yyyy}`,
+    dtCriacaoAte: '',
+    idSituacao: '',
+    cdDepositoOrigem: '',
+    cdItem: '',
+  });
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirEntradaEstoque.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status} body=${text.slice(0,200)}`);
+  let j: any;
+  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON: ${text.slice(0,120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
+function mapEntradaPHP(r: any) {
+  // Mesma shape das saídas/transferências (módulo estoque legado PHP)
+  const cd = r.cdEntradaEstoque ?? r.cdTransferenciaEstoque ?? r.cdMovimentoEstoque ?? null;
+  const cdErp = r.cdMovEstoqueERP ?? null;
+  const nrErp = r.nrEntradaEstoqueERP ?? r.nrTransfEstoqueERP ?? null;
+  const dtCri = r.dtCriacao ?? '';
+  const keySeed = cd ?? cdErp ?? nrErp ?? `${r.nmUsuarioCriacao ?? ''}-${dtCri}`;
+  return {
+    id_externo: `entrada-php:${keySeed}`,
+    tipo: 'entrada',
+    codigo_produto: r.cdItem ?? null,
+    deposito: r.cdDepositoDestino ?? r.cdDeposito ?? null,
+    quantidade: parseNum(r.qtItem),
+    documento: cd ? String(cd) : (nrErp ? String(nrErp) : null),
+    data_movimento: parseDateBR(dtCri),
+    observacao: r.dsObservacao ?? null,
+    situacao: r.idSituacao ?? null,
+    ds_situacao: r.dsSituacao ?? null,
+    usuario_criacao: r.nmUsuarioCriacao ?? null,
+    usuario_efetivacao: r.nmUsuarioEfetivacao ?? null,
+    dt_efetivacao: parseDateBR(r.dtEfetivacao),
+    documento_tipo: r.idTipoDocumento ?? null,
+    valor: parseNum(r.vlCustoMovimentacao),
+    ds_efetivacao: r.dsEfetivacao ?? null,
+    cd_transferencia: cd ? String(cd) : null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
 }
 
 function parseNum(v: any): number {
@@ -575,6 +645,17 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       if (error) throw error;
       upserted = count ?? rows.length;
       await admin.from('auge_sync_runs').update({ detalhes: { days_back: days, last_max_dt: lastMax } }).eq('id', runId);
+    } else if (entity === 'entradas') {
+      const days = daysSince(lastMax);
+      const items = await fetchEntradasPHP(auth, days);
+      processed = items.length;
+      const rows = items.map(mapEntradaPHP).filter(r => r.id_externo);
+      newMaxDt = maxDateISO(rows);
+      const { error, count } = await admin.from('auge_movimentacoes')
+        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
+      await admin.from('auge_sync_runs').update({ detalhes: { days_back: days, last_max_dt: lastMax, tipo: 'entrada' } }).eq('id', runId);
     } else if (entity === 'depositos') {
       const { data: items, path } = await fetchDepositosPHP(auth);
       processed = items.length;
