@@ -58,7 +58,7 @@ class Jar {
 }
 
 // ---------- Login (Laravel) ----------
-async function login(jar: Jar): Promise<string> {
+async function login(jar: Jar): Promise<{ csrf: string; apiToken: string | null }> {
   const loginUrl = `${AUGE_BASE_URL}/login`;
   const getRes = await fetch(loginUrl, {
     redirect: 'manual',
