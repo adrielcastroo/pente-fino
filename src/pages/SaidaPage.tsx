@@ -13,6 +13,8 @@ import { usePerformance } from '@/hooks/use-performance';
 import { formatDateBR } from '@/lib/app-utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/page-header';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import AugeSaidasTab from '@/components/auge/AugeSaidasTab';
 
 interface SaidaRegistro {
   id: string;
@@ -55,6 +57,7 @@ export default function SaidaPage() {
   const [observacoes, setObservacoes] = useState('');
   const [destino, setDestino] = useState('');
   const conferente = useAppStore(s => s.conferente);
+  const [tab, setTab] = useState<'interno' | 'auge'>('interno');
   useDocumentTitle('Saídas');
 
   const loadSaidas = async () => {
@@ -207,48 +210,62 @@ export default function SaidaPage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-4 sm:p-8 space-y-4 sm:space-y-8 flex-shrink-0">
+      <div className="p-4 sm:p-8 space-y-4 flex-shrink-0">
         <PageHeader
           title="Saídas"
           className="lg:items-center"
           actions={
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
-              <Button
-                onClick={() => setScanMode(true)}
-                variant="outline"
-                className="w-full sm:w-auto h-12 px-6 font-semibold rounded-md border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-95 text-base shrink-0"
-              >
-                <span>Dar saída</span>
-              </Button>
+            tab === 'interno' ? (
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                <Button
+                  onClick={() => setScanMode(true)}
+                  variant="outline"
+                  className="w-full sm:w-auto h-12 px-6 font-semibold rounded-md border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-95 text-base shrink-0"
+                >
+                  <span>Dar saída</span>
+                </Button>
 
-              <div className="relative group w-full sm:flex-1 lg:w-80">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
-                <Input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Filtrar item, PROC, conferente..."
-                  className="pl-10 h-11 sm:h-12 rounded-md border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
-                />
+                <div className="relative group w-full sm:flex-1 lg:w-80">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                  <Input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Filtrar item, PROC, conferente..."
+                    className="pl-10 h-11 sm:h-12 rounded-md border-border/40 bg-card/40 focus:bg-background transition-all font-bold text-xs sm:text-sm w-full"
+                  />
+                </div>
+
+                <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
+                  <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-md border-border/40 font-bold text-xs sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">Últimos 7 dias</SelectItem>
+                    <SelectItem value="30">Últimos 30 dias</SelectItem>
+                    <SelectItem value="90">Últimos 90 dias</SelectItem>
+                    <SelectItem value="todos">Todo o período</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <Select value={periodo} onValueChange={v => setPeriodo(v as Periodo)}>
-                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-12 rounded-md border-border/40 font-bold text-xs sm:text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Últimos 7 dias</SelectItem>
-                  <SelectItem value="30">Últimos 30 dias</SelectItem>
-                  <SelectItem value="90">Últimos 90 dias</SelectItem>
-                  <SelectItem value="todos">Todo o período</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            ) : null
           }
         />
 
+        <Tabs value={tab} onValueChange={(v) => setTab(v as 'interno' | 'auge')} className="w-full">
+          <TabsList className="bg-card/40 border border-border/40 rounded-md">
+            <TabsTrigger value="interno" className="text-xs font-bold uppercase tracking-wider">Interno (Tecidos)</TabsTrigger>
+            <TabsTrigger value="auge" className="text-xs font-bold uppercase tracking-wider">Auge (ERP)</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
+        {tab === 'auge' ? (
+          <div className="max-w-[1400px] mx-auto">
+            <AugeSaidasTab />
+          </div>
+        ) : (
+          <>
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -345,7 +362,10 @@ export default function SaidaPage() {
             )}
           </div>
         )}
+          </>
+        )}
       </div>
+
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
