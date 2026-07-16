@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
+import AugeItemLookup from '@/components/auge/AugeItemLookup';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -178,6 +179,7 @@ export default function CadastrosPage() {
           </p>
         </div>
         <div className="md:ml-auto flex flex-wrap items-center gap-2">
+          <AugeItemLookup />
           <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none min-w-[150px]" aria-label="Importar planilha">
             <span className="truncate">Importar planilha</span>
           </Button>
