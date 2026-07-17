@@ -10,9 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Plus, Search, Pencil, Trash2, Package, History,
   ChevronLeft, ChevronRight, GitCompare, Sparkles,
-  ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2,
+  ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
 } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
+import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
@@ -59,6 +60,7 @@ export default function CadastrosPage() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -310,6 +312,15 @@ export default function CadastrosPage() {
           </p>
         </div>
         <div className="md:ml-auto flex flex-wrap items-center gap-2 min-w-0">
+          <Button
+            variant="outline"
+            onClick={() => setImportOpen(true)}
+            className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10"
+            aria-label="Importar itens"
+          >
+            <Upload className="h-4 w-4 shrink-0" />
+            <span className="truncate">Importar</span>
+          </Button>
           <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10" aria-label="Novo item">
             <Plus className="h-4 w-4 shrink-0" />
             <span className="truncate">Novo item</span>
@@ -726,6 +737,7 @@ export default function CadastrosPage() {
       </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
+      <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
