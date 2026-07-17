@@ -649,6 +649,91 @@ async function enrichTransferencias(
   return { enriched, failed, attempted: pending.length };
 }
 
+// ============================================================
+// CRIAR / EFETIVAR TRANSFERÊNCIA
+// Endpoint: POST /l.unilux/modInventario/estoque/controle/ctlTransferenciaEstoque.php
+// idAcao=1 -> cria (rascunho), retorna { cdMovimentacao: "180340" }
+// idAcao=2 -> efetiva, body: cdMovimentacao=<id>
+// Confirmado via HAR unilux.auge.app-transferencia.har (2026-07-17)
+// ============================================================
+interface TransferenciaItem {
+  cdItem: string;
+  cdDepositoOrigem: string;
+  cdDepositoDestino: string;
+  qtd: number | string;
+}
+
+async function postCtlTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  body: URLSearchParams,
+): Promise<any> {
+  const path = '/l.unilux/modInventario/estoque/controle/ctlTransferenciaEstoque.php';
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`ctlTransferencia HTTP ${res.status}: ${text.slice(0, 200)}`);
+  try { return JSON.parse(text); } catch { throw new Error(`ctlTransferencia resposta não-JSON: ${text.slice(0, 120)}`); }
+}
+
+async function criarTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  itens: TransferenciaItem[],
+  observacao = '',
+): Promise<string> {
+  if (!itens.length) throw new Error('Ao menos 1 item é obrigatório.');
+  const body = new URLSearchParams();
+  body.set('idAcao', '1');
+  body.set('cdMovivimentacao', ''); // typo intencional (bate com Auge)
+  body.set('idUm', 'UN');
+  body.set('idEfetivacao', '');
+  body.set('idValidacao', 'N');
+  body.set('idDuplicar', 'N');
+  body.set('dsObservacao', observacao || '');
+  body.set('idLancamentoAjuste', 'N');
+  itens.forEach((it, i) => {
+    body.append('cdItem[]', it.cdItem);
+    body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
+    body.append('cdDepositoDestino[]', it.cdDepositoDestino);
+    const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
+    body.append('qtdTransferencia[]', q);
+    body.append('cdIndex[]', String(i));
+  });
+  // Linha vazia extra + cdMovivimentacao repetido (observado no HAR)
+  body.append('cdItem[]', '');
+  body.append('cdIndex[]', String(itens.length));
+  body.append('cdMovivimentacao', '');
+
+  const j = await postCtlTransferencia(auth, body);
+  const cd = j?.cdMovimentacao ?? j?.cdMovivimentacao;
+  if (!cd) throw new Error(`Resposta sem cdMovimentacao: ${JSON.stringify(j).slice(0, 200)}`);
+  return String(cd);
+}
+
+async function efetivarTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovimentacao: string,
+): Promise<void> {
+  const body = new URLSearchParams();
+  body.set('idAcao', '2');
+  body.set('cdMovimentacao', cdMovimentacao);
+  const j = await postCtlTransferencia(auth, body);
+  if (j?.ok !== 'ok' && j?.status !== 'ok') {
+    throw new Error(`Efetivação retornou: ${JSON.stringify(j).slice(0, 200)}`);
+  }
+}
+
 
 // Calcula quantos dias precisamos buscar com base no último sync.
 // Adiciona 2 dias de overlap para não perder registros que chegaram atrasados.
@@ -858,6 +943,49 @@ Deno.serve(async (req) => {
         has_api_token: !!apiToken, csrf_prefix: csrf.slice(0, 8),
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    if (action === 'transferencia_criar' || action === 'transferencia_efetivar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* body opcional em query */ }
+
+      if (action === 'transferencia_criar') {
+        const itens = Array.isArray(payload?.itens) ? payload.itens : [];
+        if (!itens.length) throw new Error('Envie ao menos 1 item em "itens".');
+        for (const it of itens) {
+          if (!it?.cdItem || !it?.cdDepositoOrigem || !it?.cdDepositoDestino || !it?.qtd) {
+            throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
+          }
+        }
+        const cd = await criarTransferencia(auth, itens, String(payload?.observacao ?? ''));
+        let efetivado = false;
+        if (payload?.efetivar === true) {
+          await efetivarTransferencia(auth, cd);
+          efetivado = true;
+        }
+        // Log da ação
+        await admin.from('auge_sync_runs').insert({
+          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          detalhes: { action, cdMovimentacao: cd, efetivado, itens: itens.length },
+        });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        const cd = String(payload?.cdMovimentacao ?? '').trim();
+        if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+        await efetivarTransferencia(auth, cd);
+        await admin.from('auge_sync_runs').insert({
+          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          detalhes: { action, cdMovimentacao: cd },
+        });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
 
     const results = [];
     for (const e of entities) {

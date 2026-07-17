@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { RefreshCw, Loader2, ArrowRightLeft, Search } from 'lucide-react';
+import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
+import NovaTransferenciaDialog from './NovaTransferenciaDialog';
 
 export default function AugeTransferenciasTab() {
   const [rows, setRows] = useState<any[]>([]);
@@ -15,6 +16,24 @@ export default function AugeTransferenciasTab() {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
   const [detail, setDetail] = useState<any | null>(null);
+  const [novaOpen, setNovaOpen] = useState(false);
+
+  const efetivarRapido = async (row: any) => {
+    if (!row?.documento) return;
+    if (!confirm(`Efetivar transferência ${row.documento} no Auge? Isso movimenta estoque.`)) return;
+    const t = toast.loading('Efetivando...');
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=transferencia_efetivar', {
+        body: { cdMovimentacao: row.documento },
+      });
+      if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error);
+      toast.success(`Transferência ${row.documento} efetivada`, { id: t });
+      await sync();
+    } catch (e: any) {
+      toast.error('Falha: ' + (e.message || ''), { id: t });
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -60,7 +79,11 @@ export default function AugeTransferenciasTab() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar produto, depósito, documento..." className="pl-10 h-11" />
         </div>
-        <Button onClick={sync} disabled={syncing} className="h-11 px-5 gap-2">
+        <Button onClick={() => setNovaOpen(true)} variant="default" className="h-11 px-5 gap-2">
+          <Plus className="w-4 h-4" />
+          Nova
+        </Button>
+        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-5 gap-2">
           {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Sincronizar
         </Button>
@@ -84,6 +107,7 @@ export default function AugeTransferenciasTab() {
                 <TableHead className="text-right">Qtd</TableHead>
                 <TableHead>Situação</TableHead>
                 <TableHead>Data</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -99,6 +123,13 @@ export default function AugeTransferenciasTab() {
                   <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{r.ds_situacao || r.situacao || '—'}</Badge></TableCell>
                   <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+                  <TableCell className="p-1" onClick={(e) => e.stopPropagation()}>
+                    {(r.situacao === 'D' || (r.ds_situacao || '').toLowerCase().includes('rascunho') || (r.ds_situacao || '').toLowerCase().includes('digit')) && (
+                      <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-amber-500 hover:text-amber-600" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
+                        <Zap className="w-3 h-3" /> Efetivar
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -110,6 +141,11 @@ export default function AugeTransferenciasTab() {
         transferencia={detail}
         open={!!detail}
         onOpenChange={(o) => !o && setDetail(null)}
+      />
+      <NovaTransferenciaDialog
+        open={novaOpen}
+        onOpenChange={setNovaOpen}
+        onCreated={() => sync()}
       />
     </div>
   );
