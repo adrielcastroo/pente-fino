@@ -11,8 +11,12 @@ export function useReservas() {
   const query = useQuery({
     queryKey: RESERVAS_QUERY_KEY,
     queryFn: () => apiService.fetchReservas(),
-    refetchInterval: 10000, // Sync every 10s
-    staleTime: 5000,
+    // Polling reduzido de 10s → 60s (o dado é raramente modificado; realtime
+    // ou mutations locais mantêm a UI em sincronia). Reduz drasticamente o
+    // volume de requests em abas abertas por longos períodos.
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const addMutation = useMutation({
