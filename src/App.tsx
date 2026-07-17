@@ -12,6 +12,7 @@ const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const TecidoPage = lazy(() => import("@/pages/TecidoPage"));
 const MadeiraPage = lazy(() => import("@/pages/MadeiraPage"));
 const MotorControlePage = lazy(() => import("@/pages/MotorControlePage"));
+const ComponentesPage = lazy(() => import("@/pages/ComponentesPage"));
 const EstoquePage = lazy(() => import("@/pages/EstoquePage"));
 const SaidaPage = lazy(() => import("@/pages/SaidaPage"));
 const ReservasPage = lazy(() => import("@/pages/ReservasPage"));
