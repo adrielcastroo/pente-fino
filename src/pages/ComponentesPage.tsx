@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowUpDown,
   Check,
   ClipboardList,
   FileSpreadsheet,
@@ -9,8 +10,10 @@ import {
   Package,
   Plus,
   ScanBarcode,
+  Search,
   Trash2,
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
