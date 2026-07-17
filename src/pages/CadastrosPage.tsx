@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight, GitCompare } from 'lucide-react';
+import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight, GitCompare, Sparkles } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import AugeItemLookup from '@/components/auge/AugeItemLookup';
-import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
@@ -21,10 +20,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { fieldLabel } from '@/lib/audit';
 import { cn } from '@/lib/utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { supabase } from '@/integrations/supabase/client';
+import { normalizarCodigo } from '@/lib/codigoFornecedor';
 
-type FornFilter = 'todos' | 'com' | 'sem';
+type FornFilter = 'todos' | 'com' | 'sem' | 'pendentes_auge';
 type SortKey = 'codigo_interno' | 'descricao' | 'updated_at';
 const PAGE_SIZE = 50;
+
+interface AugePendente {
+  codigo: string;
+  descricao: string | null;
+  qt_disponivel: number | null;
+  ativo: boolean | null;
+}
 
 export default function CadastrosPage() {
   useDocumentTitle('Cadastros');
