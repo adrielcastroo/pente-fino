@@ -218,7 +218,7 @@ export default function AugeAdminPanel() {
             <Button size="sm" variant="outline" asChild className="gap-1.5 h-9">
               <a href="/admin/depositos"><Activity className="w-3.5 h-3.5" />Gerir depósitos</a>
             </Button>
-            <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null} className="gap-1.5 h-9">
+            <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : undefined} className="gap-1.5 h-9">
               {syncingEntity === 'all' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
               Sincronizar tudo
             </Button>
