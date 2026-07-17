@@ -577,6 +577,7 @@ export default function ComponentesPage() {
   const isNarrow = isMobile || isTablet;
   const { isLow } = usePerformance();
   const { user, isGuest, guestName, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [codigo, setCodigo] = useState('');
   const [quantidade, setQuantidade] = useState('1');
