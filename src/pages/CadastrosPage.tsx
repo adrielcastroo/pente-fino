@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Plus, Search, Pencil, Trash2, Package, History,
   ChevronLeft, ChevronRight, GitCompare, Sparkles,
-  ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2,
+  ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
 } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
