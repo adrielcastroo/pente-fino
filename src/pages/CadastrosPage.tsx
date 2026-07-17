@@ -244,9 +244,12 @@ export default function CadastrosPage() {
           <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
             <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
           </TabsTrigger>
-          <TabsTrigger value="auge" className="gap-2 flex-1 sm:flex-none">
-            <History className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Auge (ERP)</span>
+          <TabsTrigger value="reconciliacao" className="gap-2 flex-1 sm:flex-none">
+            <GitCompare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Reconciliação</span>
           </TabsTrigger>
+        </TabsList>
+        <TabsList className="hidden">
+          {/* placeholder - reconciliacao moved above */}
           <TabsTrigger value="reconciliacao" className="gap-2 flex-1 sm:flex-none">
             <GitCompare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Reconciliação</span>
           </TabsTrigger>
