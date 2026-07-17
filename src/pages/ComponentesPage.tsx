@@ -23,12 +23,15 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/hooks/use-auth';
 import { itensCadastroService } from '@/services/itensCadastroService';
 import { printComponenteLabel } from '@/services/printService';
+import { conferenceService } from '@/services/conferenceService';
+import { registroService } from '@/services/registroService';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 import ImportComponentesDialog, {
   type ImportedComponenteRow,
 } from '@/components/componentes/ImportComponentesDialog';
 import { exportConferenceToExcel } from '@/lib/export-utils';
+
 
 /* ============================================================
    Tipos & Persistência
@@ -306,14 +309,23 @@ function ComponentesForm({
           <input
             id="quantidade"
             ref={qtdRef}
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0.01}
-            step="any"
+            autoComplete="off"
             value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
+            onChange={(e) => {
+              // Aceita bipagem: sanitiza para dígitos + separador decimal.
+              // Scanners costumam enviar valor + Enter; mantém apenas o número.
+              const raw = e.target.value.replace(/[^\d,.\-]/g, '');
+              // Normaliza para no máximo um separador decimal
+              const parts = raw.replace(',', '.').split('.');
+              const clean = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join('')}` : raw;
+              setQuantidade(clean);
+            }}
             onKeyDown={handleQtdKey}
-            className={cn(INPUT_BASE, 'text-center font-semibold')}
+            onFocus={(e) => e.currentTarget.select()}
+            placeholder="Bipe ou digite a quantidade"
+            className={cn(INPUT_BASE, 'text-center font-semibold text-base')}
           />
           {/* Prévia de etiquetas */}
           {(() => {
@@ -336,6 +348,7 @@ function ComponentesForm({
             );
           })()}
         </div>
+
 
         <Button
           onClick={adicionar}
@@ -595,6 +608,8 @@ export default function ComponentesPage() {
   // Cache local por sessão para evitar refetch por código
   const descCacheRef = useRef<Map<string, LookupResult>>(new Map());
   const lookupSeq = useRef(0);
+  const sessionStartedAtRef = useRef<string | null>(null);
+
 
   // Regras de impressão do usuário (mesma origem que Motor/Tecido)
   const labelSettings = useAppStore((s) => s.labelSettings);
@@ -754,7 +769,12 @@ export default function ComponentesPage() {
     }
     setSaving(false);
 
+    if (!sessionStartedAtRef.current) {
+      sessionStartedAtRef.current = new Date().toISOString();
+    }
+
     setItens((prev) => {
+
       const existente = prev.find((i) => i.codigo === cod);
       if (existente) {
         return prev.map((i) =>
@@ -966,10 +986,61 @@ export default function ComponentesPage() {
       );
     }
 
+    // Salva a conferência no histórico (/estoque/historico)
+    try {
+      const conferenteNome =
+        (!isGuest && (user?.user_metadata?.display_name || user?.email?.split('@')[0])) ||
+        (isGuest && guestName) ||
+        'Operador';
+      const startedAt = sessionStartedAtRef.current || new Date().toISOString();
+      const finishedAt = new Date().toISOString();
+      const processoNome = `Componentes ${new Date().toLocaleDateString('pt-BR')}`;
+
+      const conf = await conferenceService.insertConference(
+        processoNome,
+        conferenteNome,
+        startedAt,
+        finishedAt,
+      );
+
+      const registros = snapshot.map((it) => ({
+        id: crypto.randomUUID(),
+        item: it.codigo,
+        m2: 0,
+        mLinear: Number.isFinite(it.quantidade) ? it.quantidade : 0,
+        largura: 0,
+        endereco: '',
+        nf: '',
+        lote: '',
+        loteSistema: '',
+        posicao: null,
+        tipoTecido: it.descricao || 'Componente',
+        modoOrigem: 'componentes',
+        wasEdited: false,
+        editedBy: '',
+        editedAt: null,
+        quantidade: Number.isFinite(it.quantidade) ? Math.round(it.quantidade) : null,
+        loteMestreId: null,
+        avariaTipo: null,
+        avariaDescricao: null,
+        avariaFotoUrl: null,
+        curva_abc: 'C',
+      })) as any;
+
+      await registroService.insertRegistros((conf as any).id, registros, 'componentes');
+      toast.success('Conferência salva no histórico.');
+    } catch (err) {
+      console.error('[Componentes] falha ao salvar no histórico', err);
+      toast.error('Não foi possível salvar no histórico. Itens mantidos na tela.');
+      return; // Não limpa a tela para o operador poder tentar novamente
+    }
+
     setUndoStack((u) => [...u, { type: 'finalize', items: snapshot }]);
     setItens([]);
+    sessionStartedAtRef.current = null;
     codigoRef.current?.focus();
-  }, [itens, labelSettings]);
+  }, [itens, labelSettings, user, isGuest, guestName]);
+
 
   const undo = useCallback(() => {
     setUndoStack((stack) => {
