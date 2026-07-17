@@ -752,13 +752,19 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       const days = daysSince(lastMax);
       const { data: items, path } = await fetchTransferenciasPHP(auth, days);
       processed = items.length;
-      const rows = items.map(mapTransferencia).filter(r => r.id_externo);
+      const mapped = items.map(mapTransferencia).filter(r => r.id_externo);
+      // Enriquece com endpoint de detalhe (origem/destino/item)
+      const enrichStats = await enrichTransferencias(auth, mapped, 4, 300);
+      // Remove campo interno antes do upsert
+      const rows = mapped.map(({ _cd, ...rest }: any) => rest);
       newMaxDt = maxDateISO(rows);
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       upserted = count ?? rows.length;
-      await admin.from('auge_sync_runs').update({ detalhes: { path, days_back: days, last_max_dt: lastMax } }).eq('id', runId);
+      await admin.from('auge_sync_runs').update({
+        detalhes: { path, days_back: days, last_max_dt: lastMax, enrich: enrichStats },
+      }).eq('id', runId);
     }
 
     const nowIso = new Date().toISOString();
