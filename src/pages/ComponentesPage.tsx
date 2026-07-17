@@ -664,12 +664,15 @@ export default function ComponentesPage() {
       let hit = await itensCadastroService.findByCodigoFornecedor(cod);
       if (!hit) hit = await itensCadastroService.findByCodigoInterno(cod);
       const result: LookupResult = hit
-        ? {
-            descricao: hit.descricao?.trim() || null,
-            unidade: hit.unidade || null,
-            pacoteEstocagem: hit.pacote_estocagem != null ? Number(hit.pacote_estocagem) : null,
-            pacoteFornecedor: hit.pacote_fornecedor != null ? Number(hit.pacote_fornecedor) : null,
-          }
+        ? (() => {
+            const uRaw = (hit.unidade || '').trim().toUpperCase();
+            const unidade = uRaw === 'UN' ? 'PÇ' : uRaw || null;
+            const pf = hit.pacote_fornecedor != null ? Number(hit.pacote_fornecedor) : null;
+            const peRaw = hit.pacote_estocagem != null ? Number(hit.pacote_estocagem) : null;
+            // Regra: se pacote de estocagem for 0/vazio, usa o pacote do fornecedor
+            const pacoteEstocagem = peRaw && peRaw > 0 ? peRaw : pf;
+            return { descricao: hit.descricao?.trim() || null, unidade, pacoteEstocagem, pacoteFornecedor: pf };
+          })()
         : empty;
       descCacheRef.current.set(cod, result);
       return result;

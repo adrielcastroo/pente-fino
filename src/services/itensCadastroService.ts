@@ -54,7 +54,9 @@ function normalizeList(values: string[]): { codigos: string[]; normalizados: str
 
 function prepare(input: ItemCadastroInput) {
   const { codigos, normalizados } = normalizeList(input.codigos_fornecedor || []);
-  const unidade = (input.unidade ?? '').toString().trim().toUpperCase() || null;
+  let unidade = (input.unidade ?? '').toString().trim().toUpperCase() || null;
+  // Normalização: unidade "UN" é sempre tratada como "PÇ" (peças)
+  if (unidade === 'UN') unidade = 'PÇ';
   const pacote_fornecedor =
     input.pacote_fornecedor != null && Number.isFinite(Number(input.pacote_fornecedor)) && Number(input.pacote_fornecedor) > 0
       ? Number(input.pacote_fornecedor)
