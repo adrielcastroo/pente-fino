@@ -136,14 +136,19 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
             {/* Meta */}
             <Card className="p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <Meta icon={Calendar} label="Data" value={transferencia.data_movimento ? formatDateBR(transferencia.data_movimento) : '—'} />
-              <Meta icon={User} label="Usuário" value={transferencia.usuario_criacao ?? '—'} />
+              <Meta icon={User} label="Criado por" value={transferencia.usuario_criacao ?? '—'} />
+              <Meta icon={User} label="Efetivado por" value={transferencia.usuario_efetivacao ?? '—'} />
               <Meta icon={DollarSign} label="Valor" value={
                 transferencia.valor
                   ? Number(transferencia.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                   : '—'
               } />
+              <Meta icon={User} label="Enviou (logística)" value={transferencia.usuario_enviou_logistica ?? '—'} />
+              <Meta icon={User} label="Recebeu (logística)" value={transferencia.usuario_recebido_logistica ?? '—'} />
               <Meta icon={Package} label="ID externo" value={transferencia.id_externo ?? '—'} mono />
+              <Meta icon={Calendar} label="Detalhe sinc." value={transferencia.detalhe_sincronizado_em ? formatDateBR(transferencia.detalhe_sincronizado_em) : '—'} />
             </Card>
+
 
             {/* Transferências relacionadas */}
             {relacionadas.length > 0 && (
