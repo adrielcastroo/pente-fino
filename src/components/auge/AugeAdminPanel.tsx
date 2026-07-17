@@ -150,8 +150,39 @@ export default function AugeAdminPanel() {
 
   return (
     <div className="space-y-5">
+      {/* Chave mestre da sincronização */}
+      <Card className={`p-5 rounded-md border-border/40 ${!syncEnabled ? 'border-amber-500/40 bg-amber-500/5' : ''}`}>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${syncEnabled ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+              <Power className={`w-5 h-5 ${syncEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
+            </div>
+            <div>
+              <Label htmlFor="auge-sync-toggle" className="font-semibold text-sm cursor-pointer">
+                Sincronização com o Auge {syncEnabled ? 'ativa' : 'desligada'}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {syncEnabled
+                  ? 'Sync manual e agendado (cron) estão liberados.'
+                  : 'Todos os sync — manual e cron — estão bloqueados até religar.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {togglingFlag && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+            <Switch
+              id="auge-sync-toggle"
+              checked={syncEnabled}
+              onCheckedChange={toggleFlag}
+              disabled={togglingFlag}
+            />
+          </div>
+        </div>
+      </Card>
+
       {/* Status da conexão */}
       <Card className="p-5 rounded-md border-border/40">
+
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             {pinging ? (
