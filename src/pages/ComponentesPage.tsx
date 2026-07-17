@@ -146,6 +146,7 @@ function ComponentesForm({
   onFinalizar,
   onLimpar,
   onUndo,
+  onImport,
   temItens,
   canUndo,
   lookupLoading,
