@@ -291,6 +291,51 @@ export const itensCadastroService = {
       toInsert = kept;
     }
 
+    // Detecta códigos de fornecedor que já pertencem a OUTRO codigo_interno
+    // — evita "roubar" códigos de itens já cadastrados. Esses itens são
+    // ignorados e reportados no retorno para revisão manual.
+    const fornecedorConflicts: Array<{ codigo_interno: string; codigo_fornecedor: string; conflita_com: string }> = [];
+    const preparedAll = toInsert.map((it) => ({ input: it, prep: prepare(it) }));
+    const allNorms = Array.from(
+      new Set(preparedAll.flatMap((p) => p.prep.codigos_fornecedor_normalizado)),
+    );
+    if (allNorms.length) {
+      // Consulta em chunks para não estourar URL
+      const donoDe = new Map<string, string>(); // norm -> codigo_interno dono
+      const lookupChunk = 300;
+      for (let i = 0; i < allNorms.length; i += lookupChunk) {
+        const slice = allNorms.slice(i, i + lookupChunk);
+        const { data, error } = await supabase
+          .from('itens_cadastro')
+          .select('codigo_interno, codigos_fornecedor_normalizado')
+          .overlaps('codigos_fornecedor_normalizado', slice);
+        if (error) throw new Error(`Falha ao verificar conflitos de código de fornecedor: ${error.message}`);
+        for (const r of data || []) {
+          for (const n of (r as any).codigos_fornecedor_normalizado || []) {
+            if (slice.includes(n) && !donoDe.has(n)) donoDe.set(n, r.codigo_interno);
+          }
+        }
+      }
+      const semConflito: ItemCadastroInput[] = [];
+      for (const { input, prep } of preparedAll) {
+        let conflitou = false;
+        for (let i = 0; i < prep.codigos_fornecedor_normalizado.length; i++) {
+          const norm = prep.codigos_fornecedor_normalizado[i];
+          const dono = donoDe.get(norm);
+          if (dono && dono !== prep.codigo_interno) {
+            fornecedorConflicts.push({
+              codigo_interno: prep.codigo_interno,
+              codigo_fornecedor: prep.codigos_fornecedor[i],
+              conflita_com: dono,
+            });
+            conflitou = true;
+          }
+        }
+        if (!conflitou) semConflito.push(input);
+      }
+      toInsert = semConflito;
+    }
+
     const payload = toInsert.map(prepare);
     const chunkSize = Math.max(1, opts?.chunkSize ?? 200);
     const timeoutMs = opts?.timeoutMs ?? 30_000;
