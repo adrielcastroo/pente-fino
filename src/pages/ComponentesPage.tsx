@@ -309,14 +309,23 @@ function ComponentesForm({
           <input
             id="quantidade"
             ref={qtdRef}
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0.01}
-            step="any"
+            autoComplete="off"
             value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
+            onChange={(e) => {
+              // Aceita bipagem: sanitiza para dígitos + separador decimal.
+              // Scanners costumam enviar valor + Enter; mantém apenas o número.
+              const raw = e.target.value.replace(/[^\d,.\-]/g, '');
+              // Normaliza para no máximo um separador decimal
+              const parts = raw.replace(',', '.').split('.');
+              const clean = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join('')}` : raw;
+              setQuantidade(clean);
+            }}
             onKeyDown={handleQtdKey}
-            className={cn(INPUT_BASE, 'text-center font-semibold')}
+            onFocus={(e) => e.currentTarget.select()}
+            placeholder="Bipe ou digite a quantidade"
+            className={cn(INPUT_BASE, 'text-center font-semibold text-base')}
           />
           {/* Prévia de etiquetas */}
           {(() => {
@@ -339,6 +348,7 @@ function ComponentesForm({
             );
           })()}
         </div>
+
 
         <Button
           onClick={adicionar}
