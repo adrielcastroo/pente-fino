@@ -211,19 +211,6 @@ function ComponentesForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-              <ScanBarcode className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Passo 1
-              </div>
-              <div className="text-sm font-semibold">Bipar componente</div>
-            </div>
-          </div>
-        </div>
 
         <div className="space-y-1.5">
           <label
