@@ -614,17 +614,29 @@ export const useAppStore = create<AppState>()(
       
       loadHistory: async () => {
         const state = get();
-        if (state.isHistoryLoading) return;
-        
+        // If a load is already in flight, wait for it — but don't hang forever.
+        // The previous implementation silently returned, which produced an
+        // infinite spinner when a prior call was killed mid-flight (e.g. tab
+        // reload, aborted network) and left isHistoryLoading = true.
+        if (state.isHistoryLoading) {
+          const start = Date.now();
+          while (get().isHistoryLoading && Date.now() - start < 20000) {
+            await new Promise(r => setTimeout(r, 200));
+          }
+          if (!get().isHistoryLoading) return;
+          // Stale flag detected — force-reset and refetch.
+          set({ isHistoryLoading: false });
+        }
+
         set({ isHistoryLoading: true, historyError: null });
         try {
           const history = await apiService.fetchHistory();
           set({ history, isHistoryLoading: false });
-        } catch (e: any) { 
+        } catch (e: any) {
           console.error('Error loading history:', e);
-          set({ 
-            isHistoryLoading: false, 
-            historyError: e.message || 'Falha ao carregar histórico' 
+          set({
+            isHistoryLoading: false,
+            historyError: e?.message || 'Falha ao carregar histórico',
           });
         }
       },

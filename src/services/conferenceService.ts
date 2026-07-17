@@ -27,23 +27,47 @@ export const conferenceService = {
   },
 
   async fetchHistory(): Promise<Conference[]> {
-    // Paginate to avoid Supabase's default 1000-row limit on conferences
+    // Paginate to avoid Supabase's default 1000-row limit on conferences.
+    // Each page is bounded by a hard timeout to prevent infinite spinners
+    // when the backend is momentarily saturated.
     const allConfs: any[] = [];
     const PAGE_SIZE = 500;
+    const PAGE_TIMEOUT_MS = 15000;
     let from = 0;
     let hasMore = true;
-    
+
+    const fetchPage = async (offset: number) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
+      try {
+        const { data, error } = await supabase
+          .from('conferences')
+          .select('*, registros (*)')
+          .order('created_at', { ascending: false })
+          .order('created_at', { foreignTable: 'registros', ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1)
+          .abortSignal(controller.signal);
+        if (error) throw error;
+        return data || [];
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+
     while (hasMore) {
-      const { data: confs, error } = await supabase
-        .from('conferences')
-        .select('*, registros (*)')
-        .order('created_at', { ascending: false })
-        .order('created_at', { foreignTable: 'registros', ascending: true })
-        .range(from, from + PAGE_SIZE - 1);
-        
-      if (error) throw error;
-      
-      if (confs && confs.length > 0) {
+      let confs: any[] = [];
+      try {
+        confs = await fetchPage(from);
+      } catch (e: any) {
+        // On timeout/abort, retry once before surfacing the error
+        if (e?.name === 'AbortError' || /aborted|timeout/i.test(e?.message || '')) {
+          confs = await fetchPage(from);
+        } else {
+          throw e;
+        }
+      }
+
+      if (confs.length > 0) {
         allConfs.push(...confs);
         from += PAGE_SIZE;
         hasMore = confs.length === PAGE_SIZE;
