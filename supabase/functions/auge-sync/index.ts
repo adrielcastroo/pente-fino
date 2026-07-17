@@ -750,10 +750,26 @@ Deno.serve(async (req) => {
       throw new Error('Credenciais AUGE_USERNAME / AUGE_PASSWORD não configuradas.');
     }
 
+    // Kill-switch: se a flag auge_sync_enabled estiver desligada, bloqueia tudo (exceto ping)
+    if (action !== 'ping') {
+      const { data: flag } = await admin
+        .from('feature_flags')
+        .select('enabled')
+        .eq('key', 'auge_sync_enabled')
+        .maybeSingle();
+      if (flag && flag.enabled === false) {
+        return new Response(JSON.stringify({
+          ok: false, disabled: true,
+          error: 'Sincronização com o Auge está desligada no painel admin.',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
     const t0 = Date.now();
     const jar = new Jar();
     const { csrf, apiToken } = await login(jar);
     const auth = { jar, csrf, apiToken };
+
 
     if (action === 'ping') {
       return new Response(JSON.stringify({
