@@ -419,7 +419,10 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                   Descrição
                 </th>
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-center text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap w-[180px]">
-                  Quantidade (Pacote)
+                  Quantidade
+                </th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-center text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap w-[140px]">
+                  Etiquetas
                 </th>
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[70px] sm:w-[90px] text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Ações
