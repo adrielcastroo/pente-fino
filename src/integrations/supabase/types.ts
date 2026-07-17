@@ -2134,6 +2134,9 @@ export type Database = {
           id: string
           last_edited_at: string | null
           last_edited_field: string | null
+          pacote_estocagem: number | null
+          pacote_fornecedor: number | null
+          unidade: string | null
           updated_at: string
           updated_by: string | null
           updated_by_name: string | null
@@ -2150,6 +2153,9 @@ export type Database = {
           id?: string
           last_edited_at?: string | null
           last_edited_field?: string | null
+          pacote_estocagem?: number | null
+          pacote_fornecedor?: number | null
+          unidade?: string | null
           updated_at?: string
           updated_by?: string | null
           updated_by_name?: string | null
@@ -2166,6 +2172,9 @@ export type Database = {
           id?: string
           last_edited_at?: string | null
           last_edited_field?: string | null
+          pacote_estocagem?: number | null
+          pacote_fornecedor?: number | null
+          unidade?: string | null
           updated_at?: string
           updated_by?: string | null
           updated_by_name?: string | null

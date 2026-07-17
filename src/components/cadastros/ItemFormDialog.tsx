@@ -30,6 +30,9 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
   const [codigos, setCodigos] = useState<string[]>([]);
   const [novoCodigo, setNovoCodigo] = useState('');
   const [autoApplied, setAutoApplied] = useState(false);
+  const [unidade, setUnidade] = useState('');
+  const [pacoteFornecedor, setPacoteFornecedor] = useState('');
+  const [pacoteEstocagem, setPacoteEstocagem] = useState('');
 
   const upsert = useUpsertItemCadastro();
 
@@ -43,6 +46,9 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
       setCodigos(init);
       setNovoCodigo('');
       setAutoApplied(!!init.length);
+      setUnidade((initial?.unidade || '').toString());
+      setPacoteFornecedor(initial?.pacote_fornecedor != null ? String(initial.pacote_fornecedor) : '');
+      setPacoteEstocagem(initial?.pacote_estocagem != null ? String(initial.pacote_estocagem) : '');
     }
   }, [open, initial]);
 
@@ -123,6 +129,13 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
           codigo_interno: codigoInterno,
           descricao,
           codigos_fornecedor: finalCodigos,
+          unidade: unidade.trim() || null,
+          pacote_fornecedor: pacoteFornecedor.trim()
+            ? Number(pacoteFornecedor.replace(',', '.'))
+            : null,
+          pacote_estocagem: pacoteEstocagem.trim()
+            ? Number(pacoteEstocagem.replace(',', '.'))
+            : null,
         },
         opts: { isEdit, changedField },
       });
@@ -208,8 +221,44 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
                 <Plus className="h-3.5 w-3.5" />
                 Adicionar
               </Button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 pt-1">
+            <div>
+              <Label htmlFor="unidade">Unidade</Label>
+              <Input
+                id="unidade"
+                value={unidade}
+                onChange={(e) => setUnidade(e.target.value.toUpperCase())}
+                placeholder="PC / MT / KG"
+                maxLength={8}
+                className="h-10 font-mono uppercase"
+              />
+            </div>
+            <div>
+              <Label htmlFor="pacote_fornecedor">Pacote fornecedor</Label>
+              <Input
+                id="pacote_fornecedor"
+                value={pacoteFornecedor}
+                onChange={(e) => setPacoteFornecedor(e.target.value)}
+                placeholder="Ex: 30"
+                inputMode="decimal"
+                className="h-10 font-mono"
+              />
+            </div>
+            <div>
+              <Label htmlFor="pacote_estocagem">Pacote estocagem</Label>
+              <Input
+                id="pacote_estocagem"
+                value={pacoteEstocagem}
+                onChange={(e) => setPacoteEstocagem(e.target.value)}
+                placeholder="Ex: 10"
+                inputMode="decimal"
+                className="h-10 font-mono"
+              />
             </div>
           </div>
+        </div>
         </div>
 
         <DialogFooter>

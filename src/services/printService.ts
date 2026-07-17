@@ -721,6 +721,65 @@ export async function printMotorLabel(
   }
 }
 
+// ============================================================================
+// COMPONENTE — reaproveita o layout físico do Motor:
+//  - `sku`  = código interno do componente
+//  - `cx`   = quantidade + unidade (ex: "10 PC" / "10 MT")
+//  - `qrLoteSku` = SÓ o código do item; sem lote (o "bloco de QR de lote"
+//    da etiqueta motor exibe o próprio código, não há lote separado).
+// A quebra em N etiquetas é responsabilidade de quem chama esta função
+// (uma chamada por etiqueta física a ser impressa).
+// ============================================================================
+
+export interface ComponentePrintInput {
+  codigo: string;
+  descricao?: string;
+  quantidade: number;
+  unidade?: string | null;
+}
+
+export async function printComponenteLabel(
+  input: ComponentePrintInput,
+  labelSettings: LabelSettings & PrintConfig,
+) {
+  if (!labelSettings.autoPrint) return;
+  try {
+    const resolved = await resolverItem(input.codigo, input.codigo, input.descricao || '');
+    const unidade = (input.unidade || '').trim().toUpperCase() || 'PC';
+    const qtd = Number(input.quantidade);
+    const qtdText = Number.isFinite(qtd)
+      ? (Number.isInteger(qtd) ? String(qtd) : qtd.toFixed(2).replace(/\.00$/, ''))
+      : String(input.quantidade);
+
+    const data: MotorLabelData = {
+      sku: resolved.codigoInterno,
+      descricao: resolved.descricao,
+      cx: `${qtdText} ${unidade}`,
+      nf: '',
+      nt: '',
+      rnp: '',
+      data: today(),
+      // Sem lote — QR contém apenas o código do item.
+      qrLoteSku: resolved.codigoInterno,
+    };
+
+    const rendered = await renderMotorLabel(data, labelSettings, {
+      applyPrintOffset: resolvePrintMethod(labelSettings) === 'webhook',
+    });
+    await dispatchPrint(labelSettings, {
+      type: 'motor',
+      title: `Etiqueta ${resolved.codigoInterno}`,
+      dataUrl: rendered.dataUrl,
+      widthMm: rendered.widthMm,
+      heightMm: rendered.heightMm,
+      data: { ...data, input },
+    });
+  } catch (error) {
+    console.error('Erro ao imprimir etiqueta (componente):', error);
+    toast.error('Falha ao processar etiqueta.');
+  }
+}
+
 
 
 // ============================================================================

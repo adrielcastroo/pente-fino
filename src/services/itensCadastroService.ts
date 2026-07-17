@@ -12,6 +12,12 @@ export interface ItemCadastro {
   /** Lista completa de códigos de fornecedor (1+). */
   codigos_fornecedor: string[];
   codigos_fornecedor_normalizado: string[];
+  /** Unidade de medida do item (PC, MT, KG…). */
+  unidade: string | null;
+  /** Qtd padrão que vem no pacote do fornecedor (referência). */
+  pacote_fornecedor: number | null;
+  /** Qtd padrão que armazenamos internamente por pacote — divisor das etiquetas. */
+  pacote_estocagem: number | null;
   created_at: string;
   updated_at: string;
   updated_by?: string | null;
@@ -25,6 +31,9 @@ export interface ItemCadastroInput {
   descricao: string;
   /** Aceita lista de códigos de fornecedor; pode vir vazio. */
   codigos_fornecedor: string[];
+  unidade?: string | null;
+  pacote_fornecedor?: number | null;
+  pacote_estocagem?: number | null;
 }
 
 function normalizeList(values: string[]): { codigos: string[]; normalizados: string[] } {
@@ -45,6 +54,15 @@ function normalizeList(values: string[]): { codigos: string[]; normalizados: str
 
 function prepare(input: ItemCadastroInput) {
   const { codigos, normalizados } = normalizeList(input.codigos_fornecedor || []);
+  const unidade = (input.unidade ?? '').toString().trim().toUpperCase() || null;
+  const pacote_fornecedor =
+    input.pacote_fornecedor != null && Number.isFinite(Number(input.pacote_fornecedor)) && Number(input.pacote_fornecedor) > 0
+      ? Number(input.pacote_fornecedor)
+      : null;
+  const pacote_estocagem =
+    input.pacote_estocagem != null && Number.isFinite(Number(input.pacote_estocagem)) && Number(input.pacote_estocagem) > 0
+      ? Number(input.pacote_estocagem)
+      : null;
   return {
     codigo_interno: input.codigo_interno.trim(),
     descricao: input.descricao.trim(),
@@ -53,6 +71,9 @@ function prepare(input: ItemCadastroInput) {
     // singular mantido em sincronia com array[0] por compatibilidade
     codigo_fornecedor: codigos[0] || null,
     codigo_fornecedor_normalizado: normalizados[0] || null,
+    unidade,
+    pacote_fornecedor,
+    pacote_estocagem,
   };
 }
 

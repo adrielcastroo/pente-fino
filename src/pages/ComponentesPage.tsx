@@ -20,6 +20,8 @@ import { usePerformance } from '@/hooks/use-performance';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/hooks/use-auth';
 import { itensCadastroService } from '@/services/itensCadastroService';
+import { printComponenteLabel } from '@/services/printService';
+import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 
 /* ============================================================
@@ -30,8 +32,22 @@ type Item = {
   id: string;
   codigo: string;
   descricao: string | null;
+  /** Quantidade total (peças/metros) do pacote bipado — o que o operador digitou. */
   quantidade: number;
+  /** Unidade de medida vinda do cadastro (PC, MT, KG…). */
+  unidade: string | null;
+  /** Divisor para gerar etiquetas. `null` = sem divisão (1 etiqueta com a qtd bipada). */
+  pacoteEstocagem: number | null;
+  /** Só referência informativa vinda do cadastro. */
+  pacoteFornecedor: number | null;
   ts: number;
+};
+
+type LookupResult = {
+  descricao: string | null;
+  unidade: string | null;
+  pacoteEstocagem: number | null;
+  pacoteFornecedor: number | null;
 };
 
 type UndoAction =
@@ -39,12 +55,46 @@ type UndoAction =
   | { type: 'clear'; items: Item[] }
   | { type: 'finalize'; items: Item[] };
 
-const STORAGE_PREFIX = 'conf-componentes:v1';
+const STORAGE_PREFIX = 'conf-componentes:v2';
 const scopeKey = (uid: string | null, guestName: string, isGuest: boolean) => {
   if (uid) return `${STORAGE_PREFIX}:${uid}`;
   if (isGuest) return `${STORAGE_PREFIX}:guest:${guestName || 'default'}`;
   return `${STORAGE_PREFIX}:anon`;
 };
+
+/* ============================================================
+   Cálculo de etiquetas
+   ============================================================ */
+
+export interface EtiquetaPlan {
+  cheias: number;      // qtd de etiquetas com valor = por
+  resto: number;       // qtd extra (0 se dividir exato)
+  por: number;         // valor de cada etiqueta cheia
+  total: number;       // total de etiquetas (cheias + (resto>0 ? 1 : 0))
+}
+
+export function planEtiquetas(quantidade: number, pacoteEstocagem: number | null): EtiquetaPlan {
+  const q = Math.max(0, Number(quantidade) || 0);
+  const por = pacoteEstocagem && pacoteEstocagem > 0 ? Number(pacoteEstocagem) : q || 1;
+  if (!por || q <= 0) return { cheias: 0, resto: 0, por: por || 0, total: 0 };
+  const cheias = Math.floor(q / por);
+  const resto = +(q - cheias * por).toFixed(4);
+  const total = cheias + (resto > 0 ? 1 : 0);
+  return { cheias, resto, por, total };
+}
+
+function formatQtd(n: number): string {
+  if (!Number.isFinite(n)) return String(n);
+  return Number.isInteger(n) ? String(n) : String(+n.toFixed(2));
+}
+
+function labelUnidade(unidade: string | null | undefined): string {
+  const u = (unidade || '').trim().toUpperCase();
+  if (u === 'MT' || u === 'M' || u === 'METROS') return 'Metros por pacote';
+  if (u === 'KG') return 'Quilos por pacote';
+  if (u === 'PC' || u === 'PÇ' || u === 'PECAS' || u === 'PEÇAS') return 'Peças por pacote';
+  return 'Quantidade por pacote';
+}
 
 /* ============================================================
    FORM (LeftPanel equivalente)
@@ -66,13 +116,14 @@ interface FormProps {
   qtdRef: React.RefObject<HTMLInputElement>;
   totalLinhas: number;
   totalPacotes: number;
+  totalEtiquetas: number;
   onFinalizar: () => void;
   onLimpar: () => void;
   onUndo: () => void;
   temItens: boolean;
   canUndo: boolean;
   lookupLoading: boolean;
-  lookupHit: string | null;
+  lookupHit: LookupResult | null;
   saving: boolean;
 }
 
@@ -86,6 +137,7 @@ function ComponentesForm({
   qtdRef,
   totalLinhas,
   totalPacotes,
+  totalEtiquetas,
   onFinalizar,
   onLimpar,
   onUndo,
@@ -176,19 +228,42 @@ function ComponentesForm({
             className={cn(INPUT_BASE, 'uppercase')}
           />
           {/* Feedback do vínculo com itens_cadastro */}
-          <div className="min-h-[22px]">
+          <div className="min-h-[36px] space-y-0.5">
             {lookupLoading ? (
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <Loader2 className="w-3 h-3 animate-spin" /> Buscando descrição…
+                <Loader2 className="w-3 h-3 animate-spin" /> Buscando cadastro…
               </div>
-            ) : lookupHit ? (
-              <div className="flex items-start gap-1.5 text-[11px] text-primary/80 font-medium">
-                <Check className="w-3 h-3 mt-0.5 shrink-0" />
-                <span className="truncate" title={lookupHit}>{lookupHit}</span>
-              </div>
+            ) : lookupHit?.descricao || lookupHit?.unidade || lookupHit?.pacoteEstocagem ? (
+              <>
+                {lookupHit.descricao ? (
+                  <div className="flex items-start gap-1.5 text-[11px] text-primary/80 font-medium">
+                    <Check className="w-3 h-3 mt-0.5 shrink-0" />
+                    <span className="truncate" title={lookupHit.descricao}>
+                      {lookupHit.descricao}
+                    </span>
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap gap-1.5 pl-4">
+                  {lookupHit.unidade ? (
+                    <span className="text-[10px] font-mono uppercase rounded border border-border/60 bg-muted/40 px-1.5 py-0.5">
+                      {lookupHit.unidade}
+                    </span>
+                  ) : null}
+                  {lookupHit.pacoteEstocagem ? (
+                    <span className="text-[10px] font-mono rounded border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-primary">
+                      Estocagem: {formatQtd(lookupHit.pacoteEstocagem)}
+                    </span>
+                  ) : null}
+                  {lookupHit.pacoteFornecedor ? (
+                    <span className="text-[10px] font-mono rounded border border-border/60 bg-muted/40 px-1.5 py-0.5 text-muted-foreground">
+                      Fornecedor: {formatQtd(lookupHit.pacoteFornecedor)}
+                    </span>
+                  ) : null}
+                </div>
+              </>
             ) : codigo.trim().length >= 2 ? (
               <div className="text-[11px] text-muted-foreground/60">
-                Item não cadastrado — será registrado sem descrição.
+                Item não cadastrado — será registrado sem regra de divisão.
               </div>
             ) : null}
           </div>
@@ -199,19 +274,40 @@ function ComponentesForm({
             htmlFor="quantidade"
             className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground"
           >
-            Quantidade (Pacote)
+            {labelUnidade(lookupHit?.unidade)}
           </label>
           <input
             id="quantidade"
             ref={qtdRef}
             type="number"
-            inputMode="numeric"
-            min={1}
+            inputMode="decimal"
+            min={0.01}
+            step="any"
             value={quantidade}
             onChange={(e) => setQuantidade(e.target.value)}
             onKeyDown={handleQtdKey}
             className={cn(INPUT_BASE, 'text-center font-semibold')}
           />
+          {/* Prévia de etiquetas */}
+          {(() => {
+            const q = Number((quantidade || '').replace(',', '.'));
+            if (!Number.isFinite(q) || q <= 0) return null;
+            const plan = planEtiquetas(q, lookupHit?.pacoteEstocagem ?? null);
+            if (plan.total <= 0) return null;
+            const partes: string[] = [];
+            if (plan.cheias > 0) partes.push(`${plan.cheias}× ${formatQtd(plan.por)}`);
+            if (plan.resto > 0) partes.push(`1× ${formatQtd(plan.resto)}`);
+            const unid = lookupHit?.unidade ? ` ${lookupHit.unidade}` : '';
+            return (
+              <div className="text-[11px] text-muted-foreground pl-0.5">
+                {lookupHit?.pacoteEstocagem ? (
+                  <>Vai gerar <span className="font-mono font-bold text-primary">{plan.total}</span> etiqueta(s): {partes.join(' + ')}{unid}</>
+                ) : (
+                  <>1 etiqueta com {formatQtd(q)}{unid} (sem pacote de estocagem cadastrado)</>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         <Button
@@ -223,19 +319,25 @@ function ComponentesForm({
           Adicionar
         </Button>
 
-        <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
+        <div className="grid grid-cols-3 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
           <div className="rounded-md bg-background/40 px-3 py-2.5">
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Linhas
             </div>
             <div className="text-lg font-bold font-mono tabular-nums">{totalLinhas}</div>
           </div>
+          <div className="rounded-md bg-background/40 px-3 py-2.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Total
+            </div>
+            <div className="text-lg font-bold font-mono tabular-nums">{formatQtd(totalPacotes)}</div>
+          </div>
           <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5">
             <div className="text-[10px] font-bold uppercase tracking-wider text-primary/80">
-              Pacotes
+              Etiquetas
             </div>
             <div className="text-lg font-bold font-mono tabular-nums text-primary">
-              {totalPacotes}
+              {totalEtiquetas}
             </div>
           </div>
         </div>
@@ -317,7 +419,10 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                   Descrição
                 </th>
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-center text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap w-[180px]">
-                  Quantidade (Pacote)
+                  Quantidade
+                </th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-center text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap w-[140px]">
+                  Etiquetas
                 </th>
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[70px] sm:w-[90px] text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Ações
@@ -354,7 +459,12 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                             <Minus className="w-3.5 h-3.5" />
                           </Button>
                           <span className="min-w-10 text-center font-mono font-bold tabular-nums text-sm">
-                            {r.quantidade}
+                            {formatQtd(r.quantidade)}
+                            {r.unidade ? (
+                              <span className="ml-1 text-[10px] text-muted-foreground font-normal">
+                                {r.unidade}
+                              </span>
+                            ) : null}
                           </span>
                           <Button
                             size="icon"
@@ -366,6 +476,25 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                             <Plus className="w-3.5 h-3.5" />
                           </Button>
                         </div>
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 border-r border-border/20 text-center">
+                        {(() => {
+                          const plan = planEtiquetas(r.quantidade, r.pacoteEstocagem);
+                          if (plan.total <= 0) return <span className="text-muted-foreground/40">—</span>;
+                          const partes: string[] = [];
+                          if (plan.cheias > 0) partes.push(`${plan.cheias}× ${formatQtd(plan.por)}`);
+                          if (plan.resto > 0) partes.push(`1× ${formatQtd(plan.resto)}`);
+                          return (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-sm font-mono font-bold tabular-nums text-primary">
+                                {plan.total}
+                              </span>
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                {partes.join(' + ')}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 sm:px-5 py-3 sm:py-4 text-right">
                         <Button
@@ -432,12 +561,15 @@ export default function ComponentesPage() {
   const [showTableMobile, setShowTableMobile] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Lookup em itens_cadastro
+  // Lookup em itens_cadastro (agora traz descrição + unidade + pacotes)
   const [lookupLoading, setLookupLoading] = useState(false);
-  const [lookupHit, setLookupHit] = useState<string | null>(null);
+  const [lookupHit, setLookupHit] = useState<LookupResult | null>(null);
   // Cache local por sessão para evitar refetch por código
-  const descCacheRef = useRef<Map<string, string | null>>(new Map());
+  const descCacheRef = useRef<Map<string, LookupResult>>(new Map());
   const lookupSeq = useRef(0);
+
+  // Regras de impressão do usuário (mesma origem que Motor/Tecido)
+  const labelSettings = useAppStore((s) => s.labelSettings);
 
   const codigoRef = useRef<HTMLInputElement>(null);
   const qtdRef = useRef<HTMLInputElement>(null);
@@ -449,14 +581,28 @@ export default function ComponentesPage() {
   );
   const hydrated = useRef(false);
 
-  // Hidrata do localStorage
+  // Hidrata do localStorage — aceita formato antigo (v1) sem os campos novos.
   useEffect(() => {
     if (authLoading) return;
     try {
-      const raw = localStorage.getItem(storageKey);
+      const raw =
+        localStorage.getItem(storageKey) ??
+        localStorage.getItem(storageKey.replace(':v2:', ':v1:'));
       if (raw) {
-        const parsed = JSON.parse(raw) as { itens?: Item[] };
-        if (Array.isArray(parsed.itens)) setItens(parsed.itens);
+        const parsed = JSON.parse(raw) as { itens?: Array<Partial<Item> & Pick<Item, 'id' | 'codigo' | 'quantidade' | 'ts'>> };
+        if (Array.isArray(parsed.itens)) {
+          const hydrated: Item[] = parsed.itens.map((i) => ({
+            id: i.id,
+            codigo: i.codigo,
+            descricao: i.descricao ?? null,
+            quantidade: Number(i.quantidade) || 0,
+            unidade: i.unidade ?? null,
+            pacoteEstocagem: i.pacoteEstocagem ?? null,
+            pacoteFornecedor: i.pacoteFornecedor ?? null,
+            ts: i.ts ?? Date.now(),
+          }));
+          setItens(hydrated);
+        }
       } else {
         setItens([]);
       }
@@ -484,24 +630,37 @@ export default function ComponentesPage() {
 
   const totais = useMemo(() => {
     const totalPacotes = itens.reduce((acc, i) => acc + i.quantidade, 0);
-    return { linhas: itens.length, totalPacotes };
+    const totalEtiquetas = itens.reduce(
+      (acc, i) => acc + planEtiquetas(i.quantidade, i.pacoteEstocagem).total,
+      0,
+    );
+    return { linhas: itens.length, totalPacotes, totalEtiquetas };
   }, [itens]);
 
-  /* --------- Lookup de descrição em itens_cadastro (debounced) --------- */
-  const buscarDescricao = useCallback(async (raw: string): Promise<string | null> => {
+  /* --------- Lookup em itens_cadastro (debounced) --------- */
+  const buscarItem = useCallback(async (raw: string): Promise<LookupResult> => {
     const cod = raw.trim().toUpperCase();
-    if (!cod) return null;
-    if (descCacheRef.current.has(cod)) return descCacheRef.current.get(cod) ?? null;
+    const empty: LookupResult = { descricao: null, unidade: null, pacoteEstocagem: null, pacoteFornecedor: null };
+    if (!cod) return empty;
+    const cached = descCacheRef.current.get(cod);
+    if (cached) return cached;
 
     try {
       let hit = await itensCadastroService.findByCodigoFornecedor(cod);
       if (!hit) hit = await itensCadastroService.findByCodigoInterno(cod);
-      const desc = hit?.descricao?.trim() || null;
-      descCacheRef.current.set(cod, desc);
-      return desc;
+      const result: LookupResult = hit
+        ? {
+            descricao: hit.descricao?.trim() || null,
+            unidade: hit.unidade || null,
+            pacoteEstocagem: hit.pacote_estocagem != null ? Number(hit.pacote_estocagem) : null,
+            pacoteFornecedor: hit.pacote_fornecedor != null ? Number(hit.pacote_fornecedor) : null,
+          }
+        : empty;
+      descCacheRef.current.set(cod, result);
+      return result;
     } catch (e) {
       console.warn('[Componentes] lookup falhou', e);
-      return null;
+      return empty;
     }
   }, []);
 
@@ -515,35 +674,31 @@ export default function ComponentesPage() {
     const seq = ++lookupSeq.current;
     setLookupLoading(true);
     const t = setTimeout(async () => {
-      const desc = await buscarDescricao(cod);
+      const res = await buscarItem(cod);
       if (seq !== lookupSeq.current) return; // corrida
-      setLookupHit(desc);
+      setLookupHit(res);
       setLookupLoading(false);
     }, 250);
     return () => clearTimeout(t);
-  }, [codigo, buscarDescricao]);
+  }, [codigo, buscarItem]);
 
   /* --------- Ações --------- */
   const adicionar = useCallback(async () => {
     const cod = codigo.trim().toUpperCase();
-    const qtd = Number(quantidade);
+    const qtd = Number(quantidade.replace(',', '.'));
     if (!cod) {
       toast.warning('Bipe ou informe o código.');
       codigoRef.current?.focus();
       return;
     }
     if (!Number.isFinite(qtd) || qtd <= 0) {
-      toast.warning('Quantidade (pacote) deve ser maior que zero.');
+      toast.warning('Quantidade deve ser maior que zero.');
       qtdRef.current?.focus();
       return;
     }
 
     setSaving(true);
-    // Descrição: usa hit já resolvido; senão faz lookup síncrono
-    const descricao =
-      descCacheRef.current.get(cod) !== undefined
-        ? descCacheRef.current.get(cod) ?? null
-        : await buscarDescricao(cod);
+    const info = descCacheRef.current.get(cod) ?? (await buscarItem(cod));
     setSaving(false);
 
     setItens((prev) => {
@@ -554,24 +709,41 @@ export default function ComponentesPage() {
             ? {
                 ...i,
                 quantidade: i.quantidade + qtd,
-                descricao: i.descricao ?? descricao,
+                descricao: i.descricao ?? info.descricao,
+                unidade: i.unidade ?? info.unidade,
+                pacoteEstocagem: i.pacoteEstocagem ?? info.pacoteEstocagem,
+                pacoteFornecedor: i.pacoteFornecedor ?? info.pacoteFornecedor,
                 ts: Date.now(),
               }
             : i,
         );
       }
-      return [
-        { id: crypto.randomUUID(), codigo: cod, descricao, quantidade: qtd, ts: Date.now() },
-        ...prev,
-      ];
+      const novo: Item = {
+        id: crypto.randomUUID(),
+        codigo: cod,
+        descricao: info.descricao,
+        quantidade: qtd,
+        unidade: info.unidade,
+        pacoteEstocagem: info.pacoteEstocagem,
+        pacoteFornecedor: info.pacoteFornecedor,
+        ts: Date.now(),
+      };
+      return [novo, ...prev];
     });
 
-    toast.success(`${cod} · ${qtd} pacote(s)${descricao ? ` — ${descricao}` : ''}`);
+    const plan = planEtiquetas(qtd, info.pacoteEstocagem);
+    const detalhe =
+      plan.total > 1
+        ? plan.resto > 0
+          ? ` · ${plan.cheias}×${formatQtd(plan.por)} + 1×${formatQtd(plan.resto)} etiquetas`
+          : ` · ${plan.total}×${formatQtd(plan.por)} etiquetas`
+        : '';
+    toast.success(`${cod} · ${formatQtd(qtd)}${info.unidade ? ' ' + info.unidade : ''}${detalhe}`);
     setCodigo('');
     setQuantidade('1');
     setLookupHit(null);
     setTimeout(() => codigoRef.current?.focus(), 0);
-  }, [codigo, quantidade, buscarDescricao]);
+  }, [codigo, quantidade, buscarItem]);
 
   const remover = useCallback((id: string) => {
     setItens((prev) => {
@@ -609,21 +781,82 @@ export default function ComponentesPage() {
     codigoRef.current?.focus();
   }, []);
 
-  const finalizar = useCallback(() => {
-    setItens((prev) => {
-      if (prev.length === 0) {
-        toast.warning('Nenhum item para finalizar.');
-        return prev;
+  const [printing, setPrinting] = useState(false);
+  const finalizar = useCallback(async () => {
+    if (itens.length === 0) {
+      toast.warning('Nenhum item para finalizar.');
+      return;
+    }
+    const snapshot = itens;
+    const totalEtiquetas = snapshot.reduce(
+      (acc, i) => acc + planEtiquetas(i.quantidade, i.pacoteEstocagem).total,
+      0,
+    );
+
+    if (labelSettings.autoPrint && totalEtiquetas > 0) {
+      setPrinting(true);
+      const toastId = toast.loading(`Imprimindo ${totalEtiquetas} etiqueta(s)…`);
+      let ok = 0;
+      let fail = 0;
+      try {
+        for (const item of snapshot) {
+          const plan = planEtiquetas(item.quantidade, item.pacoteEstocagem);
+          // N etiquetas cheias
+          for (let i = 0; i < plan.cheias; i++) {
+            try {
+              await printComponenteLabel(
+                {
+                  codigo: item.codigo,
+                  descricao: item.descricao ?? undefined,
+                  quantidade: plan.por,
+                  unidade: item.unidade,
+                },
+                labelSettings,
+              );
+              ok++;
+            } catch (e) {
+              console.error('[Componentes] falha ao imprimir etiqueta cheia', e);
+              fail++;
+            }
+          }
+          // Etiqueta com o resto (se houver)
+          if (plan.resto > 0) {
+            try {
+              await printComponenteLabel(
+                {
+                  codigo: item.codigo,
+                  descricao: item.descricao ?? undefined,
+                  quantidade: plan.resto,
+                  unidade: item.unidade,
+                },
+                labelSettings,
+              );
+              ok++;
+            } catch (e) {
+              console.error('[Componentes] falha ao imprimir etiqueta parcial', e);
+              fail++;
+            }
+          }
+        }
+      } finally {
+        setPrinting(false);
+        toast.dismiss(toastId);
       }
-      const totalPacotes = prev.reduce((a, i) => a + i.quantidade, 0);
-      toast.success(
-        `Conferência finalizada: ${prev.length} item(s) · ${totalPacotes} pacote(s).`,
+      if (fail === 0) {
+        toast.success(`Conferência finalizada: ${ok} etiqueta(s) impressa(s).`);
+      } else {
+        toast.warning(`Finalizada com falhas: ${ok} ok · ${fail} falha(s).`);
+      }
+    } else if (totalEtiquetas > 0) {
+      toast.info(
+        `Impressão automática desativada — ${totalEtiquetas} etiqueta(s) não foram enviadas.`,
       );
-      setUndoStack((u) => [...u, { type: 'finalize', items: prev }]);
-      return [];
-    });
+    }
+
+    setUndoStack((u) => [...u, { type: 'finalize', items: snapshot }]);
+    setItens([]);
     codigoRef.current?.focus();
-  }, []);
+  }, [itens, labelSettings]);
 
   const undo = useCallback(() => {
     setUndoStack((stack) => {
@@ -675,6 +908,7 @@ export default function ComponentesPage() {
       qtdRef={qtdRef}
       totalLinhas={totais.linhas}
       totalPacotes={totais.totalPacotes}
+      totalEtiquetas={totais.totalEtiquetas}
       onFinalizar={finalizar}
       onLimpar={limpar}
       onUndo={undo}
