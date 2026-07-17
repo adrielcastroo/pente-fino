@@ -136,28 +136,34 @@ export default function CadastrosPage() {
     return () => { alive = false; clearTimeout(t); };
   }, [search, fornFilter]);
 
-  // Realtime — quando o Auge sincroniza (produtos/saldo), invalida caches
+  // Realtime — durante uma sync do Auge chegam milhares de eventos em rajada.
+  // Debounçamos e só invalidamos ao FIM do run (auge_sync_runs=success) para
+  // não refazer o refetch paginado de itens_cadastro (3k+ linhas) a cada evento.
   useEffect(() => {
+    let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefresh = () => {
+      if (pendingTimer) return;
+      pendingTimer = setTimeout(() => {
+        pendingTimer = null;
+        qc.invalidateQueries({ queryKey: ['auge_produtos'] });
+        if (fornFilter === 'pendentes_auge') setAugePendentes((p) => [...p]);
+      }, 2000);
+    };
     const channel = (supabase as any)
       .channel('auge-live-cadastros')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_produtos' }, () => {
-        qc.invalidateQueries({ queryKey: ['itens_cadastro'] });
-        qc.invalidateQueries({ queryKey: ['auge_produtos'] });
-        // força novo fetch da lista de pendentes se estiver na aba
-        if (fornFilter === 'pendentes_auge') setAugePendentes((p) => [...p]);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_produtos_saldo' }, () => {
-        qc.invalidateQueries({ queryKey: ['auge_produtos'] });
-      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_sync_runs' }, (payload: any) => {
-        const status = payload?.new?.status;
-        if (status === 'success') {
+        if (payload?.new?.status === 'success') {
           qc.invalidateQueries({ queryKey: ['itens_cadastro'] });
           qc.invalidateQueries({ queryKey: ['auge_produtos'] });
+          if (fornFilter === 'pendentes_auge') setAugePendentes((p) => [...p]);
         }
       })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auge_produtos' }, scheduleRefresh)
       .subscribe();
-    return () => { (supabase as any).removeChannel(channel); };
+    return () => {
+      if (pendingTimer) clearTimeout(pendingTimer);
+      (supabase as any).removeChannel(channel);
+    };
   }, [qc, fornFilter]);
 
   const semFornecedorCount = useMemo(
