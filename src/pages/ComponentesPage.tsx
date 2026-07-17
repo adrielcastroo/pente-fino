@@ -1092,6 +1092,12 @@ export default function ComponentesPage() {
     await exportConferenceToExcel(headers, rows, `Componentes_${stamp}`, [22, 42, 12, 10, 18, 18, 12]);
   }, [itens]);
 
+  // Publica a função de exportar para a TopBar
+  useEffect(() => {
+    componentesExportBus.setExport(exportar);
+    return () => componentesExportBus.setExport(null);
+  }, [exportar]);
+
   const form = (
     <ComponentesForm
       codigo={codigo}
