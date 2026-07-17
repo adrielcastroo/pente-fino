@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, TreePine, Zap, ArrowRight } from 'lucide-react';
+import { ScanLine, TreePine, Zap, ArrowRight, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -32,6 +32,13 @@ const options: HubOption[] = [
     description: 'Bipar números de série de motores, controles e coulisses.',
     icon: Zap,
     accent: 'from-violet-500/20 to-fuchsia-500/10 border-violet-500/30',
+  },
+  {
+    to: '/estoque/componentes',
+    label: 'Componentes',
+    description: 'Bipar código do componente e informar quantidade por pacote.',
+    icon: Package,
+    accent: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30',
   },
 ];
 

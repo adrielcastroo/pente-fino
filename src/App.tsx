@@ -12,6 +12,7 @@ const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const TecidoPage = lazy(() => import("@/pages/TecidoPage"));
 const MadeiraPage = lazy(() => import("@/pages/MadeiraPage"));
 const MotorControlePage = lazy(() => import("@/pages/MotorControlePage"));
+const ComponentesPage = lazy(() => import("@/pages/ComponentesPage"));
 const EstoquePage = lazy(() => import("@/pages/EstoquePage"));
 const SaidaPage = lazy(() => import("@/pages/SaidaPage"));
 const ReservasPage = lazy(() => import("@/pages/ReservasPage"));
@@ -151,6 +152,7 @@ const App = () => (
                   <Route path="/estoque/tecido" element={<TecidoPage />} />
                   <Route path="/estoque/madeira" element={<MadeiraPage />} />
                   <Route path="/estoque/motor" element={<MotorControlePage />} />
+                  <Route path="/estoque/componentes" element={<ComponentesPage />} />
                   <Route path="/estoque/mapa" element={<EstoquePage />} />
                   <Route path="/estoque/saida" element={<SaidaPage />} />
                   <Route path="/estoque/reservas" element={<ReservasPage />} />
