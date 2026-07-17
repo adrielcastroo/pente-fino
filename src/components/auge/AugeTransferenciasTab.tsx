@@ -142,6 +142,11 @@ export default function AugeTransferenciasTab() {
         open={!!detail}
         onOpenChange={(o) => !o && setDetail(null)}
       />
+      <NovaTransferenciaDialog
+        open={novaOpen}
+        onOpenChange={setNovaOpen}
+        onCreated={() => sync()}
+      />
     </div>
   );
 }
