@@ -13,17 +13,6 @@ import {
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePerformance } from '@/hooks/use-performance';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -36,7 +25,10 @@ type Item = {
   ts: number;
 };
 
-/* ---------- Form (LeftPanel equivalente) ---------- */
+/* ============================================================
+   FORM (LeftPanel equivalente) — mesmo design system das
+   páginas Tecido/Madeira/Motor
+   ============================================================ */
 
 interface FormProps {
   codigo: string;
@@ -52,6 +44,12 @@ interface FormProps {
   onLimpar: () => void;
   temItens: boolean;
 }
+
+const INPUT_BASE =
+  'w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono shadow-sm ' +
+  'transition-all duration-200 hover:border-primary/40 focus:border-primary focus:bg-card ' +
+  'focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none ' +
+  'placeholder:text-muted-foreground/40';
 
 function ComponentesForm({
   codigo,
@@ -73,7 +71,6 @@ function ComponentesForm({
     if (quantidade && Number(quantidade) > 0) adicionar();
     else qtdRef.current?.focus();
   };
-
   const handleQtdKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -82,87 +79,128 @@ function ComponentesForm({
   };
 
   return (
-    <div className="h-full w-full flex flex-col overflow-y-auto p-4 lg:p-6 gap-4">
-      <header className="space-y-1">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-          <Package className="size-3.5" /> Conferência
-        </div>
-        <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">Componentes</h1>
-        <p className="text-sm text-muted-foreground">
-          Bipe o código do componente e informe a quantidade por pacote.
-        </p>
-      </header>
-
-      <div className="rounded-lg border bg-card p-4 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <ScanBarcode className="size-4 text-primary" /> Bipar componente
-        </div>
-
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="codigo">Código / Conferência</Label>
-            <Input
-              id="codigo"
-              ref={codigoRef}
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              onKeyDown={handleCodigoKey}
-              placeholder="Bipe ou digite o código"
-              autoComplete="off"
-              className="h-12 font-mono uppercase text-base"
-            />
+    <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-md border border-border/50 lg:border-none lg:rounded-none">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5 space-y-4">
+        {/* Header + reset */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+              <Package className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Conferência
+              </div>
+              <h1 className="text-sm font-bold tracking-tight truncate">Componentes</h1>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onLimpar}
+            disabled={!temItens}
+            className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2.5 py-1 rounded-md hover:bg-destructive/10 border border-transparent hover:border-destructive/20 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:border-transparent"
+          >
+            Limpar
+          </button>
+        </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="quantidade">Quantidade (Pacote)</Label>
-            <Input
-              id="quantidade"
-              ref={qtdRef}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={quantidade}
-              onChange={(e) => setQuantidade(e.target.value)}
-              onKeyDown={handleQtdKey}
-              className="h-12 text-center font-mono text-base"
-            />
+        {/* Sub-cabeçalho "Bipar componente" (padrão dos abas de sub-modo) */}
+        <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+              <ScanBarcode className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Passo 1
+              </div>
+              <div className="text-sm font-semibold">Bipar componente</div>
+            </div>
           </div>
-
-          <Button onClick={adicionar} className="h-12 w-full gap-2">
-            <Plus className="size-4" /> Adicionar
-          </Button>
         </div>
-      </div>
 
-      <div className="rounded-lg border bg-card/50 p-4 grid grid-cols-2 gap-3">
-        <div>
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Linhas</div>
-          <div className="text-2xl font-semibold font-mono">{totalLinhas}</div>
+        {/* Campo: Código */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="codigo"
+            className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground"
+          >
+            Código / Conferência
+          </label>
+          <input
+            id="codigo"
+            ref={codigoRef}
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+            onKeyDown={handleCodigoKey}
+            placeholder="Bipe ou digite o código"
+            autoComplete="off"
+            className={cn(INPUT_BASE, 'uppercase')}
+          />
         </div>
-        <div>
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Pacotes</div>
-          <div className="text-2xl font-semibold font-mono text-primary">{totalPacotes}</div>
-        </div>
-      </div>
 
-      <div className="mt-auto flex flex-col gap-2 pt-2">
-        <Button onClick={onFinalizar} disabled={!temItens} className="h-11 gap-2">
-          <Check className="size-4" /> Finalizar conferência
+        {/* Campo: Quantidade */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="quantidade"
+            className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground"
+          >
+            Quantidade (Pacote)
+          </label>
+          <input
+            id="quantidade"
+            ref={qtdRef}
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={quantidade}
+            onChange={(e) => setQuantidade(e.target.value)}
+            onKeyDown={handleQtdKey}
+            className={cn(INPUT_BASE, 'text-center font-semibold')}
+          />
+        </div>
+
+        {/* Botão principal Adicionar */}
+        <Button onClick={adicionar} className="w-full h-11 rounded-lg font-semibold gap-2">
+          <Plus className="w-4 h-4" /> Adicionar
         </Button>
+
+        {/* Totais */}
+        <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
+          <div className="rounded-md bg-background/40 px-3 py-2.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Linhas
+            </div>
+            <div className="text-lg font-bold font-mono tabular-nums">{totalLinhas}</div>
+          </div>
+          <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-primary/80">
+              Pacotes
+            </div>
+            <div className="text-lg font-bold font-mono tabular-nums text-primary">
+              {totalPacotes}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rodapé fixo com Finalizar */}
+      <div className="flex-shrink-0 p-3 sm:p-4 border-t border-border/40 bg-card/40">
         <Button
-          variant="outline"
-          onClick={onLimpar}
+          onClick={onFinalizar}
           disabled={!temItens}
-          className="h-11 gap-2"
+          className="w-full h-11 rounded-lg font-semibold gap-2"
         >
-          <RotateCcw className="size-4" /> Limpar
+          <Check className="w-4 h-4" /> Finalizar conferência
         </Button>
       </div>
     </div>
   );
 }
 
-/* ---------- Tabela (RightPanel equivalente) ---------- */
+/* ============================================================
+   TABELA (RightPanel equivalente) — mesmo estilo do RightPanel
+   ============================================================ */
 
 interface TabelaProps {
   itens: Item[];
@@ -174,149 +212,145 @@ interface TabelaProps {
 
 function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }: TabelaProps) {
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden p-4 lg:p-6">
-      <div className="flex items-center justify-between mb-3 gap-2">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="size-4 text-primary" />
-          <h2 className="text-base font-semibold">Itens conferidos</h2>
+    <div className="flex flex-col h-full overflow-hidden bg-background rounded-md border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
+      {/* Header da tabela */}
+      <div className="px-3 xs:px-4 sm:px-6 py-3 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-shrink-0 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+            <ClipboardList className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Registros
+            </div>
+            <h2 className="text-sm font-bold tracking-tight truncate">Itens conferidos</h2>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="font-mono">{itens.length} linha(s)</Badge>
-          <Badge className="font-mono">{totalPacotes} pacote(s)</Badge>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="rounded-md border border-border/50 bg-background/60 px-2.5 py-1.5 text-[11px] font-mono font-semibold text-muted-foreground">
+            {itens.length} linha(s)
+          </span>
+          <span className="rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1.5 text-[11px] font-mono font-bold text-primary">
+            {totalPacotes} pacote(s)
+          </span>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 rounded-lg border bg-card overflow-hidden flex flex-col">
+      {/* Corpo */}
+      <div className="flex-1 overflow-y-auto overflow-x-auto bg-background/20 custom-scrollbar relative min-h-0">
         {itens.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 p-8 text-muted-foreground">
-            <Package className="size-8 opacity-40" />
-            <p className="text-sm">Nenhum item bipado ainda.</p>
-            <p className="text-xs">Comece bipando um código no formulário ao lado.</p>
+          <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-8">
+            <div className="w-16 h-16 rounded-full bg-muted/40 border border-border/40 flex items-center justify-center">
+              <Package className="w-7 h-7 text-muted-foreground/40" />
+            </div>
+            <p className="text-sm font-semibold text-muted-foreground">Nenhum item bipado.</p>
+            <p className="text-xs text-muted-foreground/60 max-w-[240px]">
+              Bipe o código do componente e informe a quantidade por pacote no formulário ao lado.
+            </p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-auto">
-            <Table>
-              <TableHeader className="sticky top-0 bg-card z-10">
-                <TableRow>
-                  <TableHead className="w-12 text-center">#</TableHead>
-                  <TableHead>Código</TableHead>
-                  <TableHead className="w-48 text-center">Quantidade (Pacote)</TableHead>
-                  <TableHead className="w-16" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <AnimatePresence initial={false}>
-                  {itens.map((i, idx) => {
-                    const row = (
-                      <TableRow key={i.id} className="group">
-                        <TableCell className="text-center text-xs font-mono text-muted-foreground">
-                          {itens.length - idx}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm truncate">{i.codigo}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0"
-                              onClick={() => onAjustar(i.id, -1)}
-                              aria-label="Diminuir"
-                            >
-                              <Minus className="size-3" />
-                            </Button>
-                            <span className="min-w-10 text-center font-mono font-semibold">
-                              {i.quantidade}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0"
-                              onClick={() => onAjustar(i.id, +1)}
-                              aria-label="Aumentar"
-                            >
-                              <Plus className="size-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
+          <table className="w-full border-separate border-spacing-0 table-auto min-w-[520px]">
+            <thead>
+              <tr className="bg-muted/30">
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background/80 whitespace-nowrap w-12">
+                  #
+                </th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap">
+                  Código
+                </th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-center text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap w-[180px]">
+                  Quantidade (Pacote)
+                </th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-right border-b border-border/40 bg-background w-[70px] sm:w-[90px] text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/20">
+              <AnimatePresence initial={false}>
+                {itens.map((r, i) => {
+                  const content = (
+                    <>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-semibold tabular-nums border-r border-border/20">
+                        {itens.length - i}
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-mono text-foreground font-bold border-r border-border/20 uppercase">
+                        {r.codigo}
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 border-r border-border/20">
+                        <div className="flex items-center justify-center gap-1">
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className="h-7 w-7 p-0 text-destructive opacity-70 group-hover:opacity-100"
-                            onClick={() => onRemover(i.id)}
-                            aria-label="Remover"
+                            className="h-8 w-8 rounded-md hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                            onClick={() => onAjustar(r.id, -1)}
+                            aria-label="Diminuir"
                           >
-                            <Trash2 className="size-3" />
+                            <Minus className="w-3.5 h-3.5" />
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
+                          <span className="min-w-10 text-center font-mono font-bold tabular-nums text-sm">
+                            {r.quantidade}
+                          </span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 rounded-md hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                            onClick={() => onAjustar(r.id, +1)}
+                            aria-label="Aumentar"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 text-right">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm"
+                          onClick={() => onRemover(r.id)}
+                          aria-label="Remover"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </>
+                  );
 
-                    if (isLow) return row;
-
+                  if (isLow) {
                     return (
-                      <motion.tr
-                        key={i.id}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className={cn('group border-b')}
+                      <tr
+                        key={r.id}
+                        className="group hover:bg-primary/[0.03] border-b border-border/30 transition-all duration-300"
                       >
-                        <td className="p-2 align-middle text-center text-xs font-mono text-muted-foreground">
-                          {itens.length - idx}
-                        </td>
-                        <td className="p-2 align-middle font-mono text-sm truncate">{i.codigo}</td>
-                        <td className="p-2 align-middle">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0"
-                              onClick={() => onAjustar(i.id, -1)}
-                              aria-label="Diminuir"
-                            >
-                              <Minus className="size-3" />
-                            </Button>
-                            <span className="min-w-10 text-center font-mono font-semibold">
-                              {i.quantidade}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0"
-                              onClick={() => onAjustar(i.id, +1)}
-                              aria-label="Aumentar"
-                            >
-                              <Plus className="size-3" />
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-2 align-middle text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 text-destructive opacity-70 group-hover:opacity-100"
-                            onClick={() => onRemover(i.id)}
-                            aria-label="Remover"
-                          >
-                            <Trash2 className="size-3" />
-                          </Button>
-                        </td>
-                      </motion.tr>
+                        {content}
+                      </tr>
                     );
-                  })}
-                </AnimatePresence>
-              </TableBody>
-            </Table>
-          </div>
+                  }
+                  return (
+                    <motion.tr
+                      key={r.id}
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="group hover:bg-primary/[0.03] border-b border-border/30 transition-all duration-300"
+                    >
+                      {content}
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
+            </tbody>
+          </table>
         )}
       </div>
     </div>
   );
 }
 
-/* ---------- Página (FormPageLayout equivalente) ---------- */
+/* ============================================================
+   PÁGINA (FormPageLayout equivalente)
+   ============================================================ */
 
 export default function ComponentesPage() {
   useDocumentTitle('Conferência — Componentes');
@@ -383,14 +417,12 @@ export default function ComponentesPage() {
         .filter((i) => i.quantidade > 0),
     );
   };
-
   const limpar = () => {
     if (itens.length === 0) return;
     if (!confirm('Limpar todos os itens da conferência?')) return;
     setItens([]);
     codigoRef.current?.focus();
   };
-
   const finalizar = () => {
     if (itens.length === 0) {
       toast.warning('Nenhum item para finalizar.');
@@ -455,7 +487,6 @@ export default function ComponentesPage() {
           <div className="animate-in slide-in-from-left-4 duration-300 h-full">{form}</div>
         )}
       </div>
-
       <div className="fixed bottom-6 right-6 z-50 lg:hidden">
         <Button
           size="lg"
