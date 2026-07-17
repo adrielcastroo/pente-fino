@@ -75,20 +75,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchProfile = async (userId: string, email?: string) => {
-    const { data, error } = await (supabase
-      .from('profiles' as any)
-      .select('*')
-      .eq('id', userId)
-      .single() as any);
-    
-    if (!error && data) {
-      setProfile(data);
-      const name = data.display_name || email?.split('@')[0] || 'Usuário';
-      setConferente(name);
-    } else if (email) {
-      // Even without a profile, set the conferente from email
-      setConferente(email.split('@')[0]);
+    try {
+      const { data, error } = await (supabase
+        .from('profiles' as any)
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle() as any);
+
+      if (!error && data) {
+        setProfile(data);
+        const name = data.display_name || email?.split('@')[0] || 'Usuário';
+        setConferente(name);
+        return;
+      }
+    } catch (e) {
+      console.warn('[auth] fetchProfile failed', e);
     }
+    // Fallback: never leave profile null, or RoleHomeRedirect fica em loop.
+    setProfile({ id: userId, email, modules: ['estoque'] });
+    if (email) setConferente(email.split('@')[0]);
   };
 
   const loginAsGuest = (name?: string) => {
