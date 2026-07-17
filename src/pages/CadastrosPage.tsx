@@ -312,6 +312,15 @@ export default function CadastrosPage() {
           </p>
         </div>
         <div className="md:ml-auto flex flex-wrap items-center gap-2 min-w-0">
+          <Button
+            variant="outline"
+            onClick={() => setImportOpen(true)}
+            className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10"
+            aria-label="Importar itens"
+          >
+            <Upload className="h-4 w-4 shrink-0" />
+            <span className="truncate">Importar</span>
+          </Button>
           <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10" aria-label="Novo item">
             <Plus className="h-4 w-4 shrink-0" />
             <span className="truncate">Novo item</span>
