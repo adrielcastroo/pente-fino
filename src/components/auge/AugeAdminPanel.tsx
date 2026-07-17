@@ -257,7 +257,7 @@ export default function AugeAdminPanel() {
                     </p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => syncOne(ent.key)}
-                    disabled={syncingEntity !== null} className="h-7 px-2 gap-1">
+                    disabled={syncingEntity !== null || !syncEnabled} className="h-7 px-2 gap-1">
                     {syncingEntity === ent.key ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                   </Button>
                 </div>
