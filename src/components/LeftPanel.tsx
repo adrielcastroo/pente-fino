@@ -827,7 +827,7 @@ export const LeftPanel = memo(function LeftPanel() {
       if (labelSettings.autoPrint) {
         printTecidoLabel({
           item: reg.item,
-          descricao: reg.tipoTecido || '',
+          descricao: '',
           lote: reg.lote,
           loteSistema: reg.loteSistema,
           processo: reg.processo,
@@ -926,7 +926,7 @@ export const LeftPanel = memo(function LeftPanel() {
     if (labelSettings.autoPrint) {
       printTecidoLabel({
         item: reg.item,
-        descricao: reg.tipoTecido || '',
+        descricao: '',
         lote: reg.lote,
         loteSistema: reg.loteSistema,
         processo: reg.processo,

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ClipboardList,
+  Download,
   FileSpreadsheet,
   List,
   Loader2,
@@ -27,6 +28,7 @@ import { cn } from '@/lib/utils';
 import ImportComponentesDialog, {
   type ImportedComponenteRow,
 } from '@/components/componentes/ImportComponentesDialog';
+import { exportConferenceToExcel } from '@/lib/export-utils';
 
 /* ============================================================
    Tipos & Persistência
@@ -125,6 +127,7 @@ interface FormProps {
   onLimpar: () => void;
   onUndo: () => void;
   onImport: () => void;
+  onExport: () => void;
   temItens: boolean;
   canUndo: boolean;
   lookupLoading: boolean;
@@ -147,6 +150,7 @@ function ComponentesForm({
   onLimpar,
   onUndo,
   onImport,
+  onExport,
   temItens,
   canUndo,
   lookupLoading,
@@ -189,6 +193,15 @@ function ComponentesForm({
               className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 flex items-center gap-1"
             >
               <FileSpreadsheet className="w-3 h-3" /> Importar
+            </button>
+            <button
+              type="button"
+              onClick={onExport}
+              disabled={!temItens}
+              title="Exportar itens conferidos (XLSX)"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent flex items-center gap-1"
+            >
+              <Download className="w-3 h-3" /> Exportar
             </button>
             <button
               type="button"
@@ -717,6 +730,28 @@ export default function ComponentesPage() {
 
     setSaving(true);
     const info = descCacheRef.current.get(cod) ?? (await buscarItem(cod));
+
+    // Aprende/atualiza o pacote do fornecedor com a quantidade bipada.
+    // Se o cadastro ainda não tem pacote_fornecedor, guarda; se tiver diferente,
+    // atualiza para a bipagem mais recente. Falhas são silenciosas — não devem
+    // bloquear a conferência.
+    try {
+      const res = await itensCadastroService.updatePacoteFornecedor(cod, qtd);
+      if (res.updated) {
+        // Invalida cache local para próxima leitura refletir novo valor
+        descCacheRef.current.delete(cod);
+        if (res.previous == null) {
+          toast.info(`Pacote do fornecedor registrado: ${formatQtd(qtd)}`);
+        } else if (Number(res.previous) !== qtd) {
+          toast.info(`Pacote do fornecedor atualizado: ${formatQtd(Number(res.previous))} → ${formatQtd(qtd)}`);
+        }
+        // Atualiza também o info em memória para a próxima linha
+        info.pacoteFornecedor = qtd;
+        if (!info.pacoteEstocagem) info.pacoteEstocagem = qtd;
+      }
+    } catch (e) {
+      console.warn('[Componentes] updatePacoteFornecedor falhou', e);
+    }
     setSaving(false);
 
     setItens((prev) => {
@@ -975,6 +1010,28 @@ export default function ComponentesPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [undo]);
 
+  const exportar = useCallback(async () => {
+    if (itens.length === 0) {
+      toast.warning('Nenhum item para exportar.');
+      return;
+    }
+    const headers = ['Código', 'Descrição', 'Quantidade', 'Unidade', 'Pacote Estocagem', 'Pacote Fornecedor', 'Etiquetas'];
+    const rows = itens.map((i) => {
+      const plan = planEtiquetas(i.quantidade, i.pacoteEstocagem);
+      return [
+        i.codigo,
+        i.descricao ?? '',
+        i.quantidade,
+        i.unidade ?? '',
+        i.pacoteEstocagem ?? '',
+        i.pacoteFornecedor ?? '',
+        plan.total,
+      ];
+    });
+    const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
+    await exportConferenceToExcel(headers, rows, `Componentes_${stamp}`, [22, 42, 12, 10, 18, 18, 12]);
+  }, [itens]);
+
   const form = (
     <ComponentesForm
       codigo={codigo}
@@ -991,6 +1048,7 @@ export default function ComponentesPage() {
       onLimpar={limpar}
       onUndo={undo}
       onImport={() => setImportOpen(true)}
+      onExport={exportar}
       temItens={itens.length > 0}
       canUndo={undoStack.length > 0}
       lookupLoading={lookupLoading}

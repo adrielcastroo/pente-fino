@@ -2126,6 +2126,7 @@ export type Database = {
           codigo_fornecedor: string | null
           codigo_fornecedor_normalizado: string | null
           codigo_interno: string
+          codigo_interno_normalizado: string | null
           codigos_fornecedor: string[]
           codigos_fornecedor_normalizado: string[]
           created_at: string
@@ -2145,6 +2146,7 @@ export type Database = {
           codigo_fornecedor?: string | null
           codigo_fornecedor_normalizado?: string | null
           codigo_interno: string
+          codigo_interno_normalizado?: string | null
           codigos_fornecedor?: string[]
           codigos_fornecedor_normalizado?: string[]
           created_at?: string
@@ -2164,6 +2166,7 @@ export type Database = {
           codigo_fornecedor?: string | null
           codigo_fornecedor_normalizado?: string | null
           codigo_interno?: string
+          codigo_interno_normalizado?: string | null
           codigos_fornecedor?: string[]
           codigos_fornecedor_normalizado?: string[]
           created_at?: string
