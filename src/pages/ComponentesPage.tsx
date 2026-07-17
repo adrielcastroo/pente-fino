@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ClipboardList,
+  FileSpreadsheet,
   List,
   Loader2,
   Minus,
@@ -23,6 +24,9 @@ import { itensCadastroService } from '@/services/itensCadastroService';
 import { printComponenteLabel } from '@/services/printService';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
+import ImportComponentesDialog, {
+  type ImportedComponenteRow,
+} from '@/components/componentes/ImportComponentesDialog';
 
 /* ============================================================
    Tipos & Persistência
@@ -120,6 +124,7 @@ interface FormProps {
   onFinalizar: () => void;
   onLimpar: () => void;
   onUndo: () => void;
+  onImport: () => void;
   temItens: boolean;
   canUndo: boolean;
   lookupLoading: boolean;
@@ -141,6 +146,7 @@ function ComponentesForm({
   onFinalizar,
   onLimpar,
   onUndo,
+  onImport,
   temItens,
   canUndo,
   lookupLoading,
@@ -176,6 +182,14 @@ function ComponentesForm({
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onImport}
+              title="Importar planilha (XLSX/CSV)"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 flex items-center gap-1"
+            >
+              <FileSpreadsheet className="w-3 h-3" /> Importar
+            </button>
             <button
               type="button"
               onClick={onUndo}
@@ -560,6 +574,7 @@ export default function ComponentesPage() {
   const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
   const [showTableMobile, setShowTableMobile] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Lookup em itens_cadastro (agora traz descrição + unidade + pacotes)
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -745,6 +760,66 @@ export default function ComponentesPage() {
     setTimeout(() => codigoRef.current?.focus(), 0);
   }, [codigo, quantidade, buscarItem]);
 
+  /**
+   * Importa em lote (planilha). Para cada linha, faz lookup do cadastro
+   * (para pegar unidade/pacoteEstocagem) — a menos que a própria linha traga
+   * um override. Agrega quantidades quando o mesmo código já existe.
+   */
+  const adicionarLote = useCallback(async (linhas: ImportedComponenteRow[]) => {
+    if (!linhas.length) return;
+    // Resolve dados de cadastro em paralelo (respeita cache)
+    const infos = await Promise.all(
+      linhas.map((l) => buscarItem(l.codigo)),
+    );
+
+    setItens((prev) => {
+      const byCod = new Map<string, Item>();
+      for (const it of prev) byCod.set(it.codigo, { ...it });
+
+      linhas.forEach((l, i) => {
+        const cod = l.codigo.trim().toUpperCase();
+        if (!cod || !(Number(l.quantidade) > 0)) return;
+        const info = infos[i];
+        const unidade = l.unidade ?? info.unidade;
+        const pacoteEstocagem = l.pacoteEstocagem ?? info.pacoteEstocagem;
+
+        const existing = byCod.get(cod);
+        if (existing) {
+          existing.quantidade += Number(l.quantidade);
+          existing.descricao = existing.descricao ?? info.descricao;
+          existing.unidade = existing.unidade ?? unidade;
+          existing.pacoteEstocagem = existing.pacoteEstocagem ?? pacoteEstocagem;
+          existing.pacoteFornecedor = existing.pacoteFornecedor ?? info.pacoteFornecedor;
+          existing.ts = Date.now();
+        } else {
+          byCod.set(cod, {
+            id: crypto.randomUUID(),
+            codigo: cod,
+            descricao: info.descricao,
+            quantidade: Number(l.quantidade),
+            unidade,
+            pacoteEstocagem,
+            pacoteFornecedor: info.pacoteFornecedor,
+            ts: Date.now() + i,
+          });
+        }
+      });
+
+      // Ordem: novos/atualizados no topo por ts desc
+      return Array.from(byCod.values()).sort((a, b) => b.ts - a.ts);
+    });
+
+    const totalLinhas = linhas.length;
+    const totalQtd = linhas.reduce((a, l) => a + Number(l.quantidade || 0), 0);
+    const totalEtiq = linhas.reduce((acc, l, i) => {
+      const pe = l.pacoteEstocagem ?? infos[i].pacoteEstocagem;
+      return acc + planEtiquetas(Number(l.quantidade || 0), pe).total;
+    }, 0);
+    toast.success(
+      `Importado: ${totalLinhas} linha(s) · ${formatQtd(totalQtd)} total · ${totalEtiq} etiqueta(s) a gerar.`,
+    );
+  }, [buscarItem]);
+
   const remover = useCallback((id: string) => {
     setItens((prev) => {
       const idx = prev.findIndex((i) => i.id === id);
@@ -912,6 +987,7 @@ export default function ComponentesPage() {
       onFinalizar={finalizar}
       onLimpar={limpar}
       onUndo={undo}
+      onImport={() => setImportOpen(true)}
       temItens={itens.length > 0}
       canUndo={undoStack.length > 0}
       lookupLoading={lookupLoading}
@@ -930,46 +1006,60 @@ export default function ComponentesPage() {
     />
   );
 
+  const importDialog = (
+    <ImportComponentesDialog
+      open={importOpen}
+      onOpenChange={setImportOpen}
+      onConfirm={adicionarLote}
+    />
+  );
+
   if (!isNarrow) {
     return (
-      <div className="flex flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-hidden">
-        <div
-          className="shrink-0 h-full min-w-0 overflow-hidden"
-          style={{ flexBasis: 'clamp(380px, 30vw, 520px)' }}
-        >
-          {form}
+      <>
+        <div className="flex flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-hidden">
+          <div
+            className="shrink-0 h-full min-w-0 overflow-hidden"
+            style={{ flexBasis: 'clamp(380px, 30vw, 520px)' }}
+          >
+            {form}
+          </div>
+          <div className="flex-1 min-w-0 h-full animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
+            {tabela}
+          </div>
         </div>
-        <div className="flex-1 min-w-0 h-full animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
-          {tabela}
-        </div>
-      </div>
+        {importDialog}
+      </>
     );
   }
 
   return (
-    <div className="h-full w-full max-w-full min-w-0 flex flex-col relative animate-in fade-in duration-300">
-      <div className="flex-1 min-h-0 overflow-y-auto pb-20">
-        {showTableMobile ? (
-          <div className="animate-in slide-in-from-right-4 duration-300 h-full">{tabela}</div>
-        ) : (
-          <div className="animate-in slide-in-from-left-4 duration-300 h-full">{form}</div>
-        )}
-      </div>
-      <div className="fixed bottom-6 right-6 z-50 lg:hidden">
-        <Button
-          size="lg"
-          onClick={() => setShowTableMobile((v) => !v)}
-          className="rounded-full h-14 w-14 shadow-lg border border-border active:scale-95 transition-transform bg-primary text-primary-foreground hover:bg-primary/90 relative"
-          aria-label={showTableMobile ? 'Voltar ao formulário' : 'Ver itens bipados'}
-        >
-          {showTableMobile ? <ClipboardList className="w-6 h-6" /> : <List className="w-6 h-6" />}
-          {!showTableMobile && itens.length > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-              {itens.length}
-            </span>
+    <>
+      <div className="h-full w-full max-w-full min-w-0 flex flex-col relative animate-in fade-in duration-300">
+        <div className="flex-1 min-h-0 overflow-y-auto pb-20">
+          {showTableMobile ? (
+            <div className="animate-in slide-in-from-right-4 duration-300 h-full">{tabela}</div>
+          ) : (
+            <div className="animate-in slide-in-from-left-4 duration-300 h-full">{form}</div>
           )}
-        </Button>
+        </div>
+        <div className="fixed bottom-6 right-6 z-50 lg:hidden">
+          <Button
+            size="lg"
+            onClick={() => setShowTableMobile((v) => !v)}
+            className="rounded-full h-14 w-14 shadow-lg border border-border active:scale-95 transition-transform bg-primary text-primary-foreground hover:bg-primary/90 relative"
+            aria-label={showTableMobile ? 'Voltar ao formulário' : 'Ver itens bipados'}
+          >
+            {showTableMobile ? <ClipboardList className="w-6 h-6" /> : <List className="w-6 h-6" />}
+            {!showTableMobile && itens.length > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                {itens.length}
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+      {importDialog}
+    </>
   );
 }
