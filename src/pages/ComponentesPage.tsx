@@ -124,6 +124,7 @@ interface FormProps {
   onFinalizar: () => void;
   onLimpar: () => void;
   onUndo: () => void;
+  onImport: () => void;
   temItens: boolean;
   canUndo: boolean;
   lookupLoading: boolean;
