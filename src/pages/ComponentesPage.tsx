@@ -608,6 +608,8 @@ export default function ComponentesPage() {
   // Cache local por sessão para evitar refetch por código
   const descCacheRef = useRef<Map<string, LookupResult>>(new Map());
   const lookupSeq = useRef(0);
+  const sessionStartedAtRef = useRef<string | null>(null);
+
 
   // Regras de impressão do usuário (mesma origem que Motor/Tecido)
   const labelSettings = useAppStore((s) => s.labelSettings);
