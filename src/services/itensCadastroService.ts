@@ -210,6 +210,33 @@ export const itensCadastroService = {
     return (data as ItemCadastro) || null;
   },
 
+  /**
+   * Atualiza (ou preenche) o `pacote_fornecedor` do item cadastrado. Usado
+   * pelo fluxo de conferência de componentes: o operador bipa a quantidade
+   * escrita no pacote e, com isso, o cadastro passa a refletir sempre a
+   * bipagem mais recente. Se não existir cadastro do código, retorna sem
+   * fazer nada.
+   */
+  async updatePacoteFornecedor(codigoBipado: string, quantidade: number): Promise<{ updated: boolean; codigoInterno?: string; previous?: number | null }> {
+    const qtd = Number(quantidade);
+    if (!Number.isFinite(qtd) || qtd <= 0) return { updated: false };
+    let hit = await this.findByCodigoFornecedor(codigoBipado);
+    if (!hit) hit = await this.findByCodigoInterno(codigoBipado);
+    if (!hit) return { updated: false };
+    if (hit.pacote_fornecedor != null && Number(hit.pacote_fornecedor) === qtd) {
+      return { updated: false, codigoInterno: hit.codigo_interno, previous: hit.pacote_fornecedor };
+    }
+    const { error } = await supabase
+      .from('itens_cadastro')
+      .update({ pacote_fornecedor: qtd })
+      .eq('id', hit.id);
+    if (error) throw error;
+    return { updated: true, codigoInterno: hit.codigo_interno, previous: hit.pacote_fornecedor };
+  },
+
+
+
+
 
 
 
