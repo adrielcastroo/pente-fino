@@ -309,7 +309,7 @@ function ComponentesForm({
             onKeyDown={handleQtdKey}
             onFocus={(e) => e.currentTarget.select()}
             placeholder="Bipe ou digite a quantidade"
-            className={cn(INPUT_BASE, 'text-center font-semibold text-base')}
+            className={cn(INPUT_BASE, 'uppercase')}
           />
           {/* Prévia de etiquetas */}
           {(() => {
