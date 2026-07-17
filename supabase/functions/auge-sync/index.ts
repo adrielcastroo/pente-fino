@@ -559,6 +559,7 @@ function mapTransferencia(r: any) {
   const cd = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? r.id ?? '';
   return {
     id_externo: `transf-php:${cd || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
+    _cd: cd ? String(cd) : null, // interno: usado para enriquecimento
     deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
     deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
     codigo_produto: r.cdItem ?? null,
@@ -567,11 +568,85 @@ function mapTransferencia(r: any) {
     ds_situacao: r.dsSituacao ?? null,
     data_movimento: parseDateBR(r.dtCriacao),
     usuario_criacao: r.nmUsuarioCriacao ?? null,
+    usuario_efetivacao: r.nmUsuarioEfetivacao ?? null,
+    usuario_enviou_logistica: r.nmUsuarioEnviouLogistica ?? null,
+    usuario_recebido_logistica: r.nmUsuarioRecebidoLogistica ?? null,
     valor: parseNum(r.vlCustoMovimentacao),
     documento: cd ? String(cd) : null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
+}
+
+// Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
+// campos ausentes no LIST: origem/destino/item.
+async function fetchTransferenciaDetalhe(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cd: string,
+): Promise<any | null> {
+  const path = `/l.unilux/modInventario/estoque/ajax/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cd)}`;
+  try {
+    const headers: Record<string, string> = {
+      'Cookie': auth.jar.header(),
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-TOKEN': auth.csrf,
+      'Referer': `${AUGE_BASE_URL}/home`,
+      'User-Agent': UA,
+      'Accept': 'application/json, text/javascript, */*; q=0.01',
+    };
+    if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+    const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+    auth.jar.ingest(res);
+    if (!res.ok) return null;
+    const text = await res.text();
+    let j: any;
+    try { j = JSON.parse(text); } catch { return null; }
+    const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
+    return d && typeof d === 'object' ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+// Enriquece linhas cujos campos-chave (origem/destino/item) estão faltando.
+async function enrichTransferencias(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  rows: any[],
+  concurrency = 4,
+  maxToEnrich = 300,
+): Promise<{ enriched: number; failed: number; attempted: number }> {
+  const pending = rows.filter(r =>
+    r._cd && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
+  ).slice(0, maxToEnrich);
+
+  let enriched = 0;
+  let failed = 0;
+  let idx = 0;
+
+  async function worker() {
+    while (idx < pending.length) {
+      const i = idx++;
+      const row = pending[i];
+      const det = await fetchTransferenciaDetalhe(auth, row._cd);
+      if (!det) { failed++; continue; }
+      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? det.cdDepositoOrig ?? null;
+      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? det.cdDepositoDest ?? null;
+      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? det.codigoItem ?? null;
+      row.quantidade = row.quantidade ?? parseNum(det.qtItem);
+      row.situacao = row.situacao ?? det.idSituacao ?? null;
+      row.ds_situacao = row.ds_situacao ?? det.dsSituacao ?? null;
+      row.usuario_efetivacao = row.usuario_efetivacao ?? det.nmUsuarioEfetivacao ?? null;
+      row.usuario_enviou_logistica = row.usuario_enviou_logistica ?? det.nmUsuarioEnviouLogistica ?? null;
+      row.usuario_recebido_logistica = row.usuario_recebido_logistica ?? det.nmUsuarioRecebidoLogistica ?? null;
+      row.valor = row.valor ?? parseNum(det.vlCustoMovimentacao);
+      row.raw = { ...(row.raw ?? {}), _detalhe: det };
+      row.detalhe_sincronizado_em = new Date().toISOString();
+      enriched++;
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, worker));
+  return { enriched, failed, attempted: pending.length };
 }
 
 
