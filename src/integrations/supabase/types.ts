@@ -453,6 +453,7 @@ export type Database = {
           data_movimento: string | null
           deposito_destino: string | null
           deposito_origem: string | null
+          detalhe_sincronizado_em: string | null
           documento: string | null
           ds_situacao: string | null
           id: string
@@ -463,6 +464,9 @@ export type Database = {
           synced_at: string
           updated_at: string
           usuario_criacao: string | null
+          usuario_efetivacao: string | null
+          usuario_enviou_logistica: string | null
+          usuario_recebido_logistica: string | null
           valor: number | null
         }
         Insert: {
@@ -471,6 +475,7 @@ export type Database = {
           data_movimento?: string | null
           deposito_destino?: string | null
           deposito_origem?: string | null
+          detalhe_sincronizado_em?: string | null
           documento?: string | null
           ds_situacao?: string | null
           id?: string
@@ -481,6 +486,9 @@ export type Database = {
           synced_at?: string
           updated_at?: string
           usuario_criacao?: string | null
+          usuario_efetivacao?: string | null
+          usuario_enviou_logistica?: string | null
+          usuario_recebido_logistica?: string | null
           valor?: number | null
         }
         Update: {
@@ -489,6 +497,7 @@ export type Database = {
           data_movimento?: string | null
           deposito_destino?: string | null
           deposito_origem?: string | null
+          detalhe_sincronizado_em?: string | null
           documento?: string | null
           ds_situacao?: string | null
           id?: string
@@ -499,6 +508,9 @@ export type Database = {
           synced_at?: string
           updated_at?: string
           usuario_criacao?: string | null
+          usuario_efetivacao?: string | null
+          usuario_enviou_logistica?: string | null
+          usuario_recebido_logistica?: string | null
           valor?: number | null
         }
         Relationships: []
