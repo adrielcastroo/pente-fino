@@ -211,19 +211,6 @@ function ComponentesForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-              <ScanBarcode className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Passo 1
-              </div>
-              <div className="text-sm font-semibold">Bipar componente</div>
-            </div>
-          </div>
-        </div>
 
         <div className="space-y-1.5">
           <label
@@ -344,39 +331,8 @@ function ComponentesForm({
           Adicionar
         </Button>
 
-        <div className="grid grid-cols-3 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
-          <div className="rounded-md bg-background/40 px-3 py-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              Linhas
-            </div>
-            <div className="text-lg font-bold font-mono tabular-nums">{totalLinhas}</div>
-          </div>
-          <div className="rounded-md bg-background/40 px-3 py-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              Total
-            </div>
-            <div className="text-lg font-bold font-mono tabular-nums">{formatQtd(totalPacotes)}</div>
-          </div>
-          <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-primary/80">
-              Etiquetas
-            </div>
-            <div className="text-lg font-bold font-mono tabular-nums text-primary">
-              {totalEtiquetas}
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div className="flex-shrink-0 p-3 sm:p-4 border-t border-border/40 bg-card/40">
-        <Button
-          onClick={onFinalizar}
-          disabled={!temItens}
-          className="w-full h-11 rounded-lg font-semibold gap-2"
-        >
-          <Check className="w-4 h-4" /> Finalizar conferência
-        </Button>
-      </div>
     </div>
   );
 }
