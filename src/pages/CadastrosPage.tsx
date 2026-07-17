@@ -272,6 +272,7 @@ export default function CadastrosPage() {
             <SelectItem value="todos">Todos os itens</SelectItem>
             <SelectItem value="com">Com cód. fornecedor</SelectItem>
             <SelectItem value="sem">Sem cód. fornecedor</SelectItem>
+            <SelectItem value="pendentes_auge">Pendentes do Auge (não cadastrados)</SelectItem>
           </SelectContent>
         </Select>
         <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
