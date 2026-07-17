@@ -437,6 +437,16 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
               neste dispositivo.
             </p>
           </div>
+        ) : filteredSorted.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-8">
+            <div className="w-16 h-16 rounded-full bg-muted/40 border border-border/40 flex items-center justify-center">
+              <Search className="w-7 h-7 text-muted-foreground/40" />
+            </div>
+            <p className="text-sm font-semibold text-muted-foreground">Nenhum resultado.</p>
+            <p className="text-xs text-muted-foreground/60 max-w-[260px]">
+              Ajuste a busca ou a ordenação para ver os itens conferidos.
+            </p>
+          </div>
         ) : (
           <table className="w-full border-separate border-spacing-0 table-auto min-w-[640px]">
             <thead>
@@ -463,12 +473,13 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
             </thead>
             <tbody className="divide-y divide-border/20">
               <AnimatePresence initial={false}>
-                {itens.map((r, i) => {
+                {filteredSorted.map((r, i) => {
                   const content = (
                     <>
                       <td className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs text-muted-foreground/40 font-semibold tabular-nums border-r border-border/20">
-                        {itens.length - i}
+                        {filteredSorted.length - i}
                       </td>
+
                       <td className="px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-mono text-foreground font-bold border-r border-border/20 uppercase">
                         {r.codigo}
                       </td>
