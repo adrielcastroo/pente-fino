@@ -5,11 +5,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   RefreshCw, Loader2, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  Database, Activity, AlertTriangle, PlayCircle,
+  Database, Activity, AlertTriangle, PlayCircle, Power,
 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+
 
 interface Run {
   id: string;
