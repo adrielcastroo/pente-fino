@@ -18,6 +18,7 @@ import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePerformance } from '@/hooks/use-performance';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 import { itensCadastroService } from '@/services/itensCadastroService';
 import { printComponenteLabel } from '@/services/printService';
 import { conferenceService } from '@/services/conferenceService';
