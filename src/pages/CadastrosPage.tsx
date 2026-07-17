@@ -570,9 +570,6 @@ export default function CadastrosPage() {
       )}
         </TabsContent>
 
-        <TabsContent value="auge" className="flex-1 overflow-hidden mt-0">
-          <AugeProdutosTab />
-        </TabsContent>
 
         <TabsContent value="reconciliacao" className="flex-1 overflow-hidden mt-0">
           <AugeReconciliacaoTab />
