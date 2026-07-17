@@ -574,6 +574,7 @@ export default function ComponentesPage() {
   const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
   const [showTableMobile, setShowTableMobile] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Lookup em itens_cadastro (agora traz descrição + unidade + pacotes)
   const [lookupLoading, setLookupLoading] = useState(false);
