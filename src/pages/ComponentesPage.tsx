@@ -24,6 +24,9 @@ import { itensCadastroService } from '@/services/itensCadastroService';
 import { printComponenteLabel } from '@/services/printService';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
+import ImportComponentesDialog, {
+  type ImportedComponenteRow,
+} from '@/components/componentes/ImportComponentesDialog';
 
 /* ============================================================
    Tipos & Persistência
