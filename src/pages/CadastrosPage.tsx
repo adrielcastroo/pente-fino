@@ -51,11 +51,47 @@ export default function CadastrosPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [augePendentes, setAugePendentes] = useState<AugePendente[]>([]);
+  const [pendentesLoading, setPendentesLoading] = useState(false);
 
   const getCodigos = (i: ItemCadastro): string[] => {
     if (i.codigos_fornecedor && i.codigos_fornecedor.length) return i.codigos_fornecedor;
     return i.codigo_fornecedor ? [i.codigo_fornecedor] : [];
   };
+
+  // Fetch Auge products missing from itens_cadastro (only when filter engaged and after itens loaded)
+  useEffect(() => {
+    if (fornFilter !== 'pendentes_auge' || isLoading) return;
+    let alive = true;
+    (async () => {
+      setPendentesLoading(true);
+      try {
+        const cadastrados = new Set(itens.map((i) => normalizarCodigo(i.codigo_interno)));
+        const all: any[] = [];
+        for (let from = 0; from < 40000; from += 1000) {
+          const { data, error } = await (supabase as any)
+            .from('auge_produtos')
+            .select('codigo, descricao, qt_disponivel, ativo')
+            .eq('ativo', true)
+            .range(from, from + 999);
+          if (error) throw error;
+          all.push(...(data || []));
+          if ((data || []).length < 1000) break;
+        }
+        const pend = all
+          .filter((a) => !cadastrados.has(normalizarCodigo(a.codigo)))
+          .map((a) => ({ codigo: String(a.codigo), descricao: a.descricao, qt_disponivel: a.qt_disponivel, ativo: a.ativo }))
+          .sort((a, b) => a.codigo.localeCompare(b.codigo));
+        if (alive) setAugePendentes(pend);
+      } catch (e: any) {
+        toast.error('Erro ao buscar pendentes Auge: ' + (e?.message || ''));
+      } finally {
+        if (alive) setPendentesLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [fornFilter, isLoading, itens]);
+
 
   const semFornecedorCount = useMemo(
     () => itens.filter((i) => getCodigos(i).length === 0).length,
