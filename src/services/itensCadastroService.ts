@@ -185,9 +185,11 @@ export const itensCadastroService = {
     duplicatesInFile: number;
     fornecedorUpdated: number;
     descChanges: Array<{ codigo_interno: string; oldDesc: string; newDesc: string }>;
+    /** Códigos de fornecedor que já pertencem a OUTRO codigo_interno — foram ignorados. */
+    fornecedorConflicts: Array<{ codigo_interno: string; codigo_fornecedor: string; conflita_com: string }>;
   }> {
     if (!inputs.length) {
-      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, fornecedorUpdated: 0, descChanges: [] };
+      return { count: 0, inserted: 0, skipped: 0, duplicatesInFile: 0, fornecedorUpdated: 0, descChanges: [], fornecedorConflicts: [] };
     }
     // Mescla linhas duplicadas por codigo_interno (acumula códigos de fornecedor)
     const map = new Map<string, ItemCadastroInput>();
