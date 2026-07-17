@@ -103,13 +103,29 @@ export const itensCadastroService = {
   },
 
   async findByCodigoInterno(codigo: string): Promise<ItemCadastro | null> {
+    const trimmed = codigo.trim();
+    if (!trimmed) return null;
+    // 1) Match exato (caminho rápido, usa índice único)
     const { data, error } = await supabase
       .from('itens_cadastro')
       .select('*')
-      .eq('codigo_interno', codigo.trim())
+      .eq('codigo_interno', trimmed)
       .maybeSingle();
-    if (error) throw error;
-    return (data as ItemCadastro) || null;
+    if (error && (error as any).code !== 'PGRST116') throw error;
+    if (data) return data as ItemCadastro;
+    // 2) Fallback tolerante: normaliza (uppercase + remove pontuação/espaços) e
+    // compara contra a coluna gerada `codigo_interno_normalizado`. Isso permite
+    // reconhecer variações como "RC-4025-BK", "RC-4025BK", "RC4025BK" ⇔ "RC4025-BK".
+    const norm = normalizarCodigo(trimmed);
+    if (!norm) return null;
+    const { data: fuzzy, error: err2 } = await supabase
+      .from('itens_cadastro')
+      .select('*')
+      .eq('codigo_interno_normalizado' as any, norm)
+      .limit(1)
+      .maybeSingle();
+    if (err2 && (err2 as any).code !== 'PGRST116') throw err2;
+    return (fuzzy as ItemCadastro) || null;
   },
 
   /**
