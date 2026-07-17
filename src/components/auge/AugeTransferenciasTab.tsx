@@ -16,6 +16,24 @@ export default function AugeTransferenciasTab() {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
   const [detail, setDetail] = useState<any | null>(null);
+  const [novaOpen, setNovaOpen] = useState(false);
+
+  const efetivarRapido = async (row: any) => {
+    if (!row?.documento) return;
+    if (!confirm(`Efetivar transferência ${row.documento} no Auge? Isso movimenta estoque.`)) return;
+    const t = toast.loading('Efetivando...');
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=transferencia_efetivar', {
+        body: { cdMovimentacao: row.documento },
+      });
+      if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error);
+      toast.success(`Transferência ${row.documento} efetivada`, { id: t });
+      await sync();
+    } catch (e: any) {
+      toast.error('Falha: ' + (e.message || ''), { id: t });
+    }
+  };
 
   const load = async () => {
     setLoading(true);
