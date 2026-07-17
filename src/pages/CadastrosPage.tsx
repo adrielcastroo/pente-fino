@@ -571,6 +571,7 @@ export default function CadastrosPage() {
           </TableBody>
         </Table>
       </div>
+      </>)}
       </TooltipProvider>
 
       {/* Pagination */}
