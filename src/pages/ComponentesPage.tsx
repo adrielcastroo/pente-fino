@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ClipboardList,
+  Download,
   FileSpreadsheet,
   List,
   Loader2,
@@ -27,6 +28,7 @@ import { cn } from '@/lib/utils';
 import ImportComponentesDialog, {
   type ImportedComponenteRow,
 } from '@/components/componentes/ImportComponentesDialog';
+import { exportConferenceToExcel } from '@/lib/export-utils';
 
 /* ============================================================
    Tipos & Persistência
@@ -717,6 +719,28 @@ export default function ComponentesPage() {
 
     setSaving(true);
     const info = descCacheRef.current.get(cod) ?? (await buscarItem(cod));
+
+    // Aprende/atualiza o pacote do fornecedor com a quantidade bipada.
+    // Se o cadastro ainda não tem pacote_fornecedor, guarda; se tiver diferente,
+    // atualiza para a bipagem mais recente. Falhas são silenciosas — não devem
+    // bloquear a conferência.
+    try {
+      const res = await itensCadastroService.updatePacoteFornecedor(cod, qtd);
+      if (res.updated) {
+        // Invalida cache local para próxima leitura refletir novo valor
+        descCacheRef.current.delete(cod);
+        if (res.previous == null) {
+          toast.info(`Pacote do fornecedor registrado: ${formatQtd(qtd)}`);
+        } else if (Number(res.previous) !== qtd) {
+          toast.info(`Pacote do fornecedor atualizado: ${formatQtd(Number(res.previous))} → ${formatQtd(qtd)}`);
+        }
+        // Atualiza também o info em memória para a próxima linha
+        info.pacoteFornecedor = qtd;
+        if (!info.pacoteEstocagem) info.pacoteEstocagem = qtd;
+      }
+    } catch (e) {
+      console.warn('[Componentes] updatePacoteFornecedor falhou', e);
+    }
     setSaving(false);
 
     setItens((prev) => {
