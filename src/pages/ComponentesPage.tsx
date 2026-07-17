@@ -1010,6 +1010,28 @@ export default function ComponentesPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [undo]);
 
+  const exportar = useCallback(async () => {
+    if (itens.length === 0) {
+      toast.warning('Nenhum item para exportar.');
+      return;
+    }
+    const headers = ['Código', 'Descrição', 'Quantidade', 'Unidade', 'Pacote Estocagem', 'Pacote Fornecedor', 'Etiquetas'];
+    const rows = itens.map((i) => {
+      const plan = planEtiquetas(i.quantidade, i.pacoteEstocagem);
+      return [
+        i.codigo,
+        i.descricao ?? '',
+        i.quantidade,
+        i.unidade ?? '',
+        i.pacoteEstocagem ?? '',
+        i.pacoteFornecedor ?? '',
+        plan.total,
+      ];
+    });
+    const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
+    await exportConferenceToExcel(headers, rows, `Componentes_${stamp}`, [22, 42, 12, 10, 18, 18, 12]);
+  }, [itens]);
+
   const form = (
     <ComponentesForm
       codigo={codigo}
@@ -1026,6 +1048,7 @@ export default function ComponentesPage() {
       onLimpar={limpar}
       onUndo={undo}
       onImport={() => setImportOpen(true)}
+      onExport={exportar}
       temItens={itens.length > 0}
       canUndo={undoStack.length > 0}
       lookupLoading={lookupLoading}
