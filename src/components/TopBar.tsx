@@ -297,6 +297,37 @@ const TopBar = memo(function TopBar() {
             </Tooltip>
           )}
 
+          {isComponentesRoute && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={() => componentesState.exportFn?.()}
+                    size="sm"
+                    disabled={!componentesState.exportFn || componentesState.count === 0}
+                    variant="outline"
+                    className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-md border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                    <span className="hidden sm:inline">Exportar Excel</span>
+                    {componentesState.count > 0 && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
+                        {componentesState.count}
+                      </Badge>
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="font-semibold">
+                <p>
+                  {componentesState.count === 0
+                    ? 'Sem itens bipados nesta sessão'
+                    : `Exportar ${componentesState.count} itens para Excel`}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
         </div>
       </div>
     </header>
