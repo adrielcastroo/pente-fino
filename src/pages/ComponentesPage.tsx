@@ -31,6 +31,7 @@ import ImportComponentesDialog, {
   type ImportedComponenteRow,
 } from '@/components/componentes/ImportComponentesDialog';
 import { exportConferenceToExcel } from '@/lib/export-utils';
+import { componentesExportBus } from '@/lib/componentes-export-bus';
 
 
 /* ============================================================
