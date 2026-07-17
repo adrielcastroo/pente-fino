@@ -944,6 +944,49 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'transferencia_criar' || action === 'transferencia_efetivar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* body opcional em query */ }
+
+      if (action === 'transferencia_criar') {
+        const itens = Array.isArray(payload?.itens) ? payload.itens : [];
+        if (!itens.length) throw new Error('Envie ao menos 1 item em "itens".');
+        for (const it of itens) {
+          if (!it?.cdItem || !it?.cdDepositoOrigem || !it?.cdDepositoDestino || !it?.qtd) {
+            throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
+          }
+        }
+        const cd = await criarTransferencia(auth, itens, String(payload?.observacao ?? ''));
+        let efetivado = false;
+        if (payload?.efetivar === true) {
+          await efetivarTransferencia(auth, cd);
+          efetivado = true;
+        }
+        // Log da ação
+        await admin.from('auge_sync_runs').insert({
+          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          detalhes: { action, cdMovimentacao: cd, efetivado, itens: itens.length },
+        });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        const cd = String(payload?.cdMovimentacao ?? '').trim();
+        if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+        await efetivarTransferencia(auth, cd);
+        await admin.from('auge_sync_runs').insert({
+          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          detalhes: { action, cdMovimentacao: cd },
+        });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+
     const results = [];
     for (const e of entities) {
       results.push(await syncEntity(admin, auth, e, triggeredBy));
