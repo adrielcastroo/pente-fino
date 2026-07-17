@@ -60,6 +60,7 @@ export default function CadastrosPage() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
