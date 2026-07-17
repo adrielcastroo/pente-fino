@@ -344,13 +344,15 @@ export const itensCadastroService = {
     if (allNorms.length) {
       // Consulta em chunks para não estourar URL
       const donoDe = new Map<string, string>(); // norm -> codigo_interno dono
-      const lookupChunk = 300;
+      const lookupChunk = 200;
       for (let i = 0; i < allNorms.length; i += lookupChunk) {
         const slice = allNorms.slice(i, i + lookupChunk);
-        const { data, error } = await supabase
-          .from('itens_cadastro')
-          .select('codigo_interno, codigos_fornecedor_normalizado')
-          .overlaps('codigos_fornecedor_normalizado', slice);
+        const { data, error } = await fetchWithRetry(() =>
+          supabase
+            .from('itens_cadastro')
+            .select('codigo_interno, codigos_fornecedor_normalizado')
+            .overlaps('codigos_fornecedor_normalizado', slice),
+        );
         if (error) throw new Error(`Falha ao verificar conflitos de código de fornecedor: ${error.message}`);
         for (const r of data || []) {
           for (const n of (r as any).codigos_fornecedor_normalizado || []) {
