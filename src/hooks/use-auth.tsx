@@ -75,20 +75,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchProfile = async (userId: string, email?: string) => {
-    const { data, error } = await (supabase
-      .from('profiles' as any)
-      .select('*')
-      .eq('id', userId)
-      .single() as any);
-    
-    if (!error && data) {
-      setProfile(data);
-      const name = data.display_name || email?.split('@')[0] || 'Usuário';
-      setConferente(name);
-    } else if (email) {
-      // Even without a profile, set the conferente from email
-      setConferente(email.split('@')[0]);
+    const fallback = () => {
+      setProfile({ id: userId, email, modules: ['estoque'] });
+      if (email) setConferente(email.split('@')[0]);
+    };
+    try {
+      const query = (supabase
+        .from('profiles' as any)
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle() as any);
+      const timeout = new Promise<{ data: null; error: any }>((resolve) =>
+        setTimeout(() => resolve({ data: null, error: new Error('profile-timeout') }), 4000),
+      );
+      const { data, error }: any = await Promise.race([query, timeout]);
+      if (!error && data) {
+        setProfile(data);
+        const name = data.display_name || email?.split('@')[0] || 'Usuário';
+        setConferente(name);
+        return;
+      }
+      if (error) console.warn('[auth] fetchProfile error', error);
+    } catch (e) {
+      console.warn('[auth] fetchProfile threw', e);
     }
+    fallback();
   };
 
   const loginAsGuest = (name?: string) => {
