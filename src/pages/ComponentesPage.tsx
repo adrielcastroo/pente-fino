@@ -760,6 +760,66 @@ export default function ComponentesPage() {
     setTimeout(() => codigoRef.current?.focus(), 0);
   }, [codigo, quantidade, buscarItem]);
 
+  /**
+   * Importa em lote (planilha). Para cada linha, faz lookup do cadastro
+   * (para pegar unidade/pacoteEstocagem) — a menos que a própria linha traga
+   * um override. Agrega quantidades quando o mesmo código já existe.
+   */
+  const adicionarLote = useCallback(async (linhas: ImportedComponenteRow[]) => {
+    if (!linhas.length) return;
+    // Resolve dados de cadastro em paralelo (respeita cache)
+    const infos = await Promise.all(
+      linhas.map((l) => buscarItem(l.codigo)),
+    );
+
+    setItens((prev) => {
+      const byCod = new Map<string, Item>();
+      for (const it of prev) byCod.set(it.codigo, { ...it });
+
+      linhas.forEach((l, i) => {
+        const cod = l.codigo.trim().toUpperCase();
+        if (!cod || !(Number(l.quantidade) > 0)) return;
+        const info = infos[i];
+        const unidade = l.unidade ?? info.unidade;
+        const pacoteEstocagem = l.pacoteEstocagem ?? info.pacoteEstocagem;
+
+        const existing = byCod.get(cod);
+        if (existing) {
+          existing.quantidade += Number(l.quantidade);
+          existing.descricao = existing.descricao ?? info.descricao;
+          existing.unidade = existing.unidade ?? unidade;
+          existing.pacoteEstocagem = existing.pacoteEstocagem ?? pacoteEstocagem;
+          existing.pacoteFornecedor = existing.pacoteFornecedor ?? info.pacoteFornecedor;
+          existing.ts = Date.now();
+        } else {
+          byCod.set(cod, {
+            id: crypto.randomUUID(),
+            codigo: cod,
+            descricao: info.descricao,
+            quantidade: Number(l.quantidade),
+            unidade,
+            pacoteEstocagem,
+            pacoteFornecedor: info.pacoteFornecedor,
+            ts: Date.now() + i,
+          });
+        }
+      });
+
+      // Ordem: novos/atualizados no topo por ts desc
+      return Array.from(byCod.values()).sort((a, b) => b.ts - a.ts);
+    });
+
+    const totalLinhas = linhas.length;
+    const totalQtd = linhas.reduce((a, l) => a + Number(l.quantidade || 0), 0);
+    const totalEtiq = linhas.reduce((acc, l, i) => {
+      const pe = l.pacoteEstocagem ?? infos[i].pacoteEstocagem;
+      return acc + planEtiquetas(Number(l.quantidade || 0), pe).total;
+    }, 0);
+    toast.success(
+      `Importado: ${totalLinhas} linha(s) · ${formatQtd(totalQtd)} total · ${totalEtiq} etiqueta(s) a gerar.`,
+    );
+  }, [buscarItem]);
+
   const remover = useCallback((id: string) => {
     setItens((prev) => {
       const idx = prev.findIndex((i) => i.id === id);
