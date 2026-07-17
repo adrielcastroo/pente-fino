@@ -108,20 +108,38 @@ function prepare(input: ItemCadastroInput) {
 
 export const itensCadastroService = {
   async list(): Promise<ItemCadastro[]> {
-    // Supabase caps queries em 1000 linhas por padrão. Paginamos para trazer
-    // todos os itens cadastrados (o app tem >3k itens hoje).
+    // Payload enxuto: seleciona só as colunas usadas pela UI (CadastrosPage,
+    // busca, hooks de vínculo). Evita trafegar campos pesados/auxiliares e
+    // reduz drasticamente o custo de cada refetch paginado.
+    const cols = [
+      'id',
+      'codigo_interno',
+      'descricao',
+      'codigo_fornecedor',
+      'codigo_fornecedor_normalizado',
+      'codigos_fornecedor',
+      'codigos_fornecedor_normalizado',
+      'unidade',
+      'pacote_fornecedor',
+      'pacote_estocagem',
+      'created_at',
+      'updated_at',
+      'updated_by',
+      'updated_by_name',
+      'last_edited_field',
+      'last_edited_at',
+    ].join(',');
     const pageSize = 1000;
     const all: ItemCadastro[] = [];
     let from = 0;
-    // limite defensivo (1M) — evita loop infinito em caso de erro inesperado
-    for (let guard = 0; guard < 1000; guard++) {
+    for (let guard = 0; guard < 20; guard++) {
       const { data, error } = await supabase
         .from('itens_cadastro')
-        .select('*')
+        .select(cols)
         .order('codigo_interno', { ascending: true })
         .range(from, from + pageSize - 1);
       if (error) throw error;
-      const batch = (data || []) as ItemCadastro[];
+      const batch = (data || []) as unknown as ItemCadastro[];
       all.push(...batch);
       if (batch.length < pageSize) break;
       from += pageSize;

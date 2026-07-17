@@ -153,7 +153,9 @@ export default function CadastrosPage() {
       .channel('auge-live-cadastros')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_sync_runs' }, (payload: any) => {
         if (payload?.new?.status === 'success') {
-          qc.invalidateQueries({ queryKey: ['itens_cadastro'] });
+          // Auge sync escreve em auge_produtos — nunca em itens_cadastro.
+          // Invalidar itens_cadastro aqui gerava refetch paginado de 3k+ linhas
+          // sem necessidade e saturava o DB (chegava a derrubar o /token do auth).
           qc.invalidateQueries({ queryKey: ['auge_produtos'] });
           if (fornFilter === 'pendentes_auge') setAugePendentes((p) => [...p]);
         }
