@@ -253,17 +253,20 @@ export const itensCadastroService = {
     let toInsert = Array.from(map.values());
 
     if (skipExisting) {
-      // Busca códigos internos existentes em lotes (evita URL gigante)
+      // Busca códigos internos existentes em lotes (evita URL gigante e o
+      // proxy de fetch do preview do Lovable, que às vezes quebra lotes maiores).
       const keys = toInsert.map((i) => i.codigo_interno.trim());
       type Existing = { descricao: string; codigos: string[]; normalizados: string[] };
       const existing = new Map<string, Existing>();
-      const lookupChunk = 500;
+      const lookupChunk = 200;
       for (let i = 0; i < keys.length; i += lookupChunk) {
         const slice = keys.slice(i, i + lookupChunk);
-        const { data, error } = await supabase
-          .from('itens_cadastro')
-          .select('codigo_interno, descricao, codigos_fornecedor, codigos_fornecedor_normalizado')
-          .in('codigo_interno', slice);
+        const { data, error } = await fetchWithRetry(() =>
+          supabase
+            .from('itens_cadastro')
+            .select('codigo_interno, descricao, codigos_fornecedor, codigos_fornecedor_normalizado')
+            .in('codigo_interno', slice),
+        );
         if (error) throw new Error(`Falha ao verificar cadastros existentes: ${error.message}`);
         for (const r of data || []) {
           existing.set(r.codigo_interno, {
