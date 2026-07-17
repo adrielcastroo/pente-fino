@@ -18,6 +18,7 @@ import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePerformance } from '@/hooks/use-performance';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 import { itensCadastroService } from '@/services/itensCadastroService';
 import { printComponenteLabel } from '@/services/printService';
 import { conferenceService } from '@/services/conferenceService';
@@ -577,6 +578,7 @@ export default function ComponentesPage() {
   const isNarrow = isMobile || isTablet;
   const { isLow } = usePerformance();
   const { user, isGuest, guestName, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [codigo, setCodigo] = useState('');
   const [quantidade, setQuantidade] = useState('1');
@@ -1076,8 +1078,9 @@ export default function ComponentesPage() {
       toast.warning('Nenhum item para exportar.');
       return;
     }
+    const snapshot = itens;
     const headers = ['Código', 'Descrição', 'Quantidade', 'Unidade', 'Pacote Estocagem', 'Pacote Fornecedor', 'Etiquetas'];
-    const rows = itens.map((i) => {
+    const rows = snapshot.map((i) => {
       const plan = planEtiquetas(i.quantidade, i.pacoteEstocagem);
       return [
         i.codigo,
@@ -1090,8 +1093,70 @@ export default function ComponentesPage() {
       ];
     });
     const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
-    await exportConferenceToExcel(headers, rows, `Componentes_${stamp}`, [22, 42, 12, 10, 18, 18, 12]);
-  }, [itens]);
+
+    const toastId = toast.loading('Salvando e exportando...');
+    try {
+      const conferenteNome =
+        (!isGuest && (user?.user_metadata?.display_name || user?.email?.split('@')[0])) ||
+        (isGuest && guestName) ||
+        'Operador';
+      const startedAt = sessionStartedAtRef.current || new Date().toISOString();
+      const finishedAt = new Date().toISOString();
+      const processoNome = `Componentes ${new Date().toLocaleDateString('pt-BR')}`;
+
+      const conf = await conferenceService.insertConference(
+        processoNome,
+        conferenteNome,
+        startedAt,
+        finishedAt,
+      );
+
+      const registros = snapshot.map((it) => ({
+        id: crypto.randomUUID(),
+        item: it.codigo,
+        m2: 0,
+        mLinear: Number.isFinite(it.quantidade) ? it.quantidade : 0,
+        largura: 0,
+        endereco: '',
+        nf: '',
+        lote: '',
+        loteSistema: '',
+        posicao: null,
+        tipoTecido: it.descricao || 'Componente',
+        modoOrigem: 'componentes',
+        wasEdited: false,
+        editedBy: '',
+        editedAt: null,
+        quantidade: Number.isFinite(it.quantidade) ? Math.round(it.quantidade) : null,
+        loteMestreId: null,
+        avariaTipo: null,
+        avariaDescricao: null,
+        avariaFotoUrl: null,
+        curva_abc: 'C',
+      })) as any;
+
+      await registroService.insertRegistros((conf as any).id, registros, 'componentes');
+
+      await exportConferenceToExcel(headers, rows, `Componentes_${stamp}`, [22, 42, 12, 10, 18, 18, 12]);
+
+      setUndoStack((u) => [...u, { type: 'finalize', items: snapshot }]);
+      setItens([]);
+      sessionStartedAtRef.current = null;
+      codigoRef.current?.focus();
+
+      toast.dismiss(toastId);
+      toast.success(`Exportação concluída! ${snapshot.length} registros arquivados no histórico.`, {
+        action: {
+          label: 'Ver no histórico',
+          onClick: () => navigate('/estoque/historico'),
+        },
+      });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      console.error('[Componentes] falha ao exportar/arquivar', err);
+      toast.error(err?.message || 'Falha ao exportar e arquivar. Itens mantidos na tela.');
+    }
+  }, [itens, user, isGuest, guestName, navigate]);
 
   // Publica a função de exportar para a TopBar
   useEffect(() => {
