@@ -2,17 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ClipboardList,
-  Download,
   FileSpreadsheet,
   List,
   Loader2,
   Minus,
   Package,
   Plus,
-  RotateCcw,
   ScanBarcode,
   Trash2,
-  Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,6 +28,7 @@ import ImportComponentesDialog, {
   type ImportedComponenteRow,
 } from '@/components/componentes/ImportComponentesDialog';
 import { exportConferenceToExcel } from '@/lib/export-utils';
+import { componentesExportBus } from '@/lib/componentes-export-bus';
 
 
 /* ============================================================
@@ -196,24 +194,6 @@ function ComponentesForm({
               className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 flex items-center gap-1"
             >
               <FileSpreadsheet className="w-3 h-3" /> Importar
-            </button>
-            <button
-              type="button"
-              onClick={onExport}
-              disabled={!temItens}
-              title="Exportar itens conferidos (XLSX)"
-              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent flex items-center gap-1"
-            >
-              <Download className="w-3 h-3" /> Exportar
-            </button>
-            <button
-              type="button"
-              onClick={onUndo}
-              disabled={!canUndo}
-              title="Desfazer (Ctrl+Z)"
-              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent flex items-center gap-1"
-            >
-              <Undo2 className="w-3 h-3" /> Desfazer
             </button>
             <button
               type="button"
@@ -680,6 +660,12 @@ export default function ComponentesPage() {
     return { linhas: itens.length, totalPacotes, totalEtiquetas };
   }, [itens]);
 
+  // Publica o count na TopBar (bus)
+  useEffect(() => {
+    componentesExportBus.setCount(itens.length);
+  }, [itens.length]);
+  useEffect(() => () => componentesExportBus.clear(), []);
+
   /* --------- Lookup em itens_cadastro (debounced) --------- */
   const buscarItem = useCallback(async (raw: string): Promise<LookupResult> => {
     const cod = raw.trim().toUpperCase();
@@ -1102,6 +1088,12 @@ export default function ComponentesPage() {
     const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
     await exportConferenceToExcel(headers, rows, `Componentes_${stamp}`, [22, 42, 12, 10, 18, 18, 12]);
   }, [itens]);
+
+  // Publica a função de exportar para a TopBar
+  useEffect(() => {
+    componentesExportBus.setExport(exportar);
+    return () => componentesExportBus.setExport(null);
+  }, [exportar]);
 
   const form = (
     <ComponentesForm

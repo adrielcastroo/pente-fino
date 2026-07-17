@@ -1,4 +1,5 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useSyncExternalStore } from 'react';
+import { componentesExportBus } from '@/lib/componentes-export-bus';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
@@ -38,6 +39,12 @@ const TopBar = memo(function TopBar() {
 
    const path = location.pathname.replace(/\/$/, '');
    const isRegistroRoute = path === '/estoque/tecido' || path === '/estoque/madeira' || path === '/estoque/motor';
+   const isComponentesRoute = path === '/estoque/componentes';
+   const componentesState = useSyncExternalStore(
+     componentesExportBus.subscribe,
+     componentesExportBus.getSnapshot,
+     componentesExportBus.getSnapshot,
+   );
 
     // Ensure conferente is synced with auth profile or guest name
     useEffect(() => {
@@ -285,6 +292,37 @@ const TopBar = memo(function TopBar() {
                     : registroCount === 0
                     ? 'Sem itens bipados nesta sessão'
                     : `Exportar ${registroCount} itens para Excel e enviar ao histórico`}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {isComponentesRoute && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={() => componentesState.exportFn?.()}
+                    size="sm"
+                    disabled={!componentesState.exportFn || componentesState.count === 0}
+                    variant="outline"
+                    className="font-semibold px-3 sm:px-4 h-9 sm:h-10 xl:h-11 rounded-md border-border/60 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-95 gap-1.5 sm:gap-2 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                    <span className="hidden sm:inline">Exportar Excel</span>
+                    {componentesState.count > 0 && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-1.5 h-5 min-w-[20px] flex items-center justify-center font-bold text-[10px] rounded-md">
+                        {componentesState.count}
+                      </Badge>
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="font-semibold">
+                <p>
+                  {componentesState.count === 0
+                    ? 'Sem itens bipados nesta sessão'
+                    : `Exportar ${componentesState.count} itens para Excel`}
                 </p>
               </TooltipContent>
             </Tooltip>
