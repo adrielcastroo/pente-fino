@@ -23,12 +23,15 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/hooks/use-auth';
 import { itensCadastroService } from '@/services/itensCadastroService';
 import { printComponenteLabel } from '@/services/printService';
+import { conferenceService } from '@/services/conferenceService';
+import { registroService } from '@/services/registroService';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 import ImportComponentesDialog, {
   type ImportedComponenteRow,
 } from '@/components/componentes/ImportComponentesDialog';
 import { exportConferenceToExcel } from '@/lib/export-utils';
+
 
 /* ============================================================
    Tipos & Persistência
