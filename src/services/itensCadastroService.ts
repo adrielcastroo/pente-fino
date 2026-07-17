@@ -2,6 +2,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { normalizarCodigo, extractCodigoFornecedor, codigoBate } from '@/lib/codigoFornecedor';
 import { buildAuditPayload } from '@/lib/audit';
 
+/**
+ * Wraps a Supabase query in an automatic retry loop.
+ *
+ * The Lovable preview injects a fetch proxy that occasionally aborts POST
+ * requests with `TypeError: Failed to fetch`. This helper retries such
+ * transient network failures with exponential backoff before giving up.
+ */
+async function fetchWithRetry<T>(
+  fn: () => PromiseLike<T>,
+  attempts = 3,
+  baseDelayMs = 400,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      lastErr = e;
+      const msg = String(e?.message || e || '');
+      const isTransient = /Failed to fetch|NetworkError|network|fetch/i.test(msg);
+      if (!isTransient || i === attempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, baseDelayMs * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
+}
+
 export interface ItemCadastro {
   id: string;
   codigo_interno: string;
