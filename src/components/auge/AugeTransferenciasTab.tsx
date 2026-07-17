@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { RefreshCw, Loader2, ArrowRightLeft, Search } from 'lucide-react';
+import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
+import NovaTransferenciaDialog from './NovaTransferenciaDialog';
 
 export default function AugeTransferenciasTab() {
   const [rows, setRows] = useState<any[]>([]);
