@@ -737,6 +737,7 @@ export default function CadastrosPage() {
       </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
+      <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
