@@ -773,6 +773,14 @@ export const LeftPanel = memo(function LeftPanel() {
 
   const handleAdd = async () => {
     const warn = (msg: string) => { bipError(); toast.warning(msg); };
+    console.log('[handleAdd] click', {
+      currentMode, diversosTipo, isCortina, isDiversos,
+      item, nf, processo, endereco, m2, cortinaLargura, diversosMLinear,
+      largura, mLinear, m2Num,
+      cortinaMetragem, cortinaUsesMLinear, cortinaUsesM2,
+      requiresEndereco, requiresNF, requiresProcesso,
+      effectiveConferente,
+    });
     // Basic validations that apply to all modes
     if (!effectiveConferente.trim()) { warn('Preencha o campo CONFERENTE no topo.'); return; }
     if (!item) { warn('Preencha o campo Item.'); return; }
