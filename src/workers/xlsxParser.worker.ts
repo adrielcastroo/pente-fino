@@ -15,7 +15,28 @@ const HEADER_ALIASES: Record<string, string[]> = {
     'codigo_fornecedor', 'codigo fornecedor', 'cod fornecedor', 'codigo do fornecedor',
     'codigos_fornecedor', 'codigos fornecedor', 'referencia', 'referência', 'ref',
   ],
+  unidade: [
+    'unidade', 'un', 'um', 'unid', 'unidade_medida', 'unidade de medida',
+    'medida', 'u.m.',
+  ],
+  pacote_fornecedor: [
+    'pacote_fornecedor', 'pacote fornecedor', 'qtd_fornecedor', 'qtd fornecedor',
+    'emb_fornecedor', 'embalagem fornecedor', 'embalagem_fornecedor',
+    'qtd por pacote fornecedor', 'pacote padrao', 'pacote padrão',
+  ],
+  pacote_estocagem: [
+    'pacote_estocagem', 'pacote estocagem', 'qtd_estocagem', 'qtd estocagem',
+    'emb_estoque', 'embalagem estoque', 'embalagem_estoque',
+    'qtd por pacote estoque', 'pacote interno', 'estoque',
+  ],
 };
+
+function parseNumeric(raw: unknown): number | null {
+  if (raw == null || raw === '') return null;
+  const s = String(raw).trim().replace(/\./g, '').replace(',', '.');
+  const n = Number(s);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 const norm = (s: string) =>
   (s || '')
@@ -69,6 +90,9 @@ self.onmessage = async (ev: MessageEvent<{ buffer: ArrayBuffer }>) => {
     const kInterno = findKey(headers, HEADER_ALIASES.codigo_interno);
     const kDesc = findKey(headers, HEADER_ALIASES.descricao);
     const kForn = findKey(headers, HEADER_ALIASES.codigo_fornecedor);
+    const kUnidade = findKey(headers, HEADER_ALIASES.unidade);
+    const kPacoteForn = findKey(headers, HEADER_ALIASES.pacote_fornecedor);
+    const kPacoteEst = findKey(headers, HEADER_ALIASES.pacote_estocagem);
 
     if (!kInterno) {
       (self as any).postMessage({ ok: false, error: 'Planilha precisa ter ao menos a coluna: codigo_interno' });
@@ -83,15 +107,26 @@ self.onmessage = async (ev: MessageEvent<{ buffer: ArrayBuffer }>) => {
       const descricao = kDesc ? String(r[kDesc] ?? '').trim() : '';
       const fornRaw = kForn ? String(r[kForn] ?? '').trim() : '';
       const codigos = splitCodes(fornRaw);
+      const unidade = kUnidade
+        ? String(r[kUnidade] ?? '').trim().toUpperCase() || null
+        : null;
+      const pacote_fornecedor = kPacoteForn ? parseNumeric(r[kPacoteForn]) : null;
+      const pacote_estocagem = kPacoteEst ? parseNumeric(r[kPacoteEst]) : null;
       const existing = byInterno.get(codigo_interno);
       if (existing) {
         existing.codigos_fornecedor = dedupeCodes([...existing.codigos_fornecedor, ...codigos]);
         if (!existing.descricao && descricao) existing.descricao = descricao;
+        if (!existing.unidade && unidade) existing.unidade = unidade;
+        if (existing.pacote_fornecedor == null && pacote_fornecedor != null) existing.pacote_fornecedor = pacote_fornecedor;
+        if (existing.pacote_estocagem == null && pacote_estocagem != null) existing.pacote_estocagem = pacote_estocagem;
       } else {
         byInterno.set(codigo_interno, {
           codigo_interno,
           descricao,
           codigos_fornecedor: dedupeCodes(codigos),
+          unidade,
+          pacote_fornecedor,
+          pacote_estocagem,
           detectado: false,
         });
       }

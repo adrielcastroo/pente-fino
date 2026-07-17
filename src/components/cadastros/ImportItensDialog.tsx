@@ -18,6 +18,9 @@ interface Row {
   codigo_interno: string;
   descricao: string;
   codigos_fornecedor: string[];
+  unidade?: string | null;
+  pacote_fornecedor?: number | null;
+  pacote_estocagem?: number | null;
   detectado: boolean;
 }
 
@@ -231,6 +234,9 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
           codigo_interno: r.codigo_interno,
           descricao: r.descricao,
           codigos_fornecedor: r.codigos_fornecedor,
+          unidade: r.unidade ?? null,
+          pacote_fornecedor: r.pacote_fornecedor ?? null,
+          pacote_estocagem: r.pacote_estocagem ?? null,
         })),
         signal: controller.signal,
         onProgress: (done, total) => setProgress({ done, total }),
@@ -343,7 +349,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Importar planilha de itens</DialogTitle>
           <DialogDescription>
-            Aceita .xlsx ou .csv. Colunas esperadas: <code>codigo_interno</code>, <code>descricao</code> e opcionalmente <code>codigo_fornecedor</code>.
+            Aceita .xlsx ou .csv. Colunas: <code>codigo_interno</code>, <code>descricao</code>, <code>codigo_fornecedor</code>, <code>unidade</code>, <code>pacote_fornecedor</code>, <code>pacote_estocagem</code> (só <code>codigo_interno</code> é obrigatório).
             Para vários códigos no mesmo item, separe por <code>;</code> ou <code>|</code> (ex.: <code>YM4202;RF-MOMBASSA</code>).
             Linhas duplicadas pelo mesmo código interno são mescladas automaticamente.
           </DialogDescription>
