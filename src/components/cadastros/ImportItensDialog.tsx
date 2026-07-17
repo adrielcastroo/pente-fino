@@ -235,14 +235,21 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         signal: controller.signal,
         onProgress: (done, total) => setProgress({ done, total }),
       });
-      const { inserted = 0, skipped = 0, duplicatesInFile = 0, fornecedorUpdated = 0, descChanges = [] } = res || {};
+      const { inserted = 0, skipped = 0, duplicatesInFile = 0, fornecedorUpdated = 0, descChanges = [], fornecedorConflicts = [] } = res || {};
       const parts = [
         `${inserted} novo(s) importado(s)`,
         skipped > 0 ? `${skipped} já cadastrado(s) ignorado(s)` : null,
         fornecedorUpdated > 0 ? `${fornecedorUpdated} com novo(s) código(s) de fornecedor adicionado(s)` : null,
         duplicatesInFile > 0 ? `${duplicatesInFile} duplicata(s) na planilha mescladas` : null,
+        fornecedorConflicts.length > 0 ? `${fornecedorConflicts.length} conflito(s) de código de fornecedor ignorado(s)` : null,
       ].filter(Boolean).join(' · ');
       toast.success(parts || 'Nada a importar');
+      if (fornecedorConflicts.length > 0) {
+        const preview = fornecedorConflicts.slice(0, 5)
+          .map((c: any) => `${c.codigo_fornecedor} → já em ${c.conflita_com} (tentado em ${c.codigo_interno})`)
+          .join('\n');
+        toast.warning(`Códigos de fornecedor duplicados (ignorados):\n${preview}${fornecedorConflicts.length > 5 ? `\n… +${fornecedorConflicts.length - 5}` : ''}`, { duration: 10000 });
+      }
       setProgress(null);
 
       await logImport({
@@ -251,7 +258,7 @@ export default function ImportItensDialog({ open, onOpenChange }: Props) {
         atualizados: fornecedorUpdated,
         ignorados: skipped,
         resultado: 'sucesso',
-        detalhes: { duplicatesInFile, descChangesCount: descChanges.length },
+        detalhes: { duplicatesInFile, descChangesCount: descChanges.length, fornecedorConflicts: fornecedorConflicts.length },
       });
 
       if (descChanges.length > 0) {
