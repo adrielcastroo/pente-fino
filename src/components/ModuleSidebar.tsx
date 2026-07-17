@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, ArrowLeftRight, type LucideIcon } from 'lucide-react';
 import {
@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { atLeast, type Role } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
+import { prefetchRoute, prefetchOnIdle } from '@/lib/route-prefetch';
 import logoComb from '@/assets/logo-comb.png';
 
 export type ModuleSidebarItem = {
@@ -74,6 +75,16 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
 
   const settingsActive = isItemActive(config.settingsPath);
 
+  // Prefetch em idle das rotas visíveis — navegação passa a ser instantânea
+  // após o primeiro segundo de idle da aplicação.
+  useEffect(() => {
+    const paths = visibleGroups.flatMap(g => g.items.map(i => i.path));
+    prefetchOnIdle(paths);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.moduleLabel]);
+
+
+
   return (
     <Sidebar
       collapsible="icon"
@@ -128,6 +139,9 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                       <SidebarMenuButton
                         size="lg"
                         onClick={() => handleNavigate(item.path)}
+                        onMouseEnter={() => prefetchRoute(item.path)}
+                        onFocus={() => prefetchRoute(item.path)}
+                        onTouchStart={() => prefetchRoute(item.path)}
                         tooltip={item.label}
                         isActive={isActive}
                         aria-current={isActive ? 'page' : undefined}
