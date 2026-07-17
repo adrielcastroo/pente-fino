@@ -987,6 +987,7 @@ export default function ComponentesPage() {
       onFinalizar={finalizar}
       onLimpar={limpar}
       onUndo={undo}
+      onImport={() => setImportOpen(true)}
       temItens={itens.length > 0}
       canUndo={undoStack.length > 0}
       lookupLoading={lookupLoading}
