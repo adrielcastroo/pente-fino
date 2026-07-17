@@ -107,6 +107,7 @@ export default function AugeTransferenciasTab() {
                 <TableHead className="text-right">Qtd</TableHead>
                 <TableHead>Situação</TableHead>
                 <TableHead>Data</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
