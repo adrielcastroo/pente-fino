@@ -79,7 +79,11 @@ export default function AugeTransferenciasTab() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar produto, depósito, documento..." className="pl-10 h-11" />
         </div>
-        <Button onClick={sync} disabled={syncing} className="h-11 px-5 gap-2">
+        <Button onClick={() => setNovaOpen(true)} variant="default" className="h-11 px-5 gap-2">
+          <Plus className="w-4 h-4" />
+          Nova
+        </Button>
+        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-5 gap-2">
           {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Sincronizar
         </Button>
