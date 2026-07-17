@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+/* Fontes carregadas via <link> assíncrono no index.html — evita bloqueio de render */
+
 
 /* OCR-B self-hosted — usada como fonte padrão das etiquetas (preview e PNG impresso). */
 @font-face {
