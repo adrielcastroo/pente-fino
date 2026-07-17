@@ -5,11 +5,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   RefreshCw, Loader2, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  Database, Activity, AlertTriangle, PlayCircle,
+  Database, Activity, AlertTriangle, PlayCircle, Power,
 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+
 
 interface Run {
   id: string;
@@ -39,6 +42,35 @@ export default function AugeAdminPanel() {
   const [pinging, setPinging] = useState(false);
   const [syncingEntity, setSyncingEntity] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [syncEnabled, setSyncEnabled] = useState<boolean>(true);
+  const [togglingFlag, setTogglingFlag] = useState(false);
+
+  const loadFlag = useCallback(async () => {
+    const { data } = await (supabase as any)
+      .from('feature_flags')
+      .select('enabled')
+      .eq('key', 'auge_sync_enabled')
+      .maybeSingle();
+    if (data) setSyncEnabled(!!data.enabled);
+  }, []);
+
+  const toggleFlag = async (next: boolean) => {
+    setTogglingFlag(true);
+    const prev = syncEnabled;
+    setSyncEnabled(next);
+    const { error } = await (supabase as any)
+      .from('feature_flags')
+      .update({ enabled: next })
+      .eq('key', 'auge_sync_enabled');
+    setTogglingFlag(false);
+    if (error) {
+      setSyncEnabled(prev);
+      toast.error('Falha ao alterar: ' + error.message);
+    } else {
+      toast.success(next ? 'Sincronização com Auge ligada' : 'Sincronização com Auge desligada');
+    }
+  };
+
 
   const loadRuns = useCallback(async () => {
     setLoading(true);
@@ -104,10 +136,11 @@ export default function AugeAdminPanel() {
   };
 
   useEffect(() => {
-    loadRuns(); loadCounts(); doPing();
+    loadRuns(); loadCounts(); doPing(); loadFlag();
     const iv = setInterval(loadRuns, 15000);
     return () => clearInterval(iv);
-  }, [loadRuns, loadCounts, doPing]);
+  }, [loadRuns, loadCounts, doPing, loadFlag]);
+
 
   // Stats do painel
   const last24h = runs.filter(r => new Date(r.started_at).getTime() > Date.now() - 24 * 3600 * 1000);
@@ -117,8 +150,39 @@ export default function AugeAdminPanel() {
 
   return (
     <div className="space-y-5">
+      {/* Chave mestre da sincronização */}
+      <Card className={`p-5 rounded-md border-border/40 ${!syncEnabled ? 'border-amber-500/40 bg-amber-500/5' : ''}`}>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${syncEnabled ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+              <Power className={`w-5 h-5 ${syncEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
+            </div>
+            <div>
+              <Label htmlFor="auge-sync-toggle" className="font-semibold text-sm cursor-pointer">
+                Sincronização com o Auge {syncEnabled ? 'ativa' : 'desligada'}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {syncEnabled
+                  ? 'Sync manual e agendado (cron) estão liberados.'
+                  : 'Todos os sync — manual e cron — estão bloqueados até religar.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {togglingFlag && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+            <Switch
+              id="auge-sync-toggle"
+              checked={syncEnabled}
+              onCheckedChange={toggleFlag}
+              disabled={togglingFlag}
+            />
+          </div>
+        </div>
+      </Card>
+
       {/* Status da conexão */}
       <Card className="p-5 rounded-md border-border/40">
+
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             {pinging ? (
@@ -154,7 +218,7 @@ export default function AugeAdminPanel() {
             <Button size="sm" variant="outline" asChild className="gap-1.5 h-9">
               <a href="/admin/depositos"><Activity className="w-3.5 h-3.5" />Gerir depósitos</a>
             </Button>
-            <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null} className="gap-1.5 h-9">
+            <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : undefined} className="gap-1.5 h-9">
               {syncingEntity === 'all' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
               Sincronizar tudo
             </Button>
@@ -193,7 +257,7 @@ export default function AugeAdminPanel() {
                     </p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => syncOne(ent.key)}
-                    disabled={syncingEntity !== null} className="h-7 px-2 gap-1">
+                    disabled={syncingEntity !== null || !syncEnabled} className="h-7 px-2 gap-1">
                     {syncingEntity === ent.key ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                   </Button>
                 </div>
