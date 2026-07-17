@@ -118,10 +118,10 @@ export const itensCadastroService = {
     // reconhecer variações como "RC-4025-BK", "RC-4025BK", "RC4025BK" ⇔ "RC4025-BK".
     const norm = normalizarCodigo(trimmed);
     if (!norm) return null;
-    const { data: fuzzy, error: err2 } = await supabase
+    const { data: fuzzy, error: err2 } = await (supabase
       .from('itens_cadastro')
-      .select('*')
-      .eq('codigo_interno_normalizado' as any, norm)
+      .select('*') as any)
+      .eq('codigo_interno_normalizado', norm)
       .limit(1)
       .maybeSingle();
     if (err2 && (err2 as any).code !== 'PGRST116') throw err2;
