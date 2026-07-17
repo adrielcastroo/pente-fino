@@ -120,8 +120,12 @@ export default function ImportComponentesDialog({ open, onOpenChange, onConfirm 
         const codigo = String(r[kCod] ?? '').trim().toUpperCase();
         const qtd = parseNumeric(r[kQtd]);
         if (!codigo || qtd == null) { skipped++; continue; }
-        const unidade = kUn ? (String(r[kUn] ?? '').trim().toUpperCase() || null) : null;
-        const pacoteEstocagem = kPacEst ? parseNumeric(r[kPacEst]) : null;
+        let unidade = kUn ? (String(r[kUn] ?? '').trim().toUpperCase() || null) : null;
+        if (unidade === 'UN') unidade = 'PÇ';
+        const peParsed = kPacEst ? parseNumeric(r[kPacEst]) : null;
+        // Se estocagem vier 0 ou vazia, deixa null — o merge com o cadastro
+        // fará o fallback para o pacote do fornecedor.
+        const pacoteEstocagem = peParsed && peParsed > 0 ? peParsed : null;
         parsed.push({ codigo, quantidade: qtd, unidade, pacoteEstocagem });
       }
       setRows(parsed);
