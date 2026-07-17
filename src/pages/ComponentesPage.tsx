@@ -663,6 +663,12 @@ export default function ComponentesPage() {
     return { linhas: itens.length, totalPacotes, totalEtiquetas };
   }, [itens]);
 
+  // Publica o count na TopBar (bus)
+  useEffect(() => {
+    componentesExportBus.setCount(itens.length);
+  }, [itens.length]);
+  useEffect(() => () => componentesExportBus.clear(), []);
+
   /* --------- Lookup em itens_cadastro (debounced) --------- */
   const buscarItem = useCallback(async (raw: string): Promise<LookupResult> => {
     const cod = raw.trim().toUpperCase();
