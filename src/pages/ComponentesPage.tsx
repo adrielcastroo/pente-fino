@@ -769,7 +769,12 @@ export default function ComponentesPage() {
     }
     setSaving(false);
 
+    if (!sessionStartedAtRef.current) {
+      sessionStartedAtRef.current = new Date().toISOString();
+    }
+
     setItens((prev) => {
+
       const existente = prev.find((i) => i.codigo === cod);
       if (existente) {
         return prev.map((i) =>
