@@ -42,6 +42,35 @@ export default function AugeAdminPanel() {
   const [pinging, setPinging] = useState(false);
   const [syncingEntity, setSyncingEntity] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [syncEnabled, setSyncEnabled] = useState<boolean>(true);
+  const [togglingFlag, setTogglingFlag] = useState(false);
+
+  const loadFlag = useCallback(async () => {
+    const { data } = await (supabase as any)
+      .from('feature_flags')
+      .select('enabled')
+      .eq('key', 'auge_sync_enabled')
+      .maybeSingle();
+    if (data) setSyncEnabled(!!data.enabled);
+  }, []);
+
+  const toggleFlag = async (next: boolean) => {
+    setTogglingFlag(true);
+    const prev = syncEnabled;
+    setSyncEnabled(next);
+    const { error } = await (supabase as any)
+      .from('feature_flags')
+      .update({ enabled: next })
+      .eq('key', 'auge_sync_enabled');
+    setTogglingFlag(false);
+    if (error) {
+      setSyncEnabled(prev);
+      toast.error('Falha ao alterar: ' + error.message);
+    } else {
+      toast.success(next ? 'Sincronização com Auge ligada' : 'Sincronização com Auge desligada');
+    }
+  };
+
 
   const loadRuns = useCallback(async () => {
     setLoading(true);
