@@ -127,6 +127,7 @@ interface FormProps {
   onLimpar: () => void;
   onUndo: () => void;
   onImport: () => void;
+  onExport: () => void;
   temItens: boolean;
   canUndo: boolean;
   lookupLoading: boolean;
@@ -149,6 +150,7 @@ function ComponentesForm({
   onLimpar,
   onUndo,
   onImport,
+  onExport,
   temItens,
   canUndo,
   lookupLoading,
@@ -191,6 +193,15 @@ function ComponentesForm({
               className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 flex items-center gap-1"
             >
               <FileSpreadsheet className="w-3 h-3" /> Importar
+            </button>
+            <button
+              type="button"
+              onClick={onExport}
+              disabled={!temItens}
+              title="Exportar itens conferidos (XLSX)"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent flex items-center gap-1"
+            >
+              <Download className="w-3 h-3" /> Exportar
             </button>
             <button
               type="button"
