@@ -10,15 +10,23 @@ import { atLeast } from '@/lib/permissions';
  */
 export default function RoleHomeRedirect() {
   const { role, loading, isGuest, modules, user, profile } = useAuth();
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 5000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Wait for profile to load so `modules` is accurate (avoids default 'estoque' redirect)
-  if (loading || (user && !profile)) {
+  if ((loading || (user && !profile)) && !timedOut) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
+
+  if (!user && !isGuest) return <Navigate to="/login" replace />;
 
   // Guests have no role — default to operational home.
   if (isGuest) return <Navigate to="/estoque/operacao" replace />;
