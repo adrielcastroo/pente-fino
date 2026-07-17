@@ -184,6 +184,14 @@ function ComponentesForm({
           <div className="flex items-center gap-1">
             <button
               type="button"
+              onClick={onImport}
+              title="Importar planilha (XLSX/CSV)"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 flex items-center gap-1"
+            >
+              <FileSpreadsheet className="w-3 h-3" /> Importar
+            </button>
+            <button
+              type="button"
               onClick={onUndo}
               disabled={!canUndo}
               title="Desfazer (Ctrl+Z)"
