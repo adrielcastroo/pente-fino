@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight, GitCompare } from 'lucide-react';
+import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight, GitCompare, Sparkles } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import AugeItemLookup from '@/components/auge/AugeItemLookup';
-import AugeProdutosTab from '@/components/auge/AugeProdutosTab';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
@@ -21,10 +20,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { fieldLabel } from '@/lib/audit';
 import { cn } from '@/lib/utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { supabase } from '@/integrations/supabase/client';
+import { normalizarCodigo } from '@/lib/codigoFornecedor';
 
-type FornFilter = 'todos' | 'com' | 'sem';
+type FornFilter = 'todos' | 'com' | 'sem' | 'pendentes_auge';
 type SortKey = 'codigo_interno' | 'descricao' | 'updated_at';
 const PAGE_SIZE = 50;
+
+interface AugePendente {
+  codigo: string;
+  descricao: string | null;
+  qt_disponivel: number | null;
+  ativo: boolean | null;
+}
 
 export default function CadastrosPage() {
   useDocumentTitle('Cadastros');
@@ -43,11 +51,47 @@ export default function CadastrosPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [augePendentes, setAugePendentes] = useState<AugePendente[]>([]);
+  const [pendentesLoading, setPendentesLoading] = useState(false);
 
   const getCodigos = (i: ItemCadastro): string[] => {
     if (i.codigos_fornecedor && i.codigos_fornecedor.length) return i.codigos_fornecedor;
     return i.codigo_fornecedor ? [i.codigo_fornecedor] : [];
   };
+
+  // Fetch Auge products missing from itens_cadastro (only when filter engaged and after itens loaded)
+  useEffect(() => {
+    if (fornFilter !== 'pendentes_auge' || isLoading) return;
+    let alive = true;
+    (async () => {
+      setPendentesLoading(true);
+      try {
+        const cadastrados = new Set(itens.map((i) => normalizarCodigo(i.codigo_interno)));
+        const all: any[] = [];
+        for (let from = 0; from < 40000; from += 1000) {
+          const { data, error } = await (supabase as any)
+            .from('auge_produtos')
+            .select('codigo, descricao, qt_disponivel, ativo')
+            .eq('ativo', true)
+            .range(from, from + 999);
+          if (error) throw error;
+          all.push(...(data || []));
+          if ((data || []).length < 1000) break;
+        }
+        const pend = all
+          .filter((a) => !cadastrados.has(normalizarCodigo(a.codigo)))
+          .map((a) => ({ codigo: String(a.codigo), descricao: a.descricao, qt_disponivel: a.qt_disponivel, ativo: a.ativo }))
+          .sort((a, b) => a.codigo.localeCompare(b.codigo));
+        if (alive) setAugePendentes(pend);
+      } catch (e: any) {
+        toast.error('Erro ao buscar pendentes Auge: ' + (e?.message || ''));
+      } finally {
+        if (alive) setPendentesLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [fornFilter, isLoading, itens]);
+
 
   const semFornecedorCount = useMemo(
     () => itens.filter((i) => getCodigos(i).length === 0).length,
@@ -200,13 +244,11 @@ export default function CadastrosPage() {
           <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
             <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
           </TabsTrigger>
-          <TabsTrigger value="auge" className="gap-2 flex-1 sm:flex-none">
-            <History className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Auge (ERP)</span>
-          </TabsTrigger>
           <TabsTrigger value="reconciliacao" className="gap-2 flex-1 sm:flex-none">
             <GitCompare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Reconciliação</span>
           </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
@@ -230,6 +272,7 @@ export default function CadastrosPage() {
             <SelectItem value="todos">Todos os itens</SelectItem>
             <SelectItem value="com">Com cód. fornecedor</SelectItem>
             <SelectItem value="sem">Sem cód. fornecedor</SelectItem>
+            <SelectItem value="pendentes_auge">Pendentes do Auge (não cadastrados)</SelectItem>
           </SelectContent>
         </Select>
         <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
@@ -281,7 +324,61 @@ export default function CadastrosPage() {
       )}
 
       <TooltipProvider>
+      {fornFilter === 'pendentes_auge' ? (
+        <div className="flex-1 overflow-auto border rounded-lg bg-card">
+          {pendentesLoading ? (
+            <p className="text-center text-muted-foreground py-12 text-sm">Buscando itens do Auge...</p>
+          ) : augePendentes.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12 text-sm">Nenhum item do Auge pendente — tudo cadastrado. 🎉</p>
+          ) : (
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
+                <TableRow>
+                  <TableHead className="w-[180px]">Código Auge</TableHead>
+                  <TableHead>Descrição (Auge)</TableHead>
+                  <TableHead className="w-[100px] text-right">Qt disp.</TableHead>
+                  <TableHead className="w-[140px] text-right">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {augePendentes.slice(0, 500).map((p) => {
+                  const q = search.trim().toLowerCase();
+                  if (q && !p.codigo.toLowerCase().includes(q) && !(p.descricao || '').toLowerCase().includes(q)) return null;
+                  return (
+                    <TableRow key={p.codigo}>
+                      <TableCell className="font-mono text-xs font-bold text-primary">{p.codigo}</TableCell>
+                      <TableCell className="text-xs">{p.descricao || <span className="text-muted-foreground/40">—</span>}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{p.qt_disponivel != null ? Number(p.qt_disponivel).toLocaleString('pt-BR') : '—'}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 h-8"
+                          onClick={() => {
+                            setEditing({
+                              codigo_interno: p.codigo,
+                              descricao: p.descricao || '',
+                              codigos_fornecedor: [],
+                            } as any);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Cadastrar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+          {augePendentes.length > 500 && (
+            <p className="text-center py-3 text-xs text-muted-foreground">Exibindo 500 de {augePendentes.length}. Refine com a busca.</p>
+          )}
+        </div>
+      ) : (<>
       {/* Mobile: cards empilhados */}
+
       <div className="md:hidden flex-1 overflow-auto space-y-2">
         {isLoading && <p className="text-center text-muted-foreground py-8 text-sm">Carregando...</p>}
         {!isLoading && filtered.length === 0 && (
@@ -474,10 +571,11 @@ export default function CadastrosPage() {
           </TableBody>
         </Table>
       </div>
+      </>)}
       </TooltipProvider>
 
       {/* Pagination */}
-      {filtered.length > 0 && (
+      {fornFilter !== 'pendentes_auge' && filtered.length > 0 && (
         <nav aria-label="Paginação" className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-border/40 pt-3 min-w-0">
           <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
             Mostrando {start + 1}–{end} de {filtered.length}
@@ -527,9 +625,6 @@ export default function CadastrosPage() {
       )}
         </TabsContent>
 
-        <TabsContent value="auge" className="flex-1 overflow-hidden mt-0">
-          <AugeProdutosTab />
-        </TabsContent>
 
         <TabsContent value="reconciliacao" className="flex-1 overflow-hidden mt-0">
           <AugeReconciliacaoTab />
