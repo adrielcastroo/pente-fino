@@ -581,14 +581,28 @@ export default function ComponentesPage() {
   );
   const hydrated = useRef(false);
 
-  // Hidrata do localStorage
+  // Hidrata do localStorage — aceita formato antigo (v1) sem os campos novos.
   useEffect(() => {
     if (authLoading) return;
     try {
-      const raw = localStorage.getItem(storageKey);
+      const raw =
+        localStorage.getItem(storageKey) ??
+        localStorage.getItem(storageKey.replace(':v2:', ':v1:'));
       if (raw) {
-        const parsed = JSON.parse(raw) as { itens?: Item[] };
-        if (Array.isArray(parsed.itens)) setItens(parsed.itens);
+        const parsed = JSON.parse(raw) as { itens?: Array<Partial<Item> & Pick<Item, 'id' | 'codigo' | 'quantidade' | 'ts'>> };
+        if (Array.isArray(parsed.itens)) {
+          const hydrated: Item[] = parsed.itens.map((i) => ({
+            id: i.id,
+            codigo: i.codigo,
+            descricao: i.descricao ?? null,
+            quantidade: Number(i.quantidade) || 0,
+            unidade: i.unidade ?? null,
+            pacoteEstocagem: i.pacoteEstocagem ?? null,
+            pacoteFornecedor: i.pacoteFornecedor ?? null,
+            ts: i.ts ?? Date.now(),
+          }));
+          setItens(hydrated);
+        }
       } else {
         setItens([]);
       }
