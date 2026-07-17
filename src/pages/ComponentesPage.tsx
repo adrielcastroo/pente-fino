@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ClipboardList,
   List,
+  Loader2,
   Minus,
   Package,
   Plus,
   RotateCcw,
   ScanBarcode,
   Trash2,
+  Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,19 +18,43 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePerformance } from '@/hooks/use-performance';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useAuth } from '@/hooks/use-auth';
+import { itensCadastroService } from '@/services/itensCadastroService';
 import { cn } from '@/lib/utils';
+
+/* ============================================================
+   Tipos & Persistência
+   ============================================================ */
 
 type Item = {
   id: string;
   codigo: string;
+  descricao: string | null;
   quantidade: number;
   ts: number;
 };
 
+type UndoAction =
+  | { type: 'delete'; item: Item; idx: number }
+  | { type: 'clear'; items: Item[] }
+  | { type: 'finalize'; items: Item[] };
+
+const STORAGE_PREFIX = 'conf-componentes:v1';
+const scopeKey = (uid: string | null, guestName: string, isGuest: boolean) => {
+  if (uid) return `${STORAGE_PREFIX}:${uid}`;
+  if (isGuest) return `${STORAGE_PREFIX}:guest:${guestName || 'default'}`;
+  return `${STORAGE_PREFIX}:anon`;
+};
+
 /* ============================================================
-   FORM (LeftPanel equivalente) — mesmo design system das
-   páginas Tecido/Madeira/Motor
+   FORM (LeftPanel equivalente)
    ============================================================ */
+
+const INPUT_BASE =
+  'w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono shadow-sm ' +
+  'transition-all duration-200 hover:border-primary/40 focus:border-primary focus:bg-card ' +
+  'focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none ' +
+  'placeholder:text-muted-foreground/40';
 
 interface FormProps {
   codigo: string;
@@ -42,14 +68,13 @@ interface FormProps {
   totalPacotes: number;
   onFinalizar: () => void;
   onLimpar: () => void;
+  onUndo: () => void;
   temItens: boolean;
+  canUndo: boolean;
+  lookupLoading: boolean;
+  lookupHit: string | null;
+  saving: boolean;
 }
-
-const INPUT_BASE =
-  'w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono shadow-sm ' +
-  'transition-all duration-200 hover:border-primary/40 focus:border-primary focus:bg-card ' +
-  'focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none ' +
-  'placeholder:text-muted-foreground/40';
 
 function ComponentesForm({
   codigo,
@@ -63,7 +88,12 @@ function ComponentesForm({
   totalPacotes,
   onFinalizar,
   onLimpar,
+  onUndo,
   temItens,
+  canUndo,
+  lookupLoading,
+  lookupHit,
+  saving,
 }: FormProps) {
   const handleCodigoKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
@@ -81,7 +111,6 @@ function ComponentesForm({
   return (
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-md border border-border/50 lg:border-none lg:rounded-none">
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5 space-y-4">
-        {/* Header + reset */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
@@ -94,17 +123,27 @@ function ComponentesForm({
               <h1 className="text-sm font-bold tracking-tight truncate">Componentes</h1>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onLimpar}
-            disabled={!temItens}
-            className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2.5 py-1 rounded-md hover:bg-destructive/10 border border-transparent hover:border-destructive/20 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:border-transparent"
-          >
-            Limpar
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onUndo}
+              disabled={!canUndo}
+              title="Desfazer (Ctrl+Z)"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 border border-transparent hover:border-primary/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent flex items-center gap-1"
+            >
+              <Undo2 className="w-3 h-3" /> Desfazer
+            </button>
+            <button
+              type="button"
+              onClick={onLimpar}
+              disabled={!temItens}
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2 py-1 rounded-md hover:bg-destructive/10 border border-transparent hover:border-destructive/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent"
+            >
+              Limpar
+            </button>
+          </div>
         </div>
 
-        {/* Sub-cabeçalho "Bipar componente" (padrão dos abas de sub-modo) */}
         <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
@@ -119,7 +158,6 @@ function ComponentesForm({
           </div>
         </div>
 
-        {/* Campo: Código */}
         <div className="space-y-1.5">
           <label
             htmlFor="codigo"
@@ -137,9 +175,25 @@ function ComponentesForm({
             autoComplete="off"
             className={cn(INPUT_BASE, 'uppercase')}
           />
+          {/* Feedback do vínculo com itens_cadastro */}
+          <div className="min-h-[22px]">
+            {lookupLoading ? (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" /> Buscando descrição…
+              </div>
+            ) : lookupHit ? (
+              <div className="flex items-start gap-1.5 text-[11px] text-primary/80 font-medium">
+                <Check className="w-3 h-3 mt-0.5 shrink-0" />
+                <span className="truncate" title={lookupHit}>{lookupHit}</span>
+              </div>
+            ) : codigo.trim().length >= 2 ? (
+              <div className="text-[11px] text-muted-foreground/60">
+                Item não cadastrado — será registrado sem descrição.
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        {/* Campo: Quantidade */}
         <div className="space-y-1.5">
           <label
             htmlFor="quantidade"
@@ -160,12 +214,15 @@ function ComponentesForm({
           />
         </div>
 
-        {/* Botão principal Adicionar */}
-        <Button onClick={adicionar} className="w-full h-11 rounded-lg font-semibold gap-2">
-          <Plus className="w-4 h-4" /> Adicionar
+        <Button
+          onClick={adicionar}
+          disabled={saving}
+          className="w-full h-11 rounded-lg font-semibold gap-2"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          Adicionar
         </Button>
 
-        {/* Totais */}
         <div className="grid grid-cols-2 gap-2 p-1 bg-muted/20 rounded-md border border-border/40">
           <div className="rounded-md bg-background/40 px-3 py-2.5">
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -184,7 +241,6 @@ function ComponentesForm({
         </div>
       </div>
 
-      {/* Rodapé fixo com Finalizar */}
       <div className="flex-shrink-0 p-3 sm:p-4 border-t border-border/40 bg-card/40">
         <Button
           onClick={onFinalizar}
@@ -199,7 +255,7 @@ function ComponentesForm({
 }
 
 /* ============================================================
-   TABELA (RightPanel equivalente) — mesmo estilo do RightPanel
+   TABELA (RightPanel equivalente)
    ============================================================ */
 
 interface TabelaProps {
@@ -213,7 +269,6 @@ interface TabelaProps {
 function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }: TabelaProps) {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-md border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
-      {/* Header da tabela */}
       <div className="px-3 xs:px-4 sm:px-6 py-3 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-shrink-0 min-w-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
@@ -236,7 +291,6 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
         </div>
       </div>
 
-      {/* Corpo */}
       <div className="flex-1 overflow-y-auto overflow-x-auto bg-background/20 custom-scrollbar relative min-h-0">
         {itens.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-8">
@@ -244,12 +298,13 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
               <Package className="w-7 h-7 text-muted-foreground/40" />
             </div>
             <p className="text-sm font-semibold text-muted-foreground">Nenhum item bipado.</p>
-            <p className="text-xs text-muted-foreground/60 max-w-[240px]">
-              Bipe o código do componente e informe a quantidade por pacote no formulário ao lado.
+            <p className="text-xs text-muted-foreground/60 max-w-[260px]">
+              Bipe o código e informe a quantidade por pacote. Itens ficam salvos automaticamente
+              neste dispositivo.
             </p>
           </div>
         ) : (
-          <table className="w-full border-separate border-spacing-0 table-auto min-w-[520px]">
+          <table className="w-full border-separate border-spacing-0 table-auto min-w-[640px]">
             <thead>
               <tr className="bg-muted/30">
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold text-muted-foreground border-b border-r border-border/40 bg-background/80 whitespace-nowrap w-12">
@@ -257,6 +312,9 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                 </th>
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap">
                   Código
+                </th>
+                <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-left text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap">
+                  Descrição
                 </th>
                 <th className="sticky top-0 z-10 px-2 sm:px-4 py-3 sm:py-4 text-center text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-r border-border/40 bg-background whitespace-nowrap w-[180px]">
                   Quantidade (Pacote)
@@ -276,6 +334,13 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                       </td>
                       <td className="px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-mono text-foreground font-bold border-r border-border/20 uppercase">
                         {r.codigo}
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm text-foreground/80 border-r border-border/20 max-w-[280px] truncate">
+                        {r.descricao ? (
+                          <span title={r.descricao}>{r.descricao}</span>
+                        ) : (
+                          <span className="text-muted-foreground/40 italic">—</span>
+                        )}
                       </td>
                       <td className="px-3 sm:px-5 py-3 sm:py-4 border-r border-border/20">
                         <div className="flex items-center justify-center gap-1">
@@ -349,7 +414,7 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
 }
 
 /* ============================================================
-   PÁGINA (FormPageLayout equivalente)
+   PÁGINA
    ============================================================ */
 
 export default function ComponentesPage() {
@@ -358,15 +423,61 @@ export default function ComponentesPage() {
   const isTablet = useIsTablet();
   const isNarrow = isMobile || isTablet;
   const { isLow } = usePerformance();
+  const { user, isGuest, guestName, loading: authLoading } = useAuth();
 
   const [codigo, setCodigo] = useState('');
   const [quantidade, setQuantidade] = useState('1');
   const [itens, setItens] = useState<Item[]>([]);
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
   const [showTableMobile, setShowTableMobile] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Lookup em itens_cadastro
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupHit, setLookupHit] = useState<string | null>(null);
+  // Cache local por sessão para evitar refetch por código
+  const descCacheRef = useRef<Map<string, string | null>>(new Map());
+  const lookupSeq = useRef(0);
 
   const codigoRef = useRef<HTMLInputElement>(null);
   const qtdRef = useRef<HTMLInputElement>(null);
 
+  // Chave de persistência escopada por usuário
+  const storageKey = useMemo(
+    () => scopeKey(user?.id ?? null, guestName, isGuest),
+    [user?.id, guestName, isGuest],
+  );
+  const hydrated = useRef(false);
+
+  // Hidrata do localStorage
+  useEffect(() => {
+    if (authLoading) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { itens?: Item[] };
+        if (Array.isArray(parsed.itens)) setItens(parsed.itens);
+      } else {
+        setItens([]);
+      }
+    } catch (e) {
+      console.warn('[Componentes] hydrate falhou', e);
+    }
+    hydrated.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey, authLoading]);
+
+  // Persiste
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ itens }));
+    } catch (e) {
+      console.warn('[Componentes] persist falhou', e);
+    }
+  }, [itens, storageKey]);
+
+  // Foco inicial
   useEffect(() => {
     codigoRef.current?.focus();
   }, []);
@@ -376,7 +487,44 @@ export default function ComponentesPage() {
     return { linhas: itens.length, totalPacotes };
   }, [itens]);
 
-  const adicionar = () => {
+  /* --------- Lookup de descrição em itens_cadastro (debounced) --------- */
+  const buscarDescricao = useCallback(async (raw: string): Promise<string | null> => {
+    const cod = raw.trim().toUpperCase();
+    if (!cod) return null;
+    if (descCacheRef.current.has(cod)) return descCacheRef.current.get(cod) ?? null;
+
+    try {
+      let hit = await itensCadastroService.findByCodigoFornecedor(cod);
+      if (!hit) hit = await itensCadastroService.findByCodigoInterno(cod);
+      const desc = hit?.descricao?.trim() || null;
+      descCacheRef.current.set(cod, desc);
+      return desc;
+    } catch (e) {
+      console.warn('[Componentes] lookup falhou', e);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const cod = codigo.trim();
+    if (cod.length < 2) {
+      setLookupHit(null);
+      setLookupLoading(false);
+      return;
+    }
+    const seq = ++lookupSeq.current;
+    setLookupLoading(true);
+    const t = setTimeout(async () => {
+      const desc = await buscarDescricao(cod);
+      if (seq !== lookupSeq.current) return; // corrida
+      setLookupHit(desc);
+      setLookupLoading(false);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [codigo, buscarDescricao]);
+
+  /* --------- Ações --------- */
+  const adicionar = useCallback(async () => {
     const cod = codigo.trim().toUpperCase();
     const qtd = Number(quantidade);
     if (!cod) {
@@ -390,50 +538,131 @@ export default function ComponentesPage() {
       return;
     }
 
+    setSaving(true);
+    // Descrição: usa hit já resolvido; senão faz lookup síncrono
+    const descricao =
+      descCacheRef.current.get(cod) !== undefined
+        ? descCacheRef.current.get(cod) ?? null
+        : await buscarDescricao(cod);
+    setSaving(false);
+
     setItens((prev) => {
       const existente = prev.find((i) => i.codigo === cod);
       if (existente) {
         return prev.map((i) =>
-          i.codigo === cod ? { ...i, quantidade: i.quantidade + qtd, ts: Date.now() } : i,
+          i.codigo === cod
+            ? {
+                ...i,
+                quantidade: i.quantidade + qtd,
+                descricao: i.descricao ?? descricao,
+                ts: Date.now(),
+              }
+            : i,
         );
       }
       return [
-        { id: crypto.randomUUID(), codigo: cod, quantidade: qtd, ts: Date.now() },
+        { id: crypto.randomUUID(), codigo: cod, descricao, quantidade: qtd, ts: Date.now() },
         ...prev,
       ];
     });
 
-    toast.success(`${cod} · ${qtd} pacote(s)`);
+    toast.success(`${cod} · ${qtd} pacote(s)${descricao ? ` — ${descricao}` : ''}`);
     setCodigo('');
     setQuantidade('1');
+    setLookupHit(null);
     setTimeout(() => codigoRef.current?.focus(), 0);
-  };
+  }, [codigo, quantidade, buscarDescricao]);
 
-  const remover = (id: string) => setItens((prev) => prev.filter((i) => i.id !== id));
-  const ajustar = (id: string, delta: number) => {
-    setItens((prev) =>
-      prev
+  const remover = useCallback((id: string) => {
+    setItens((prev) => {
+      const idx = prev.findIndex((i) => i.id === id);
+      if (idx < 0) return prev;
+      setUndoStack((u) => [...u, { type: 'delete', item: prev[idx], idx }]);
+      return prev.filter((i) => i.id !== id);
+    });
+  }, []);
+
+  const ajustar = useCallback((id: string, delta: number) => {
+    setItens((prev) => {
+      const next = prev
         .map((i) => (i.id === id ? { ...i, quantidade: i.quantidade + delta } : i))
-        .filter((i) => i.quantidade > 0),
-    );
-  };
-  const limpar = () => {
-    if (itens.length === 0) return;
-    if (!confirm('Limpar todos os itens da conferência?')) return;
-    setItens([]);
+        .filter((i) => i.quantidade > 0);
+      // Se removeu por chegar em zero, empilha para undo
+      if (next.length < prev.length) {
+        const removed = prev.find((i) => i.id === id);
+        const idx = prev.findIndex((i) => i.id === id);
+        if (removed && idx >= 0) {
+          setUndoStack((u) => [...u, { type: 'delete', item: removed, idx }]);
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  const limpar = useCallback(() => {
+    setItens((prev) => {
+      if (prev.length === 0) return prev;
+      if (!confirm('Limpar todos os itens da conferência?')) return prev;
+      setUndoStack((u) => [...u, { type: 'clear', items: prev }]);
+      return [];
+    });
     codigoRef.current?.focus();
-  };
-  const finalizar = () => {
-    if (itens.length === 0) {
-      toast.warning('Nenhum item para finalizar.');
-      return;
-    }
-    toast.success(
-      `Conferência finalizada: ${totais.linhas} item(s) · ${totais.totalPacotes} pacote(s).`,
-    );
-    setItens([]);
+  }, []);
+
+  const finalizar = useCallback(() => {
+    setItens((prev) => {
+      if (prev.length === 0) {
+        toast.warning('Nenhum item para finalizar.');
+        return prev;
+      }
+      const totalPacotes = prev.reduce((a, i) => a + i.quantidade, 0);
+      toast.success(
+        `Conferência finalizada: ${prev.length} item(s) · ${totalPacotes} pacote(s).`,
+      );
+      setUndoStack((u) => [...u, { type: 'finalize', items: prev }]);
+      return [];
+    });
     codigoRef.current?.focus();
-  };
+  }, []);
+
+  const undo = useCallback(() => {
+    setUndoStack((stack) => {
+      if (stack.length === 0) {
+        toast.info('Nada para desfazer.');
+        return stack;
+      }
+      const last = stack[stack.length - 1];
+      setItens((prev) => {
+        if (last.type === 'delete') {
+          const next = [...prev];
+          const idx = Math.min(last.idx, next.length);
+          next.splice(idx, 0, last.item);
+          return next;
+        }
+        // clear / finalize → restaura estado inteiro
+        return last.items;
+      });
+      toast.success('Desfeito.');
+      return stack.slice(0, -1);
+    });
+  }, []);
+
+  // Ctrl+Z / Cmd+Z global (respeita campos de input)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isUndo = (e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z';
+      if (!isUndo) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const editable =
+        tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable;
+      if (editable) return; // preserva undo do campo
+      e.preventDefault();
+      undo();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo]);
 
   const form = (
     <ComponentesForm
@@ -448,7 +677,12 @@ export default function ComponentesPage() {
       totalPacotes={totais.totalPacotes}
       onFinalizar={finalizar}
       onLimpar={limpar}
+      onUndo={undo}
       temItens={itens.length > 0}
+      canUndo={undoStack.length > 0}
+      lookupLoading={lookupLoading}
+      lookupHit={lookupHit}
+      saving={saving}
     />
   );
 
