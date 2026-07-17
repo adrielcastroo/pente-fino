@@ -1,15 +1,18 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useItensCadastro, useDeleteItemCadastro } from '@/hooks/useItensCadastro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Pencil, Trash2, Package, History, ChevronLeft, ChevronRight, GitCompare, Sparkles } from 'lucide-react';
+import {
+  Plus, Search, Pencil, Trash2, Package, History,
+  ChevronLeft, ChevronRight, GitCompare, Sparkles,
+  ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2,
+} from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
-import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
-import AugeItemLookup from '@/components/auge/AugeItemLookup';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
@@ -24,7 +27,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
 
 type FornFilter = 'todos' | 'com' | 'sem' | 'pendentes_auge';
-type SortKey = 'codigo_interno' | 'descricao' | 'updated_at';
+type EditFilter = 'todos' | 'editados' | 'nao_editados';
+type SortKey = 'codigo_interno' | 'descricao' | 'codigo_fornecedor' | 'updated_at';
+type SortDir = 'asc' | 'desc';
 const PAGE_SIZE = 50;
 
 interface AugePendente {
@@ -34,18 +39,26 @@ interface AugePendente {
   ativo: boolean | null;
 }
 
+interface AugeSearchHit {
+  codigo: string;
+  descricao: string | null;
+  qt_disponivel: number | null;
+}
+
 export default function CadastrosPage() {
   useDocumentTitle('Cadastros');
+  const qc = useQueryClient();
   const { data: itens = [], isLoading } = useItensCadastro();
   const del = useDeleteItemCadastro();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
   const [search, setSearch] = useState('');
   const [fornFilter, setFornFilter] = useState<FornFilter>('todos');
+  const [editFilter, setEditFilter] = useState<EditFilter>('todos');
   const [sortKey, setSortKey] = useState<SortKey>('codigo_interno');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ItemCadastro | null>(null);
   const [toDelete, setToDelete] = useState<ItemCadastro | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -53,13 +66,15 @@ export default function CadastrosPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [augePendentes, setAugePendentes] = useState<AugePendente[]>([]);
   const [pendentesLoading, setPendentesLoading] = useState(false);
+  const [augeHits, setAugeHits] = useState<AugeSearchHit[]>([]);
+  const [augeHitsLoading, setAugeHitsLoading] = useState(false);
 
   const getCodigos = (i: ItemCadastro): string[] => {
     if (i.codigos_fornecedor && i.codigos_fornecedor.length) return i.codigos_fornecedor;
     return i.codigo_fornecedor ? [i.codigo_fornecedor] : [];
   };
 
-  // Fetch Auge products missing from itens_cadastro (only when filter engaged and after itens loaded)
+  // Fetch Auge products missing from itens_cadastro
   useEffect(() => {
     if (fornFilter !== 'pendentes_auge' || isLoading) return;
     let alive = true;
@@ -92,9 +107,63 @@ export default function CadastrosPage() {
     return () => { alive = false; };
   }, [fornFilter, isLoading, itens]);
 
+  // Debounced Auge search (in-place, no popup) — substitui o botão "Consultar Auge"
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2 || fornFilter === 'pendentes_auge') {
+      setAugeHits([]);
+      return;
+    }
+    let alive = true;
+    const t = setTimeout(async () => {
+      setAugeHitsLoading(true);
+      try {
+        const { data, error } = await (supabase as any)
+          .from('auge_produtos')
+          .select('codigo, descricao, qt_disponivel')
+          .or(`codigo.ilike.%${q}%,descricao.ilike.%${q}%`)
+          .limit(20);
+        if (error) throw error;
+        if (alive) setAugeHits((data || []) as AugeSearchHit[]);
+      } catch {
+        if (alive) setAugeHits([]);
+      } finally {
+        if (alive) setAugeHitsLoading(false);
+      }
+    }, 300);
+    return () => { alive = false; clearTimeout(t); };
+  }, [search, fornFilter]);
+
+  // Realtime — quando o Auge sincroniza (produtos/saldo), invalida caches
+  useEffect(() => {
+    const channel = (supabase as any)
+      .channel('auge-live-cadastros')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_produtos' }, () => {
+        qc.invalidateQueries({ queryKey: ['itens_cadastro'] });
+        qc.invalidateQueries({ queryKey: ['auge_produtos'] });
+        // força novo fetch da lista de pendentes se estiver na aba
+        if (fornFilter === 'pendentes_auge') setAugePendentes((p) => [...p]);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_produtos_saldo' }, () => {
+        qc.invalidateQueries({ queryKey: ['auge_produtos'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'auge_sync_runs' }, (payload: any) => {
+        const status = payload?.new?.status;
+        if (status === 'success') {
+          qc.invalidateQueries({ queryKey: ['itens_cadastro'] });
+          qc.invalidateQueries({ queryKey: ['auge_produtos'] });
+        }
+      })
+      .subscribe();
+    return () => { (supabase as any).removeChannel(channel); };
+  }, [qc, fornFilter]);
 
   const semFornecedorCount = useMemo(
     () => itens.filter((i) => getCodigos(i).length === 0).length,
+    [itens],
+  );
+  const editadosCount = useMemo(
+    () => itens.filter((i) => !!i.last_edited_at).length,
     [itens],
   );
 
@@ -103,6 +172,8 @@ export default function CadastrosPage() {
     let out = itens;
     if (fornFilter === 'com') out = out.filter((i) => getCodigos(i).length > 0);
     else if (fornFilter === 'sem') out = out.filter((i) => getCodigos(i).length === 0);
+    if (editFilter === 'editados') out = out.filter((i) => !!i.last_edited_at);
+    else if (editFilter === 'nao_editados') out = out.filter((i) => !i.last_edited_at);
     if (q) {
       out = out.filter(
         (i) =>
@@ -111,13 +182,17 @@ export default function CadastrosPage() {
           getCodigos(i).some((c) => c.toLowerCase().includes(q)),
       );
     }
+    const dir = sortDir === 'asc' ? 1 : -1;
     const sorted = [...out].sort((a, b) => {
-      if (sortKey === 'updated_at') return (b.updated_at || '').localeCompare(a.updated_at || '');
-      if (sortKey === 'descricao') return a.descricao.localeCompare(b.descricao);
-      return a.codigo_interno.localeCompare(b.codigo_interno);
+      let cmp = 0;
+      if (sortKey === 'updated_at') cmp = (a.updated_at || '').localeCompare(b.updated_at || '');
+      else if (sortKey === 'descricao') cmp = a.descricao.localeCompare(b.descricao);
+      else if (sortKey === 'codigo_fornecedor') cmp = (getCodigos(a)[0] || '').localeCompare(getCodigos(b)[0] || '');
+      else cmp = a.codigo_interno.localeCompare(b.codigo_interno, undefined, { numeric: true });
+      return cmp * dir;
     });
     return sorted;
-  }, [itens, search, fornFilter, sortKey]);
+  }, [itens, search, fornFilter, editFilter, sortKey, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -125,10 +200,8 @@ export default function CadastrosPage() {
   const end = Math.min(start + PAGE_SIZE, filtered.length);
   const paged = useMemo(() => filtered.slice(start, end), [filtered, start, end]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [search, fornFilter, sortKey]);
+  useEffect(() => { setPage(1); }, [search, fornFilter, editFilter, sortKey, sortDir]);
 
-  // Deep link: when ?id= is set, jump to the page containing that item and highlight
   useEffect(() => {
     if (!highlightId || filtered.length === 0) return;
     const idx = filtered.findIndex(i => i.id === highlightId);
@@ -140,15 +213,8 @@ export default function CadastrosPage() {
     }
   }, [highlightId, filtered]);
 
-  const handleEdit = (item: ItemCadastro) => {
-    setEditing(item);
-    setFormOpen(true);
-  };
-
-  const handleNew = () => {
-    setEditing(null);
-    setFormOpen(true);
-  };
+  const handleEdit = (item: ItemCadastro) => { setEditing(item); setFormOpen(true); };
+  const handleNew = () => { setEditing(null); setFormOpen(true); };
 
   const handleConfirmDelete = async () => {
     if (!toDelete) return;
@@ -174,7 +240,6 @@ export default function CadastrosPage() {
       return next;
     });
   };
-
   const toggleOne = (id: string, checked: boolean) => {
     setSelected(prev => {
       const next = new Set(prev);
@@ -182,18 +247,13 @@ export default function CadastrosPage() {
       return next;
     });
   };
-
-  const selectAllFiltered = () => {
-    setSelected(new Set(filtered.map(i => i.id)));
-  };
-
+  const selectAllFiltered = () => setSelected(new Set(filtered.map(i => i.id)));
   const clearSelection = () => setSelected(new Set());
 
   const handleBulkDelete = async () => {
     setBulkDeleting(true);
     const ids = Array.from(selected);
-    let ok = 0;
-    let fail = 0;
+    let ok = 0, fail = 0;
     for (const id of ids) {
       try { await del.mutateAsync(id); ok++; } catch { fail++; }
     }
@@ -210,11 +270,35 @@ export default function CadastrosPage() {
     setSearchParams(next, { replace: true });
   };
 
-  // Page numbers to display: first, last, current ±2, with ellipses
   const pageNumbers = useMemo(() => {
     const set = new Set<number>([1, totalPages, safePage, safePage - 1, safePage + 1]);
     return Array.from(set).filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
   }, [safePage, totalPages]);
+
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(k); setSortDir('asc'); }
+  };
+
+  const SortIcon = ({ k }: { k: SortKey }) => {
+    if (sortKey !== k) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
+  };
+
+  const SortableHead: React.FC<{ k: SortKey; className?: string; children: React.ReactNode }> = ({ k, className, children }) => (
+    <TableHead className={cn('cursor-pointer select-none hover:bg-muted/40 transition-colors', className)} onClick={() => toggleSort(k)}>
+      <span className="inline-flex items-center gap-1.5">
+        {children}
+        <SortIcon k={k} />
+      </span>
+    </TableHead>
+  );
+
+  // Itens do Auge encontrados na busca que ainda não estão cadastrados
+  const augeHitsPendentes = useMemo(() => {
+    const cadastrados = new Set(itens.map((i) => normalizarCodigo(i.codigo_interno)));
+    return augeHits.filter((h) => !cadastrados.has(normalizarCodigo(h.codigo)));
+  }, [augeHits, itens]);
 
   return (
     <div className="flex flex-col h-full min-w-0 p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 overflow-hidden">
@@ -222,16 +306,10 @@ export default function CadastrosPage() {
         <div className="min-w-0">
           <h1 className="text-lg sm:text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
           <p className="text-[11px] sm:text-xs text-muted-foreground">
-            Base usada para validar etiquetas: código interno + descrição + código fornecedor
+            Base usada para validar etiquetas: código interno + descrição + código fornecedor. Sincronização com Auge em tempo real.
           </p>
         </div>
         <div className="md:ml-auto flex flex-wrap items-center gap-2 min-w-0">
-          <AugeItemLookup />
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-1 md:flex-none sm:min-w-[150px] h-10" aria-label="Importar planilha">
-            <Upload className="h-4 w-4 sm:mr-2 shrink-0" />
-            <span className="truncate hidden sm:inline">Importar planilha</span>
-            <span className="truncate sm:hidden">Importar</span>
-          </Button>
           <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10" aria-label="Novo item">
             <Plus className="h-4 w-4 shrink-0" />
             <span className="truncate">Novo item</span>
@@ -249,382 +327,398 @@ export default function CadastrosPage() {
           </TabsTrigger>
         </TabsList>
 
-
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
-
-        <div className="relative w-full md:flex-1 md:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por código, descrição ou fornecedor..."
-            className="pl-9 h-10 w-full"
-            aria-label="Buscar itens"
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2 md:contents min-w-0">
-        <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
-          <SelectTrigger className="flex-1 min-w-[140px] md:w-[180px] md:flex-none h-10" aria-label="Filtrar por fornecedor">
-            <SelectValue placeholder="Mostrar" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os itens</SelectItem>
-            <SelectItem value="com">Com cód. fornecedor</SelectItem>
-            <SelectItem value="sem">Sem cód. fornecedor</SelectItem>
-            <SelectItem value="pendentes_auge">Pendentes do Auge (não cadastrados)</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-          <SelectTrigger className="flex-1 min-w-[140px] md:w-[180px] md:flex-none h-10" aria-label="Ordenar">
-            <SelectValue placeholder="Ordenar" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="codigo_interno">Código interno</SelectItem>
-            <SelectItem value="descricao">Descrição</SelectItem>
-            <SelectItem value="updated_at">Atualizado recente</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
-          <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
-          {semFornecedorCount > 0 && (
-            <Badge variant="outline" className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 border-amber-500/30">
-              {semFornecedorCount} sem fornecedor
-            </Badge>
-          )}
-        </div>
-        </div>
-      </div>
-
-      {/* Highlight banner from deep link */}
-      {highlightId && filtered.some(i => i.id === highlightId) && (
-        <div role="status" className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs flex items-center justify-between gap-3">
-          <span>Item de destaque do link compartilhado.</span>
-          <Button size="sm" variant="ghost" onClick={clearDeepLink} className="h-7">Limpar</Button>
-        </div>
-      )}
-
-      {/* Bulk action bar */}
-      {someSelected && (
-        <div role="region" aria-label="Ações em lote" className="rounded-lg border bg-card px-3 py-2 flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
-          <span className="text-xs sm:text-sm font-medium">{selected.size} selecionado(s)</span>
-          <Button size="sm" variant="ghost" onClick={clearSelection} className="h-8">Limpar</Button>
-          {selected.size < filtered.length && (
-            <Button size="sm" variant="ghost" onClick={selectAllFiltered} className="h-8 text-xs">
-              <span className="hidden sm:inline">Selecionar todos os {filtered.length}</span>
-              <span className="sm:hidden">Todos ({filtered.length})</span>
-            </Button>
-          )}
-          <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
-            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5 w-full sm:w-auto h-9" aria-label="Excluir selecionados">
-              <Trash2 className="h-3.5 w-3.5" /> Excluir selecionados
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <TooltipProvider>
-      {fornFilter === 'pendentes_auge' ? (
-        <div className="flex-1 overflow-auto border rounded-lg bg-card">
-          {pendentesLoading ? (
-            <p className="text-center text-muted-foreground py-12 text-sm">Buscando itens do Auge...</p>
-          ) : augePendentes.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12 text-sm">Nenhum item do Auge pendente — tudo cadastrado. 🎉</p>
-          ) : (
-            <Table>
-              <TableHeader className="sticky top-0 bg-card z-10">
-                <TableRow>
-                  <TableHead className="w-[180px]">Código Auge</TableHead>
-                  <TableHead>Descrição (Auge)</TableHead>
-                  <TableHead className="w-[100px] text-right">Qt disp.</TableHead>
-                  <TableHead className="w-[140px] text-right">Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {augePendentes.slice(0, 500).map((p) => {
-                  const q = search.trim().toLowerCase();
-                  if (q && !p.codigo.toLowerCase().includes(q) && !(p.descricao || '').toLowerCase().includes(q)) return null;
-                  return (
-                    <TableRow key={p.codigo}>
-                      <TableCell className="font-mono text-xs font-bold text-primary">{p.codigo}</TableCell>
-                      <TableCell className="text-xs">{p.descricao || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{p.qt_disponivel != null ? Number(p.qt_disponivel).toLocaleString('pt-BR') : '—'}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1.5 h-8"
-                          onClick={() => {
-                            setEditing({
-                              codigo_interno: p.codigo,
-                              descricao: p.descricao || '',
-                              codigos_fornecedor: [],
-                            } as any);
-                            setFormOpen(true);
-                          }}
-                        >
-                          <Sparkles className="h-3.5 w-3.5" /> Cadastrar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-          {augePendentes.length > 500 && (
-            <p className="text-center py-3 text-xs text-muted-foreground">Exibindo 500 de {augePendentes.length}. Refine com a busca.</p>
-          )}
-        </div>
-      ) : (<>
-      {/* Mobile: cards empilhados */}
-
-      <div className="md:hidden flex-1 overflow-auto space-y-2">
-        {isLoading && <p className="text-center text-muted-foreground py-8 text-sm">Carregando...</p>}
-        {!isLoading && filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-12 text-sm">
-            {itens.length === 0 ? 'Nenhum item cadastrado.' : 'Nenhum resultado.'}
-          </p>
-        )}
-        {paged.map((item) => {
-          const codigos = getCodigos(item);
-          const isHighlight = item.id === highlightId;
-          const isSelected = selected.has(item.id);
-          return (
-            <div
-              key={item.id}
-              id={`cad-row-${item.id}`}
-              className={cn(
-                'rounded-lg border bg-card p-3 flex flex-col gap-2',
-                isHighlight && 'ring-2 ring-primary border-primary/40',
-                isSelected && 'bg-primary/5',
+          <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
+            <div className="relative w-full md:flex-1 md:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar em Cadastro + Auge (código, descrição, fornecedor)..."
+                className="pl-9 pr-9 h-10 w-full"
+                aria-label="Buscar itens (inclui Auge)"
+              />
+              {augeHitsLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
               )}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2 min-w-0 flex-1">
-                  <Checkbox checked={isSelected} onCheckedChange={(c) => toggleOne(item.id, !!c)} aria-label={`Selecionar ${item.codigo_interno}`} className="mt-1" />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-mono text-xs text-primary font-bold">{item.codigo_interno}</div>
-                    <div className="text-sm font-medium mt-0.5 line-clamp-2">{item.descricao}</div>
-                  </div>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir item">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              {codigos.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {codigos.slice(0, 4).map((c, i) => (
-                    <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[10px]">{c}</Badge>
-                  ))}
-                  {codigos.length > 4 && <Badge variant="secondary" className="text-[10px]">+{codigos.length - 4}</Badge>}
-                </div>
-              ) : (
-                <span className="text-[10px] text-muted-foreground italic">sem código fornecedor</span>
-              )}
-              <div className="text-[10px] text-muted-foreground">
-                Atualizado em {new Date(item.updated_at).toLocaleDateString('pt-BR')}
-                {item.last_edited_at && <span className="ml-2 text-amber-600 dark:text-amber-400">• editado</span>}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 md:contents min-w-0">
+              <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
+                <SelectTrigger className="flex-1 min-w-[140px] md:w-[200px] md:flex-none h-10" aria-label="Filtrar por fornecedor">
+                  <SelectValue placeholder="Fornecedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os itens</SelectItem>
+                  <SelectItem value="com">Com cód. fornecedor</SelectItem>
+                  <SelectItem value="sem">Sem cód. fornecedor</SelectItem>
+                  <SelectItem value="pendentes_auge">Pendentes do Auge</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={editFilter} onValueChange={(v) => setEditFilter(v as EditFilter)}>
+                <SelectTrigger className="flex-1 min-w-[140px] md:w-[170px] md:flex-none h-10" aria-label="Filtrar por edição">
+                  <SelectValue placeholder="Edição" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas edições</SelectItem>
+                  <SelectItem value="editados">Editados</SelectItem>
+                  <SelectItem value="nao_editados">Nunca editados</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
+                <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
+                {semFornecedorCount > 0 && (
+                  <Badge variant="outline" className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 border-amber-500/30">
+                    {semFornecedorCount} sem fornecedor
+                  </Badge>
+                )}
+                {editadosCount > 0 && (
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">
+                    {editadosCount} editados
+                  </Badge>
+                )}
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
 
-      {/* Desktop/tablet: tabela */}
-      <div className="hidden md:block flex-1 overflow-auto border rounded-lg bg-card">
-        <Table>
-          <TableHeader className="sticky top-0 bg-card z-10">
-            <TableRow>
-              <TableHead className="w-[44px]">
-                <Checkbox
-                  checked={allPageSelected}
-                  onCheckedChange={(c) => togglePageAll(!!c)}
-                  aria-label="Selecionar todos da página"
-                  className="h-5 w-5"
-                />
-              </TableHead>
-              <TableHead className="w-[200px]">Código interno</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead className="w-[200px]">Código fornecedor</TableHead>
-              <TableHead className="w-[140px]">Atualizado</TableHead>
-              <TableHead className="w-[110px] text-center">Edição</TableHead>
-              <TableHead className="w-[100px] text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
-            )}
-            {!isLoading && filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                  {itens.length === 0 ? 'Nenhum item cadastrado. Importe uma planilha ou crie manualmente.' : 'Nenhum resultado para a busca.'}
-                </TableCell>
-              </TableRow>
-            )}
-            {paged.map((item) => {
-              const lf = item.last_edited_field || null;
-              const wasEdited = !!item.last_edited_at;
-              const editedCol = (k: string) => lf === k;
-              const isHighlight = item.id === highlightId;
-              const isSelected = selected.has(item.id);
-              return (
-              <TableRow
-                key={item.id}
-                id={`cad-row-${item.id}`}
-                className={cn(
-                  isHighlight && 'bg-primary/10 ring-1 ring-primary/40',
-                  isSelected && !isHighlight && 'bg-primary/5',
-                )}
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(c) => toggleOne(item.id, !!c)}
-                    aria-label={`Selecionar ${item.codigo_interno}`}
-                    className="h-5 w-5"
-                  />
-                </TableCell>
-                <TableCell className={cn('font-mono text-xs', editedCol('codigo_interno') && 'bg-amber-500/5')}>
-                  <span className="inline-flex items-center gap-1.5">
-                    {editedCol('codigo_interno') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-                    {item.codigo_interno}
-                  </span>
-                </TableCell>
-                <TableCell className={cn('text-xs max-w-xl', editedCol('descricao') && 'bg-amber-500/5')}>
-                  <div className="line-clamp-2 inline-flex items-start gap-1.5" title={item.descricao}>
-                    {editedCol('descricao') && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />}
-                    <span>{item.descricao}</span>
+          {/* Auge inline hits — só quando há busca e itens do Auge fora do cadastro */}
+          {search.trim().length >= 2 && fornFilter !== 'pendentes_auge' && augeHitsPendentes.length > 0 && (
+            <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-violet-700 dark:text-violet-300">
+                <Cloud className="h-3.5 w-3.5" />
+                {augeHitsPendentes.length} {augeHitsPendentes.length === 1 ? 'item encontrado no Auge' : 'itens encontrados no Auge'} — ainda não cadastrados
+              </div>
+              <div className="flex flex-col gap-1.5 max-h-48 overflow-auto">
+                {augeHitsPendentes.map((h) => (
+                  <div key={h.codigo} className="flex items-center gap-2 rounded-md bg-background/60 px-2 py-1.5 text-xs">
+                    <span className="font-mono font-bold text-primary shrink-0 w-24 truncate">{h.codigo}</span>
+                    <span className="flex-1 truncate">{h.descricao || '—'}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                      {h.qt_disponivel != null ? Number(h.qt_disponivel).toLocaleString('pt-BR') : '—'}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 shrink-0"
+                      onClick={() => {
+                        setEditing({ codigo_interno: h.codigo, descricao: h.descricao || '', codigos_fornecedor: [] } as any);
+                        setFormOpen(true);
+                      }}
+                    >
+                      <Sparkles className="h-3 w-3" /> Cadastrar
+                    </Button>
                   </div>
-                </TableCell>
-                <TableCell className={cn((editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
-                  <div className="inline-flex items-start gap-1.5 flex-wrap max-w-[240px]">
-                    {(editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && (
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                    )}
-                    {(() => {
-                      const codigos = getCodigos(item);
-                      if (!codigos.length) {
-                        return <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>;
-                      }
-                      const visiveis = codigos.slice(0, 3);
-                      const extras = codigos.length - visiveis.length;
-                      return (
-                        <>
-                          {visiveis.map((c, i) => (
+                ))}
+              </div>
+            </div>
+          )}
+
+          {highlightId && filtered.some(i => i.id === highlightId) && (
+            <div role="status" className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs flex items-center justify-between gap-3">
+              <span>Item de destaque do link compartilhado.</span>
+              <Button size="sm" variant="ghost" onClick={clearDeepLink} className="h-7">Limpar</Button>
+            </div>
+          )}
+
+          {someSelected && (
+            <div role="region" aria-label="Ações em lote" className="rounded-lg border bg-card px-3 py-2 flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+              <span className="text-xs sm:text-sm font-medium">{selected.size} selecionado(s)</span>
+              <Button size="sm" variant="ghost" onClick={clearSelection} className="h-8">Limpar</Button>
+              {selected.size < filtered.length && (
+                <Button size="sm" variant="ghost" onClick={selectAllFiltered} className="h-8 text-xs">
+                  <span className="hidden sm:inline">Selecionar todos os {filtered.length}</span>
+                  <span className="sm:hidden">Todos ({filtered.length})</span>
+                </Button>
+              )}
+              <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
+                <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5 w-full sm:w-auto h-9" aria-label="Excluir selecionados">
+                  <Trash2 className="h-3.5 w-3.5" /> Excluir selecionados
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <TooltipProvider>
+            {fornFilter === 'pendentes_auge' ? (
+              <div className="flex-1 overflow-auto border rounded-lg bg-card">
+                {pendentesLoading ? (
+                  <p className="text-center text-muted-foreground py-12 text-sm">Buscando itens do Auge...</p>
+                ) : augePendentes.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-12 text-sm">Nenhum item do Auge pendente — tudo cadastrado. 🎉</p>
+                ) : (
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-card z-10">
+                      <TableRow>
+                        <TableHead className="w-[180px]">Código Auge</TableHead>
+                        <TableHead>Descrição (Auge)</TableHead>
+                        <TableHead className="w-[100px] text-right">Qt disp.</TableHead>
+                        <TableHead className="w-[140px] text-right">Ação</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {augePendentes.slice(0, 500).map((p) => {
+                        const q = search.trim().toLowerCase();
+                        if (q && !p.codigo.toLowerCase().includes(q) && !(p.descricao || '').toLowerCase().includes(q)) return null;
+                        return (
+                          <TableRow key={p.codigo}>
+                            <TableCell className="font-mono text-xs font-bold text-primary">{p.codigo}</TableCell>
+                            <TableCell className="text-xs">{p.descricao || <span className="text-muted-foreground/40">—</span>}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">{p.qt_disponivel != null ? Number(p.qt_disponivel).toLocaleString('pt-BR') : '—'}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 h-8"
+                                onClick={() => {
+                                  setEditing({ codigo_interno: p.codigo, descricao: p.descricao || '', codigos_fornecedor: [] } as any);
+                                  setFormOpen(true);
+                                }}
+                              >
+                                <Sparkles className="h-3.5 w-3.5" /> Cadastrar
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+                {augePendentes.length > 500 && (
+                  <p className="text-center py-3 text-xs text-muted-foreground">Exibindo 500 de {augePendentes.length}. Refine com a busca.</p>
+                )}
+              </div>
+            ) : (<>
+              {/* Mobile */}
+              <div className="md:hidden flex-1 overflow-auto space-y-2">
+                {isLoading && <p className="text-center text-muted-foreground py-8 text-sm">Carregando...</p>}
+                {!isLoading && filtered.length === 0 && (
+                  <p className="text-center text-muted-foreground py-12 text-sm">
+                    {itens.length === 0 ? 'Nenhum item cadastrado.' : 'Nenhum resultado.'}
+                  </p>
+                )}
+                {paged.map((item) => {
+                  const codigos = getCodigos(item);
+                  const isHighlight = item.id === highlightId;
+                  const isSelected = selected.has(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      id={`cad-row-${item.id}`}
+                      className={cn(
+                        'rounded-lg border bg-card p-3 flex flex-col gap-2',
+                        isHighlight && 'ring-2 ring-primary border-primary/40',
+                        isSelected && 'bg-primary/5',
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2 min-w-0 flex-1">
+                          <Checkbox checked={isSelected} onCheckedChange={(c) => toggleOne(item.id, !!c)} aria-label={`Selecionar ${item.codigo_interno}`} className="mt-1" />
+                          <div className="min-w-0 flex-1">
+                            <div className="font-mono text-xs text-primary font-bold">{item.codigo_interno}</div>
+                            <div className="text-sm font-medium mt-0.5 line-clamp-2">{item.descricao}</div>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir item">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      {codigos.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {codigos.slice(0, 4).map((c, i) => (
                             <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[10px]">{c}</Badge>
                           ))}
-                          {extras > 0 && (
-                            <Badge variant="secondary" className="text-[10px]" title={codigos.slice(3).join(', ')}>
-                              +{extras}
-                            </Badge>
+                          {codigos.length > 4 && <Badge variant="secondary" className="text-[10px]">+{codigos.length - 4}</Badge>}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground italic">sem código fornecedor</span>
+                      )}
+                      <div className="text-[10px] text-muted-foreground">
+                        Atualizado em {new Date(item.updated_at).toLocaleDateString('pt-BR')}
+                        {item.last_edited_at && <span className="ml-2 text-amber-600 dark:text-amber-400">• editado</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop */}
+              <div className="hidden md:block flex-1 overflow-auto border rounded-lg bg-card">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-card z-10">
+                    <TableRow>
+                      <TableHead className="w-[44px]">
+                        <Checkbox
+                          checked={allPageSelected}
+                          onCheckedChange={(c) => togglePageAll(!!c)}
+                          aria-label="Selecionar todos da página"
+                          className="h-5 w-5"
+                        />
+                      </TableHead>
+                      <SortableHead k="codigo_interno" className="w-[200px]">Código interno</SortableHead>
+                      <SortableHead k="descricao">Descrição</SortableHead>
+                      <SortableHead k="codigo_fornecedor" className="w-[200px]">Código fornecedor</SortableHead>
+                      <SortableHead k="updated_at" className="w-[140px]">Atualizado</SortableHead>
+                      <TableHead className="w-[110px] text-center">Edição</TableHead>
+                      <TableHead className="w-[100px] text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading && (
+                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
+                    )}
+                    {!isLoading && filtered.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                          {itens.length === 0 ? 'Nenhum item cadastrado. Sincronize via Auge no /admin.' : 'Nenhum resultado para a busca.'}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {paged.map((item) => {
+                      const lf = item.last_edited_field || null;
+                      const wasEdited = !!item.last_edited_at;
+                      const editedCol = (k: string) => lf === k;
+                      const isHighlight = item.id === highlightId;
+                      const isSelected = selected.has(item.id);
+                      return (
+                        <TableRow
+                          key={item.id}
+                          id={`cad-row-${item.id}`}
+                          className={cn(
+                            isHighlight && 'bg-primary/10 ring-1 ring-primary/40',
+                            isSelected && !isHighlight && 'bg-primary/5',
                           )}
-                        </>
+                        >
+                          <TableCell>
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={(c) => toggleOne(item.id, !!c)}
+                              aria-label={`Selecionar ${item.codigo_interno}`}
+                              className="h-5 w-5"
+                            />
+                          </TableCell>
+                          <TableCell className={cn('font-mono text-xs', editedCol('codigo_interno') && 'bg-amber-500/5')}>
+                            <span className="inline-flex items-center gap-1.5">
+                              {editedCol('codigo_interno') && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                              {item.codigo_interno}
+                            </span>
+                          </TableCell>
+                          <TableCell className={cn('text-xs max-w-xl', editedCol('descricao') && 'bg-amber-500/5')}>
+                            <div className="line-clamp-2 inline-flex items-start gap-1.5" title={item.descricao}>
+                              {editedCol('descricao') && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />}
+                              <span>{item.descricao}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className={cn((editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
+                            <div className="inline-flex items-start gap-1.5 flex-wrap max-w-[240px]">
+                              {(editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && (
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                              )}
+                              {(() => {
+                                const codigos = getCodigos(item);
+                                if (!codigos.length) {
+                                  return <span className="text-[10px] text-muted-foreground/60 italic">— sem código —</span>;
+                                }
+                                const visiveis = codigos.slice(0, 3);
+                                const extras = codigos.length - visiveis.length;
+                                return (
+                                  <>
+                                    {visiveis.map((c, i) => (
+                                      <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[10px]">{c}</Badge>
+                                    ))}
+                                    {extras > 0 && (
+                                      <Badge variant="secondary" className="text-[10px]" title={codigos.slice(3).join(', ')}>
+                                        +{extras}
+                                      </Badge>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {new Date(item.updated_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {wasEdited ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 font-medium text-[10px] cursor-help">
+                                    <History className="w-3 h-3" />
+                                    editado
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs text-xs">
+                                  <div className="font-semibold">{item.updated_by_name || 'Usuário'}</div>
+                                  <div className="text-muted-foreground">
+                                    alterou <span className="font-medium text-foreground">{fieldLabel(lf) || '—'}</span>
+                                  </div>
+                                  <div className="text-muted-foreground mt-1">
+                                    {item.last_edited_at ? new Date(item.last_edited_at).toLocaleString('pt-BR') : ''}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-muted-foreground/40 text-[10px]">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir item">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       );
-                    })()}
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {new Date(item.updated_at).toLocaleDateString('pt-BR')}
-                </TableCell>
-                <TableCell className="text-center">
-                  {wasEdited ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 font-medium text-[10px] cursor-help">
-                          <History className="w-3 h-3" />
-                          editado
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs text-xs">
-                        <div className="font-semibold">{item.updated_by_name || 'Usuário'}</div>
-                        <div className="text-muted-foreground">
-                          alterou <span className="font-medium text-foreground">{fieldLabel(lf) || '—'}</span>
-                        </div>
-                        <div className="text-muted-foreground mt-1">
-                          {item.last_edited_at ? new Date(item.last_edited_at).toLocaleString('pt-BR') : ''}
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <span className="text-muted-foreground/40 text-[10px]">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9 text-destructive hover:text-destructive" onClick={() => setToDelete(item)} aria-label="Excluir item">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );})}
-          </TableBody>
-        </Table>
-      </div>
-      </>)}
-      </TooltipProvider>
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>)}
+          </TooltipProvider>
 
-      {/* Pagination */}
-      {fornFilter !== 'pendentes_auge' && filtered.length > 0 && (
-        <nav aria-label="Paginação" className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-border/40 pt-3 min-w-0">
-          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
-            Mostrando {start + 1}–{end} de {filtered.length}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-1 min-w-0">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={safePage <= 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              aria-label="Página anterior"
-              className="gap-1 h-8 px-2"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Anterior</span>
-            </Button>
-            {pageNumbers.map((n, i) => {
-              const prev = pageNumbers[i - 1];
-              const showEllipsis = prev !== undefined && n - prev > 1;
-              return (
-                <span key={n} className="flex items-center gap-1">
-                  {showEllipsis && <span className="px-1 text-muted-foreground/60 text-xs">…</span>}
-                  <Button
-                    size="sm"
-                    variant={n === safePage ? 'default' : 'outline'}
-                    onClick={() => setPage(n)}
-                    className="h-8 min-w-[32px] px-2"
-                    aria-label={`Página ${n}`}
-                    aria-current={n === safePage ? 'page' : undefined}
-                  >
-                    {n}
-                  </Button>
-                </span>
-              );
-            })}
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={safePage >= totalPages}
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              aria-label="Próxima página"
-              className="gap-1 h-8 px-2"
-            >
-              <span className="hidden sm:inline">Próximo</span> <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </nav>
-      )}
+          {fornFilter !== 'pendentes_auge' && filtered.length > 0 && (
+            <nav aria-label="Paginação" className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-border/40 pt-3 min-w-0">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
+                Mostrando {start + 1}–{end} de {filtered.length}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-1 min-w-0">
+                <Button size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} aria-label="Página anterior" className="gap-1 h-8 px-2">
+                  <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Anterior</span>
+                </Button>
+                {pageNumbers.map((n, i) => {
+                  const prev = pageNumbers[i - 1];
+                  const showEllipsis = prev !== undefined && n - prev > 1;
+                  return (
+                    <span key={n} className="flex items-center gap-1">
+                      {showEllipsis && <span className="px-1 text-muted-foreground/60 text-xs">…</span>}
+                      <Button
+                        size="sm"
+                        variant={n === safePage ? 'default' : 'outline'}
+                        onClick={() => setPage(n)}
+                        className="h-8 min-w-[32px] px-2"
+                        aria-label={`Página ${n}`}
+                        aria-current={n === safePage ? 'page' : undefined}
+                      >
+                        {n}
+                      </Button>
+                    </span>
+                  );
+                })}
+                <Button size="sm" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} aria-label="Próxima página" className="gap-1 h-8 px-2">
+                  <span className="hidden sm:inline">Próximo</span> <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </nav>
+          )}
         </TabsContent>
-
 
         <TabsContent value="reconciliacao" className="flex-1 overflow-hidden mt-0">
           <AugeReconciliacaoTab />
@@ -632,8 +726,6 @@ export default function CadastrosPage() {
       </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
-      <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />
-
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
