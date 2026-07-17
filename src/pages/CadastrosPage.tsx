@@ -575,7 +575,7 @@ export default function CadastrosPage() {
       </TooltipProvider>
 
       {/* Pagination */}
-      {filtered.length > 0 && (
+      {fornFilter !== 'pendentes_auge' && filtered.length > 0 && (
         <nav aria-label="Paginação" className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 border-t border-border/40 pt-3 min-w-0">
           <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center sm:text-left">
             Mostrando {start + 1}–{end} de {filtered.length}
