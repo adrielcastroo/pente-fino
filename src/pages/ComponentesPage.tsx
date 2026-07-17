@@ -161,8 +161,12 @@ function ComponentesForm({
   const handleCodigoKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
-    if (quantidade && Number(quantidade) > 0) adicionar();
-    else qtdRef.current?.focus();
+    // Sempre encaminha para o input de quantidade, para que o conferente possa
+    // bipar a quantidade do pacote sem precisar clicar no campo.
+    setTimeout(() => {
+      qtdRef.current?.focus();
+      qtdRef.current?.select();
+    }, 0);
   };
   const handleQtdKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -305,7 +309,7 @@ function ComponentesForm({
             onKeyDown={handleQtdKey}
             onFocus={(e) => e.currentTarget.select()}
             placeholder="Bipe ou digite a quantidade"
-            className={cn(INPUT_BASE, 'text-center font-semibold text-base')}
+            className={cn(INPUT_BASE, 'uppercase')}
           />
           {/* Prévia de etiquetas */}
           {(() => {
