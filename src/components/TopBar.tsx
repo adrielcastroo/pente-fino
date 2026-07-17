@@ -39,6 +39,12 @@ const TopBar = memo(function TopBar() {
 
    const path = location.pathname.replace(/\/$/, '');
    const isRegistroRoute = path === '/estoque/tecido' || path === '/estoque/madeira' || path === '/estoque/motor';
+   const isComponentesRoute = path === '/estoque/componentes';
+   const componentesState = useSyncExternalStore(
+     componentesExportBus.subscribe,
+     componentesExportBus.getSnapshot,
+     componentesExportBus.getSnapshot,
+   );
 
     // Ensure conferente is synced with auth profile or guest name
     useEffect(() => {
