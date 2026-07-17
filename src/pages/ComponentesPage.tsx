@@ -867,6 +867,7 @@ export default function ComponentesPage() {
       qtdRef={qtdRef}
       totalLinhas={totais.linhas}
       totalPacotes={totais.totalPacotes}
+      totalEtiquetas={totais.totalEtiquetas}
       onFinalizar={finalizar}
       onLimpar={limpar}
       onUndo={undo}
