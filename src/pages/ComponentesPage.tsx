@@ -459,7 +459,12 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                             <Minus className="w-3.5 h-3.5" />
                           </Button>
                           <span className="min-w-10 text-center font-mono font-bold tabular-nums text-sm">
-                            {r.quantidade}
+                            {formatQtd(r.quantidade)}
+                            {r.unidade ? (
+                              <span className="ml-1 text-[10px] text-muted-foreground font-normal">
+                                {r.unidade}
+                              </span>
+                            ) : null}
                           </span>
                           <Button
                             size="icon"
@@ -471,6 +476,25 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
                             <Plus className="w-3.5 h-3.5" />
                           </Button>
                         </div>
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 sm:py-4 border-r border-border/20 text-center">
+                        {(() => {
+                          const plan = planEtiquetas(r.quantidade, r.pacoteEstocagem);
+                          if (plan.total <= 0) return <span className="text-muted-foreground/40">—</span>;
+                          const partes: string[] = [];
+                          if (plan.cheias > 0) partes.push(`${plan.cheias}× ${formatQtd(plan.por)}`);
+                          if (plan.resto > 0) partes.push(`1× ${formatQtd(plan.resto)}`);
+                          return (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-sm font-mono font-bold tabular-nums text-primary">
+                                {plan.total}
+                              </span>
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                {partes.join(' + ')}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 sm:px-5 py-3 sm:py-4 text-right">
                         <Button
