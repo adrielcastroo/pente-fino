@@ -1,4 +1,5 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useSyncExternalStore } from 'react';
+import { componentesExportBus } from '@/lib/componentes-export-bus';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
