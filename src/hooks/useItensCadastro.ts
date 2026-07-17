@@ -7,7 +7,13 @@ export function useItensCadastro() {
   return useQuery({
     queryKey: KEY,
     queryFn: () => itensCadastroService.list(),
-    staleTime: 5 * 60 * 1000,
+    // Cadastro muda com pouca frequência (edições manuais + reconciliação).
+    // staleTime alto reduz refetches paginados que saturam o DB (era o #1
+    // ofensor em pg_stat_statements: 13k+ chamadas / 1.6M ms totais).
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
