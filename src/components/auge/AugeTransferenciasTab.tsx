@@ -123,6 +123,13 @@ export default function AugeTransferenciasTab() {
                   <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{r.ds_situacao || r.situacao || '—'}</Badge></TableCell>
                   <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+                  <TableCell className="p-1" onClick={(e) => e.stopPropagation()}>
+                    {(r.situacao === 'D' || (r.ds_situacao || '').toLowerCase().includes('rascunho') || (r.ds_situacao || '').toLowerCase().includes('digit')) && (
+                      <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-amber-500 hover:text-amber-600" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
+                        <Zap className="w-3 h-3" /> Efetivar
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
