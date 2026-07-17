@@ -75,25 +75,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchProfile = async (userId: string, email?: string) => {
+    const fallback = () => {
+      setProfile({ id: userId, email, modules: ['estoque'] });
+      if (email) setConferente(email.split('@')[0]);
+    };
     try {
-      const { data, error } = await (supabase
+      const query = (supabase
         .from('profiles' as any)
         .select('*')
         .eq('id', userId)
         .maybeSingle() as any);
-
+      const timeout = new Promise<{ data: null; error: any }>((resolve) =>
+        setTimeout(() => resolve({ data: null, error: new Error('profile-timeout') }), 4000),
+      );
+      const { data, error }: any = await Promise.race([query, timeout]);
       if (!error && data) {
         setProfile(data);
         const name = data.display_name || email?.split('@')[0] || 'Usuário';
         setConferente(name);
         return;
       }
+      if (error) console.warn('[auth] fetchProfile error', error);
     } catch (e) {
-      console.warn('[auth] fetchProfile failed', e);
+      console.warn('[auth] fetchProfile threw', e);
     }
-    // Fallback: never leave profile null, or RoleHomeRedirect fica em loop.
-    setProfile({ id: userId, email, modules: ['estoque'] });
-    if (email) setConferente(email.split('@')[0]);
+    fallback();
   };
 
   const loginAsGuest = (name?: string) => {
