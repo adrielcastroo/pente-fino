@@ -324,7 +324,61 @@ export default function CadastrosPage() {
       )}
 
       <TooltipProvider>
+      {fornFilter === 'pendentes_auge' ? (
+        <div className="flex-1 overflow-auto border rounded-lg bg-card">
+          {pendentesLoading ? (
+            <p className="text-center text-muted-foreground py-12 text-sm">Buscando itens do Auge...</p>
+          ) : augePendentes.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12 text-sm">Nenhum item do Auge pendente — tudo cadastrado. 🎉</p>
+          ) : (
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
+                <TableRow>
+                  <TableHead className="w-[180px]">Código Auge</TableHead>
+                  <TableHead>Descrição (Auge)</TableHead>
+                  <TableHead className="w-[100px] text-right">Qt disp.</TableHead>
+                  <TableHead className="w-[140px] text-right">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {augePendentes.slice(0, 500).map((p) => {
+                  const q = search.trim().toLowerCase();
+                  if (q && !p.codigo.toLowerCase().includes(q) && !(p.descricao || '').toLowerCase().includes(q)) return null;
+                  return (
+                    <TableRow key={p.codigo}>
+                      <TableCell className="font-mono text-xs font-bold text-primary">{p.codigo}</TableCell>
+                      <TableCell className="text-xs">{p.descricao || <span className="text-muted-foreground/40">—</span>}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{p.qt_disponivel != null ? Number(p.qt_disponivel).toLocaleString('pt-BR') : '—'}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 h-8"
+                          onClick={() => {
+                            setEditing({
+                              codigo_interno: p.codigo,
+                              descricao: p.descricao || '',
+                              codigos_fornecedor: [],
+                            } as any);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Cadastrar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+          {augePendentes.length > 500 && (
+            <p className="text-center py-3 text-xs text-muted-foreground">Exibindo 500 de {augePendentes.length}. Refine com a busca.</p>
+          )}
+        </div>
+      ) : (<>
       {/* Mobile: cards empilhados */}
+
       <div className="md:hidden flex-1 overflow-auto space-y-2">
         {isLoading && <p className="text-center text-muted-foreground py-8 text-sm">Carregando...</p>}
         {!isLoading && filtered.length === 0 && (
