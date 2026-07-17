@@ -131,6 +131,29 @@ export const itensCadastroService = {
 
   async upsert(input: ItemCadastroInput, opts?: { changedField?: string | null; isEdit?: boolean }): Promise<ItemCadastro> {
     const base = prepare(input);
+
+    // Anti-duplicidade: se algum código de fornecedor já pertence a OUTRO
+    // código interno, aborta com mensagem clara em vez de criar cadastro
+    // conflitante. (O onConflict abaixo cobre duplicidade por codigo_interno.)
+    if (base.codigos_fornecedor_normalizado.length) {
+      const { data: conflitos, error: conflErr } = await supabase
+        .from('itens_cadastro')
+        .select('codigo_interno, codigos_fornecedor_normalizado')
+        .overlaps('codigos_fornecedor_normalizado', base.codigos_fornecedor_normalizado);
+      if (conflErr) throw conflErr;
+      const outros = (conflitos || []).filter((c: any) => c.codigo_interno !== base.codigo_interno);
+      if (outros.length) {
+        const doGrupo = new Set(base.codigos_fornecedor_normalizado);
+        const detalhe = outros
+          .map((c: any) => {
+            const dup = (c.codigos_fornecedor_normalizado || []).filter((n: string) => doGrupo.has(n));
+            return `${c.codigo_interno} (${dup.join(', ')})`;
+          })
+          .join('; ');
+        throw new Error(`Código de fornecedor já cadastrado em outro item: ${detalhe}`);
+      }
+    }
+
     const payload: any = { ...base };
     if (opts?.isEdit) {
       const audit = await buildAuditPayload(opts.changedField ?? null);
