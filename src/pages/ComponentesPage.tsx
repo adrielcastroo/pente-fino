@@ -979,10 +979,61 @@ export default function ComponentesPage() {
       );
     }
 
+    // Salva a conferência no histórico (/estoque/historico)
+    try {
+      const conferenteNome =
+        (!isGuest && (user?.user_metadata?.display_name || user?.email?.split('@')[0])) ||
+        (isGuest && guestName) ||
+        'Operador';
+      const startedAt = sessionStartedAtRef.current || new Date().toISOString();
+      const finishedAt = new Date().toISOString();
+      const processoNome = `Componentes ${new Date().toLocaleDateString('pt-BR')}`;
+
+      const conf = await conferenceService.insertConference(
+        processoNome,
+        conferenteNome,
+        startedAt,
+        finishedAt,
+      );
+
+      const registros = snapshot.map((it) => ({
+        id: crypto.randomUUID(),
+        item: it.codigo,
+        m2: 0,
+        mLinear: Number.isFinite(it.quantidade) ? it.quantidade : 0,
+        largura: 0,
+        endereco: '',
+        nf: '',
+        lote: '',
+        loteSistema: '',
+        posicao: null,
+        tipoTecido: it.descricao || 'Componente',
+        modoOrigem: 'componentes',
+        wasEdited: false,
+        editedBy: '',
+        editedAt: null,
+        quantidade: Number.isFinite(it.quantidade) ? Math.round(it.quantidade) : null,
+        loteMestreId: null,
+        avariaTipo: null,
+        avariaDescricao: null,
+        avariaFotoUrl: null,
+        curva_abc: 'C',
+      })) as any;
+
+      await registroService.insertRegistros((conf as any).id, registros, 'componentes');
+      toast.success('Conferência salva no histórico.');
+    } catch (err) {
+      console.error('[Componentes] falha ao salvar no histórico', err);
+      toast.error('Não foi possível salvar no histórico. Itens mantidos na tela.');
+      return; // Não limpa a tela para o operador poder tentar novamente
+    }
+
     setUndoStack((u) => [...u, { type: 'finalize', items: snapshot }]);
     setItens([]);
+    sessionStartedAtRef.current = null;
     codigoRef.current?.focus();
-  }, [itens, labelSettings]);
+  }, [itens, labelSettings, user, isGuest, guestName]);
+
 
   const undo = useCallback(() => {
     setUndoStack((stack) => {
