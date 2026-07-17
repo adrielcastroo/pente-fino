@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { atLeast, type Role } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import { prefetchRoute, prefetchOnIdle } from '@/lib/route-prefetch';
-import logoComb from '@/assets/logo-comb.png';
+import logoComb from '@/assets/logo-comb.webp';
 
 export type ModuleSidebarItem = {
   key: string;

@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Logo from '@/components/Logo';
 import Seo from '@/components/Seo';
-import logoComb from '@/assets/logo-comb.png';
+import logoComb from '@/assets/logo-comb.webp';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
