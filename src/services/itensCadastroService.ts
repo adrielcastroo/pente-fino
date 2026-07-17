@@ -2,6 +2,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { normalizarCodigo, extractCodigoFornecedor, codigoBate } from '@/lib/codigoFornecedor';
 import { buildAuditPayload } from '@/lib/audit';
 
+/**
+ * Wraps a Supabase query in an automatic retry loop.
+ *
+ * The Lovable preview injects a fetch proxy that occasionally aborts POST
+ * requests with `TypeError: Failed to fetch`. This helper retries such
+ * transient network failures with exponential backoff before giving up.
+ */
+async function fetchWithRetry<T>(
+  fn: () => PromiseLike<T>,
+  attempts = 3,
+  baseDelayMs = 400,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      lastErr = e;
+      const msg = String(e?.message || e || '');
+      const isTransient = /Failed to fetch|NetworkError|network|fetch/i.test(msg);
+      if (!isTransient || i === attempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, baseDelayMs * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
+}
+
 export interface ItemCadastro {
   id: string;
   codigo_interno: string;
@@ -253,17 +280,20 @@ export const itensCadastroService = {
     let toInsert = Array.from(map.values());
 
     if (skipExisting) {
-      // Busca códigos internos existentes em lotes (evita URL gigante)
+      // Busca códigos internos existentes em lotes (evita URL gigante e o
+      // proxy de fetch do preview do Lovable, que às vezes quebra lotes maiores).
       const keys = toInsert.map((i) => i.codigo_interno.trim());
       type Existing = { descricao: string; codigos: string[]; normalizados: string[] };
       const existing = new Map<string, Existing>();
-      const lookupChunk = 500;
+      const lookupChunk = 200;
       for (let i = 0; i < keys.length; i += lookupChunk) {
         const slice = keys.slice(i, i + lookupChunk);
-        const { data, error } = await supabase
-          .from('itens_cadastro')
-          .select('codigo_interno, descricao, codigos_fornecedor, codigos_fornecedor_normalizado')
-          .in('codigo_interno', slice);
+        const { data, error } = await fetchWithRetry(() =>
+          supabase
+            .from('itens_cadastro')
+            .select('codigo_interno, descricao, codigos_fornecedor, codigos_fornecedor_normalizado')
+            .in('codigo_interno', slice),
+        );
         if (error) throw new Error(`Falha ao verificar cadastros existentes: ${error.message}`);
         for (const r of data || []) {
           existing.set(r.codigo_interno, {
@@ -341,13 +371,15 @@ export const itensCadastroService = {
     if (allNorms.length) {
       // Consulta em chunks para não estourar URL
       const donoDe = new Map<string, string>(); // norm -> codigo_interno dono
-      const lookupChunk = 300;
+      const lookupChunk = 200;
       for (let i = 0; i < allNorms.length; i += lookupChunk) {
         const slice = allNorms.slice(i, i + lookupChunk);
-        const { data, error } = await supabase
-          .from('itens_cadastro')
-          .select('codigo_interno, codigos_fornecedor_normalizado')
-          .overlaps('codigos_fornecedor_normalizado', slice);
+        const { data, error } = await fetchWithRetry(() =>
+          supabase
+            .from('itens_cadastro')
+            .select('codigo_interno, codigos_fornecedor_normalizado')
+            .overlaps('codigos_fornecedor_normalizado', slice),
+        );
         if (error) throw new Error(`Falha ao verificar conflitos de código de fornecedor: ${error.message}`);
         for (const r of data || []) {
           for (const n of (r as any).codigos_fornecedor_normalizado || []) {
