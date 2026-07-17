@@ -136,10 +136,11 @@ export default function AugeAdminPanel() {
   };
 
   useEffect(() => {
-    loadRuns(); loadCounts(); doPing();
+    loadRuns(); loadCounts(); doPing(); loadFlag();
     const iv = setInterval(loadRuns, 15000);
     return () => clearInterval(iv);
-  }, [loadRuns, loadCounts, doPing]);
+  }, [loadRuns, loadCounts, doPing, loadFlag]);
+
 
   // Stats do painel
   const last24h = runs.filter(r => new Date(r.started_at).getTime() > Date.now() - 24 * 3600 * 1000);
