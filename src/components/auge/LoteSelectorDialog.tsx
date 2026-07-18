@@ -126,6 +126,37 @@ export default function LoteSelectorDialog({
   };
   const limpar = () => setSel({});
 
+  // Lista filtrada (aplicada em busca — Proc/NF/Lote/Série/Endereço)
+  const lotesFiltrados = useMemo(() => {
+    const q = filtro.toLowerCase().trim();
+    if (!q) return lotes;
+    return lotes.filter(l => (l.lote || '').toLowerCase().includes(q));
+  }, [lotes, filtro]);
+
+  // Sugestão FIFO: preenche do topo (Auge já devolve em ordem FIFO / por validade
+  // no fallback local) até bater a quantidade alvo.
+  const sugerirFIFO = () => {
+    if (!alvo || alvo <= 0) return;
+    const map: Record<string, number> = {};
+    let restante = alvo;
+    for (const l of lotesFiltrados) {
+      const disp = Number(l.quantidade || 0);
+      if (disp <= 0) continue;
+      if (restante <= 0) break;
+      if (modo === 'serie') {
+        // 1 unidade por série
+        map[l.lote] = disp;
+        restante -= disp;
+      } else {
+        const usar = Math.min(disp, restante);
+        map[l.lote] = usar;
+        restante -= usar;
+      }
+    }
+    setSel(map);
+  };
+
+
   const confirmar = () => {
     const result: LoteSelecionado[] = lotes
       .filter(l => (sel[l.lote] || 0) > 0)
