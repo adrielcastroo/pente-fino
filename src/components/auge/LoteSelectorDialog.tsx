@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Loader2, Layers, AlertCircle } from 'lucide-react';
+import { Loader2, Layers, AlertCircle, Search, Wand2 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 
 export interface LoteSelecionado {
