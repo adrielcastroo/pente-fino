@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Loader2, Layers, AlertCircle, Search, Wand2 } from 'lucide-react';
+import { Loader2, Layers, AlertCircle, Search, Wand2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 
 export interface LoteSelecionado {
@@ -17,6 +16,22 @@ export interface LoteSelecionado {
 }
 
 type Modo = 'lote' | 'serie';
+type SortKey = 'lote' | 'quantidade' | 'data_validade';
+type SortDir = 'asc' | 'desc';
+
+// Formata quantidade no padrão BR (0.000,00); inteiros exibidos sem casas.
+function fmtQtd(v: number): string {
+  const n = Number(v) || 0;
+  if (Number.isInteger(n)) return n.toLocaleString('pt-BR');
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Extrai parte numérica da série para ordenação/FIFO sequencial
+function serieNum(s: string): number {
+  const m = String(s || '').match(/\d+/g);
+  if (!m) return Number.POSITIVE_INFINITY;
+  return Number(m.join('')) || Number.POSITIVE_INFINITY;
+}
 
 export default function LoteSelectorDialog({
   open, onOpenChange, cdItem, deposito, descricao,
@@ -36,6 +51,8 @@ export default function LoteSelectorDialog({
   const [modo, setModo] = useState<Modo>('lote');
   const [filtro, setFiltro] = useState('');
   const [alvo, setAlvo] = useState<number>(qtdAlvo ?? 0);
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   // Map lote -> qtd (0 = não selecionado)
   const [sel, setSel] = useState<Record<string, number>>({});
 
@@ -43,13 +60,11 @@ export default function LoteSelectorDialog({
     if (open) setAlvo(qtdAlvo ?? 0);
   }, [open, qtdAlvo]);
 
-
   useEffect(() => {
     if (!open || !cdItem || !deposito) return;
     (async () => {
       setLoading(true);
       try {
-        // 1) Tenta série ao vivo (motores/controles). Se retornar dados, usa modo série.
         const serieRes = await supabase.functions.invoke('auge-sync?action=series_live', {
           body: { cdItem, cdDeposito: deposito },
         });
@@ -60,7 +75,6 @@ export default function LoteSelectorDialog({
           setLoading(false);
           return;
         }
-        // 2) Consulta lotes ao vivo (tecidos e demais controlados por lote)
         const loteRes = await supabase.functions.invoke('auge-sync?action=lotes_live', {
           body: { cdItem, cdDeposito: deposito },
         });
@@ -71,7 +85,6 @@ export default function LoteSelectorDialog({
           setLoading(false);
           return;
         }
-        // 3) Fallback: tabela local auge_lotes (caso item não seja controlado no Auge)
         const { data } = await supabase
           .from('auge_lotes')
           .select('lote, quantidade, data_fabricacao, data_validade')
@@ -86,16 +99,14 @@ export default function LoteSelectorDialog({
     })();
   }, [open, cdItem, deposito]);
 
-
-  // Inicializa seleção do estado inicial
   useEffect(() => {
     if (!open) return;
     const map: Record<string, number> = {};
     for (const s of initial) map[s.lote] = s.qtd;
     setSel(map);
-    // Heurística: se todos os lotes têm qtd inteira = disponível, provavelmente é série
     const looksSerie = initial.length > 0 && initial.every(s => s.qtd === s.disponivel);
-    setModo(looksSerie ? 'serie' : 'lote');
+    if (looksSerie) setModo('serie');
+    setSortKey(null);
   }, [open, initial]);
 
   const toggle = (lote: string, disponivel: number) => {
@@ -126,25 +137,64 @@ export default function LoteSelectorDialog({
   };
   const limpar = () => setSel({});
 
-  // Lista filtrada (aplicada em busca — Proc/NF/Lote/Série/Endereço)
-  const lotesFiltrados = useMemo(() => {
+  // Filtro + ordenação
+  const lotesExibidos = useMemo(() => {
     const q = filtro.toLowerCase().trim();
-    if (!q) return lotes;
-    return lotes.filter(l => (l.lote || '').toLowerCase().includes(q));
-  }, [lotes, filtro]);
+    let arr = q
+      ? lotes.filter(l => (l.lote || '').toLowerCase().includes(q))
+      : [...lotes];
 
-  // Sugestão FIFO: preenche do topo (Auge já devolve em ordem FIFO / por validade
-  // no fallback local) até bater a quantidade alvo.
+    if (sortKey) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      arr.sort((a, b) => {
+        if (sortKey === 'quantidade') {
+          return ((Number(a.quantidade) || 0) - (Number(b.quantidade) || 0)) * dir;
+        }
+        if (sortKey === 'data_validade') {
+          const va = a.data_validade ? new Date(a.data_validade).getTime() : Number.POSITIVE_INFINITY;
+          const vb = b.data_validade ? new Date(b.data_validade).getTime() : Number.POSITIVE_INFINITY;
+          return (va - vb) * dir;
+        }
+        // lote/série: numérico se possível, senão alfabético
+        const na = serieNum(a.lote); const nb = serieNum(b.lote);
+        if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return (na - nb) * dir;
+        return String(a.lote || '').localeCompare(String(b.lote || ''), 'pt-BR') * dir;
+      });
+    }
+    return arr;
+  }, [lotes, filtro, sortKey, sortDir]);
+
+  const toggleSort = (k: SortKey) => {
+    if (sortKey !== k) { setSortKey(k); setSortDir('asc'); return; }
+    setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+  };
+
+  const SortIcon = ({ k }: { k: SortKey }) => {
+    if (sortKey !== k) return <ArrowUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === 'asc' ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />;
+  };
+
+  // FIFO: em séries usa ordem numérica sequencial (mesma NF/lote agrupados)
   const sugerirFIFO = () => {
     if (!alvo || alvo <= 0) return;
+    let ordenados = [...lotesExibidos];
+    if (modo === 'serie') {
+      ordenados.sort((a, b) => serieNum(a.lote) - serieNum(b.lote));
+    } else {
+      // Lote: mais antigos primeiro (por validade)
+      ordenados.sort((a, b) => {
+        const va = a.data_validade ? new Date(a.data_validade).getTime() : Number.POSITIVE_INFINITY;
+        const vb = b.data_validade ? new Date(b.data_validade).getTime() : Number.POSITIVE_INFINITY;
+        return va - vb;
+      });
+    }
     const map: Record<string, number> = {};
     let restante = alvo;
-    for (const l of lotesFiltrados) {
+    for (const l of ordenados) {
       const disp = Number(l.quantidade || 0);
       if (disp <= 0) continue;
       if (restante <= 0) break;
       if (modo === 'serie') {
-        // 1 unidade por série
         map[l.lote] = disp;
         restante -= disp;
       } else {
@@ -155,7 +205,6 @@ export default function LoteSelectorDialog({
     }
     setSel(map);
   };
-
 
   const confirmar = () => {
     const result: LoteSelecionado[] = lotes
@@ -176,71 +225,63 @@ export default function LoteSelectorDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Layers className="w-4 h-4 text-primary" />
-            Selecionar lotes/séries
+            Selecionar {modo === 'serie' ? 'séries' : 'lotes'}
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
             <span className="font-mono text-primary">{cdItem}</span>
             {descricao && <> — {descricao}</>}
             {' · Origem '}<span className="font-mono">{deposito}</span>
+            {modo === 'serie' && (
+              <Badge variant="outline" className="ml-2 text-[9px] uppercase">Série · sem fração</Badge>
+            )}
           </p>
         </DialogHeader>
 
         <div className="flex flex-col gap-2 border-b pb-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <ToggleGroup type="single" value={modo} onValueChange={(v) => v && setModo(v as Modo)}>
-              <ToggleGroupItem value="lote" className="text-xs">
-                Lote (fracionado)
-              </ToggleGroupItem>
-              <ToggleGroupItem value="serie" className="text-xs">
-                Série (múltiplos)
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <div className="ml-auto flex items-center gap-2">
-              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selecionarTodos}>
-                Selecionar tudo
-              </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={limpar}>
-                Limpar
-              </Button>
-            </div>
-          </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
               <Input
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
-                placeholder="Filtrar por Proc, NF, endereço, série..."
+                placeholder={modo === 'serie' ? 'Filtrar por série...' : 'Filtrar por lote, Proc, NF...'}
                 className="pl-8 h-8 text-xs"
               />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] uppercase text-muted-foreground">Alvo</span>
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={alvo ? String(alvo).replace('.', ',') : ''}
-                onChange={(e) => {
-                  const v = Number(e.target.value.replace(',', '.').replace(/[^\d.]/g, ''));
-                  setAlvo(Number.isFinite(v) ? v : 0);
-                }}
-                placeholder="0"
-                className="h-8 text-xs text-right font-mono w-20"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-8 text-xs gap-1"
-                onClick={sugerirFIFO}
-                disabled={!alvo || alvo <= 0 || lotesFiltrados.length === 0}
-                title="Preenche automaticamente os lotes mais antigos até bater a quantidade alvo"
-              >
-                <Wand2 className="w-3.5 h-3.5" /> FIFO
-              </Button>
-            </div>
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={selecionarTodos}>
+              Selecionar tudo
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={limpar}>
+              Limpar
+            </Button>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] uppercase text-muted-foreground">Alvo</span>
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={alvo ? String(alvo).replace('.', ',') : ''}
+              onChange={(e) => {
+                const v = Number(e.target.value.replace(',', '.').replace(/[^\d.]/g, ''));
+                setAlvo(Number.isFinite(v) ? v : 0);
+              }}
+              placeholder="0"
+              className="h-8 text-xs text-right font-mono w-24"
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 text-xs gap-1"
+              onClick={sugerirFIFO}
+              disabled={!alvo || alvo <= 0 || lotesExibidos.length === 0}
+              title={modo === 'serie'
+                ? 'Marca séries em sequência numérica até bater o alvo'
+                : 'Preenche lotes mais antigos até bater o alvo'}
+            >
+              <Wand2 className="w-3.5 h-3.5" /> FIFO
+            </Button>
           </div>
         </div>
-
 
         <div className="flex-1 overflow-auto">
           {loading ? (
@@ -251,23 +292,43 @@ export default function LoteSelectorDialog({
               <p className="text-sm text-muted-foreground">
                 Nenhum lote/série do item <span className="font-mono">{cdItem}</span> no depósito <span className="font-mono">{deposito}</span>.
               </p>
-              <p className="text-[11px] text-muted-foreground/70">
-                Sincronize a entidade <b>lotes</b> no painel admin caso o item seja controlado.
-              </p>
             </div>
           ) : (
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-card z-10">
                 <tr className="text-[10px] uppercase text-muted-foreground border-b">
                   <th className="text-left p-2 w-8"></th>
-                  <th className="text-left p-2">Lote / Série</th>
-                  <th className="text-right p-2">Disponível</th>
-                  <th className="text-right p-2 w-32">{modo === 'lote' ? 'Qtd a transferir' : 'Será enviado'}</th>
-                  <th className="text-left p-2">Validade</th>
+                  <th
+                    className="text-left p-2 cursor-pointer select-none hover:text-primary"
+                    onClick={() => toggleSort('lote')}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {modo === 'serie' ? 'Série' : 'Lote'} <SortIcon k="lote" />
+                    </span>
+                  </th>
+                  <th
+                    className="text-right p-2 cursor-pointer select-none hover:text-primary"
+                    onClick={() => toggleSort('quantidade')}
+                  >
+                    <span className="inline-flex items-center gap-1 justify-end">
+                      Disponível <SortIcon k="quantidade" />
+                    </span>
+                  </th>
+                  <th className="text-right p-2 w-32">
+                    {modo === 'lote' ? 'Qtd a transferir' : 'Será enviado'}
+                  </th>
+                  <th
+                    className="text-left p-2 cursor-pointer select-none hover:text-primary"
+                    onClick={() => toggleSort('data_validade')}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      Validade <SortIcon k="data_validade" />
+                    </span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {lotesFiltrados.map(l => {
+                {lotesExibidos.map(l => {
                   const disponivel = Number(l.quantidade || 0);
                   const cur = sel[l.lote] || 0;
                   const checked = cur > 0;
@@ -282,7 +343,7 @@ export default function LoteSelectorDialog({
                       </td>
                       <td className="p-2 font-mono font-semibold text-primary">{l.lote}</td>
                       <td className="p-2 text-right font-mono tabular-nums">
-                        {disponivel.toLocaleString('pt-BR')}
+                        {fmtQtd(disponivel)}
                       </td>
                       <td className="p-2 text-right">
                         {modo === 'lote' ? (
@@ -301,7 +362,7 @@ export default function LoteSelectorDialog({
                           />
                         ) : (
                           <span className="font-mono tabular-nums">
-                            {checked ? disponivel.toLocaleString('pt-BR') : '—'}
+                            {checked ? fmtQtd(disponivel) : '—'}
                           </span>
                         )}
                       </td>
@@ -322,7 +383,7 @@ export default function LoteSelectorDialog({
               {Object.keys(sel).filter(k => sel[k] > 0).length} selecionados
             </Badge>
             <span className="text-muted-foreground">Total:</span>
-            <span className="font-mono font-bold text-primary">{total.toLocaleString('pt-BR')}</span>
+            <span className="font-mono font-bold text-primary">{fmtQtd(total)}</span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
