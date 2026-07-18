@@ -575,6 +575,7 @@ function mapTransferencia(r: any) {
     documento: cd ? String(cd) : null,
     nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
     ds_efetivacao: r.dsEfetivacao ?? null,
+    observacao: r.dsObservacao ?? r.dsObs ?? null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
