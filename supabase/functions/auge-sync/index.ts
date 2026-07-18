@@ -1145,6 +1145,16 @@ Deno.serve(async (req) => {
     }
 
 
+    if (action === 'sync_tecidos_map') {
+      const result = await syncTecidosMap(admin, auth);
+      return new Response(JSON.stringify({ ok: true, ...result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
+
     if (action === 'lotes_live' || action === 'series_live') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
