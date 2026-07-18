@@ -138,21 +138,28 @@ export default function AugeAdminPanel() {
 
   const syncTecidosMap = async () => {
     setSyncingEntity('tecidos_map');
-    const t = toast.loading('Reconstruindo mapa de tecidos a partir do Auge...');
+    const t = toast.loading('Iniciando sincronização de tecidos (roda em background)...');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tecidos_map', { method: 'POST' });
       if (error) throw error;
       if ((data as any)?.ok === false) throw new Error((data as any).error);
-      const r = data as any;
       toast.success(
-        `Tecidos: ${r.alocados ?? 0} alocados · ${r.sem_espaco ?? 0} sem espaço`,
-        { id: t },
+        'Sync iniciado em background. Acompanhe o progresso no histórico abaixo (leva ~1-3 min).',
+        { id: t, duration: 6000 },
       );
-      await Promise.all([loadRuns(), loadCounts()]);
+      await loadRuns();
+      // Recarrega periodicamente para acompanhar o run rodando
+      let tries = 0;
+      const iv = setInterval(async () => {
+        tries++;
+        await Promise.all([loadRuns(), loadCounts()]);
+        if (tries >= 20) clearInterval(iv);
+      }, 8000);
     } catch (e: any) {
       toast.error('Falha: ' + e.message, { id: t });
     } finally { setSyncingEntity(null); }
   };
+
 
 
   useEffect(() => {
