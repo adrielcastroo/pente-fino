@@ -1055,14 +1055,15 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     } catch (_) { /* noop */ }
   };
 
-  // 1. Itens candidatos: apenas tecidos (grupo/descrição contém "tecido")
-  //    (evita percorrer 3000+ itens sem lotes em dep 15 e estourar o timeout)
+  // 1. Itens candidatos: TODOS os produtos do Auge (usuário pediu cobertura total).
+  //    Prioriza itens com saldo>0 no dep 15 quando disponível, mas se não houver saldo
+  //    ainda faz a chamada — Auge pode retornar lotes zerados úteis para diagnóstico.
   const { data: produtos } = await admin
     .from('auge_produtos')
-    .select('codigo, descricao')
-    .or('descricao.ilike.%tecido%,descricao.ilike.%screen%,descricao.ilike.%blackout%');
+    .select('codigo, descricao');
 
   const items = (produtos ?? []).filter((p: any) => p.codigo);
+
 
 
   // 2. Larguras vindas do itens_cadastro (via raw da descrição? Não temos.)
@@ -1094,7 +1095,7 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   };
   const lotesBrutos: LoteBruto[] = [];
 
-  const BATCH = 12;
+  const BATCH = 20;
   let processed = 0;
   for (let i = 0; i < items.length; i += BATCH) {
     const chunk = items.slice(i, i + BATCH);
@@ -1129,10 +1130,11 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   }
 
 
-  // 4. Filtra apenas lotes com endereço TEC válido
-  const parsed = lotesBrutos
-    .map(l => ({ raw: l, addr: parseLoteTecido(l.dsDeposito) }))
-    .filter(x => x.addr !== null) as { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> }[];
+  // 4. Separa lotes com endereço TEC válido dos que não bateram no padrão
+  const parsedAll = lotesBrutos.map(l => ({ raw: l, addr: parseLoteTecido(l.dsDeposito) }));
+  const parsed = parsedAll.filter(x => x.addr !== null) as { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> }[];
+  const semPadrao = parsedAll.filter(x => x.addr === null).map(x => x.raw);
+
 
   // 5. Limpa estoque_posicoes atual de TECxx e tecidos_sem_espaco
   await admin.from('estoque_posicoes').delete().like('estrutura', 'TEC%');
@@ -1206,6 +1208,26 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     }
   };
   if (estoqueRows.length) await insertBatch('estoque_posicoes', estoqueRows);
+
+  // Lotes que voltaram do Auge mas não bateram no padrão TEC → pendentes sem endereço
+  for (const raw of semPadrao) {
+    overflowRows.push({
+      item: raw.descricao || raw.cdItem,
+      endereco_desejado: null,
+      estrutura: null,
+      coluna: null,
+      nivel: null,
+      proc: null,
+      m_linear: null,
+      largura: raw.largura || null,
+      m2: null,
+      lote: null,
+      lote_sistema: raw.dsDeposito,
+      auge_cd_item: raw.cdItem,
+      auge_cd_deposito: TEC_DEPOSITO_CD,
+      synced_at: nowIso,
+    });
+  }
   if (overflowRows.length) await insertBatch('tecidos_sem_espaco', overflowRows);
 
   return {
@@ -1214,10 +1236,12 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     itens_consultados: items.length,
     lotes_brutos: lotesBrutos.length,
     lotes_com_endereco: parsed.length,
+    lotes_sem_padrao: semPadrao.length,
     alocados: estoqueRows.length,
     sem_espaco: overflowRows.length,
   };
 }
+
 
 
 Deno.serve(async (req) => {
