@@ -453,6 +453,47 @@ async function downloadConferenceExcel(conf: Conference) {
   exportConferenceToExcel(headers, data, fileName, columnWidths);
 }
 
+// Constrói o payload inicial para o dialog de transferência a partir da conferência.
+// Agrupa por código de item; junta lotes (tecidos) e séries (motores/controles).
+function buildTransferInitialFromConference(conf: Conference) {
+  const map = new Map<string, {
+    cdItem: string;
+    descricao: string;
+    lotes: { lote: string; qtd: number; disponivel: number }[];
+    qtd: number;
+    modoLote?: 'lote' | 'serie';
+  }>();
+  for (const r of conf.registros) {
+    const code = (r.item || '').trim();
+    if (!code) continue;
+    const isMotor = r.modoOrigem === 'motor' || r.modoOrigem === 'controle';
+    const lote = (isMotor ? (r.loteSistema || r.lote) : r.lote) || '';
+    const qtd = isMotor
+      ? Number(r.quantidade || 1)
+      : Number(r.mLinear || r.m2 || r.quantidade || 0) || 0;
+    const cur = map.get(code) ?? { cdItem: code, descricao: '', lotes: [], qtd: 0 };
+    cur.qtd += qtd;
+    if (isMotor) cur.modoLote = 'serie';
+    if (lote) {
+      const ex = cur.lotes.find(l => l.lote === lote);
+      if (ex) { ex.qtd += qtd; ex.disponivel += qtd; }
+      else cur.lotes.push({ lote, qtd, disponivel: qtd });
+    }
+    map.set(code, cur);
+  }
+  return {
+    itens: [...map.values()].map(v => ({
+      cdItem: v.cdItem,
+      descricao: v.descricao,
+      cdDepositoOrigem: '',
+      cdDepositoDestino: '',
+      qtd: v.qtd || (v.lotes.reduce((a, b) => a + b.qtd, 0)),
+      lotes: v.lotes,
+      modoLote: v.modoLote,
+    })),
+    observacao: `Origem: conferência ${getConferenceFolderName(conf)}`,
+  };
+
 function getModeBadges(conf: Conference): string[] {
   const badges = new Set<string>();
   for (const r of conf.registros) {
