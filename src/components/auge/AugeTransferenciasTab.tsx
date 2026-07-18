@@ -5,18 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
 import NovaTransferenciaDialog from './NovaTransferenciaDialog';
+
+type Filtro = 'todos' | 'rascunho' | 'efetivada';
 
 export default function AugeTransferenciasTab() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
+  const [filtro, setFiltro] = useState<Filtro>('todos');
   const [detail, setDetail] = useState<any | null>(null);
   const [novaOpen, setNovaOpen] = useState(false);
+
+  const isRascunho = (r: any) =>
+    r.situacao === 'D' || r.situacao === '10' || r.situacao === 10 ||
+    /rascunho|edi[çc][ãa]o|digit/i.test(r.ds_situacao ?? '');
+  const isEfetivada = (r: any) => !!r.nr_efetivacao || /efetiv/i.test(r.ds_situacao ?? '');
 
   const efetivarRapido = async (row: any) => {
     if (!row?.documento) return;
@@ -37,7 +46,11 @@ export default function AugeTransferenciasTab() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any).from('auge_transferencias').select('*').order('data_movimento', { ascending: false, nullsFirst: false }).limit(500);
+    const { data, error } = await (supabase as any)
+      .from('auge_transferencias')
+      .select('*')
+      .order('data_movimento', { ascending: false, nullsFirst: false })
+      .limit(500);
     if (error) toast.error(error.message);
     setRows(data || []);
     setLoading(false);
@@ -63,22 +76,32 @@ export default function AugeTransferenciasTab() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return rows;
-    return rows.filter(r =>
-      (r.codigo_produto || '').toLowerCase().includes(q) ||
-      (r.documento || '').toLowerCase().includes(q) ||
-      (r.deposito_origem || '').toLowerCase().includes(q) ||
-      (r.deposito_destino || '').toLowerCase().includes(q)
-    );
-  }, [rows, search]);
+    return rows.filter(r => {
+      if (filtro === 'rascunho' && !isRascunho(r)) return false;
+      if (filtro === 'efetivada' && !isEfetivada(r)) return false;
+      if (!q) return true;
+      return (
+        (r.codigo_produto || '').toLowerCase().includes(q) ||
+        (r.documento || '').toLowerCase().includes(q) ||
+        (r.nr_efetivacao || '').toLowerCase().includes(q) ||
+        (r.deposito_origem || '').toLowerCase().includes(q) ||
+        (r.deposito_destino || '').toLowerCase().includes(q)
+      );
+    });
+  }, [rows, search, filtro]);
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-hidden">
       <div className="flex flex-col lg:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar produto, depósito, documento..." className="pl-10 h-11" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito..." className="pl-10 h-11" />
         </div>
+        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11">
+          <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
+          <ToggleGroupItem value="rascunho" className="h-11 px-3 text-xs">Rascunhos</ToggleGroupItem>
+          <ToggleGroupItem value="efetivada" className="h-11 px-3 text-xs">Efetivadas</ToggleGroupItem>
+        </ToggleGroup>
         <Button onClick={() => setNovaOpen(true)} variant="default" className="h-11 px-5 gap-2">
           <Plus className="w-4 h-4" />
           Nova
@@ -94,14 +117,15 @@ export default function AugeTransferenciasTab() {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center py-12 gap-3">
           <ArrowRightLeft className="w-10 h-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhuma transferência. Endpoint experimental.' : 'Sem resultados.'}</p>
+          <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhuma transferência.' : 'Sem resultados.'}</p>
         </div>
       ) : (
         <div className="flex-1 overflow-auto border rounded-lg bg-card">
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
-                <TableHead>Documento</TableHead>
+                <TableHead>Rascunho</TableHead>
+                <TableHead>Nº Efetivação</TableHead>
                 <TableHead>Origem → Destino</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-right">Qtd</TableHead>
@@ -114,6 +138,13 @@ export default function AugeTransferenciasTab() {
               {filtered.map(r => (
                 <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetail(r)}>
                   <TableCell className="font-mono text-xs font-bold text-primary">{r.documento || '—'}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {r.nr_efetivacao ? (
+                      <span className="font-bold text-emerald-500">{r.nr_efetivacao}</span>
+                    ) : (
+                      <span className="text-muted-foreground/60">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-xs">
                     <span className="font-mono">{r.deposito_origem || '?'}</span>
                     <ArrowRightLeft className="inline w-3 h-3 mx-1 text-muted-foreground" />
@@ -121,10 +152,17 @@ export default function AugeTransferenciasTab() {
                   </TableCell>
                   <TableCell className="font-mono text-xs">{r.codigo_produto || '—'}</TableCell>
                   <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
-                  <TableCell><Badge variant="outline" className="text-[10px]">{r.ds_situacao || r.situacao || '—'}</Badge></TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={isEfetivada(r) ? 'default' : isRascunho(r) ? 'secondary' : 'outline'}
+                      className="text-[10px]"
+                    >
+                      {r.ds_situacao || r.situacao || '—'}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
                   <TableCell className="p-1" onClick={(e) => e.stopPropagation()}>
-                    {(r.situacao === 'D' || (r.ds_situacao || '').toLowerCase().includes('rascunho') || (r.ds_situacao || '').toLowerCase().includes('digit')) && (
+                    {isRascunho(r) && !isEfetivada(r) && (
                       <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-amber-500 hover:text-amber-600" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
                         <Zap className="w-3 h-3" /> Efetivar
                       </Button>

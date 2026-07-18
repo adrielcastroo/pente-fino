@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -93,6 +93,20 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
     },
   });
 
+  const { data: lotes = [] } = useQuery({
+    queryKey: ['ficha-lotes', cod],
+    enabled: !!cod && open,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('auge_lotes')
+        .select('lote, deposito, quantidade, data_fabricacao, data_validade, synced_at')
+        .eq('codigo_produto', cod!)
+        .order('data_fabricacao', { ascending: false, nullsFirst: false })
+        .limit(100);
+      return (data ?? []) as any[];
+    },
+  });
+
   const totalSaldo = useMemo(
     () => saldos.reduce((acc: number, s: any) => acc + Number(s.quantidade ?? 0), 0),
     [saldos],
@@ -150,9 +164,12 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
             </Card>
 
             <Tabs defaultValue="depositos">
-              <TabsList className="w-full grid grid-cols-4">
+              <TabsList className="w-full grid grid-cols-5">
                 <TabsTrigger value="depositos" className="gap-1.5">
                   <Boxes className="h-3.5 w-3.5" /> Depósitos ({saldos.length})
+                </TabsTrigger>
+                <TabsTrigger value="lotes" className="gap-1.5">
+                  <Layers className="h-3.5 w-3.5" /> Lotes ({lotes.length})
                 </TabsTrigger>
                 <TabsTrigger value="kardex" className="gap-1.5">
                   <History className="h-3.5 w-3.5" /> Kardex ({kardex.length})
@@ -195,6 +212,45 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                   </table>
                 </Card>
               </TabsContent>
+
+              {/* Lotes / Séries */}
+              <TabsContent value="lotes" className="mt-2">
+                <Card className="overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted"><tr className="text-left">
+                      <th className="p-2">Lote / Série</th>
+                      <th className="p-2">Depósito</th>
+                      <th className="p-2 text-right">Qtd</th>
+                      <th className="p-2">Fabricação</th>
+                      <th className="p-2">Validade</th>
+                    </tr></thead>
+                    <tbody>
+                      {lotes.map((l: any, i: number) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-2 font-mono text-[11px] font-semibold text-primary">{l.lote ?? '—'}</td>
+                          <td className="p-2"><Badge variant="outline" className="text-[10px]">{l.deposito ?? '—'}</Badge></td>
+                          <td className="p-2 text-right tabular-nums">{Number(l.quantidade ?? 0).toLocaleString('pt-BR')}</td>
+                          <td className="p-2 text-[10px] text-muted-foreground">
+                            {l.data_fabricacao ? new Date(l.data_fabricacao).toLocaleDateString('pt-BR') : '—'}
+                          </td>
+                          <td className="p-2 text-[10px] text-muted-foreground">
+                            {l.data_validade ? new Date(l.data_validade).toLocaleDateString('pt-BR') : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                      {lotes.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-4 text-center text-muted-foreground text-[11px]">
+                            Nenhum lote/série no Auge para este item. Sincronize lotes na aba admin caso o item seja controlado por lote.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Card>
+              </TabsContent>
+
+
 
               {/* Kardex */}
               <TabsContent value="kardex" className="mt-2">

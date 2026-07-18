@@ -82,10 +82,17 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2 text-base flex-wrap">
               <ClipboardList className="h-5 w-5 text-primary" />
               Transferência
+              <span className="text-[10px] uppercase text-muted-foreground ml-1">Rascunho</span>
               <span className="font-mono text-primary">{transferencia.documento ?? '—'}</span>
+              {transferencia.nr_efetivacao && (
+                <>
+                  <span className="text-[10px] uppercase text-muted-foreground ml-1">Efetivação</span>
+                  <span className="font-mono text-emerald-500 font-bold">{transferencia.nr_efetivacao}</span>
+                </>
+              )}
               <Badge variant={situacaoTone as any} className="text-[10px] ml-1">
                 {transferencia.ds_situacao ?? transferencia.situacao ?? '—'}
               </Badge>
@@ -135,18 +142,23 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
 
             {/* Meta */}
             <Card className="p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <Meta icon={ClipboardList} label="Rascunho" value={transferencia.documento ?? '—'} mono />
+              <Meta icon={ClipboardList} label="Nº Efetivação (SAP)" value={transferencia.nr_efetivacao ?? '—'} mono />
               <Meta icon={Calendar} label="Data" value={transferencia.data_movimento ? formatDateBR(transferencia.data_movimento) : '—'} />
-              <Meta icon={User} label="Criado por" value={transferencia.usuario_criacao ?? '—'} />
-              <Meta icon={User} label="Efetivado por" value={transferencia.usuario_efetivacao ?? '—'} />
               <Meta icon={DollarSign} label="Valor" value={
                 transferencia.valor
                   ? Number(transferencia.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                   : '—'
               } />
+              <Meta icon={User} label="Criado por" value={transferencia.usuario_criacao ?? '—'} />
+              <Meta icon={User} label="Efetivado por" value={transferencia.usuario_efetivacao ?? '—'} />
               <Meta icon={User} label="Enviou (logística)" value={transferencia.usuario_enviou_logistica ?? '—'} />
               <Meta icon={User} label="Recebeu (logística)" value={transferencia.usuario_recebido_logistica ?? '—'} />
-              <Meta icon={Package} label="ID externo" value={transferencia.id_externo ?? '—'} mono />
-              <Meta icon={Calendar} label="Detalhe sinc." value={transferencia.detalhe_sincronizado_em ? formatDateBR(transferencia.detalhe_sincronizado_em) : '—'} />
+              {transferencia.ds_efetivacao && (
+                <div className="col-span-2 md:col-span-4 text-[11px] text-muted-foreground border-t pt-2">
+                  <span className="uppercase text-[10px] tracking-wide">Obs. efetivação:</span> {transferencia.ds_efetivacao}
+                </div>
+              )}
             </Card>
 
 
