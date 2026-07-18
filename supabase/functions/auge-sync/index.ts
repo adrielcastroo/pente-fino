@@ -1352,11 +1352,54 @@ Deno.serve(async (req) => {
 
 
     if (action === 'sync_tecidos_map') {
-      const result = await syncTecidosMap(admin, auth);
-      return new Response(JSON.stringify({ ok: true, ...result }), {
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'tecidos_map',
+        status: 'running',
+        started_at: new Date().toISOString(),
+        triggered_by: triggeredBy,
+        detalhes: { fase: 'iniciando' },
+      }).select('id').single();
+      const runId = runIns.data?.id as string | undefined;
+
+      const task = (async () => {
+        try {
+          const result = await syncTecidosMap(admin, auth, runId);
+          if (runId) {
+            await admin.from('auge_sync_runs').update({
+              status: 'success',
+              finished_at: new Date().toISOString(),
+              rows_processed: result.itens_consultados,
+              rows_upserted: (result.alocados ?? 0) + (result.sem_espaco ?? 0),
+              detalhes: result,
+            }).eq('id', runId);
+          }
+        } catch (e) {
+          if (runId) {
+            await admin.from('auge_sync_runs').update({
+              status: 'error',
+              finished_at: new Date().toISOString(),
+              error_message: e instanceof Error ? e.message : String(e),
+            }).eq('id', runId);
+          }
+        }
+      })();
+
+      // @ts-ignore - EdgeRuntime existe no Deno Deploy
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(task);
+      }
+
+      return new Response(JSON.stringify({
+        ok: true,
+        background: true,
+        run_id: runId,
+        message: 'Sincronização de tecidos iniciada em background. Acompanhe em /admin (histórico de runs).',
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
 
 
