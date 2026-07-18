@@ -87,7 +87,8 @@ export default function NovaTransferenciaDialog({
         cdDepositoOrigem: String(it.cdDepositoOrigem ?? ''),
         cdDepositoDestino: String(it.cdDepositoDestino ?? ''),
         qtd: String(it.qtd ?? '1').replace('.', ','),
-        lotes: [],
+        lotes: it.lotes ?? [],
+        modoLote: it.modoLote,
       })));
     } else {
       setLinhas([novaLinha()]);
