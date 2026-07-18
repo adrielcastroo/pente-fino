@@ -32,6 +32,14 @@ export default function TecidosSemEspacoTab() {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
   const [detail, setDetail] = useState<Row | null>(null);
+  const [sortKey, setSortKey] = useState<keyof Row | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const toggleSort = (key: keyof Row) => {
+    if (sortKey !== key) { setSortKey(key); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortKey(null); setSortDir('asc');
+  };
 
   const load = async () => {
     setLoading(true);
