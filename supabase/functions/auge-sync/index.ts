@@ -573,6 +573,8 @@ function mapTransferencia(r: any) {
     usuario_recebido_logistica: r.nmUsuarioRecebidoLogistica ?? null,
     valor: parseNum(r.vlCustoMovimentacao),
     documento: cd ? String(cd) : null,
+    nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
+    ds_efetivacao: r.dsEfetivacao ?? null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
