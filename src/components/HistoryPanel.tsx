@@ -493,6 +493,9 @@ function buildTransferInitialFromConference(conf: Conference) {
     })),
     observacao: `Origem: conferência ${getConferenceFolderName(conf)}`,
   };
+}
+
+
 
 function getModeBadges(conf: Conference): string[] {
   const badges = new Set<string>();
