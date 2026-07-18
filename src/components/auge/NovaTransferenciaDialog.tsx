@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowRightLeft, Plus, Trash2, Search } from 'lucide-react';
+import { Loader2, ArrowRightLeft, Plus, Trash2, Search, Layers, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import LoteSelectorDialog, { type LoteSelecionado } from './LoteSelectorDialog';
 
 interface Deposito { codigo: string; nome: string | null; }
 interface Produto { codigo: string; descricao: string | null; unidade: string | null; }
@@ -20,11 +21,14 @@ interface Linha {
   cdDepositoOrigem: string;
   cdDepositoDestino: string;
   qtd: string;
+  lotes: LoteSelecionado[]; // vazio = sem controle por lote
+  modoLote?: 'lote' | 'serie';
 }
 
 const novaLinha = (): Linha => ({
   key: crypto.randomUUID(),
   cdItem: '', descricao: '', cdDepositoOrigem: '', cdDepositoDestino: '', qtd: '1',
+  lotes: [],
 });
 
 export type TransfDialogMode = 'novo' | 'editar' | 'duplicar';
@@ -51,6 +55,8 @@ export default function NovaTransferenciaDialog({
   const [observacao, setObservacao] = useState('');
   const [efetivar, setEfetivar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [seletor, setSeletor] = useState<{ key: string } | null>(null);
+  const [visualizar, setVisualizar] = useState<Linha | null>(null);
 
   const isEdit = mode === 'editar' && !!initial?.cdMovimentacao;
   const cdEdit = initial?.cdMovimentacao ?? null;
@@ -63,7 +69,6 @@ export default function NovaTransferenciaDialog({
     })();
   }, [open]);
 
-  // Pré-preenche em modo editar/duplicar quando o diálogo abre
   useEffect(() => {
     if (!open) return;
     if (initial?.itens?.length) {
@@ -74,6 +79,7 @@ export default function NovaTransferenciaDialog({
         cdDepositoOrigem: String(it.cdDepositoOrigem ?? ''),
         cdDepositoDestino: String(it.cdDepositoDestino ?? ''),
         qtd: String(it.qtd ?? '1').replace('.', ','),
+        lotes: [],
       })));
     } else {
       setLinhas([novaLinha()]);
@@ -82,7 +88,6 @@ export default function NovaTransferenciaDialog({
     setOrigemPadrao(''); setDestinoPadrao(''); setEfetivar(false);
   }, [open, initial]);
 
-  // Ao mudar depósito padrão, aplica em todas as linhas vazias
   useEffect(() => {
     if (!origemPadrao) return;
     setLinhas(ls => ls.map(l => l.cdDepositoOrigem ? l : { ...l, cdDepositoOrigem: origemPadrao }));
@@ -92,10 +97,15 @@ export default function NovaTransferenciaDialog({
     setLinhas(ls => ls.map(l => l.cdDepositoDestino ? l : { ...l, cdDepositoDestino: destinoPadrao }));
   }, [destinoPadrao]);
 
+  const linhaTotal = (l: Linha) =>
+    l.lotes.length > 0
+      ? l.lotes.reduce((a, b) => a + (Number(b.qtd) || 0), 0)
+      : Number(String(l.qtd).replace(',', '.')) || 0;
+
   const canSubmit = useMemo(
     () => !loading && linhas.every(l =>
       l.cdItem.trim() && l.cdDepositoOrigem && l.cdDepositoDestino &&
-      l.cdDepositoOrigem !== l.cdDepositoDestino && Number(l.qtd.replace(',', '.')) > 0
+      l.cdDepositoOrigem !== l.cdDepositoDestino && linhaTotal(l) > 0
     ),
     [linhas, loading],
   );
@@ -117,6 +127,8 @@ export default function NovaTransferenciaDialog({
     cdDepositoDestino: destinoPadrao,
   }]);
 
+  const linhaSelecionador = linhas.find(l => l.key === seletor?.key) ?? null;
+
   const submit = async () => {
     if (!canSubmit) return;
     setLoading(true);
@@ -125,12 +137,24 @@ export default function NovaTransferenciaDialog({
       efetivar ? 'Criando e efetivando...' : 'Criando transferência...'
     );
     try {
-      const itens = linhas.map(l => ({
-        cdItem: l.cdItem.trim(),
-        cdDepositoOrigem: l.cdDepositoOrigem,
-        cdDepositoDestino: l.cdDepositoDestino,
-        qtd: Number(l.qtd.replace(',', '.')),
-      }));
+      // Expande cada linha em N itens quando há lotes selecionados
+      const itens = linhas.flatMap(l => {
+        if (l.lotes.length > 0) {
+          return l.lotes.map(lt => ({
+            cdItem: l.cdItem.trim(),
+            cdDepositoOrigem: l.cdDepositoOrigem,
+            cdDepositoDestino: l.cdDepositoDestino,
+            qtd: Number(lt.qtd),
+            nrLote: lt.lote,
+          }));
+        }
+        return [{
+          cdItem: l.cdItem.trim(),
+          cdDepositoOrigem: l.cdDepositoOrigem,
+          cdDepositoDestino: l.cdDepositoDestino,
+          qtd: Number(String(l.qtd).replace(',', '.')),
+        }];
+      });
       const endpoint = isEdit
         ? 'auge-sync?action=transferencia_atualizar'
         : 'auge-sync?action=transferencia_criar';
@@ -157,6 +181,7 @@ export default function NovaTransferenciaDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => { if (!loading) onOpenChange(o); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -171,7 +196,6 @@ export default function NovaTransferenciaDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2 overflow-auto pr-1">
-          {/* Depósitos padrão */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Origem padrão</Label>
@@ -201,7 +225,6 @@ export default function NovaTransferenciaDialog({
             </div>
           </div>
 
-          {/* Linhas de itens */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs">Itens ({linhas.length})</Label>
@@ -210,65 +233,114 @@ export default function NovaTransferenciaDialog({
               </Button>
             </div>
 
-            {linhas.map((l, idx) => (
-              <div key={l.key} className="border rounded-md p-2.5 space-y-2 bg-card/50">
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-[10px]">#{idx + 1}</Badge>
-                  {linhas.length > 1 && (
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive"
-                      onClick={() => removeLinha(l.key)}>
-                      <Trash2 className="w-3.5 h-3.5" />
+            {linhas.map((l, idx) => {
+              const total = linhaTotal(l);
+              const temLotes = l.lotes.length > 0;
+              const podeSelecionarLote = !!l.cdItem && !!l.cdDepositoOrigem;
+              return (
+                <div key={l.key} className="border rounded-md p-2.5 space-y-2 bg-card/50">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-[10px]">#{idx + 1}</Badge>
+                    {linhas.length > 1 && (
+                      <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive"
+                        onClick={() => removeLinha(l.key)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <ItemAutocomplete
+                    cdItem={l.cdItem}
+                    descricao={l.descricao}
+                    onSelect={(p) => updateLinha(l.key, { cdItem: p.codigo, descricao: p.descricao || '', lotes: [] })}
+                    onCdItemChange={(v) => updateLinha(l.key, { cdItem: v, lotes: [] })}
+                  />
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-[10px]">Origem</Label>
+                      <Select value={l.cdDepositoOrigem} onValueChange={(v) => updateLinha(l.key, { cdDepositoOrigem: v, lotes: [] })}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {depositos.map(d => (
+                            <SelectItem key={d.codigo} value={d.codigo}>
+                              <span className="font-mono">{d.codigo}</span> {d.nome ? `— ${d.nome}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">Destino</Label>
+                      <Select value={l.cdDepositoDestino} onValueChange={(v) => updateLinha(l.key, { cdDepositoDestino: v })}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {depositos.map(d => (
+                            <SelectItem key={d.codigo} value={d.codigo} disabled={d.codigo === l.cdDepositoOrigem}>
+                              <span className="font-mono">{d.codigo}</span> {d.nome ? `— ${d.nome}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">
+                        Quantidade {temLotes && <span className="text-primary">(auto lotes)</span>}
+                      </Label>
+                      {temLotes ? (
+                        <div className="h-8 flex items-center px-2 rounded-md border bg-muted/40 font-mono text-xs text-primary font-semibold">
+                          {total.toLocaleString('pt-BR')}
+                        </div>
+                      ) : (
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={l.qtd}
+                          onChange={(e) => updateLinha(l.key, { qtd: e.target.value.replace(/[^\d.,]/g, '') })}
+                          className="h-8 text-xs font-mono"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ações de lote/série */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
+                    <Button
+                      type="button" size="sm" variant="outline"
+                      className="h-7 text-[11px] gap-1"
+                      disabled={!podeSelecionarLote}
+                      onClick={() => setSeletor({ key: l.key })}
+                      title={podeSelecionarLote ? '' : 'Escolha item e origem primeiro'}
+                    >
+                      <Layers className="w-3 h-3" />
+                      {temLotes ? 'Alterar lotes/séries' : 'Selecionar lotes/séries'}
                     </Button>
-                  )}
-                </div>
-
-                <ItemAutocomplete
-                  cdItem={l.cdItem}
-                  descricao={l.descricao}
-                  onSelect={(p) => updateLinha(l.key, { cdItem: p.codigo, descricao: p.descricao || '' })}
-                  onCdItemChange={(v) => updateLinha(l.key, { cdItem: v })}
-                />
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Label className="text-[10px]">Origem</Label>
-                    <Select value={l.cdDepositoOrigem} onValueChange={(v) => updateLinha(l.key, { cdDepositoOrigem: v })}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        {depositos.map(d => (
-                          <SelectItem key={d.codigo} value={d.codigo}>
-                            <span className="font-mono">{d.codigo}</span> {d.nome ? `— ${d.nome}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-[10px]">Destino</Label>
-                    <Select value={l.cdDepositoDestino} onValueChange={(v) => updateLinha(l.key, { cdDepositoDestino: v })}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        {depositos.map(d => (
-                          <SelectItem key={d.codigo} value={d.codigo} disabled={d.codigo === l.cdDepositoOrigem}>
-                            <span className="font-mono">{d.codigo}</span> {d.nome ? `— ${d.nome}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-[10px]">Quantidade</Label>
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={l.qtd}
-                      onChange={(e) => updateLinha(l.key, { qtd: e.target.value.replace(/[^\d.,]/g, '') })}
-                      className="h-8 text-xs font-mono"
-                    />
+                    {temLotes && (
+                      <>
+                        <Button
+                          type="button" size="sm" variant="ghost"
+                          className="h-7 text-[11px] gap-1"
+                          onClick={() => setVisualizar(l)}
+                        >
+                          <Eye className="w-3 h-3" />
+                          Ver seleção ({l.lotes.length})
+                        </Button>
+                        <Button
+                          type="button" size="sm" variant="ghost"
+                          className="h-7 text-[11px] text-destructive"
+                          onClick={() => updateLinha(l.key, { lotes: [] })}
+                        >
+                          Limpar lotes
+                        </Button>
+                        <Badge variant="secondary" className="text-[10px] font-mono">
+                          {l.modoLote === 'serie' ? 'Série' : 'Lote'}
+                        </Badge>
+                      </>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="space-y-1.5">
@@ -302,6 +374,76 @@ export default function NovaTransferenciaDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {linhaSelecionador && (
+      <LoteSelectorDialog
+        open={!!seletor}
+        onOpenChange={(o) => !o && setSeletor(null)}
+        cdItem={linhaSelecionador.cdItem}
+        deposito={linhaSelecionador.cdDepositoOrigem}
+        descricao={linhaSelecionador.descricao}
+        initial={linhaSelecionador.lotes}
+        onConfirm={(sel, modo) => {
+          updateLinha(linhaSelecionador.key, { lotes: sel, modoLote: modo });
+        }}
+      />
+    )}
+
+    {/* Visualização somente-leitura, com atalho para editar */}
+    <Dialog open={!!visualizar} onOpenChange={(o) => !o && setVisualizar(null)}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Eye className="w-4 h-4 text-primary" />
+            Lotes/séries selecionados
+          </DialogTitle>
+          {visualizar && (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-mono text-primary">{visualizar.cdItem}</span>
+              {visualizar.descricao && <> — {visualizar.descricao}</>}
+            </p>
+          )}
+        </DialogHeader>
+        {visualizar && (
+          <div className="space-y-2 max-h-[50vh] overflow-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[10px] uppercase text-muted-foreground border-b">
+                  <th className="text-left p-2">Lote/Série</th>
+                  <th className="text-right p-2">Qtd</th>
+                  <th className="text-right p-2">Disponível</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visualizar.lotes.map(lt => (
+                  <tr key={lt.lote} className="border-b">
+                    <td className="p-2 font-mono font-semibold text-primary">{lt.lote}</td>
+                    <td className="p-2 text-right font-mono">{lt.qtd.toLocaleString('pt-BR')}</td>
+                    <td className="p-2 text-right text-muted-foreground font-mono">{lt.disponivel.toLocaleString('pt-BR')}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t font-bold">
+                  <td className="p-2 text-right">Total</td>
+                  <td className="p-2 text-right font-mono text-primary">
+                    {visualizar.lotes.reduce((a, b) => a + b.qtd, 0).toLocaleString('pt-BR')}
+                  </td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setVisualizar(null)}>Fechar</Button>
+          <Button onClick={() => { if (visualizar) { setSeletor({ key: visualizar.key }); setVisualizar(null); } }}>
+            Alterar seleção
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
@@ -384,4 +526,3 @@ function ItemAutocomplete({
     </div>
   );
 }
-
