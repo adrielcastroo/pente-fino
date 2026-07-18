@@ -93,6 +93,20 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
     },
   });
 
+  const { data: lotes = [] } = useQuery({
+    queryKey: ['ficha-lotes', cod],
+    enabled: !!cod && open,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('auge_lotes')
+        .select('lote, deposito, quantidade, data_fabricacao, data_validade, synced_at')
+        .eq('codigo_produto', cod!)
+        .order('data_fabricacao', { ascending: false, nullsFirst: false })
+        .limit(100);
+      return (data ?? []) as any[];
+    },
+  });
+
   const totalSaldo = useMemo(
     () => saldos.reduce((acc: number, s: any) => acc + Number(s.quantidade ?? 0), 0),
     [saldos],
