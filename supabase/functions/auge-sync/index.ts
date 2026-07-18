@@ -1130,10 +1130,11 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   }
 
 
-  // 4. Filtra apenas lotes com endereço TEC válido
-  const parsed = lotesBrutos
-    .map(l => ({ raw: l, addr: parseLoteTecido(l.dsDeposito) }))
-    .filter(x => x.addr !== null) as { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> }[];
+  // 4. Separa lotes com endereço TEC válido dos que não bateram no padrão
+  const parsedAll = lotesBrutos.map(l => ({ raw: l, addr: parseLoteTecido(l.dsDeposito) }));
+  const parsed = parsedAll.filter(x => x.addr !== null) as { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> }[];
+  const semPadrao = parsedAll.filter(x => x.addr === null).map(x => x.raw);
+
 
   // 5. Limpa estoque_posicoes atual de TECxx e tecidos_sem_espaco
   await admin.from('estoque_posicoes').delete().like('estrutura', 'TEC%');
