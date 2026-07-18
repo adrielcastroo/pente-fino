@@ -1016,9 +1016,10 @@ async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
 
 // ============================================================
 // Sincronização Tecidos → estoque_posicoes (por endereço embutido)
-// Parse do dsDeposito: "TEC02.B.N04  PROC29863/26 27M-1"
+// Parse do dsDeposito: "TEC0.B.N05 PROC19395/23 27m-2" | "TEC02.B.N04 PROC29863/26 27M-1"
 // ============================================================
-const TEC_ADDR_RE = /^(TEC\d{2})\.([A-Z])\.N(\d{2})\s+(.*?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
+// Aceita TEC + 1-2 dígitos, nível 1-2 dígitos, M/m com sufixo opcional.
+const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
 const TEC_DEPOSITO_CD = '15'; // "Lotes Tec/Mad Inteiros"
 
 function parseLoteTecido(dsDeposito: string): {
@@ -1029,46 +1030,59 @@ function parseLoteTecido(dsDeposito: string): {
   const s = dsDeposito.replace(/\s+/g, ' ').trim();
   const m = s.match(TEC_ADDR_RE);
   if (!m) return null;
-  const [, est, col, niv, proc, ml, suf] = m;
+  const [, num, col, niv, proc, ml, suf] = m;
+  const estrutura = `TEC${num.padStart(2, '0')}`;
+  const coluna = col.toUpperCase();
+  const nivelStr = niv.padStart(2, '0');
   return {
-    estrutura: est.toUpperCase(),
-    coluna: col.toUpperCase(),
+    estrutura,
+    coluna,
     nivel: parseInt(niv, 10),
     proc: proc.trim(),
     m_linear: parseFloat(ml.replace(',', '.')),
     sufixo: suf || '',
-    endereco: `${est.toUpperCase()}.${col.toUpperCase()}.N${niv.padStart(2, '0')}`,
+    endereco: `${estrutura}.${coluna}.N${nivelStr}`,
   };
 }
 
-async function syncTecidosMap(admin: any, auth: any) {
+async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   const startedAt = new Date().toISOString();
 
-  // 1. Lista de itens com estoque em depósito 15 (tecidos)
+  const logProgress = async (detalhes: any) => {
+    if (!runId) return;
+    try {
+      await admin.from('auge_sync_runs').update({ detalhes }).eq('id', runId);
+    } catch (_) { /* noop */ }
+  };
+
+  // 1. Itens candidatos: apenas tecidos (grupo/descrição contém "tecido")
+  //    (evita percorrer 3000+ itens sem lotes em dep 15 e estourar o timeout)
   const { data: produtos } = await admin
     .from('auge_produtos')
-    .select('codigo, descricao, raw')
-    .gt('qt_estoque', 0);
+    .select('codigo, descricao')
+    .or('descricao.ilike.%tecido%,descricao.ilike.%screen%,descricao.ilike.%blackout%');
 
   const items = (produtos ?? []).filter((p: any) => p.codigo);
+
 
   // 2. Larguras vindas do itens_cadastro (via raw da descrição? Não temos.)
   //    Extraímos largura numérica da descrição do produto (ex: "TECIDO XYZ 2,80M")
   //    Se não conseguir, fica 0.
   const extractLargura = (desc: string): number => {
     if (!desc) return 0;
-    // Procura padrão "L{numero}" ou "{numero}M" ou "{numero}cm"
-    const cm = desc.match(/(\d+[.,]?\d*)\s*cm\b/i);
-    if (cm) return parseFloat(cm[1].replace(',', '.')) / 100;
-    const m = desc.match(/L\s*(\d[.,]?\d*)\s*M?\b/i);
-    if (m) return parseFloat(m[1].replace(',', '.'));
-    const mFallback = desc.match(/(\d[.,]?\d*)\s*M\b/i);
-    if (mFallback) {
-      const v = parseFloat(mFallback[1].replace(',', '.'));
-      if (v > 0.5 && v < 5) return v; // largura plausível
-    }
+    const clamp = (v: number) => (v >= 0.5 && v <= 5 ? v : 0);
+    // Padrão: "2,80L" ou "2.80L" (número seguido de L, com no máx 3 dígitos antes)
+    const preL = desc.match(/(?<![\d.,])(\d{1,2}(?:[.,]\d{1,3})?)\s*L\b/i);
+    if (preL) return clamp(parseFloat(preL[1].replace(',', '.')));
+    // Padrão: "L 2,80"
+    const posL = desc.match(/\bL\s*(\d{1,2}(?:[.,]\d{1,3})?)\b/i);
+    if (posL) return clamp(parseFloat(posL[1].replace(',', '.')));
+    // Padrão: "cm"
+    const cm = desc.match(/(\d{2,3})\s*cm\b/i);
+    if (cm) return clamp(parseFloat(cm[1]) / 100);
     return 0;
   };
+
 
   // 3. Busca lotes para cada item (paralelo em batches de 6)
   type LoteBruto = {
@@ -1080,7 +1094,7 @@ async function syncTecidosMap(admin: any, auth: any) {
   };
   const lotesBrutos: LoteBruto[] = [];
 
-  const BATCH = 6;
+  const BATCH = 12;
   let processed = 0;
   for (let i = 0; i < items.length; i += BATCH) {
     const chunk = items.slice(i, i + BATCH);
@@ -1104,7 +1118,16 @@ async function syncTecidosMap(admin: any, auth: any) {
       if (r.status === 'fulfilled') lotesBrutos.push(...r.value);
     }
     processed += chunk.length;
+    if (processed % 60 === 0 || processed >= items.length) {
+      await logProgress({
+        fase: 'fetching_lotes',
+        processed,
+        total: items.length,
+        lotes_encontrados: lotesBrutos.length,
+      });
+    }
   }
+
 
   // 4. Filtra apenas lotes com endereço TEC válido
   const parsed = lotesBrutos
@@ -1330,11 +1353,54 @@ Deno.serve(async (req) => {
 
 
     if (action === 'sync_tecidos_map') {
-      const result = await syncTecidosMap(admin, auth);
-      return new Response(JSON.stringify({ ok: true, ...result }), {
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'tecidos_map',
+        status: 'running',
+        started_at: new Date().toISOString(),
+        triggered_by: triggeredBy,
+        detalhes: { fase: 'iniciando' },
+      }).select('id').single();
+      const runId = runIns.data?.id as string | undefined;
+
+      const task = (async () => {
+        try {
+          const result = await syncTecidosMap(admin, auth, runId);
+          if (runId) {
+            await admin.from('auge_sync_runs').update({
+              status: 'success',
+              finished_at: new Date().toISOString(),
+              rows_processed: result.itens_consultados,
+              rows_upserted: (result.alocados ?? 0) + (result.sem_espaco ?? 0),
+              detalhes: result,
+            }).eq('id', runId);
+          }
+        } catch (e) {
+          if (runId) {
+            await admin.from('auge_sync_runs').update({
+              status: 'error',
+              finished_at: new Date().toISOString(),
+              error_message: e instanceof Error ? e.message : String(e),
+            }).eq('id', runId);
+          }
+        }
+      })();
+
+      // @ts-ignore - EdgeRuntime existe no Deno Deploy
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(task);
+      }
+
+      return new Response(JSON.stringify({
+        ok: true,
+        background: true,
+        run_id: runId,
+        message: 'Sincronização de tecidos iniciada em background. Acompanhe em /admin (histórico de runs).',
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
 
 
