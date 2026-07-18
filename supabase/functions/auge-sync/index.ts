@@ -1014,7 +1014,191 @@ async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
 }
 
 
+// ============================================================
+// Sincronização Tecidos → estoque_posicoes (por endereço embutido)
+// Parse do dsDeposito: "TEC02.B.N04  PROC29863/26 27M-1"
+// ============================================================
+const TEC_ADDR_RE = /^(TEC\d{2})\.([A-Z])\.N(\d{2})\s+(.*?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
+const TEC_DEPOSITO_CD = '15'; // "Lotes Tec/Mad Inteiros"
+
+function parseLoteTecido(dsDeposito: string): {
+  estrutura: string; coluna: string; nivel: number;
+  proc: string; m_linear: number; sufixo: string; endereco: string;
+} | null {
+  if (!dsDeposito) return null;
+  const s = dsDeposito.replace(/\s+/g, ' ').trim();
+  const m = s.match(TEC_ADDR_RE);
+  if (!m) return null;
+  const [, est, col, niv, proc, ml, suf] = m;
+  return {
+    estrutura: est.toUpperCase(),
+    coluna: col.toUpperCase(),
+    nivel: parseInt(niv, 10),
+    proc: proc.trim(),
+    m_linear: parseFloat(ml.replace(',', '.')),
+    sufixo: suf || '',
+    endereco: `${est.toUpperCase()}.${col.toUpperCase()}.N${niv.padStart(2, '0')}`,
+  };
+}
+
+async function syncTecidosMap(admin: any, auth: any) {
+  const startedAt = new Date().toISOString();
+
+  // 1. Lista de itens com estoque em depósito 15 (tecidos)
+  const { data: produtos } = await admin
+    .from('auge_produtos')
+    .select('codigo, descricao, raw')
+    .gt('qt_estoque', 0);
+
+  const items = (produtos ?? []).filter((p: any) => p.codigo);
+
+  // 2. Larguras vindas do itens_cadastro (via raw da descrição? Não temos.)
+  //    Extraímos largura numérica da descrição do produto (ex: "TECIDO XYZ 2,80M")
+  //    Se não conseguir, fica 0.
+  const extractLargura = (desc: string): number => {
+    if (!desc) return 0;
+    // Procura padrão "L{numero}" ou "{numero}M" ou "{numero}cm"
+    const cm = desc.match(/(\d+[.,]?\d*)\s*cm\b/i);
+    if (cm) return parseFloat(cm[1].replace(',', '.')) / 100;
+    const m = desc.match(/L\s*(\d[.,]?\d*)\s*M?\b/i);
+    if (m) return parseFloat(m[1].replace(',', '.'));
+    const mFallback = desc.match(/(\d[.,]?\d*)\s*M\b/i);
+    if (mFallback) {
+      const v = parseFloat(mFallback[1].replace(',', '.'));
+      if (v > 0.5 && v < 5) return v; // largura plausível
+    }
+    return 0;
+  };
+
+  // 3. Busca lotes para cada item (paralelo em batches de 6)
+  type LoteBruto = {
+    cdItem: string;
+    descricao: string;
+    largura: number;
+    dsDeposito: string;
+    quantidade: number;
+  };
+  const lotesBrutos: LoteBruto[] = [];
+
+  const BATCH = 6;
+  let processed = 0;
+  for (let i = 0; i < items.length; i += BATCH) {
+    const chunk = items.slice(i, i + BATCH);
+    const results = await Promise.allSettled(
+      chunk.map(async (p: any) => {
+        try {
+          const rows = await fetchLotesLive(auth, p.codigo, TEC_DEPOSITO_CD);
+          return rows.map((r: any) => ({
+            cdItem: p.codigo,
+            descricao: p.descricao ?? '',
+            largura: extractLargura(p.descricao ?? ''),
+            dsDeposito: r.lote,
+            quantidade: r.quantidade,
+          }));
+        } catch (_) {
+          return [];
+        }
+      })
+    );
+    for (const r of results) {
+      if (r.status === 'fulfilled') lotesBrutos.push(...r.value);
+    }
+    processed += chunk.length;
+  }
+
+  // 4. Filtra apenas lotes com endereço TEC válido
+  const parsed = lotesBrutos
+    .map(l => ({ raw: l, addr: parseLoteTecido(l.dsDeposito) }))
+    .filter(x => x.addr !== null) as { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> }[];
+
+  // 5. Limpa estoque_posicoes atual de TECxx e tecidos_sem_espaco
+  await admin.from('estoque_posicoes').delete().like('estrutura', 'TEC%');
+  await admin.from('tecidos_sem_espaco').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+  // 6. Agrupa por célula e aloca posições 1..30
+  const porCelula = new Map<string, typeof parsed>();
+  for (const p of parsed) {
+    const key = `${p.addr.estrutura}.${p.addr.coluna}.${p.addr.nivel}`;
+    if (!porCelula.has(key)) porCelula.set(key, []);
+    porCelula.get(key)!.push(p);
+  }
+
+  const estoqueRows: any[] = [];
+  const overflowRows: any[] = [];
+  const nowIso = new Date().toISOString();
+
+  for (const [_key, list] of porCelula.entries()) {
+    // Ordena por dsDeposito para estabilidade
+    list.sort((a, b) => a.raw.dsDeposito.localeCompare(b.raw.dsDeposito));
+    let pos = 1;
+    for (const item of list) {
+      const { addr, raw } = item;
+      const loteFinal = `${raw.dsDeposito}`; // lote_sistema completo
+      const loteSemSufixo = `${addr.m_linear}M`; // sem o -N final
+      const m2 = raw.largura > 0 ? +(addr.m_linear * raw.largura).toFixed(2) : 0;
+      const base = {
+        estrutura: addr.estrutura,
+        coluna: addr.coluna,
+        nivel: addr.nivel,
+        item: raw.descricao || raw.cdItem,
+        m2,
+        largura: raw.largura,
+        m_linear: addr.m_linear,
+        lote: loteSemSufixo,
+        endereco: addr.endereco,
+        lote_sistema: loteFinal,
+        conferente_entrada: 'Importado Auge',
+        data_registro: nowIso,
+      };
+      if (pos <= 30) {
+        estoqueRows.push({ ...base, posicao: pos, status: 'ocupado', proc: addr.proc });
+        pos++;
+      } else {
+        overflowRows.push({
+          item: base.item,
+          endereco_desejado: addr.endereco,
+          estrutura: addr.estrutura,
+          coluna: addr.coluna,
+          nivel: addr.nivel,
+          proc: addr.proc,
+          m_linear: addr.m_linear,
+          largura: raw.largura,
+          m2,
+          lote: loteSemSufixo,
+          lote_sistema: loteFinal,
+          auge_cd_item: raw.cdItem,
+          auge_cd_deposito: TEC_DEPOSITO_CD,
+          synced_at: nowIso,
+        });
+      }
+    }
+  }
+
+  // 7. Insere em batches
+  const insertBatch = async (table: string, rows: any[]) => {
+    const CH = 500;
+    for (let i = 0; i < rows.length; i += CH) {
+      const { error } = await admin.from(table).insert(rows.slice(i, i + CH));
+      if (error) throw new Error(`${table}: ${error.message}`);
+    }
+  };
+  if (estoqueRows.length) await insertBatch('estoque_posicoes', estoqueRows);
+  if (overflowRows.length) await insertBatch('tecidos_sem_espaco', overflowRows);
+
+  return {
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    itens_consultados: items.length,
+    lotes_brutos: lotesBrutos.length,
+    lotes_com_endereco: parsed.length,
+    alocados: estoqueRows.length,
+    sem_espaco: overflowRows.length,
+  };
+}
+
+
 Deno.serve(async (req) => {
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
