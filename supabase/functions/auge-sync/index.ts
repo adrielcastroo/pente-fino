@@ -1055,14 +1055,15 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     } catch (_) { /* noop */ }
   };
 
-  // 1. Itens candidatos: apenas tecidos (grupo/descrição contém "tecido")
-  //    (evita percorrer 3000+ itens sem lotes em dep 15 e estourar o timeout)
+  // 1. Itens candidatos: TODOS os produtos do Auge (usuário pediu cobertura total).
+  //    Prioriza itens com saldo>0 no dep 15 quando disponível, mas se não houver saldo
+  //    ainda faz a chamada — Auge pode retornar lotes zerados úteis para diagnóstico.
   const { data: produtos } = await admin
     .from('auge_produtos')
-    .select('codigo, descricao')
-    .or('descricao.ilike.%tecido%,descricao.ilike.%screen%,descricao.ilike.%blackout%');
+    .select('codigo, descricao');
 
   const items = (produtos ?? []).filter((p: any) => p.codigo);
+
 
 
   // 2. Larguras vindas do itens_cadastro (via raw da descrição? Não temos.)
