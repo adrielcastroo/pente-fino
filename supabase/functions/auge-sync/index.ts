@@ -1219,7 +1219,7 @@ async function tecidosAusentesInit(admin: any, runId: string) {
   for (const p of posicoesExist) if (p.lote_sistema) mapExist.set(p.lote_sistema, p);
 
   // Ausentes agrupados por cdItem
-  const ausentes = posicoesExist.filter(p => !mapAtual.has(p.lote_sistema));
+  const ausentes = posicoesExist.filter(p => !mapAtual.has(p.lote_sistema) && p.status !== 'saida');
   const porItem: Record<string, any[]> = {};
   const semItem: string[] = [];
   for (const p of ausentes) {
