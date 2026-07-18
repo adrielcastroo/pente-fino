@@ -1019,7 +1019,11 @@ async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
 // Parse do dsDeposito: "TEC0.B.N05 PROC19395/23 27m-2" | "TEC02.B.N04 PROC29863/26 27M-1"
 // ============================================================
 // Aceita TEC + 1-2 dígitos, nível 1-2 dígitos, M/m com sufixo opcional.
-const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
+// Aceita TEC + 1-2 dígitos, coluna A-Z, nível 1-2 dígitos.
+// Aceita espaço opcional entre a metragem e o sufixo "-N" (ex: "30m -1" ou "30m-1").
+const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$/i;
+// CHÃO / CHAO / chao / Chão (com ou sem acento, qualquer case)
+const CHAO_ADDR_RE = /^CH[ÃA]O\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$/i;
 const DEP_CENTRAL = '01';     // Central
 const DEP_PROVISORIO = '11';  // Central Provisório
 
@@ -1029,6 +1033,21 @@ function parseLoteTecido(dsDeposito: string): {
 } | null {
   if (!dsDeposito) return null;
   const s = dsDeposito.replace(/\s+/g, ' ').trim();
+
+  // 1) CHÃO e variantes → aloca sempre no endereço "CHÃO"
+  const c = s.match(CHAO_ADDR_RE);
+  if (c) {
+    const [, proc, ml, suf] = c;
+    return {
+      estrutura: 'CHÃO', coluna: 'G', nivel: 1,
+      proc: proc.trim(),
+      m_linear: parseFloat(ml.replace(',', '.')),
+      sufixo: suf || '',
+      endereco: 'CHÃO',
+    };
+  }
+
+  // 2) TECxx.Y.Nzz — normaliza TEC2 → TEC02, N4 → N04
   const m = s.match(TEC_ADDR_RE);
   if (!m) return null;
   const [, num, col, niv, proc, ml, suf] = m;
@@ -1149,7 +1168,7 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     const { data, error } = await admin
       .from('estoque_posicoes')
       .select('id, estrutura, coluna, nivel, posicao, lote_sistema, item, largura, m_linear, m_linear_atual, deposito_atual, status, auge_cd_item')
-      .like('estrutura', 'TEC%')
+      .or('estrutura.like.TEC%,estrutura.eq.CHÃO')
       .eq('conferente_entrada', 'Importado Auge')
       .range(offset, offset + PAGE - 1);
     if (error) throw error;
