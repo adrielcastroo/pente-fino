@@ -43,6 +43,10 @@ interface Posicao {
   data_registro: string | null;
   data_saida: string | null;
   registro_id: string | null;
+  deposito_atual?: string | null;
+  m_linear_atual?: number | null;
+  m2_atual?: number | null;
+  auge_cd_item?: string | null;
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
