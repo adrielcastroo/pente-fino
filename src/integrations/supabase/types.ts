@@ -3033,6 +3033,66 @@ export type Database = {
         }
         Relationships: []
       }
+      tecidos_sem_espaco: {
+        Row: {
+          auge_cd_deposito: string | null
+          auge_cd_item: string | null
+          coluna: string
+          created_at: string
+          endereco_desejado: string
+          estrutura: string
+          id: string
+          item: string
+          largura: number | null
+          lote: string | null
+          lote_sistema: string
+          m_linear: number | null
+          m2: number | null
+          nivel: number
+          proc: string | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          auge_cd_deposito?: string | null
+          auge_cd_item?: string | null
+          coluna: string
+          created_at?: string
+          endereco_desejado: string
+          estrutura: string
+          id?: string
+          item: string
+          largura?: number | null
+          lote?: string | null
+          lote_sistema: string
+          m_linear?: number | null
+          m2?: number | null
+          nivel: number
+          proc?: string | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          auge_cd_deposito?: string | null
+          auge_cd_item?: string | null
+          coluna?: string
+          created_at?: string
+          endereco_desejado?: string
+          estrutura?: string
+          id?: string
+          item?: string
+          largura?: number | null
+          lote?: string | null
+          lote_sistema?: string
+          m_linear?: number | null
+          m2?: number | null
+          nivel?: number
+          proc?: string | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tracking_links: {
         Row: {
           carrier: string
