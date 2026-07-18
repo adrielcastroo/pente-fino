@@ -767,6 +767,7 @@ async function atualizarTransferencia(
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
     body.append('qtdTransferencia[]', q);
     body.append('cdIndex[]', String(i));
+    body.append('nrLote[]', it.nrLote ?? '');
   });
   body.append('cdItem[]', '');
   body.append('cdIndex[]', String(itens.length));
