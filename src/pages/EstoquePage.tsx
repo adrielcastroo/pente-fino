@@ -153,11 +153,24 @@ export default function EstoquePage() {
   const loadStats = useCallback(async () => {
     try {
       // Fetch status + estrutura + campos usados na busca global (cross-TEC).
-      const { data, error } = await supabase
-        .from('estoque_posicoes')
-        .select('id, status, estrutura, coluna, nivel, item, lote, lote_sistema, proc, endereco');
-      if (error) throw error;
-      setAllPosicoes((data as any[]) || []);
+      // Paginação obrigatória: o Data API do Supabase limita cada request a 1000 linhas,
+      // então precisamos iterar em ranges até esgotar o resultado.
+      const PAGE = 1000;
+      let offset = 0;
+      const all: any[] = [];
+      // hard stop em 50 páginas (50k linhas) só como salvaguarda
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await supabase
+          .from('estoque_posicoes')
+          .select('id, status, estrutura, coluna, nivel, item, lote, lote_sistema, proc, endereco')
+          .range(offset, offset + PAGE - 1);
+        if (error) throw error;
+        const batch = (data as any[]) || [];
+        all.push(...batch);
+        if (batch.length < PAGE) break;
+        offset += PAGE;
+      }
+      setAllPosicoes(all);
     } catch (e) {
       console.error('Erro ao carregar estatísticas:', e);
     }
