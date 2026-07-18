@@ -1016,9 +1016,10 @@ async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
 
 // ============================================================
 // Sincronização Tecidos → estoque_posicoes (por endereço embutido)
-// Parse do dsDeposito: "TEC02.B.N04  PROC29863/26 27M-1"
+// Parse do dsDeposito: "TEC0.B.N05 PROC19395/23 27m-2" | "TEC02.B.N04 PROC29863/26 27M-1"
 // ============================================================
-const TEC_ADDR_RE = /^(TEC\d{2})\.([A-Z])\.N(\d{2})\s+(.*?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
+// Aceita TEC + 1-2 dígitos, nível 1-2 dígitos, M/m com sufixo opcional.
+const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
 const TEC_DEPOSITO_CD = '15'; // "Lotes Tec/Mad Inteiros"
 
 function parseLoteTecido(dsDeposito: string): {
@@ -1029,28 +1030,40 @@ function parseLoteTecido(dsDeposito: string): {
   const s = dsDeposito.replace(/\s+/g, ' ').trim();
   const m = s.match(TEC_ADDR_RE);
   if (!m) return null;
-  const [, est, col, niv, proc, ml, suf] = m;
+  const [, num, col, niv, proc, ml, suf] = m;
+  const estrutura = `TEC${num.padStart(2, '0')}`;
+  const coluna = col.toUpperCase();
+  const nivelStr = niv.padStart(2, '0');
   return {
-    estrutura: est.toUpperCase(),
-    coluna: col.toUpperCase(),
+    estrutura,
+    coluna,
     nivel: parseInt(niv, 10),
     proc: proc.trim(),
     m_linear: parseFloat(ml.replace(',', '.')),
     sufixo: suf || '',
-    endereco: `${est.toUpperCase()}.${col.toUpperCase()}.N${niv.padStart(2, '0')}`,
+    endereco: `${estrutura}.${coluna}.N${nivelStr}`,
   };
 }
 
-async function syncTecidosMap(admin: any, auth: any) {
+async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   const startedAt = new Date().toISOString();
 
-  // 1. Lista de itens com estoque em depósito 15 (tecidos)
+  const logProgress = async (detalhes: any) => {
+    if (!runId) return;
+    try {
+      await admin.from('auge_sync_runs').update({ detalhes }).eq('id', runId);
+    } catch (_) { /* noop */ }
+  };
+
+  // 1. Itens candidatos: apenas tecidos (grupo/descrição contém "tecido")
+  //    (evita percorrer 3000+ itens sem lotes em dep 15 e estourar o timeout)
   const { data: produtos } = await admin
     .from('auge_produtos')
-    .select('codigo, descricao, raw')
-    .gt('qt_estoque', 0);
+    .select('codigo, descricao')
+    .or('descricao.ilike.%tecido%,descricao.ilike.%screen%,descricao.ilike.%blackout%');
 
   const items = (produtos ?? []).filter((p: any) => p.codigo);
+
 
   // 2. Larguras vindas do itens_cadastro (via raw da descrição? Não temos.)
   //    Extraímos largura numérica da descrição do produto (ex: "TECIDO XYZ 2,80M")
