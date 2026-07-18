@@ -455,9 +455,11 @@ export type Database = {
           deposito_origem: string | null
           detalhe_sincronizado_em: string | null
           documento: string | null
+          ds_efetivacao: string | null
           ds_situacao: string | null
           id: string
           id_externo: string
+          nr_efetivacao: string | null
           quantidade: number | null
           raw: Json | null
           situacao: string | null
@@ -477,9 +479,11 @@ export type Database = {
           deposito_origem?: string | null
           detalhe_sincronizado_em?: string | null
           documento?: string | null
+          ds_efetivacao?: string | null
           ds_situacao?: string | null
           id?: string
           id_externo: string
+          nr_efetivacao?: string | null
           quantidade?: number | null
           raw?: Json | null
           situacao?: string | null
@@ -499,9 +503,11 @@ export type Database = {
           deposito_origem?: string | null
           detalhe_sincronizado_em?: string | null
           documento?: string | null
+          ds_efetivacao?: string | null
           ds_situacao?: string | null
           id?: string
           id_externo?: string
+          nr_efetivacao?: string | null
           quantidade?: number | null
           raw?: Json | null
           situacao?: string | null
