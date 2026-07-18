@@ -950,6 +950,70 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
   }
 }
 
+// ============================================================
+// Consulta ao vivo de lotes (tecidos) e séries (motores/controles)
+// Endpoints (confirmados via HAR 2026-07-18):
+//   POST /l.unilux/modInventario/estoque/ajax/getLote.php  body: cdItem, cdDeposito
+//   POST /l.unilux/modInventario/estoque/ajax/getSerie.php body: cdItem, cdDeposito
+// ============================================================
+async function postAjaxJson(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  path: string,
+  body: URLSearchParams,
+): Promise<any> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status}: ${text.slice(0, 200)}`);
+  try { return JSON.parse(text); } catch { throw new Error(`Resposta não-JSON em ${path}: ${text.slice(0, 120)}`); }
+}
+
+function parseBRNumber(v: any): number {
+  if (v == null) return 0;
+  const s = String(v).replace(/\./g, '').replace(',', '.');
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function fetchLotesLive(auth: any, cdItem: string, cdDeposito: string) {
+  const body = new URLSearchParams({ cdItem, cdDeposito });
+  const j = await postAjaxJson(auth, '/l.unilux/modInventario/estoque/ajax/getLote.php', body);
+  const data = Array.isArray(j?.data) ? j.data : [];
+  return data.map((r: any) => ({
+    lote: r.dsDeposito ?? '',       // Ex: "TEC02.B.N04  PROC29863/26 27M-1"
+    quantidade: parseBRNumber(r.qtDeposito),
+    selecionado: parseBRNumber(r.qtDepositoSelecionado),
+    cdItem: r.cdItem,
+    cdDeposito: r.cdDeposito,
+  })).filter((r: any) => r.lote);
+}
+
+async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
+  const body = new URLSearchParams({ cdItem, cdDeposito });
+  const j = await postAjaxJson(auth, '/l.unilux/modInventario/estoque/ajax/getSerie.php', body);
+  const data = Array.isArray(j?.data) ? j.data : [];
+  return data.map((r: any) => ({
+    lote: r.cdSerie ?? '',          // Ex: "CX01 NF 148470 NT926069000349"
+    idSerie: r.idSerie ?? null,
+    quantidade: parseBRNumber(r.qtDeposito),
+    selecionado: parseBRNumber(r.qtDepositoSelecionado),
+    cdItem: r.cdItem,
+    cdDeposito: r.cdDeposito,
+  })).filter((r: any) => r.lote);
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -1081,7 +1145,22 @@ Deno.serve(async (req) => {
     }
 
 
+    if (action === 'lotes_live' || action === 'series_live') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cdItem = String(payload?.cdItem ?? '').trim();
+      const cdDeposito = String(payload?.cdDeposito ?? '').trim();
+      if (!cdItem || !cdDeposito) throw new Error('cdItem e cdDeposito são obrigatórios.');
+      const data = action === 'lotes_live'
+        ? await fetchLotesLive(auth, cdItem, cdDeposito)
+        : await fetchSeriesLive(auth, cdItem, cdDeposito);
+      return new Response(JSON.stringify({ ok: true, data, source: action }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const results = [];
+
     for (const e of entities) {
       results.push(await syncEntity(admin, auth, e, triggeredBy));
     }
