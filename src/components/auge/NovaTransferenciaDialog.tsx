@@ -27,9 +27,23 @@ const novaLinha = (): Linha => ({
   cdItem: '', descricao: '', cdDepositoOrigem: '', cdDepositoDestino: '', qtd: '1',
 });
 
+export type TransfDialogMode = 'novo' | 'editar' | 'duplicar';
+
+export interface TransfDialogInitial {
+  cdMovimentacao?: string | null;
+  itens?: Array<{ cdItem: string; descricao?: string | null; cdDepositoOrigem: string; cdDepositoDestino: string; qtd: number | string }>;
+  observacao?: string | null;
+}
+
 export default function NovaTransferenciaDialog({
-  open, onOpenChange, onCreated,
-}: { open: boolean; onOpenChange: (o: boolean) => void; onCreated?: () => void }) {
+  open, onOpenChange, onCreated, mode = 'novo', initial,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onCreated?: () => void;
+  mode?: TransfDialogMode;
+  initial?: TransfDialogInitial | null;
+}) {
   const [depositos, setDepositos] = useState<Deposito[]>([]);
   const [linhas, setLinhas] = useState<Linha[]>([novaLinha()]);
   const [origemPadrao, setOrigemPadrao] = useState('');
@@ -38,6 +52,9 @@ export default function NovaTransferenciaDialog({
   const [efetivar, setEfetivar] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const isEdit = mode === 'editar' && !!initial?.cdMovimentacao;
+  const cdEdit = initial?.cdMovimentacao ?? null;
+
   useEffect(() => {
     if (!open) return;
     (async () => {
@@ -45,6 +62,25 @@ export default function NovaTransferenciaDialog({
       setDepositos(data || []);
     })();
   }, [open]);
+
+  // Pré-preenche em modo editar/duplicar quando o diálogo abre
+  useEffect(() => {
+    if (!open) return;
+    if (initial?.itens?.length) {
+      setLinhas(initial.itens.map(it => ({
+        key: crypto.randomUUID(),
+        cdItem: String(it.cdItem ?? ''),
+        descricao: it.descricao ?? '',
+        cdDepositoOrigem: String(it.cdDepositoOrigem ?? ''),
+        cdDepositoDestino: String(it.cdDepositoDestino ?? ''),
+        qtd: String(it.qtd ?? '1').replace('.', ','),
+      })));
+    } else {
+      setLinhas([novaLinha()]);
+    }
+    setObservacao(initial?.observacao ?? '');
+    setOrigemPadrao(''); setDestinoPadrao(''); setEfetivar(false);
+  }, [open, initial]);
 
   // Ao mudar depósito padrão, aplica em todas as linhas vazias
   useEffect(() => {
@@ -84,7 +120,10 @@ export default function NovaTransferenciaDialog({
   const submit = async () => {
     if (!canSubmit) return;
     setLoading(true);
-    const t = toast.loading(efetivar ? 'Criando e efetivando...' : 'Criando transferência...');
+    const t = toast.loading(
+      isEdit ? 'Atualizando no Auge...' :
+      efetivar ? 'Criando e efetivando...' : 'Criando transferência...'
+    );
     try {
       const itens = linhas.map(l => ({
         cdItem: l.cdItem.trim(),
@@ -92,13 +131,19 @@ export default function NovaTransferenciaDialog({
         cdDepositoDestino: l.cdDepositoDestino,
         qtd: Number(l.qtd.replace(',', '.')),
       }));
-      const { data, error } = await supabase.functions.invoke('auge-sync?action=transferencia_criar', {
-        body: { itens, observacao: observacao.trim(), efetivar },
-      });
+      const endpoint = isEdit
+        ? 'auge-sync?action=transferencia_atualizar'
+        : 'auge-sync?action=transferencia_criar';
+      const body: any = isEdit
+        ? { cdMovimentacao: cdEdit, itens, observacao: observacao.trim() }
+        : { itens, observacao: observacao.trim(), efetivar };
+      const { data, error } = await supabase.functions.invoke(endpoint, { body });
       if (error) throw error;
-      if (data?.ok === false) throw new Error(data.error || 'Falha ao criar');
+      if (data?.ok === false) throw new Error(data.error || 'Falha');
       toast.success(
-        `Transferência ${data.cdMovimentacao} ${data.efetivado ? 'criada e efetivada' : 'criada (rascunho)'}`,
+        isEdit
+          ? `Rascunho ${data.cdMovimentacao} atualizado`
+          : `Transferência ${data.cdMovimentacao} ${data.efetivado ? 'criada e efetivada' : 'criada (rascunho)'}`,
         { id: t },
       );
       reset();
