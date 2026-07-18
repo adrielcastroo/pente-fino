@@ -644,6 +644,7 @@ async function enrichTransferencias(
       row.valor = row.valor ?? parseNum(det.vlCustoMovimentacao);
       row.nr_efetivacao = row.nr_efetivacao ?? (det.nrTransfEstoqueERP ? String(det.nrTransfEstoqueERP) : null);
       row.ds_efetivacao = row.ds_efetivacao ?? det.dsEfetivacao ?? null;
+      row.observacao = row.observacao ?? det.dsObservacao ?? det.dsObs ?? null;
       row.raw = { ...(row.raw ?? {}), _detalhe: det };
       row.detalhe_sincronizado_em = new Date().toISOString();
       enriched++;
