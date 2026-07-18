@@ -1,99 +1,85 @@
 ## Objetivo
 
-Espelhar 100% dos lotes de tecido do Auge dentro do Pente Fino (`estoque_posicoes`), usando o endereço embutido no próprio lote, e realocar automaticamente quando abrir espaço. Tecidos que não couberem vão para uma nova aba **"Tecidos sem espaço"** em `/estoque/reservas`.
+Refinar o mapa de tecidos para refletir com precisão onde cada lote está fisicamente no Auge, distinguindo entre estoque disponível (01 - Central), bloqueado (11 - Central Provisório), em trânsito para outros depósitos, e saídas definitivas.
 
-## Padrão do lote (confirmado no HAR)
+## Regras de negócio
 
-Campo `dsDeposito` do endpoint `getLote.php` do Auge:
+1. **Sync varre apenas depósitos 01 e 11.** Os outros depósitos são consultados só para rastreamento de trânsito.
+2. **Depósito 01 → `status='ocupado'`** (disponível).
+3. **Depósito 11 → `status='bloqueado'`** (novo status). Se o mesmo lote_sistema aparecer no 01, prevalece 01/ocupado.
+4. **Lote some do 01 e 11 mas aparece em outro depósito (ex: 03, 04, 07…)**:
+   - NÃO gera saída.
+   - Marca a posição no mapa como `status='transferido'` + `deposito_atual` = código do novo depósito.
+   - Guarda `m_linear_atual` (quantidade retornada quando/se voltar).
+5. **Lote some completamente do Auge** → gera saída em `estoque_saidas` e libera posição.
+6. **Lote volta do depósito X para o 01/11** com metragem menor: atualiza `m_linear_atual` e `m2_atual` (m_linear original preservado em `m_linear`). Ficha técnica mostra os dois valores. `lote_sistema` permanece imutável.
 
-```
-TEC02.B.N04  PROC29863/26 27M-1
-└────┬────┘  └─────┬─────┘ └┬┘└┬┘
-  endereço    proc/NF       ML sufixo
-```
-
-- `TEC02.B.N04` → `estrutura=TEC02`, `coluna=B`, `nivel=4`
-- `27M` → `m_linear = 27`
-- `-1` → sufixo diferenciador (fica só no `lote_sistema`, some do `m_linear`)
-- Área total: `m_linear × largura_nominal` (do `itens_cadastro`)
-- Conferente: `Importado Auge`
-- Data: campo do Auge se existir, senão `now()`
-
-## Etapa 1 — Edge Function: novo action `sync-tecidos-full`
-
-Arquivo: `supabase/functions/auge-sync/index.ts`
-
-1. Buscar todos os `itens_cadastro` com código Auge e categoria "tecido" (ou pelo prefixo do depósito `TEC*`).
-2. Para cada item × depósito TEC, chamar `getLote.php` (reaproveitando `fetchLotesLive`).
-3. Parser do `dsDeposito`:
-   - Regex `^(TEC\d{2})\.([A-Z])\.N(\d{2})\s+(.*?)\s+(\d+(?:[.,]\d+)?)M(?:-(\d+))?$`
-   - Descartar linhas que não casem com o padrão.
-4. Buscar largura do `itens_cadastro` (`largura_util` ou `largura`).
-5. Truncar/rebuild em lote:
-   - `DELETE FROM estoque_posicoes WHERE estrutura LIKE 'TEC%' AND conferente_entrada = 'Importado Auge'`
-   - Também apagar tecidos manuais? **Sim** — usuário escolheu "substituir tudo". Filtro: `estrutura LIKE 'TEC%'`.
-6. Alocar posições 1..N sequencialmente por célula (`estrutura.coluna.nivel`) respeitando limite de 30.
-7. Overflow → tabela nova `tecidos_sem_espaco`.
-8. Rodar automaticamente ao final do sync normal (entity=`lotes` já dispara).
-
-## Etapa 2 — Nova tabela `tecidos_sem_espaco`
+## Etapa 1 — Schema (migração)
 
 ```sql
-CREATE TABLE public.tecidos_sem_espaco (
-  id uuid PK default gen_random_uuid(),
-  item text NOT NULL,
-  endereco_desejado text NOT NULL,   -- TECxx.x.Nxx
-  proc text,
-  m_linear numeric,
-  largura numeric,
-  m2 numeric,
-  lote text,                          -- ex: "27M-1"
-  lote_sistema text NOT NULL,         -- string completa original
-  auge_cd_item text,
-  auge_cd_deposito text,
-  synced_at timestamptz default now()
-);
+ALTER TABLE public.estoque_posicoes
+  ADD COLUMN IF NOT EXISTS deposito_atual text,       -- código Auge (01, 03, 11…)
+  ADD COLUMN IF NOT EXISTS m_linear_atual numeric,    -- metragem física atual
+  ADD COLUMN IF NOT EXISTS m2_atual numeric;
+
+-- Ampliar CHECK do status se existir, ou apenas documentar valores:
+-- status ∈ ('livre','ocupado','bloqueado','transferido','saida')
 ```
 
-GRANT + RLS (authenticated leitura/escrita, service_role tudo).
+Nenhuma nova tabela; reaproveitamos `estoque_posicoes`.
 
-## Etapa 3 — Realocação automática
+## Etapa 2 — Edge Function `sync_tecidos_map` (rewrite parcial)
 
-Trigger `AFTER DELETE ON estoque_posicoes`:
-- Se removeu de célula TECxx.x.Nxx, checa `tecidos_sem_espaco` com `endereco_desejado` correspondente.
-- Se houver, insere o mais antigo em `estoque_posicoes` e remove de `tecidos_sem_espaco`.
+Arquivo: `supabase/functions/auge-sync/index.ts`.
 
-## Etapa 4 — Frontend
+1. Para cada produto tecido (paginado, 1000 em 1000 via `.range()` como já está):
+   - Chamar `getLote.php` para **depósito 01** e **depósito 11** (2 chamadas por item, batch 20).
+   - Parsear `dsDeposito` com regex existente (`TEC\d{1,2}\.[A-Z]\.N\d{1,2}`).
+2. Montar mapa `lote_sistema → { dep, m_linear, endereco, ... }` — 01 prevalece sobre 11.
+3. Buscar lotes atuais em `estoque_posicoes WHERE estrutura LIKE 'TEC%' AND conferente_entrada='Importado Auge'` (paginado).
+4. Diff:
+   - **Novo** → INSERT com `status = dep==='01' ? 'ocupado' : 'bloqueado'`, `deposito_atual`, `m_linear_atual = m_linear`.
+   - **Existente, mesmo dep** → UPDATE `m_linear_atual`/`m2_atual` se mudou.
+   - **Existente, mudou de dep entre 01↔11** → UPDATE status + deposito_atual.
+   - **Existente, sumiu do 01 e 11** → chamar `getLote.php` para **todos os depósitos ativos** (lista de `auge_depositos`) procurando o `lote_sistema`. 
+     - Achou em outro dep → UPDATE `status='transferido'`, `deposito_atual`, `m_linear_atual`.
+     - Não achou em lugar nenhum → INSERT em `estoque_saidas` (motivo `AUGE_SAIDA`) e DELETE da posição.
+5. **Retorno em 01/11 a partir de "transferido"**: se um lote que estava com `status='transferido'` reaparece no 01/11 com nova metragem, atualiza status e `m_linear_atual` (menor que o original preservado em `m_linear`).
+6. Overflow (célula cheia) continua indo para `tecidos_sem_espaco`.
 
-1. **Nova aba em `/estoque/reservas`** — "Tecidos sem espaço"
-   - Reaproveita layout do `ReservasTable` (mesmas colunas + endereço desejado).
-   - Ao clicar em linha, abre `EstoqueDetailDialog` (mesmo dialog do `/estoque/mapa`).
-   - Componente: `src/components/estoque/TecidosSemEspacoTab.tsx`.
+Otimização: para os "sumidos", varrer só a lista de depósitos ativos (~10) em batch, não todos.
 
-2. **Botão de sync manual** em `/admin` (painel Auge) — "Sincronizar tecidos por endereço".
+## Etapa 3 — UI
 
-3. **Item 1 do pedido** (série transferida atualiza no app): reforçar chamada a `fetchSeriesLive`/`fetchLotesLive` ao abrir `NovaTransferenciaDialog`, invalidando cache. Já existe — apenas confirmar que `LoteSelectorDialog` sempre re-busca do Auge (sem cache local).
+**`src/components/estoque/EstoqueDetailDialog.tsx`** (ou o dialog atual da ficha):
+- Novo campo **"Depósito atual"** (badge com código+nome, buscado de `auge_depositos`).
+- Se `m_linear_atual !== m_linear`: mostra ambos com label "Original" / "Atual (físico)".
+- Badge de status: 
+  - `ocupado` verde "Disponível"
+  - `bloqueado` âmbar "Bloqueado (Provisório)"
+  - `transferido` azul "Em outro depósito"
 
-## Arquivos afetados
+**`src/components/estoque/MadeiraEstoque.tsx` / mapa 2D**:
+- Cor por status: verde/âmbar/azul.
 
-- `supabase/functions/auge-sync/index.ts` — novo bloco `syncTecidosFull()`
-- Migração SQL — `tecidos_sem_espaco` + trigger de realoc
-- `src/components/estoque/TecidosSemEspacoTab.tsx` (novo)
-- `src/pages/ReservasPage.tsx` — adicionar Tab
-- `src/components/auge/AugeAdminPanel.tsx` — botão manual
-- `src/components/auge/LoteSelectorDialog.tsx` — forçar refetch (sem cache)
+## Etapa 4 — Arquivos afetados
+
+- Migração SQL (colunas novas)
+- `supabase/functions/auge-sync/index.ts` — rewrite do `syncTecidosMap`
+- `src/components/estoque/EstoqueDetailDialog.tsx` — novos campos
+- Grid/mapa: adicionar cor para `bloqueado` e `transferido`
+- Tipagem: `src/integrations/supabase/types.ts` (auto)
 
 ## Detalhes técnicos
 
-- Parser tolerante: espaços múltiplos, vírgula/ponto decimal, `M` maiúsculo.
-- `getLote.php` só aceita 1 item por chamada — paralelizar em batches de 8 com backoff.
-- Estimativa: ~500 itens tecido × ~10 depósitos = ~5000 chamadas. Split em runs de 100 com progresso salvo em `auge_sync_runs.detalhes`.
-- Idempotente: cada rodada reconstrói do zero, então re-executar é seguro.
-- Item 1 (transferências afetando série): a série é buscada live toda vez que o dialog abre, então já reflete o Auge. Adicionaremos `staleTime: 0` explícito no fetch.
+- `m2_atual = m_linear_atual × largura` recalculado no sync.
+- `lote_sistema` NUNCA muda depois de criado — é a chave estável.
+- Rodada é idempotente. Progresso salvo em `auge_sync_runs.detalhes` (contadores: `dep01`, `dep11`, `transferidos`, `saidas`, `retornos`).
+- Estimativa: 3.6k itens × 2 dep = 7.2k chamadas. Batch 20 = ~360 batches. Rodada ~5-8min em background.
 
 ## Fora do escopo
 
-- Motor/controle (séries) — o pedido é só sobre tecido (padrão TECxx.x.xxx).
-- Ajuste de largura do `itens_cadastro` — usa-se o que já existe; itens sem largura ficam com `m2=0` e um badge de alerta na UI.
+- Motor/controle/série continuam sem mapa físico.
+- Não vamos criar transferência automática no Auge — só refletir o que já aconteceu lá.
 
 Confirma para eu executar?
