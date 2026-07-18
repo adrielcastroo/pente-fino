@@ -1,0 +1,1 @@
+ALTER TABLE public.auge_transferencias ADD COLUMN IF NOT EXISTS observacao TEXT;

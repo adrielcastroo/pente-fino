@@ -27,9 +27,23 @@ const novaLinha = (): Linha => ({
   cdItem: '', descricao: '', cdDepositoOrigem: '', cdDepositoDestino: '', qtd: '1',
 });
 
+export type TransfDialogMode = 'novo' | 'editar' | 'duplicar';
+
+export interface TransfDialogInitial {
+  cdMovimentacao?: string | null;
+  itens?: Array<{ cdItem: string; descricao?: string | null; cdDepositoOrigem: string; cdDepositoDestino: string; qtd: number | string }>;
+  observacao?: string | null;
+}
+
 export default function NovaTransferenciaDialog({
-  open, onOpenChange, onCreated,
-}: { open: boolean; onOpenChange: (o: boolean) => void; onCreated?: () => void }) {
+  open, onOpenChange, onCreated, mode = 'novo', initial,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onCreated?: () => void;
+  mode?: TransfDialogMode;
+  initial?: TransfDialogInitial | null;
+}) {
   const [depositos, setDepositos] = useState<Deposito[]>([]);
   const [linhas, setLinhas] = useState<Linha[]>([novaLinha()]);
   const [origemPadrao, setOrigemPadrao] = useState('');
@@ -38,6 +52,9 @@ export default function NovaTransferenciaDialog({
   const [efetivar, setEfetivar] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const isEdit = mode === 'editar' && !!initial?.cdMovimentacao;
+  const cdEdit = initial?.cdMovimentacao ?? null;
+
   useEffect(() => {
     if (!open) return;
     (async () => {
@@ -45,6 +62,25 @@ export default function NovaTransferenciaDialog({
       setDepositos(data || []);
     })();
   }, [open]);
+
+  // Pré-preenche em modo editar/duplicar quando o diálogo abre
+  useEffect(() => {
+    if (!open) return;
+    if (initial?.itens?.length) {
+      setLinhas(initial.itens.map(it => ({
+        key: crypto.randomUUID(),
+        cdItem: String(it.cdItem ?? ''),
+        descricao: it.descricao ?? '',
+        cdDepositoOrigem: String(it.cdDepositoOrigem ?? ''),
+        cdDepositoDestino: String(it.cdDepositoDestino ?? ''),
+        qtd: String(it.qtd ?? '1').replace('.', ','),
+      })));
+    } else {
+      setLinhas([novaLinha()]);
+    }
+    setObservacao(initial?.observacao ?? '');
+    setOrigemPadrao(''); setDestinoPadrao(''); setEfetivar(false);
+  }, [open, initial]);
 
   // Ao mudar depósito padrão, aplica em todas as linhas vazias
   useEffect(() => {
@@ -84,7 +120,10 @@ export default function NovaTransferenciaDialog({
   const submit = async () => {
     if (!canSubmit) return;
     setLoading(true);
-    const t = toast.loading(efetivar ? 'Criando e efetivando...' : 'Criando transferência...');
+    const t = toast.loading(
+      isEdit ? 'Atualizando no Auge...' :
+      efetivar ? 'Criando e efetivando...' : 'Criando transferência...'
+    );
     try {
       const itens = linhas.map(l => ({
         cdItem: l.cdItem.trim(),
@@ -92,13 +131,19 @@ export default function NovaTransferenciaDialog({
         cdDepositoDestino: l.cdDepositoDestino,
         qtd: Number(l.qtd.replace(',', '.')),
       }));
-      const { data, error } = await supabase.functions.invoke('auge-sync?action=transferencia_criar', {
-        body: { itens, observacao: observacao.trim(), efetivar },
-      });
+      const endpoint = isEdit
+        ? 'auge-sync?action=transferencia_atualizar'
+        : 'auge-sync?action=transferencia_criar';
+      const body: any = isEdit
+        ? { cdMovimentacao: cdEdit, itens, observacao: observacao.trim() }
+        : { itens, observacao: observacao.trim(), efetivar };
+      const { data, error } = await supabase.functions.invoke(endpoint, { body });
       if (error) throw error;
-      if (data?.ok === false) throw new Error(data.error || 'Falha ao criar');
+      if (data?.ok === false) throw new Error(data.error || 'Falha');
       toast.success(
-        `Transferência ${data.cdMovimentacao} ${data.efetivado ? 'criada e efetivada' : 'criada (rascunho)'}`,
+        isEdit
+          ? `Rascunho ${data.cdMovimentacao} atualizado`
+          : `Transferência ${data.cdMovimentacao} ${data.efetivado ? 'criada e efetivada' : 'criada (rascunho)'}`,
         { id: t },
       );
       reset();
@@ -117,7 +162,11 @@ export default function NovaTransferenciaDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="w-4 h-4 text-primary" />
-            Nova transferência (Auge)
+            {isEdit
+              ? `Editar rascunho ${cdEdit}`
+              : mode === 'duplicar'
+                ? 'Duplicar transferência (Auge)'
+                : 'Nova transferência (Auge)'}
           </DialogTitle>
         </DialogHeader>
 
@@ -227,14 +276,18 @@ export default function NovaTransferenciaDialog({
             <Textarea id="obs" value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={2} />
           </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-            <Checkbox checked={efetivar} onCheckedChange={(v) => setEfetivar(!!v)} />
-            <span>Efetivar imediatamente após criar</span>
-          </label>
-          {efetivar && (
-            <p className="text-[11px] text-amber-500 -mt-2">
-              ⚠ Movimenta estoque no Auge sem conferência manual.
-            </p>
+          {!isEdit && (
+            <>
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <Checkbox checked={efetivar} onCheckedChange={(v) => setEfetivar(!!v)} />
+                <span>Efetivar imediatamente após criar</span>
+              </label>
+              {efetivar && (
+                <p className="text-[11px] text-amber-500 -mt-2">
+                  ⚠ Movimenta estoque no Auge sem conferência manual.
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -242,7 +295,9 @@ export default function NovaTransferenciaDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
           <Button onClick={submit} disabled={!canSubmit} className="gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {efetivar ? 'Criar e efetivar' : 'Criar rascunho'}
+            {isEdit
+              ? 'Salvar alterações no Auge'
+              : efetivar ? 'Criar e efetivar' : 'Criar rascunho'}
           </Button>
         </DialogFooter>
       </DialogContent>

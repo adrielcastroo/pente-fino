@@ -154,6 +154,11 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
               <Meta icon={User} label="Efetivado por" value={transferencia.usuario_efetivacao ?? '—'} />
               <Meta icon={User} label="Enviou (logística)" value={transferencia.usuario_enviou_logistica ?? '—'} />
               <Meta icon={User} label="Recebeu (logística)" value={transferencia.usuario_recebido_logistica ?? '—'} />
+              {transferencia.observacao && (
+                <div className="col-span-2 md:col-span-4 text-[11px] text-muted-foreground border-t pt-2">
+                  <span className="uppercase text-[10px] tracking-wide">Observação:</span> {transferencia.observacao}
+                </div>
+              )}
               {transferencia.ds_efetivacao && (
                 <div className="col-span-2 md:col-span-4 text-[11px] text-muted-foreground border-t pt-2">
                   <span className="uppercase text-[10px] tracking-wide">Obs. efetivação:</span> {transferencia.ds_efetivacao}

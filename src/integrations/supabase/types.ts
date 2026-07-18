@@ -460,6 +460,7 @@ export type Database = {
           id: string
           id_externo: string
           nr_efetivacao: string | null
+          observacao: string | null
           quantidade: number | null
           raw: Json | null
           situacao: string | null
@@ -484,6 +485,7 @@ export type Database = {
           id?: string
           id_externo: string
           nr_efetivacao?: string | null
+          observacao?: string | null
           quantidade?: number | null
           raw?: Json | null
           situacao?: string | null
@@ -508,6 +510,7 @@ export type Database = {
           id?: string
           id_externo?: string
           nr_efetivacao?: string | null
+          observacao?: string | null
           quantidade?: number | null
           raw?: Json | null
           situacao?: string | null

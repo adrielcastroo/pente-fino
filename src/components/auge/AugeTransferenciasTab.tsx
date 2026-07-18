@@ -6,10 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
-import NovaTransferenciaDialog from './NovaTransferenciaDialog';
+import NovaTransferenciaDialog, { type TransfDialogInitial, type TransfDialogMode } from './NovaTransferenciaDialog';
 
 type Filtro = 'todos' | 'rascunho' | 'efetivada';
 
@@ -20,7 +24,11 @@ export default function AugeTransferenciasTab() {
   const [search, setSearch] = useState('');
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [detail, setDetail] = useState<any | null>(null);
-  const [novaOpen, setNovaOpen] = useState(false);
+
+  // Dialog Nova/Editar/Duplicar
+  const [dialogMode, setDialogMode] = useState<TransfDialogMode>('novo');
+  const [dialogInitial, setDialogInitial] = useState<TransfDialogInitial | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const isRascunho = (r: any) =>
     r.situacao === 'D' || r.situacao === '10' || r.situacao === 10 ||
@@ -41,6 +49,59 @@ export default function AugeTransferenciasTab() {
       await sync();
     } catch (e: any) {
       toast.error('Falha: ' + (e.message || ''), { id: t });
+    }
+  };
+
+  const abrirEdicao = (row: any) => {
+    setDialogMode('editar');
+    setDialogInitial({
+      cdMovimentacao: row.documento,
+      observacao: row.observacao ?? '',
+      itens: [{
+        cdItem: row.codigo_produto ?? '',
+        cdDepositoOrigem: row.deposito_origem ?? '',
+        cdDepositoDestino: row.deposito_destino ?? '',
+        qtd: Number(row.quantidade ?? 0),
+      }],
+    });
+    setDialogOpen(true);
+  };
+
+  const abrirDuplicar = (row: any) => {
+    setDialogMode('duplicar');
+    setDialogInitial({
+      observacao: row.observacao ?? '',
+      itens: [{
+        cdItem: row.codigo_produto ?? '',
+        cdDepositoOrigem: row.deposito_origem ?? '',
+        cdDepositoDestino: row.deposito_destino ?? '',
+        qtd: Number(row.quantidade ?? 0),
+      }],
+    });
+    setDialogOpen(true);
+  };
+
+  const abrirNovo = () => {
+    setDialogMode('novo');
+    setDialogInitial(null);
+    setDialogOpen(true);
+  };
+
+  const excluirRascunho = async (row: any) => {
+    if (!row?.documento) return;
+    if (!confirm(`Remover o rascunho ${row.documento} definitivamente do Auge e do Pente Fino?`)) return;
+    const t = toast.loading('Removendo no Auge...');
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=transferencia_excluir', {
+        body: { cdMovimentacao: row.documento },
+      });
+      if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error);
+      toast.success(`Rascunho ${row.documento} removido`, { id: t });
+      setRows(rs => rs.filter(r => r.id !== row.id));
+      await sync();
+    } catch (e: any) {
+      toast.error('Falha ao remover: ' + (e.message || ''), { id: t });
     }
   };
 
@@ -85,7 +146,9 @@ export default function AugeTransferenciasTab() {
         (r.documento || '').toLowerCase().includes(q) ||
         (r.nr_efetivacao || '').toLowerCase().includes(q) ||
         (r.deposito_origem || '').toLowerCase().includes(q) ||
-        (r.deposito_destino || '').toLowerCase().includes(q)
+        (r.deposito_destino || '').toLowerCase().includes(q) ||
+        (r.observacao || '').toLowerCase().includes(q) ||
+        (r.usuario_criacao || '').toLowerCase().includes(q)
       );
     });
   }, [rows, search, filtro]);
@@ -95,14 +158,14 @@ export default function AugeTransferenciasTab() {
       <div className="flex flex-col lg:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito..." className="pl-10 h-11" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito, usuário..." className="pl-10 h-11" />
         </div>
         <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11">
           <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
           <ToggleGroupItem value="rascunho" className="h-11 px-3 text-xs">Rascunhos</ToggleGroupItem>
           <ToggleGroupItem value="efetivada" className="h-11 px-3 text-xs">Efetivadas</ToggleGroupItem>
         </ToggleGroup>
-        <Button onClick={() => setNovaOpen(true)} variant="default" className="h-11 px-5 gap-2">
+        <Button onClick={abrirNovo} variant="default" className="h-11 px-5 gap-2">
           <Plus className="w-4 h-4" />
           Nova
         </Button>
@@ -124,52 +187,93 @@ export default function AugeTransferenciasTab() {
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
-                <TableHead>Rascunho</TableHead>
+                <TableHead>Nº Rascunho</TableHead>
                 <TableHead>Nº Efetivação</TableHead>
                 <TableHead>Origem → Destino</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-right">Qtd</TableHead>
                 <TableHead>Situação</TableHead>
+                <TableHead>Usuário</TableHead>
+                <TableHead className="max-w-[220px]">Observação</TableHead>
                 <TableHead>Data</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-[80px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(r => (
-                <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetail(r)}>
-                  <TableCell className="font-mono text-xs font-bold text-primary">{r.documento || '—'}</TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {r.nr_efetivacao ? (
-                      <span className="font-bold text-emerald-500">{r.nr_efetivacao}</span>
-                    ) : (
-                      <span className="text-muted-foreground/60">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    <span className="font-mono">{r.deposito_origem || '?'}</span>
-                    <ArrowRightLeft className="inline w-3 h-3 mx-1 text-muted-foreground" />
-                    <span className="font-mono">{r.deposito_destino || '?'}</span>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{r.codigo_produto || '—'}</TableCell>
-                  <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={isEfetivada(r) ? 'default' : isRascunho(r) ? 'secondary' : 'outline'}
-                      className="text-[10px]"
-                    >
-                      {r.ds_situacao || r.situacao || '—'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
-                  <TableCell className="p-1" onClick={(e) => e.stopPropagation()}>
-                    {isRascunho(r) && !isEfetivada(r) && (
-                      <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-amber-500 hover:text-amber-600" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
-                        <Zap className="w-3 h-3" /> Efetivar
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.map(r => {
+                const rascunho = isRascunho(r) && !isEfetivada(r);
+                return (
+                  <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => rascunho ? abrirEdicao(r) : setDetail(r)}>
+                    <TableCell className="font-mono text-xs font-bold text-primary">{r.documento || '—'}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {r.nr_efetivacao ? (
+                        <span className="font-bold text-emerald-500">{r.nr_efetivacao}</span>
+                      ) : (
+                        <span className="text-muted-foreground/60">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      <span className="font-mono">{r.deposito_origem || '?'}</span>
+                      <ArrowRightLeft className="inline w-3 h-3 mx-1 text-muted-foreground" />
+                      <span className="font-mono">{r.deposito_destino || '?'}</span>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{r.codigo_produto || '—'}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={isEfetivada(r) ? 'default' : rascunho ? 'secondary' : 'outline'}
+                        className="text-[10px]"
+                      >
+                        {r.ds_situacao || r.situacao || '—'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground truncate max-w-[140px]" title={r.usuario_criacao || ''}>
+                      {r.usuario_criacao || '—'}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate" title={r.observacao || ''}>
+                      {r.observacao || <span className="text-muted-foreground/40">—</span>}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+                    <TableCell className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        {rascunho && (
+                          <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-amber-500 hover:text-amber-600" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
+                            <Zap className="w-3 h-3" /> Efetivar
+                          </Button>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7">
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            {rascunho && (
+                              <DropdownMenuItem onClick={() => abrirEdicao(r)}>
+                                <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => abrirDuplicar(r)}>
+                              <Copy className="w-3.5 h-3.5 mr-2" /> Duplicar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDetail(r)}>
+                              Ver detalhes
+                            </DropdownMenuItem>
+                            {rascunho && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => excluirRascunho(r)} className="text-destructive focus:text-destructive">
+                                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Remover rascunho
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -181,8 +285,10 @@ export default function AugeTransferenciasTab() {
         onOpenChange={(o) => !o && setDetail(null)}
       />
       <NovaTransferenciaDialog
-        open={novaOpen}
-        onOpenChange={setNovaOpen}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        initial={dialogInitial}
         onCreated={() => sync()}
       />
     </div>

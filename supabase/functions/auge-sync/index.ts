@@ -575,6 +575,7 @@ function mapTransferencia(r: any) {
     documento: cd ? String(cd) : null,
     nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
     ds_efetivacao: r.dsEfetivacao ?? null,
+    observacao: r.dsObservacao ?? r.dsObs ?? null,
     raw: r,
     synced_at: new Date().toISOString(),
   };
@@ -643,6 +644,7 @@ async function enrichTransferencias(
       row.valor = row.valor ?? parseNum(det.vlCustoMovimentacao);
       row.nr_efetivacao = row.nr_efetivacao ?? (det.nrTransfEstoqueERP ? String(det.nrTransfEstoqueERP) : null);
       row.ds_efetivacao = row.ds_efetivacao ?? det.dsEfetivacao ?? null;
+      row.observacao = row.observacao ?? det.dsObservacao ?? det.dsObs ?? null;
       row.raw = { ...(row.raw ?? {}), _detalhe: det };
       row.detalhe_sincronizado_em = new Date().toISOString();
       enriched++;
@@ -736,6 +738,59 @@ async function efetivarTransferencia(
   if (j?.ok !== 'ok' && j?.status !== 'ok') {
     throw new Error(`Efetivação retornou: ${JSON.stringify(j).slice(0, 200)}`);
   }
+}
+
+// Atualiza um rascunho existente: mesma estrutura de idAcao=1, porém com
+// cdMovivimentacao preenchido com o cd atual (padrão observado no portal Auge).
+async function atualizarTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovimentacao: string,
+  itens: TransferenciaItem[],
+  observacao = '',
+): Promise<string> {
+  if (!itens.length) throw new Error('Ao menos 1 item é obrigatório.');
+  const body = new URLSearchParams();
+  body.set('idAcao', '1');
+  body.set('cdMovivimentacao', cdMovimentacao); // typo intencional
+  body.set('idUm', 'UN');
+  body.set('idEfetivacao', '');
+  body.set('idValidacao', 'N');
+  body.set('idDuplicar', 'N');
+  body.set('dsObservacao', observacao || '');
+  body.set('idLancamentoAjuste', 'N');
+  itens.forEach((it, i) => {
+    body.append('cdItem[]', it.cdItem);
+    body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
+    body.append('cdDepositoDestino[]', it.cdDepositoDestino);
+    const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
+    body.append('qtdTransferencia[]', q);
+    body.append('cdIndex[]', String(i));
+  });
+  body.append('cdItem[]', '');
+  body.append('cdIndex[]', String(itens.length));
+  body.append('cdMovivimentacao', cdMovimentacao);
+
+  const j = await postCtlTransferencia(auth, body);
+  const cd = j?.cdMovimentacao ?? j?.cdMovivimentacao ?? cdMovimentacao;
+  return String(cd);
+}
+
+// Exclui / cancela rascunho no Auge. Tenta idAcao=3 (padrão observado em
+// controllers PHP similares do Auge). Se o portal usa outro código, o JSON de
+// resposta é propagado para diagnóstico.
+async function excluirTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovimentacao: string,
+): Promise<any> {
+  const body = new URLSearchParams();
+  body.set('idAcao', '3');
+  body.set('cdMovimentacao', cdMovimentacao);
+  body.set('cdMovivimentacao', cdMovimentacao);
+  const j = await postCtlTransferencia(auth, body);
+  if (j?.ok !== 'ok' && j?.status !== 'ok' && j?.erro) {
+    throw new Error(`Exclusão retornou: ${JSON.stringify(j).slice(0, 200)}`);
+  }
+  return j;
 }
 
 
@@ -948,9 +1003,20 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (action === 'transferencia_criar' || action === 'transferencia_efetivar') {
+    if (
+      action === 'transferencia_criar' ||
+      action === 'transferencia_efetivar' ||
+      action === 'transferencia_atualizar' ||
+      action === 'transferencia_excluir'
+    ) {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* body opcional em query */ }
+
+      const logDetalhes = (extra: any) => admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action, ...extra },
+      });
 
       if (action === 'transferencia_criar') {
         const itens = Array.isArray(payload?.itens) ? payload.itens : [];
@@ -966,28 +1032,49 @@ Deno.serve(async (req) => {
           await efetivarTransferencia(auth, cd);
           efetivado = true;
         }
-        // Log da ação
-        await admin.from('auge_sync_runs').insert({
-          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
-          finished_at: new Date().toISOString(),
-          detalhes: { action, cdMovimentacao: cd, efetivado, itens: itens.length },
-        });
+        await logDetalhes({ cdMovimentacao: cd, efetivado, itens: itens.length });
         return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
-      } else {
+      }
+
+      if (action === 'transferencia_atualizar') {
         const cd = String(payload?.cdMovimentacao ?? '').trim();
+        const itens = Array.isArray(payload?.itens) ? payload.itens : [];
         if (!cd) throw new Error('cdMovimentacao é obrigatório.');
-        await efetivarTransferencia(auth, cd);
-        await admin.from('auge_sync_runs').insert({
-          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
-          finished_at: new Date().toISOString(),
-          detalhes: { action, cdMovimentacao: cd },
-        });
-        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado: true }), {
+        if (!itens.length) throw new Error('Envie ao menos 1 item em "itens".');
+        for (const it of itens) {
+          if (!it?.cdItem || !it?.cdDepositoOrigem || !it?.cdDepositoDestino || !it?.qtd) {
+            throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
+          }
+        }
+        const newCd = await atualizarTransferencia(auth, cd, itens, String(payload?.observacao ?? ''));
+        await logDetalhes({ cdMovimentacao: newCd, itens: itens.length });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: newCd }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      if (action === 'transferencia_excluir') {
+        const cd = String(payload?.cdMovimentacao ?? '').trim();
+        if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+        const resp = await excluirTransferencia(auth, cd);
+        // Remove local também
+        await admin.from('auge_transferencias').delete().eq('documento', cd);
+        await logDetalhes({ cdMovimentacao: cd, auge_resp: resp });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, auge: resp }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // transferencia_efetivar
+      const cd = String(payload?.cdMovimentacao ?? '').trim();
+      if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+      await efetivarTransferencia(auth, cd);
+      await logDetalhes({ cdMovimentacao: cd });
+      return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
 
