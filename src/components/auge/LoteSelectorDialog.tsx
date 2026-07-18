@@ -267,7 +267,7 @@ export default function LoteSelectorDialog({
                 </tr>
               </thead>
               <tbody>
-                {lotes.map(l => {
+                {lotesFiltrados.map(l => {
                   const disponivel = Number(l.quantidade || 0);
                   const cur = sel[l.lote] || 0;
                   const checked = cur > 0;
