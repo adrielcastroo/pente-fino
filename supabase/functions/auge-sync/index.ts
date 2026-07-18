@@ -1077,50 +1077,78 @@ const extractLargura = (desc: string): number => {
   return 0;
 };
 
-async function syncTecidosMap(admin: any, auth: any, runId?: string) {
-  const startedAt = new Date().toISOString();
-  const logProgress = async (detalhes: any) => {
-    if (!runId) return;
-    try { await admin.from('auge_sync_runs').update({ detalhes }).eq('id', runId); } catch (_) { /* noop */ }
+// ============================================================
+// Sync de tecidos em chunks (evita CPU-time exceeded no edge runtime).
+// Estado persistido em auge_sync_runs.detalhes; auto-encadeado por HTTP self-invoke.
+// ============================================================
+
+const TECIDOS_CHUNK_SIZE = 350;          // itens Auge por chunk (350 × 2 HTTPs = 700)
+const TECIDOS_AUSENTES_CHUNK_SIZE = 40;  // itens ausentes por chunk (varre depósitos)
+const TECIDOS_BATCH = 15;                // concorrência dentro de um chunk
+
+type CompactLote = [string, string, number, string, number]; // [cdItem, descricao, largura, lote, qtd]
+
+function selfInvoke(action: string, runId: string) {
+  const url = `${SUPABASE_URL}/functions/v1/auge-sync?action=${action}&run_id=${encodeURIComponent(runId)}`;
+  const req = fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SERVICE_ROLE}`,
+      'Content-Type': 'application/json',
+      'apikey': SERVICE_ROLE,
+    },
+  }).catch((e) => console.error('selfInvoke error:', e));
+  // @ts-ignore EdgeRuntime existe no Deno Deploy
+  if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(req);
+}
+
+async function loadTecidosState(admin: any, runId: string) {
+  const { data } = await admin.from('auge_sync_runs').select('detalhes').eq('id', runId).maybeSingle();
+  return (data?.detalhes ?? {}) as any;
+}
+
+async function saveTecidosState(admin: any, runId: string, patch: any, extra?: any) {
+  await admin.from('auge_sync_runs').update({ detalhes: patch, ...(extra ?? {}) }).eq('id', runId);
+}
+
+async function tecidosInit(admin: any, runId: string) {
+  // Conta total de produtos Auge (não carrega — cada chunk pagina sob demanda)
+  const { count } = await admin.from('auge_produtos').select('*', { count: 'exact', head: true });
+  const total = count ?? 0;
+
+  const state = {
+    phase: 'fetch',
+    cursor: 0,
+    total,
+    brutos01: [] as CompactLote[],
+    brutos11: [] as CompactLote[],
+    started_at: new Date().toISOString(),
+    chunk_count: 0,
   };
+  await saveTecidosState(admin, runId, state);
+  selfInvoke('sync_tecidos_map_chunk', runId);
+  return { runId, total };
+}
 
-  // 1. Todos os produtos (paginado)
-  const produtos: { codigo: string; descricao: string }[] = [];
-  const PAGE = 1000;
-  for (let offset = 0; ; offset += PAGE) {
-    const { data, error } = await admin
-      .from('auge_produtos').select('codigo, descricao')
-      .order('codigo', { ascending: true }).range(offset, offset + PAGE - 1);
-    if (error) throw error;
-    if (!data || data.length === 0) break;
-    produtos.push(...data);
-    if (data.length < PAGE) break;
-  }
-  const items = produtos.filter((p: any) => p.codigo);
-  await logProgress({ fase: 'produtos_carregados', total: items.length });
+async function tecidosChunkFetch(admin: any, auth: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const cursor = state.cursor ?? 0;
+  const total = state.total ?? 0;
 
-  // 2. Depósitos ativos (para varrer "sumidos")
-  const { data: depsData } = await admin.from('auge_depositos').select('codigo, nome').order('codigo');
-  const depsAtivos: string[] = (depsData ?? [])
-    .map((d: any) => String(d.codigo).padStart(2, '0'))
-    .filter((c: string) => c !== DEP_CENTRAL && c !== DEP_PROVISORIO);
+  // Página do Auge produtos por range
+  const { data: items, error } = await admin
+    .from('auge_produtos')
+    .select('codigo, descricao')
+    .order('codigo', { ascending: true })
+    .range(cursor, cursor + TECIDOS_CHUNK_SIZE - 1);
+  if (error) throw error;
 
-  // 3. Fetch dep 01 + dep 11 para cada item (batch 15)
-  type LoteBruto = {
-    cdItem: string;
-    descricao: string;
-    largura: number;
-    dsDeposito: string;
-    quantidade: number;
-    cdDeposito: string;
-  };
-  const brutos01: LoteBruto[] = [];
-  const brutos11: LoteBruto[] = [];
+  const brutos01: CompactLote[] = state.brutos01 ?? [];
+  const brutos11: CompactLote[] = state.brutos11 ?? [];
 
-  const BATCH = 15;
-  let processed = 0;
-  for (let i = 0; i < items.length; i += BATCH) {
-    const chunk = items.slice(i, i + BATCH);
+  const list = (items ?? []).filter((p: any) => p.codigo);
+  for (let i = 0; i < list.length; i += TECIDOS_BATCH) {
+    const chunk = list.slice(i, i + TECIDOS_BATCH);
     const results = await Promise.allSettled(
       chunk.map(async (p: any) => {
         const largura = extractLargura(p.descricao ?? '');
@@ -1129,8 +1157,8 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
           fetchLotesLive(auth, p.codigo, DEP_PROVISORIO).catch(() => []),
         ]);
         return {
-          d01: r01.map((r: any) => ({ cdItem: p.codigo, descricao: p.descricao ?? '', largura, dsDeposito: r.lote, quantidade: r.quantidade, cdDeposito: DEP_CENTRAL })),
-          d11: r11.map((r: any) => ({ cdItem: p.codigo, descricao: p.descricao ?? '', largura, dsDeposito: r.lote, quantidade: r.quantidade, cdDeposito: DEP_PROVISORIO })),
+          d01: r01.map((r: any) => [p.codigo, p.descricao ?? '', largura, r.lote, r.quantidade] as CompactLote),
+          d11: r11.map((r: any) => [p.codigo, p.descricao ?? '', largura, r.lote, r.quantidade] as CompactLote),
         };
       })
     );
@@ -1140,30 +1168,41 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
         brutos11.push(...r.value.d11);
       }
     }
-    processed += chunk.length;
-    if (processed % 60 === 0 || processed >= items.length) {
-      await logProgress({ fase: 'fetching_dep_01_11', processed, total: items.length, dep01: brutos01.length, dep11: brutos11.length });
-    }
   }
 
-  // 4. Constroi mapa lote_sistema → registro (01 prevalece sobre 11)
-  type Parsed = { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> };
-  const mapAtual = new Map<string, Parsed>();
-  const semPadrao: LoteBruto[] = [];
-  // 11 primeiro, 01 sobrescreve
-  for (const l of brutos11) {
-    const addr = parseLoteTecido(l.dsDeposito);
-    if (!addr) { semPadrao.push(l); continue; }
-    mapAtual.set(l.dsDeposito, { raw: l, addr });
-  }
-  for (const l of brutos01) {
-    const addr = parseLoteTecido(l.dsDeposito);
-    if (!addr) { semPadrao.push(l); continue; }
-    mapAtual.set(l.dsDeposito, { raw: l, addr });
-  }
+  const newCursor = cursor + TECIDOS_CHUNK_SIZE;
+  const done = newCursor >= total || list.length === 0;
+  const nextPhase = done ? 'ausentes_init' : 'fetch';
+  const newState = {
+    ...state,
+    phase: nextPhase,
+    cursor: done ? 0 : newCursor,
+    brutos01,
+    brutos11,
+    chunk_count: (state.chunk_count ?? 0) + 1,
+    last_progress: { cursor: newCursor, total, dep01: brutos01.length, dep11: brutos11.length },
+  };
+  await saveTecidosState(admin, runId, newState);
+  selfInvoke('sync_tecidos_map_chunk', runId);
+}
 
-  // 5. Carrega estado atual do DB (posições TEC importadas do Auge)
+async function tecidosAusentesInit(admin: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+
+  // Constrói mapa lote_sistema → registro atual (01 prevalece)
+  const mapAtual = new Map<string, { raw: CompactLote; cdDep: string }>();
+  const semPadrao: { raw: CompactLote; cdDep: string }[] = [];
+  const push = (l: CompactLote, cdDep: string) => {
+    const addr = parseLoteTecido(l[3]);
+    if (!addr) { semPadrao.push({ raw: l, cdDep }); return; }
+    mapAtual.set(l[3], { raw: l, cdDep });
+  };
+  for (const l of (state.brutos11 ?? []) as CompactLote[]) push(l, DEP_PROVISORIO);
+  for (const l of (state.brutos01 ?? []) as CompactLote[]) push(l, DEP_CENTRAL);
+
+  // Carrega posições existentes
   const posicoesExist: any[] = [];
+  const PAGE = 1000;
   for (let offset = 0; ; offset += PAGE) {
     const { data, error } = await admin
       .from('estoque_posicoes')
@@ -1179,120 +1218,170 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   const mapExist = new Map<string, any>();
   for (const p of posicoesExist) if (p.lote_sistema) mapExist.set(p.lote_sistema, p);
 
-  // 6. Diff: para cada lote atual (01/11) → upsert; para cada existente ausente → verificar outros deps ou saída
+  // Ausentes agrupados por cdItem
+  const ausentes = posicoesExist.filter(p => !mapAtual.has(p.lote_sistema));
+  const porItem: Record<string, any[]> = {};
+  const semItem: string[] = [];
+  for (const p of ausentes) {
+    const k = p.auge_cd_item || '';
+    if (!k) { semItem.push(p.id); continue; }
+    (porItem[k] ??= []).push(p);
+  }
+  const itensAusentes = Object.keys(porItem);
+
+  // Depósitos ativos
+  const { data: depsData } = await admin.from('auge_depositos').select('codigo').order('codigo');
+  const depsAtivos: string[] = (depsData ?? [])
+    .map((d: any) => String(d.codigo).padStart(2, '0'))
+    .filter((c: string) => c !== DEP_CENTRAL && c !== DEP_PROVISORIO);
+
+  // Serializa "mapAtual" e mapExist para próximas fases (evita reprocessar)
+  const mapAtualArr = Array.from(mapAtual.entries()).map(([k, v]) => [k, v.raw, v.cdDep]);
+  const semPadraoArr = semPadrao.map(x => [x.raw, x.cdDep]);
+
+  const newState = {
+    ...state,
+    phase: 'ausentes',
+    ausentes_cursor: 0,
+    ausentes_items: itensAusentes,
+    por_item: porItem,
+    sem_item_ids: semItem,
+    map_atual: mapAtualArr,
+    sem_padrao: semPadraoArr,
+    posicoes_exist_ids: posicoesExist.map(p => ({
+      id: p.id, estrutura: p.estrutura, coluna: p.coluna, nivel: p.nivel, posicao: p.posicao,
+      lote_sistema: p.lote_sistema, largura: p.largura, m_linear: p.m_linear, m_linear_atual: p.m_linear_atual,
+      status: p.status, item: p.item,
+    })),
+    deps_ativos: depsAtivos,
+    transfer_updates: [] as any[],
+    saidas_rows: [] as any[],
+    delete_ids: [...semItem] as string[],
+    // brutos não são mais necessários daqui pra frente — libera espaço
+    brutos01: undefined,
+    brutos11: undefined,
+  };
+  await saveTecidosState(admin, runId, newState);
+  selfInvoke('sync_tecidos_map_chunk', runId);
+}
+
+async function tecidosChunkAusentes(admin: any, auth: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const cursor = state.ausentes_cursor ?? 0;
+  const itens: string[] = state.ausentes_items ?? [];
+  const porItem: Record<string, any[]> = state.por_item ?? {};
+  const depsAtivos: string[] = state.deps_ativos ?? [];
+  const transferUpdates: any[] = state.transfer_updates ?? [];
+  const saidasRows: any[] = state.saidas_rows ?? [];
+  const deleteIds: string[] = state.delete_ids ?? [];
+
+  const nowIso = new Date().toISOString();
+  const chunk = itens.slice(cursor, cursor + TECIDOS_AUSENTES_CHUNK_SIZE);
+
+  const results = await Promise.allSettled(chunk.map(async (cdItem) => {
+    const found: Record<string, { cdDeposito: string; quantidade: number }> = {};
+    for (const dep of depsAtivos) {
+      try {
+        const rows = await fetchLotesLive(auth, cdItem, dep);
+        for (const r of rows) {
+          if (r.lote && !found[r.lote]) {
+            found[r.lote] = { cdDeposito: dep, quantidade: r.quantidade };
+          }
+        }
+      } catch (_) { /* noop */ }
+    }
+    return { cdItem, found };
+  }));
+
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue;
+    const { cdItem, found } = r.value;
+    for (const p of (porItem[cdItem] ?? [])) {
+      const hit = found[p.lote_sistema];
+      if (hit) {
+        const largura = p.largura || 0;
+        transferUpdates.push({
+          id: p.id,
+          patch: {
+            status: 'transferido',
+            deposito_atual: hit.cdDeposito,
+            m_linear_atual: hit.quantidade,
+            m2_atual: largura > 0 ? +(hit.quantidade * largura).toFixed(2) : 0,
+          },
+        });
+      } else {
+        saidasRows.push({
+          estrutura: p.estrutura, coluna: p.coluna, nivel: p.nivel, posicao: p.posicao,
+          item: p.item, lote_sistema: p.lote_sistema,
+          m_linear: p.m_linear_atual ?? p.m_linear ?? 0,
+          largura: p.largura ?? 0,
+          m2: (p.m_linear_atual ?? p.m_linear ?? 0) * (p.largura ?? 0),
+          conferente_saida: 'Auge Sync', observacoes: 'AUGE_SAIDA', data_saida: nowIso,
+        });
+        deleteIds.push(p.id);
+      }
+    }
+  }
+
+  const newCursor = cursor + TECIDOS_AUSENTES_CHUNK_SIZE;
+  const done = newCursor >= itens.length;
+  const newState = {
+    ...state,
+    phase: done ? 'apply' : 'ausentes',
+    ausentes_cursor: newCursor,
+    transfer_updates: transferUpdates,
+    saidas_rows: saidasRows,
+    delete_ids: deleteIds,
+    last_progress: { ausentes_cursor: newCursor, ausentes_total: itens.length, transferidos: transferUpdates.length, saidas: saidasRows.length },
+  };
+  await saveTecidosState(admin, runId, newState);
+  selfInvoke('sync_tecidos_map_chunk', runId);
+}
+
+async function tecidosApply(admin: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const mapAtualArr: any[][] = state.map_atual ?? [];
+  const semPadraoArr: any[][] = state.sem_padrao ?? [];
+  const posicoesExist: any[] = state.posicoes_exist_ids ?? [];
+  const transferUpdates: any[] = state.transfer_updates ?? [];
+  const saidasRows: any[] = state.saidas_rows ?? [];
+  const deleteIds: string[] = state.delete_ids ?? [];
+
+  const mapExist = new Map<string, any>();
+  for (const p of posicoesExist) if (p.lote_sistema) mapExist.set(p.lote_sistema, p);
+
   const nowIso = new Date().toISOString();
   const toInsert: any[] = [];
-  const toUpdate: { id: string; patch: any }[] = [];
+  const toUpdate: { id: string; patch: any }[] = [...transferUpdates];
   const overflowRows: any[] = [];
-  const saidas: any[] = [];
-  const toDeleteIds: string[] = [];
-  let transferidosCount = 0;
+  const novosPorCelula = new Map<string, any[]>();
   let retornosCount = 0;
 
-  // Agrupa novos por célula para alocar posição
-  const novosPorCelula = new Map<string, Parsed[]>();
-  for (const [loteSistema, cur] of mapAtual.entries()) {
+  for (const [loteSistema, raw, cdDep] of mapAtualArr) {
+    const [cdItem, descricao, largura, _lote, quantidade] = raw as CompactLote;
+    const addr = parseLoteTecido(loteSistema);
+    if (!addr) continue;
     const existente = mapExist.get(loteSistema);
-    const targetStatus = cur.raw.cdDeposito === DEP_CENTRAL ? 'ocupado' : 'bloqueado';
-    const m2atual = cur.raw.largura > 0 ? +(cur.raw.quantidade * cur.raw.largura).toFixed(2) : 0;
-
+    const targetStatus = cdDep === DEP_CENTRAL ? 'ocupado' : 'bloqueado';
+    const m2atual = largura > 0 ? +(quantidade * largura).toFixed(2) : 0;
     if (!existente) {
-      const key = `${cur.addr.estrutura}.${cur.addr.coluna}.${cur.addr.nivel}`;
+      const key = `${addr.estrutura}.${addr.coluna}.${addr.nivel}`;
       if (!novosPorCelula.has(key)) novosPorCelula.set(key, []);
-      novosPorCelula.get(key)!.push(cur);
+      novosPorCelula.get(key)!.push({ addr, cdItem, descricao, largura, quantidade, cdDep, loteSistema, targetStatus, m2atual });
     } else {
-      // Retorno de "transferido" → conta
       if (existente.status === 'transferido') retornosCount++;
       toUpdate.push({
         id: existente.id,
         patch: {
-          status: targetStatus,
-          deposito_atual: cur.raw.cdDeposito,
-          m_linear_atual: cur.raw.quantidade,
-          m2_atual: m2atual,
-          auge_cd_item: cur.raw.cdItem,
+          status: targetStatus, deposito_atual: cdDep,
+          m_linear_atual: quantidade, m2_atual: m2atual, auge_cd_item: cdItem,
         },
       });
     }
   }
 
-  // Lotes existentes que sumiram do 01 e 11
-  const ausentes = posicoesExist.filter(p => !mapAtual.has(p.lote_sistema));
-  // Para eficiência, agrupa por cdItem (evita duplicar chamadas)
-  const porItem = new Map<string, any[]>();
-  for (const p of ausentes) {
-    const k = p.auge_cd_item || '';
-    if (!k) { toDeleteIds.push(p.id); continue; }
-    if (!porItem.has(k)) porItem.set(k, []);
-    porItem.get(k)!.push(p);
-  }
-
-  const itensAusentes = Array.from(porItem.keys());
-  let procA = 0;
-  for (let i = 0; i < itensAusentes.length; i += BATCH) {
-    const chunk = itensAusentes.slice(i, i + BATCH);
-    const results = await Promise.allSettled(chunk.map(async (cdItem) => {
-      const found: Record<string, { cdDeposito: string; quantidade: number }> = {};
-      for (const dep of depsAtivos) {
-        try {
-          const rows = await fetchLotesLive(auth, cdItem, dep);
-          for (const r of rows) {
-            if (r.lote && !found[r.lote]) {
-              found[r.lote] = { cdDeposito: dep, quantidade: r.quantidade };
-            }
-          }
-        } catch (_) { /* noop */ }
-      }
-      return { cdItem, found };
-    }));
-    for (const r of results) {
-      if (r.status !== 'fulfilled') continue;
-      const { cdItem, found } = r.value;
-      const positions = porItem.get(cdItem) ?? [];
-      for (const p of positions) {
-        const hit = found[p.lote_sistema];
-        if (hit) {
-          const largura = p.largura || 0;
-          toUpdate.push({
-            id: p.id,
-            patch: {
-              status: 'transferido',
-              deposito_atual: hit.cdDeposito,
-              m_linear_atual: hit.quantidade,
-              m2_atual: largura > 0 ? +(hit.quantidade * largura).toFixed(2) : 0,
-            },
-          });
-          transferidosCount++;
-        } else {
-          // Saiu completamente → grava saída + apaga posição
-          saidas.push({
-            estrutura: p.estrutura,
-            coluna: p.coluna,
-            nivel: p.nivel,
-            posicao: p.posicao,
-            item: p.item,
-            lote_sistema: p.lote_sistema,
-            m_linear: p.m_linear_atual ?? p.m_linear ?? 0,
-            largura: p.largura ?? 0,
-            m2: (p.m_linear_atual ?? p.m_linear ?? 0) * (p.largura ?? 0),
-            conferente_saida: 'Auge Sync',
-            observacoes: 'AUGE_SAIDA',
-            data_saida: nowIso,
-          });
-          toDeleteIds.push(p.id);
-        }
-      }
-    }
-    procA += chunk.length;
-    if (procA % 30 === 0 || procA >= itensAusentes.length) {
-      await logProgress({ fase: 'diff_ausentes', procA, total: itensAusentes.length, transferidos: transferidosCount, saidas: saidas.length });
-    }
-  }
-
-  // 7. Aloca novos em posições 1..30 por célula
   for (const [_key, list] of novosPorCelula.entries()) {
-    list.sort((a, b) => a.raw.dsDeposito.localeCompare(b.raw.dsDeposito));
-    // Posições ocupadas na célula (considerando existentes + já inserindo)
+    list.sort((a: any, b: any) => a.loteSistema.localeCompare(b.loteSistema));
     const cellRef = list[0].addr;
     const ocupadas = new Set<number>();
     for (const p of posicoesExist) {
@@ -1301,57 +1390,45 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
       }
     }
     for (const item of list) {
-      const { addr, raw } = item;
-      const status = raw.cdDeposito === DEP_CENTRAL ? 'ocupado' : 'bloqueado';
-      const m2 = raw.largura > 0 ? +(raw.quantidade * raw.largura).toFixed(2) : 0;
+      const { addr, cdItem, descricao, largura, quantidade, cdDep, loteSistema, targetStatus, m2atual } = item;
       let pos = 1;
       while (pos <= 30 && ocupadas.has(pos)) pos++;
       const base = {
-        estrutura: addr.estrutura,
-        coluna: addr.coluna,
-        nivel: addr.nivel,
-        item: raw.descricao || raw.cdItem,
-        m2, largura: raw.largura, m_linear: raw.quantidade,
-        m_linear_atual: raw.quantidade,
-        m2_atual: m2,
-        deposito_atual: raw.cdDeposito,
-        auge_cd_item: raw.cdItem,
-        lote: `${raw.quantidade}M`,
-        endereco: addr.endereco,
-        lote_sistema: raw.dsDeposito,
-        conferente_entrada: 'Importado Auge',
-        data_registro: nowIso,
-        proc: addr.proc,
+        estrutura: addr.estrutura, coluna: addr.coluna, nivel: addr.nivel,
+        item: descricao || cdItem,
+        m2: m2atual, largura, m_linear: quantidade,
+        m_linear_atual: quantidade, m2_atual: m2atual,
+        deposito_atual: cdDep, auge_cd_item: cdItem,
+        lote: `${quantidade}M`, endereco: addr.endereco,
+        lote_sistema: loteSistema, conferente_entrada: 'Importado Auge',
+        data_registro: nowIso, proc: addr.proc,
       };
       if (pos <= 30) {
-        toInsert.push({ ...base, posicao: pos, status });
+        toInsert.push({ ...base, posicao: pos, status: targetStatus });
         ocupadas.add(pos);
       } else {
         overflowRows.push({
           item: base.item, endereco_desejado: addr.endereco,
           estrutura: addr.estrutura, coluna: addr.coluna, nivel: addr.nivel,
-          proc: addr.proc, m_linear: raw.quantidade, largura: raw.largura, m2,
-          lote: `${raw.quantidade}M`, lote_sistema: raw.dsDeposito,
-          auge_cd_item: raw.cdItem, auge_cd_deposito: raw.cdDeposito,
-          synced_at: nowIso,
+          proc: addr.proc, m_linear: quantidade, largura, m2: m2atual,
+          lote: `${quantidade}M`, lote_sistema: loteSistema,
+          auge_cd_item: cdItem, auge_cd_deposito: cdDep, synced_at: nowIso,
         });
       }
     }
   }
 
-  // Overflow: sem padrão
-  for (const raw of semPadrao) {
+  for (const [raw, cdDep] of semPadraoArr) {
+    const [cdItem, descricao, largura, loteSistema, _qtd] = raw as CompactLote;
     overflowRows.push({
-      item: raw.descricao || raw.cdItem, endereco_desejado: null,
+      item: descricao || cdItem, endereco_desejado: null,
       estrutura: null, coluna: null, nivel: null, proc: null,
-      m_linear: null, largura: raw.largura || null, m2: null,
-      lote: null, lote_sistema: raw.dsDeposito,
-      auge_cd_item: raw.cdItem, auge_cd_deposito: raw.cdDeposito,
-      synced_at: nowIso,
+      m_linear: null, largura: largura || null, m2: null,
+      lote: null, lote_sistema: loteSistema,
+      auge_cd_item: cdItem, auge_cd_deposito: cdDep, synced_at: nowIso,
     });
   }
 
-  // 8. Aplica writes
   const CH = 500;
   const applyInsert = async (table: string, rows: any[]) => {
     for (let i = 0; i < rows.length; i += CH) {
@@ -1359,37 +1436,58 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
       if (error) throw new Error(`${table}: ${error.message}`);
     }
   };
-
   if (toInsert.length) await applyInsert('estoque_posicoes', toInsert);
-  if (saidas.length) {
-    try { await applyInsert('estoque_saidas', saidas); } catch (e) { console.error('estoque_saidas:', e); }
+  if (saidasRows.length) {
+    try { await applyInsert('estoque_saidas', saidasRows); } catch (e) { console.error('estoque_saidas:', e); }
   }
   for (const u of toUpdate) {
     await admin.from('estoque_posicoes').update(u.patch).eq('id', u.id);
   }
-  if (toDeleteIds.length) {
-    for (let i = 0; i < toDeleteIds.length; i += CH) {
-      await admin.from('estoque_posicoes').delete().in('id', toDeleteIds.slice(i, i + CH));
+  if (deleteIds.length) {
+    for (let i = 0; i < deleteIds.length; i += CH) {
+      await admin.from('estoque_posicoes').delete().in('id', deleteIds.slice(i, i + CH));
     }
   }
-  // tecidos_sem_espaco: reconstruído (limpa e insere)
   await admin.from('tecidos_sem_espaco').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (overflowRows.length) await applyInsert('tecidos_sem_espaco', overflowRows);
 
-  return {
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    itens_consultados: items.length,
-    dep01: brutos01.length,
-    dep11: brutos11.length,
+  const summary = {
+    phase: 'done',
+    itens_consultados: state.total ?? 0,
     novos_alocados: toInsert.length,
     atualizados: toUpdate.length,
-    transferidos: transferidosCount,
+    transferidos: transferUpdates.length,
     retornos: retornosCount,
-    saidas: saidas.length,
+    saidas: saidasRows.length,
     sem_espaco: overflowRows.length,
-    lotes_sem_padrao: semPadrao.length,
+    lotes_sem_padrao: semPadraoArr.length,
+    started_at: state.started_at,
+    finished_at: new Date().toISOString(),
   };
+  await admin.from('auge_sync_runs').update({
+    status: 'success',
+    finished_at: summary.finished_at,
+    rows_processed: summary.itens_consultados,
+    rows_upserted: summary.novos_alocados + summary.atualizados,
+    detalhes: summary,
+  }).eq('id', runId);
+}
+
+async function tecidosDispatch(admin: any, auth: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const phase = state.phase ?? 'fetch';
+  try {
+    if (phase === 'fetch') await tecidosChunkFetch(admin, auth, runId);
+    else if (phase === 'ausentes_init') await tecidosAusentesInit(admin, runId);
+    else if (phase === 'ausentes') await tecidosChunkAusentes(admin, auth, runId);
+    else if (phase === 'apply') await tecidosApply(admin, runId);
+  } catch (e) {
+    await admin.from('auge_sync_runs').update({
+      status: 'error',
+      finished_at: new Date().toISOString(),
+      error_message: (e instanceof Error ? e.message : String(e)) + ` (phase=${phase})`,
+    }).eq('id', runId);
+  }
 }
 
 
@@ -1532,48 +1630,40 @@ Deno.serve(async (req) => {
         status: 'running',
         started_at: new Date().toISOString(),
         triggered_by: triggeredBy,
-        detalhes: { fase: 'iniciando' },
+        detalhes: { phase: 'init' },
       }).select('id').single();
       const runId = runIns.data?.id as string | undefined;
+      if (!runId) throw new Error('Falha ao criar run.');
 
       const task = (async () => {
-        try {
-          const result = await syncTecidosMap(admin, auth, runId);
-          if (runId) {
-            await admin.from('auge_sync_runs').update({
-              status: 'success',
-              finished_at: new Date().toISOString(),
-              rows_processed: result.itens_consultados,
-              rows_upserted: (result.alocados ?? 0) + (result.sem_espaco ?? 0),
-              detalhes: result,
-            }).eq('id', runId);
-          }
-        } catch (e) {
-          if (runId) {
-            await admin.from('auge_sync_runs').update({
-              status: 'error',
-              finished_at: new Date().toISOString(),
-              error_message: e instanceof Error ? e.message : String(e),
-            }).eq('id', runId);
-          }
+        try { await tecidosInit(admin, runId); }
+        catch (e) {
+          await admin.from('auge_sync_runs').update({
+            status: 'error', finished_at: new Date().toISOString(),
+            error_message: e instanceof Error ? e.message : String(e),
+          }).eq('id', runId);
         }
       })();
-
-      // @ts-ignore - EdgeRuntime existe no Deno Deploy
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
-        // @ts-ignore
-        EdgeRuntime.waitUntil(task);
-      }
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
 
       return new Response(JSON.stringify({
-        ok: true,
-        background: true,
-        run_id: runId,
-        message: 'Sincronização de tecidos iniciada em background. Acompanhe em /admin (histórico de runs).',
-      }), {
+        ok: true, background: true, run_id: runId, chunked: true,
+        message: 'Sync iniciado em chunks encadeados. Acompanhe em /admin.',
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (action === 'sync_tecidos_map_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id é obrigatório.');
+      const task = tecidosDispatch(admin, auth, runId);
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
 
 
