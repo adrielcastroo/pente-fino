@@ -1070,18 +1070,19 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   //    Se não conseguir, fica 0.
   const extractLargura = (desc: string): number => {
     if (!desc) return 0;
-    // Procura padrão "L{numero}" ou "{numero}M" ou "{numero}cm"
-    const cm = desc.match(/(\d+[.,]?\d*)\s*cm\b/i);
-    if (cm) return parseFloat(cm[1].replace(',', '.')) / 100;
-    const m = desc.match(/L\s*(\d[.,]?\d*)\s*M?\b/i);
-    if (m) return parseFloat(m[1].replace(',', '.'));
-    const mFallback = desc.match(/(\d[.,]?\d*)\s*M\b/i);
-    if (mFallback) {
-      const v = parseFloat(mFallback[1].replace(',', '.'));
-      if (v > 0.5 && v < 5) return v; // largura plausível
-    }
+    const clamp = (v: number) => (v >= 0.5 && v <= 5 ? v : 0);
+    // Padrão: "2,80L" ou "2.80L" (número seguido de L, com no máx 3 dígitos antes)
+    const preL = desc.match(/(?<![\d.,])(\d{1,2}(?:[.,]\d{1,3})?)\s*L\b/i);
+    if (preL) return clamp(parseFloat(preL[1].replace(',', '.')));
+    // Padrão: "L 2,80"
+    const posL = desc.match(/\bL\s*(\d{1,2}(?:[.,]\d{1,3})?)\b/i);
+    if (posL) return clamp(parseFloat(posL[1].replace(',', '.')));
+    // Padrão: "cm"
+    const cm = desc.match(/(\d{2,3})\s*cm\b/i);
+    if (cm) return clamp(parseFloat(cm[1]) / 100);
     return 0;
   };
+
 
   // 3. Busca lotes para cada item (paralelo em batches de 6)
   type LoteBruto = {
