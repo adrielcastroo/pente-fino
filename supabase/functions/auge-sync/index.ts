@@ -1029,12 +1029,20 @@ const CHAO_ADDR_RE = /^CH[ÃA]O\s+(.+?)[\s-]+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$
 const DEP_CENTRAL = '01';     // Central
 const DEP_PROVISORIO = '11';  // Central Provisório
 
+// Exceções manuais: lotes com endereço mal formatado no Auge que devem ser
+// realocados para um endereço fixo conhecido.
+const LOTE_ALIASES: Record<string, string> = {
+  'TEC0.B1 NF169972 29,5m': 'TEC01.B.N01 NF169972 29,5m',
+};
+
 function parseLoteTecido(dsDeposito: string): {
   estrutura: string; coluna: string; nivel: number;
   proc: string; m_linear: number; sufixo: string; endereco: string;
 } | null {
   if (!dsDeposito) return null;
-  const s = dsDeposito.replace(/\s+/g, ' ').trim();
+  const aliased = LOTE_ALIASES[dsDeposito.trim()] ?? dsDeposito;
+  const s = aliased.replace(/\s+/g, ' ').trim();
+
 
   // 1) CHÃO e variantes → aloca sempre no endereço "CHÃO"
   const c = s.match(CHAO_ADDR_RE);
