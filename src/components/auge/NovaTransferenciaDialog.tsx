@@ -162,7 +162,11 @@ export default function NovaTransferenciaDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="w-4 h-4 text-primary" />
-            Nova transferência (Auge)
+            {isEdit
+              ? `Editar rascunho ${cdEdit}`
+              : mode === 'duplicar'
+                ? 'Duplicar transferência (Auge)'
+                : 'Nova transferência (Auge)'}
           </DialogTitle>
         </DialogHeader>
 
