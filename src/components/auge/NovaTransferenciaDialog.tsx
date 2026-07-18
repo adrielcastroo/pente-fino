@@ -266,60 +266,67 @@ function ItemAutocomplete({
 
   const buscar = (q: string) => {
     if (debouncedRef.current) window.clearTimeout(debouncedRef.current);
-    if (!q.trim() || q.trim().length < 2) { setResults([]); return; }
+    const term = q.trim();
+    if (term.length < 1) { setResults([]); return; }
     debouncedRef.current = window.setTimeout(async () => {
       setLoading(true);
-      const s = q.trim().replace(/[%,]/g, ' ');
+      const s = term.replace(/[%,]/g, ' ');
       const { data } = await supabase
         .from('auge_produtos')
         .select('codigo,descricao,unidade')
         .or(`codigo.ilike.%${s}%,descricao.ilike.%${s}%`)
         .order('codigo')
-        .limit(15);
+        .limit(20);
       setResults((data ?? []) as Produto[]);
       setLoading(false);
-    }, 250);
+    }, 200);
   };
 
+  const showList = open && (results.length > 0 || loading);
+
   return (
-    <div>
-      <Label className="text-[10px]">Código do item</Label>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              value={cdItem}
-              onChange={(e) => { onCdItemChange(e.target.value); buscar(e.target.value); setOpen(true); }}
-              onFocus={() => { if (results.length) setOpen(true); }}
-              placeholder="Buscar por código ou descrição..."
-              className="pl-7 h-8 text-xs font-mono"
-            />
-          </div>
-        </PopoverTrigger>
-        {results.length > 0 && (
-          <PopoverContent className="p-0 w-[--radix-popover-trigger-width] max-h-64 overflow-auto" align="start">
-            <ul className="divide-y">
-              {results.map(p => (
-                <li key={p.codigo}>
-                  <button
-                    type="button"
-                    onClick={() => { onSelect(p); setOpen(false); }}
-                    className="w-full text-left p-2 hover:bg-muted/60 transition-colors"
-                  >
-                    <div className="font-mono text-[11px] font-semibold text-primary">{p.codigo}</div>
-                    <div className="text-[11px] text-muted-foreground line-clamp-1">{p.descricao ?? '—'}</div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </PopoverContent>
-        )}
-      </Popover>
-      {descricao && (
-        <div className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{descricao}</div>
+    <div className="relative">
+      <Label className="text-[10px]">Código do item ou descrição</Label>
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        <Input
+          value={cdItem}
+          onChange={(e) => { onCdItemChange(e.target.value); buscar(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Digite código ou parte da descrição (ex: comp)..."
+          className="pl-7 h-8 text-xs font-mono"
+          autoComplete="off"
+        />
+      </div>
+      {showList && (
+        <div className="absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-md border bg-popover shadow-lg">
+          {loading && (
+            <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1.5">
+              <Loader2 className="w-3 h-3 animate-spin" /> Buscando...
+            </div>
+          )}
+          <ul className="divide-y">
+            {results.map(p => (
+              <li key={p.codigo}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { onSelect(p); setOpen(false); }}
+                  className="w-full text-left p-2 hover:bg-muted/60 transition-colors"
+                >
+                  <div className="font-mono text-[11px] font-semibold text-primary">{p.codigo}</div>
+                  <div className="text-[11px] text-muted-foreground line-clamp-1">{p.descricao ?? '—'}</div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
-      {loading && <div className="text-[10px] text-muted-foreground mt-0.5">Buscando...</div>}
+      {descricao && !showList && (
+        <div className="text-[10px] text-muted-foreground mt-1 line-clamp-1">✓ {descricao}</div>
+      )}
     </div>
   );
 }
+
