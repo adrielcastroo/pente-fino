@@ -740,6 +740,59 @@ async function efetivarTransferencia(
   }
 }
 
+// Atualiza um rascunho existente: mesma estrutura de idAcao=1, porém com
+// cdMovivimentacao preenchido com o cd atual (padrão observado no portal Auge).
+async function atualizarTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovimentacao: string,
+  itens: TransferenciaItem[],
+  observacao = '',
+): Promise<string> {
+  if (!itens.length) throw new Error('Ao menos 1 item é obrigatório.');
+  const body = new URLSearchParams();
+  body.set('idAcao', '1');
+  body.set('cdMovivimentacao', cdMovimentacao); // typo intencional
+  body.set('idUm', 'UN');
+  body.set('idEfetivacao', '');
+  body.set('idValidacao', 'N');
+  body.set('idDuplicar', 'N');
+  body.set('dsObservacao', observacao || '');
+  body.set('idLancamentoAjuste', 'N');
+  itens.forEach((it, i) => {
+    body.append('cdItem[]', it.cdItem);
+    body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
+    body.append('cdDepositoDestino[]', it.cdDepositoDestino);
+    const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
+    body.append('qtdTransferencia[]', q);
+    body.append('cdIndex[]', String(i));
+  });
+  body.append('cdItem[]', '');
+  body.append('cdIndex[]', String(itens.length));
+  body.append('cdMovivimentacao', cdMovimentacao);
+
+  const j = await postCtlTransferencia(auth, body);
+  const cd = j?.cdMovimentacao ?? j?.cdMovivimentacao ?? cdMovimentacao;
+  return String(cd);
+}
+
+// Exclui / cancela rascunho no Auge. Tenta idAcao=3 (padrão observado em
+// controllers PHP similares do Auge). Se o portal usa outro código, o JSON de
+// resposta é propagado para diagnóstico.
+async function excluirTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovimentacao: string,
+): Promise<any> {
+  const body = new URLSearchParams();
+  body.set('idAcao', '3');
+  body.set('cdMovimentacao', cdMovimentacao);
+  body.set('cdMovivimentacao', cdMovimentacao);
+  const j = await postCtlTransferencia(auth, body);
+  if (j?.ok !== 'ok' && j?.status !== 'ok' && j?.erro) {
+    throw new Error(`Exclusão retornou: ${JSON.stringify(j).slice(0, 200)}`);
+  }
+  return j;
+}
+
 
 // Calcula quantos dias precisamos buscar com base no último sync.
 // Adiciona 2 dias de overlap para não perder registros que chegaram atrasados.
