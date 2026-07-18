@@ -1,17 +1,20 @@
 import { useState, useMemo, memo, useCallback } from 'react';
-import { Package, Search } from 'lucide-react';
+import { Package, PackageX, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ReservasTable } from '@/components/estoque/ReservasTable';
 import { ReservaFormDialog } from '@/components/estoque/ReservaFormDialog';
+import TecidosSemEspacoTab from '@/components/estoque/TecidosSemEspacoTab';
 import { filterReservas, ReservaFormData } from '@/components/estoque/reservas-utils';
 import { useReservas } from '@/hooks/useReservas';
 import { Reserva } from '@/types';
 import { diffFields } from '@/lib/audit';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+
 
 const ReservasPage = () => {
   useDocumentTitle('Reservas');
