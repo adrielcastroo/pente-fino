@@ -9,8 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
   RefreshCw, Loader2, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  Database, Activity, AlertTriangle, PlayCircle, Power,
+  Database, Activity, AlertTriangle, PlayCircle, Power, MapPin,
 } from 'lucide-react';
+
 import { formatDateBR } from '@/lib/app-utils';
 
 
@@ -135,6 +136,25 @@ export default function AugeAdminPanel() {
     } finally { setSyncingEntity(null); }
   };
 
+  const syncTecidosMap = async () => {
+    setSyncingEntity('tecidos_map');
+    const t = toast.loading('Reconstruindo mapa de tecidos a partir do Auge...');
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tecidos_map', { method: 'POST' });
+      if (error) throw error;
+      if ((data as any)?.ok === false) throw new Error((data as any).error);
+      const r = data as any;
+      toast.success(
+        `Tecidos: ${r.alocados ?? 0} alocados · ${r.sem_espaco ?? 0} sem espaço`,
+        { id: t },
+      );
+      await Promise.all([loadRuns(), loadCounts()]);
+    } catch (e: any) {
+      toast.error('Falha: ' + e.message, { id: t });
+    } finally { setSyncingEntity(null); }
+  };
+
+
   useEffect(() => {
     loadRuns(); loadCounts(); doPing(); loadFlag();
     const iv = setInterval(loadRuns, 15000);
@@ -218,10 +238,15 @@ export default function AugeAdminPanel() {
             <Button size="sm" variant="outline" asChild className="gap-1.5 h-9">
               <a href="/admin/depositos"><Activity className="w-3.5 h-3.5" />Gerir depósitos</a>
             </Button>
+            <Button size="sm" variant="outline" onClick={syncTecidosMap} disabled={syncingEntity !== null || !syncEnabled} className="gap-1.5 h-9" title="Reconstrói /estoque/mapa a partir dos lotes do Auge">
+              {syncingEntity === 'tecidos_map' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
+              Sincronizar mapa tecidos
+            </Button>
             <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : undefined} className="gap-1.5 h-9">
               {syncingEntity === 'all' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
               Sincronizar tudo
             </Button>
+
           </div>
         </div>
       </Card>
