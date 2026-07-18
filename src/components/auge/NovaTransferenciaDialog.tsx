@@ -276,14 +276,18 @@ export default function NovaTransferenciaDialog({
             <Textarea id="obs" value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={2} />
           </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-            <Checkbox checked={efetivar} onCheckedChange={(v) => setEfetivar(!!v)} />
-            <span>Efetivar imediatamente após criar</span>
-          </label>
-          {efetivar && (
-            <p className="text-[11px] text-amber-500 -mt-2">
-              ⚠ Movimenta estoque no Auge sem conferência manual.
-            </p>
+          {!isEdit && (
+            <>
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <Checkbox checked={efetivar} onCheckedChange={(v) => setEfetivar(!!v)} />
+                <span>Efetivar imediatamente após criar</span>
+              </label>
+              {efetivar && (
+                <p className="text-[11px] text-amber-500 -mt-2">
+                  ⚠ Movimenta estoque no Auge sem conferência manual.
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -291,7 +295,9 @@ export default function NovaTransferenciaDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
           <Button onClick={submit} disabled={!canSubmit} className="gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {efetivar ? 'Criar e efetivar' : 'Criar rascunho'}
+            {isEdit
+              ? 'Salvar alterações no Auge'
+              : efetivar ? 'Criar e efetivar' : 'Criar rascunho'}
           </Button>
         </DialogFooter>
       </DialogContent>
