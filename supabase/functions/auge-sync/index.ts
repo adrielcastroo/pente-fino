@@ -1021,9 +1021,11 @@ async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
 // Aceita TEC + 1-2 dígitos, nível 1-2 dígitos, M/m com sufixo opcional.
 // Aceita TEC + 1-2 dígitos, coluna A-Z, nível 1-2 dígitos.
 // Aceita espaço opcional entre a metragem e o sufixo "-N" (ex: "30m -1" ou "30m-1").
-const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$/i;
+// Aceita separador `\s+` OU `-` entre PROC/NF e a metragem
+// (ex.: "NF173523-30m" além de "PROC25/01253 30m").
+const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)[\s-]+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$/i;
 // CHÃO / CHAO / chao / Chão (com ou sem acento, qualquer case)
-const CHAO_ADDR_RE = /^CH[ÃA]O\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$/i;
+const CHAO_ADDR_RE = /^CH[ÃA]O\s+(.+?)[\s-]+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$/i;
 const DEP_CENTRAL = '01';     // Central
 const DEP_PROVISORIO = '11';  // Central Provisório
 
@@ -1392,6 +1394,9 @@ async function tecidosApply(admin: any, runId: string) {
     const cellRef = list[0].addr;
     const ocupadas = new Set<number>();
     for (const p of posicoesExist) {
+      // Slots com status 'saida' ou 'transferido' NÃO ocupam espaço físico —
+      // podem ser reutilizados por novos lotes na mesma célula.
+      if (p.status === 'saida' || p.status === 'transferido') continue;
       if (p.estrutura === cellRef.estrutura && p.coluna === cellRef.coluna && p.nivel === cellRef.nivel) {
         ocupadas.add(p.posicao);
       }
