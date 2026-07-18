@@ -177,13 +177,13 @@ export default function TecidosSemEspacoTab() {
             <Table>
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>
-                  <TableHead>Endereço desejado</TableHead>
-                  <TableHead>Item</TableHead>
-                  <TableHead>PROC / NF</TableHead>
-                  <TableHead className="text-right">M lin</TableHead>
-                  <TableHead className="text-right">Largura</TableHead>
-                  <TableHead className="text-right">m²</TableHead>
-                  <TableHead>Lote sistema</TableHead>
+                  <SortHead k="endereco_desejado">Endereço desejado</SortHead>
+                  <SortHead k="item">Item</SortHead>
+                  <SortHead k="proc">PROC / NF</SortHead>
+                  <SortHead k="m_linear" align="right">M lin</SortHead>
+                  <SortHead k="largura" align="right">Largura</SortHead>
+                  <SortHead k="m2" align="right">m²</SortHead>
+                  <SortHead k="lote_sistema">Lote sistema</SortHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
