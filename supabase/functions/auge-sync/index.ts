@@ -1310,15 +1310,22 @@ async function tecidosChunkAusentes(admin: any, auth: any, runId: string) {
           },
         });
       } else {
-        saidasRows.push({
-          estrutura: p.estrutura, coluna: p.coluna, nivel: p.nivel, posicao: p.posicao,
-          item: p.item, lote_sistema: p.lote_sistema,
-          m_linear: p.m_linear_atual ?? p.m_linear ?? 0,
-          largura: p.largura ?? 0,
-          m2: (p.m_linear_atual ?? p.m_linear ?? 0) * (p.largura ?? 0),
-          conferente_saida: 'Auge Sync', observacoes: 'AUGE_SAIDA', data_saida: nowIso,
+        // Só registra saída se ainda não estava marcada como saida (evita duplicar audit)
+        if (p.status !== 'saida') {
+          saidasRows.push({
+            estrutura: p.estrutura, coluna: p.coluna, nivel: p.nivel, posicao: p.posicao,
+            item: p.item, lote_sistema: p.lote_sistema,
+            m_linear: p.m_linear_atual ?? p.m_linear ?? 0,
+            largura: p.largura ?? 0,
+            m2: (p.m_linear_atual ?? p.m_linear ?? 0) * (p.largura ?? 0),
+            conferente_saida: 'Auge Sync', observacoes: 'AUGE_SAIDA', data_saida: nowIso,
+          });
+        }
+        // SOFT-SAIDA: preserva a posição e o lote_sistema para reabrir se o lote retornar.
+        transferUpdates.push({
+          id: p.id,
+          patch: { status: 'saida', deposito_atual: null, m_linear_atual: 0, m2_atual: 0 },
         });
-        deleteIds.push(p.id);
       }
     }
   }
