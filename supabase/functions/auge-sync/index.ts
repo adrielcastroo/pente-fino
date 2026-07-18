@@ -1376,7 +1376,7 @@ async function tecidosApply(admin: any, runId: string) {
       if (!novosPorCelula.has(key)) novosPorCelula.set(key, []);
       novosPorCelula.get(key)!.push({ addr, cdItem, descricao, largura, quantidade, cdDep, loteSistema, targetStatus, m2atual });
     } else {
-      if (existente.status === 'transferido') retornosCount++;
+      if (existente.status === 'transferido' || existente.status === 'saida') retornosCount++;
       toUpdate.push({
         id: existente.id,
         patch: {
