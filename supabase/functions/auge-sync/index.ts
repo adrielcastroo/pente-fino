@@ -1095,7 +1095,7 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   };
   const lotesBrutos: LoteBruto[] = [];
 
-  const BATCH = 12;
+  const BATCH = 20;
   let processed = 0;
   for (let i = 0; i < items.length; i += BATCH) {
     const chunk = items.slice(i, i + BATCH);
