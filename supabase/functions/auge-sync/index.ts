@@ -1093,7 +1093,7 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   };
   const lotesBrutos: LoteBruto[] = [];
 
-  const BATCH = 6;
+  const BATCH = 12;
   let processed = 0;
   for (let i = 0; i < items.length; i += BATCH) {
     const chunk = items.slice(i, i + BATCH);
@@ -1117,7 +1117,16 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
       if (r.status === 'fulfilled') lotesBrutos.push(...r.value);
     }
     processed += chunk.length;
+    if (processed % 60 === 0 || processed >= items.length) {
+      await logProgress({
+        fase: 'fetching_lotes',
+        processed,
+        total: items.length,
+        lotes_encontrados: lotesBrutos.length,
+      });
+    }
   }
+
 
   // 4. Filtra apenas lotes com endereço TEC válido
   const parsed = lotesBrutos
