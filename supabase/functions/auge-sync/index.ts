@@ -1394,6 +1394,9 @@ async function tecidosApply(admin: any, runId: string) {
     const cellRef = list[0].addr;
     const ocupadas = new Set<number>();
     for (const p of posicoesExist) {
+      // Slots com status 'saida' ou 'transferido' NÃO ocupam espaço físico —
+      // podem ser reutilizados por novos lotes na mesma célula.
+      if (p.status === 'saida' || p.status === 'transferido') continue;
       if (p.estrutura === cellRef.estrutura && p.coluna === cellRef.coluna && p.nivel === cellRef.nivel) {
         ocupadas.add(p.posicao);
       }
