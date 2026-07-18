@@ -90,15 +90,47 @@ export default function TecidosSemEspacoTab() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return rows;
-    return rows.filter(
-      r =>
-        r.item?.toLowerCase().includes(q) ||
-        r.endereco_desejado?.toLowerCase().includes(q) ||
-        r.lote_sistema?.toLowerCase().includes(q) ||
-        r.proc?.toLowerCase().includes(q),
+    let out = rows;
+    if (q) {
+      out = out.filter(
+        r =>
+          r.item?.toLowerCase().includes(q) ||
+          r.endereco_desejado?.toLowerCase().includes(q) ||
+          r.lote_sistema?.toLowerCase().includes(q) ||
+          r.proc?.toLowerCase().includes(q),
+      );
+    }
+    if (sortKey) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      out = [...out].sort((a, b) => {
+        const av = a[sortKey] as any;
+        const bv = b[sortKey] as any;
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+        return String(av).localeCompare(String(bv), 'pt-BR', { numeric: true, sensitivity: 'base' }) * dir;
+      });
+    }
+    return out;
+  }, [rows, search, sortKey, sortDir]);
+
+  const SortHead = ({ k, children, align }: { k: keyof Row; children: React.ReactNode; align?: 'right' }) => {
+    const active = sortKey === k;
+    const Icon = !active ? ArrowUpDown : sortDir === 'asc' ? ArrowUp : ArrowDown;
+    return (
+      <TableHead className={align === 'right' ? 'text-right' : ''}>
+        <button
+          type="button"
+          onClick={() => toggleSort(k)}
+          className={`inline-flex items-center gap-1 hover:text-foreground transition-colors ${active ? 'text-foreground font-semibold' : 'text-muted-foreground'} ${align === 'right' ? 'flex-row-reverse' : ''}`}
+        >
+          <span>{children}</span>
+          <Icon className="w-3 h-3 opacity-70" />
+        </button>
+      </TableHead>
     );
-  }, [rows, search]);
+  };
 
   return (
     <Card className="border-border/40 shadow-xl shadow-black/5 overflow-hidden ring-1 ring-black/5">
