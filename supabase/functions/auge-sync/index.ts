@@ -1055,14 +1055,25 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     } catch (_) { /* noop */ }
   };
 
-  // 1. Itens candidatos: TODOS os produtos do Auge (usuário pediu cobertura total).
-  //    Prioriza itens com saldo>0 no dep 15 quando disponível, mas se não houver saldo
-  //    ainda faz a chamada — Auge pode retornar lotes zerados úteis para diagnóstico.
-  const { data: produtos } = await admin
-    .from('auge_produtos')
-    .select('codigo, descricao');
+  // 1. Itens candidatos: TODOS os produtos do Auge (paginação obrigatória,
+  //    Supabase limita .select() a 1000 linhas por padrão).
+  const produtos: { codigo: string; descricao: string }[] = [];
+  const PAGE = 1000;
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await admin
+      .from('auge_produtos')
+      .select('codigo, descricao')
+      .order('codigo', { ascending: true })
+      .range(offset, offset + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    produtos.push(...data);
+    if (data.length < PAGE) break;
+  }
 
-  const items = (produtos ?? []).filter((p: any) => p.codigo);
+  const items = produtos.filter((p: any) => p.codigo);
+  await logProgress({ fase: 'produtos_carregados', total: items.length });
+
 
 
 
