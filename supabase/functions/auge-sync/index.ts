@@ -1145,7 +1145,22 @@ Deno.serve(async (req) => {
     }
 
 
+    if (action === 'lotes_live' || action === 'series_live') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cdItem = String(payload?.cdItem ?? '').trim();
+      const cdDeposito = String(payload?.cdDeposito ?? '').trim();
+      if (!cdItem || !cdDeposito) throw new Error('cdItem e cdDeposito são obrigatórios.');
+      const data = action === 'lotes_live'
+        ? await fetchLotesLive(auth, cdItem, cdDeposito)
+        : await fetchSeriesLive(auth, cdItem, cdDeposito);
+      return new Response(JSON.stringify({ ok: true, data, source: action }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const results = [];
+
     for (const e of entities) {
       results.push(await syncEntity(admin, auth, e, triggeredBy));
     }
