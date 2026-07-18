@@ -136,6 +136,25 @@ export default function AugeAdminPanel() {
     } finally { setSyncingEntity(null); }
   };
 
+  const syncTecidosMap = async () => {
+    setSyncingEntity('tecidos_map');
+    const t = toast.loading('Reconstruindo mapa de tecidos a partir do Auge...');
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tecidos_map', { method: 'POST' });
+      if (error) throw error;
+      if ((data as any)?.ok === false) throw new Error((data as any).error);
+      const r = data as any;
+      toast.success(
+        `Tecidos: ${r.alocados ?? 0} alocados · ${r.sem_espaco ?? 0} sem espaço`,
+        { id: t },
+      );
+      await Promise.all([loadRuns(), loadCounts()]);
+    } catch (e: any) {
+      toast.error('Falha: ' + e.message, { id: t });
+    } finally { setSyncingEntity(null); }
+  };
+
+
   useEffect(() => {
     loadRuns(); loadCounts(); doPing(); loadFlag();
     const iv = setInterval(loadRuns, 15000);
