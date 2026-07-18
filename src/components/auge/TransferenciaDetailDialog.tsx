@@ -82,10 +82,17 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2 text-base flex-wrap">
               <ClipboardList className="h-5 w-5 text-primary" />
               Transferência
+              <span className="text-[10px] uppercase text-muted-foreground ml-1">Rascunho</span>
               <span className="font-mono text-primary">{transferencia.documento ?? '—'}</span>
+              {transferencia.nr_efetivacao && (
+                <>
+                  <span className="text-[10px] uppercase text-muted-foreground ml-1">Efetivação</span>
+                  <span className="font-mono text-emerald-500 font-bold">{transferencia.nr_efetivacao}</span>
+                </>
+              )}
               <Badge variant={situacaoTone as any} className="text-[10px] ml-1">
                 {transferencia.ds_situacao ?? transferencia.situacao ?? '—'}
               </Badge>
