@@ -1257,7 +1257,7 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
             largura: p.largura ?? 0,
             m2: (p.m_linear_atual ?? p.m_linear ?? 0) * (p.largura ?? 0),
             conferente_saida: 'Auge Sync',
-            motivo: 'AUGE_SAIDA',
+            observacoes: 'AUGE_SAIDA',
             data_saida: nowIso,
           });
           toDeleteIds.push(p.id);
