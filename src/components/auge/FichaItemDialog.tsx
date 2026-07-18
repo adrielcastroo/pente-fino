@@ -164,9 +164,12 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
             </Card>
 
             <Tabs defaultValue="depositos">
-              <TabsList className="w-full grid grid-cols-4">
+              <TabsList className="w-full grid grid-cols-5">
                 <TabsTrigger value="depositos" className="gap-1.5">
                   <Boxes className="h-3.5 w-3.5" /> Depósitos ({saldos.length})
+                </TabsTrigger>
+                <TabsTrigger value="lotes" className="gap-1.5">
+                  <Layers className="h-3.5 w-3.5" /> Lotes ({lotes.length})
                 </TabsTrigger>
                 <TabsTrigger value="kardex" className="gap-1.5">
                   <History className="h-3.5 w-3.5" /> Kardex ({kardex.length})
