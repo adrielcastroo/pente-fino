@@ -667,6 +667,7 @@ interface TransferenciaItem {
   cdDepositoOrigem: string;
   cdDepositoDestino: string;
   qtd: number | string;
+  nrLote?: string | null;
 }
 
 async function postCtlTransferencia(
