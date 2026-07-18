@@ -1003,9 +1003,20 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (action === 'transferencia_criar' || action === 'transferencia_efetivar') {
+    if (
+      action === 'transferencia_criar' ||
+      action === 'transferencia_efetivar' ||
+      action === 'transferencia_atualizar' ||
+      action === 'transferencia_excluir'
+    ) {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* body opcional em query */ }
+
+      const logDetalhes = (extra: any) => admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action, ...extra },
+      });
 
       if (action === 'transferencia_criar') {
         const itens = Array.isArray(payload?.itens) ? payload.itens : [];
@@ -1021,28 +1032,49 @@ Deno.serve(async (req) => {
           await efetivarTransferencia(auth, cd);
           efetivado = true;
         }
-        // Log da ação
-        await admin.from('auge_sync_runs').insert({
-          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
-          finished_at: new Date().toISOString(),
-          detalhes: { action, cdMovimentacao: cd, efetivado, itens: itens.length },
-        });
+        await logDetalhes({ cdMovimentacao: cd, efetivado, itens: itens.length });
         return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
-      } else {
+      }
+
+      if (action === 'transferencia_atualizar') {
         const cd = String(payload?.cdMovimentacao ?? '').trim();
+        const itens = Array.isArray(payload?.itens) ? payload.itens : [];
         if (!cd) throw new Error('cdMovimentacao é obrigatório.');
-        await efetivarTransferencia(auth, cd);
-        await admin.from('auge_sync_runs').insert({
-          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
-          finished_at: new Date().toISOString(),
-          detalhes: { action, cdMovimentacao: cd },
-        });
-        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado: true }), {
+        if (!itens.length) throw new Error('Envie ao menos 1 item em "itens".');
+        for (const it of itens) {
+          if (!it?.cdItem || !it?.cdDepositoOrigem || !it?.cdDepositoDestino || !it?.qtd) {
+            throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
+          }
+        }
+        const newCd = await atualizarTransferencia(auth, cd, itens, String(payload?.observacao ?? ''));
+        await logDetalhes({ cdMovimentacao: newCd, itens: itens.length });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: newCd }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      if (action === 'transferencia_excluir') {
+        const cd = String(payload?.cdMovimentacao ?? '').trim();
+        if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+        const resp = await excluirTransferencia(auth, cd);
+        // Remove local também
+        await admin.from('auge_transferencias').delete().eq('documento', cd);
+        await logDetalhes({ cdMovimentacao: cd, auge_resp: resp });
+        return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, auge: resp }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // transferencia_efetivar
+      const cd = String(payload?.cdMovimentacao ?? '').trim();
+      if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+      await efetivarTransferencia(auth, cd);
+      await logDetalhes({ cdMovimentacao: cd });
+      return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, efetivado: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
 
