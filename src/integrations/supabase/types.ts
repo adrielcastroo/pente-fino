@@ -852,6 +852,7 @@ export type Database = {
       }
       estoque_posicoes: {
         Row: {
+          auge_cd_item: string | null
           codigo_cor: string | null
           coluna: string
           composicao: string | null
@@ -860,6 +861,7 @@ export type Database = {
           created_at: string
           data_registro: string | null
           data_saida: string | null
+          deposito_atual: string | null
           endereco: string | null
           estoque_minimo: number | null
           estrutura: string
@@ -872,7 +874,9 @@ export type Database = {
           lote: string | null
           lote_sistema: string | null
           m_linear: number | null
+          m_linear_atual: number | null
           m2: number | null
+          m2_atual: number | null
           nivel: number
           posicao: number
           preco_metro: number | null
@@ -881,6 +885,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          auge_cd_item?: string | null
           codigo_cor?: string | null
           coluna: string
           composicao?: string | null
@@ -889,6 +894,7 @@ export type Database = {
           created_at?: string
           data_registro?: string | null
           data_saida?: string | null
+          deposito_atual?: string | null
           endereco?: string | null
           estoque_minimo?: number | null
           estrutura: string
@@ -901,7 +907,9 @@ export type Database = {
           lote?: string | null
           lote_sistema?: string | null
           m_linear?: number | null
+          m_linear_atual?: number | null
           m2?: number | null
+          m2_atual?: number | null
           nivel: number
           posicao: number
           preco_metro?: number | null
@@ -910,6 +918,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          auge_cd_item?: string | null
           codigo_cor?: string | null
           coluna?: string
           composicao?: string | null
@@ -918,6 +927,7 @@ export type Database = {
           created_at?: string
           data_registro?: string | null
           data_saida?: string | null
+          deposito_atual?: string | null
           endereco?: string | null
           estoque_minimo?: number | null
           estrutura?: string
@@ -930,7 +940,9 @@ export type Database = {
           lote?: string | null
           lote_sistema?: string | null
           m_linear?: number | null
+          m_linear_atual?: number | null
           m2?: number | null
+          m2_atual?: number | null
           nivel?: number
           posicao?: number
           preco_metro?: number | null
