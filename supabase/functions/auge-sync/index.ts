@@ -1029,12 +1029,20 @@ const CHAO_ADDR_RE = /^CH[ÃA]O\s+(.+?)[\s-]+(\d+(?:[.,]\d+)?)\s*M\s*(-\d+)?\s*$
 const DEP_CENTRAL = '01';     // Central
 const DEP_PROVISORIO = '11';  // Central Provisório
 
+// Exceções manuais: lotes com endereço mal formatado no Auge que devem ser
+// realocados para um endereço fixo conhecido.
+const LOTE_ALIASES: Record<string, string> = {
+  'TEC0.B1 NF169972 29,5m': 'TEC01.B.N01 NF169972 29,5m',
+};
+
 function parseLoteTecido(dsDeposito: string): {
   estrutura: string; coluna: string; nivel: number;
   proc: string; m_linear: number; sufixo: string; endereco: string;
 } | null {
   if (!dsDeposito) return null;
-  const s = dsDeposito.replace(/\s+/g, ' ').trim();
+  const aliased = LOTE_ALIASES[dsDeposito.trim()] ?? dsDeposito;
+  const s = aliased.replace(/\s+/g, ' ').trim();
+
 
   // 1) CHÃO e variantes → aloca sempre no endereço "CHÃO"
   const c = s.match(CHAO_ADDR_RE);
@@ -1403,8 +1411,14 @@ async function tecidosApply(admin: any, runId: string) {
     }
     for (const item of list) {
       const { addr, cdItem, descricao, largura, quantidade, cdDep, loteSistema, targetStatus, m2atual } = item;
+      const isChao = addr.estrutura === 'CHÃO';
       let pos = 1;
-      while (pos <= 30 && ocupadas.has(pos)) pos++;
+      if (isChao) {
+        // CHÃO não tem limite — pega o próximo número disponível a partir de 1.
+        while (ocupadas.has(pos)) pos++;
+      } else {
+        while (pos <= 30 && ocupadas.has(pos)) pos++;
+      }
       const base = {
         estrutura: addr.estrutura, coluna: addr.coluna, nivel: addr.nivel,
         item: descricao || cdItem,
@@ -1415,7 +1429,7 @@ async function tecidosApply(admin: any, runId: string) {
         lote_sistema: loteSistema, conferente_entrada: 'Importado Auge',
         data_registro: nowIso, proc: addr.proc,
       };
-      if (pos <= 30) {
+      if (isChao || pos <= 30) {
         toInsert.push({ ...base, posicao: pos, status: targetStatus });
         ocupadas.add(pos);
       } else {
@@ -1430,16 +1444,8 @@ async function tecidosApply(admin: any, runId: string) {
     }
   }
 
-  for (const [raw, cdDep] of semPadraoArr) {
-    const [cdItem, descricao, largura, loteSistema, _qtd] = raw as CompactLote;
-    overflowRows.push({
-      item: descricao || cdItem, endereco_desejado: null,
-      estrutura: null, coluna: null, nivel: null, proc: null,
-      m_linear: null, largura: largura || null, m2: null,
-      lote: null, lote_sistema: loteSistema,
-      auge_cd_item: cdItem, auge_cd_deposito: cdDep, synced_at: nowIso,
-    });
-  }
+  // Itens sem padrão de endereço são ignorados — não entram em "tecidos sem espaço".
+
 
   const CH = 500;
   const applyInsert = async (table: string, rows: any[]) => {
