@@ -40,16 +40,44 @@ export default function LoteSelectorDialog({
     if (!open || !cdItem || !deposito) return;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from('auge_lotes')
-        .select('lote, quantidade, data_fabricacao, data_validade')
-        .eq('codigo_produto', cdItem)
-        .eq('deposito', deposito)
-        .order('data_validade', { ascending: true, nullsFirst: false });
-      setLotes(data ?? []);
+      try {
+        // 1) Tenta série ao vivo (motores/controles). Se retornar dados, usa modo série.
+        const serieRes = await supabase.functions.invoke('auge-sync?action=series_live', {
+          body: { cdItem, cdDeposito: deposito },
+        });
+        const serieData = (serieRes.data as any)?.data ?? [];
+        if (Array.isArray(serieData) && serieData.length > 0) {
+          setLotes(serieData);
+          setModo('serie');
+          setLoading(false);
+          return;
+        }
+        // 2) Consulta lotes ao vivo (tecidos e demais controlados por lote)
+        const loteRes = await supabase.functions.invoke('auge-sync?action=lotes_live', {
+          body: { cdItem, cdDeposito: deposito },
+        });
+        const loteData = (loteRes.data as any)?.data ?? [];
+        if (Array.isArray(loteData) && loteData.length > 0) {
+          setLotes(loteData);
+          setModo('lote');
+          setLoading(false);
+          return;
+        }
+        // 3) Fallback: tabela local auge_lotes (caso item não seja controlado no Auge)
+        const { data } = await supabase
+          .from('auge_lotes')
+          .select('lote, quantidade, data_fabricacao, data_validade')
+          .eq('codigo_produto', cdItem)
+          .eq('deposito', deposito)
+          .order('data_validade', { ascending: true, nullsFirst: false });
+        setLotes(data ?? []);
+      } catch (_) {
+        setLotes([]);
+      }
       setLoading(false);
     })();
   }, [open, cdItem, deposito]);
+
 
   // Inicializa seleção do estado inicial
   useEffect(() => {
