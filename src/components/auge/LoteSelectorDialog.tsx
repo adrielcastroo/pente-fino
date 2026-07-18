@@ -20,7 +20,7 @@ type Modo = 'lote' | 'serie';
 
 export default function LoteSelectorDialog({
   open, onOpenChange, cdItem, deposito, descricao,
-  initial, onConfirm,
+  initial, onConfirm, qtdAlvo,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -29,12 +29,20 @@ export default function LoteSelectorDialog({
   descricao?: string;
   initial: LoteSelecionado[];
   onConfirm: (sel: LoteSelecionado[], modo: Modo) => void;
+  qtdAlvo?: number;
 }) {
   const [lotes, setLotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [modo, setModo] = useState<Modo>('lote');
+  const [filtro, setFiltro] = useState('');
+  const [alvo, setAlvo] = useState<number>(qtdAlvo ?? 0);
   // Map lote -> qtd (0 = não selecionado)
   const [sel, setSel] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (open) setAlvo(qtdAlvo ?? 0);
+  }, [open, qtdAlvo]);
+
 
   useEffect(() => {
     if (!open || !cdItem || !deposito) return;
