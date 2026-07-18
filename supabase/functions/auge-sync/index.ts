@@ -1020,7 +1020,8 @@ async function fetchSeriesLive(auth: any, cdItem: string, cdDeposito: string) {
 // ============================================================
 // Aceita TEC + 1-2 dígitos, nível 1-2 dígitos, M/m com sufixo opcional.
 const TEC_ADDR_RE = /^TEC(\d{1,2})\.([A-Z])\.N(\d{1,2})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*M(-\d+)?\s*$/i;
-const TEC_DEPOSITO_CD = '15'; // "Lotes Tec/Mad Inteiros"
+const DEP_CENTRAL = '01';     // Central
+const DEP_PROVISORIO = '11';  // Central Provisório
 
 function parseLoteTecido(dsDeposito: string): {
   estrutura: string; coluna: string; nivel: number;
@@ -1045,211 +1046,330 @@ function parseLoteTecido(dsDeposito: string): {
   };
 }
 
+const extractLargura = (desc: string): number => {
+  if (!desc) return 0;
+  const clamp = (v: number) => (v >= 0.5 && v <= 5 ? v : 0);
+  const preL = desc.match(/(?<![\d.,])(\d{1,2}(?:[.,]\d{1,3})?)\s*L\b/i);
+  if (preL) return clamp(parseFloat(preL[1].replace(',', '.')));
+  const posL = desc.match(/\bL\s*(\d{1,2}(?:[.,]\d{1,3})?)\b/i);
+  if (posL) return clamp(parseFloat(posL[1].replace(',', '.')));
+  const cm = desc.match(/(\d{2,3})\s*cm\b/i);
+  if (cm) return clamp(parseFloat(cm[1]) / 100);
+  return 0;
+};
+
 async function syncTecidosMap(admin: any, auth: any, runId?: string) {
   const startedAt = new Date().toISOString();
-
   const logProgress = async (detalhes: any) => {
     if (!runId) return;
-    try {
-      await admin.from('auge_sync_runs').update({ detalhes }).eq('id', runId);
-    } catch (_) { /* noop */ }
+    try { await admin.from('auge_sync_runs').update({ detalhes }).eq('id', runId); } catch (_) { /* noop */ }
   };
 
-  // 1. Itens candidatos: TODOS os produtos do Auge (paginação obrigatória,
-  //    Supabase limita .select() a 1000 linhas por padrão).
+  // 1. Todos os produtos (paginado)
   const produtos: { codigo: string; descricao: string }[] = [];
   const PAGE = 1000;
   for (let offset = 0; ; offset += PAGE) {
     const { data, error } = await admin
-      .from('auge_produtos')
-      .select('codigo, descricao')
-      .order('codigo', { ascending: true })
-      .range(offset, offset + PAGE - 1);
+      .from('auge_produtos').select('codigo, descricao')
+      .order('codigo', { ascending: true }).range(offset, offset + PAGE - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;
     produtos.push(...data);
     if (data.length < PAGE) break;
   }
-
   const items = produtos.filter((p: any) => p.codigo);
   await logProgress({ fase: 'produtos_carregados', total: items.length });
 
+  // 2. Depósitos ativos (para varrer "sumidos")
+  const { data: depsData } = await admin.from('auge_depositos').select('codigo, nome').order('codigo');
+  const depsAtivos: string[] = (depsData ?? [])
+    .map((d: any) => String(d.codigo).padStart(2, '0'))
+    .filter((c: string) => c !== DEP_CENTRAL && c !== DEP_PROVISORIO);
 
-
-
-  // 2. Larguras vindas do itens_cadastro (via raw da descrição? Não temos.)
-  //    Extraímos largura numérica da descrição do produto (ex: "TECIDO XYZ 2,80M")
-  //    Se não conseguir, fica 0.
-  const extractLargura = (desc: string): number => {
-    if (!desc) return 0;
-    const clamp = (v: number) => (v >= 0.5 && v <= 5 ? v : 0);
-    // Padrão: "2,80L" ou "2.80L" (número seguido de L, com no máx 3 dígitos antes)
-    const preL = desc.match(/(?<![\d.,])(\d{1,2}(?:[.,]\d{1,3})?)\s*L\b/i);
-    if (preL) return clamp(parseFloat(preL[1].replace(',', '.')));
-    // Padrão: "L 2,80"
-    const posL = desc.match(/\bL\s*(\d{1,2}(?:[.,]\d{1,3})?)\b/i);
-    if (posL) return clamp(parseFloat(posL[1].replace(',', '.')));
-    // Padrão: "cm"
-    const cm = desc.match(/(\d{2,3})\s*cm\b/i);
-    if (cm) return clamp(parseFloat(cm[1]) / 100);
-    return 0;
-  };
-
-
-  // 3. Busca lotes para cada item (paralelo em batches de 6)
+  // 3. Fetch dep 01 + dep 11 para cada item (batch 15)
   type LoteBruto = {
     cdItem: string;
     descricao: string;
     largura: number;
     dsDeposito: string;
     quantidade: number;
+    cdDeposito: string;
   };
-  const lotesBrutos: LoteBruto[] = [];
+  const brutos01: LoteBruto[] = [];
+  const brutos11: LoteBruto[] = [];
 
-  const BATCH = 20;
+  const BATCH = 15;
   let processed = 0;
   for (let i = 0; i < items.length; i += BATCH) {
     const chunk = items.slice(i, i + BATCH);
     const results = await Promise.allSettled(
       chunk.map(async (p: any) => {
-        try {
-          const rows = await fetchLotesLive(auth, p.codigo, TEC_DEPOSITO_CD);
-          return rows.map((r: any) => ({
-            cdItem: p.codigo,
-            descricao: p.descricao ?? '',
-            largura: extractLargura(p.descricao ?? ''),
-            dsDeposito: r.lote,
-            quantidade: r.quantidade,
-          }));
-        } catch (_) {
-          return [];
-        }
+        const largura = extractLargura(p.descricao ?? '');
+        const [r01, r11] = await Promise.all([
+          fetchLotesLive(auth, p.codigo, DEP_CENTRAL).catch(() => []),
+          fetchLotesLive(auth, p.codigo, DEP_PROVISORIO).catch(() => []),
+        ]);
+        return {
+          d01: r01.map((r: any) => ({ cdItem: p.codigo, descricao: p.descricao ?? '', largura, dsDeposito: r.lote, quantidade: r.quantidade, cdDeposito: DEP_CENTRAL })),
+          d11: r11.map((r: any) => ({ cdItem: p.codigo, descricao: p.descricao ?? '', largura, dsDeposito: r.lote, quantidade: r.quantidade, cdDeposito: DEP_PROVISORIO })),
+        };
       })
     );
     for (const r of results) {
-      if (r.status === 'fulfilled') lotesBrutos.push(...r.value);
+      if (r.status === 'fulfilled') {
+        brutos01.push(...r.value.d01);
+        brutos11.push(...r.value.d11);
+      }
     }
     processed += chunk.length;
     if (processed % 60 === 0 || processed >= items.length) {
-      await logProgress({
-        fase: 'fetching_lotes',
-        processed,
-        total: items.length,
-        lotes_encontrados: lotesBrutos.length,
+      await logProgress({ fase: 'fetching_dep_01_11', processed, total: items.length, dep01: brutos01.length, dep11: brutos11.length });
+    }
+  }
+
+  // 4. Constroi mapa lote_sistema → registro (01 prevalece sobre 11)
+  type Parsed = { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> };
+  const mapAtual = new Map<string, Parsed>();
+  const semPadrao: LoteBruto[] = [];
+  // 11 primeiro, 01 sobrescreve
+  for (const l of brutos11) {
+    const addr = parseLoteTecido(l.dsDeposito);
+    if (!addr) { semPadrao.push(l); continue; }
+    mapAtual.set(l.dsDeposito, { raw: l, addr });
+  }
+  for (const l of brutos01) {
+    const addr = parseLoteTecido(l.dsDeposito);
+    if (!addr) { semPadrao.push(l); continue; }
+    mapAtual.set(l.dsDeposito, { raw: l, addr });
+  }
+
+  // 5. Carrega estado atual do DB (posições TEC importadas do Auge)
+  const posicoesExist: any[] = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await admin
+      .from('estoque_posicoes')
+      .select('id, estrutura, coluna, nivel, posicao, lote_sistema, item, largura, m_linear, m_linear_atual, deposito_atual, status, auge_cd_item')
+      .like('estrutura', 'TEC%')
+      .eq('conferente_entrada', 'Importado Auge')
+      .range(offset, offset + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    posicoesExist.push(...data);
+    if (data.length < PAGE) break;
+  }
+  const mapExist = new Map<string, any>();
+  for (const p of posicoesExist) if (p.lote_sistema) mapExist.set(p.lote_sistema, p);
+
+  // 6. Diff: para cada lote atual (01/11) → upsert; para cada existente ausente → verificar outros deps ou saída
+  const nowIso = new Date().toISOString();
+  const toInsert: any[] = [];
+  const toUpdate: { id: string; patch: any }[] = [];
+  const overflowRows: any[] = [];
+  const saidas: any[] = [];
+  const toDeleteIds: string[] = [];
+  let transferidosCount = 0;
+  let retornosCount = 0;
+
+  // Agrupa novos por célula para alocar posição
+  const novosPorCelula = new Map<string, Parsed[]>();
+  for (const [loteSistema, cur] of mapAtual.entries()) {
+    const existente = mapExist.get(loteSistema);
+    const targetStatus = cur.raw.cdDeposito === DEP_CENTRAL ? 'ocupado' : 'bloqueado';
+    const m2atual = cur.raw.largura > 0 ? +(cur.raw.quantidade * cur.raw.largura).toFixed(2) : 0;
+
+    if (!existente) {
+      const key = `${cur.addr.estrutura}.${cur.addr.coluna}.${cur.addr.nivel}`;
+      if (!novosPorCelula.has(key)) novosPorCelula.set(key, []);
+      novosPorCelula.get(key)!.push(cur);
+    } else {
+      // Retorno de "transferido" → conta
+      if (existente.status === 'transferido') retornosCount++;
+      toUpdate.push({
+        id: existente.id,
+        patch: {
+          status: targetStatus,
+          deposito_atual: cur.raw.cdDeposito,
+          m_linear_atual: cur.raw.quantidade,
+          m2_atual: m2atual,
+          auge_cd_item: cur.raw.cdItem,
+        },
       });
     }
   }
 
-
-  // 4. Separa lotes com endereço TEC válido dos que não bateram no padrão
-  const parsedAll = lotesBrutos.map(l => ({ raw: l, addr: parseLoteTecido(l.dsDeposito) }));
-  const parsed = parsedAll.filter(x => x.addr !== null) as { raw: LoteBruto; addr: NonNullable<ReturnType<typeof parseLoteTecido>> }[];
-  const semPadrao = parsedAll.filter(x => x.addr === null).map(x => x.raw);
-
-
-  // 5. Limpa estoque_posicoes atual de TECxx e tecidos_sem_espaco
-  await admin.from('estoque_posicoes').delete().like('estrutura', 'TEC%');
-  await admin.from('tecidos_sem_espaco').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-  // 6. Agrupa por célula e aloca posições 1..30
-  const porCelula = new Map<string, typeof parsed>();
-  for (const p of parsed) {
-    const key = `${p.addr.estrutura}.${p.addr.coluna}.${p.addr.nivel}`;
-    if (!porCelula.has(key)) porCelula.set(key, []);
-    porCelula.get(key)!.push(p);
+  // Lotes existentes que sumiram do 01 e 11
+  const ausentes = posicoesExist.filter(p => !mapAtual.has(p.lote_sistema));
+  // Para eficiência, agrupa por cdItem (evita duplicar chamadas)
+  const porItem = new Map<string, any[]>();
+  for (const p of ausentes) {
+    const k = p.auge_cd_item || '';
+    if (!k) { toDeleteIds.push(p.id); continue; }
+    if (!porItem.has(k)) porItem.set(k, []);
+    porItem.get(k)!.push(p);
   }
 
-  const estoqueRows: any[] = [];
-  const overflowRows: any[] = [];
-  const nowIso = new Date().toISOString();
+  const itensAusentes = Array.from(porItem.keys());
+  let procA = 0;
+  for (let i = 0; i < itensAusentes.length; i += BATCH) {
+    const chunk = itensAusentes.slice(i, i + BATCH);
+    const results = await Promise.allSettled(chunk.map(async (cdItem) => {
+      const found: Record<string, { cdDeposito: string; quantidade: number }> = {};
+      for (const dep of depsAtivos) {
+        try {
+          const rows = await fetchLotesLive(auth, cdItem, dep);
+          for (const r of rows) {
+            if (r.lote && !found[r.lote]) {
+              found[r.lote] = { cdDeposito: dep, quantidade: r.quantidade };
+            }
+          }
+        } catch (_) { /* noop */ }
+      }
+      return { cdItem, found };
+    }));
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const { cdItem, found } = r.value;
+      const positions = porItem.get(cdItem) ?? [];
+      for (const p of positions) {
+        const hit = found[p.lote_sistema];
+        if (hit) {
+          const largura = p.largura || 0;
+          toUpdate.push({
+            id: p.id,
+            patch: {
+              status: 'transferido',
+              deposito_atual: hit.cdDeposito,
+              m_linear_atual: hit.quantidade,
+              m2_atual: largura > 0 ? +(hit.quantidade * largura).toFixed(2) : 0,
+            },
+          });
+          transferidosCount++;
+        } else {
+          // Saiu completamente → grava saída + apaga posição
+          saidas.push({
+            estrutura: p.estrutura,
+            coluna: p.coluna,
+            nivel: p.nivel,
+            posicao: p.posicao,
+            item: p.item,
+            lote_sistema: p.lote_sistema,
+            m_linear: p.m_linear_atual ?? p.m_linear ?? 0,
+            largura: p.largura ?? 0,
+            m2: (p.m_linear_atual ?? p.m_linear ?? 0) * (p.largura ?? 0),
+            conferente_saida: 'Auge Sync',
+            observacoes: 'AUGE_SAIDA',
+            data_saida: nowIso,
+          });
+          toDeleteIds.push(p.id);
+        }
+      }
+    }
+    procA += chunk.length;
+    if (procA % 30 === 0 || procA >= itensAusentes.length) {
+      await logProgress({ fase: 'diff_ausentes', procA, total: itensAusentes.length, transferidos: transferidosCount, saidas: saidas.length });
+    }
+  }
 
-  for (const [_key, list] of porCelula.entries()) {
-    // Ordena por dsDeposito para estabilidade
+  // 7. Aloca novos em posições 1..30 por célula
+  for (const [_key, list] of novosPorCelula.entries()) {
     list.sort((a, b) => a.raw.dsDeposito.localeCompare(b.raw.dsDeposito));
-    let pos = 1;
+    // Posições ocupadas na célula (considerando existentes + já inserindo)
+    const cellRef = list[0].addr;
+    const ocupadas = new Set<number>();
+    for (const p of posicoesExist) {
+      if (p.estrutura === cellRef.estrutura && p.coluna === cellRef.coluna && p.nivel === cellRef.nivel) {
+        ocupadas.add(p.posicao);
+      }
+    }
     for (const item of list) {
       const { addr, raw } = item;
-      const loteFinal = `${raw.dsDeposito}`; // lote_sistema completo
-      const loteSemSufixo = `${addr.m_linear}M`; // sem o -N final
-      const m2 = raw.largura > 0 ? +(addr.m_linear * raw.largura).toFixed(2) : 0;
+      const status = raw.cdDeposito === DEP_CENTRAL ? 'ocupado' : 'bloqueado';
+      const m2 = raw.largura > 0 ? +(raw.quantidade * raw.largura).toFixed(2) : 0;
+      let pos = 1;
+      while (pos <= 30 && ocupadas.has(pos)) pos++;
       const base = {
         estrutura: addr.estrutura,
         coluna: addr.coluna,
         nivel: addr.nivel,
         item: raw.descricao || raw.cdItem,
-        m2,
-        largura: raw.largura,
-        m_linear: addr.m_linear,
-        lote: loteSemSufixo,
+        m2, largura: raw.largura, m_linear: raw.quantidade,
+        m_linear_atual: raw.quantidade,
+        m2_atual: m2,
+        deposito_atual: raw.cdDeposito,
+        auge_cd_item: raw.cdItem,
+        lote: `${raw.quantidade}M`,
         endereco: addr.endereco,
-        lote_sistema: loteFinal,
+        lote_sistema: raw.dsDeposito,
         conferente_entrada: 'Importado Auge',
         data_registro: nowIso,
+        proc: addr.proc,
       };
       if (pos <= 30) {
-        estoqueRows.push({ ...base, posicao: pos, status: 'ocupado', proc: addr.proc });
-        pos++;
+        toInsert.push({ ...base, posicao: pos, status });
+        ocupadas.add(pos);
       } else {
         overflowRows.push({
-          item: base.item,
-          endereco_desejado: addr.endereco,
-          estrutura: addr.estrutura,
-          coluna: addr.coluna,
-          nivel: addr.nivel,
-          proc: addr.proc,
-          m_linear: addr.m_linear,
-          largura: raw.largura,
-          m2,
-          lote: loteSemSufixo,
-          lote_sistema: loteFinal,
-          auge_cd_item: raw.cdItem,
-          auge_cd_deposito: TEC_DEPOSITO_CD,
+          item: base.item, endereco_desejado: addr.endereco,
+          estrutura: addr.estrutura, coluna: addr.coluna, nivel: addr.nivel,
+          proc: addr.proc, m_linear: raw.quantidade, largura: raw.largura, m2,
+          lote: `${raw.quantidade}M`, lote_sistema: raw.dsDeposito,
+          auge_cd_item: raw.cdItem, auge_cd_deposito: raw.cdDeposito,
           synced_at: nowIso,
         });
       }
     }
   }
 
-  // 7. Insere em batches
-  const insertBatch = async (table: string, rows: any[]) => {
-    const CH = 500;
+  // Overflow: sem padrão
+  for (const raw of semPadrao) {
+    overflowRows.push({
+      item: raw.descricao || raw.cdItem, endereco_desejado: null,
+      estrutura: null, coluna: null, nivel: null, proc: null,
+      m_linear: null, largura: raw.largura || null, m2: null,
+      lote: null, lote_sistema: raw.dsDeposito,
+      auge_cd_item: raw.cdItem, auge_cd_deposito: raw.cdDeposito,
+      synced_at: nowIso,
+    });
+  }
+
+  // 8. Aplica writes
+  const CH = 500;
+  const applyInsert = async (table: string, rows: any[]) => {
     for (let i = 0; i < rows.length; i += CH) {
       const { error } = await admin.from(table).insert(rows.slice(i, i + CH));
       if (error) throw new Error(`${table}: ${error.message}`);
     }
   };
-  if (estoqueRows.length) await insertBatch('estoque_posicoes', estoqueRows);
 
-  // Lotes que voltaram do Auge mas não bateram no padrão TEC → pendentes sem endereço
-  for (const raw of semPadrao) {
-    overflowRows.push({
-      item: raw.descricao || raw.cdItem,
-      endereco_desejado: null,
-      estrutura: null,
-      coluna: null,
-      nivel: null,
-      proc: null,
-      m_linear: null,
-      largura: raw.largura || null,
-      m2: null,
-      lote: null,
-      lote_sistema: raw.dsDeposito,
-      auge_cd_item: raw.cdItem,
-      auge_cd_deposito: TEC_DEPOSITO_CD,
-      synced_at: nowIso,
-    });
+  if (toInsert.length) await applyInsert('estoque_posicoes', toInsert);
+  if (saidas.length) {
+    try { await applyInsert('estoque_saidas', saidas); } catch (e) { console.error('estoque_saidas:', e); }
   }
-  if (overflowRows.length) await insertBatch('tecidos_sem_espaco', overflowRows);
+  for (const u of toUpdate) {
+    await admin.from('estoque_posicoes').update(u.patch).eq('id', u.id);
+  }
+  if (toDeleteIds.length) {
+    for (let i = 0; i < toDeleteIds.length; i += CH) {
+      await admin.from('estoque_posicoes').delete().in('id', toDeleteIds.slice(i, i + CH));
+    }
+  }
+  // tecidos_sem_espaco: reconstruído (limpa e insere)
+  await admin.from('tecidos_sem_espaco').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (overflowRows.length) await applyInsert('tecidos_sem_espaco', overflowRows);
 
   return {
     startedAt,
     finishedAt: new Date().toISOString(),
     itens_consultados: items.length,
-    lotes_brutos: lotesBrutos.length,
-    lotes_com_endereco: parsed.length,
-    lotes_sem_padrao: semPadrao.length,
-    alocados: estoqueRows.length,
+    dep01: brutos01.length,
+    dep11: brutos11.length,
+    novos_alocados: toInsert.length,
+    atualizados: toUpdate.length,
+    transferidos: transferidosCount,
+    retornos: retornosCount,
+    saidas: saidas.length,
     sem_espaco: overflowRows.length,
+    lotes_sem_padrao: semPadrao.length,
   };
 }
 

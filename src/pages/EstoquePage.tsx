@@ -43,6 +43,10 @@ interface Posicao {
   data_registro: string | null;
   data_saida: string | null;
   registro_id: string | null;
+  deposito_atual?: string | null;
+  m_linear_atual?: number | null;
+  m2_atual?: number | null;
+  auge_cd_item?: string | null;
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
@@ -59,6 +63,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   ocupado: { label: 'Ocupado', color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
   bloqueado: { label: 'Bloqueado', color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30' },
   reservado: { label: 'Reservado', color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30' },
+  transferido: { label: 'Em outro depósito', color: 'text-sky-400', bg: 'bg-sky-500/15', border: 'border-sky-500/30' },
   saida: { label: 'Saída', color: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30' },
   livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
 };
@@ -1034,16 +1039,26 @@ export default function EstoquePage() {
                 {/* Info Grid */}
                 <div className="p-8 space-y-8 bg-card/20">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
+                    {(() => {
+                      const depAtual = detailPos.deposito_atual || null;
+                      const depNome = depAtual === '01' ? '01 · Central'
+                        : depAtual === '11' ? '11 · Central Provisório'
+                        : depAtual ? `Depósito ${depAtual}` : '—';
+                      const mlAtual = detailPos.m_linear_atual;
+                      const mlOrig = detailPos.m_linear;
+                      const mostraDiff = mlAtual != null && mlOrig != null && Math.abs((mlAtual as number) - (mlOrig as number)) > 0.01;
+                      return [
                       { label: 'Lote Fábrica', value: detailPos.lote || '—' },
                       { label: 'Lote Sistema (Final)', value: detailPos.lote_sistema || '—' },
                       { label: 'Endereço Atual', value: detailPos.endereco || '—' },
+                      { label: 'Depósito Atual (Auge)', value: depNome },
                       { label: 'Conferente Responsável', value: detailPos.conferente_entrada || '—' },
-                      { label: 'Área Total (M²)', value: detailPos.m2 != null ? `${detailPos.m2}` : '—' },
                       { label: 'Largura Nominal', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
-                      { label: 'Metragem Linear', value: detailPos.m_linear != null ? `${detailPos.m_linear}` : '—' },
+                      { label: 'Metragem Linear (Original)', value: mlOrig != null ? `${mlOrig} M` : '—' },
+                      { label: 'Metragem Física Atual', value: mlAtual != null ? `${mlAtual} M${mostraDiff ? ' ⚠️' : ''}` : (mlOrig != null ? `${mlOrig} M` : '—') },
+                      { label: 'Área Total Atual (M²)', value: (detailPos.m2_atual ?? detailPos.m2) != null ? `${detailPos.m2_atual ?? detailPos.m2}` : '—' },
                       { label: 'Data de Entrada', value: formatDateBR(detailPos.data_registro) },
-                    ].map((f, i) => (
+                    ]; })().map((f, i) => (
                       <motion.div 
                         key={f.label} 
                         initial={{ opacity: 0, scale: 0.95 }}
