@@ -17,7 +17,13 @@ import NovaTransferenciaDialog, { type TransfDialogInitial, type TransfDialogMod
 
 type Filtro = 'todos' | 'rascunho' | 'efetivada';
 
-export default function AugeTransferenciasTab() {
+export default function AugeTransferenciasTab({
+  autoInitial,
+  onAutoInitialConsumed,
+}: {
+  autoInitial?: TransfDialogInitial | null;
+  onAutoInitialConsumed?: () => void;
+} = {}) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -29,6 +35,17 @@ export default function AugeTransferenciasTab() {
   const [dialogMode, setDialogMode] = useState<TransfDialogMode>('novo');
   const [dialogInitial, setDialogInitial] = useState<TransfDialogInitial | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Abre automaticamente quando vier initial de fora (ex.: /historico → Transferir)
+  useEffect(() => {
+    if (autoInitial) {
+      setDialogMode('novo');
+      setDialogInitial(autoInitial);
+      setDialogOpen(true);
+      onAutoInitialConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoInitial]);
 
   const isRascunho = (r: any) =>
     r.situacao === 'D' || r.situacao === '10' || r.situacao === 10 ||
