@@ -1168,7 +1168,7 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     const { data, error } = await admin
       .from('estoque_posicoes')
       .select('id, estrutura, coluna, nivel, posicao, lote_sistema, item, largura, m_linear, m_linear_atual, deposito_atual, status, auge_cd_item')
-      .like('estrutura', 'TEC%')
+      .or('estrutura.like.TEC%,estrutura.eq.CHÃO')
       .eq('conferente_entrada', 'Importado Auge')
       .range(offset, offset + PAGE - 1);
     if (error) throw error;
