@@ -1021,6 +1021,29 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const initial = buildTransferInitialFromConference(conf);
+                        if (!initial.itens.length) {
+                          toast.warning('Nenhum item válido para transferir.');
+                          return;
+                        }
+                        navigate('/estoque/transferencias', { state: { transferInitial: initial } });
+                      }}
+                      className="h-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors font-medium text-xs px-3"
+                    >
+                      <ArrowRightLeft className="w-4 h-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Transferir</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Criar transferência no Auge com os itens desta pasta (lotes/séries pré-preenchidos)</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
                       size="icon"
                       onClick={(e) => { e.stopPropagation(); downloadConferenceExcel(conf); }}
                       className="h-9 w-9 rounded-md border-border/40 bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
@@ -1030,6 +1053,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   </TooltipTrigger>
                   <TooltipContent>Exportar para Excel</TooltipContent>
                 </Tooltip>
+
 
                 {!isGuest && (
                   <RequireRole action="delete:registro" showLocked>
