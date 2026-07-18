@@ -1208,6 +1208,26 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     }
   };
   if (estoqueRows.length) await insertBatch('estoque_posicoes', estoqueRows);
+
+  // Lotes que voltaram do Auge mas não bateram no padrão TEC → pendentes sem endereço
+  for (const raw of semPadrao) {
+    overflowRows.push({
+      item: raw.descricao || raw.cdItem,
+      endereco_desejado: null,
+      estrutura: null,
+      coluna: null,
+      nivel: null,
+      proc: null,
+      m_linear: null,
+      largura: raw.largura || null,
+      m2: null,
+      lote: null,
+      lote_sistema: raw.dsDeposito,
+      auge_cd_item: raw.cdItem,
+      auge_cd_deposito: TEC_DEPOSITO_CD,
+      synced_at: nowIso,
+    });
+  }
   if (overflowRows.length) await insertBatch('tecidos_sem_espaco', overflowRows);
 
   return {
@@ -1216,10 +1236,12 @@ async function syncTecidosMap(admin: any, auth: any, runId?: string) {
     itens_consultados: items.length,
     lotes_brutos: lotesBrutos.length,
     lotes_com_endereco: parsed.length,
+    lotes_sem_padrao: semPadrao.length,
     alocados: estoqueRows.length,
     sem_espaco: overflowRows.length,
   };
 }
+
 
 
 Deno.serve(async (req) => {
