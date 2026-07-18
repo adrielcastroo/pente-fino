@@ -383,6 +383,8 @@ export default function NovaTransferenciaDialog({
         deposito={linhaSelecionador.cdDepositoOrigem}
         descricao={linhaSelecionador.descricao}
         initial={linhaSelecionador.lotes}
+        qtdAlvo={Number(String(linhaSelecionador.qtd).replace(',', '.')) || 0}
+
         onConfirm={(sel, modo) => {
           updateLinha(linhaSelecionador.key, { lotes: sel, modoLote: modo });
         }}

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Loader2, Layers, AlertCircle } from 'lucide-react';
+import { Loader2, Layers, AlertCircle, Search, Wand2 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 
 export interface LoteSelecionado {
@@ -20,7 +20,7 @@ type Modo = 'lote' | 'serie';
 
 export default function LoteSelectorDialog({
   open, onOpenChange, cdItem, deposito, descricao,
-  initial, onConfirm,
+  initial, onConfirm, qtdAlvo,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -29,12 +29,20 @@ export default function LoteSelectorDialog({
   descricao?: string;
   initial: LoteSelecionado[];
   onConfirm: (sel: LoteSelecionado[], modo: Modo) => void;
+  qtdAlvo?: number;
 }) {
   const [lotes, setLotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [modo, setModo] = useState<Modo>('lote');
+  const [filtro, setFiltro] = useState('');
+  const [alvo, setAlvo] = useState<number>(qtdAlvo ?? 0);
   // Map lote -> qtd (0 = não selecionado)
   const [sel, setSel] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (open) setAlvo(qtdAlvo ?? 0);
+  }, [open, qtdAlvo]);
+
 
   useEffect(() => {
     if (!open || !cdItem || !deposito) return;
@@ -118,6 +126,37 @@ export default function LoteSelectorDialog({
   };
   const limpar = () => setSel({});
 
+  // Lista filtrada (aplicada em busca — Proc/NF/Lote/Série/Endereço)
+  const lotesFiltrados = useMemo(() => {
+    const q = filtro.toLowerCase().trim();
+    if (!q) return lotes;
+    return lotes.filter(l => (l.lote || '').toLowerCase().includes(q));
+  }, [lotes, filtro]);
+
+  // Sugestão FIFO: preenche do topo (Auge já devolve em ordem FIFO / por validade
+  // no fallback local) até bater a quantidade alvo.
+  const sugerirFIFO = () => {
+    if (!alvo || alvo <= 0) return;
+    const map: Record<string, number> = {};
+    let restante = alvo;
+    for (const l of lotesFiltrados) {
+      const disp = Number(l.quantidade || 0);
+      if (disp <= 0) continue;
+      if (restante <= 0) break;
+      if (modo === 'serie') {
+        // 1 unidade por série
+        map[l.lote] = disp;
+        restante -= disp;
+      } else {
+        const usar = Math.min(disp, restante);
+        map[l.lote] = usar;
+        restante -= usar;
+      }
+    }
+    setSel(map);
+  };
+
+
   const confirmar = () => {
     const result: LoteSelecionado[] = lotes
       .filter(l => (sel[l.lote] || 0) > 0)
@@ -146,24 +185,62 @@ export default function LoteSelectorDialog({
           </p>
         </DialogHeader>
 
-        <div className="flex items-center gap-3 border-b pb-3">
-          <ToggleGroup type="single" value={modo} onValueChange={(v) => v && setModo(v as Modo)}>
-            <ToggleGroupItem value="lote" className="text-xs">
-              Lote (quantidade fracionada)
-            </ToggleGroupItem>
-            <ToggleGroupItem value="serie" className="text-xs">
-              Série (múltiplos completos)
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <div className="ml-auto flex gap-2">
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selecionarTodos}>
-              Selecionar tudo
-            </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={limpar}>
-              Limpar
-            </Button>
+        <div className="flex flex-col gap-2 border-b pb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <ToggleGroup type="single" value={modo} onValueChange={(v) => v && setModo(v as Modo)}>
+              <ToggleGroupItem value="lote" className="text-xs">
+                Lote (fracionado)
+              </ToggleGroupItem>
+              <ToggleGroupItem value="serie" className="text-xs">
+                Série (múltiplos)
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <div className="ml-auto flex items-center gap-2">
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selecionarTodos}>
+                Selecionar tudo
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={limpar}>
+                Limpar
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+              <Input
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+                placeholder="Filtrar por Proc, NF, endereço, série..."
+                className="pl-8 h-8 text-xs"
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] uppercase text-muted-foreground">Alvo</span>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={alvo ? String(alvo).replace('.', ',') : ''}
+                onChange={(e) => {
+                  const v = Number(e.target.value.replace(',', '.').replace(/[^\d.]/g, ''));
+                  setAlvo(Number.isFinite(v) ? v : 0);
+                }}
+                placeholder="0"
+                className="h-8 text-xs text-right font-mono w-20"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 text-xs gap-1"
+                onClick={sugerirFIFO}
+                disabled={!alvo || alvo <= 0 || lotesFiltrados.length === 0}
+                title="Preenche automaticamente os lotes mais antigos até bater a quantidade alvo"
+              >
+                <Wand2 className="w-3.5 h-3.5" /> FIFO
+              </Button>
+            </div>
           </div>
         </div>
+
 
         <div className="flex-1 overflow-auto">
           {loading ? (
@@ -190,7 +267,7 @@ export default function LoteSelectorDialog({
                 </tr>
               </thead>
               <tbody>
-                {lotes.map(l => {
+                {lotesFiltrados.map(l => {
                   const disponivel = Number(l.quantidade || 0);
                   const cur = sel[l.lote] || 0;
                   const checked = cur > 0;
