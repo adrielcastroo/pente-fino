@@ -35,7 +35,15 @@ export type TransfDialogMode = 'novo' | 'editar' | 'duplicar';
 
 export interface TransfDialogInitial {
   cdMovimentacao?: string | null;
-  itens?: Array<{ cdItem: string; descricao?: string | null; cdDepositoOrigem: string; cdDepositoDestino: string; qtd: number | string }>;
+  itens?: Array<{
+    cdItem: string;
+    descricao?: string | null;
+    cdDepositoOrigem: string;
+    cdDepositoDestino: string;
+    qtd: number | string;
+    lotes?: LoteSelecionado[];
+    modoLote?: 'lote' | 'serie';
+  }>;
   observacao?: string | null;
 }
 
