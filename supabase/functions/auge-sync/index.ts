@@ -556,10 +556,14 @@ function mapLote(r: any) {
 }
 
 function mapTransferencia(r: any) {
-  const cd = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? r.id ?? '';
+  const cdTransf = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? null;
+  const cdMov = r.cdMovEstoqueERP ?? r.cdMov ?? null;
+  const cd = cdTransf ?? cdMov ?? r.id ?? '';
   return {
     id_externo: `transf-php:${cd || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
-    _cd: cd ? String(cd) : null, // interno: usado para enriquecimento
+    _cd: cd ? String(cd) : null,        // interno: usado para enriquecimento (transferencia OU mov)
+    _cd_mov: cdMov ? String(cdMov) : null,   // preferido para endpoint de detalhe (cdMov=)
+    _cd_transf: cdTransf ? String(cdTransf) : null,
     deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
     deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
     codigo_produto: r.cdItem ?? null,
@@ -572,7 +576,7 @@ function mapTransferencia(r: any) {
     usuario_enviou_logistica: r.nmUsuarioEnviouLogistica ?? null,
     usuario_recebido_logistica: r.nmUsuarioRecebidoLogistica ?? null,
     valor: parseNum(r.vlCustoMovimentacao),
-    documento: cd ? String(cd) : null,
+    documento: cdTransf ? String(cdTransf) : (cdMov ? String(cdMov) : null),
     nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
     ds_efetivacao: r.dsEfetivacao ?? null,
     observacao: r.dsObservacao ?? r.dsObs ?? null,
@@ -581,34 +585,168 @@ function mapTransferencia(r: any) {
   };
 }
 
-// Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
-// campos ausentes no LIST: origem/destino/item.
-async function fetchTransferenciaDetalhe(
-  auth: { jar: Jar; csrf: string; apiToken: string | null },
-  cd: string,
-): Promise<any | null> {
-  const path = `/l.unilux/modInventario/estoque/ajax/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cd)}`;
+// Extrai campos da página HTML manterTransferenciaEstoque.php.
+// Procura por <select name="X">…<option value="Y" selected>Texto</option>… e
+// <input name="X" value="Y" />, cobrindo os principais campos.
+function parseTransferenciaHTML(html: string): Record<string, any> | null {
+  if (!html || html.length < 200) return null;
+  const out: Record<string, any> = {};
+
+  // Selects: name -> [selected value, selected text]
+  const selectRe = /<select\b[^>]*\bname=["']([^"']+)["'][^>]*>([\s\S]*?)<\/select>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = selectRe.exec(html)) !== null) {
+    const name = m[1];
+    const inner = m[2];
+    const optRe = /<option\b([^>]*)>([\s\S]*?)<\/option>/gi;
+    let om: RegExpExecArray | null;
+    while ((om = optRe.exec(inner)) !== null) {
+      const attrs = om[1];
+      const label = om[2].replace(/<[^>]+>/g, '').trim();
+      if (/\bselected\b/i.test(attrs)) {
+        const vm = /\bvalue=["']([^"']*)["']/i.exec(attrs);
+        const v = vm ? vm[1] : label;
+        if (v !== '' && v !== '0') {
+          out[name] = v;
+          out[`${name}__label`] = label;
+        }
+        break;
+      }
+    }
+  }
+
+  // Inputs: name/value/type
+  const inputRe = /<input\b([^>]+)\/?>/gi;
+  while ((m = inputRe.exec(html)) !== null) {
+    const attrs = m[1];
+    const nm = /\bname=["']([^"']+)["']/i.exec(attrs);
+    const vm = /\bvalue=["']([^"']*)["']/i.exec(attrs);
+    const tm = /\btype=["']([^"']+)["']/i.exec(attrs);
+    if (!nm) continue;
+    const name = nm[1];
+    if (out[name] !== undefined) continue;
+    const type = tm ? tm[1].toLowerCase() : 'text';
+    if (type === 'submit' || type === 'button' || type === 'image') continue;
+    if (type === 'checkbox' || type === 'radio') {
+      if (/\bchecked\b/i.test(attrs)) out[name] = vm ? vm[1] : 'on';
+      continue;
+    }
+    if (vm && vm[1] !== '') out[name] = vm[1];
+  }
+
+  // inicializaLinhas([{...}, ...]) — dados reais dos itens embutidos no HTML
   try {
-    const headers: Record<string, string> = {
-      'Cookie': auth.jar.header(),
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN': auth.csrf,
-      'Referer': `${AUGE_BASE_URL}/home`,
-      'User-Agent': UA,
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-    };
-    if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-    const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
-    auth.jar.ingest(res);
-    if (!res.ok) return null;
-    const text = await res.text();
-    let j: any;
-    try { j = JSON.parse(text); } catch { return null; }
-    const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
-    return d && typeof d === 'object' ? d : null;
-  } catch {
+    const initRe = /inicializaLinhas\s*\(\s*(\[[\s\S]*?\])\s*\)\s*;/;
+    const im = initRe.exec(html);
+    if (im) {
+      // JSON-like com aspas simples e sem quoting de chaves em alguns casos —
+      // primeiro tenta JSON.parse; se falhar, converte para aspas duplas.
+      let raw = im[1];
+      let arr: any = null;
+      try { arr = JSON.parse(raw); } catch {
+        // Substitui aspas simples por duplas e cita chaves não citadas
+        const norm = raw
+          .replace(/'/g, '"')
+          .replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:/g, '$1"$2":');
+        try { arr = JSON.parse(norm); } catch { arr = null; }
+      }
+      if (Array.isArray(arr) && arr.length > 0) {
+        const item = arr[0];
+        for (const k of Object.keys(item)) {
+          if (out[k] === undefined && item[k] !== '' && item[k] !== null) {
+            out[k] = item[k];
+          }
+        }
+        out._itens = arr;
+      }
+    }
+  } catch { /* ignore */ }
+
+  // Se não encontramos absolutamente nada de identificável, devolve null
+  if (!out.cdDepositoOrigem && !out.cdDepositoDestino && !out.cdItem
+      && !out.cdTransferenciaEstoque && !out.cdMovEstoqueERP) {
     return null;
   }
+  return out;
+}
+
+
+
+// Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
+// campos ausentes no LIST: origem/destino/item. Tenta múltiplos endpoints/params.
+async function fetchTransferenciaDetalhe(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMov: string | null,
+  cdTransf: string | null,
+): Promise<{ det: any | null; debug: { status: number; path: string }[] }> {
+  const attempts: { method: 'GET' | 'POST'; path: string; body?: URLSearchParams }[] = [];
+  const base = '/l.unilux/modInventario/estoque/ajax';
+  if (cdMov) {
+    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
+    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
+    attempts.push({ method: 'GET', path: `${base}/getTransferenciaEstoqueDetalhe.php?cdMov=${encodeURIComponent(cdMov)}` });
+    attempts.push({ method: 'POST', path: `${base}/getTransferenciaEstoqueItens.php`, body: new URLSearchParams({ cdMov }) });
+    attempts.push({ method: 'POST', path: `${base}/getItensTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
+    attempts.push({ method: 'GET',  path: `${base}/getItensTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
+  }
+  if (cdTransf) {
+    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdTransferenciaEstoque=${encodeURIComponent(cdTransf)}` });
+    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdTransferenciaEstoque: cdTransf }) });
+  }
+
+  const debug: { status: number; path: string }[] = [];
+  for (const att of attempts) {
+    try {
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Referer': `${AUGE_BASE_URL}/home`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+      };
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+      if (att.method === 'POST') headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      const res = await fetch(`${AUGE_BASE_URL}${att.path}`, {
+        method: att.method,
+        headers,
+        body: att.method === 'POST' ? att.body?.toString() : undefined,
+      });
+      auth.jar.ingest(res);
+      debug.push({ status: res.status, path: att.path });
+      if (!res.ok) continue;
+      const text = await res.text();
+      let j: any;
+      try { j = JSON.parse(text); } catch {
+        const parsed = parseTransferenciaHTML(text);
+        (debug[debug.length - 1] as any).parsed_keys = parsed ? Object.keys(parsed).slice(0, 20) : null;
+        if (!parsed) {
+          // Guarda snippet localizando o trecho relevante (inicializaLinhas / cdDeposito)
+          const idx = Math.max(
+            text.indexOf('inicializaLinhas('),
+            text.indexOf('cdDepositoOrigem":'),
+            text.indexOf("cdDepositoOrigem':"),
+          );
+          (debug[debug.length - 1] as any).body_snippet =
+            idx >= 0 ? text.slice(idx, idx + 1200) : text.slice(-1200);
+          continue;
+        }
+        return { det: parsed, debug };
+      }
+      const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
+      if (d && typeof d === 'object') {
+        (debug[debug.length - 1] as any).keys = Object.keys(d).slice(0, 30);
+        if (d.cdDepositoOrigem || d.cdDepositoDestino || d.cdItem
+            || d.CdDepositoOrigem || d.deposito_origem
+            || d.origem || d.destino) {
+          return { det: d, debug };
+        }
+      }
+    } catch (e) {
+      debug.push({ status: -1, path: att.path });
+    }
+  }
+  return { det: null, debug };
 }
 
 // Enriquece linhas cujos campos-chave (origem/destino/item) estão faltando.
@@ -617,21 +755,26 @@ async function enrichTransferencias(
   rows: any[],
   concurrency = 4,
   maxToEnrich = 300,
-): Promise<{ enriched: number; failed: number; attempted: number }> {
+): Promise<{ enriched: number; failed: number; attempted: number; sample_debug?: any }> {
   const pending = rows.filter(r =>
-    r._cd && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
+    (r._cd_mov || r._cd_transf || r._cd) && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
   ).slice(0, maxToEnrich);
 
   let enriched = 0;
   let failed = 0;
   let idx = 0;
+  let sampleDebug: any = null;
 
   async function worker() {
     while (idx < pending.length) {
       const i = idx++;
       const row = pending[i];
-      const det = await fetchTransferenciaDetalhe(auth, row._cd);
-      if (!det) { failed++; continue; }
+      const { det, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
+      if (!det) {
+        failed++;
+        if (!sampleDebug) sampleDebug = { cd_mov: row._cd_mov, cd_transf: row._cd_transf, debug };
+        continue;
+      }
       row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? det.cdDepositoOrig ?? null;
       row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? det.cdDepositoDest ?? null;
       row.codigo_produto = row.codigo_produto ?? det.cdItem ?? det.codigoItem ?? null;
@@ -652,7 +795,7 @@ async function enrichTransferencias(
   }
 
   await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, worker));
-  return { enriched, failed, attempted: pending.length };
+  return { enriched, failed, attempted: pending.length, sample_debug: sampleDebug };
 }
 
 // ============================================================
@@ -903,7 +1046,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       // Enriquece com endpoint de detalhe (origem/destino/item)
       const enrichStats = await enrichTransferencias(auth, mapped, 4, 300);
       // Remove campo interno antes do upsert
-      const rows = mapped.map(({ _cd, ...rest }: any) => rest);
+      const rows = mapped.map(({ _cd, _cd_mov, _cd_transf, ...rest }: any) => rest);
       newMaxDt = maxDateISO(rows);
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
