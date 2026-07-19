@@ -1103,8 +1103,9 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let q = admin
     .from('auge_transferencias')
     .select('*')
+    .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,descricao_produto.is.null,documento.is.null,nr_efetivacao.is.null')
     .order('id', { ascending: true })
-    .limit(TRANSFERENCIA_BACKFILL_BATCH * 12);
+    .limit(TRANSFERENCIA_BACKFILL_BATCH);
   if (lastId) q = q.gt('id', lastId);
 
   const { data: rows, error } = await q;
@@ -1123,7 +1124,7 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let enriched = 0;
   let failed = 0;
   let sampleDebug = state.sample_debug ?? null;
-  const pendingRows = rows.filter(transferenciaNeedsBackfill).slice(0, TRANSFERENCIA_BACKFILL_BATCH);
+  const pendingRows = rows.filter(transferenciaNeedsBackfill);
   for (const row of pendingRows) {
     const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
     const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
