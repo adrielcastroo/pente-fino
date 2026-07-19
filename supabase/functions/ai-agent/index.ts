@@ -105,8 +105,9 @@ Deno.serve(async (req) => {
       baseURL: "https://integrate.api.nvidia.com/v1",
       headers: { Authorization: `Bearer ${apiKey}` },
     });
-    // Modelo padrão: leve, rápido, com tool calling, baixo consumo de tokens.
-    const model = nvidia("meta/llama-3.1-8b-instruct");
+    // Modelo com tool calling robusto — 8B é fraco demais para 7 ferramentas.
+    // 70B do Llama 3.3 é o padrão NVIDIA NIM com melhor custo/qualidade para agentes.
+    const model = nvidia("meta/llama-3.3-70b-instruct");
 
     const system = `Você é o Assistente do Pente Fino, um agente de IA integrado ao ERP de estoque da Unilux.
 Você tem acesso ao banco de dados do app e pode consultar cadastros, transferências, estoque, movimentações e mais.
