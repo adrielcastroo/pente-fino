@@ -1,5 +1,5 @@
 import { RequireRole } from '@/components/auth/RequireRole';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from '@/components/icons';
 import AugeKardexTab from '@/components/auge/AugeKardexTab';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 

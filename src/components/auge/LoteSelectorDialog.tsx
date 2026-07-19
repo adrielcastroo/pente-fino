@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Layers, AlertCircle, Search, Wand2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Loader2, Layers, AlertCircle, Search, Wand2, ArrowUp, ArrowDown, ArrowUpDown } from '@/components/icons';
 import { formatDateBR } from '@/lib/app-utils';
 
 export interface LoteSelecionado {

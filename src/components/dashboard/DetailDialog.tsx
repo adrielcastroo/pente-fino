@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, Activity } from '@/components/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,

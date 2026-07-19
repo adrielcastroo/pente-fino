@@ -9,7 +9,7 @@ import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedo
 import { useUpsertItemCadastro } from '@/hooks/useItensCadastro';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
-import { Sparkles, Plus, X } from 'lucide-react';
+import { Sparkles, Plus, X } from '@/components/icons';
 
 interface Props {
   open: boolean;

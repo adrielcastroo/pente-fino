@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, History, Loader2, ExternalLink } from 'lucide-react';
+import { Search, History, Loader2, ExternalLink } from '@/components/icons';
 import { formatDateBR } from '@/lib/app-utils';
 import FichaItemDialog from './FichaItemDialog';
 

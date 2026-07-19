@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Scale, AlertTriangle, CheckCircle2, Package, FileWarning, RotateCcw } from 'lucide-react';
+import { Scale, AlertTriangle, CheckCircle2, Package, FileWarning, RotateCcw } from '@/components/icons';
 import { cn, formatQty } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';

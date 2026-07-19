@@ -11,7 +11,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil } from '@/components/icons';
 import { toast } from 'sonner';
 import { ReservaFormData, initialReservaForm } from './reservas-utils';
 import { Reserva } from '@/types';

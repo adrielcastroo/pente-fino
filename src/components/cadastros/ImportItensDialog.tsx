@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { useBulkUpsertItensCadastro } from '@/hooks/useItensCadastro';
 import { toast } from 'sonner';
-import { Upload, FileSpreadsheet, AlertCircle, Download } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, Download } from '@/components/icons';
 import { supabase } from '@/integrations/supabase/client';
 import XlsxWorker from '@/workers/xlsxParser.worker.ts?worker';
 

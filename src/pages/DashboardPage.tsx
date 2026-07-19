@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Maximize2, Minimize2, FileDown, ExternalLink, RefreshCw } from 'lucide-react';
+import { Activity, Download, Users, Layers3, TrendingUp, BarChart3, Clock, Package, ChevronRight, FileText, Calendar, Loader2, ListChecks, Maximize2, Minimize2, FileDown, ExternalLink, RefreshCw } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
