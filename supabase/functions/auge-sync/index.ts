@@ -613,9 +613,9 @@ function mapTransferencia(r: any) {
     _cd_mov: cdMov ? String(cdMov) : null,   // preferido para endpoint de detalhe (cdMov=)
     _cd_transf: cdTransf ? String(cdTransf) : null,
     _detail_ids: detailIds,
-    deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
-    deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
-    codigo_produto: r.cdItem ?? null,
+    deposito_origem: cleanText(r.cdDepositoOrigem ?? r.nmDepositoOrigem),
+    deposito_destino: cleanText(r.cdDepositoDestino ?? r.nmDepositoDestino),
+    codigo_produto: cleanText(r.cdItem),
     descricao_produto: normalizeDescricaoProduto(r.nmItem ?? r.dsItem ?? r.descricaoProduto, r.cdItem),
     quantidade: parseNum(r.qtItem),
     situacao: r.idSituacao ?? null,
@@ -723,9 +723,9 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
 
 
 function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
-  row.deposito_origem = det.cdDepositoOrigem ?? row.deposito_origem ?? null;
-  row.deposito_destino = det.cdDepositoDestino ?? row.deposito_destino ?? null;
-  row.codigo_produto = det.cdItem ?? row.codigo_produto ?? null;
+  row.deposito_origem = cleanText(det.cdDepositoOrigem ?? det.nmDepositoOrigem) ?? row.deposito_origem ?? null;
+  row.deposito_destino = cleanText(det.cdDepositoDestino ?? det.nmDepositoDestino) ?? row.deposito_destino ?? null;
+  row.codigo_produto = cleanText(det.cdItem) ?? row.codigo_produto ?? null;
   row.descricao_produto = normalizeDescricaoProduto(
     det.nmItem ?? det.dsItem ?? det.descricaoProduto ?? det.textAbrev,
     det.cdItem ?? row.codigo_produto,
