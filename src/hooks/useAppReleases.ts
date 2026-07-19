@@ -9,6 +9,7 @@ export interface AppRelease {
   released_at: string;
   is_stable: boolean;
   is_current: boolean;
+  build_time: string | null;
   created_at: string;
   updated_at: string;
 }
