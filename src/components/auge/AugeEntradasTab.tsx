@@ -249,6 +249,13 @@ export default function AugeEntradasTab() {
           )}
         </div>
       )}
+
+      <MovimentacaoDetailDialog
+        movimentacao={detail}
+        tipo="entrada"
+        open={!!detail}
+        onOpenChange={(o) => !o && setDetail(null)}
+      />
     </div>
   );
 }
