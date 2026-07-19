@@ -49,7 +49,7 @@ const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/Acompanham
 const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"));
 const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
-const RastreamentoPage = lazy(() => import("@/pages/RastreamentoPage"));
+
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
 const TransferenciasPage = lazy(() => import("@/pages/TransferenciasPage"));
 const OAuthCallbackPage = lazy(() => import("@/pages/OAuthCallbackPage"));
@@ -168,12 +168,10 @@ const App = () => (
                     }
                   />
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
-                  <Route path="/estoque/rastreamento" element={<RastreamentoPage />} />
                   <Route path="/estoque/entradas" element={<EntradasPage />} />
                   <Route path="/estoque/auge" element={<Navigate to="/estoque/cadastros" replace />} />
                   <Route path="/estoque/transferencias" element={<TransferenciasPage />} />
                   <Route path="/transferencias" element={<Navigate to="/estoque/transferencias" replace />} />
-                  <Route path="/rastreamento" element={<Navigate to="/estoque/rastreamento" replace />} />
                   <Route path="/estoque/etiquetas" element={<Navigate to="/expedicao/etiquetas" replace />} />
 
                   {/* Redirects 301 — rotas legadas → /estoque/* */}
