@@ -29,15 +29,15 @@ const STATUS_DOT: Record<PresenceStatus, string> = {
 };
 
 const STATUS_BADGE: Record<PresenceStatus, string> = {
-  online: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-  away: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  online: 'bg-emerald-500/10 text-success dark:text-success border-emerald-500/20',
+  away: 'bg-amber-500/10 text-warning dark:text-warning border-amber-500/20',
   offline: 'bg-muted/40 text-muted-foreground border-border/40',
 };
 
 const ROLE_BADGE: Record<Role, string> = {
   admin: 'bg-primary/15 text-primary border-primary/30',
   gerente: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-  supervisor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  supervisor: 'bg-amber-500/10 text-warning dark:text-warning border-amber-500/20',
   operador: 'bg-muted/40 text-muted-foreground border-border/40',
 };
 
@@ -136,7 +136,7 @@ export default function TeamPanel() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {(['online', 'away', 'offline'] as PresenceStatus[]).map((s) => (
           <div key={s} className={`flex items-center gap-3 p-4 rounded-md border ${STATUS_BADGE[s]}`}>
-            <Circle className={`w-2.5 h-2.5 fill-current ${s === 'online' ? 'text-emerald-500' : s === 'away' ? 'text-amber-500' : 'text-muted-foreground'}`} />
+            <Circle className={`w-2.5 h-2.5 fill-current ${s === 'online' ? 'text-success' : s === 'away' ? 'text-warning' : 'text-muted-foreground'}`} />
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{STATUS_LABEL[s]}</span>
               <span className="text-xl font-semibold tabular-nums">{counts[s]}</span>

@@ -163,7 +163,7 @@ export default function AugeReconciliacaoTab() {
 }
 
 function StatBox({ label, value, tone }: { label: string; value: number; tone?: 'emerald' | 'amber' | 'red' }) {
-  const cls = tone === 'emerald' ? 'text-emerald-500' : tone === 'amber' ? 'text-amber-500' : tone === 'red' ? 'text-red-500' : 'text-foreground';
+  const cls = tone === 'emerald' ? 'text-success' : tone === 'amber' ? 'text-warning' : tone === 'red' ? 'text-destructive' : 'text-foreground';
   return (
     <div className="bg-card/60 border border-border/40 rounded-md p-3">
       <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{label}</p>
@@ -174,10 +174,10 @@ function StatBox({ label, value, tone }: { label: string; value: number; tone?: 
 
 function StatusBadge({ status }: { status: Row['status'] }) {
   const map = {
-    ok: { icon: CheckCircle2, cls: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30', label: 'OK' },
-    divergente: { icon: AlertTriangle, cls: 'bg-amber-500/10 text-amber-500 border-amber-500/30', label: 'Descrição div.' },
+    ok: { icon: CheckCircle2, cls: 'bg-emerald-500/10 text-success border-emerald-500/30', label: 'OK' },
+    divergente: { icon: AlertTriangle, cls: 'bg-amber-500/10 text-warning border-amber-500/30', label: 'Descrição div.' },
     inativo: { icon: XCircle, cls: 'bg-slate-500/10 text-slate-400 border-slate-500/30', label: 'Inativo Auge' },
-    ausente_auge: { icon: XCircle, cls: 'bg-red-500/10 text-red-500 border-red-500/30', label: 'Só no interno' },
+    ausente_auge: { icon: XCircle, cls: 'bg-red-500/10 text-destructive border-red-500/30', label: 'Só no interno' },
     ausente_interno: { icon: AlertTriangle, cls: 'bg-blue-500/10 text-blue-400 border-blue-500/30', label: 'Só no Auge' },
   };
   const { icon: Icon, cls, label } = map[status];

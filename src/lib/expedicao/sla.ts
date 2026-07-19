@@ -55,7 +55,7 @@ export function computeSla(status: PickingStatus, createdAt: string): SlaInfo {
     level: 'ok',
     minutes,
     label: `No prazo · ${formatMinutes(minutes)}`,
-    cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+    cls: 'bg-emerald-50 text-success dark:bg-emerald-950 dark:text-emerald-300',
   };
 }
 

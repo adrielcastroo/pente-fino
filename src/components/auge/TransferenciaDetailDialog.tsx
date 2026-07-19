@@ -90,7 +90,7 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
               {transferencia.nr_efetivacao && (
                 <>
                   <span className="text-[10px] uppercase text-muted-foreground ml-1">Efetivação</span>
-                  <span className="font-mono text-emerald-500 font-bold">{transferencia.nr_efetivacao}</span>
+                  <span className="font-mono text-success font-bold">{transferencia.nr_efetivacao}</span>
                 </>
               )}
               <Badge variant={situacaoTone as any} className="text-[10px] ml-1">

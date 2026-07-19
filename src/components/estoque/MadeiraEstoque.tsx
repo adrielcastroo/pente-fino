@@ -108,10 +108,10 @@ export default function MadeiraEstoque() {
         <div className="flex sm:grid sm:grid-cols-5 gap-3 min-w-max sm:min-w-0">
           {[
             { label: 'Total', value: stats.total, color: 'text-foreground' },
-            { label: 'Lâminas', value: stats.laminas, color: 'text-emerald-400' },
+            { label: 'Lâminas', value: stats.laminas, color: 'text-success' },
             { label: 'Bases', value: stats.bases, color: 'text-cyan-400' },
             { label: 'Bandôs', value: stats.bandos, color: 'text-violet-400' },
-            { label: 'Avarias', value: stats.avarias, color: 'text-red-400' },
+            { label: 'Avarias', value: stats.avarias, color: 'text-destructive' },
           ].map((s) => (
             <Card key={s.label} className="border border-border/30 bg-card/40 shadow-none shrink-0 w-[120px] sm:w-auto">
               <CardContent className="p-4 text-center space-y-1">
@@ -196,7 +196,7 @@ export default function MadeiraEstoque() {
                 <CardContent className="p-4 space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <TreePine className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <TreePine className="w-4 h-4 text-success shrink-0" />
                       <span className="text-sm font-bold truncate">{r.item || '—'}</span>
                     </div>
                     {r.avaria_tipo && (

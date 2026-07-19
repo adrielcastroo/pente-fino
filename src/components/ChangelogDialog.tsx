@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 
 const TYPE_META: Record<ChangelogEntry['highlights'][number]['type'], { label: string; icon: typeof Sparkles; className: string }> = {
   feature: { label: 'Novo', icon: Sparkles, className: 'bg-primary/10 text-primary' },
-  improvement: { label: 'Melhoria', icon: Zap, className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-  fix: { label: 'Correção', icon: Wrench, className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  improvement: { label: 'Melhoria', icon: Zap, className: 'bg-amber-500/10 text-warning dark:text-warning' },
+  fix: { label: 'Correção', icon: Wrench, className: 'bg-emerald-500/10 text-success dark:text-success' },
 };
 
 function formatDate(iso: string): string {

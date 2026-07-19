@@ -791,7 +791,7 @@ export default function SettingsPage() {
                           </div>
                           {prefSilentBrowserPrint && (
                             <div className="mt-3 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
-                              <p className="font-bold text-amber-500">⚠️ Requer configuração no navegador</p>
+                              <p className="font-bold text-warning">⚠️ Requer configuração no navegador</p>
                               <p className="text-muted-foreground">
                                 Por segurança, navegadores <b>não permitem</b> impressão silenciosa por padrão.
                                 Para funcionar, é preciso abrir o Chrome/Edge com uma "flag" especial:
@@ -954,9 +954,9 @@ export default function SettingsPage() {
                       </div>
                       
                       <div className="p-4 rounded-md bg-amber-500/5 border border-amber-500/10 flex gap-4">
-                        <Activity className="w-5 h-5 text-amber-500 shrink-0" />
+                        <Activity className="w-5 h-5 text-warning shrink-0" />
                         <div className="space-y-1">
-                          <h5 className="text-xs font-bold text-amber-500 uppercase">Dica de Performance</h5>
+                          <h5 className="text-xs font-bold text-warning uppercase">Dica de Performance</h5>
                           <p className="text-xs text-muted-foreground leading-relaxed">
                             O Modo Lite é ativado automaticamente em tablets de entrada (≤4GB RAM, ≤4 núcleos ou rede 3G). Você pode forçar manual e voltar ao automático no botão "Auto".
                           </p>
@@ -972,7 +972,7 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-bold flex items-center gap-2">
                             OpenRouter AI
-                            <Badge variant="outline" className={orKey ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
+                            <Badge variant="outline" className={orKey ? "text-success border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
                               {orKey ? "Configurado" : "Pendente"}
                             </Badge>
                           </h4>
@@ -1018,7 +1018,7 @@ export default function SettingsPage() {
                           <div className="space-y-0.5">
                             <h4 className="text-sm font-bold flex items-center gap-2">
                               Impressão Automática (PNG)
-                              <Badge variant="outline" className={labelSettings.autoPrint ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
+                              <Badge variant="outline" className={labelSettings.autoPrint ? "text-success border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
                                 {labelSettings.autoPrint ? "Ativa" : "Desativada"}
                               </Badge>
                             </h4>
@@ -1053,7 +1053,7 @@ export default function SettingsPage() {
                           <div className="space-y-0.5">
                             <h4 className="text-sm font-bold flex items-center gap-2">
                               Consulta Item SAP (n8n)
-                              <Badge variant="outline" className={n8nSapEnabled && n8nSapUrl ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
+                              <Badge variant="outline" className={n8nSapEnabled && n8nSapUrl ? "text-success border-emerald-500/20 bg-emerald-500/5" : "text-muted-foreground"}>
                                 {n8nSapEnabled && n8nSapUrl ? "Ativa" : "Desativada"}
                               </Badge>
                             </h4>
@@ -1277,7 +1277,7 @@ export default function SettingsPage() {
                                   {mfaFactors.filter(f => f.status === 'verified').map(factor => (
                                     <div key={factor.id} className="flex items-center justify-between p-3 rounded-md bg-emerald-500/5 border border-emerald-500/20">
                                       <div className="flex items-center gap-3">
-                                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                                        <ShieldCheck className="w-5 h-5 text-success" />
                                         <div>
                                           <p className="text-sm font-bold">App Autenticador</p>
                                           <p className="text-xs text-muted-foreground">Ativado em {new Date(factor.created_at).toLocaleDateString('pt-BR')}</p>
@@ -1483,8 +1483,8 @@ export default function SettingsPage() {
           )}
           {saveState === 'saved' && (
             <>
-              <Check className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-emerald-600 dark:text-emerald-400">Salvo automaticamente</span>
+              <Check className="w-3.5 h-3.5 text-success" />
+              <span className="text-success dark:text-success">Salvo automaticamente</span>
             </>
           )}
           {saveState === 'idle' && hasUnsavedChanges && (

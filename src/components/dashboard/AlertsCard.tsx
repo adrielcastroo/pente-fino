@@ -30,7 +30,7 @@ interface AlertsCardProps {
 
 const SEVERITY_STYLES: Record<AlertSeverity, { bg: string; text: string; border: string; icon: any }> = {
   critical: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', icon: AlertTriangle },
-  warning: { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/30', icon: PackageX },
+  warning: { bg: 'bg-amber-500/10', text: 'text-warning', border: 'border-amber-500/30', icon: PackageX },
   info: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/30', icon: Info },
 };
 
@@ -95,7 +95,7 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
   if (alerts.length === 0) {
     return (
       <div className="rounded-lg border border-border/40 bg-card/50 px-4 py-3 flex items-center gap-3">
-        <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-500">
+        <div className="p-1.5 rounded-md bg-emerald-500/10 text-success">
           <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
         </div>
         <div className="flex flex-col">
@@ -109,11 +109,11 @@ export const AlertsCard = memo(({ stats }: AlertsCardProps) => {
   return (
     <div className="rounded-lg border border-border/40 bg-card/50 overflow-hidden">
       <div className="px-4 py-2.5 border-b border-border/30 flex items-center gap-2">
-        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.75} />
+        <AlertTriangle className="w-3.5 h-3.5 text-warning" strokeWidth={1.75} />
         <h2 className="text-xs font-medium text-foreground">
           Alertas operacionais
         </h2>
-        <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 tabular-nums">
+        <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 text-warning tabular-nums">
           {alerts.length}
         </span>
       </div>

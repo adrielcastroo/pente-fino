@@ -140,7 +140,7 @@ export default function AugeSaldoTab() {
                   <TableCell className="text-xs">{r.descricao || '—'}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{r.deposito}</Badge></TableCell>
                   <TableCell className="text-xs text-center">{r.unidade || '—'}</TableCell>
-                  <TableCell className={`text-xs text-right font-mono font-bold ${r.quantidade > 0 ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                  <TableCell className={`text-xs text-right font-mono font-bold ${r.quantidade > 0 ? 'text-success' : 'text-muted-foreground'}`}>
                     {Number(r.quantidade).toLocaleString('pt-BR')}
                   </TableCell>
                 </TableRow>
@@ -163,7 +163,7 @@ export default function AugeSaldoTab() {
 }
 
 function StatBox({ label, value, tone }: { label: string; value: number; tone?: 'emerald' | 'amber' }) {
-  const cls = tone === 'emerald' ? 'text-emerald-500' : tone === 'amber' ? 'text-amber-500' : 'text-foreground';
+  const cls = tone === 'emerald' ? 'text-success' : tone === 'amber' ? 'text-warning' : 'text-foreground';
   return (
     <div className="bg-card/60 border border-border/40 rounded-md p-3">
       <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{label}</p>

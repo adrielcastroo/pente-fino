@@ -144,7 +144,7 @@ export default function IntegrationsTab() {
 function StatusBadge({ status, coming }: { status: string; coming: boolean }) {
   if (coming) return <Badge variant="outline" className="text-[9px] mt-0.5">Em breve</Badge>;
   const map: Record<string, { icon: any; cls: string; label: string }> = {
-    active: { icon: CheckCircle2, cls: 'text-emerald-600 dark:text-emerald-400', label: 'Ativa' },
+    active: { icon: CheckCircle2, cls: 'text-success dark:text-success', label: 'Ativa' },
     disabled: { icon: XCircle, cls: 'text-muted-foreground', label: 'Desativada' },
     error: { icon: AlertCircle, cls: 'text-destructive', label: 'Erro' },
     unknown: { icon: Clock, cls: 'text-muted-foreground', label: 'Sem verificação' },

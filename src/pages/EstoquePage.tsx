@@ -60,9 +60,9 @@ const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  ocupado: { label: 'Ocupado', color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
-  bloqueado: { label: 'Bloqueado', color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30' },
-  reservado: { label: 'Reservado', color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30' },
+  ocupado: { label: 'Ocupado', color: 'text-success', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
+  bloqueado: { label: 'Bloqueado', color: 'text-destructive', bg: 'bg-red-500/15', border: 'border-red-500/30' },
+  reservado: { label: 'Reservado', color: 'text-warning', bg: 'bg-amber-500/15', border: 'border-amber-500/30' },
   transferido: { label: 'Em outro depósito', color: 'text-sky-400', bg: 'bg-sky-500/15', border: 'border-sky-500/30' },
   saida: { label: 'Saída', color: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30' },
   livre: { label: 'Livre', color: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/30' },
@@ -1136,7 +1136,7 @@ export default function EstoquePage() {
                       <Button 
                         variant="ghost" 
                         onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-14 rounded-md font-semibold uppercase tracking-widest text-[10px] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 border border-transparent hover:border-rose-500/20 transition-all duration-300"
+                        className="w-full h-14 rounded-md font-semibold uppercase tracking-widest text-[10px] text-destructive hover:bg-rose-500/10 hover:text-destructive border border-transparent hover:border-rose-500/20 transition-all duration-300"
                       >
                         <Trash2 className="w-5 h-5 mr-3" />
                         Remover do Sistema Permanentemente
@@ -1157,9 +1157,9 @@ export default function EstoquePage() {
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
               { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-white/5', hex: '#ffffff' },
-              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-emerald-500', bg: 'bg-emerald-500/10', hex: '#10b981' },
-              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-amber-500', bg: 'bg-amber-500/10', hex: '#f59e0b' },
-              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-rose-500', bg: 'bg-rose-500/10', hex: '#f43f5e' },
+              { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-success', bg: 'bg-emerald-500/10', hex: '#10b981' },
+              { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-warning', bg: 'bg-amber-500/10', hex: '#f59e0b' },
+              { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-destructive', bg: 'bg-rose-500/10', hex: '#f43f5e' },
               { label: 'Livre', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, color: 'text-primary', bg: 'bg-primary/10', hex: '#3b82f6' },
             ];
             const current = statItems.find(s => s.label.toLowerCase() === selectedStat) || statItems[0];
@@ -1387,8 +1387,8 @@ export default function EstoquePage() {
             {scanResult && (
               <div className={`p-4 rounded-md border ${
                 scanResult.success 
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-success' 
+                  : 'bg-red-500/10 border-red-500/20 text-destructive'
               }`}>
                 <div className="flex items-center gap-2 text-sm font-bold">
                   {scanResult.success ? <CheckCircle2 className="w-4 h-4" /> : <Archive className="w-4 h-4" />}

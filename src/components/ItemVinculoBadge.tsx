@@ -93,7 +93,7 @@ export default function ItemVinculoBadge({ item, enabled = true }: Props) {
       <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
         {nenhum ? (
           <>
-            <AlertTriangle className="h-3 w-3 text-amber-500" />
+            <AlertTriangle className="h-3 w-3 text-warning" />
             <span>"{codigoConsultado}" não encontrado — será gravado como digitado.</span>
           </>
         ) : (

@@ -140,7 +140,7 @@ const ReservasTable = ({ items, onDelete, onEdit }: ReservasTableProps) => {
                   {wasEdited ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 font-medium text-[10px] cursor-help">
+                        <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-warning dark:text-warning font-medium text-[10px] cursor-help">
                           <History className="w-3 h-3" />
                           editado
                         </Badge>

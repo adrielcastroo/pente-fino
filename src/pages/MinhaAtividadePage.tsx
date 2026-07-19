@@ -176,8 +176,8 @@ export default function MinhaAtividadePage() {
                     variant="outline"
                     className={
                       'font-medium text-[10px] tabular-nums ' + (
-                        item.type === 'conf' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
-                        item.type === 'sai' ? 'bg-rose-500/10 text-rose-600 border-rose-500/30' :
+                        item.type === 'conf' ? 'bg-emerald-500/10 text-success border-emerald-500/30' :
+                        item.type === 'sai' ? 'bg-rose-500/10 text-destructive border-rose-500/30' :
                         'bg-primary/10 text-primary border-primary/30'
                       )
                     }

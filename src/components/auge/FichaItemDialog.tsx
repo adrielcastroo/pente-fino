@@ -133,7 +133,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
           <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
         ) : !produto ? (
           <div className="p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-            <AlertCircle className="h-6 w-6 text-amber-500" />
+            <AlertCircle className="h-6 w-6 text-warning" />
             Item <span className="font-mono">{cod}</span> não encontrado no espelho do Auge.
           </div>
         ) : (
@@ -374,8 +374,8 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
 function Kpi({ label, value, tone }: { label: string; value: number; tone?: 'primary' | 'emerald' | 'amber' }) {
   const cls =
     tone === 'primary' ? 'text-primary' :
-    tone === 'emerald' ? 'text-emerald-500' :
-    tone === 'amber' ? 'text-amber-500' :
+    tone === 'emerald' ? 'text-success' :
+    tone === 'amber' ? 'text-warning' :
     'text-foreground';
   return (
     <div className="text-right">

@@ -364,7 +364,7 @@ export default function NovaTransferenciaDialog({
                 <span>Efetivar imediatamente após criar</span>
               </label>
               {efetivar && (
-                <p className="text-[11px] text-amber-500 -mt-2">
+                <p className="text-[11px] text-warning -mt-2">
                   ⚠ Movimenta estoque no Auge sem conferência manual.
                 </p>
               )}

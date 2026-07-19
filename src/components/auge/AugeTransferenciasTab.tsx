@@ -225,7 +225,7 @@ export default function AugeTransferenciasTab({
                     <TableCell className="font-mono text-xs font-bold text-primary whitespace-nowrap">{r.documento || '—'}</TableCell>
                     <TableCell className="font-mono text-xs whitespace-nowrap">
                       {r.nr_efetivacao ? (
-                        <span className="font-bold text-emerald-500">{r.nr_efetivacao}</span>
+                        <span className="font-bold text-success">{r.nr_efetivacao}</span>
                       ) : (
                         <span className="text-muted-foreground/60">—</span>
                       )}
@@ -256,7 +256,7 @@ export default function AugeTransferenciasTab({
                     <TableCell className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         {rascunho && (
-                          <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-amber-500 hover:text-amber-600" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
+                          <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-warning hover:text-warning" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
                             <Zap className="w-3 h-3" /> Efetivar
                           </Button>
                         )}

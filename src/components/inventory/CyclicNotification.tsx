@@ -48,9 +48,9 @@ export function CyclicNotification() {
             <Bell className="w-5 h-5 animate-bounce" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-amber-600 dark:text-amber-400">Inventário Cíclico</h3>
+            <h3 className="text-lg font-semibold text-warning dark:text-warning">Inventário Cíclico</h3>
             <p className="text-sm font-bold text-foreground/70">
-              Você possui <span className="text-amber-600 dark:text-amber-400 font-semibold">{pendingCount}</span> contagens cíclicas pendentes para hoje.
+              Você possui <span className="text-warning dark:text-warning font-semibold">{pendingCount}</span> contagens cíclicas pendentes para hoje.
             </p>
           </div>
         </div>

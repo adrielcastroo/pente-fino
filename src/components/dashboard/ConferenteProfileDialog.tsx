@@ -139,7 +139,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Últimas sessões</span>
                 {data.anomaliesCount > 0 && (
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/5 text-[10px] font-bold gap-1">
+                  <Badge variant="outline" className="border-amber-500/40 text-warning dark:text-warning bg-amber-500/5 text-[10px] font-bold gap-1">
                     <AlertTriangle className="w-3 h-3" /> {data.anomaliesCount} anormais
                   </Badge>
                 )}
@@ -162,7 +162,7 @@ export function ConferenteProfileDialog({ conferente, history, onClose }: Props)
                     <div className="flex items-center gap-2 flex-none">
                       {s.isAnomaly && (
                         <span title="Duração acima do dobro da média">
-                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+                          <AlertTriangle className="w-4 h-4 text-warning" />
                         </span>
                       )}
                       <Badge variant="outline" className="text-[10px] font-bold font-mono">

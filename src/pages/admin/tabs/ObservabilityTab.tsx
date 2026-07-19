@@ -108,7 +108,7 @@ export default function ObservabilityTab() {
 }
 
 function MetricCard({ icon: Icon, label, value, highlight }: { icon: any; label: string; value: any; highlight?: 'warn' | 'error' }) {
-  const color = highlight === 'error' ? 'text-destructive' : highlight === 'warn' ? 'text-amber-500' : 'text-foreground';
+  const color = highlight === 'error' ? 'text-destructive' : highlight === 'warn' ? 'text-warning' : 'text-foreground';
   return (
     <Card className="p-4">
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
