@@ -23,9 +23,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("NVIDIA_API_KEY");
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not set" }), {
+      return new Response(JSON.stringify({ error: "NVIDIA_API_KEY not set" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -47,8 +47,14 @@ Deno.serve(async (req) => {
 
     const { messages }: { messages: UIMessage[] } = await req.json();
 
-    const gateway = createLovableAiGatewayProvider(apiKey);
-    const model = gateway("google/gemini-2.5-flash");
+    // Provedor: NVIDIA NIM (OpenAI-compatível)
+    const nvidia = createOpenAICompatible({
+      name: "nvidia",
+      baseURL: "https://integrate.api.nvidia.com/v1",
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    // Modelo padrão: leve, rápido, com tool calling, baixo consumo de tokens.
+    const model = nvidia("meta/llama-3.1-8b-instruct");
 
     const system = `Você é o Assistente do Pente Fino, um agente de IA integrado ao ERP de estoque da Unilux.
 Você tem acesso ao banco de dados do app e pode consultar cadastros, transferências, estoque, movimentações e mais.
