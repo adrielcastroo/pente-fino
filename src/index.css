@@ -15,6 +15,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+ * Identidade dos ícones (lucide-react)
+ * Traço mais fino (1.5) — visual "Linear/Vercel-like", combina
+ * melhor com IBM Plex + dark navy. Aplica-se a TODOS os ícones
+ * do app sem precisar tocar em cada `<Icon />` individualmente.
+ * Componentes que precisem de traço grosso podem sobrescrever
+ * com `strokeWidth={2}` inline.
+ * ============================================================ */
+.lucide {
+  stroke-width: 1.5;
+}
+/* Ícones em botões/actions ganham um "peso" a mais pra manter legibilidade */
+button .lucide,
+[role="button"] .lucide {
+  stroke-width: 1.75;
+}
+
 @layer base {
   :root {
     --background: 210 20% 98%;
