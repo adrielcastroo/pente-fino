@@ -1144,7 +1144,7 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let q = admin
     .from('auge_transferencias')
     .select('*')
-    .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,descricao_produto.is.null,documento.is.null,nr_efetivacao.is.null')
+      .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,descricao_produto.is.null,observacao.is.null,documento.is.null,nr_efetivacao.is.null')
     .order('id', { ascending: true })
     .limit(TRANSFERENCIA_BACKFILL_BATCH);
   if (lastId) q = q.gt('id', lastId);
