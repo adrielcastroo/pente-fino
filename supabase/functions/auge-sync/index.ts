@@ -1023,8 +1023,22 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
     const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
     if (det) {
       mergeTransferenciaDetalhe(mutable, det, itens);
-      const patch = transferenciaPatch(mutable);
-      const { error: updError } = await admin.from('auge_transferencias').update(patch).eq('id', row.id);
+      const expanded = expandTransferenciaItens(mutable).map((expandedRow: any) => ({
+        ...row,
+        ...transferenciaPatch(expandedRow),
+        id_externo: expandedRow.id_externo,
+        situacao: row.situacao,
+        ds_situacao: row.ds_situacao,
+        data_movimento: row.data_movimento,
+        usuario_criacao: row.usuario_criacao,
+        usuario_efetivacao: row.usuario_efetivacao,
+        usuario_enviou_logistica: row.usuario_enviou_logistica,
+        usuario_recebido_logistica: row.usuario_recebido_logistica,
+        valor: row.valor,
+      }));
+      const existing = await fetchExistingTransferencias(admin, expanded);
+      const rowsToUpsert = expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)));
+      const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
       if (updError) throw updError;
       enriched++;
     } else {
