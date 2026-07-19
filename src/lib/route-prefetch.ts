@@ -19,7 +19,7 @@ const registry: Record<string, Loader> = {
   '/estoque/saida': () => import('@/pages/SaidaPage'),
   '/estoque/entradas': () => import('@/pages/EntradasPage'),
   '/estoque/reservas': () => import('@/pages/ReservasPage'),
-  '/estoque/rastreamento': () => import('@/pages/RastreamentoPage'),
+  
   '/estoque/transferencias': () => import('@/pages/TransferenciasPage'),
   '/estoque/historico': () => import('@/pages/HistoricoPage'),
   '/estoque/cadastros': () => import('@/pages/CadastrosPage'),
