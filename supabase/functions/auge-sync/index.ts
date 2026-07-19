@@ -559,7 +559,7 @@ async function tryPHP(
       if (data && data.length >= 0) return { data, path: p.path };
       errors.push(`${p.path} sem data[]`);
     } catch (e) {
-      errors.push(`${p.path}: ${e instanceof Error ? e.message : String(e)}`);
+      errors.push(`${p.path}: ${getErrorMessage(e)}`);
     }
   }
   throw new Error(`Nenhum endpoint respondeu. Tentativas: ${errors.join(' | ')}`);
@@ -2118,7 +2118,7 @@ async function tecidosDispatch(admin: any, auth: any, runId: string) {
     await admin.from('auge_sync_runs').update({
       status: 'error',
       finished_at: new Date().toISOString(),
-      error_message: (e instanceof Error ? e.message : String(e)) + ` (phase=${phase})`,
+      error_message: (getErrorMessage(e)) + ` (phase=${phase})`,
     }).eq('id', runId);
   }
 }
@@ -2273,7 +2273,7 @@ Deno.serve(async (req) => {
         catch (e) {
           await admin.from('auge_sync_runs').update({
             status: 'error', finished_at: new Date().toISOString(),
-            error_message: e instanceof Error ? e.message : String(e),
+            error_message: getErrorMessage(e),
           }).eq('id', runId);
         }
       })();
@@ -2367,7 +2367,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = getErrorMessage(e);
     return new Response(JSON.stringify({ ok: false, error: msg, fallback: true }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
