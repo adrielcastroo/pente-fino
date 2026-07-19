@@ -1077,10 +1077,10 @@ export default function EstoquePage() {
 
       {/* ===== STAT DETAIL DIALOG ===== */}
       <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500 overflow-y-auto max-h-[95vh]">
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
-              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-white/5', hex: '#ffffff' },
+              { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-muted', hex: 'hsl(var(--primary))' },
               { label: 'Ocupado', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, color: 'text-success', bg: 'bg-emerald-500/10', hex: '#10b981' },
               { label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, color: 'text-warning', bg: 'bg-amber-500/10', hex: '#f59e0b' },
               { label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, color: 'text-destructive', bg: 'bg-rose-500/10', hex: '#f43f5e' },
@@ -1109,99 +1109,105 @@ export default function EstoquePage() {
 
             return (
               <>
-                <div className="px-8 sm:px-12 pt-10 sm:pt-14 pb-8 border-b border-white/5 bg-gradient-to-br from-white/10 to-transparent">
-                  <div className="flex flex-col sm:flex-row items-center gap-8">
-                     <div className={cn("p-6 rounded-[2rem] shadow-2xl ring-4 ring-white/10", current.bg, current.color)}>
-                        <LayoutDashboard className="w-10 h-10" />
-                     </div>
-                     <div className="flex-1 text-center sm:text-left">
-                        <DialogTitle className="text-2xl font-semibold tracking-tight leading-none">
-                           {current.label}
-                        </DialogTitle>
-                        <DialogDescription className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-[0.3em] mt-3 opacity-60">
-                           {current.value} Itens · {current.percent}% da Capacidade Total do CD
-                        </DialogDescription>
-                     </div>
+                {/* Header ERP: título + subtítulo + ícone contido */}
+                <div className="px-5 sm:px-6 py-4 border-b border-border bg-card">
+                  <div className="flex items-center gap-3 pr-10">
+                    <div className={cn("p-2 rounded-md border border-border/60", current.bg, current.color)}>
+                      <LayoutDashboard className="w-5 h-5" strokeWidth={1.5} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <DialogTitle className="text-base sm:text-lg font-semibold tracking-tight leading-tight">
+                        {current.label}
+                      </DialogTitle>
+                      <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                        <span className="tabular-nums font-medium text-foreground">{current.value.toLocaleString('pt-BR')}</span> itens · {current.percent}% da capacidade total do CD
+                      </DialogDescription>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="p-6 sm:p-10 space-y-8 sm:space-y-12 bg-card/20">
+
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-background/40">
                   {/* Charts Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
-                    {/* General Distribution (Pie Chart) */}
-                    <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 sm:p-8 shadow-xl ring-1 ring-white/5 flex flex-col items-center">
-                      <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] mb-8 self-start">Ocupação Geral do CD</h4>
-                      <div className="h-[260px] w-full">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Pie */}
+                    <div className="bg-card border border-border rounded-lg p-4 sm:p-5 flex flex-col">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-semibold text-foreground">Ocupação geral do CD</h4>
+                        <Badge variant="outline" className="text-[10px] font-medium">Total {stats.totalSlots.toLocaleString('pt-BR')}</Badge>
+                      </div>
+                      <div className="h-[240px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
                               data={pieData}
                               cx="50%"
                               cy="50%"
-                              innerRadius={70}
-                              outerRadius={95}
-                              paddingAngle={8}
+                              innerRadius={62}
+                              outerRadius={92}
+                              paddingAngle={2}
                               dataKey="value"
-                              animationBegin={200}
-                              animationDuration={1200}
+                              animationBegin={100}
+                              animationDuration={600}
                             >
                               {pieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="hsl(var(--card))" strokeWidth={2} />
                               ))}
                             </Pie>
-                            <ChartTooltip 
-                              contentStyle={{ background: 'rgba(0,0,0,0.85)', border: 'none', borderRadius: '16px', color: '#fff', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', padding: '12px' }}
-                              itemStyle={{ color: '#fff' }}
+                            <ChartTooltip
+                              contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'hsl(var(--popover-foreground))', fontSize: '12px', padding: '6px 10px' }}
+                              itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
                             />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      {/* Custom Legend */}
-                      <div className="grid grid-cols-2 gap-x-8 gap-y-3 mt-4 w-full px-4">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3 pt-3 border-t border-border/60">
                         {pieData.map((d) => (
-                          <div key={d.name} className="flex items-center gap-3">
-                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{d.name}</span>
-                            <span className="text-[10px] font-semibold ml-auto tabular-nums">{d.value}</span>
+                          <div key={d.name} className="flex items-center gap-2 text-xs">
+                            <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+                            <span className="text-muted-foreground">{d.name}</span>
+                            <span className="ml-auto font-medium tabular-nums text-foreground">{d.value.toLocaleString('pt-BR')}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Per-TEC Breakdown (Bar Chart) */}
-                    <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 sm:p-8 shadow-xl ring-1 ring-white/5">
-                      <div className="flex items-center justify-between mb-8">
-                         <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em]">Distribuição por Estrutura</h4>
-                         <Badge variant="outline" className="text-[8px] font-semibold uppercase tracking-widest px-3 border-white/10 opacity-60">Status: {current.label}</Badge>
+                    {/* Bar */}
+                    <div className="bg-card border border-border rounded-lg p-4 sm:p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-semibold text-foreground">Distribuição por estrutura</h4>
+                        <Badge variant="outline" className="text-[10px] font-medium">
+                          Status: <span className="ml-1 font-semibold">{current.label}</span>
+                        </Badge>
                       </div>
                       <div className="h-[260px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={tecBreakdown} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                            <XAxis 
-                              dataKey="tec" 
-                              fontSize={9} 
-                              axisLine={false} 
-                              tickLine={false} 
-                              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
+                          <BarChart data={tecBreakdown} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
+                            <XAxis
+                              dataKey="tec"
+                              fontSize={11}
+                              axisLine={{ stroke: 'hsl(var(--border))' }}
+                              tickLine={false}
+                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
                             />
-                            <YAxis 
-                              fontSize={9} 
-                              axisLine={false} 
-                              tickLine={false} 
-                              tick={{ fill: 'hsl(var(--muted-foreground))', fontWeight: 900 }} 
+                            <YAxis
+                              fontSize={11}
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
                             />
                             <ChartTooltip
-                              cursor={{ fill: 'rgba(255,255,255,0.03)', radius: 12 }}
-                              contentStyle={{ background: 'rgba(0,0,0,0.85)', border: 'none', borderRadius: '16px', color: '#fff', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', padding: '12px' }}
-                              itemStyle={{ color: '#fff' }}
-                              formatter={(value: number, _name: string, props: any) => [`${value} POSIÇÕES`, `ESTRUTURA ${props.payload.tec}`]}
+                              cursor={{ fill: 'hsl(var(--muted) / 0.5)' }}
+                              contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'hsl(var(--popover-foreground))', fontSize: '12px', padding: '6px 10px' }}
+                              itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                              formatter={(value: number, _name: string, props: any) => [`${value} posições`, `Estrutura ${props.payload.tec}`]}
                             />
-                            <Bar 
-                              dataKey="value" 
-                              radius={[10, 10, 0, 0]} 
-                              fill={current.hex === '#ffffff' ? 'hsl(var(--primary))' : current.hex}
-                              minPointSize={4}
-                              animationDuration={1500}
+                            <Bar
+                              dataKey="value"
+                              radius={[3, 3, 0, 0]}
+                              fill={current.hex === 'hsl(var(--primary))' ? 'hsl(var(--primary))' : current.hex}
+                              minPointSize={2}
+                              animationDuration={700}
                             />
                           </BarChart>
                         </ResponsiveContainer>
@@ -1210,19 +1216,22 @@ export default function EstoquePage() {
                   </div>
 
                   {/* Detailed Summary Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                    {tecBreakdown.map((t) => (
-                      <div key={t.tec} className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-md p-6 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1">
-                         <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-2 opacity-50 group-hover:opacity-100 transition-opacity">{t.tec}</div>
-                         <div className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tighter tabular-nums mb-1">{t.value}</div>
-                         <div className="flex items-center gap-2">
-                           <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                              <div className="h-full bg-primary/40" style={{ width: `${t.percent}%` }} />
-                           </div>
-                           <div className="text-[9px] font-semibold text-primary uppercase">{t.percent}%</div>
-                         </div>
-                      </div>
-                    ))}
+                  <div>
+                    <h4 className="text-xs font-semibold text-foreground mb-2">Resumo por estrutura</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {tecBreakdown.map((t) => (
+                        <div key={t.tec} className="bg-card border border-border rounded-md p-3 hover:border-primary/40 transition-colors">
+                          <div className="text-[10px] font-medium text-muted-foreground mb-1">{t.tec}</div>
+                          <div className="text-xl font-semibold text-foreground tabular-nums leading-none mb-2">{t.value.toLocaleString('pt-BR')}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary" style={{ width: `${t.percent}%` }} />
+                            </div>
+                            <div className="text-[10px] font-medium text-muted-foreground tabular-nums">{t.percent}%</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </>
