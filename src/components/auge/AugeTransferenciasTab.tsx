@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,46 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
+import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CalendarDays, X } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import { formatQty } from '@/lib/utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
 import NovaTransferenciaDialog, { type TransfDialogInitial, type TransfDialogMode } from './NovaTransferenciaDialog';
 
 type Filtro = 'todos' | 'rascunho' | 'efetivada';
+type SortDirection = 'asc' | 'desc';
+type SortKey = 'documento' | 'nr_efetivacao' | 'deposito' | 'codigo_produto' | 'descricao_produto' | 'quantidade' | 'usuario_criacao' | 'observacao' | 'data_movimento';
+
+const SORT_LABELS: Record<SortKey, string> = {
+  documento: 'Nº Rascunho',
+  nr_efetivacao: 'Nº Efetivação',
+  deposito: 'Origem → Destino',
+  codigo_produto: 'Produto',
+  descricao_produto: 'Descrição',
+  quantidade: 'Qtd',
+  usuario_criacao: 'Usuário',
+  observacao: 'Observação',
+  data_movimento: 'Data',
+};
+
+function normalizeText(value: unknown): string {
+  return String(value ?? '').trim().toLocaleLowerCase('pt-BR');
+}
+
+function sortValue(row: any, key: SortKey): string | number {
+  if (key === 'deposito') return normalizeText(`${row.deposito_origem ?? ''} ${row.deposito_destino ?? ''}`);
+  if (key === 'quantidade') return Number(row.quantidade ?? 0);
+  if (key === 'data_movimento') return row.data_movimento ? new Date(row.data_movimento).getTime() : 0;
+  return normalizeText(row[key]);
+}
+
+function endOfDayISO(date: string): string {
+  return `${date}T23:59:59.999-03:00`;
+}
+
+function startOfDayISO(date: string): string {
+  return `${date}T00:00:00.000-03:00`;
+}
 
 export default function AugeTransferenciasTab({
   autoInitial,
@@ -30,6 +63,10 @@ export default function AugeTransferenciasTab({
   const [search, setSearch] = useState('');
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [detail, setDetail] = useState<any | null>(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('data_movimento');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Dialog Nova/Editar/Duplicar
   const [dialogMode, setDialogMode] = useState<TransfDialogMode>('novo');
@@ -122,15 +159,36 @@ export default function AugeTransferenciasTab({
     }
   };
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from('auge_transferencias')
-      .select('*')
-      .order('data_movimento', { ascending: false, nullsFirst: false })
-      .limit(500);
-    if (error) toast.error(error.message);
-    const transferencias = data || [];
+    const pageSize = 1000;
+    let transferencias: any[] = [];
+    let from = 0;
+    let errorMessage: string | null = null;
+
+    while (true) {
+      let query = (supabase as any)
+        .from('auge_transferencias')
+        .select('*')
+        .order('data_movimento', { ascending: false, nullsFirst: false })
+        .range(from, from + pageSize - 1);
+
+      if (dateFrom) query = query.gte('data_movimento', startOfDayISO(dateFrom));
+      if (dateTo) query = query.lte('data_movimento', endOfDayISO(dateTo));
+
+      const { data, error } = await query;
+      if (error) {
+        errorMessage = error.message;
+        break;
+      }
+      const page = data || [];
+      transferencias = transferencias.concat(page);
+      if (page.length < pageSize || (!dateFrom && !dateTo && transferencias.length >= 500)) break;
+      from += pageSize;
+    }
+
+    if (errorMessage) toast.error(errorMessage);
+    if (!dateFrom && !dateTo) transferencias = transferencias.slice(0, 500);
     const codigos = Array.from(new Set(
       transferencias.map((r: any) => r.codigo_produto).filter(Boolean)
     ));
@@ -148,13 +206,15 @@ export default function AugeTransferenciasTab({
       setRows(transferencias);
     }
     setLoading(false);
-  };
+  }, [dateFrom, dateTo]);
 
   const sync = async () => {
     setSyncing(true);
-    const t = toast.loading('Sincronizando transferências...');
+    const t = toast.loading(dateFrom || dateTo ? 'Sincronizando período...' : 'Sincronizando transferências...');
     try {
-      const { data, error } = await supabase.functions.invoke('auge-sync?entity=transferencias');
+      const { data, error } = await supabase.functions.invoke('auge-sync?entity=transferencias', {
+        body: { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined },
+      });
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
       const r = (data?.results ?? []).find((x: any) => x.entity === 'transferencias');
@@ -168,9 +228,25 @@ export default function AugeTransferenciasTab({
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => { load(); }, [load]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortKey(key);
+    setSortDirection('asc');
+  };
+
+  const clearDates = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return rows.filter(r => {
+    const base = rows.filter(r => {
       if (filtro === 'rascunho' && !isRascunho(r)) return false;
       if (filtro === 'efetivada' && !isEfetivada(r)) return false;
       if (!q) return true;
@@ -185,7 +261,35 @@ export default function AugeTransferenciasTab({
         (r.usuario_criacao || '').toLowerCase().includes(q)
       );
     });
-  }, [rows, search, filtro]);
+    return [...base].sort((a, b) => {
+      const av = sortValue(a, sortKey);
+      const bv = sortValue(b, sortKey);
+      const result = typeof av === 'number' && typeof bv === 'number'
+        ? av - bv
+        : String(av).localeCompare(String(bv), 'pt-BR', { numeric: true, sensitivity: 'base' });
+      return sortDirection === 'asc' ? result : -result;
+    });
+  }, [rows, search, filtro, sortKey, sortDirection]);
+
+  const SortableHead = ({ column, className }: { column: SortKey; className?: string }) => {
+    const active = sortKey === column;
+    const Icon = !active ? ArrowUpDown : sortDirection === 'asc' ? ArrowUp : ArrowDown;
+    return (
+      <TableHead className={className} aria-sort={active ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 -ml-2 px-2 gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          onClick={() => toggleSort(column)}
+          title={`Ordenar por ${SORT_LABELS[column]}`}
+        >
+          <span className="whitespace-nowrap">{SORT_LABELS[column]}</span>
+          <Icon className="w-3.5 h-3.5" />
+        </Button>
+      </TableHead>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0 min-w-0 overflow-hidden">
@@ -193,6 +297,21 @@ export default function AugeTransferenciasTab({
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito, usuário..." className="pl-10 h-11 w-full" />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <div className="relative w-[150px]">
+            <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none" />
+            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="pl-9 h-11 text-xs" aria-label="Data de início" />
+          </div>
+          <div className="relative w-[150px]">
+            <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none" />
+            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="pl-9 h-11 text-xs" aria-label="Data final" />
+          </div>
+          {(dateFrom || dateTo) && (
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0" onClick={clearDates} title="Limpar período">
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
         <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11 shrink-0">
           <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
@@ -222,15 +341,15 @@ export default function AugeTransferenciasTab({
           <Table className="min-w-[1080px]">
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
-                <TableHead className="whitespace-nowrap">Nº Rascunho</TableHead>
-                <TableHead className="whitespace-nowrap">Nº Efetivação</TableHead>
-                <TableHead className="whitespace-nowrap">Origem → Destino</TableHead>
-                <TableHead className="whitespace-nowrap">Produto</TableHead>
-                <TableHead className="min-w-[260px] whitespace-nowrap">Descrição</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Qtd</TableHead>
-                <TableHead className="whitespace-nowrap">Usuário</TableHead>
-                <TableHead className="max-w-[220px] whitespace-nowrap">Observação</TableHead>
-                <TableHead className="whitespace-nowrap">Data</TableHead>
+                <SortableHead column="documento" className="whitespace-nowrap" />
+                <SortableHead column="nr_efetivacao" className="whitespace-nowrap" />
+                <SortableHead column="deposito" className="whitespace-nowrap" />
+                <SortableHead column="codigo_produto" className="whitespace-nowrap" />
+                <SortableHead column="descricao_produto" className="min-w-[260px] whitespace-nowrap" />
+                <SortableHead column="quantidade" className="text-right whitespace-nowrap" />
+                <SortableHead column="usuario_criacao" className="whitespace-nowrap" />
+                <SortableHead column="observacao" className="max-w-[220px] whitespace-nowrap" />
+                <SortableHead column="data_movimento" className="whitespace-nowrap" />
                 <TableHead className="w-[80px] text-right whitespace-nowrap">Ações</TableHead>
               </TableRow>
             </TableHeader>
