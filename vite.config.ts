@@ -74,8 +74,15 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("xlsx") || id.includes("exceljs")) return "xlsx-vendor";
           if (id.includes("date-fns")) return "date-vendor";
           if (id.includes("@tanstack")) return "query-vendor";
-          if (id.includes("zod")) return "zod-vendor";
-          if (id.includes("react-hook-form") || id.includes("@hookform")) {
+          // react-hook-form, @hookform/resolvers e zod ficam juntos no mesmo
+          // chunk para evitar TDZ (Cannot access 'X' before initialization)
+          // causado por dependência circular entre eles quando separados.
+          if (
+            id.includes("react-hook-form") ||
+            id.includes("@hookform") ||
+            id.includes("/zod/") ||
+            id.endsWith("/zod")
+          ) {
             return "forms-vendor";
           }
           if (id.includes("lucide-react")) return "icons-vendor";
